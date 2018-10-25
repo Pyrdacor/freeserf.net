@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio.cs" />
+    <Compile Include="Buffer.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Cout.cs" />
     <Compile Include="Debug.cs" />
@@ -57,6 +58,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Freeserf.cs" />
+    <Compile Include="FreeserfEndian.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
