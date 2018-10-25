@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,7 +13,7 @@ namespace Freeserf
             protected struct Parameter
             {
                 public string Name;
-                public Func<StringBuilder, bool> Handler;
+                public Func<AutoParseableString, bool> Handler;
             }
 
             protected string comment = "";
@@ -69,7 +69,7 @@ namespace Freeserf
                 }
             }
 
-            public Option AddParameter(string name, Func<StringBuilder, bool> handler)
+            public Option AddParameter(string name, Func<AutoParseableString, bool> handler)
             {
                 var parameter = new Parameter();
 
@@ -91,15 +91,12 @@ namespace Freeserf
 
                 for (var i = 0; i < parameters.Count; ++i)
                 {
-                    var s = new StringBuilder();
-
-                    s.Append(parameters[i]);
-
-                    if (!this.parameters[i].Handler(s))
+                    if (!this.parameters[i].Handler(new AutoParseableString(parameters[i])))
                     {
-                      return false;
+                        return false;
                     }
                 }
+
                 return true;
             }
         }
