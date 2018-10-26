@@ -458,7 +458,7 @@ namespace Freeserf
             return image;
         }
 
-        public abstract Tuple<Sprite, Sprite> GetSpriteParts(Data.Resource resource, int index);
+        public abstract Tuple<Sprite, Sprite> GetSpriteParts(Data.Resource resource, uint index);
 
         public virtual int GetAnimationPhaseCount(int animation)
         {

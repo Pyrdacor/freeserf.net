@@ -228,38 +228,160 @@ namespace Freeserf
         {
             public SpriteAmiga(uint width, uint height)
             {
+                this.width = width;
+                this.height = height;
 
+                data = new byte[width * height * 4];
             }
 
-            public void set_delta(int x, int y) { delta_x = x; delta_y = y; }
-            public void set_offset(int x, int y) { offset_x = x; offset_y = y; }
-            public SpriteAmiga get_amiga_masked(PSprite mask)
+            public void SetDelta(int x, int y)
             {
-
+                deltaX = x;
+                deltaY = y;
             }
 
-            public void clear()
+            public void SetOffset(int x, int y)
+            {
+                offsetX = x;
+                offsetY = y;
+            }
+
+            unsafe public SpriteAmiga GetAmigaMasked(Sprite mask)
+            {
+                if (mask.Width > width)
+                {
+                    throw new ExceptionFreeserf("Failed to apply mask");
+                }
+
+                SpriteAmiga masked = new SpriteAmiga(mask.Width, mask.Height);
+
+                fixed (byte* pointer = data)
+                fixed (byte* maskPointer = mask.GetData())
+                fixed (byte* maskedPointer = masked.GetData())
+                {
+                    uint* pos = (uint*)maskedPointer;
+
+                    uint* sBeg = (uint*)pointer;
+                    uint* sPos = sBeg;
+                    uint* sEnd = sBeg + width * height;
+                    uint sDelta = width - masked.Width;
+
+                    uint* mPos = (uint*)maskPointer;
+
+                    for (uint y = 0; y < masked.Height; ++y)
+                    {
+                        for (uint x = 0; x < masked.Width; ++x)
+                        {
+                            if (sPos >= sEnd)
+                            {
+                                sPos = sBeg;
+                            }
+
+                            *pos++ = *sPos++ & *mPos++;
+                        }
+
+                        sPos += sDelta;
+                    }
+                }
+
+                return masked;
+            }
+
+            public void Clear()
             {
             }
 
-            public Sprite.Color* get_writable_data()
+            unsafe public Color* GetWritableData()
             {
-                return reinterpret_cast<Sprite.Color*>(data);
+                fixed (byte* pointer = data)
+                {
+                    return (Color*)pointer;
+                }
             }
 
-            public void make_transparent(uint rc = 0)
+            unsafe public void MakeTransparent(uint rc = 0)
             {
+                fixed (byte* pointer = data)
+                {
+                    uint* p = (uint*)pointer;
 
+                    for (uint y = 0; y < height; ++y)
+                    {
+                        for (uint x = 0; x < width; ++x)
+                        {
+                            if ((*p & 0x00FFFFFF) == rc)
+                            {
+                                *p = 0x00000000;
+                            }
+
+                            ++p;
+                        }
+                    }
+                }
             }
 
-            public SpriteAmiga merge_horizontaly(SpriteAmiga right)
+            unsafe public SpriteAmiga MergeHorizontaly(SpriteAmiga right)
             {
+                if (right.Height != height)
+                {
+                    return null;
+                }
 
+                SpriteAmiga result = new SpriteAmiga(width + right.Width, height);
+
+                fixed (byte* pointer = data)
+                fixed (byte* rightPointer = right.GetData())
+                fixed (byte* resPointer = result.GetData())
+                {
+                    uint* srcLeft = (uint*)pointer;
+                    uint* srcRight = (uint*)rightPointer;
+                    uint* res = (uint*)resPointer;
+
+                    for (uint y = 0; y < height; ++y)
+                    {
+                        for (uint x = 0; x < width; ++x)
+                        {
+                            *res++ = *srcLeft++;
+                        }
+
+                        for (uint x = 0; x < right.Width; ++x)
+                        {
+                            *res++ = *srcRight++;
+                        }
+                    }
+                }
+
+                return result;
             }
 
-            public SpriteAmiga split_horizontaly(bool return_right)
+            unsafe public SpriteAmiga SplitHorizontaly(bool returnRight)
             {
+                uint res_width = width / 2;
+                SpriteAmiga s = new SpriteAmiga(res_width, height);
 
+                fixed (byte* pointer = data)
+                fixed (byte* sPointer = s.GetData())
+                {
+                    uint* src = (uint*)pointer;
+                    uint* res = (uint*)sPointer;
+
+                    if (returnRight)
+                    {
+                        src += res_width;
+                    }
+
+                    for (uint y = 0; y < height; ++y)
+                    {
+                        for (uint x = 0; x < res_width; ++x)
+                        {
+                            *res++ = *src++;
+                        }
+
+                        src += res_width;
+                    }
+                }
+
+                return s;
             }
         }
 
@@ -338,13 +460,13 @@ namespace Freeserf
             }
 
             // Prepare icons catalog
-            uint icon_catalog_offset = gfxHeader.Pop<ushort>();
-            uint icon_catalog_size = gfxHeader.Pop<ushort>();
-            Buffer icon_catalog_tmp = gfxFast.GetSubBuffer(icon_catalog_offset * 4,
-                                                              icon_catalog_size * 4);
-            for (uint i = 0; i < icon_catalog_size; ++i)
+            uint iconCatalogOffset = gfxHeader.Pop<ushort>();
+            uint iconCatalogSize = gfxHeader.Pop<ushort>();
+            Buffer iconCatalogTemp = gfxFast.GetSubBuffer(iconCatalogOffset * 4, iconCatalogSize * 4);
+
+            for (uint i = 0; i < iconCatalogSize; ++i)
             {
-                uint offset = icon_catalog_tmp.Pop<uint>();
+                uint offset = iconCatalogTemp.Pop<uint>();
 
                 iconCatalog.Add(offset);
             }
@@ -418,19 +540,465 @@ namespace Freeserf
             return LoadAnimationTable(dataPointers[1].GetSubBuffer(0, 30528));
         }
 
-        public override Tuple<Sprite, Sprite> GetSpriteParts(Data.Resource resource, int index)
+        public override Tuple<Sprite, Sprite> GetSpriteParts(Data.Resource resource, uint index)
         {
-            throw new NotImplementedException();
+            Sprite sprite = null;
+
+            switch (resource)
+            {
+                case Data.Resource.ArtLandscape:
+                    break;
+                case Data.Resource.SerfShadow:
+                    {
+                        ushort[] shadow = new ushort[6]
+                        {
+                            Endian.Betoh<ushort>(0x01C0), Endian.Betoh<ushort>(0x07C0),
+                            Endian.Betoh<ushort>(0x1F80), Endian.Betoh<ushort>(0x7F00),
+                            Endian.Betoh<ushort>(0xFE00), Endian.Betoh<ushort>(0xFC00)
+                        };
+
+                        Buffer data = new Buffer(shadow);
+                        SpriteAmiga m = DecodeMaskSprite(data, 16, 6);
+
+                        m.FillMasked(new Sprite.Color { Blue = 0x00, Green = 0x00, Red = 0x00, Alpha = 0x80});
+                        m.SetDelta(2, 0);
+                        m.SetOffset(-2, -7);
+
+                        sprite = m;
+
+                        break;
+                    }
+                case Data.Resource.DottedLines:
+                    break;
+                case Data.Resource.ArtFlag:
+                    break;
+                case Data.Resource.ArtBox:
+                    if ((index < pictures.Length) && pictures[index] != null)
+                    {
+                        sprite = DecodeInterlasedSprite(pictures[index], 16, 144, 0, 0, Palette);
+                    }
+                    break;
+                case Data.Resource.CreditsBg:
+                    sprite = DecodeInterlasedSprite(dataPointers[23], 40, 200, 0, 0, PaletteIntro);
+                    break;
+                case Data.Resource.Logo:
+                    {
+                        Buffer data = gfxFast.GetTail(188356);
+                        sprite = DecodeInterlasedSprite(data, 64 / 8, 96, 0, 0, PaletteLogo);
+                        break;
+                    }
+                case Data.Resource.Symbol:
+                    {
+                        Buffer data = gfxFast.GetTail(178116 + (640 * index));
+                        sprite = DecodeInterlasedSprite(data, 32 / 8, 32, 0, 0, PaletteSymbols);
+                        break;
+                    }
+                case Data.Resource.MapMaskUp:
+                    sprite = GetGroundMaskSprite(index);
+                    break;
+                case Data.Resource.MapMaskDown:
+                    {
+                        Sprite mask = GetGroundMaskSprite(index);
+
+                        if (mask != null)
+                        {
+                            SpriteAmiga s = GetMirroredHorizontalySprite(mask);
+                            s.SetOffset(0, -((int)s.Height - 1));
+                            sprite = s;
+                        }
+
+                        break;
+                    }
+                case Data.Resource.PathMask:
+                    sprite = GetPathMaskSprite(index);
+                    break;
+                case Data.Resource.MapGround:
+                    {
+                        SpriteAmiga s;
+
+                        if (index == 32u)
+                        {
+                            s = new SpriteAmiga(32, 21);
+                            var c = new Sprite.Color{ Blue = 0xBB, Green = 0x00, Red = 0x00, Alpha = 0xFF };
+                            s.Fill(c);
+                        }
+                        else
+                        {
+                            s = GetGroundSprite(index);
+                        }
+
+                        sprite = s;
+
+                        break;
+                    }
+                case Data.Resource.PathGround:
+                    sprite = GetGroundSprite(index);
+                    break;
+                case Data.Resource.GameObject:
+                    sprite = GetGameObjectSprite(15, index + 1);
+                    break;
+                case Data.Resource.FrameTop:
+                    if (index < 2)
+                    {
+                        sprite = DecodeAmigaSprite(dataPointers[22].GetTail(1864 * index), 2, 233, Palette);
+                    }
+                    else if (index == 2)
+                    {
+                        sprite = DecodePlannedSprite(dataPointers[21], 39, 8, 24, 24, Palette);
+                    }
+                    else if (index == 3)
+                    {
+                        SpriteAmiga left = DecodeInterlasedSprite(dataPointers[7], 2, 216, 0, 0, Palette);
+                        SpriteAmiga right = DecodeInterlasedSprite(dataPointers[7].GetTail(2160), 2, 216, 0, 0, Palette);
+                        sprite = left.MergeHorizontaly(right);
+                    }
+                    break;
+                case Data.Resource.MapBorder:
+                    {
+                        Buffer data = dataPointers[8].GetTail(index * 120);
+                        SpriteAmiga s = DecodeInterlasedSprite(data, 2, 6, 0, 0, Palette);
+                        data = data.GetTail(60);
+                        SpriteAmiga m = DecodeInterlasedSprite(data, 2, 6, 0, 0, Palette);
+                        m.MakeTransparent();
+                        sprite = s.GetMasked(m);
+                        break;
+                    }
+                case Data.Resource.MapWaves:
+                    {
+                        Buffer data = dataPointers[9].GetTail(index * 228);
+                        SpriteAmiga s = DecodeInterlasedSprite(data, 6, 19, 28, 5, Palette);
+                        s.MakeTransparent(0x0000BB);
+                        s.SetDelta(1, 0);
+                        sprite = s;
+                        break;
+                    }
+                case Data.Resource.FramePopup:
+                    if (index == 0)
+                    {
+                        sprite = DecodeInterlasedSprite(dataPointers[10], 18, 9, 0, 0, Palette, 1);
+                    }
+                    else if (index == 1)
+                    {
+                        sprite = DecodeInterlasedSprite(dataPointers[10].GetTail(972), 18, 7, 0, 0, Palette, 1);
+                    }
+                    else
+                    {
+                        SpriteAmiga s = DecodeInterlasedSprite(dataPointers[11], 2, 144, 0, 0, Palette);
+                        sprite = s.SplitHorizontaly(index == 3);
+                    }
+                    break;
+                case Data.Resource.Indicator:
+                    //      sprite = DecodePlannedSprite(reinterpret_cast<uint8_t*>(gfxfast) +
+                    //                                     43076, 1, 7, 0, 0);
+                    //      if (index > 3) {
+                    //        index -= 4;
+                    //      }
+                    //    sprite = decode_amiga_sprite(reinterpret_cast<uint8_t*>(gfxfast) + 43076,
+                    //                                 5, 7, palette);  // 5 indicators WTF?
+                    //    10 indicators WTF?
+                    sprite = DecodeAmigaSprite(gfxFast.GetTail(44676), 10, 7, Palette2);
+                    break;
+                case Data.Resource.Font:
+                    {
+                        Buffer data = dataPointers[14].GetSubBuffer(index * 8, 8);
+                        SpriteAmiga s = DecodeMaskSprite(data, 8, 8);
+                        return Tuple.Create<Sprite, Sprite>(s, null);
+                    }
+                case Data.Resource.FontShadow:
+                    {
+                        Buffer data = dataPointers[14].GetSubBuffer(index * 8, 8);
+                        SpriteAmiga s = DecodeMaskSprite(data, 8, 8);
+                        return Tuple.Create<Sprite, Sprite>(MakeShadowFromSymbol(s), null);
+                    }
+                case Data.Resource.Icon:
+                    sprite = GetIconScprite(index);
+                    break;
+                case Data.Resource.MapObject:
+                    if ((index >= 128) && (index <= 143))
+                    {
+                        // Flag sprites
+                        uint flagFrame = (index - 128) % 4;
+                        Sprite s1 = GetMapObjectSprite(128 + flagFrame);
+                        Sprite s2 = GetMapObjectSprite(128 + flagFrame + 4);
+
+                        return SeparateSprites(s1, s2);
+                    }
+
+                    sprite = GetMapObjectSprite(index);
+                    break;
+                case Data.Resource.MapShadow:
+                    sprite = GetMapObjectSprite(index);
+                    break;
+                case Data.Resource.PanelButton:
+                    if (index < 17)
+                    {
+                        sprite = GetMenuSprite(index, dataPointers[16], 32, 32, 16, 0);
+                    }
+                    else
+                    {
+                        index -= 17;
+                        uint[] backs = new uint[] { 3, 4, 10, 12, 14, 16, 2, 8 };
+                        SpriteAmiga s = GetMenuSprite(backs[index], dataPointers[16], 32, 32, 16, 0);
+                        Buffer lData = GetDataFromCatalog(17, 0, gfxChip);
+                        Buffer rData = GetDataFromCatalog(17, 16, gfxChip);
+
+                        SpriteAmiga left = DecodeInterlasedSprite(lData, 2, 29, 28, 20, Palette2);
+                        left.MakeTransparent();
+
+                        SpriteAmiga right = DecodeInterlasedSprite(rData, 2, 29, 28, 20, Palette2);
+                        right.MakeTransparent();
+
+                        SpriteAmiga star = left.MergeHorizontaly(right);
+                        s.Stick(star, 0, 1);
+
+                        sprite = s;
+                    }
+                    break;
+                case Data.Resource.FrameBottom:
+                    if (index == 0)
+                    {
+                        SpriteAmiga s = GetHudSprite(6);
+                        sprite = s.SplitHorizontaly(true);
+                    }
+                    else if (index == 1)
+                    {
+                        SpriteAmiga s = GetHudSprite(6);
+                        sprite = s.SplitHorizontaly(false);
+                    }
+                    else if (index == 2)
+                    {
+                        sprite = GetHudSprite(18);
+                    }
+                    else if (index == 4)
+                    {
+                        sprite = GetHudSprite(19);
+                    }
+                    else if (index == 6)
+                    {
+                        sprite = GetHudSprite(17);
+                    }
+                    else if ((index > 6) && (index < 17))
+                    {
+                        sprite = GetHudSprite(7 + (index - 7));
+                    }
+                    else if (index > 19)
+                    {
+                        sprite = GetHudSprite(index - 20);
+                    }
+                    break;
+                case Data.Resource.SerfTorso:
+                    {
+                        Sprite s1 = GetTorsoSprite(index, Palette);
+                        Sprite s2 = GetTorsoSprite(index, Palette3);
+                        return SeparateSprites(s1, s2);
+                    }
+                case Data.Resource.SerfHead:
+                    sprite = GetGameObjectSprite(20, index);
+                    break;
+                case Data.Resource.FrameSplit:
+                    break;
+                case Data.Resource.Cursor:
+                    {
+                        Buffer data = dataPointers[12];
+                        SpriteAmiga s = DecodeInterlasedSprite(data, 2, 16, 28, 16, Palette);
+                        s.MakeTransparent(0x00444444);
+                        sprite = s;
+                        break;
+                    }
+                default:
+                    break;
+            }
+
+            return Tuple.Create<Sprite, Sprite>(null, sprite);
         }
+
+        struct SoundStruct
+        {
+            public uint Offset;
+            public uint Size;
+
+            public SoundStruct(uint offset, uint size)
+            {
+                Offset = offset;
+                Size = size;
+            }
+        }
+
+        static readonly SoundStruct[] SoundInfo = new[]
+        {
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,  2704),
+            new SoundStruct( 2704,  1134),
+            new SoundStruct(    0,     0),
+            new SoundStruct( 3838,  2420),
+            new SoundStruct(    0,     0),
+            new SoundStruct( 6258,  1014),
+            new SoundStruct(    0,     0),
+            new SoundStruct( 7272,    78),
+            new SoundStruct(    0,     0),
+            new SoundStruct( 7350,  2114),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct( 9464,  2644),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(12108,  2258),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(14366,  1426),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(15792,  4108),
+            new SoundStruct(    0,     0),
+            new SoundStruct(19900,   894),
+            new SoundStruct(    0,     0),
+            new SoundStruct(20794,  1524),
+            new SoundStruct(    0,     0),
+            new SoundStruct(22318,  1088),
+            new SoundStruct(    0,     0),
+            new SoundStruct(23406,  1774),
+            new SoundStruct(    0,     0),
+            new SoundStruct(25180,  1094),
+            new SoundStruct(    0,     0),
+            new SoundStruct(26274,   780),
+            new SoundStruct(    0,     0),
+            new SoundStruct(27054,   484),
+            new SoundStruct(    0,     0),
+            new SoundStruct(27538,  1944),
+            new SoundStruct(27538,  1944),
+            new SoundStruct(29482,   916),
+            new SoundStruct(    0,     0),
+            new SoundStruct(30398,   470),
+            new SoundStruct(    0,     0),
+            new SoundStruct(30868,   608),
+            new SoundStruct(    0,     0),
+            new SoundStruct(31476,  1894),
+            new SoundStruct(    0,     0),
+            new SoundStruct(33370,  1174),
+            new SoundStruct(    0,     0),
+            new SoundStruct(34544,   300),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(34844,   682),
+            new SoundStruct(    0,     0),
+            new SoundStruct(35526,  1170),
+            new SoundStruct(    0,     0),
+            new SoundStruct(36696,  2294),
+            new SoundStruct(    0,     0),
+            new SoundStruct(38990,  3388),
+            new SoundStruct(    0,     0),
+            new SoundStruct(42378,  2670),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(45048,  3340),
+            new SoundStruct(48388,   954),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(49342,  3540),
+            new SoundStruct(    0,     0),
+            new SoundStruct(52882,  5868),
+            new SoundStruct(    0,     0),
+            new SoundStruct(58750,  4436),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(63186,  7334),
+            new SoundStruct(    0,     0),
+            new SoundStruct(70520, 11304),
+            new SoundStruct(    0,     0),
+            new SoundStruct(81824, 14874),
+            new SoundStruct(    0,     0),
+            new SoundStruct(96698, 15312),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0),
+            new SoundStruct(    0,     0)
+        };
 
         public override Buffer GetSound(uint index)
         {
-            throw new NotImplementedException();
+            Buffer data = GetSoundData(index);
+
+            if (data == null)
+            {
+                Log.Error.Write("data", $"Sound sample with index {index} not present.");
+                return null;
+            }
+
+            try
+            {
+                // TODO
+                return null;
+                //ConvertorSFX2WAV convertor(data);
+                //return convertor.convert();
+            }
+            catch
+            {
+                Log.Error.Write("data", $"Could not convert SFX clip to WAV: #{index}");
+                return null;
+            }
         }
 
         public override Buffer GetMusic(uint index)
         {
-            throw new NotImplementedException();
+            if (music != null)
+            {
+                return music;
+            }
+
+            Buffer data;
+
+            try
+            {
+                data = new Buffer(path + "/music");
+                data = Decode(data);
+                data = Unpack(data);
+            }
+            catch
+            {
+                Log.Warn.Write("data", "Failed to load 'music'");
+                return null;
+            }
+
+            // Amiga music file starts with music-player code, we must drop it
+            string str;
+
+            unsafe
+            {
+                str = new string((char*)data.Data, 0, (int)data.Size);
+            }
+
+            var pos = str.IndexOf("M!K!");
+
+            if (pos == -1)
+            {
+                return null;
+            }
+            pos -= 1080;
+
+            Buffer mod = data.GetTail(pos);
+
+            try
+            {
+                // TODO
+                //ConvertorMOD2WAV converter(mod);
+                //music = converter.convert();
+            }
+            catch (ExceptionFreeserf e)
+            {
+                Log.Error.Write("data", e.Description);
+                music = null;
+            }
+
+            return music;
         }
 
         Buffer gfxFast;
@@ -443,17 +1011,52 @@ namespace Freeserf
 
         Buffer Decode(Buffer data)
         {
+            MutableBuffer result = new MutableBuffer(data.Size, Endian.Endianess.Big);
 
+            for (uint i = 0; i < data.Size; ++i)
+            {
+                result.Push((byte)(data.Pop<byte>() ^ (byte)i));
+            }
+
+            return result;
         }
 
         Buffer Unpack(Buffer data)
         {
+            MutableBuffer result = new MutableBuffer(Endian.Endianess.Big);
+            byte flag = data.Pop<byte>();
 
+            while (data.Readable())
+            {
+                var val = data.Pop<byte>();
+                uint count = 0;
+
+                if (val == flag)
+                {
+                    count = data.Pop<byte>();
+                    val = data.Pop<byte>();
+                }
+
+                for (uint i = 0; i < count + 1; ++i)
+                {
+                    result.Push(val);
+                }
+            }
+
+            return result;
         }
 
-        Buffer GetDataFromCatalog(uint catalog, uint index, Buffer baseBuffer)
+        unsafe Buffer GetDataFromCatalog(uint catalogIndex, uint index, Buffer baseBuffer)
         {
+            uint* catalog = (uint*)dataPointers[catalogIndex].Data;
+            uint offset = Endian.Betoh(catalog[index]);
 
+            if (offset == 0)
+            {
+                return null;
+            }
+
+            return baseBuffer.GetTail(offset);
         }
 
         SpriteAmiga GetMenuSprite(uint index, Buffer block,
@@ -461,98 +1064,595 @@ namespace Freeserf
                              byte compression,
                              byte filling)
         {
+            uint bpp = BitplaneCountFromCompression(compression);
+            uint spriteSize = (width * height) / 8 * bpp;
+            Buffer data = block.GetTail(spriteSize * index);
 
+            return DecodeInterlasedSprite(data, width / 8, height, compression, filling, Palette2);
         }
 
         Sprite GetIconScprite(uint index)
         {
+            Buffer data = gfxFast.GetTail(iconCatalog[(int)index]);
 
+            ushort width = data.Pop<ushort>();
+            ushort height = data.Pop<ushort>();
+            byte filling = data.Pop<byte>();
+            byte compression = data.Pop<byte>();
+
+            return DecodePlannedSprite(data.PopTail(), width, height, compression, filling, Palette);
         }
 
         SpriteAmiga GetGroundSprite(uint index)
         {
+            Buffer data = GetDataFromCatalog(4, index, gfxChip);
 
+            if (data == null)
+            {
+                return null;
+            }
+
+            byte filled = data.Pop<byte>();
+            byte compressed = data.Pop<byte>();
+
+            SpriteAmiga sprite = DecodePlannedSprite(data.PopTail(), 4, 21, compressed, filled, Palette);
+
+            if (sprite != null)
+            {
+                sprite.SetDelta(1, 0);
+                sprite.SetOffset(0, 0);
+            }
+
+            return sprite;
         }
 
-        Sprite GetGroundMaskSprite(uint index)
+        unsafe Sprite GetGroundMaskSprite(uint index)
         {
+            Buffer data;
 
+            if (index == 0)
+            {
+                data = gfxChip.GetTail(0);
+            }
+            else
+            {
+                data = GetDataFromCatalog(2, index, gfxChip);
+            }
+
+            if (data == null)
+            {
+                return null;
+            }
+
+            ushort height = data.Pop<ushort>();
+
+            SpriteAmiga sprite =  new SpriteAmiga(32, height);
+            sprite.SetDelta(2, 0);
+            sprite.SetOffset(0, 0);
+
+            fixed (byte* pointer = sprite.GetData())
+            {
+                uint* pixel = (uint*)pointer;
+
+                for (int i = 0; i < 32 * height / 8; i++)
+                {
+                    byte b = data.Pop<byte>();
+
+                    for (uint j = 0; j < 8; ++j)
+                    {
+                        if (((b >> (7 - (int)j)) & 0x01) == 0x01)
+                        {
+                            *pixel = 0xFFFFFFFF;
+                        }
+                        else
+                        {
+                            *pixel = 0x00000000;
+                        }
+
+                        ++pixel;
+                    }
+                }
+            }
+
+            return sprite;
         }
 
-        SpriteAmiga GetMirroredHorizontalySprite(Sprite sprite)
+        unsafe SpriteAmiga GetMirroredHorizontalySprite(Sprite sprite)
         {
+            if (sprite == null)
+            {
+                return null;
+            }
 
+            SpriteAmiga result = new SpriteAmiga(sprite.Width, sprite.Height);
+            result.SetDelta(sprite.DeltaX, sprite.DeltaY);
+            result.SetOffset(sprite.OffsetX, sprite.OffsetY);
+
+            fixed (byte* srcPointer = sprite.GetData())
+            {
+                byte* srcPixels = srcPointer;
+                byte* dstPixels = srcPointer + result.Width * (result.Height - 1) * 4;
+
+                for (uint i = 0; i < sprite.Height; ++i)
+                {
+                    System.Buffer.MemoryCopy(srcPixels, dstPixels, ulong.MaxValue, sprite.Width * 4);
+                    srcPixels += sprite.Width * 4;
+                    dstPixels -= sprite.Width * 4;
+                }
+            }
+
+            return result;
         }
 
         Sprite GetPathMaskSprite(uint index)
         {
+            Buffer data = GetDataFromCatalog(3, index, gfxChip);
 
+            if (data == null)
+            {
+                return null;
+            }
+
+            byte n = data.Pop<byte>();
+            byte k = data.Pop<byte>();
+
+            uint width = (k == 66) ? 32 : 16;
+            uint[] heights = new uint[] { 0, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41 };
+
+            SpriteAmiga sprite = DecodeMaskSprite(data.PopTail(), width, heights[n]);
+            sprite.SetDelta(2, 0);
+            sprite.SetOffset(0, 0);
+
+            return sprite;
         }
 
         Sprite GetGameObjectSprite(uint catalog, uint index)
         {
+            Buffer data = GetDataFromCatalog(catalog, index, gfxChip);
 
+            if (data == null)
+            {
+                return null;
+            }
+
+            byte h = data.Pop<byte>();
+            byte offsetY = data.Pop<byte>();
+            byte w = data.Pop<byte>();
+            byte offsetX = data.Pop<byte>();
+            byte filling = data.Pop<byte>();
+            byte compression = data.Pop<byte>();
+
+            if (w < 16)
+                w = 16;
+
+            uint width = (uint)(w + 7) / 8;
+
+            SpriteAmiga mask = DecodeMaskSprite(data, width * 8, h);
+            SpriteAmiga pixels = DecodePlannedSprite(data.PopTail(), width, h, compression, filling, Palette);
+
+            SpriteAmiga sprite = pixels.GetAmigaMasked(mask);
+
+            if (sprite == null)
+            {
+                return null;
+            }
+
+            sprite.SetDelta(1, 0);
+            sprite.SetOffset(-offsetX, -offsetY);
+
+            return sprite;
         }
 
-        Sprite GetTorsoSprite(uint index, byte* palette)
+        Sprite GetTorsoSprite(uint index, byte[] palette)
         {
+            Buffer data = GetDataFromCatalog(19, index, gfxChip);
 
+            if (data == null)
+            {
+                return null;
+            }
+
+            byte offsetX = data.Pop<byte>();
+            byte w = data.Pop<byte>();
+            byte offsetY = data.Pop<byte>();
+            byte h = data.Pop<byte>();
+            sbyte deltaY = (sbyte)data.Pop<byte>();
+            sbyte deltaX = (sbyte)data.Pop<byte>();
+
+            if (w < 16)
+                w = 16;
+
+            w = (byte)((w + 7) / 8);
+
+            uint bps = (uint)w * h;
+
+            SpriteAmiga mask = DecodeMaskSprite(data, (uint)w * 8, h);
+
+            MutableBuffer buff = new MutableBuffer(Endian.Endianess.Big);
+
+            buff.Push(data.Pop(bps * 4));
+            data.Pop(bps);
+            buff.Push(data.Pop(bps));
+
+            SpriteAmiga pixels = DecodePlannedSprite(buff, w, h, 0, 0, palette);
+            SpriteAmiga res = pixels.GetAmigaMasked(mask);
+
+            res.SetDelta(deltaY, deltaX);
+            res.SetOffset(-offsetX, -offsetY);
+
+            return res;
         }
 
         Sprite GetMapObjectSprite(uint index)
         {
+            Buffer data = GetDataFromCatalog(6, index, gfxChip);
 
+            if (data == null)
+            {
+                return null;
+            }
+
+            data.Pop<ushort>();  // drop shadow_offset
+            ushort bitplaneSize = data.Pop<ushort>();
+            byte width = data.Pop<byte>();
+            byte height = data.Pop<byte>();
+            byte offsetY = data.Pop<byte>();
+            byte compression = data.Pop<byte>();
+
+            if (height == 0)
+            {
+                return null;
+            }
+
+            if (width == 0)
+            {
+                width = (byte)(bitplaneSize / height);
+            }
+
+            byte compressed = 0;
+            byte filled = 0;
+
+            for (int i = 0; i < 2; ++i)
+            {
+                compressed = (byte)(compressed >> 1);
+                filled = (byte)(filled >> 1);
+
+                if ((compression & 0x80) != 0)
+                {
+                    compressed = (byte)(compressed | 0x10);
+
+                    if ((compression & 0x40) != 0)
+                    {
+                        filled = (byte)(filled | 0x10);
+                    }
+
+                    compression = (byte)(compression << 1);
+                }
+
+                compression = (byte)(compression << 1);
+            }
+
+            SpriteAmiga mask = DecodeMaskSprite(data, (uint)width * 8, height);
+            SpriteAmiga pixels = DecodePlannedSprite(data.PopTail(), width, height, compressed, filled, Palette);
+
+            SpriteAmiga sprite = pixels.GetAmigaMasked(mask);
+            sprite.SetDelta(1, 0);
+
+            if ((index >= 128) && (index <= 143))
+            {
+                sprite.SetOffset(0, -offsetY);
+            }
+            else
+            {
+                sprite.SetOffset(-width * 4, -offsetY);
+            }
+
+            return sprite;
         }
 
         Sprite GetMapObjectShadow(uint index)
         {
+            Buffer data = GetDataFromCatalog(6, index, gfxChip);
 
+            if (data == null)
+            {
+                return null;
+            }
+
+            ushort shadow_offset = data.Pop<ushort>();
+            data.Pop<ushort>();
+            data.Pop<byte>();
+            data.Pop<byte>();
+            data.Pop<byte>();  // drop offset_y
+            data.Pop<byte>();  // drop compression
+
+            Buffer shadow = data.GetTail(shadow_offset);
+            int shadowOffsetY = (sbyte)shadow.Pop<byte>();
+            uint shadowHeight = shadow.Pop<byte>();
+            int shadowOffsetX = (sbyte)shadow.Pop<byte>();
+            uint shadowWidth = (uint)shadow.Pop<byte>() * 8;
+
+            SpriteAmiga sprite = DecodeMaskSprite(shadow, shadowWidth, shadowHeight);
+            sprite.FillMasked(new Sprite.Color{ Blue = 0x00, Green = 0x00, Red = 0x00, Alpha = 0x80});
+            sprite.Clear();
+            sprite.SetDelta(0, 0);
+            sprite.SetOffset(shadowOffsetX * 8, -shadowOffsetY);
+
+            return sprite;
         }
+
+        static readonly uint[] HudOffsets =
+        {
+            0,    320, 2, 40,
+            320,  320, 2, 40,
+            640,  320, 2, 40,
+            960,  320, 2, 40,
+            1280, 320, 2, 40,
+            1600, 320, 2, 40,
+            1920, 320, 2, 40,
+            2240,  64, 4,  4,
+            2304,  64, 4,  4,
+            2368,  64, 4,  4,
+            2432,  64, 4,  4,
+            2496,  64, 4,  4,
+            2560,  64, 4,  4,
+            2624,  64, 4,  4,
+            2688,  64, 4,  4,
+            2752,  64, 4,  4,
+            2816,  64, 4,  4,
+            2880, 800, 5, 40,
+            3680,  48, 1, 12,
+            3728,  40, 1, 10
+        };
 
         SpriteAmiga GetHudSprite(uint index)
         {
+            Buffer data = dataPointers[18].GetTail(HudOffsets[index * 4]);
 
+            return DecodeInterlasedSprite(data, HudOffsets[index * 4 + 2],
+                                          HudOffsets[index * 4 + 3], 16, 0, Palette2);
         }
 
-        SpriteAmiga DecodePlannedSprite(Buffer data, uint width, uint height,
-                                   byte compression, byte filling,
-                                   byte* palette, bool invert = true)
+        static byte Invert5Bit(byte src)
         {
+            byte res = 0;
 
+            for (int i = 0; i < 5; ++i)
+            {
+                res <<= 1;
+                res = (byte)(res | (byte)(src & 0x01));
+                src >>= 1;
+            }
+
+            return res;
         }
 
-        SpriteAmiga DecodeInterlasedSprite(Buffer data,
+        unsafe SpriteAmiga DecodePlannedSprite(Buffer data, uint width, uint height,
+                                   byte compression, byte filling,
+                                   byte[] palette, bool invert = true)
+        {
+            SpriteAmiga sprite = new SpriteAmiga(width * 8, height);
+
+            byte* src = data.Data;
+            Sprite.Color* res = sprite.GetWritableData();
+
+            uint bps = width * height;  // bitplane size in bytes
+
+            for (uint i = 0; i < bps; ++i)
+            {
+                for (int k = 7; k >= 0; --k)
+                {
+                    byte color = 0;
+                    int n = 0;
+
+                    for (int b = 0; b < 5; ++b)
+                    {
+                        color = (byte)(color << 1);
+
+                        if (((compression >> b) & 0x01) != 0)
+                        {
+                            if (((filling >> b) & 0x01) != 0)
+                            {
+                                color |= 0x01;
+                            }
+                        }
+                        else
+                        {
+                            color |= (byte)((*(src + (n * bps)) >> k) & 0x01);
+                            ++n;
+                        }
+                    }
+
+                    if (invert)
+                    {
+                        color = Invert5Bit(color);
+                    }
+
+                    res->Red = palette[color * 3 + 0];    // R
+                    res->Green = palette[color * 3 + 1];  // G
+                    res->Blue = palette[color * 3 + 2];   // B
+                    res->Alpha = 0xFF;                    // A
+                    ++res;
+                }
+
+                ++src;
+            }
+
+            return sprite;
+        }
+
+        unsafe SpriteAmiga DecodeInterlasedSprite(Buffer data,
                                       uint width, uint height,
                                       byte compression, byte filling,
-                                      byte* palette,
+                                      byte[] palette,
                                       uint skip_lines = 0)
         {
+            SpriteAmiga sprite = new SpriteAmiga(width * 8, height);
 
+            byte* src = data.Data;
+            Sprite.Color* res = sprite.GetWritableData();
+
+            uint bpp = BitplaneCountFromCompression(compression);
+
+            for (uint y = 0; y < height; ++y)
+            {
+                for (uint i = 0; i < width; ++i)
+                {
+                    for (int k = 7; k >= 0; --k)
+                    {
+                        byte color = 0;
+                        int n = 0;
+
+                        for (int b = 0; b < 5; b++)
+                        {
+                            color = (byte)(color << 1);
+
+                            if (((compression >> b) & 0x01) != 0)
+                            {
+                                if (((filling >> b) & 0x01) != 0)
+                                {
+                                    color |= 0x01;
+                                }
+                            }
+                            else
+                            {
+                                color |= (byte)((*(src + (n * width) + ((skip_lines * width * y))) >> k) & 0x01);
+                                ++n;
+                            }
+                        }
+                        color = Invert5Bit(color);
+                        res->Red = palette[color * 3 + 0];    // R
+                        res->Green = palette[color * 3 + 1];  // G
+                        res->Blue = palette[color * 3 + 2];   // B
+                        res->Alpha = 0xFF;                    // A
+                        ++res;
+                    }
+
+                    ++src;
+                }
+
+                src += (bpp - 1) * width;
+            }
+
+            return sprite;
         }
 
-        SpriteAmiga DecodeAmigaSprite(Buffer data, uint width, uint height, byte* palette)
+        unsafe SpriteAmiga DecodeAmigaSprite(Buffer data, uint width, uint height, byte[] palette)
         {
+            SpriteAmiga sprite = new SpriteAmiga(width * 8, height);
 
+            byte* src1 = data.Data;
+            uint bp2s = width * 2 * height;
+            byte* src2 = src1 + bp2s;
+            Sprite.Color* res = sprite.GetWritableData();
+
+            for (uint y = 0; y < height; ++y)
+            {
+                for (uint i = 0; i < width; ++i)
+                {
+                    for (int k = 7; k >= 0; --k)
+                    {
+                        byte color = 0;
+                        color |= (byte)((((*src1) >> k) & 0x01) << 0);
+                        color |= (byte)((((*(src1 + width)) >> k) & 0x01) << 1);
+                        color |= (byte)((((*src2) >> k) & 0x01) << 2);
+                        color |= (byte)((((*(src2 + width)) >> k) & 0x01) << 3);
+                        color |= 0x10;
+                        res->Red = palette[color * 3 + 0];    // R
+                        res->Green = palette[color * 3 + 1];  // G
+                        res->Blue = palette[color * 3 + 2];   // B
+                        res->Alpha = 0xFF;                    // A
+                        ++res;
+                    }
+
+                    ++src1;
+                    ++src2;
+                }
+
+                src1 += width;
+                src2 += width;
+            }
+
+            return sprite;
         }
 
-        SpriteAmiga DecodeMaskSprite(Buffer data, uint width, uint height)
+        unsafe SpriteAmiga DecodeMaskSprite(Buffer data, uint width, uint height)
         {
+            SpriteAmiga sprite = new SpriteAmiga(width, height);
 
+            uint size = width / 8 * height;
+
+            fixed (byte* pointer = sprite.GetData())
+            {
+                uint* pixel = (uint*)pointer;
+
+                for (uint i = 0; i < size; ++i)
+                {
+                    byte b = data.Pop<byte>();
+
+                    for (uint j = 0; j < 8; ++j)
+                    {
+                        if (((b >> (7 - (int)j)) & 0x01) == 0x01)
+                        {
+                            *pixel = 0xFFFFFFFF;
+                        }
+                        else
+                        {
+                            *pixel = 0x00000000;
+                        }
+
+                        ++pixel;
+                    }
+                }
+            }
+
+            return sprite;
         }
 
         uint BitplaneCountFromCompression(byte compression)
         {
+            uint bpp = 5;
 
+            for (int i = 0; i < 5; i++)
+            {
+                if ((compression & 0x01) != 0)
+                {
+                    --bpp;
+                }
+
+                compression = (byte)(compression >> 1);
+            }
+
+            return bpp;
         }
 
         SpriteAmiga MakeShadowFromSymbol(SpriteAmiga symbol)
         {
+            SpriteAmiga res = new SpriteAmiga(10, 10);
 
+            res.Stick(symbol, 1, 0);
+            res.Stick(symbol, 0, 1);
+            res.Stick(symbol, 2, 1);
+            res.Stick(symbol, 1, 2);
+            res.FillMasked(new Sprite.Color { Blue = 0xFF, Green = 0xFF, Red = 0xFF, Alpha = 0xFF});
+
+            return res;
         }
 
         Buffer GetSoundData(uint index)
         {
+            if (sound != null)
+            {
+                if (index < SoundInfo.Length)
+                {
+                    if (SoundInfo[index].Size != 0)
+                    {
+                        return sound.GetSubBuffer(SoundInfo[index].Offset, SoundInfo[index].Size);
+                    }
+                }
+            }
 
+            return null;
         }
     }
 }
