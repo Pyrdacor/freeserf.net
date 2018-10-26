@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio.cs" />
+    <Compile Include="AudioDummy.cs" />
     <Compile Include="Buffer.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Cout.cs" />
