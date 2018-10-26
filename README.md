@@ -31,3 +31,19 @@ This includes:
 At the end this should become a stable and performant game that runs on many platforms and can be easily compiled and extended by .NET developers.
 
 I am not sure how far this project will go as my time is very limited. I can not promise anything at this point.
+
+
+## Implementation details
+
+The first version will be a Visual Studio 2017 WinForms project with .NET 4.6.1. But the plan is to move most of the code to a .NET Standard library and leave only the window/surfave/context creation to the executable.
+
+Later the game logic should be usable in different application types like:
+
+- WPF
+- WinForms
+- Xamarin
+- MonoGame
+- Cocos2D
+- SFML.NET
+
+In theory everything which provides an OpenGL context. But we will see in the future how this works out.
