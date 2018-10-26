@@ -48,10 +48,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio.cs" />
+    <Compile Include="Buffer.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Cout.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="DataSource.cs" />
+    <Compile Include="DataSourceAmiga.cs" />
+    <Compile Include="DataSourceLegacy.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -60,7 +63,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Freeserf.cs" />
-    <Compile Include="FreeserfEndian.cs" />
+    <Compile Include="FreeserfSettings.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Misc.cs" />
     <Compile Include="Program.cs" />

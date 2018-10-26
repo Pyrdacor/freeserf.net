@@ -493,8 +493,8 @@ namespace Freeserf
             return animationTable[animation][phase];
         }
 
-        public abstract Buffer GetSound(int index);
-        public abstract Buffer GetMusic(int index);
+        public abstract Buffer GetSound(uint index);
+        public abstract Buffer GetMusic(uint index);
 
         public bool CheckFile(string path)
         {

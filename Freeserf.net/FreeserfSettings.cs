@@ -11,7 +11,8 @@ namespace Freeserf
         public enum Endianess
         {
             Big,
-            Little
+            Little,
+            Default
         }
 
         public static bool IsBigEndian => !BitConverter.IsLittleEndian;
@@ -53,5 +54,10 @@ namespace Freeserf
         {
             return Letoh(x);
         }
+    }
+
+    public static class Settings
+    {
+        public static Encoding Encoding = Encoding.ASCII;
     }
 }

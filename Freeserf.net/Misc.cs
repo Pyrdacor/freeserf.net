@@ -8,6 +8,48 @@ namespace Freeserf
 {
     public static class Misc
     {
+        unsafe public static void CopyByte(byte* pointer, byte value, uint count)
+        {
+            while (count > 0)
+            {
+                *pointer++ = value;
+                --count;
+            }
+        }
+
+        unsafe public static void CopyWord(byte* pointer, ushort value, uint count)
+        {
+            ushort* p = (ushort*)pointer;
+
+            while (count > 0)
+            {
+                *p++ = value;
+                --count;
+            }
+        }
+
+        unsafe public static void CopyDWord(byte* pointer, uint value, uint count)
+        {
+            uint* p = (uint*)pointer;
+
+            while (count > 0)
+            {
+                *p++ = value;
+                --count;
+            }
+        }
+
+        unsafe public static void CopyQWord(byte* pointer, ulong value, uint count)
+        {
+            ulong* p = (ulong*)pointer;
+
+            while (count > 0)
+            {
+                *p++ = value;
+                --count;
+            }
+        }
+
         public static int Bit(int n)
         {
             return (1 << n);
