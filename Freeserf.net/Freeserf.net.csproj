@@ -49,6 +49,8 @@
     <Compile Include="Audio.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="Cout.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="DataSource.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
