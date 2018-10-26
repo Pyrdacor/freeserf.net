@@ -67,6 +67,7 @@
     <Compile Include="FreeserfSettings.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Misc.cs" />
+    <Compile Include="Objects.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AutoParseableString.cs" />
