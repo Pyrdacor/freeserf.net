@@ -81,6 +81,28 @@ namespace Freeserf
 
         }
 
+        public BufferStream(ushort[] data)
+        {
+            uint size = (uint)data.Length << 1;
+
+            this.data = new byte[size];
+
+            fixed (ushort* dataPointer = data)
+            fixed (byte* pointer = this.data)
+            {
+                byte* src = (byte*)dataPointer;
+                byte* end = src + size;
+                byte* dst = pointer;
+
+                while (src < end)
+                    *dst++ = *src++;
+
+                start = pointer;
+            }
+
+            this.size = size;
+        }
+
         public BufferStream(byte[] data, uint offset, uint size)
         {
             if (offset + size > data.Length)
@@ -241,6 +263,14 @@ namespace Freeserf
         }
 
         public Buffer(byte[] data, Endianess endianess = Endianess.Default)
+        {
+            this.data = new BufferStream(data);
+            owned = true;
+            this.endianess = ChooseEndianess(endianess);
+            read = this.data.GetPointer();
+        }
+
+        public Buffer(ushort[] data, Endianess endianess = Endianess.Default)
         {
             this.data = new BufferStream(data);
             owned = true;
