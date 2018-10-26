@@ -57,6 +57,7 @@
     <Compile Include="DataSourceAmiga.cs" />
     <Compile Include="DataSourceLegacy.cs" />
     <Compile Include="Debug.cs" />
+    <Compile Include="EventLoop.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
