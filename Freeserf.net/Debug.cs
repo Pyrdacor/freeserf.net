@@ -17,13 +17,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with freeserf.net.  If not, see <http://www.gnu.org/licenses/>.
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Runtime.CompilerServices;
 
 namespace Freeserf

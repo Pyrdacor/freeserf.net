@@ -2,7 +2,7 @@
  * Log.cs - Logging
  *
  * Copyright (C) 2012-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with freeserf.net.  If not, see <http://www.gnu.org/licenses/>.
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /* Log levels determine the importance of a log message. Use the
