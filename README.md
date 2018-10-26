@@ -35,15 +35,6 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 ## Implementation details
 
-The first version will be a Visual Studio 2017 WinForms project with .NET 4.6.1. But the plan is to move most of the code to a .NET Standard library and leave only the window/surfave/context creation to the executable.
+The first version will be a Visual Studio 2017 WinForms project with .NET 4.6.1. But the plan is to move most of the code to a .NET Standard library and leave only the window/surface/context creation to the executable.
 
-Later the game logic should be usable in different application types like:
-
-- WPF
-- WinForms
-- Xamarin
-- MonoGame
-- Cocos2D
-- SFML.NET
-
-In theory everything which provides an OpenGL context. But we will see in the future how this works out.
+In theory later every .NET project which provides an OpenGL context should be able to run the game. But we will see in the future how this works out.
