@@ -26,7 +26,13 @@ using System.Linq;
 
 namespace Freeserf
 {
-    public class GameObject
+    public interface IGameObject
+    {
+        uint Index { get; }
+        Game Game { get; }
+    }
+
+    public class GameObject : IGameObject
     {
         public uint Index { get; protected set; }
         public Game Game { get; protected set; }
@@ -38,11 +44,31 @@ namespace Freeserf
         }
     }
 
-    public class Collection : IEnumerable<KeyValuePair<uint, GameObject>>
+    static class ObjectFactory<T> where T : class, IGameObject
+    {
+        static readonly System.Type type = typeof(T);
+
+        static bool IsType<U>()
+        {
+            return type == typeof(U);
+        }
+
+        public static T Create(Game game, uint index)
+        {
+            if (IsType<GameObject>())
+                return (T)(IGameObject)new GameObject(game, index);
+
+            // TODO
+
+            return null;
+        }
+    }
+
+    public class Collection<T> : IEnumerable<KeyValuePair<uint, T>> where T : class, IGameObject
     {
         Game game;
         uint firstFreeIndex = 0;
-        Dictionary<uint, GameObject> objects = new Dictionary<uint, GameObject>();
+        Dictionary<uint, T> objects = new Dictionary<uint, T>();
         SortedSet<uint> freeIndices = new SortedSet<uint>();
 
         public Collection(Game game = null)
@@ -50,20 +76,20 @@ namespace Freeserf
             this.game = game;
         }
 
-        GameObject Allocate()
+        public T Allocate()
         {
-            GameObject obj;
+            T obj;
 
             if (freeIndices.Count > 0)
             {
                 var index = freeIndices.First();
 
-                obj = new GameObject(game, index);
+                obj = ObjectFactory<T>.Create(game, index);
                 freeIndices.Remove(index);
             }
             else
             {
-                obj = new GameObject(game, firstFreeIndex++);
+                obj = ObjectFactory<T>.Create(game, firstFreeIndex++);
             }
 
             objects.Add(obj.Index, obj);
@@ -71,7 +97,7 @@ namespace Freeserf
             return obj;
         }
 
-        GameObject GetOrInsert(uint index)
+        public T GetOrInsert(uint index)
         {
             if (!objects.ContainsKey(index))
                 objects.Add(index, new GameObject(game, index));
@@ -79,7 +105,9 @@ namespace Freeserf
             return objects[index];
         }
 
-        void Erase(uint index)
+        public T this[uint index] => objects[index];
+
+        public void Erase(uint index)
         {
             if (objects.ContainsKey(index))
             {
@@ -92,14 +120,14 @@ namespace Freeserf
             }
         }
 
-        public IEnumerator<KeyValuePair<uint, GameObject>> GetEnumerator()
+        public IEnumerator<KeyValuePair<uint, T>> GetEnumerator()
         {
-            return ((IEnumerable<KeyValuePair<uint, GameObject>>)objects).GetEnumerator();
+            return ((IEnumerable<KeyValuePair<uint, T>>)objects).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<KeyValuePair<uint, GameObject>>)objects).GetEnumerator();
+            return ((IEnumerable<KeyValuePair<uint, T>>)objects).GetEnumerator();
         }
 
         public int Size => objects.Count;
