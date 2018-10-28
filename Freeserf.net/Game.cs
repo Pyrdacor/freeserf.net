@@ -100,7 +100,7 @@ namespace Freeserf
             goldTotal = (uint)Math.Max(0, goldTotal + delta);
         }
 
-        public Building GetBuildintAtPos(MapPos pos)
+        public Building GetBuildingAtPos(MapPos pos)
         {
 
         }
@@ -434,44 +434,145 @@ namespace Freeserf
 
         }
 
-        protected void clear_serf_request_failure();
-        protected void update_knight_morale();
-        protected static bool update_inventories_cb(Flag* flag, void* data);
-        protected void update_inventories();
-        protected void update_flags();
-        protected static bool send_serf_to_flag_search_cb(Flag* flag, void* data);
-        protected void update_buildings();
-        protected void update_serfs();
-        protected void record_player_history(int max_level, int aspect,
-                             const int history_index[], const Values &values);
-        protected int calculate_clear_winner(const Values &values);
-        protected void update_game_stats();
-        protected void get_resource_estimate(MapPos pos, int weight, int estimates[5]);
-        protected bool road_segment_in_water(MapPos pos, Direction dir) const;
-        protected void flag_reset_transport(Flag* flag);
-        protected void building_remove_player_refs(Building* building);
-        protected bool path_serf_idle_to_wait_state(MapPos pos);
-        protected void remove_road_forwards(MapPos pos, Direction dir);
-        protected bool demolish_road_(MapPos pos);
-        protected void build_flag_split_path(MapPos pos);
-        protected bool map_types_within(MapPos pos, Map::Terrain low, Map::Terrain high) const;
-        protected void flag_remove_player_refs(Flag* flag);
-        protected bool demolish_flag_(MapPos pos);
-        protected bool demolish_building_(MapPos pos);
-        protected void surrender_land(MapPos pos);
-        protected void demolish_flag_and_roads(MapPos pos);
+        protected void ClearSerfRequestFailure()
+        {
 
-public:
-  friend SaveReaderBinary&
-    operator >>(SaveReaderBinary &reader, Game &game);
-friend SaveReaderText&
-    operator >>(SaveReaderText &reader, Game &game);
-friend SaveWriterText&
-    operator <<(SaveWriterText &writer, Game &game);
+        }
 
-        protected bool load_serfs(SaveReaderBinary* reader, int max_serf_index);
-        protected bool load_flags(SaveReaderBinary* reader, int max_flag_index);
-        protected bool load_buildings(SaveReaderBinary* reader, int max_building_index);
-        protected bool load_inventories(SaveReaderBinary* reader, int max_inventory_index);
+        protected void UpdateKnightMorale()
+        {
+
+        }
+
+        protected static bool UpdateInventoriesCb(Flag flag, byte[] data)
+        {
+
+        }
+
+        protected void UpdateInventories()
+        {
+
+        }
+
+        protected void UpdateFlags()
+        {
+
+        }
+
+        protected static bool SendSerfToFlagSearchCb(Flag flag, byte[] data)
+        {
+
+        }
+
+        protected void UpdateBuildings()
+        {
+
+        }
+
+        protected void UpdateSerfs()
+        {
+
+        }
+
+        protected void RecordPlayerHistory(int maxLevel, int aspect, int historyIndex[], Values values)
+        {
+
+        }
+
+        protected int CalculateClearWinner(Values values)
+        {
+
+        }
+
+        protected void UpdateGameStats()
+        {
+
+        }
+
+        // estimates = int[5]
+        protected void GetResourceEstimate(MapPos pos, int weight, int[] estimates)
+        {
+
+        }
+
+        protected bool RoadSegmentInWater(MapPos pos, Direction dir)
+        {
+
+        }
+
+        protected void FlagResetTransport(Flag flag)
+        {
+
+        }
+
+        protected void BuildingRemovePlayerRefs(Building building)
+        {
+
+        }
+
+        protected bool PathSerfIdleToWaitState(MapPos pos)
+        {
+
+        }
+
+        protected void RemoveRoadForwards(MapPos pos, Direction dir)
+        {
+
+        }
+
+        protected bool DemolishRoad_(MapPos pos)
+        {
+
+        }
+
+        protected void BuildFlagSplitPath(MapPos pos)
+        {
+
+        }
+
+        protected bool MapTypesWithin(MapPos pos, Map.Terrain low, Map.Terrain high)
+        {
+
+        }
+
+        protected void FlagRemovePlayerRefs(Flag flag)
+        {
+
+        }
+
+        protected bool DemolishFlag_(MapPos pos)
+        {
+
+        }
+
+        protected bool DemolishBuilding_(MapPos pos)
+        {
+
+        }
+
+        protected void SurrenderLand(MapPos pos)
+        {
+
+        }
+
+        protected void DemolishFlagAndRoads(MapPos pos)
+        {
+
+        }
+
+        #endregion
+
+        /*public:
+  friend SaveReaderBinary
+    operator >>(SaveReaderBinary reader, Game game);
+friend SaveReaderText
+    operator >>(SaveReaderText reader, Game game);
+friend SaveWriterText
+    operator <<(SaveWriterText writer, Game game);
+
+        protected bool LoadSerfs(SaveReaderBinary reader, int maxSerfIndex);
+        protected bool LoadFlags(SaveReaderBinary reader, int maxFlagIndex);
+        protected bool LoadBuildings(SaveReaderBinary reader, int maxBuildingIndex);
+        protected bool LoadInventories(SaveReaderBinary reader, int maxInventoryIndex);*/
     }
 }
