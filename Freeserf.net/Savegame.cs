@@ -326,11 +326,11 @@ namespace Freeserf
                 {
                     game.ReadFrom(new SaveReaderTextFile(reader));
                 }
-                catch (ExceptionFreeserf e)
+                catch (ExceptionFreeserf ex1)
                 {
                     reader.Close();
 
-                    Log.Warn.Write("savegame", "Unable to load save game: " + e.Message);
+                    Log.Warn.Write("savegame", "Unable to load save game: " + ex1.Message);
                     Log.Warn.Write("savegame", "Trying compatability mode...");
 
                     stream.Position = 0;
@@ -339,9 +339,9 @@ namespace Freeserf
                     {
                         game.ReadFrom(new SaveReaderBinary(reader));
                     }
-                    catch (ExceptionFreeserf e)
+                    catch (ExceptionFreeserf ex2)
                     {
-                        Log.Error.Write("savegame", "Failed to load save game: " + e.Message);
+                        Log.Error.Write("savegame", "Failed to load save game: " + ex2.Message);
                         return false;
                     }
                 }
