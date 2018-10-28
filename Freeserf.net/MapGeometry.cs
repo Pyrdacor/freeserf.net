@@ -105,7 +105,7 @@ namespace Freeserf
         CCW
     }
 
-    public abstract class DirectionCycle
+    public abstract class DirectionCycle : IEquatable<DirectionCycle>, IEqualityComparer<DirectionCycle>
     {
         public abstract class Iterator : Iterator<Direction>
         {
@@ -144,7 +144,10 @@ namespace Freeserf
                     ++offset;
             }
         }
-        
+
+        protected Direction start;
+        protected uint length;
+
         public DirectionCycle(Direction start, uint length)
         {
             if (start == Direction.None)
@@ -162,16 +165,54 @@ namespace Freeserf
             length = other.length;
         }
 
-    /*Iterator begin() const { return Iterator(*this, 0); }
-      Iterator end() const { return Iterator(*this, length); }
+        public bool Equals(DirectionCycle other)
+        {
+            return this == other;
+        }
 
-      bool operator ==(const DirectionCycle& rhs) const {
-        return start == rhs.start && length == rhs.length; }
-      bool operator !=(const DirectionCycle& rhs) const {
-        return !(*this == rhs); }*/
+        public static bool operator ==(DirectionCycle self, DirectionCycle rhs)
+        {
+            if (ReferenceEquals(self, null))
+                return ReferenceEquals(rhs, null);
 
-        protected Direction start;
-        protected uint length;
+            if (ReferenceEquals(rhs, null))
+                return false;
+
+            return self.start == rhs.start && self.length == rhs.length;
+        }
+
+        public static bool operator !=(DirectionCycle self, DirectionCycle rhs)
+        {
+            return !(self == rhs);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as DirectionCycle);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+
+                hash = hash * 23 + start.GetHashCode();
+                hash = hash * 23 + length.GetHashCode();
+
+                return hash;
+            }
+        }
+
+        public bool Equals(DirectionCycle x, DirectionCycle y)
+        {
+            return x == y;
+        }
+
+        public int GetHashCode(DirectionCycle obj)
+        {
+            return (obj == null) ? 0 : obj.GetHashCode();
+        }
     }
 
     public class DirectionCycleCW : DirectionCycle
