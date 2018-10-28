@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -25,6 +22,11 @@ namespace Freeserf
             }
 
             return result;
+        }
+
+        public static T GetValue<T>(this string value)
+        {
+            return (T)Convert.ChangeType(value, typeof(T));
         }
     }
 }
