@@ -8,5 +8,33 @@ namespace Freeserf
 {
     public class Building : GameObject
     {
+        public enum Type
+        {
+            None = 0,
+            Fisher,
+            Lumberjack,
+            Boatbuilder,
+            Stonecutter,
+            StoneMine,
+            CoalMine,
+            IronMine,
+            GoldMine,
+            Forester,
+            Stock,
+            Hut,
+            Farm,
+            Butcher,
+            PigFarm,
+            Mill,
+            Baker,
+            Sawmill,
+            SteelSmelter,
+            ToolMaker,
+            WeaponSmith,
+            Tower,
+            Fortress,
+            GoldSmelter,
+            Castle
+        }
     }
 }
