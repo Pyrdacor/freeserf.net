@@ -320,15 +320,16 @@ namespace Freeserf
             }
 
             using (var stream = File.OpenRead(path))
-            using (var reader = new BinaryReader(stream))
+            using (var readerText = new StreamReader(stream, Encoding.ASCII, false, 1024, true))
+            using (var readerBinary = new BinaryReader(stream))
             {
                 try
                 {
-                    game.ReadFrom(new SaveReaderTextFile(reader));
+                    game.ReadFrom(new SaveReaderTextFile(readerText));
                 }
                 catch (ExceptionFreeserf ex1)
                 {
-                    reader.Close();
+                    readerBinary.Close();
 
                     Log.Warn.Write("savegame", "Unable to load save game: " + ex1.Message);
                     Log.Warn.Write("savegame", "Trying compatability mode...");
@@ -337,7 +338,7 @@ namespace Freeserf
 
                     try
                     {
-                        game.ReadFrom(new SaveReaderBinary(reader));
+                        game.ReadFrom(new SaveReaderBinary(readerBinary));
                     }
                     catch (ExceptionFreeserf ex2)
                     {
@@ -361,7 +362,7 @@ namespace Freeserf
             return Save(path, game);
         }
 
-        public bool Read(BinaryReader reader, Game game)
+        public bool Read(StreamReader reader, Game game)
         {
             try
             {
@@ -377,7 +378,7 @@ namespace Freeserf
             }            
         }
 
-        public bool Write(BinaryWriter writer, Game game)
+        public bool Write(StreamWriter writer, Game game)
         {
             var writerText = new SaveWriterTextSection("game", 0);
 
@@ -477,7 +478,7 @@ namespace Freeserf
             return file.Save(path);
         }
 
-        public bool Write(BinaryWriter writer)
+        public bool Write(StreamWriter writer)
         {
             ConfigFile file = new ConfigFile();
 
@@ -487,9 +488,9 @@ namespace Freeserf
         }
 
 
-        public override SaveWriterText AddSection(string sub_name, uint sub_number)
+        public override SaveWriterText AddSection(string subName, uint subNumber)
         {
-            var section = new SaveWriterTextSection(sub_name, sub_number);
+            var section = new SaveWriterTextSection(subName, subNumber);
 
             sections.Add(section);
 
@@ -572,7 +573,7 @@ namespace Freeserf
 
         public override int Number => 0;
 
-        public SaveReaderTextFile(BinaryReader reader)
+        public SaveReaderTextFile(StreamReader reader)
         {
             ConfigFile file = new ConfigFile();
 
@@ -592,7 +593,7 @@ namespace Freeserf
             foreach (string vname in vals)
             {
                 if (!values.ContainsKey(vname))
-                    values.Add(vname, new SaveReaderTextValue(file.Value("main", vname, ""))));
+                    values.Add(vname, new SaveReaderTextValue(file.Value("main", vname, "")));
             }
         }
 
