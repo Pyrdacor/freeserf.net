@@ -86,13 +86,62 @@ namespace Freeserf
             }
         }
 
-        public string ReadLine()
+        public string ReadToEnd()
         {
             var temp = content;
 
             content = "";
 
             return temp;
+        }
+
+        public string GetLine(params char[] delims)
+        {
+            if (content.Length == 0)
+                return null;
+
+            int end = content.IndexOfAny(delims);
+            string line = "";
+
+            if (end == -1)
+            {
+                line = content;
+                content = "";
+            }
+            else
+            {
+                line = content.Substring(0, end);
+                content = content.Substring(end + 1);
+            }
+
+            return line;
+        }
+
+        public string ReadLine()
+        {
+            if (content.Length == 0)
+                return null;
+
+            int end = content.IndexOfAny(new char[] { '\r', '\n' });
+            string line = "";
+
+            if (end == -1)
+            {
+                line = content;
+                content = "";
+            }
+            else
+            {
+                line = content.Substring(0, end);
+                content = content.Substring(end);
+
+                if (content.StartsWith("\r\n"))
+                    content = content.Substring(2);
+                else // skip '\r' or '\n'
+                    content = content.Substring(1);
+            }
+
+            return line;
         }
     }
 }

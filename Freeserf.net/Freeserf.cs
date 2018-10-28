@@ -76,7 +76,7 @@ namespace Freeserf
 
             commandLine.AddOption('l', "Load saved game").AddParameter("FILE", (AutoParseableString s) =>
             {
-                saveFile = s.ReadLine();
+                saveFile = s.ReadToEnd();
 
                 return true;
             });
