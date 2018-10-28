@@ -69,6 +69,7 @@
     <Compile Include="Freeserf.cs" />
     <Compile Include="FreeserfSettings.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Iterator.cs" />
     <Compile Include="Inventory.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Map.cs" />

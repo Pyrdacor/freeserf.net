@@ -68,21 +68,429 @@ namespace Freeserf
         Up
     }
 
-    // Return the given direction turned clockwise a number of times.
-    //
-    // Return the resulting direction from turning the given direction
-    // clockwise in 60 degree increment the specified number of times.
-    // If times is a negative number the direction will be turned counter
-    // clockwise.
+    public static class DirectionExtensions
+    {
+        // Return the given direction turned clockwise a number of times.
+        //
+        // Return the resulting direction from turning the given direction
+        // clockwise in 60 degree increment the specified number of times.
+        // If times is a negative number the direction will be turned counter
+        // clockwise.
+        public static Direction Turn(this Direction d, int times)
+        {
+            if (d == Direction.None)
+            {
+                throw new ExceptionFreeserf("Failed to turn uninitialised direction");
+            }
+
+            int td = ((int)d + times) % 6;
+
+            if (td < 0)
+                td += 6;
+
+            return (Direction)td;
+        }
+
+        // Return the given direction reversed.
+        public static Direction Reverse(this Direction d)
+        {
+            return Turn(d, 3);
+        }
+    }
 
     // Cycle direction (clockwise or counter-clockwise)
     public enum Cycle
     {
         CW,
         CCW
-    }    
+    }
 
-    public class MapGeometry
+    public abstract class DirectionCycle
     {
+        public abstract class Iterator : Iterator<Direction>
+        {
+            protected DirectionCycle cycle;
+            protected int offset;
+
+            protected Iterator(DirectionCycle cycle, int offset)
+            {
+                this.cycle = cycle;
+                this.offset = offset;
+            }
+
+            protected Iterator(Iterator other)
+            {
+                if (other == null)
+                    throw new NullReferenceException("Iterator construction with null reference.");
+
+                cycle = other.cycle;
+                offset = other.offset;
+            }
+
+            public override bool Equals(Iterator<Direction> other)
+            {
+                if (!(other is Iterator))
+                    return false;
+
+                var iter = other as Iterator;
+
+                return cycle == iter.cycle &&
+                    offset == iter.offset;
+            }
+
+            protected override void Increment()
+            {
+                if (offset < (int)cycle.length)
+                    ++offset;
+            }
+        }
+        
+        public DirectionCycle(Direction start, uint length)
+        {
+            if (start == Direction.None)
+            {
+                throw new ExceptionFreeserf("Failed to init DirectionCycle with uninitialised direction");
+            }
+
+            this.start = start;
+            this.length = length;
+        }
+
+        public DirectionCycle(DirectionCycle other)
+        {
+            start = other.start;
+            length = other.length;
+        }
+
+    /*Iterator begin() const { return Iterator(*this, 0); }
+      Iterator end() const { return Iterator(*this, length); }
+
+      bool operator ==(const DirectionCycle& rhs) const {
+        return start == rhs.start && length == rhs.length; }
+      bool operator !=(const DirectionCycle& rhs) const {
+        return !(*this == rhs); }*/
+
+        protected Direction start;
+        protected uint length;
+    }
+
+    public class DirectionCycleCW : DirectionCycle
+    {
+        Direction Start => base.start;
+        uint Length => base.length;
+
+        public class IteratorCW : Iterator
+        {
+            internal IteratorCW(DirectionCycle cycle, int offset)
+                : base(cycle, offset)
+            {
+
+            }
+
+            public IteratorCW(Iterator other)
+                : base(other as IteratorCW)
+            {
+
+            }
+
+            public override Direction Current => (Direction)(((int)(cycle as DirectionCycleCW).Start + offset) % 6);
+        }
+
+        public DirectionCycleCW(Direction start, MapPos length)
+            : base(start, length)
+        {
+
+        }
+
+        public DirectionCycleCW(DirectionCycleCW other)
+            : base(other)
+        {
+
+        }
+
+        public IteratorCW Begin()
+        {
+            return new IteratorCW(this, 0);
+        }
+
+        public IteratorCW End()
+        {
+            return new IteratorCW(this, (int)length);
+        }
+    }
+
+    public class DirectionCycleCCW : DirectionCycle
+    {
+        Direction Start => base.start;
+        uint Length => base.length;
+
+        public class IteratorCCW : Iterator
+        {
+            internal IteratorCCW(DirectionCycle cycle, int offset)
+                : base(cycle, offset)
+            {
+
+            }
+
+            public IteratorCCW(Iterator other)
+                : base(other as IteratorCCW)
+            {
+
+            }
+
+            public override Direction Current => (Direction)((((int)(cycle as DirectionCycleCCW).Start - offset) % 6 + 6) % 6);
+        }
+
+        public DirectionCycleCCW(Direction start, MapPos length)
+            : base(start, length)
+        {
+
+        }
+
+        public DirectionCycleCCW(DirectionCycleCCW other)
+            : base(other)
+        {
+
+        }
+
+        public IteratorCCW Begin()
+        {
+            return new IteratorCCW(this, 0);
+        }
+
+        public IteratorCCW End()
+        {
+            return new IteratorCCW(this, (int)length);
+        }
+    }
+
+    public class MapGeometry : IEquatable<MapGeometry>, IEqualityComparer<MapGeometry>
+    {
+        public class Iterator : Iterator<MapPos>
+        {
+            MapGeometry mapGeometry;
+            MapPos pos;
+
+            internal Iterator(MapGeometry mapGeometry, MapPos pos)
+            {
+                this.mapGeometry = mapGeometry;
+                this.pos = pos;
+            }
+
+            public Iterator(Iterator other)
+            {
+                mapGeometry = other.mapGeometry;
+                pos = other.pos;
+            }
+
+            public override MapPos Current => pos;
+
+            public override bool Equals(Iterator<MapPos> other)
+            {
+                if (!(other is Iterator))
+                    return false;
+
+                var iter = other as Iterator;
+
+                return mapGeometry == iter.mapGeometry &&
+                    pos == iter.pos;
+            }
+
+            protected override void Increment()
+            {
+                if (pos < mapGeometry.TileCount)
+                    ++pos;
+            }
+        }
+
+        // Derived members
+        protected MapPos[] dirs = new MapPos[6];
+
+        public uint Size { get; protected set; }
+        public uint ColumnSize { get; protected set; }
+        public uint RowSize { get; protected set; }
+        public uint Columns { get; protected set; }
+        public uint Rows { get; protected set; }
+        public uint ColumnMask { get; protected set; }
+        public uint RowMask { get; protected set; }
+        public int RowShift { get; protected set; }
+        public uint TileCount => Columns * Rows;
+
+        public MapGeometry(uint size)
+        {
+            Size = size;
+
+            Init();
+        }
+
+        public MapGeometry(MapGeometry other)
+            : this(other.Size)
+        {
+
+        }
+
+        /* Extract col and row from MapPos */
+        public uint PosColumn(uint pos)
+        {
+            return pos & ColumnMask;
+
+        }
+
+        public uint PosRow(uint pos)
+        {
+            return (pos >> RowShift) & RowMask;
+        }
+
+        /* Translate col, row coordinate to MapPos value. */
+        public MapPos Pos(uint x, uint y)
+        {
+            return (y << RowShift) | x;
+        }
+
+        /* Addition of two map positions. */
+        public MapPos PosAdd(MapPos pos, uint x, uint y)
+        {
+            return Pos((PosColumn(pos) + x) & ColumnMask, (PosRow(pos) + y) & RowMask);
+        }
+
+        public MapPos PosAdd(MapPos pos, MapPos off)
+        {
+            return Pos((PosColumn(pos) + PosColumn(off)) & ColumnMask,
+                    (PosRow(pos) + PosRow(off)) & RowMask);
+        }
+
+        // Shortest signed distance between map positions.
+        public int DistX(MapPos pos1, MapPos pos2)
+        {
+            return (int)Columns/2 - (int)(((int)Columns / 2 + (int)PosColumn(pos1) - (int)PosColumn(pos2)) & ColumnMask);
+        }
+
+        public int DistY(MapPos pos1, MapPos pos2)
+        {
+            return (int)Rows/2 - (int)(((int)Rows/2 + (int)PosRow(pos1) - (int)PosRow(pos2)) & RowMask);
+        }
+
+        /* Movement of map position according to directions. */
+        public MapPos Move(MapPos pos, Direction dir)
+        {
+            return PosAdd(pos, dirs[(int)dir]);
+        }
+
+        public MapPos MoveRight(MapPos pos)
+        {
+            return Move(pos, Direction.Right);
+        }
+
+        public MapPos MoveDownRight(MapPos pos)
+        {
+            return Move(pos, Direction.DownRight);
+        }
+
+        public MapPos MoveDown(MapPos pos)
+        {
+            return Move(pos, Direction.Down);
+        }
+
+        public MapPos MoveLeft(MapPos pos)
+        {
+            return Move(pos, Direction.Left);
+        }
+
+        public MapPos MoveUpLeft(MapPos pos)
+        {
+            return Move(pos, Direction.UpLeft);
+        }
+
+        public MapPos MoveUp(MapPos pos)
+        {
+            return Move(pos, Direction.Up);
+        }
+
+        MapPos MoveRightN(MapPos pos, int n)
+        {
+            return PosAdd(pos, (MapPos)(dirs[(int)Direction.Right] * n));
+        }
+
+        MapPos MoveDownN(MapPos pos, int n)
+        {
+            return PosAdd(pos, (MapPos)(dirs[(int)Direction.Down] * n));
+        }
+
+        public Iterator Begin()
+        {
+            return new Iterator(this, 0);
+        }
+
+        public Iterator End()
+        {
+            return new Iterator(this, TileCount);
+        }
+
+        protected void Init()
+        {
+            if (Size > 20)
+            {
+                throw new ExceptionFreeserf("Above size 20 the map positions can no longer fit in a 32-bit integer.");
+            }
+
+            ColumnSize = 5 + Size / 2;
+            RowSize = 5 + (Size - 1) / 2;
+            Columns = 1u << (int)ColumnSize;
+            Rows = 1u << (int)ColumnSize;
+
+            ColumnMask = Columns - 1;
+            RowMask = Rows - 1;
+            RowShift = (int)ColumnSize;
+
+            // Setup direction offsets
+            dirs[(int)Direction.Right] = 1u & ColumnMask;
+            dirs[(int)Direction.Left] = (MapPos)(-1 & ColumnMask);
+            dirs[(int)Direction.Down] = (1 & RowMask) << RowShift;
+            dirs[(int)Direction.Up] = (MapPos)(-1 & RowMask) << RowShift;
+
+            dirs[(int)Direction.DownRight] = dirs[(int)Direction.Right] | dirs[(int)Direction.Down];
+            dirs[(int)Direction.UpLeft] = dirs[(int)Direction.Left] | dirs[(int)Direction.Up];
+        }
+
+        public bool Equals(MapGeometry other)
+        {
+            return this == other;
+        }
+
+        public static bool operator ==(MapGeometry self, MapGeometry rhs)
+        {
+            if (ReferenceEquals(self, null))
+                return ReferenceEquals(rhs, null);
+
+            if (ReferenceEquals(rhs, null))
+                return false;
+
+            return self.Size == rhs.Size;
+        }
+
+        public static bool operator !=(MapGeometry self, MapGeometry rhs)
+        {
+            return !(self == rhs);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as MapGeometry);
+        }
+
+        public override int GetHashCode()
+        {
+            return Size.GetHashCode();
+        }
+
+        public bool Equals(MapGeometry x, MapGeometry y)
+        {
+            return x == y;
+        }
+
+        public int GetHashCode(MapGeometry obj)
+        {
+            return (obj == null) ? 0 : obj.GetHashCode();
+        }
     }
 }
