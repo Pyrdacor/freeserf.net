@@ -562,15 +562,22 @@ namespace Freeserf
 
         #endregion
 
-        /*public:
-  friend SaveReaderBinary
-    operator >>(SaveReaderBinary reader, Game game);
-friend SaveReaderText
-    operator >>(SaveReaderText reader, Game game);
-friend SaveWriterText
-    operator <<(SaveWriterText writer, Game game);
+        public void ReadFrom(SaveReaderBinary reader)
+        {
 
-        protected bool LoadSerfs(SaveReaderBinary reader, int maxSerfIndex);
+        }
+
+        public void ReadFrom(SaveReaderText reader)
+        {
+
+        }
+
+        public void WriteTo(SaveWriterText writer)
+        {
+
+        }
+
+        /*protected bool LoadSerfs(SaveReaderBinary reader, int maxSerfIndex);
         protected bool LoadFlags(SaveReaderBinary reader, int maxFlagIndex);
         protected bool LoadBuildings(SaveReaderBinary reader, int maxBuildingIndex);
         protected bool LoadInventories(SaveReaderBinary reader, int maxInventoryIndex);*/
