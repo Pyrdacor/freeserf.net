@@ -562,6 +562,7 @@ namespace Freeserf
 
         #endregion
 
+
         public void ReadFrom(SaveReaderBinary reader)
         {
 
@@ -577,9 +578,24 @@ namespace Freeserf
 
         }
 
-        /*protected bool LoadSerfs(SaveReaderBinary reader, int maxSerfIndex);
-        protected bool LoadFlags(SaveReaderBinary reader, int maxFlagIndex);
-        protected bool LoadBuildings(SaveReaderBinary reader, int maxBuildingIndex);
-        protected bool LoadInventories(SaveReaderBinary reader, int maxInventoryIndex);*/
+        protected bool LoadSerfs(SaveReaderBinary reader, int maxSerfIndex)
+        {
+
+        }
+
+        protected bool LoadFlags(SaveReaderBinary reader, int maxFlagIndex)
+        {
+
+        }
+
+        protected bool LoadBuildings(SaveReaderBinary reader, int maxBuildingIndex)
+        {
+
+        }
+
+        protected bool LoadInventories(SaveReaderBinary reader, int maxInventoryIndex)
+        {
+
+        }
     }
 }
