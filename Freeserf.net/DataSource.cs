@@ -453,7 +453,7 @@ namespace Freeserf
         public abstract bool Check();
         public abstract bool Load();
 
-        public virtual Sprite GetSprite(Data.Resource resource, int index, Sprite.Color color)
+        public virtual Sprite GetSprite(Data.Resource resource, uint index, Sprite.Color color)
         {
             if (index >= Data.GetAssetCount(resource))
             {

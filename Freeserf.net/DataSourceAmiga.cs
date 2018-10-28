@@ -1003,7 +1003,7 @@ namespace Freeserf
             }
             pos -= 1080;
 
-            Buffer mod = data.GetTail(pos);
+            Buffer mod = data.GetTail((uint)pos);
 
             try
             {
@@ -1215,7 +1215,7 @@ namespace Freeserf
             byte n = data.Pop<byte>();
             byte k = data.Pop<byte>();
 
-            uint width = (k == 66) ? 32 : 16;
+            uint width = (k == 66) ? 32u : 16u;
             uint[] heights = new uint[] { 0, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41 };
 
             SpriteAmiga sprite = DecodeMaskSprite(data.PopTail(), width, heights[n]);
