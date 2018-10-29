@@ -73,9 +73,19 @@ namespace Freeserf
             return (1 << n);
         }
 
+        public static uint BitU(int n)
+        {
+            return (1u << n);
+        }
+
         public static bool BitTest(int x, int n)
         {
             return (x & Bit(n)) != 0;
+        }
+
+        public static bool BitTest(uint x, int n)
+        {
+            return (x & BitU(n)) != 0u;
         }
 
         public static void BitInvert(ref int x, int n)
@@ -86,6 +96,22 @@ namespace Freeserf
         public static int BitInvert(int x, int n)
         {
             return x ^ Bit(n);
+        }
+
+        public static void SetBit(ref int value, int bit, bool set)
+        {
+            if (set)
+                value |= Bit(bit);
+            else
+                value &= ~Bit(bit);
+        }
+
+        public static void SetBit(ref uint value, int bit, bool set)
+        {
+            if (set)
+                value |= BitU(bit);
+            else
+                value &= ~BitU(bit);
         }
 
         public static void Clamp(int low, ref int value, int high)
