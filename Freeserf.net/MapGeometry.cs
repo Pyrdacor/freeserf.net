@@ -338,7 +338,7 @@ namespace Freeserf
         }
     }
 
-    public class MapGeometry : IEquatable<MapGeometry>, IEqualityComparer<MapGeometry>
+    public class MapGeometry : IEquatable<MapGeometry>, IEqualityComparer<MapGeometry>, IEnumerable<MapPos>
     {
         public class Iterator : Iterator<MapPos>
         {
@@ -422,9 +422,9 @@ namespace Freeserf
         }
 
         /* Addition of two map positions. */
-        public MapPos PosAdd(MapPos pos, uint x, uint y)
+        public MapPos PosAdd(MapPos pos, int x, int y)
         {
-            return Pos((PosColumn(pos) + x) & ColumnMask, (PosRow(pos) + y) & RowMask);
+            return Pos((uint)((int)PosColumn(pos) + x) & ColumnMask, (uint)((int)PosRow(pos) + y) & RowMask);
         }
 
         public MapPos PosAdd(MapPos pos, MapPos off)
@@ -480,12 +480,12 @@ namespace Freeserf
             return Move(pos, Direction.Up);
         }
 
-        MapPos MoveRightN(MapPos pos, int n)
+        public MapPos MoveRightN(MapPos pos, int n)
         {
             return PosAdd(pos, (MapPos)(dirs[(int)Direction.Right] * n));
         }
 
-        MapPos MoveDownN(MapPos pos, int n)
+        public MapPos MoveDownN(MapPos pos, int n)
         {
             return PosAdd(pos, (MapPos)(dirs[(int)Direction.Down] * n));
         }
@@ -565,6 +565,20 @@ namespace Freeserf
         public int GetHashCode(MapGeometry obj)
         {
             return (obj == null) ? 0 : obj.GetHashCode();
+        }
+
+        public IEnumerator<uint> GetEnumerator()
+        {
+            var iter = Begin() as Iterator<MapPos>;
+            var end = End() as Iterator<MapPos>;
+
+            while (iter != end)
+                yield return (iter++).Current;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
