@@ -175,27 +175,21 @@ namespace Freeserf
             return value;
         }
 
-        public SaveReaderTextValue this[uint pos] => parts[(int)pos];
+        public SaveReaderTextValue this[int pos] => parts[(int)pos];
     }
 
     public class SaveWriterTextValue
     {
         public string Value { get; protected set; } = "";
 
-        public static SaveWriterTextValue operator +(SaveWriterTextValue v1, object v2)
+        public void Write(object val)
         {
-            return new SaveWriterTextValue()
-            {
-                Value = v1.Value + ((v1.Value.Length > 0) ? "," : "") + v2.ToString()
-            };
+            Value += ((Value.Length > 0) ? "," : "") + val.ToString();
         }
 
-        public static SaveWriterTextValue operator +(SaveWriterTextValue v1, Enum v2)
+        public void Write(Enum val)
         {
-            return new SaveWriterTextValue()
-            {
-                Value = v1.Value + ((v1.Value.Length > 0) ? "," : "") + Enum.GetName(v2.GetType(), v2)
-            };
+            Write(Enum.GetName(val.GetType(), val));
         }
     }
 
