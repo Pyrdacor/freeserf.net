@@ -319,7 +319,7 @@ namespace Freeserf
             return resourceHistoryIndex;
         }
 
-        int NextSearchId()
+        public int NextSearchId()
         {
 
         }
