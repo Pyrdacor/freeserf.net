@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace Freeserf
 {
+    using MapPos = UInt32;
+
     public class Road
     {
 
@@ -13,5 +15,10 @@ namespace Freeserf
 
     public class Map
     {
+        public uint GetObjectIndex(MapPos pos)
+        {
+            // TODO
+            return 0u;
+        }
     }
 }

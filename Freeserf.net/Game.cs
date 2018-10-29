@@ -289,12 +289,12 @@ namespace Freeserf
 
         }
 
-        void CancelTransportedResource(Resource.Type type, uint dest)
+        internal void CancelTransportedResource(Resource.Type type, uint dest)
         {
 
         }
 
-        void LoseResource(Resource.Type type)
+        internal void LoseResource(Resource.Type type)
         {
 
         }
@@ -319,7 +319,7 @@ namespace Freeserf
             return resourceHistoryIndex;
         }
 
-        public int NextSearchId()
+        internal int NextSearchId()
         {
 
         }
@@ -334,7 +334,7 @@ namespace Freeserf
 
         }
 
-        Flag CreateFlag(int index = -1)
+        internal Flag CreateFlag(int index = -1)
         {
 
         }
@@ -349,7 +349,7 @@ namespace Freeserf
 
         }
 
-        Building CreateBuilding(int index = -1)
+        internal Building CreateBuilding(int index = -1)
         {
 
         }
@@ -359,12 +359,12 @@ namespace Freeserf
 
         }
 
-        Serf GetSerf(uint index)
+        public Serf GetSerf(uint index)
         {
             return serfs[index];
         }
 
-        Flag GetFlag(uint index)
+        public Flag GetFlag(uint index)
         {
             return flags[index];
         }
@@ -379,7 +379,7 @@ namespace Freeserf
             return buildings[index];
         }
 
-        Player GetPlayer(uint index)
+        public Player GetPlayer(uint index)
         {
             return players[index];
         }
@@ -399,7 +399,7 @@ namespace Freeserf
 
         }
 
-        ListSerfs GetSerfsRelatedTo(uint dest, Direction dir)
+        internal ListSerfs GetSerfsRelatedTo(uint dest, Direction dir)
         {
 
         }
@@ -409,7 +409,7 @@ namespace Freeserf
 
         }
 
-        ListSerfs GetSerfsAtPos(MapPos pos)
+        public ListSerfs GetSerfsAtPos(MapPos pos)
         {
 
         }

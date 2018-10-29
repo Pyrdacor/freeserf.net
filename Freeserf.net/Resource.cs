@@ -8,6 +8,9 @@ namespace Freeserf.Resource
 {
     public enum Type
     {
+        MinValue = None,
+        MaxValue = GroupFood,
+
         None = -1,
 
         Fish = 0,
