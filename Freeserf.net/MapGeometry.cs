@@ -21,10 +21,8 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -105,7 +103,7 @@ namespace Freeserf
         CCW
     }
 
-    public abstract class DirectionCycle : IEquatable<DirectionCycle>, IEqualityComparer<DirectionCycle>
+    public abstract class DirectionCycle : IEquatable<DirectionCycle>, IEqualityComparer<DirectionCycle>, IEnumerable<Direction>
     {
         public abstract class Iterator : Iterator<Direction>
         {
@@ -213,6 +211,13 @@ namespace Freeserf
         {
             return (obj == null) ? 0 : obj.GetHashCode();
         }
+
+        public abstract IEnumerator<Direction> GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
     public class DirectionCycleCW : DirectionCycle
@@ -249,6 +254,11 @@ namespace Freeserf
 
         }
 
+        public static DirectionCycleCW CreateDefault()
+        {
+            return new DirectionCycleCW(Direction.Right, 6);
+        }
+
         public IteratorCW Begin()
         {
             return new IteratorCW(this, 0);
@@ -257,6 +267,15 @@ namespace Freeserf
         public IteratorCW End()
         {
             return new IteratorCW(this, (int)length);
+        }
+
+        public override IEnumerator<Direction> GetEnumerator()
+        {
+            var iter = Begin() as Iterator<Direction>;
+            var end = End() as Iterator<Direction>;
+
+            while (iter != end)
+                yield return (iter++).Current;
         }
     }
 
@@ -294,6 +313,11 @@ namespace Freeserf
 
         }
 
+        public static DirectionCycleCCW CreateDefault()
+        {
+            return new DirectionCycleCCW(Direction.Up, 6);
+        }
+
         public IteratorCCW Begin()
         {
             return new IteratorCCW(this, 0);
@@ -302,6 +326,15 @@ namespace Freeserf
         public IteratorCCW End()
         {
             return new IteratorCCW(this, (int)length);
+        }
+
+        public override IEnumerator<Direction> GetEnumerator()
+        {
+            var iter = Begin() as Iterator<Direction>;
+            var end = End() as Iterator<Direction>;
+
+            while (iter != end)
+                yield return (iter++).Current;
         }
     }
 
