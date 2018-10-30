@@ -72,6 +72,8 @@ namespace Freeserf
          bound to a road or a flag. */
         public enum State
         {
+            Invalid = -1,
+
             Null = 0,
             IdleInStock,
             Walking,
@@ -186,6 +188,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SEnteringBuilding
             {
+                // FieldB = -2: Enter inventory (castle, etc)
                 public int FieldB; /* B */
                 public int SlopeLen; /* C */
             }
@@ -322,7 +325,7 @@ namespace Freeserf
             {
                 public int Mode; /* B */
                 public int Counter; /* C */
-                public uint Type; /* D */
+                public int Type; /* D */
             }
             [FieldOffset(0)]
             public SSmelting Smelting;
@@ -440,8 +443,8 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SIdleOnPath
             {
-                // NOTE: Flag was a Flag* before!
-                public int Flag; /* C */
+                // NOTE: Flag was a Flag* before! Now it is the MapPos of it.
+                public uint FlagPos; /* C */
                 public int Field_E; /* E */
                 public Direction RevDir; /* B */
             }
@@ -704,7 +707,7 @@ namespace Freeserf
         public Serf(Game game, uint index)
             : base(game, index)
         {
-            SerfState = State.Null;
+            SerfState = State..Null;
             Player = uint.MaxValue;
             type = Type.None;
             sound = false;
@@ -810,7 +813,7 @@ namespace Freeserf
            from any earlier state first. */
         public void set_lost_state()
         {
-            if (SerfState == State.Walking)
+            if (SerfState == State..Walking)
             {
                 if (s.Walking.Dir1 >= 0)
                 {
@@ -831,10 +834,10 @@ namespace Freeserf
                     building.RequestedSerfLost();
                 }
 
-                SerfState = State.Lost;
+                SerfState = State..Lost;
                 s.Lost.FieldB = 0;
             }
-            else if (SerfState == State.Transporting || SerfState == State.Delivering)
+            else if (SerfState == State..Transporting || SerfState == State..Delivering)
             {
                 if (s.Walking.Res != Resource.Type.None)
                 {
@@ -847,24 +850,24 @@ namespace Freeserf
 
                 if (GetSerfType() != Type.Sailor)
                 {
-                    SerfState = State.Lost;
+                    SerfState = State..Lost;
                     s.Lost.FieldB = 0;
                 }
                 else
                 {
-                    SerfState = State.LostSailor;
+                    SerfState = State..LostSailor;
                 }
             }
             else
             {
-                SerfState = State.Lost;
+                SerfState = State..Lost;
                 s.Lost.FieldB = 0;
             }
         }
 
         public void add_to_defending_queue(uint nextKnightIndex, bool pause)
         {
-            SerfState = State.DefendingCastle;
+            SerfState = State..DefendingCastle;
 
             s.Defending.NextKnight = (int)nextKnightIndex;
 
@@ -882,56 +885,56 @@ namespace Freeserf
             Building building = Game.GetBuilding(inventory.BuildingIndex);
             Position = building.Position;
             tick = (ushort)Game.Tick;
-            SerfState = State.IdleInStock;
+            SerfState = State..IdleInStock;
             s.IdleInStock.InvIndex = inventory.Index;
         }
 
         public void init_inventory_transporter(Inventory inventory)
         {
-            SerfState = State.BuildingCastle;
+            SerfState = State..BuildingCastle;
             s.BuildingCastle.InvIndex = inventory.Index;
         }
 
         public void reset_transport(Flag flag)
         {
-            if (SerfState == State.Walking && s.Walking.Dest == flag.Index && s.Walking.Dir1 < 0)
+            if (SerfState == State..Walking && s.Walking.Dest == flag.Index && s.Walking.Dir1 < 0)
             {
                 s.Walking.Dir1 = -2;
                 s.Walking.Dest = 0;
             }
-            else if (SerfState == State.ReadyToLeaveInventory &&
+            else if (SerfState == State..ReadyToLeaveInventory &&
                      s.ReadyToLeaveInventory.Dest == flag.Index &&
                      s.ReadyToLeaveInventory.Mode < 0)
             {
                 s.ReadyToLeaveInventory.Mode = -2;
                 s.ReadyToLeaveInventory.Dest = 0;
             }
-            else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
-                     s.LeavingBuilding.NextState == State.Walking &&
+            else if ((SerfState == State..LeavingBuilding || SerfState == State..ReadyToLeave) &&
+                     s.LeavingBuilding.NextState == State..Walking &&
                      s.LeavingBuilding.Dest == flag.Index &&
                      s.LeavingBuilding.FieldB < 0)
             {
                 s.LeavingBuilding.FieldB = -2;
                 s.LeavingBuilding.Dest = 0;
             }
-            else if (SerfState == State.Transporting &&
+            else if (SerfState == State..Transporting &&
                      s.Walking.Dest == flag.Index)
             {
                 s.Walking.Dest = 0;
             }
-            else if (SerfState == State.MoveResourceOut &&
-                     s.MoveResourceOut.NextState == State.DropResourceOut &&
+            else if (SerfState == State..MoveResourceOut &&
+                     s.MoveResourceOut.NextState == State..DropResourceOut &&
                      s.MoveResourceOut.ResDest == flag.Index)
             {
                 s.MoveResourceOut.ResDest = 0;
             }
-            else if (SerfState == State.DropResourceOut &&
+            else if (SerfState == State..DropResourceOut &&
                      s.MoveResourceOut.ResDest == flag.Index)
             {
                 s.MoveResourceOut.ResDest = 0;
             }
-            else if (SerfState == State.LeavingBuilding &&
-                     s.LeavingBuilding.NextState == State.DropResourceOut &&
+            else if (SerfState == State..LeavingBuilding &&
+                     s.LeavingBuilding.NextState == State..DropResourceOut &&
                      s.LeavingBuilding.Dest == flag.Index)
             {
                 s.LeavingBuilding.Dest = 0;
@@ -940,7 +943,7 @@ namespace Freeserf
 
         public bool path_splited(uint flag1, Direction dir1, uint flag2, Direction dir2, ref int select)
         {
-            if (SerfState == State.Walking)
+            if (SerfState == State..Walking)
             {
                 if (s.Walking.Dest == flag1 && s.Walking.Dir1 == (int)dir1)
                 {
@@ -953,7 +956,7 @@ namespace Freeserf
                     return true;
                 }
             }
-            else if (SerfState == State.ReadyToLeaveInventory)
+            else if (SerfState == State..ReadyToLeaveInventory)
             {
                 if (s.ReadyToLeaveInventory.Dest == flag1 &&
                     s.ReadyToLeaveInventory.Mode == (int)dir1)
@@ -968,8 +971,8 @@ namespace Freeserf
                     return true;
                 }
             }
-            else if ((SerfState == State.ReadyToLeave || SerfState == State.LeavingBuilding) &&
-                     s.LeavingBuilding.NextState == State.Walking)
+            else if ((SerfState == State..ReadyToLeave || SerfState == State..LeavingBuilding) &&
+                     s.LeavingBuilding.NextState == State..Walking)
             {
                 if (s.LeavingBuilding.Dest == flag1 &&
                     s.LeavingBuilding.FieldB == (int)dir1)
@@ -1011,7 +1014,7 @@ namespace Freeserf
                 case State.ReadyToLeave:
                     if (s.LeavingBuilding.Dest == dest &&
                         s.LeavingBuilding.FieldB == (int)dir &&
-                        s.LeavingBuilding.NextState == State.Walking)
+                        s.LeavingBuilding.NextState == State..Walking)
                     {
                         result = true;
                     }
@@ -1046,7 +1049,7 @@ namespace Freeserf
                 case State.ReadyToLeave:
                     if (s.LeavingBuilding.Dest == dest &&
                         s.LeavingBuilding.FieldB == (int)dir &&
-                        s.LeavingBuilding.NextState == State.Walking)
+                        s.LeavingBuilding.NextState == State..Walking)
                     {
                         s.LeavingBuilding.FieldB = -2;
                         s.LeavingBuilding.Dest = 0;
@@ -1059,24 +1062,24 @@ namespace Freeserf
 
         public void path_merged(Flag flag)
         {
-            if (SerfState == State.ReadyToLeaveInventory &&
+            if (SerfState == State..ReadyToLeaveInventory &&
                 s.ReadyToLeaveInventory.Dest == flag.Index)
             {
                 s.ReadyToLeaveInventory.Dest = 0;
                 s.ReadyToLeaveInventory.Mode = -2;
             }
-            else if (SerfState == State.Walking && s.Walking.Dest == flag.Index)
+            else if (SerfState == State..Walking && s.Walking.Dest == flag.Index)
             {
                 s.Walking.Dest = 0;
                 s.Walking.Dir1 = -2;
             }
-            else if (SerfState == State.IdleInStock && true/*...*/) // TODO: ?
+            else if (SerfState == State..IdleInStock && true/*...*/) // TODO: ?
             {
                 /* TODO */
             }
-            else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
+            else if ((SerfState == State..LeavingBuilding || SerfState == State..ReadyToLeave) &&
                    s.LeavingBuilding.Dest == flag.Index &&
-                   s.LeavingBuilding.NextState == State.Walking)
+                   s.LeavingBuilding.NextState == State..Walking)
             {
                 s.LeavingBuilding.Dest = 0;
                 s.LeavingBuilding.FieldB = -2;
@@ -1085,7 +1088,7 @@ namespace Freeserf
 
         public void path_merged2(uint flag1, Direction dir1, uint flag2, Direction dir2)
         {
-            if (SerfState == State.ReadyToLeaveInventory &&
+            if (SerfState == State..ReadyToLeaveInventory &&
               ((s.ReadyToLeaveInventory.Dest == flag1 &&
                 s.ReadyToLeaveInventory.Mode == (int)dir1) ||
                (s.ReadyToLeaveInventory.Dest == flag2 &&
@@ -1094,23 +1097,23 @@ namespace Freeserf
                 s.ReadyToLeaveInventory.Dest = 0;
                 s.ReadyToLeaveInventory.Mode = -2;
             }
-            else if (SerfState == State.Walking &&
+            else if (SerfState == State..Walking &&
                      ((s.Walking.Dest == flag1 && s.Walking.Dir1 == (int)dir1) ||
                       (s.Walking.Dest == flag2 && s.Walking.Dir1 == (int)dir2)))
             {
                 s.Walking.Dest = 0;
                 s.Walking.Dir1 = -2;
             }
-            else if (SerfState == State.IdleInStock)
+            else if (SerfState == State..IdleInStock)
             {
                 /* TODO */
             }
-            else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
+            else if ((SerfState == State..LeavingBuilding || SerfState == State..ReadyToLeave) &&
                      ((s.LeavingBuilding.Dest == flag1 &&
                        s.LeavingBuilding.FieldB == (int)dir1) ||
                       (s.LeavingBuilding.Dest == flag2 &&
                        s.LeavingBuilding.FieldB == (int)dir2)) &&
-                     s.LeavingBuilding.NextState == State.Walking)
+                     s.LeavingBuilding.NextState == State..Walking)
             {
                 s.LeavingBuilding.Dest = 0;
                 s.LeavingBuilding.FieldB = -2;
@@ -1123,13 +1126,13 @@ namespace Freeserf
             {
                 case State.ReadyToLeave:
                 case State.LeavingBuilding:
-                    s.LeavingBuilding.NextState = State.Lost;
+                    s.LeavingBuilding.NextState = State..Lost;
                     break;
                 case State.FinishedBuilding:
                 case State.Walking:
                     if (Game.Map.Paths(flagPos) == 0)
                     {
-                        SerfState = State.Lost;
+                        SerfState = State..Lost;
                     }
                     break;
                 default:
@@ -1140,12 +1143,12 @@ namespace Freeserf
         public bool building_deleted(MapPos buildingPos, bool escape)
         {
             if (Position == buildingPos &&
-                (SerfState == State.IdleInStock || SerfState == State.ReadyToLeaveInventory))
+                (SerfState == State..IdleInStock || SerfState == State..ReadyToLeaveInventory))
             {
                 if (escape)
                 {
                     /* Serf is escaping. */
-                    SerfState = State.EscapeBuilding;
+                    SerfState = State..EscapeBuilding;
                 }
                 else
                 {
@@ -1174,20 +1177,20 @@ namespace Freeserf
 
             if (Game.Map.GetSerfIndex(Position) == Index)
             {
-                SerfState = State.Lost;
+                SerfState = State..Lost;
                 s.Lost.FieldB = 0;
             }
             else
             {
-                SerfState = State.EscapeBuilding;
+                SerfState = State..EscapeBuilding;
             }
         }
 
         public bool change_transporter_state_at_pos(MapPos pos, State state)
         {
             if (Position == pos &&
-              (state == State.WakeAtFlag || state == State.WakeOnPath ||
-               state == State.WaitIdleOnPath || state == State.IdleOnPath))
+              (state == State..WakeAtFlag || state == State..WakeOnPath ||
+               state == State..WaitIdleOnPath || state == State..IdleOnPath))
             {
                 SerfState = state;
                 return true;
@@ -1198,7 +1201,7 @@ namespace Freeserf
 
         public void restore_path_serf_info()
         {
-            if (SerfState != State.WakeOnPath)
+            if (SerfState != State..WakeOnPath)
             {
                 s.Walking.WaitCounter = -1;
 
@@ -1213,7 +1216,7 @@ namespace Freeserf
             }
             else
             {
-                SerfState = State.WakeAtFlag;
+                SerfState = State..WakeAtFlag;
             }
         }
 
@@ -1240,7 +1243,7 @@ namespace Freeserf
                 case State.ReadyToLeave:
                     if (s.LeavingBuilding.Dest == dest &&
                         s.LeavingBuilding.FieldB < 0 &&
-                        s.LeavingBuilding.NextState == State.Walking)
+                        s.LeavingBuilding.NextState == State..Walking)
                     {
                         s.LeavingBuilding.FieldB = -2;
                         s.LeavingBuilding.Dest = 0;
@@ -1269,14 +1272,14 @@ namespace Freeserf
                     break;
                 case State.LeavingBuilding:
                     if (s.LeavingBuilding.Dest == dest &&
-                        s.LeavingBuilding.NextState == State.DropResourceOut)
+                        s.LeavingBuilding.NextState == State..DropResourceOut)
                     {
                         s.LeavingBuilding.Dest = 0;
                     }
                     break;
                 case State.MoveResourceOut:
                     if (s.MoveResourceOut.ResDest == dest &&
-                        s.MoveResourceOut.NextState == State.DropResourceOut)
+                        s.MoveResourceOut.NextState == State..DropResourceOut)
                     {
                         s.MoveResourceOut.ResDest = 0;
                     }
@@ -1289,10 +1292,10 @@ namespace Freeserf
         public bool idle_to_wait_state(MapPos pos)
         {
             if (Position == pos &&
-              (SerfState == State.IdleOnPath || SerfState == State.WaitIdleOnPath ||
-               SerfState == State.WakeAtFlag || SerfState == State.WakeOnPath))
+              (SerfState == State..IdleOnPath || SerfState == State..WaitIdleOnPath ||
+               SerfState == State..WakeAtFlag || SerfState == State..WakeOnPath))
             {
-                SerfState = State.WakeAtFlag;
+                SerfState = State..WakeAtFlag;
                 return true;
             }
             return false;
@@ -1422,7 +1425,7 @@ namespace Freeserf
 
         void go_out_from_inventory(uint inventory, MapPos dest, int mode)
         {
-            SerfState = State.ReadyToLeaveInventory;
+            SerfState = State..ReadyToLeaveInventory;
             s.ReadyToLeaveInventory.Mode = mode;
             s.ReadyToLeaveInventory.Dest = dest;
             s.ReadyToLeaveInventory.InvIndex = inventory;
@@ -1431,27 +1434,27 @@ namespace Freeserf
         void send_off_to_fight(int distColumn, int distRow)
         {
             /* Send this serf off to fight. */
-            SerfState = State.KnightLeaveForWalkToFight;
+            SerfState = State..KnightLeaveForWalkToFight;
             s.LeaveForWalkToFight.DistColumn = distColumn;
             s.LeaveForWalkToFight.DistRow = distRow;
             s.LeaveForWalkToFight.FieldD = 0;
             s.LeaveForWalkToFight.FieldE = 0;
-            s.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
+            s.LeaveForWalkToFight.NextState = State..KnightFreeWalking;
         }
 
         void stay_idle_in_stock(uint inventory)
         {
-            SerfState = State.IdleInStock;
+            SerfState = State..IdleInStock;
             s.IdleInStock.InvIndex = inventory;
         }
 
         void go_out_from_building(MapPos dest, int dir, int fieldB)
         {
-            SerfState = State.ReadyToLeave;
+            SerfState = State..ReadyToLeave;
             s.LeavingBuilding.FieldB = fieldB;
             s.LeavingBuilding.Dest = dest;
             s.LeavingBuilding.Dir = dir;
-            s.LeavingBuilding.NextState = State.Walking;
+            s.LeavingBuilding.NextState = State..Walking;
         }
 
         void update()
@@ -1496,16 +1499,16 @@ namespace Freeserf
                 Direction.None,     Direction.Down,     Direction.DownRight
             };
 
-            if ((SerfState == State.Transporting || SerfState == State.Walking ||
-                 SerfState == State.Delivering) &&
+            if ((SerfState == State..Transporting || SerfState == State..Walking ||
+                 SerfState == State..Delivering) &&
                  s.Walking.Dir < 0)
             {
                 dir = (Direction)(s.Walking.Dir + 6);
                 return true;
             }
-            else if ((SerfState == State.FreeWalking ||
-                      SerfState == State.KnightFreeWalking ||
-                      SerfState == State.StoneCutterFreeWalking) &&
+            else if ((SerfState == State..FreeWalking ||
+                      SerfState == State..KnightFreeWalking ||
+                      SerfState == State..StoneCutterFreeWalking) &&
                       Animation == 82)
             {
                 int dx = s.FreeWalking.Dist1;
@@ -1523,7 +1526,7 @@ namespace Freeserf
 
                 return true;
             }
-            else if (SerfState == State.Digging && s.Digging.Substate < 0)
+            else if (SerfState == State..Digging && s.Digging.Substate < 0)
             {
                 int d = s.Digging.DigPos;
 
@@ -1540,16 +1543,16 @@ namespace Freeserf
            switch is not acceptable. */
         bool SwitchWaiting(Direction dir)
         {
-            if ((SerfState == State.Transporting || SerfState == State.Walking ||
-                SerfState == State.Delivering) &&
+            if ((SerfState == State..Transporting || SerfState == State..Walking ||
+                SerfState == State..Delivering) &&
                 s.Walking.Dir < 0)
             {
                 s.Walking.Dir = (int)dir.Reverse();
                 return true;
             }
-            else if ((SerfState == State.FreeWalking ||
-                      SerfState == State.KnightFreeWalking ||
-                      SerfState == State.StoneCutterFreeWalking) &&
+            else if ((SerfState == State..FreeWalking ||
+                      SerfState == State..KnightFreeWalking ||
+                      SerfState == State..StoneCutterFreeWalking) &&
                       Animation == 82)
             {
                 int dx = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) < 2) ? 1 : 0);
@@ -1566,7 +1569,7 @@ namespace Freeserf
 
                 return true;
             }
-            else if (SerfState == State.Digging && s.Digging.Substate < 0)
+            else if (SerfState == State..Digging && s.Digging.Substate < 0)
             {
                 return false;
             }
@@ -1713,7 +1716,7 @@ namespace Freeserf
            serf index cleared. */
         void EnterBuilding(int fieldB, bool joinPos)
         {
-            SerfState = State.EnteringBuilding;
+            SerfState = State..EnteringBuilding;
 
             StartWalking(Direction.UpLeft, 32, !joinPos);
 
@@ -1730,14 +1733,32 @@ namespace Freeserf
             s.EnteringBuilding.FieldB = fieldB;
         }
 
-        void leave_building(int join_pos)
+        /* Start leaving building by switching to LEAVING BUILDING and
+           setting appropriate state. */
+        void LeaveBuilding(bool joinPos)
         {
+            Building building = Game.GetBuildingAtPos(Position);
+            int slope = 31 - RoadBuildingSlope[(int)building.Type];
 
+            if (!building.IsDone())
+                slope = 30;
+
+            if (joinPos)
+                Game.Map.SetSerfIndex(Position, 0);
+
+            StartWalking(Direction.DownRight, slope, !joinPos);
+
+            SerfState = State..LeavingBuilding;
         }
 
-        void enter_inventory()
+        void EnterInventory()
         {
-
+            Game.Map.SetSerfIndex(Position, 0);
+            Building building = Game.GetBuildingAtPos(Position);
+            SerfState = State..IdleInStock;
+            /*serf->s.idle_in_stock.field_B = 0;
+              serf->s.idle_in_stock.field_C = 0;*/
+            s.IdleInStock.InvIndex = building.GetInventory().Index;
         }
 
         void drop_resource(Resource.Type res)
@@ -1760,7 +1781,7 @@ namespace Freeserf
 
         }
 
-        static bool handle_serf_walking_state_search_cb(Flag flag, object data)
+        static bool HandleSerfWalkingStateSearchCB(Flag flag, object data)
         {
             Serf serf = data as Serf;
             Flag dest = flag.Game.GetFlag(serf.s.Walking.Dest);
@@ -1775,7 +1796,7 @@ namespace Freeserf
             return false;
         }
 
-        void handle_serf_idle_in_stock_state()
+        void HandleSerfIdleInStockState()
         {
             Inventory inventory = Game.GetInventory(s.IdleInStock.InvIndex);
 
@@ -1808,41 +1829,939 @@ namespace Freeserf
             { /* out */
                 inventory.CallOutSerf(this);
 
-                SerfState = State.ReadyToLeaveInventory;
+                SerfState = State..ReadyToLeaveInventory;
                 s.ReadyToLeaveInventory.Mode = -3;
                 s.ReadyToLeaveInventory.InvIndex = inventory.Index;
                 /* TODO immediate switch to next state. */
             }
         }
 
-        void handle_serf_walking_state_dest_reached()
+        void HandleSerfWalkingStateDestReached()
         {
+            /* Destination reached. */
+            if (s.Walking.Dir1 < 0)
+            {
+                Map map = Game.Map;
+                Building building = Game.GetBuildingAtPos(map.MoveUpLeft(Position));
+                building.RequestedSerfReached(this);
 
+                if (map.HasSerf(map.MoveUpLeft(Position)))
+                {
+                    Animation = 85;
+                    Counter = 0;
+                    SerfState = State..ReadyToEnter;
+                }
+                else
+                {
+                    EnterBuilding(s.Walking.Dir1, false);
+                }
+            }
+            else if (s.Walking.Dir1 == 6)
+            {
+                SerfState = State..LookingForGeoSpot;
+                Counter = 0;
+            }
+            else
+            {
+                Flag flag = Game.GetFlagAtPos(Position);
+
+                if (flag == null)
+                {
+                    throw new ExceptionFreeserf("Flag expected as destination of walking serf.");
+                }
+
+                Direction dir = (Direction)s.Walking.Dir1;
+                Flag otherFlag = flag.GetOtherEndFlag(dir);
+
+                if (otherFlag == null)
+                {
+                    throw new ExceptionFreeserf("Path has no other end flag in selected dir.");
+                }
+
+                Direction otherDir = flag.GetOtherEndDir(dir);
+
+                /* Increment transport serf count */
+                flag.CompleteSerfRequest(dir);
+                otherFlag.CompleteSerfRequest(otherDir);
+
+                SerfState = State..Transporting;
+                s.Walking.Res = Resource.Type.None;
+                s.Walking.Dir = (int)dir;
+                s.Walking.Dir1 = 0;
+                s.Walking.WaitCounter= 0;
+
+                TransporterMoveToFlag(flag);
+            }
         }
 
-        void handle_serf_walking_state_waiting()
+        void HandleSerfWalkingStateWaiting()
         {
+            /* Waiting for other serf. */
+            Direction dir = (Direction)(s.Walking.Dir + 6);
 
+            Map map = Game.Map;
+            /* Only check for loops once in a while. */
+            ++s.Walking.WaitCounter;
+
+            if ((!map.HasFlag(Position) && s.Walking.WaitCounter>= 10) ||
+                s.Walking.WaitCounter >= 50)
+            {
+                MapPos pos = Position;
+
+                /* Follow the chain of serfs waiting for each other and
+                   see if there is a loop. */
+                for (int i = 0; i < 100; i++)
+                {
+                    pos = map.Move(pos, dir);
+
+                    if (!map.HasSerf(pos))
+                    {
+                        break;
+                    }
+                    else if (map.GetSerfIndex(pos) == Index)
+                    {
+                        /* We have found a loop, try a different direction. */
+                        ChangeDirection(dir.Reverse(), false);
+                        return;
+                    }
+
+                    /* Get next serf and follow the chain */
+                    Serf otherSerf = Game.GetSerfAtPos(Position);
+
+                    if (otherSerf.SerfState != State..Walking &&
+                        otherSerf.SerfState != State..Transporting)
+                    {
+                        break;
+                    }
+
+                    if (otherSerf.s.Walking.Dir >= 0 ||
+                        (otherSerf.s.Walking.Dir + 6) == (int)dir.Reverse())
+                    {
+                        break;
+                    }
+
+                    dir = (Direction)(otherSerf.s.Walking.Dir + 6);
+                }
+            }
+
+            /* Stick to the same direction */
+            s.Walking.WaitCounter = 0;
+            ChangeDirection((Direction)(s.Walking.Dir + 6), false);
         }
 
-        void handle_serf_walking_state()
+        void HandleSerfWalkingState()
         {
+            ushort delta = (ushort)(Game.Tick - tick);
+            tick = Game.Tick;
+            Counter -= delta;
 
+            while (Counter < 0)
+            {
+                if (s.Walking.Dir < 0)
+                {
+                    HandleSerfWalkingStateWaiting();
+                    continue;
+                }
+
+                /* 301F0 */
+                if (Game.Map.HasFlag(Position))
+                {
+                    /* Serf has reached a flag.
+                       Search for a destination if none is known. */
+                    if (s.Walking.Dest == 0)
+                    {
+                        uint flagIndex = Game.Map.GetObjectIndex(Position);
+                        Flag src = Game.GetFlag(flagIndex);
+                        int r = src.FindNearestInventoryForSerf();
+
+                        if (r < 0)
+                        {
+                            SerfState = State..Lost;
+                            s.Lost.FieldB = 1;
+                            Counter = 0;
+
+                            return;
+                        }
+
+                        s.Walking.Dest = r;
+                    }
+
+                    /* Check whether destination has been reached.
+                       If not, find out which direction to move in
+                       to reach the destination. */
+                    if (s.Walking.Dest == Game.Map.GetObjectIndex(Position))
+                    {
+                        HandleSerfWalkingStateDestReached();
+                        return;
+                    }
+                    else
+                    {
+                        Flag src = Game.GetFlagAtPos(Position);
+                        FlagSearch search = new FlagSearch(Game);
+                        var cycle = DirectionCycleCCW.CreateDefault();
+
+                        foreach (Direction i in cycle)
+                        {
+                            if (!src.IsWaterPath(i))
+                            {
+                                Flag otherFlag = src.GetOtherEndFlag(i);
+                                otherFlag.SearchDir = i;
+                                search.AddSource(otherFlag);
+                            }
+                        }
+
+                        if (search.Execute(HandleSerfWalkingStateSearchCB, true, false, this))
+                            continue;
+                    }
+                }
+                else
+                {
+                    /* 30A37 */
+                    /* Serf is not at a flag. Just follow the road. */
+                    uint paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Dir);
+                    Direction dir = Direction.None;
+                    var cycle = DirectionCycleCW.CreateDefault();
+
+                    foreach (Direction d in cycle)
+                    {
+                        if (paths == Misc.BitU(d))
+                        {
+                            dir = d;
+                            break;
+                        }
+                    }
+
+                    if (dir >= 0)
+                    {
+                        ChangeDirection(dir, false);
+                        continue;
+                    }
+
+                    Counter = 0;
+                }
+
+                /* Either the road is a dead end; or
+                   we are at a flag, but the flag search for
+                   the destination failed. */
+                if (s.Walking.Dir1 < 0)
+                {
+                    if (s.Walking.Dir1 < -1)
+                    {
+                        SerfState = State..Lost;
+                        s.Lost.FieldB = 1;
+                        Counter = 0;
+
+                        return;
+                    }
+
+                    Flag flag = Game.GetFlag(s.Walking.Dest);
+                    Building building = flag.GetBuilding();
+
+                    building.RequestedSerfLost();
+                }
+                else if (s.Walking.Dir1 != 6)
+                {
+                    Flag flag = Game.GetFlag(s.Walking.Dest);
+                    Direction d = (Direction)s.Walking.Dir1;
+
+                    flag.CancelSerfRequest(d);
+                    flag.GetOtherEndFlag(d).CancelSerfRequest(flag.GetOtherEndDir(d));
+                }
+
+                s.Walking.Dir1 = -2;
+                s.Walking.Dest = 0;
+                Counter = 0;
+            }
         }
 
-        void handle_serf_transporting_state()
+        void HandleSerfTransportingState()
         {
+            ushort delta = (ushort)(Game.Tick - tick);
+            tick = Game.Tick;
+            Counter -= delta;
 
+            if (Counter >= 0)
+                return;
+
+            if (s.Walking.Dir < 0)
+            {
+                ChangeDirection((Direction)(s.Walking.Dir + 6), true);
+            }
+            else
+            {
+                Map map = Game.Map;
+
+                /* 31549 */
+                if (map.HasFlag(Position))
+                {
+                    /* Current position occupied by waiting transporter */
+                    if (s.Walking.WaitCounter < 0)
+                    {
+                        SerfState = State..Walking;
+                        s.Walking.WaitCounter = 0;
+                        s.Walking.Dir1 = -2;
+                        s.Walking.Dest = 0;
+                        Counter = 0;
+
+                        return;
+                    }
+
+                    /* 31590 */
+                    if (s.Walking.Res != Resource.Type.None &&
+                      map.GetObjectIndex(Position) == s.Walking.Dest)
+                    {
+                        /* At resource destination */
+                        SerfState = State..Delivering;
+                        s.Walking.WaitCounter = 0;
+
+                        MapPos newPos = map.MoveUpLeft(Position);
+                        Animation = 3 + (int)map.GetHeight(newPos) - (int)map.GetHeight(Position) +
+                                    ((int)Direction.UpLeft + 6) * 9;
+                        Counter = CounterFromAnimation[Animation];
+                        /* TODO next call is actually into the middle of
+                           handle_serf_delivering_state().
+                           Why is a nice and clean state switch not enough???
+                           Just ignore this call and we'll be safe, I think... */
+                        /* handle_serf_delivering_state(serf); */
+                        return;
+                    }
+
+                    Flag flag = Game.GetFlagAtPos(Position);
+                    TransporterMoveToFlag(flag);
+                }
+                else
+                {
+                    uint paths = map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Dir);
+                    Direction dir = Direction.None;
+                    var cycle = DirectionCycleCW.CreateDefault();
+
+                    foreach (Direction d in cycle)
+                    {
+                        if (paths == Misc.BitU((int)d))
+                        {
+                            dir = d;
+                            break;
+                        }
+                    }
+
+                    if (dir < 0)
+                    {
+                        SerfState = State..Lost;
+                        Counter = 0;
+
+                        return;
+                    }
+
+                    if (!map.HasFlag(map.Move(Position, dir)) ||
+                        s.Walking.Res != Resource.Type.None ||
+                        s.Walking.WaitCounter < 0)
+                    {
+                        ChangeDirection(dir, true);
+                        return;
+                    }
+
+                    Flag flag = Game.GetFlagAtPos(map.Move(Position, dir));
+                    Direction revDir = dir.Reverse();
+                    Flag otherFlag = flag.GetOtherEndFlag(revDir);
+                    Direction otherDir = flag.GetOtherEndDir(revDir);
+
+                    if (flag.IsScheduled(revDir))
+                    {
+                        ChangeDirection(dir, true);
+                        return;
+                    }
+
+                    Animation = 110 + s.Walking.Dir;
+                    Counter = CounterFromAnimation[Animation];
+                    s.Walking.Dir -= 6;
+
+                    if (flag.FreeTransporterCount(revDir) > 1)
+                    {
+                        ++s.Walking.WaitCounter;
+
+                        if (s.Walking.WaitCounter > 3)
+                        {
+                            flag.TransporterToServe(revDir);
+                            otherFlag.TransporterToServe(otherDir);
+                            s.Walking.WaitCounter = -1;
+                        }
+                    }
+                    else
+                    {
+                        if (!otherFlag.IsScheduled(otherDir))
+                        {
+                            /* TODO Don't use anim as state var */
+                            tick = (ushort)((tick & 0xff00) | (s.Walking.Dir & 0xff));
+                            SerfState = State..IdleOnPath;
+                            s.IdleOnPath.RevDir = revDir;
+                            s.IdleOnPath.FlagPos = flag.Position;
+                            map.SetIdleSerf(Position);
+                            map.SetSerfIndex(Position, 0);
+
+                            return;
+                        }
+                    }
+                }
+            }
         }
 
-        void handle_serf_entering_building_state()
+        void HandleSerfEnteringBuildingState()
         {
+            ushort delta = (ushort)(Game.Tick - tick);
+            tick = Game.Tick;
+            Counter -= delta;
 
+            if (Counter < 0 || Counter <= s.EnteringBuilding.SlopeLen)
+            {
+                if (Game.Map.GetObjectIndex(Position) == 0 ||
+                    Game.GetBuildingAtPos(Position).IsBurning())
+                {
+                    /* Burning */
+                    SerfState = State.Lost;
+                    s.Lost.FieldB = 0;
+                    Counter = 0;
+
+                    return;
+                }
+
+                Counter = s.EnteringBuilding.SlopeLen;
+                Map map = Game.Map;
+
+                switch (GetSerfType())
+                {
+                    case Type.Transporter:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            uint flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
+                            Flag flag = Game.GetFlag(flagIndex);
+
+                            /* Mark as inventory accepting resources and serfs. */
+                            flag.SetHasInventory();
+                            flag.SetAcceptsResources(true);
+                            flag.SetAcceptsSerfs(true);
+
+                            SerfState = State.WaitForResourceOut);
+                            Counter = 63;
+                            SetSerfType(Type.TransporterInventory);
+                        }
+                        break;
+                    case Type.Sailor:
+                        EnterInventory();
+                        break;
+                    case Type.Digger:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            SerfState = State.Digging);
+                            s.Digging.HIndex = 15;
+
+                            Building building = Game.GetBuildingAtPos(Position);
+                            s.Digging.DigPos = 6;
+                            s.Digging.TargetH = building.GetLevel();
+                            s.Digging.Substate = 1;
+                        }
+                        break;
+                    case Type.Builder:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            SerfState = State.Building;
+                            Animation = 98;
+                            Counter = 127;
+                            s.Building.Mode = 1;
+                            s.Building.Index = map.GetObjectIndex(Position);
+                            s.Building.MaterialStep = 0;
+
+                            Building building = Game.GetBuilding(s.Building.Index);
+
+                            switch (building.BuildingType)
+                            {
+                                case Building.Type.Stock:
+                                case Building.Type.Sawmill:
+                                case Building.Type.ToolMaker:
+                                case Building.Type.Fortress:
+                                    s.Building.MaterialStep |= Misc.BitU(7);
+                                    Animation = 100;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        break;
+                    case Type.TransporterInventory:
+                        map.SetSerfIndex(Position, 0);
+                        SerfState = State.WaitForResourceOut;
+                        Counter = 63;
+                        break;
+                    case Type.Lumberjack:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            SerfState = State.PlanningLogging;
+                        }
+                        break;
+                    case Type.Sawmiller:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                uint flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
+                                Flag flag = Game.GetFlag(flagIndex);
+                                flag.ClearFlags();
+                                building.StockInit(1, Resource.Type.Lumber, 8);
+                            }
+
+                            SerfState = State.Sawing;
+                            s.Sawing.Mode = 0;
+                        }
+                        break;
+                    case Type.Stonecutter:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            SerfState = State.PlanningStoneCutting;
+                        }
+                        break;
+                    case Type.Forester:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            SerfState = State.PlanningPlanting;
+                        }
+                        break;
+                    case Type.Miner:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            Building building = Game.GetBuildingAtPos(Position);
+                            Building.Type buildingType = building.BuildingType;
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                building.StartActivity();
+                                building.StopPlayingSfx();
+
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.GroupFood, 8);
+                            }
+
+                            SerfState = State.Mining;
+                            s.Mining.Substate = 0;
+                            s.Mining.Deposit = (Map.Minerals)(4 - (buildingType - Building.Type.StoneMine));
+                            /*s.Mining.FieldC = 0;*/
+                            s.Mining.Res = 0;
+                        }
+                        break;
+                    case Type.Smelter:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            Building building = Game.GetBuildingAtPos(Position);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Coal, 8);
+
+                                if (building.BuildingType == Building.Type.SteelSmelter)
+                                {
+                                    building.StockInit(1, Resource.Type.IronOre, 8);
+                                }
+                                else
+                                {
+                                    building.StockInit(1, Resource.Type.GoldOre, 8);
+                                }
+                            }
+
+                            /* Switch to smelting state to begin work. */
+                            SerfState = State.Smelting;
+
+                            if (building.BuildingType == Building.Type.SteelSmelter)
+                            {
+                                s.Smelting.Type = 0;
+                            }
+                            else
+                            {
+                                s.Smelting.Type = -1;
+                            }
+
+                            s.Smelting.Mode = 0;
+                        }
+                        break;
+                    case Type.Fisher:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            SerfState = State.PlanningFishing;
+                        }
+                        break;
+                    case Type.PigFarmer:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+
+                                building.SetInitialResInStock(1, 1);
+
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Wheat, 8);
+
+                                SerfState = State.PigFarming;
+                                s.PigFarming.Mode = 0;
+                            }
+                            else
+                            {
+                                SerfState = State.PigFarming;
+                                s.PigFarming.Mode = 6;
+                                Counter = 0;
+                            }
+                        }
+                        break;
+                    case Type.Butcher:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Pig, 8);
+                            }
+
+                            SerfState = State.Butchering;
+                            s.Butchering.Mode = 0;
+                        }
+                        break;
+                    case Type.Farmer:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+                            SerfState = State.PlanningFarming;
+                        }
+                        break;
+                    case Type.Miller:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Wheat, 8);
+                            }
+
+                            SerfState = State.Milling;
+                            s.Milling.Mode = 0;
+                        }
+                        break;
+                    case Type.Baker:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Flour, 8);
+                            }
+
+                            SerfState = State.Baking;
+                            s.Baking.Mode = 0;
+                        }
+                        break;
+                    case Type.BoatBuilder:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Plank, 8);
+                            }
+
+                            SerfState = State.BuildingBoat;
+                            s.BuildingBoat.Mode = 0;
+                        }
+                        break;
+                    case Type.Toolmaker:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Plank, 8);
+                                building.StockInit(1, Resource.Type.Steel, 8);
+                            }
+
+                            SerfState = State.MakingTool;
+                            s.MakingTool.Mode = 0;
+                        }
+                        break;
+                    case Type.WeaponSmith:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            if (s.EnteringBuilding.FieldB != 0)
+                            {
+                                Building building = Game.GetBuildingAtPos(Position);
+                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                flag.ClearFlags();
+                                building.StockInit(0, Resource.Type.Coal, 8);
+                                building.StockInit(1, Resource.Type.Steel, 8);
+                            }
+
+                            SerfState = State.MakingWeapon;
+                            s.MakingWeapon.Mode = 0;
+                        }
+                        break;
+                    case Type.Geologist:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            SerfState = State.LookingForGeoSpot; /* TODO Should never be reached */
+                            Counter = 0;
+                        }
+                        break;
+                    case Type.Generic:
+                        {
+                            map.SetSerfIndex(Position, 0);
+
+                            Building building = Game.GetBuildingAtPos(Position);
+                            Inventory inventory = building.GetInventory();
+
+                            if (inventory == null)
+                            {
+                                throw new ExceptionFreeserf("Not inventory.");
+                            }
+
+                            inventory.SerfComeBack();
+
+                            SerfState = State.IdleInStock;
+                            s.IdleInStock.InvIndex= inventory.Index;
+                            break;
+                        }
+                    case Type.Knight0:
+                    case Type.Knight1:
+                    case Type.Knight2:
+                    case Type.Knight3:
+                    case Type.Knight4:
+                        if (s.EnteringBuilding.FieldB == -2)
+                        {
+                            EnterInventory();
+                        }
+                        else
+                        {
+                            Building building = Game.GetBuildingAtPos(Position);
+
+                            if (building.IsBurning())
+                            {
+                                SerfState = State.Lost;
+                                Counter = 0;
+                            }
+                            else
+                            {
+                                map.SetSerfIndex(Position, 0);
+
+                                if (building.HasInventory())
+                                {
+                                    SerfState = State.DefendingCastle;
+                                    Counter = 6000;
+
+                                    /* Prepend to knight list */
+                                    s.Defending.NextKnight = building.GetFirstKnight();
+                                    building.SetFirstKnight(Index);
+
+                                    Game.GetPlayer(building.GetOwner()).IncreaseCastleKnights();
+
+                                    return;
+                                }
+
+                                building.RequestedKnightArrived();
+
+                                State nextState = State.Invalid;
+
+                                switch (building.BuildingType)
+                                {
+                                    case Building.Type.Hut:
+                                        nextState = State.DefendingHut;
+                                        break;
+                                    case Building.Type.Tower:
+                                        nextState = State.DefendingTower;
+                                        break;
+                                    case Building.Type.Fortress:
+                                        nextState = State.DefendingFortress;
+                                        break;
+                                    default:
+                                        Debug.NotReached();
+                                        break;
+                                }
+
+                                /* Switch to defending state */
+                                SerfState = nextState;
+                                Counter = 6000;
+
+                                /* Prepend to knight list */
+                                s.Defending.NextKnight = building.GetFirstKnight();
+                                building.SetFirstKnight(Index);
+                            }
+                        }
+                        break;
+                    default:
+                        Debug.NotReached();
+                        break;
+                }
+            }
         }
 
-        void handle_serf_leaving_building_state()
+        void HandleSerfLeavingBuildingState()
         {
+            ushort delta = (ushort)(Game.Tick - tick);
+            tick = Game.Tick;
+            Counter -= delta;
 
+            if (Counter < 0)
+            {
+                Counter = 0;
+                SerfState = s.LeavingBuilding.NextState;
+
+                /* Set FieldF to 0, do this for individual states if necessary */
+                if (SerfState == State.Walking)
+                {
+                    int mode = s.LeavingBuilding.FieldB;
+                    uint dest = s.LeavingBuilding.Dest;
+                    s.Walking.Dir1 = mode;
+                    s.Walking.Dest = dest;
+                    s.Walking.WaitCounter = 0;
+                }
+                else if (SerfState == State.DropResourceOut)
+                {
+                    uint res = (uint)s.LeavingBuilding.FieldB;
+                    uint resDest = s.LeavingBuilding.Dest;
+                    s.MoveResourceOut.Res = res;
+                    s.MoveResourceOut.ResDest = resDest;
+                }
+                else if (SerfState == State.FreeWalking ||
+                         SerfState == State.KnightFreeWalking ||
+                         SerfState == State.StoneCutterFreeWalking)
+                {
+                    int dist1 = s.LeavingBuilding.FieldB;
+                    int dist2 = (int)s.LeavingBuilding.Dest;
+                    int negDist1 = s.LeavingBuilding.Dest2;
+                    int negDist2 = s.LeavingBuilding.Dir;
+                    s.FreeWalking.Dist1 = dist1;
+                    s.FreeWalking.Dist2 = dist2;
+                    s.FreeWalking.NegDist1= negDist1;
+                    s.FreeWalking.NegDist2 = negDist2;
+                    s.FreeWalking.Flags = 0;
+                }
+                else if (SerfState == State.KnightPrepareDefending ||
+                         SerfState == State.Scatter)
+                {
+                    /* No state. */
+                }
+                else
+                {
+                    Log.Debug.Write("serf", "unhandled next state when leaving building.");
+                }
+            }
         }
 
         void handle_serf_ready_to_enter_state()

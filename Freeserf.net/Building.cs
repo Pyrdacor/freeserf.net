@@ -36,5 +36,7 @@ namespace Freeserf
             GoldSmelter,
             Castle
         }
+
+        public Type BuildingType { get; private set; }
     }
 }
