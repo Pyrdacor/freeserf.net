@@ -75,6 +75,7 @@
     <Compile Include="Inventory.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="MapGenerator.cs" />
     <Compile Include="MapGeometry.cs" />
     <Compile Include="Misc.cs" />
     <Compile Include="Objects.cs" />

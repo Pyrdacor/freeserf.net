@@ -329,7 +329,7 @@ namespace Freeserf
 
         }
 
-        void DeleteSerf(Serf serf)
+        internal void DeleteSerf(Serf serf)
         {
 
         }
@@ -369,12 +369,12 @@ namespace Freeserf
             return flags[index];
         }
 
-        Inventory GetInventory(uint index)
+        public Inventory GetInventory(uint index)
         {
             return inventories[index];
         }
 
-        Building GetBuilding(uint index)
+        public Building GetBuilding(uint index)
         {
             return buildings[index];
         }
@@ -384,17 +384,17 @@ namespace Freeserf
             return players[index];
         }
 
-        ListSerfs GetPlayerSerfs(Player player)
+        public ListSerfs GetPlayerSerfs(Player player)
         {
 
         }
 
-        ListBuildings GetPlayerBuildings(Player player)
+        public ListBuildings GetPlayerBuildings(Player player)
         {
 
         }
 
-        ListSerfs GetSerfsInInventory(Inventory inventory)
+        public ListSerfs GetSerfsInInventory(Inventory inventory)
         {
 
         }
@@ -404,7 +404,7 @@ namespace Freeserf
 
         }
 
-        ListInventories GetPlayerInventories(Player player)
+        public ListInventories GetPlayerInventories(Player player)
         {
 
         }
@@ -414,12 +414,12 @@ namespace Freeserf
 
         }
 
-        Player GetNextPlayer(Player player)
+        public Player GetNextPlayer(Player player)
         {
 
         }
 
-        uint GetEnemyScore(Player player)
+        public uint GetEnemyScore(Player player)
         {
 
         }
