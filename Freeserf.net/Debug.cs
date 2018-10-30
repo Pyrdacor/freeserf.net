@@ -46,7 +46,10 @@ namespace Freeserf
         }
 
         public override string Message => "[" + System + "]" + Description;
+    }
 
+    public static class Debug
+    {
         static string SourceCodeLocation([CallerLineNumber] int lineNumber = 0,
             [CallerFilePath] string file = "")
         {
