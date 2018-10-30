@@ -341,7 +341,7 @@ namespace Freeserf
             return ((otherEndDir[(int)dir] >> 7) & 1) != 0;
         }
 
-        public bool PickUpResource(uint fromSlot, Resource.Type res, uint dest)
+        public bool PickUpResource(uint fromSlot, ref Resource.Type res, ref uint dest)
         {
             if (fromSlot >= FLAG_MAX_RES_COUNT)
             {

@@ -401,9 +401,9 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SAttacking
             {
-                public int Field_B; /* B */
-                public int Field_C; /* C */
-                public int Field_D; /* D */
+                public int FieldB; /* B */
+                public int FieldC; /* C */
+                public int FieldD; /* D */
                 public int DefIndex; /* E */
             }
             [FieldOffset(0)]
@@ -428,8 +428,8 @@ namespace Freeserf
             {
                 public int DistColumn; /* B */
                 public int DistRow; /* C */
-                public int Field_D; /* D */
-                public int Field_E; /* E */
+                public int FieldD; /* D */
+                public int FieldE; /* E */
                 public State NextState; /* F */
             }
             [FieldOffset(0)]
@@ -463,7 +463,7 @@ namespace Freeserf
 
         StateInfo s;
 
-        static readonly int[] counter_from_animation = new []
+        static readonly int[] CounterFromAnimation = new []
         {
             /* Walking (0-80) */
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
@@ -576,7 +576,7 @@ namespace Freeserf
             7
         };
 
-        static readonly string[] serf_state_name = new string[]
+        static readonly string[] SerfStateNames = new string[]
         {
             "NULL",  // SERF_STATE_NULL
             "IDLE IN STOCK",  // SERF_STATE_IDLE_IN_STOCK
@@ -660,7 +660,7 @@ namespace Freeserf
             "KNIGHT ATTACKING DEFEAT FREE",  // SERF_STATE_KNIGHT_ATTACKING_DEFEAT_FREE
         };
 
-        static readonly string[] serf_type_name = new string[] 
+        static readonly string[] SerfTypeNames = new string[] 
         {
             "TRANSPORTER",  // SERF_TRANSPORTER = 0,
             "SAILOR",  // SERF_SAILOR,
@@ -690,6 +690,15 @@ namespace Freeserf
             "KNIGHT_3",  // TypeKnight3,
             "KNIGHT_4",  // TypeKnight4,
             "DEAD",  // TypeDead
+        };
+
+        static readonly int[] RoadBuildingSlope = new []
+        {
+            /* Finished building */
+            5, 18, 18, 15, 18, 22, 22, 22,
+            22, 18, 16, 18, 1, 10, 1, 15,
+            15, 16, 15, 15, 10, 15, 20, 15,
+            18
         };
 
         public Serf(Game game, uint index)
@@ -775,12 +784,82 @@ namespace Freeserf
 
         public int TrainKnight(int p)
         {
+            ushort delta = (ushort)(Game.Tick - tick);
+            tick = Game.Tick;
+            Counter -= delta;
 
+            while (Counter < 0)
+            {
+                if (Game.RandomInt() < p)
+                {
+                    /* Level up */
+                    Type oldType = GetSerfType();
+                    SetSerfType((Type)(oldType + 1));
+                    Counter = 6000;
+
+                    return 0;
+                }
+
+                Counter += 6000;
+            }
+
+            return -1;
         }
 
+        /* Change serf state to lost, but make necessary clean up
+           from any earlier state first. */
         public void set_lost_state()
         {
+            if (SerfState == State.Walking)
+            {
+                if (s.Walking.Dir1 >= 0)
+                {
+                    if (s.Walking.Dir1 != 6)
+                    {
+                        Direction dir = (Direction)s.Walking.Dir1;
+                        Flag flag = Game.GetFlag(s.Walking.Dest);
+                        flag.CancelSerfRequest(dir);
 
+                        Direction other_dir = flag.GetOtherEndDir(dir);
+                        flag.GetOtherEndFlag(dir).CancelSerfRequest(other_dir);
+                    }
+                }
+                else if (s.Walking.Dir1 == -1)
+                {
+                    Flag flag = Game.GetFlag(s.Walking.Dest);
+                    Building building = flag.GetBuilding();
+                    building.RequestedSerfLost();
+                }
+
+                SerfState = State.Lost;
+                s.Lost.FieldB = 0;
+            }
+            else if (SerfState == State.Transporting || SerfState == State.Delivering)
+            {
+                if (s.Walking.Res != Resource.Type.None)
+                {
+                    Resource.Type res = s.Walking.Res;
+                    uint dest = s.Walking.Dest;
+
+                    Game.CancelTransportedResource(res, dest);
+                    Game.LoseResource(res);
+                }
+
+                if (GetSerfType() != Type.Sailor)
+                {
+                    SerfState = State.Lost;
+                    s.Lost.FieldB = 0;
+                }
+                else
+                {
+                    SerfState = State.LostSailor;
+                }
+            }
+            else
+            {
+                SerfState = State.Lost;
+                s.Lost.FieldB = 0;
+            }
         }
 
         public void add_to_defending_queue(uint nextKnightIndex, bool pause)
@@ -1252,62 +1331,62 @@ namespace Freeserf
 
         int get_free_walking_neg_dist1()
         {
-            return s.free_walking.neg_dist1;
+            return s.FreeWalking.NegDist1;
         }
 
         int get_free_walking_neg_dist2()
         {
-            return s.free_walking.neg_dist2;
+            return s.FreeWalking.NegDist2;
         }
 
         int get_leaving_building_next_state()
         {
-            return s.leaving_building.next_state;
+            return s.LeavingBuilding.NextState;
         }
 
         int get_leaving_building_field_B()
         {
-            return s.leaving_building.field_B;
+            return s.LeavingBuilding.FieldB;
         }
 
         int get_mining_res()
         {
-            return s.mining.res;
+            return s.Mining.Res;
         }
 
         int get_attacking_field_D()
         {
-            return s.attacking.field_D;
+            return s.Attacking.FieldD;
         }
 
         int get_attacking_def_index()
         {
-            return s.attacking.def_index;
+            return s.Attacking.DefIndex;
         }
 
         int get_walking_wait_counter()
         {
-            return s.walking.wait_counter;
+            return s.Walking.WaitCounter;
 
         }
-        void set_walking_wait_counter(int new_counter)
+        void set_walking_wait_counter(int newCounter)
         {
-            s.walking.wait_counter = new_counter;
+            s.Walking.WaitCounter = newCounter;
         }
 
         int get_walking_dir()
         {
-            return s.walking.dir;
+            return s.Walking.Dir;
         }
 
         uint get_idle_in_stock_inv_index()
         {
-            return s.idle_in_stock.inv_index;
+            return s.IdleInStock.InvIndex;
         }
 
         int get_mining_substate()
         {
-            return s.mining.substate;
+            return s.Milling.Substate;
         }
 
         public Serf extract_last_knight_from_list()
@@ -1340,24 +1419,39 @@ namespace Freeserf
         }
 
         // Commands
+
         void go_out_from_inventory(uint inventory, MapPos dest, int mode)
         {
-
+            SerfState = State.ReadyToLeaveInventory;
+            s.ReadyToLeaveInventory.Mode = mode;
+            s.ReadyToLeaveInventory.Dest = dest;
+            s.ReadyToLeaveInventory.InvIndex = inventory;
         }
 
-        void send_off_to_fight(int dist_col, int dist_row)
+        void send_off_to_fight(int distColumn, int distRow)
         {
-
+            /* Send this serf off to fight. */
+            SerfState = State.KnightLeaveForWalkToFight;
+            s.LeaveForWalkToFight.DistColumn = distColumn;
+            s.LeaveForWalkToFight.DistRow = distRow;
+            s.LeaveForWalkToFight.FieldD = 0;
+            s.LeaveForWalkToFight.FieldE = 0;
+            s.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
         }
 
         void stay_idle_in_stock(uint inventory)
         {
-
+            SerfState = State.IdleInStock;
+            s.IdleInStock.InvIndex = inventory;
         }
 
-        void go_out_from_building(MapPos dest, int dir, int field_B)
+        void go_out_from_building(MapPos dest, int dir, int fieldB)
         {
-
+            SerfState = State.ReadyToLeave;
+            s.LeavingBuilding.FieldB = fieldB;
+            s.LeavingBuilding.Dest = dest;
+            s.LeavingBuilding.Dir = dir;
+            s.LeavingBuilding.NextState = State.Walking;
         }
 
         void update()
@@ -1365,14 +1459,14 @@ namespace Freeserf
 
         }
 
-        static string get_state_name(State state)
+        static string GetStateName(State state)
         {
-
+            return SerfStateNames[(int)state];
         }
 
-        static string get_type_name(Type type)
+        static string GetTypeName(Type type)
         {
-
+            return SerfTypeNames[(int)type];
         }
 
         public void ReadFrom(SaveReaderBinary reader)
@@ -1390,40 +1484,250 @@ namespace Freeserf
 
         }
 
-        //protected:
-        bool is_waiting(Direction* dir)
+        /* Return true if serf is waiting for a position to be available.
+           In this case, dir will be set to the desired direction of the serf,
+           or DirectionNone if the desired direction cannot be determined. */
+        bool IsWaiting(ref Direction dir)
         {
+            Direction[] dirFromOffset = new Direction[]
+            {
+                Direction.UpLeft,   Direction.Up,       Direction.None,
+                Direction.Left,     Direction.None,     Direction.Right,
+                Direction.None,     Direction.Down,     Direction.DownRight
+            };
 
+            if ((SerfState == State.Transporting || SerfState == State.Walking ||
+                 SerfState == State.Delivering) &&
+                 s.Walking.Dir < 0)
+            {
+                dir = (Direction)(s.Walking.Dir + 6);
+                return true;
+            }
+            else if ((SerfState == State.FreeWalking ||
+                      SerfState == State.KnightFreeWalking ||
+                      SerfState == State.StoneCutterFreeWalking) &&
+                      Animation == 82)
+            {
+                int dx = s.FreeWalking.Dist1;
+                int dy = s.FreeWalking.Dist2;
+
+                if (Math.Abs(dx) <= 1 && Math.Abs(dy) <= 1 &&
+                    dirFromOffset[(dx + 1) + 3 * (dy + 1)] > Direction.None)
+                {
+                    dir = dirFromOffset[(dx + 1) + 3 * (dy + 1)];
+                }
+                else
+                {
+                    dir = Direction.None;
+                }
+
+                return true;
+            }
+            else if (SerfState == State.Digging && s.Digging.Substate < 0)
+            {
+                int d = s.Digging.DigPos;
+
+                dir = (d == 0) ? Direction.Up : (Direction)(6 - d);
+
+                return true;
+            }
+
+            return false;
         }
 
-        int switch_waiting(Direction dir)
+        /* Signal waiting serf that it is possible to move in direction
+           while switching position with another serf. Returns 0 if the
+           switch is not acceptable. */
+        bool SwitchWaiting(Direction dir)
         {
+            if ((SerfState == State.Transporting || SerfState == State.Walking ||
+                SerfState == State.Delivering) &&
+                s.Walking.Dir < 0)
+            {
+                s.Walking.Dir = (int)dir.Reverse();
+                return true;
+            }
+            else if ((SerfState == State.FreeWalking ||
+                      SerfState == State.KnightFreeWalking ||
+                      SerfState == State.StoneCutterFreeWalking) &&
+                      Animation == 82)
+            {
+                int dx = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) < 2) ? 1 : 0);
+                int dy = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) > 0) ? 1 : 0);
 
+                s.FreeWalking.Dist1 -= dx;
+                s.FreeWalking.Dist2 -= dy;
+
+                if (s.FreeWalking.Dist1 == 0 && s.FreeWalking.Dist2 == 0)
+                {
+                    /* Arriving to destination */
+                    s.FreeWalking.Flags = Misc.Bit(3);
+                }
+
+                return true;
+            }
+            else if (SerfState == State.Digging && s.Digging.Substate < 0)
+            {
+                return false;
+            }
+
+            return false;
         }
 
-        int get_walking_animation(int h_diff, Direction dir, int switch_pos)
+        int GetWalkingAnimation(int hDiff, Direction dir, bool switchPos)
         {
+            int d = (int)dir;
 
+            if (switchPos && d < 3)
+                d += 6;
+
+            return 4 + hDiff + 9 * d;
         }
 
-        void change_direction(Direction dir, int alt_end)
+        /* Preconditon: serf is in WALKING or TRANSPORTING state */
+        void ChangeDirection(Direction dir, bool altEnd)
         {
+            Map map = Game.Map;
+            MapPos newPos = map.Move(Position, dir);
 
+            if (!map.HasSerf(newPos))
+            {
+                /* Change direction, not occupied. */
+                map.SetSerfIndex(Position, 0);
+                Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
+                s.Walking.Dir = (int)dir.Reverse();
+            }
+            else
+            {
+                /* Direction is occupied. */
+                Serf otherSerf = Game.GetSerfAtPos(newPos);
+                Direction otherDir = Direction.None;
+
+                if (otherSerf.IsWaiting(ref otherDir) &&
+                    (otherDir == dir.Reverse() || otherDir == Direction.None) &&
+                    otherSerf.SwitchWaiting(dir.Reverse()))
+                {
+                    /* Do the switch */
+                    otherSerf.Position = Position;
+                    map.SetSerfIndex(otherSerf.Position, (int)otherSerf.Index);
+                    otherSerf.Animation = GetWalkingAnimation(
+                        (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPos), dir.Reverse(), true);
+                    otherSerf.Counter = CounterFromAnimation[otherSerf.Animation];
+
+                    Animation = GetWalkingAnimation(
+                        (int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, true);
+                    s.Walking.Dir = (int)dir.Reverse();
+                }
+                else
+                {
+                    /* Wait for other serf */
+                    Animation = 81 + (int)dir;
+                    Counter = CounterFromAnimation[Animation];
+                    s.Walking.Dir = (int)dir - 6;
+                    return;
+                }
+            }
+
+            if (!altEnd)
+                s.Walking.WaitCounter = 0;
+
+            Position = newPos;
+            map.SetSerfIndex(Position, (int)Index);
+            Counter += CounterFromAnimation[Animation];
+
+            if (altEnd && Counter < 0)
+            {
+                if (map.HasFlag(newPos))
+                {
+                    Counter = 0;
+                }
+                else
+                {
+                    Log.Debug.Write("serf", "unhandled jump to 31B82.");
+                }
+            }
         }
 
-        void transporter_move_to_flag(Flag* flag)
+        /* Precondition: serf state is in WALKING or TRANSPORTING state */
+        void TransporterMoveToFlag(Flag flag)
         {
+            Direction dir = (Direction)s.Walking.Dir;
 
+            if (flag.IsScheduled(dir))
+            {
+                /* Fetch resource from flag */
+                s.Walking.WaitCounter = 0;
+                uint resIndex = flag.ScheduledSlot(dir);
+
+                if (s.Walking.Res == Resource.Type.None)
+                {
+                    /* Pick up resource. */
+                    flag.PickUpResource(resIndex, ref s.Walking.Res, ref s.Walking.Dest);
+                }
+                else
+                {
+                    /* Switch resources and destination. */
+                    Resource.Type tempRes = s.Walking.Res;
+                    uint tempDest = s.Walking.Dest;
+
+                    flag.PickUpResource(resIndex, ref s.Walking.Res, ref s.Walking.Dest);
+
+                    flag.DropResource(tempRes, tempDest);
+                }
+
+                /* Find next resource to be picked up */
+                Player player = Game.GetPlayer(Player);
+                flag.PrioritizePickup(dir, player);
+            }
+            else if (s.Walking.Res != Resource.Type.None)
+            {
+                /* Drop resource at flag */
+                if (flag.DropResource(s.Walking.Res, s.Walking.Dest))
+                {
+                    s.Walking.Res = Resource.Type.None;
+                }
+            }
+
+            ChangeDirection(dir, true);
         }
 
-        void start_walking(Direction dir, int slope, int change_pos)
+        void StartWalking(Direction dir, int slope, bool changePos)
         {
+            Map map = Game.Map;
+            MapPos newPos = map.Move(Position, dir);
+            Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
+            Counter += (slope * CounterFromAnimation[Animation]) >> 5;
 
+            if (changePos)
+            {
+                map.SetSerfIndex(Position, 0);
+                map.SetSerfIndex(newPos, (int)Index);
+            }
+
+            Position = newPos;
         }
 
-        void enter_building(int field_B, int join_pos)
+        /* Start entering building in direction up-left.
+           If join_pos is set the serf is assumed to origin from
+           a joined position so the source position will not have it's
+           serf index cleared. */
+        void EnterBuilding(int fieldB, bool joinPos)
         {
+            SerfState = State.EnteringBuilding;
 
+            StartWalking(Direction.UpLeft, 32, !joinPos);
+
+            if (joinPos)
+                Game.Map.SetSerfIndex(Position, (int)Index);
+
+            Building building = Game.GetBuildingAtPos(Position);
+            int slope = RoadBuildingSlope[(int)building.Type];
+
+            if (!building.IsDone())
+                slope = 1;
+
+            s.EnteringBuilding.SlopeLen = (slope * Counter) >> 5;
+            s.EnteringBuilding.FieldB = fieldB;
         }
 
         void leave_building(int join_pos)
@@ -1451,19 +1755,64 @@ namespace Freeserf
 
         }
 
-        void set_fight_outcome(Serf* attacker, Serf* defender)
+        void set_fight_outcome(Serf attacker, Serf defender)
         {
 
         }
 
-        static bool handle_serf_walking_state_search_cb(Flag* flag, void* data)
+        static bool handle_serf_walking_state_search_cb(Flag flag, object data)
         {
+            Serf serf = data as Serf;
+            Flag dest = flag.Game.GetFlag(serf.s.Walking.Dest);
 
+            if (flag == dest)
+            {
+                Log.Verbose.Write("serf", " dest found: " + dest.SearchDir);
+                serf.ChangeDirection(dest.SearchDir, false);
+                return true;
+            }
+
+            return false;
         }
 
         void handle_serf_idle_in_stock_state()
         {
+            Inventory inventory = Game.GetInventory(s.IdleInStock.InvIndex);
 
+            if (inventory.GetSerfMode() == 0
+                || inventory.GetSerfMode() == 1 /* in, stop */
+                || inventory.GetSerfQueueLength() >= 3)
+            {
+                switch (GetSerfType())
+                {
+                    case Type.Knight0:
+                        inventory.KnightTraining(this, 4000);
+                        break;
+                    case Type.Knight1:
+                        inventory.KnightTraining(this, 2000);
+                        break;
+                    case Type.Knight2:
+                        inventory.KnightTraining(this, 1000);
+                        break;
+                    case Type.Knight3:
+                        inventory.KnightTraining(this, 500);
+                        break;
+                    case Type.Smelter: /* TODO ??? */
+                        break;
+                    default:
+                        inventory.SerfIdleInStock(this);
+                        break;
+                }
+            }
+            else
+            { /* out */
+                inventory.CallOutSerf(this);
+
+                SerfState = State.ReadyToLeaveInventory;
+                s.ReadyToLeaveInventory.Mode = -3;
+                s.ReadyToLeaveInventory.InvIndex = inventory.Index;
+                /* TODO immediate switch to next state. */
+            }
         }
 
         void handle_serf_walking_state_dest_reached()

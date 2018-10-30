@@ -1,8 +1,8 @@
 ﻿/*
 * Game.cs - Gameplay related functions
 *
-* Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
-* Copyright (C) 2018		Robert Schneckenhaus <robert.schneckenhaus@web.de>
+* Copyright (C) 2013-2017   Jon Lund Steffensen <jonlst@gmail.com>
+* Copyright (C) 2018	    Robert Schneckenhaus <robert.schneckenhaus@web.de>
 *
 * This file is part of freeserf.net. freeserf.net is based on freeserf.
 *
@@ -59,7 +59,7 @@ namespace Freeserf
         protected Random initMapRandom;
         protected uint gameSpeedSave;
         protected uint gameSpeed;
-        protected uint tick;
+        protected ushort tick;
         protected uint lastTick;
         protected uint constTick;
         protected uint gameStatsCounter;
@@ -90,7 +90,7 @@ namespace Freeserf
         protected int inventoryScheduleCounter;
 
         public Map Map => map;
-        public uint Tick => tick;
+        public ushort Tick => tick;
         public uint ConstTick => constTick;
         public uint MapGoldMoraleFactor => mapGoldMoraleFactor;
         public uint GoldTotal => goldTotal;
@@ -299,7 +299,7 @@ namespace Freeserf
 
         }
 
-        ushort RandomInt()
+        internal ushort RandomInt()
         {
 
         }
