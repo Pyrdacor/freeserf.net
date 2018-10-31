@@ -386,7 +386,7 @@ namespace Freeserf
             return false;
         }
 
-        public bool HasEmptyslot()
+        public bool HasEmptySlot()
         {
             return slot.Any(s => s.Type == Resource.Type.None);
         }
