@@ -197,8 +197,8 @@ namespace Freeserf
             [FieldOffset(0)]
             public SEnteringBuilding EnteringBuilding;
 
-            /* States: leaving_building, ready_to_leave,
-               leave_for_fight */
+            /* States: leavingBuilding, readyToLeave,
+               leaveForFight */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SLeavingBuilding
             {
@@ -251,7 +251,7 @@ namespace Freeserf
             [FieldOffset(0)]
             public SBuildingCastle BuildingCastle;
 
-            /* States: MoveResourceOut, drop_resource_out */
+            /* States: MoveResourceOut, dropResourceOut */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMoveResourceOut
             {
@@ -262,7 +262,7 @@ namespace Freeserf
             [FieldOffset(0)]
             public SMoveResourceOut MoveResourceOut;
 
-            /* No state: wait_for_resource_out */
+            /* No state: waitForResourceOut */
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SReadyToLeaveInventory
@@ -274,12 +274,12 @@ namespace Freeserf
             [FieldOffset(0)]
             public SReadyToLeaveInventory ReadyToLeaveInventory;
 
-            /* States: free_walking, logging,
+            /* States: freeWalking, logging,
                planting, stonecutting, fishing,
-               farming, sampling_geo_spot,
-               knight_free_walking,
-               knight_attacking_free,
-               knight_attacking_free_wait */
+               farming, samplingGeoSpot,
+               knightFreeWalking,
+               knightAttackingFree,
+               knightAttackingFreeWait */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SFreeWalking
             {
@@ -292,8 +292,8 @@ namespace Freeserf
             [FieldOffset(0)]
             public SFreeWalking FreeWalking;
 
-            /* No state data: planning_logging,
-               planning_planting, planning_stonecutting */
+            /* No state data: planningLogging,
+               planningPlanting, planningStonecutting */
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SSawing
@@ -332,8 +332,8 @@ namespace Freeserf
             [FieldOffset(0)]
             public SSmelting Smelting;
 
-            /* No state data: planning_fishing,
-               planning_farming */
+            /* No state data: planningFishing,
+               planningFarming */
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMilling
@@ -391,17 +391,17 @@ namespace Freeserf
             [FieldOffset(0)]
             public SBuildingBoat BuildingBoat;
 
-            /* No state data: looking_for_geo_spot */
+            /* No state data: lookingForGeoSpot */
 
-            /* States: knight_engaging_building,
-               knight_prepare_attacking,
-               knight_prepare_defending_free_wait,
-               knight_attacking_defeat_free,
-               knight_attacking,
-               knight_attacking_victory,
-               knight_engage_attacking_free,
-               knight_engage_attacking_free_join,
-               knight_attacking_victory_free,
+            /* States: knightEngagingBuilding,
+               knightPrepareAttacking,
+               knightPrepareDefendingFreeWait,
+               knightAttackingDefeatFree,
+               knightAttacking,
+               knightAttackingVictory,
+               knightEngageAttackingFree,
+               knightEngageAttackingFreeJoin,
+               knightAttackingVictoryFree,
             */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SAttacking
@@ -414,14 +414,14 @@ namespace Freeserf
             [FieldOffset(0)]
             public SAttacking Attacking;
 
-            /* States: knight_defending_free,
-               knight_engage_defending_free */
+            /* States: knightDefendingFree,
+               knightEngageDefendingFree */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SDefendingFree
             {
                 public int DistColumn; /* B */
                 public int DistRow; /* C */
-                public int Field_D; /* D */
+                public int FieldD; /* D */
                 public int OtherDistColumn; /* E */
                 public int OtherDistRow; /* F */
             }
@@ -440,23 +440,23 @@ namespace Freeserf
             [FieldOffset(0)]
             public SLeaveForWalkToFight LeaveForWalkToFight;
 
-            /* States: idle_on_path, wait_idle_on_path,
-               wake_at_flag, wake_on_path. */
+            /* States: idleOnPath, waitIdleOnPath,
+               wakeAtFlag, wakeOnPath. */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SIdleOnPath
             {
                 // NOTE: Flag was a Flag* before! Now it is the index of it.
                 public uint FlagIndex; /* C */
-                public int Field_E; /* E */
+                public int FieldE; /* E */
                 public Direction RevDir; /* B */
             }
             [FieldOffset(0)]
             public SIdleOnPath IdleOnPath;
 
-            /* No state data: finished_building */
+            /* No state data: finishedBuilding */
 
-            /* States: defending_hut, defending_tower,
-               defending_fortress, defending_castle */
+            /* States: defendingHut, defendingTower,
+               defendingFortress, defendingCastle */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SDefending
             {
@@ -468,7 +468,7 @@ namespace Freeserf
 
         StateInfo s;
 
-        static readonly int[] CounterFromAnimation = new []
+        static readonly int[] CounterFromAnimation = new[]
         {
             /* Walking (0-80) */
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
@@ -665,7 +665,7 @@ namespace Freeserf
             "KNIGHT ATTACKING DEFEAT FREE",  // SERF_STATE_KNIGHT_ATTACKING_DEFEAT_FREE
         };
 
-        static readonly string[] SerfTypeNames = new string[] 
+        static readonly string[] SerfTypeNames = new string[]
         {
             "TRANSPORTER",  // SERF_TRANSPORTER = 0,
             "SAILOR",  // SERF_SAILOR,
@@ -697,7 +697,7 @@ namespace Freeserf
             "DEAD",  // TypeDead
         };
 
-        static readonly int[] RoadBuildingSlope = new []
+        static readonly int[] RoadBuildingSlope = new[]
         {
             /* Finished building */
             5, 18, 18, 15, 18, 22, 22, 22,
@@ -825,8 +825,8 @@ namespace Freeserf
                         Flag flag = Game.GetFlag(s.Walking.Dest);
                         flag.CancelSerfRequest(dir);
 
-                        Direction other_dir = flag.GetOtherEndDir(dir);
-                        flag.GetOtherEndFlag(dir).CancelSerfRequest(other_dir);
+                        Direction otherDir = flag.GetOtherEndDir(dir);
+                        flag.GetOtherEndFlag(dir).CancelSerfRequest(otherDir);
                     }
                 }
                 else if (s.Walking.Dir1 == -1)
@@ -867,7 +867,7 @@ namespace Freeserf
             }
         }
 
-        public void add_to_defending_queue(uint nextKnightIndex, bool pause)
+        public void AddToDefendingQueue(uint nextKnightIndex, bool pause)
         {
             SerfState = State.DefendingCastle;
 
@@ -1188,7 +1188,7 @@ namespace Freeserf
             }
         }
 
-        public bool change_transporter_state_at_pos(MapPos pos, State state)
+        public bool changeTransporterStateAtPos(MapPos pos, State state)
         {
             if (Position == pos &&
               (state == State.WakeAtFlag || state == State.WakeOnPath ||
@@ -1201,7 +1201,7 @@ namespace Freeserf
             return false;
         }
 
-        public void restore_path_serf_info()
+        public void RestorePathSerfInfo()
         {
             if (SerfState != State.WakeOnPath)
             {
@@ -1222,7 +1222,7 @@ namespace Freeserf
             }
         }
 
-        public void clear_destination(uint dest)
+        public void ClearDestination(uint dest)
         {
             switch (SerfState)
             {
@@ -1256,7 +1256,7 @@ namespace Freeserf
             }
         }
 
-        public void clear_destination2(uint dest)
+        public void ClearDestination2(uint dest)
         {
             switch (SerfState)
             {
@@ -1291,7 +1291,7 @@ namespace Freeserf
             }
         }
 
-        public bool idle_to_wait_state(MapPos pos)
+        public bool idleToWaitState(MapPos pos)
         {
             if (Position == pos &&
               (SerfState == State.IdleOnPath || SerfState == State.WaitIdleOnPath ||
@@ -1349,52 +1349,52 @@ namespace Freeserf
             return s.LeavingBuilding.NextState;
         }
 
-        int get_leaving_building_field_B()
+        int getLeavingBuildingFieldB()
         {
             return s.LeavingBuilding.FieldB;
         }
 
-        Resource.Type get_mining_res()
+        uint GetMiningRes()
         {
             return s.Mining.Res;
         }
 
-        int get_attacking_field_D()
+        int getAttackingFieldD()
         {
             return s.Attacking.FieldD;
         }
 
-        int get_attacking_def_index()
+        int getAttackingDefIndex()
         {
             return s.Attacking.DefIndex;
         }
 
-        int get_walking_wait_counter()
+        int getWalkingWaitCounter()
         {
             return s.Walking.WaitCounter;
 
         }
-        void set_walking_wait_counter(int newCounter)
+        void SetWalkingWaitCounter(int newCounter)
         {
             s.Walking.WaitCounter = newCounter;
         }
 
-        int get_walking_dir()
+        int getWalkingDir()
         {
             return s.Walking.Dir;
         }
 
-        uint get_idle_in_stock_inv_index()
+        uint getIdleInStockInvIndex()
         {
             return s.IdleInStock.InvIndex;
         }
 
-        int get_mining_substate()
+        int getMiningSubstate()
         {
             return s.Milling.Substate;
         }
 
-        public Serf extract_last_knight_from_list()
+        public Serf extractLastKnightFromList()
         {
             uint defIndex = Index;
             Serf defSerf = Game.GetSerf(defIndex);
@@ -1408,24 +1408,24 @@ namespace Freeserf
             return defSerf;
         }
 
-        void insert_before(Serf knight)
+        void InsertBefore(Serf knight)
         {
             s.Defending.NextKnight = knight.Index;
         }
 
-        uint get_next()
+        uint getNext()
         {
             return s.Defending.NextKnight;
         }
 
-        void set_next(uint next)
+        void SetNext(uint next)
         {
             s.Defending.NextKnight = next;
         }
 
         // Commands
 
-        void go_out_from_inventory(uint inventory, MapPos dest, int mode)
+        void GoOutFromInventory(uint inventory, MapPos dest, int mode)
         {
             SerfState = State.ReadyToLeaveInventory;
             s.ReadyToLeaveInventory.Mode = mode;
@@ -1433,7 +1433,7 @@ namespace Freeserf
             s.ReadyToLeaveInventory.InvIndex = inventory;
         }
 
-        void send_off_to_fight(int distColumn, int distRow)
+        void SendOffToFight(int distColumn, int distRow)
         {
             /* Send this serf off to fight. */
             SerfState = State.KnightLeaveForWalkToFight;
@@ -1444,13 +1444,13 @@ namespace Freeserf
             s.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
         }
 
-        void stay_idle_in_stock(uint inventory)
+        void StayIdleInStock(uint inventory)
         {
             SerfState = State.IdleInStock;
             s.IdleInStock.InvIndex = inventory;
         }
 
-        void go_out_from_building(MapPos dest, int dir, int fieldB)
+        void GoOutFromBuilding(MapPos dest, int dir, int fieldB)
         {
             SerfState = State.ReadyToLeave;
             s.LeavingBuilding.FieldB = fieldB;
@@ -1459,7 +1459,7 @@ namespace Freeserf
             s.LeavingBuilding.NextState = State.Walking;
         }
 
-        void update()
+        void Update()
         {
 
         }
@@ -1713,7 +1713,7 @@ namespace Freeserf
         }
 
         /* Start entering building in direction up-left.
-           If join_pos is set the serf is assumed to origin from
+           If joinPos is set the serf is assumed to origin from
            a joined position so the source position will not have it's
            serf index cleared. */
         void EnterBuilding(int fieldB, bool joinPos)
@@ -1758,8 +1758,8 @@ namespace Freeserf
             Game.Map.SetSerfIndex(Position, 0);
             Building building = Game.GetBuildingAtPos(Position);
             SerfState = State.IdleInStock;
-            /*serf->s.idle_in_stock.FieldB = 0;
-              serf->s.idle_in_stock.FieldC = 0;*/
+            /*serf->s.idleInStock.FieldB = 0;
+              serf->s.idleInStock.FieldC = 0;*/
             s.IdleInStock.InvIndex = building.GetInventory().Index;
         }
 
@@ -1806,7 +1806,7 @@ namespace Freeserf
             return Map.MapSpaceFromObject[(int)Game.Map.GetObject(pos)] <= Map.Space.Semipassable;
         }
 
-        void set_fight_outcome(Serf attacker, Serf defender)
+        void SetFightOutcome(Serf attacker, Serf defender)
         {
             /* Calculate "morale" for attacker. */
             int expFactor = 1 << (attacker.GetSerfType() - Type.Knight0);
@@ -1966,7 +1966,7 @@ namespace Freeserf
                 s.Walking.Res = Resource.Type.None;
                 s.Walking.Dir = (int)dir;
                 s.Walking.Dir1 = 0;
-                s.Walking.WaitCounter= 0;
+                s.Walking.WaitCounter = 0;
 
                 TransporterMoveToFlag(flag);
             }
@@ -1981,7 +1981,7 @@ namespace Freeserf
             /* Only check for loops once in a while. */
             ++s.Walking.WaitCounter;
 
-            if ((!map.HasFlag(Position) && s.Walking.WaitCounter>= 10) ||
+            if ((!map.HasFlag(Position) && s.Walking.WaitCounter >= 10) ||
                 s.Walking.WaitCounter >= 50)
             {
                 MapPos pos = Position;
@@ -2197,10 +2197,10 @@ namespace Freeserf
                                     ((int)Direction.UpLeft + 6) * 9;
                         Counter = CounterFromAnimation[Animation];
                         /* TODO next call is actually into the middle of
-                           handle_serf_delivering_state().
+                           handleSerfDeliveringState().
                            Why is a nice and clean state switch not enough???
                            Just ignore this call and we'll be safe, I think... */
-                        /* handle_serf_delivering_state(serf); */
+                        /* handleSerfDeliveringState(serf); */
                         return;
                     }
 
@@ -2713,7 +2713,7 @@ namespace Freeserf
                             inventory.SerfComeBack();
 
                             SerfState = State.IdleInStock;
-                            s.IdleInStock.InvIndex= inventory.Index;
+                            s.IdleInStock.InvIndex = inventory.Index;
                             break;
                         }
                     case Type.Knight0:
@@ -2826,7 +2826,7 @@ namespace Freeserf
                     int negDist2 = s.LeavingBuilding.Dir;
                     s.FreeWalking.Dist1 = dist1;
                     s.FreeWalking.Dist2 = dist2;
-                    s.FreeWalking.NegDist1= negDist1;
+                    s.FreeWalking.NegDist1 = negDist1;
                     s.FreeWalking.NegDist2 = negDist2;
                     s.FreeWalking.Flags = 0;
                 }
@@ -2858,7 +2858,7 @@ namespace Freeserf
         }
 
         void HandleSerfReadyToLeaveState()
-		{
+        {
             tick = Game.Tick;
             Counter = 0;
 
@@ -2877,8 +2877,8 @@ namespace Freeserf
         }
 
         void HandleSerfDiggingState()
-		{
-            int[] hDiff = new []
+        {
+            int[] hDiff = new[]
             {
                 -1, 1, -2, 2, -3, 3, -4, 4,
                 -5, 5, -6, 6, -7, 7, -8, 8
@@ -3062,8 +3062,8 @@ namespace Freeserf
         }
 
         void HandleSerfBuildingState()
-		{
-            int[] materialOrder = new []
+        {
+            int[] materialOrder = new[]
             {
                 0, 0, 0, 0, 0, 4, 0, 0,
                 0, 0, 0x38, 2, 8, 2, 8, 4,
@@ -3199,7 +3199,7 @@ namespace Freeserf
         }
 
         void HandleSerfBuildingCastleState()
-		{
+        {
             tick = Game.Tick;
 
             Inventory inventory = Game.GetInventory(s.BuildingCastle.InvIndex);
@@ -3214,7 +3214,7 @@ namespace Freeserf
         }
 
         void HandleSerfMoveResourceOutState()
-		{
+        {
             tick = Game.Tick;
             Counter = 0;
 
@@ -3250,7 +3250,7 @@ namespace Freeserf
         }
 
         void HandleSerfWaitForResourceOutState()
-		{
+        {
             if (Counter != 0)
             {
                 ushort delta = (ushort)(Game.Tick - tick);
@@ -3287,7 +3287,7 @@ namespace Freeserf
         }
 
         void HandleSerfDropResourceOutState()
-		{
+        {
             Flag flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
 
             if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Res - 1), s.MoveResourceOut.ResDest))
@@ -3300,7 +3300,7 @@ namespace Freeserf
         }
 
         void HandleSerfDeliveringState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -3333,8 +3333,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_ready_to_leave_inventory_state()
-		{
+        void HandleSerfReadyToLeaveInventoryState()
+        {
             tick = Game.Tick;
             Counter = 0;
 
@@ -3386,7 +3386,7 @@ namespace Freeserf
         }
 
         void HandleSerfFreeWalkingStateDestReached()
-		{
+        {
             if (s.FreeWalking.NegDist1 == -128 && s.FreeWalking.NegDist2 < 0)
             {
                 FindInventory();
@@ -3671,7 +3671,7 @@ namespace Freeserf
         }
 
         void HandleSerfFreeWalkingSwitchOnDir(Direction dir)
-		{
+        {
             // A suitable direction has been found; walk.
             if (dir < Direction.Right)
             {
@@ -3697,7 +3697,7 @@ namespace Freeserf
         }
 
         void HandleSerfFreeWalkingSwitchWithOther()
-		{
+        {
             /* No free position can be found. Switch with other serf. */
             MapPos newPos = 0;
             Direction dir = Direction.None;
@@ -3797,7 +3797,7 @@ namespace Freeserf
         };
 
         int HandleFreeWalkingFollowEdge()
-		{
+        {
             bool water = SerfState == State.FreeSailing;
             int dirIndex = -1;
             Direction[] dirArray = null;
@@ -3825,9 +3825,9 @@ namespace Freeserf
                 /* Convert offset in two dimensions to
                    direction variable. */
                 Direction dirFromOffset = DirFromOffset[(d1 + 1) + 3 * (d2 + 1)];
-                MapPos new_pos = Game.Map.Move(Position, dirFromOffset);
+                MapPos newPos = Game.Map.Move(Position, dirFromOffset);
 
-                if (!CanPassMapPos(new_pos))
+                if (!CanPassMapPos(newPos))
                 {
                     if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDist1 != -128)
                     {
@@ -3850,7 +3850,7 @@ namespace Freeserf
                 }
 
                 if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDist1 != -128 &&
-                    Game.Map.HasSerf(new_pos))
+                    Game.Map.HasSerf(newPos))
                 {
                     /* Wait for other serfs */
                     s.FreeWalking.Flags = 0;
@@ -3955,7 +3955,7 @@ namespace Freeserf
         };
 
         void HandleFreeWalkingCommon()
-		{
+        {
             bool water = SerfState == State.FreeSailing;
 
             if (Misc.BitTest(s.FreeWalking.Flags, 3) &&
@@ -4202,7 +4202,7 @@ namespace Freeserf
         }
 
         void HandleSerfFreeWalkingState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4214,7 +4214,7 @@ namespace Freeserf
         }
 
         void HandleSerfLoggingState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4256,7 +4256,7 @@ namespace Freeserf
         }
 
         void HandleSerfPlanningLoggingState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4285,7 +4285,7 @@ namespace Freeserf
         }
 
         void HandleSerfPlanningPlantingState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4320,7 +4320,7 @@ namespace Freeserf
         }
 
         void HandleSerfPlantingState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4355,7 +4355,7 @@ namespace Freeserf
         }
 
         void HandleSerfPlanningStonecutting()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4386,7 +4386,7 @@ namespace Freeserf
         }
 
         void HandleStonecutterFreeWalking()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4412,7 +4412,7 @@ namespace Freeserf
         }
 
         void HandleSerfStonecuttingState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4470,7 +4470,7 @@ namespace Freeserf
         }
 
         void HandleSerfSawingState()
-		{
+        {
             if (s.Sawing.Mode == 0)
             {
                 Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
@@ -4505,7 +4505,7 @@ namespace Freeserf
         }
 
         void HandleSerfLostState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4607,7 +4607,7 @@ namespace Freeserf
         }
 
         void HandleLostSailor()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4669,7 +4669,7 @@ namespace Freeserf
         }
 
         void HandleFreeSailing()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4688,7 +4688,7 @@ namespace Freeserf
         }
 
         void HandleSerfEscapeBuildingState()
-		{
+        {
             if (!Game.Map.HasSerf(Position))
             {
                 Game.Map.SetSerfIndex(Position, (int)Index);
@@ -4702,7 +4702,7 @@ namespace Freeserf
         }
 
         void HandleSerfMiningState()
-		{
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4793,7 +4793,7 @@ namespace Freeserf
                                     Resource.Type.Coal, Resource.Type.Stone
                                 };
 
-                                s.Mining.Res = (int)resFromMineType[(int)s.Mining.Deposit - 1] + 1;
+                                s.Mining.Res = (uint)resFromMineType[(int)s.Mining.Deposit - 1] + 1;
                                 s.Mining.Substate = 8;
                             }
 
@@ -4845,7 +4845,7 @@ namespace Freeserf
         }
 
         void HandleSerfSmeltingState()
-		{
+        {
             Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.Smelting.Mode == 0)
@@ -4896,15 +4896,16 @@ namespace Freeserf
                             res = 1 + (int)Resource.Type.GoldBar;
                         }
 
-                        SerfState = State.MoveResourceOut);
+                        SerfState = State.MoveResourceOut;
 
-                        s.MoveResourceOut.Res = res;
+                        s.MoveResourceOut.Res = (uint)res;
                         s.MoveResourceOut.ResDest = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
                         /* Update resource stats. */
-                        Player* player = Game.get_player(Player);
-                        player.increase_res_count(res - 1);
+                        Player player = Game.GetPlayer(Player);
+                        player.IncreaseResCount(res - 1);
+
                         return;
                     }
                     else if (s.Smelting.Counter == 0)
@@ -4917,8 +4918,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_planning_fishing_state()
-		{
+        void HandleSerfPlanningFishingState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4927,24 +4928,23 @@ namespace Freeserf
             while (Counter < 0)
             {
                 int dist = ((Game.RandomInt() >> 2) & 0x3f) + 1;
-                MapPos dest = map.PosAdd_spirally(Position, dist);
+                MapPos dest = map.PosAddSpirally(Position, (uint)dist);
 
-                if (map.GetObject(dest) == Map.ObjectNone &&
-                    map.paths(dest) == 0 &&
-                    ((map.TypeDown(dest) <= Map.TerrainWater3 &&
-                      map.TypeUp(map.move_up_left(dest)) >= Map.TerrainGrass0) ||
-                     (map.TypeDown(map.move_left(dest)) <= Map.TerrainWater3 &&
-                      map.TypeUp(map.move_up(dest)) >= Map.TerrainGrass0)))
+                if (map.GetObject(dest) == Map.Object.None &&
+                    map.Paths(dest) == 0 &&
+                    ((map.TypeDown(dest) <= Map.Terrain.Water3 &&
+                      map.TypeUp(map.MoveUpLeft(dest)) >= Map.Terrain.Grass0) ||
+                     (map.TypeDown(map.MoveLeft(dest)) <= Map.Terrain.Water3 &&
+                      map.TypeUp(map.MoveUp(dest)) >= Map.Terrain.Grass0)))
                 {
                     SerfState = State.ReadyToLeave);
                     s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
-                    s.LeavingBuilding.dest = Map.GetSpiralPattern()[2 * dist + 1] - 1;
-                    s.LeavingBuilding.dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
-                    s.LeavingBuilding.dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
-                    s.LeavingBuilding.next_state = State.FreeWalking;
-                    Log.Verbose["serf"] << "planning fishing: lake found, dist "
-                                         << s.LeavingBuilding.FieldB << ","
-                                         << s.LeavingBuilding.dest;
+                    s.LeavingBuilding.Dest = (uint)Map.GetSpiralPattern()[2 * dist + 1] - 1;
+                    s.LeavingBuilding.Dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
+                    s.LeavingBuilding.Dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
+                    s.LeavingBuilding.NextState = State.FreeWalking;
+                    Log.Verbose.Write("serf", $"planning fishing: lake found, dist {s.LeavingBuilding.FieldB},{s.LeavingBuilding.Dest}");
+
                     return;
                 }
 
@@ -4952,8 +4952,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_fishing_state()
-		{
+        void HandleSerfFishingState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -4964,10 +4964,11 @@ namespace Freeserf
                     s.FreeWalking.Flags == 10)
                 {
                     /* Stop fishing. Walk back. */
-                    SerfState = State.FreeWalking);
+                    SerfState = State.FreeWalking;
                     s.FreeWalking.NegDist1 = -128;
                     s.FreeWalking.Flags = 0;
                     Counter = 0;
+
                     return;
                 }
 
@@ -4980,46 +4981,48 @@ namespace Freeserf
                 }
 
                 Map map = Game.Map;
-                Direction dir = DirectionNone;
+                Direction dir = Direction.None;
+
                 if (Animation == 131)
                 {
-                    if (map.is_in_water(map.move_left(Position)))
+                    if (map.IsInWater(map.MoveLeft(Position)))
                     {
-                        dir = DirectionLeft;
+                        dir = Direction.Left;
                     }
                     else
                     {
-                        dir = DirectionDown;
+                        dir = Direction.Down;
                     }
                 }
                 else
                 {
-                    if (map.is_in_water(map.move_right(Position)))
+                    if (map.IsInWater(map.MoveRight(Position)))
                     {
-                        dir = DirectionRight;
+                        dir = Direction.Right;
                     }
                     else
                     {
-                        dir = DirectionDownRight;
+                        dir = Direction.DownRight;
                     }
                 }
 
-                int res = map.get_res_fish(map.move(Position, dir));
+                uint res = map.GetResourceFish(map.Move(Position, dir));
+
                 if (res > 0 && (Game.RandomInt() & 0x3f) + 4 < res)
                 {
                     /* Caught a fish. */
-                    map.remove_fish(map.move(Position, dir), 1);
-                    s.FreeWalking.NegDist2 = 1 + Resource.TypeFish;
+                    map.RemoveFish(map.Move(Position, dir), 1);
+                    s.FreeWalking.NegDist2 = 1 + (int)Resource.Type.Fish;
                 }
 
-                s.FreeWalking.flags += 1;
+                ++s.FreeWalking.Flags;
                 Animation += 2;
                 Counter += 128;
             }
         }
 
-        void handle_serf_planning_farming_state()
-		{
+        void HandleSerfPlanningFarmingState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -5028,42 +5031,43 @@ namespace Freeserf
             while (Counter < 0)
             {
                 int dist = ((Game.RandomInt() >> 2) & 0x1f) + 7;
-                MapPos dest = map.PosAdd_spirally(Position, dist);
+
+                MapPos dest = map.PosAddSpirally(Position, (uint)dist);
 
                 /* If destination doesn't have an object it must be
                    of the correct type and the surrounding spaces
                    must not be occupied by large buildings.
-                   If it _has_ an object it must be an existing field. */
-                if ((map.GetObject(dest) == Map.ObjectNone &&
-                     (map.TypeUp(dest) == Map.TerrainGrass1 &&
-                      map.TypeDown(dest) == Map.TerrainGrass1 &&
-                      map.paths(dest) == 0 &&
-                      map.GetObject(map.move_right(dest)) != Map.ObjectLargeBuilding &&
-                      map.GetObject(map.move_right(dest)) != Map.ObjectCastle &&
-                     map.GetObject(map.move_down_right(dest)) != Map.ObjectLargeBuilding &&
-                      map.GetObject(map.move_down_right(dest)) != Map.ObjectCastle &&
-                      map.GetObject(map.move_down(dest)) != Map.ObjectLargeBuilding &&
-                      map.GetObject(map.move_down(dest)) != Map.ObjectCastle &&
-                      map.TypeDown(map.move_left(dest)) == Map.TerrainGrass1 &&
-                      map.GetObject(map.move_left(dest)) != Map.ObjectLargeBuilding &&
-                      map.GetObject(map.move_left(dest)) != Map.ObjectCastle &&
-                      map.TypeUp(map.move_up_left(dest)) == Map.TerrainGrass1 &&
-                      map.TypeDown(map.move_up_left(dest)) == Map.TerrainGrass1 &&
-                      map.GetObject(map.move_up_left(dest)) != Map.ObjectLargeBuilding &&
-                      map.GetObject(map.move_up_left(dest)) != Map.ObjectCastle &&
-                      map.TypeUp(map.move_up(dest)) == Map.TerrainGrass1 &&
-                      map.GetObject(map.move_up(dest)) != Map.ObjectLargeBuilding &&
-                      map.GetObject(map.move_up(dest)) != Map.ObjectCastle)) ||
-                    map.GetObject(dest) == Map.ObjectSeeds5 ||
-                    (map.GetObject(dest) >= Map.ObjectField0 &&
-                     map.GetObject(dest) <= Map.ObjectField5))
+                   If it Has_ an object it must be an existing field. */
+                if ((map.GetObject(dest) == Map.Object.None &&
+                     (map.TypeUp(dest) == Map.Terrain.Grass1 &&
+                      map.TypeDown(dest) == Map.Terrain.Grass1 &&
+                      map.Paths(dest) == 0 &&
+                      map.GetObject(map.moveRight(dest)) != Map.Object.LargeBuilding &&
+                      map.GetObject(map.moveRight(dest)) != Map.Object.Castle &&
+                     map.GetObject(map.moveDownRight(dest)) != Map.Object.LargeBuilding &&
+                      map.GetObject(map.moveDownRight(dest)) != Map.Object.Castle &&
+                      map.GetObject(map.moveDown(dest)) != Map.Object.LargeBuilding &&
+                      map.GetObject(map.moveDown(dest)) != Map.Object.Castle &&
+                      map.TypeDown(map.moveLeft(dest)) == Map.Terrain.Grass1 &&
+                      map.GetObject(map.moveLeft(dest)) != Map.Object.LargeBuilding &&
+                      map.GetObject(map.moveLeft(dest)) != Map.Object.Castle &&
+                      map.TypeUp(map.moveUpLeft(dest)) == Map.Terrain.Grass1 &&
+                      map.TypeDown(map.moveUpLeft(dest)) == Map.Terrain.Grass1 &&
+                      map.GetObject(map.moveUpLeft(dest)) != Map.Object.LargeBuilding &&
+                      map.GetObject(map.moveUpLeft(dest)) != Map.Object.Castle &&
+                      map.TypeUp(map.moveUp(dest)) == Map.Terrain.Grass1 &&
+                      map.GetObject(map.moveUp(dest)) != Map.Object.LargeBuilding &&
+                      map.GetObject(map.moveUp(dest)) != Map.Object.Castle)) ||
+                    map.GetObject(dest) == Map.Object.Seeds5 ||
+                    (map.GetObject(dest) >= Map.Object.Field0 &&
+                     map.GetObject(dest) <= Map.Object.Field5))
                 {
                     SerfState = State.ReadyToLeave);
                     s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
                     s.LeavingBuilding.dest = Map.GetSpiralPattern()[2 * dist + 1] - 1;
                     s.LeavingBuilding.dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
                     s.LeavingBuilding.dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
-                    s.LeavingBuilding.next_state = State.FreeWalking;
+                    s.LeavingBuilding.nextState = State.FreeWalking;
                     Log.Verbose["serf"] << "planning farming: field spot found, dist "
                                          << s.LeavingBuilding.FieldB << ", "
                                          << s.LeavingBuilding.dest << ".";
@@ -5074,8 +5078,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_farming_state()
-		{
+        void HandleSerfFarmingState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -5088,7 +5092,7 @@ namespace Freeserf
                 /* Sowing. */
                 if (map.GetObject(Position) == 0 && map.paths(Position) == 0)
                 {
-                    map.set_object(Position, Map.ObjectSeeds0, -1);
+                    map.setObject(Position, Map.ObjectSeeds0, -1);
                 }
             }
             else
@@ -5097,15 +5101,15 @@ namespace Freeserf
                 s.FreeWalking.NegDist2 = 1;
                 if (map.GetObject(Position) == Map.ObjectSeeds5)
                 {
-                    map.set_object(Position, Map.ObjectField0, -1);
+                    map.setObject(Position, Map.ObjectField0, -1);
                 }
                 else if (map.GetObject(Position) == Map.ObjectField5)
                 {
-                    map.set_object(Position, Map.ObjectFieldExpired, -1);
+                    map.setObject(Position, Map.ObjectFieldExpired, -1);
                 }
                 else if (map.GetObject(Position) != Map.ObjectFieldExpired)
                 {
-                    map.set_object(Position, (Map.Object)(map.GetObject(Position) + 1), -1);
+                    map.setObject(Position, (Map.Object)(map.GetObject(Position) + 1), -1);
                 }
             }
 
@@ -5115,15 +5119,15 @@ namespace Freeserf
             Counter = 0;
         }
 
-        void handle_serf_milling_state()
-		{
+        void HandleSerfMillingState()
+        {
             Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.milling.mode == 0)
             {
-                if (building.use_resource_in_stock(0))
+                if (building.useResourceInStock(0))
                 {
-                    building.start_activity();
+                    building.startActivity();
 
                     s.milling.mode = 1;
                     Animation = 137;
@@ -5145,14 +5149,14 @@ namespace Freeserf
                     if (s.milling.mode == 5)
                     {
                         /* Done milling. */
-                        building.stop_activity();
+                        building.stopActivity();
                         SerfState = State.MoveResourceOut);
                         s.MoveResourceOut.Res = 1 + Resource.TypeFlour;
                         s.MoveResourceOut.ResDest = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        Player* player = Game.get_player(Player);
-                        player.increase_res_count(Resource.TypeFlour);
+                        Player* player = Game.getPlayer(Player);
+                        player.increaseResCount(Resource.TypeFlour);
                         return;
                     }
                     else if (s.milling.mode == 3)
@@ -5170,13 +5174,13 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_baking_state()
-		{
+        void HandleSerfBakingState()
+        {
             Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.baking.mode == 0)
             {
-                if (building.use_resource_in_stock(0))
+                if (building.useResourceInStock(0))
                 {
                     s.baking.mode = 1;
                     Animation = 138;
@@ -5198,20 +5202,20 @@ namespace Freeserf
                     if (s.baking.mode == 3)
                     {
                         /* Done baking. */
-                        building.stop_activity();
+                        building.stopActivity();
 
                         SerfState = State.MoveResourceOut);
                         s.MoveResourceOut.Res = 1 + Resource.TypeBread;
                         s.MoveResourceOut.ResDest = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        Player* player = Game.get_player(Player);
-                        player.increase_res_count(Resource.TypeBread);
+                        Player* player = Game.getPlayer(Player);
+                        player.increaseResCount(Resource.TypeBread);
                         return;
                     }
                     else
                     {
-                        building.start_activity();
+                        building.startActivity();
                         Game.Map.SetSerfIndex(Position, 0);
                         Counter += 1500;
                     }
@@ -5219,19 +5223,20 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_pigfarming_state()
-		{
+        void HandleSerfPigfarmingState()
+        {
             /* When the serf is present there is also at least one
      pig present and at most eight. */
-            const int breeding_prob[] = {
-    6000, 8000, 10000, 11000, 12000, 13000, 14000, 0
-  };
+            int[] breedingProb = new int[]
+            {
+                6000, 8000, 10000, 11000, 12000, 13000, 14000, 0
+            };
 
             Building building = Game.GetBuildingAtPos(Position);
 
             if (s.pigfarming.mode == 0)
             {
-                if (building.use_resource_in_stock(0))
+                if (building.useResourceInStock(0))
                 {
                     s.pigfarming.mode = 1;
                     Animation = 139;
@@ -5258,12 +5263,12 @@ namespace Freeserf
                             Animation = 139;
                             Counter = CounterFromAnimation[Animation];
                         }
-                        else if (building.pigs_count() == 8 ||
-                                 (building.pigs_count() > 3 &&
-                                  ((20 * Game.RandomInt()) >> 16) < building.pigs_count()))
+                        else if (building.pigsCount() == 8 ||
+                                 (building.pigsCount() > 3 &&
+                                  ((20 * Game.RandomInt()) >> 16) < building.pigsCount()))
                         {
                             /* Pig is ready for the butcher. */
-                            building.send_pig_to_butcher();
+                            building.sendPigToButcher();
 
                             SerfState = State.MoveResourceOut);
                             s.MoveResourceOut.Res = 1 + Resource.TypePig;
@@ -5271,8 +5276,8 @@ namespace Freeserf
                             s.MoveResourceOut.NextState = State.DropResourceOut;
 
                             /* Update resource stats. */
-                            Player* player = Game.get_player(Player);
-                            player.increase_res_count(Resource.TypePig);
+                            Player* player = Game.getPlayer(Player);
+                            player.increaseResCount(Resource.TypePig);
                         }
                         else if (Game.RandomInt() & 0xf)
                         {
@@ -5291,10 +5296,10 @@ namespace Freeserf
                     else
                     {
                         Game.Map.SetSerfIndex(Position, 0);
-                        if (building.pigs_count() < 8 &&
-                            Game.RandomInt() < breeding_prob[building.pigs_count() - 1])
+                        if (building.pigsCount() < 8 &&
+                            Game.RandomInt() < breedingProb[building.pigsCount() - 1])
                         {
-                            building.place_new_pig();
+                            building.placeNewPig();
                         }
                         Counter += 2048;
                     }
@@ -5302,13 +5307,13 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_butchering_state()
-		{
+        void HandleSerfButcheringState()
+        {
             Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.butchering.mode == 0)
             {
-                if (building.use_resource_in_stock(0))
+                if (building.useResourceInStock(0))
                 {
                     s.butchering.mode = 1;
                     Animation = 140;
@@ -5335,33 +5340,33 @@ namespace Freeserf
                     s.MoveResourceOut.NextState = State.DropResourceOut;
 
                     /* Update resource stats. */
-                    Player* player = Game.get_player(Player);
-                    player.increase_res_count(Resource.TypeMeat);
+                    Player* player = Game.getPlayer(Player);
+                    player.increaseResCount(Resource.TypeMeat);
                 }
             }
         }
 
-        void handle_serf_making_weapon_state()
-		{
+        void HandleSerfMakingWeaponState()
+        {
             Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
-            if (s.making_weapon.mode == 0)
+            if (s.makingWeapon.mode == 0)
             {
                 /* One of each resource makes a sword and a shield.
                    Bit 3 is set if a sword has been made and a
                    shield can be made without more resources. */
                 /* TODO Use of this bit overlaps with sfx check bit. */
-                if (!building.is_playing_sfx())
+                if (!building.isPlayingSfx())
                 {
-                    if (!building.use_resources_in_stocks())
+                    if (!building.useResourcesInStocks())
                     {
                         return;
                     }
                 }
 
-                building.start_activity();
+                building.startActivity();
 
-                s.making_weapon.mode = 1;
+                s.makingWeapon.mode = 1;
                 Animation = 143;
                 Counter = CounterFromAnimation[Animation];
                 tick = Game.Tick;
@@ -5376,22 +5381,22 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    s.making_weapon.mode += 1;
-                    if (s.making_weapon.mode == 7)
+                    s.makingWeapon.mode += 1;
+                    if (s.makingWeapon.mode == 7)
                     {
                         /* Done making sword or shield. */
-                        building.stop_activity();
+                        building.stopActivity();
                         Game.Map.SetSerfIndex(Position, 0);
 
-                        Resource.Type res = building.is_playing_sfx() ? Resource.TypeShield :
+                        Resource.Type res = building.isPlayingSfx() ? Resource.TypeShield :
                                                                           Resource.TypeSword;
-                        if (building.is_playing_sfx())
+                        if (building.isPlayingSfx())
                         {
-                            building.stop_playing_sfx();
+                            building.stopPlayingSfx();
                         }
                         else
                         {
-                            building.start_playing_sfx();
+                            building.startPlayingSfx();
                         }
 
                         SerfState = State.MoveResourceOut);
@@ -5400,8 +5405,8 @@ namespace Freeserf
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
                         /* Update resource stats. */
-                        Player* player = Game.get_player(Player);
-                        player.increase_res_count(res);
+                        Player* player = Game.getPlayer(Player);
+                        player.increaseResCount(res);
                         return;
                     }
                     else
@@ -5412,15 +5417,15 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_making_tool_state()
-		{
+        void HandleSerfMakingToolState()
+        {
             Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
-            if (s.making_tool.mode == 0)
+            if (s.makingTool.mode == 0)
             {
-                if (building.use_resources_in_stocks())
+                if (building.useResourcesInStocks())
                 {
-                    s.making_tool.mode = 1;
+                    s.makingTool.mode = 1;
                     Animation = 144;
                     Counter = CounterFromAnimation[Animation];
                     tick = Game.Tick;
@@ -5436,26 +5441,26 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    s.making_tool.mode += 1;
-                    if (s.making_tool.mode == 4)
+                    s.makingTool.mode += 1;
+                    if (s.makingTool.mode == 4)
                     {
                         /* Done making tool. */
                         Game.Map.SetSerfIndex(Position, 0);
 
-                        Player* player = Game.get_player(Player);
-                        int total_tool_prio = 0;
-                        for (int i = 0; i < 9; i++) total_tool_prio += player.get_tool_prio(i);
-                        total_tool_prio >>= 4;
+                        Player* player = Game.getPlayer(Player);
+                        int totalToolPrio = 0;
+                        for (int i = 0; i < 9; i++) totalToolPrio += player.getToolPrio(i);
+                        totalToolPrio >>= 4;
 
                         int res = -1;
-                        if (total_tool_prio > 0)
+                        if (totalToolPrio > 0)
                         {
                             /* Use defined tool priorities. */
-                            int prio_offset = (total_tool_prio * Game.RandomInt()) >> 16;
+                            int prioOffset = (totalToolPrio * Game.RandomInt()) >> 16;
                             for (int i = 0; i < 9; i++)
                             {
-                                prio_offset -= player.get_tool_prio(i) >> 4;
-                                if (prio_offset < 0)
+                                prioOffset -= player.getToolPrio(i) >> 4;
+                                if (prioOffset < 0)
                                 {
                                     res = Resource.TypeShovel + i;
                                     break;
@@ -5474,7 +5479,7 @@ namespace Freeserf
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
                         /* Update resource stats. */
-                        player.increase_res_count(res);
+                        player.increaseResCount(res);
                         return;
                     }
                     else
@@ -5485,17 +5490,17 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_building_boat_state()
-		{
+        void HandleSerfBuildingBoatState()
+        {
             Map map = Game.Map;
             Building building = Game.GetBuilding(map.GetObjectIndex(Position));
 
-            if (s.building_boat.mode == 0)
+            if (s.buildingBoat.mode == 0)
             {
-                if (!building.use_resource_in_stock(0)) return;
-                building.boat_clear();
+                if (!building.useResourceInStock(0)) return;
+                building.boatClear();
 
-                s.building_boat.mode = 1;
+                s.buildingBoat.mode = 1;
                 Animation = 146;
                 Counter = CounterFromAnimation[Animation];
                 tick = Game.Tick;
@@ -5510,21 +5515,21 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    s.building_boat.mode += 1;
-                    if (s.building_boat.mode == 9)
+                    s.buildingBoat.mode += 1;
+                    if (s.buildingBoat.mode == 9)
                     {
                         /* Boat done. */
-                        MapPos new_pos = map.move_down_right(Position);
-                        if (map.HasSerf(new_pos))
+                        MapPos newPos = map.moveDownRight(Position);
+                        if (map.HasSerf(newPos))
                         {
                             /* Wait for flag to be free. */
-                            s.building_boat.mode -= 1;
+                            s.buildingBoat.mode -= 1;
                             Counter = 0;
                         }
                         else
                         {
                             /* Drop boat at flag. */
-                            building.boat_clear();
+                            building.boatClear();
                             map.SetSerfIndex(Position, 0);
 
                             SerfState = State.MoveResourceOut);
@@ -5533,8 +5538,8 @@ namespace Freeserf
                             s.MoveResourceOut.NextState = State.DropResourceOut;
 
                             /* Update resource stats. */
-                            Player* player = Game.get_player(Player);
-                            player.increase_res_count(Resource.TypeBoat);
+                            Player* player = Game.getPlayer(Player);
+                            player.increaseResCount(Resource.TypeBoat);
 
                             break;
                         }
@@ -5542,7 +5547,7 @@ namespace Freeserf
                     else
                     {
                         /* Continue building. */
-                        building.boat_do();
+                        building.boatDo();
                         Animation = 145;
                         Counter += 1408;
                     }
@@ -5550,22 +5555,22 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_looking_for_geo_spot_state()
-		{
+        void HandleSerfLookingForGeoSpotState()
+        {
             int tries = 2;
             Map map = Game.Map;
             for (int i = 0; i < 8; i++)
             {
                 int dist = ((Game.RandomInt() >> 2) & 0x3f) + 1;
-                MapPos dest = map.PosAdd_spirally(Position, dist);
+                MapPos dest = map.PosAddSpirally(Position, dist);
 
                 int obj = map.GetObject(dest);
                 if (obj == Map.ObjectNone)
                 {
                     Map.Terrain t1 = map.TypeDown(dest);
                     Map.Terrain t2 = map.TypeUp(dest);
-                    Map.Terrain t3 = map.TypeDown(map.move_up_left(dest));
-                    Map.Terrain t4 = map.TypeUp(map.move_up_left(dest));
+                    Map.Terrain t3 = map.TypeDown(map.moveUpLeft(dest));
+                    Map.Terrain t4 = map.TypeUp(map.moveUpLeft(dest));
                     if ((t1 >= Map.TerrainTundra0 && t1 <= Map.TerrainSnow0) ||
                         (t2 >= Map.TerrainTundra0 && t2 <= Map.TerrainSnow0) ||
                         (t3 >= Map.TerrainTundra0 && t3 <= Map.TerrainSnow0) ||
@@ -5596,12 +5601,12 @@ namespace Freeserf
             s.Walking.dest = 0;
             s.Walking.dir1 = -2;
             s.Walking.dir = 0;
-            s.Walking.wait_Counter = 0;
+            s.Walking.waitCounter = 0;
             Counter = 0;
         }
 
-        void handle_serf_sampling_geo_spot_state()
-		{
+        void HandleSerfSamplingGeoSpotState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -5612,11 +5617,11 @@ namespace Freeserf
                 if (s.FreeWalking.NegDist1 == 0 &&
                   map.GetObject(Position) == Map.ObjectNone)
                 {
-                    if (map.get_res_type(Position) == Map.MineralsNone ||
-                        map.get_res_amount(Position) == 0)
+                    if (map.getResType(Position) == Map.MineralsNone ||
+                        map.getResAmount(Position) == 0)
                     {
                         /* No available resource here. Put empty sign. */
-                        map.set_object(Position, Map.ObjectSignEmpty, -1);
+                        map.setObject(Position, Map.ObjectSignEmpty, -1);
                     }
                     else
                     {
@@ -5625,27 +5630,27 @@ namespace Freeserf
 
                         /* Select small or large sign with the right resource depicted. */
                         int obj = Map.ObjectSignLargeGold +
-                          2 * (map.get_res_type(Position) - 1) +
-                          (map.get_res_amount(Position) < 12 ? 1 : 0);
-                        map.set_object(Position, (Map.Object)obj, -1);
+                          2 * (map.getResType(Position) - 1) +
+                          (map.getResAmount(Position) < 12 ? 1 : 0);
+                        map.setObject(Position, (Map.Object)obj, -1);
 
                         /* Check whether a new notification should be posted. */
-                        int show_notification = 1;
+                        int showNotification = 1;
                         for (int i = 0; i < 60; i++)
                         {
-                            MapPos pos_ = map.PosAdd_spirally(Position, 1 + i);
+                            MapPos pos_ = map.PosAddSpirally(Position, 1 + i);
                             if ((map.GetObject(pos_) >> 1) == (obj >> 1))
                             {
-                                show_notification = 0;
+                                showNotification = 0;
                                 break;
                             }
                         }
 
                         /* Create notification for found resource. */
-                        if (show_notification)
+                        if (showNotification)
                         {
                             Message.Type mtype;
-                            switch (map.get_res_type(Position))
+                            switch (map.getResType(Position))
                             {
                                 case Map.MineralsCoal:
                                     mtype = Message.TypeFoundCoal;
@@ -5660,10 +5665,10 @@ namespace Freeserf
                                     mtype = Message.TypeFoundStone;
                                     break;
                                 default:
-                                    NOT_REACHED();
+                                    NOTREACHED();
                             }
-                            Game.get_player(Player).add_notification(mtype, pos,
-                                                                      map.get_res_type(Position) - 1);
+                            Game.getPlayer(Player).addNotification(mtype, pos,
+                                                                      map.getResType(Position) - 1);
                         }
 
                         Counter += 64;
@@ -5679,8 +5684,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_knight_engaging_building_state()
-		{
+        void HandleSerfKnightEngagingBuildingState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -5688,20 +5693,20 @@ namespace Freeserf
             if (Counter < 0)
             {
                 Map map = Game.Map;
-                Map.Object obj = map.GetObject(map.move_up_left(Position));
+                Map.Object obj = map.GetObject(map.moveUpLeft(Position));
                 if (obj >= Map.ObjectSmallBuilding &&
                     obj <= Map.ObjectCastle)
                 {
                     Building building = Game.GetBuilding(map.GetObjectIndex(
-                                                            map.move_up_left(Position)));
-                    if (building.is_done() &&
-                        building.is_military() &&
+                                                            map.moveUpLeft(Position)));
+                    if (building.isDone() &&
+                        building.isMilitary() &&
                         building.GetOwner() != Player &&
-                        building.has_knight())
+                        building.hasKnight())
                     {
-                        if (building.is_under_attack())
+                        if (building.isUnderAttack())
                         {
-                            Game.get_player(building.GetOwner()).add_notification(
+                            Game.getPlayer(building.GetOwner()).addNotification(
                                                                    Message.TypeUnderAttack,
                                                                          building.Position,
                                                                                    Player);
@@ -5712,14 +5717,14 @@ namespace Freeserf
                         state = State.KnightPrepareAttacking;
                         Animation = 168;
 
-                        Serf* def_serf = building.call_defender_out();
+                        Serf* defSerf = building.callDefenderOut();
 
-                        s.attacking.def_index = def_serf.get_index();
+                        s.attacking.defIndex = defSerf.getIndex();
 
                         /* Change state of defending knight */
-                        set_other_state(def_serf, StateKnightLeaveForFight);
-                        def_serf.s.LeavingBuilding.next_state = State.KnightPrepareDefending;
-                        def_serf.Counter = 0;
+                        setOtherState(defSerf, StateKnightLeaveForFight);
+                        defSerf.s.LeavingBuilding.nextState = State.KnightPrepareDefending;
+                        defSerf.Counter = 0;
                         return;
                     }
                 }
@@ -5732,11 +5737,11 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_knight_prepare_attacking()
-		{
-            Serf* def_serf = Game.get_serf(s.attacking.def_index);
+        void HandleSerfKnightPrepareAttacking()
+        {
+            Serf* defSerf = Game.getSerf(s.attacking.defIndex);
 
-            if (def_serf.state == State.KnightPrepareDefending)
+            if (defSerf.state == State.KnightPrepareDefending)
             {
                 /* Change state of attacker. */
                 SerfState = State.KnightAttacking);
@@ -5744,61 +5749,61 @@ namespace Freeserf
                 tick = Game.Tick;
 
                 /* Change state of defender. */
-                set_other_state(def_serf, StateKnightDefending);
-                def_serf.Counter = 0;
+                setOtherState(defSerf, StateKnightDefending);
+                defSerf.Counter = 0;
 
-                set_fight_outcome(this, def_serf);
+                setFightOutcome(this, defSerf);
             }
         }
 
-        void handle_serf_knight_leave_for_fight_state()
-		{
+        void HandleSerfKnightLeaveForFightState()
+        {
             tick = Game.Tick;
             Counter = 0;
 
             if (Game.Map.GetSerfIndex(Position) == index ||
                 !Game.Map.HasSerf(Position))
             {
-                leave_building(1);
+                leaveBuilding(1);
             }
         }
 
-        void handle_serf_knight_prepare_defending_state()
-		{
+        void HandleSerfKnightPrepareDefendingState()
+        {
             Counter = 0;
             Animation = 84;
         }
 
-        void handle_knight_attacking()
-		{
+        void HandleKnightAttacking()
+        {
             const int moves[] =  {
-    1, 2, 4, 2, 0, 2, 4, 2, 1, 0, 2, 2, 3, 0, 0, -1,
-    3, 2, 2, 3, 0, 4, 1, 3, 2, 4, 2, 2, 3, 0, 0, -1,
-    2, 1, 4, 3, 2, 2, 2, 3, 0, 3, 1, 2, 0, 2, 0, -1,
-    2, 1, 3, 2, 4, 2, 3, 0, 0, 4, 2, 0, 2, 1, 0, -1,
-    3, 1, 0, 2, 2, 1, 0, 2, 4, 2, 2, 3, 0, 0, -1,
-    0, 3, 1, 2, 3, 4, 2, 1, 2, 0, 2, 4, 0, 2, 0, -1,
-    0, 2, 1, 2, 4, 2, 3, 0, 2, 4, 3, 2, 0, 0, -1,
-    0, 0, 1, 4, 3, 2, 2, 1, 2, 0, 0, 4, 3, 0, -1
-  };
+                    1, 2, 4, 2, 0, 2, 4, 2, 1, 0, 2, 2, 3, 0, 0, -1,
+                    3, 2, 2, 3, 0, 4, 1, 3, 2, 4, 2, 2, 3, 0, 0, -1,
+                    2, 1, 4, 3, 2, 2, 2, 3, 0, 3, 1, 2, 0, 2, 0, -1,
+                    2, 1, 3, 2, 4, 2, 3, 0, 0, 4, 2, 0, 2, 1, 0, -1,
+                    3, 1, 0, 2, 2, 1, 0, 2, 4, 2, 2, 3, 0, 0, -1,
+                    0, 3, 1, 2, 3, 4, 2, 1, 2, 0, 2, 4, 0, 2, 0, -1,
+                    0, 2, 1, 2, 4, 2, 3, 0, 2, 4, 3, 2, 0, 0, -1,
+                    0, 0, 1, 4, 3, 2, 2, 1, 2, 0, 0, 4, 3, 0, -1
+                  };
 
-            const int fight_anim[] = {
-    24, 35, 41, 56, 67, 72, 83, 89, 100, 121, 0, 0, 0, 0, 0, 0,
-    26, 40, 42, 57, 73, 74, 88, 104, 106, 120, 122, 0, 0, 0, 0, 0,
-    17, 18, 23, 33, 34, 38, 39, 98, 102, 103, 113, 114, 118, 119, 0, 0,
-    130, 133, 134, 135, 147, 148, 161, 162, 164, 166, 167, 0, 0, 0, 0, 0,
-    50, 52, 53, 70, 129, 131, 132, 146, 149, 151, 0, 0, 0, 0, 0, 0
-  };
+            const int fightAnim[] = {
+                    24, 35, 41, 56, 67, 72, 83, 89, 100, 121, 0, 0, 0, 0, 0, 0,
+                    26, 40, 42, 57, 73, 74, 88, 104, 106, 120, 122, 0, 0, 0, 0, 0,
+                    17, 18, 23, 33, 34, 38, 39, 98, 102, 103, 113, 114, 118, 119, 0, 0,
+                    130, 133, 134, 135, 147, 148, 161, 162, 164, 166, 167, 0, 0, 0, 0, 0,
+                    50, 52, 53, 70, 129, 131, 132, 146, 149, 151, 0, 0, 0, 0, 0, 0
+                  };
 
-            const int fight_anim_max[] = { 10, 11, 14, 11, 10 };
+            const int fightAnimMax[] = { 10, 11, 14, 11, 10 };
 
-            Serf* def_serf = Game.get_serf(s.attacking.def_index);
+            Serf* defSerf = Game.getSerf(s.attacking.defIndex);
 
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
-            def_serf.tick = tick;
+            defSerf.tick = tick;
             Counter -= delta;
-            def_serf.Counter = Counter;
+            defSerf.Counter = Counter;
 
             while (Counter < 0)
             {
@@ -5810,27 +5815,27 @@ namespace Freeserf
                         /* Defender won. */
                         if (state == State.KnightAttackingFree)
                         {
-                            set_other_state(def_serf, StateKnightDefendingVictoryFree);
+                            setOtherState(defSerf, StateKnightDefendingVictoryFree);
 
-                            def_serf.Animation = 180;
-                            def_serf.Counter = 0;
+                            defSerf.Animation = 180;
+                            defSerf.Counter = 0;
 
                             /* Attacker dies. */
                             SerfState = State.KnightAttackingDefeatFree);
                             Animation = 152 + GetSerfType();
                             Counter = 255;
-                            set_type(TypeDead);
+                            setType(TypeDead);
                         }
                         else
                         {
                             /* Defender returns to building. */
-                            def_serf.enter_building(-1, 1);
+                            defSerf.enterBuilding(-1, 1);
 
                             /* Attacker dies. */
                             SerfState = State.KnightAttackingDefeat);
                             Animation = 152 + GetSerfType();
                             Counter = 255;
-                            set_type(TypeDead);
+                            setType(TypeDead);
                         }
                     }
                     else
@@ -5842,9 +5847,9 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
-                            s.attacking.FieldB = def_serf.s.defending_free.FieldD;
-                            s.attacking.FieldC = def_serf.s.defending_free.other_dist_col;
-                            s.attacking.FieldD = def_serf.s.defending_free.other_dist_row;
+                            s.attacking.FieldB = defSerf.s.defendingFree.FieldD;
+                            s.attacking.FieldC = defSerf.s.defendingFree.otherDistCol;
+                            s.attacking.FieldD = defSerf.s.defendingFree.otherDistRow;
                         }
                         else
                         {
@@ -5853,16 +5858,16 @@ namespace Freeserf
                             Counter = 0;
 
                             int obj = Game.Map.GetObjectIndex(
-                                                    Game.Map.move_up_left(def_serf.pos));
+                                                    Game.Map.moveUpLeft(defSerf.pos));
                             Building building = Game.GetBuilding(obj);
-                            building.requested_knight_defeat_on_walk();
+                            building.requestedKnightDefeatOnWalk();
                         }
 
                         /* Defender dies. */
-                        def_serf.tick = Game.Tick;
-                        def_serf.Animation = 147 + GetSerfType();
-                        def_serf.Counter = 255;
-                        set_type(TypeDead);
+                        defSerf.tick = Game.Tick;
+                        defSerf.Animation = 147 + GetSerfType();
+                        defSerf.Counter = 255;
+                        setType(TypeDead);
                     }
                 }
                 else
@@ -5872,29 +5877,29 @@ namespace Freeserf
                     if (s.attacking.FieldC == 0) move = 4 - move;
                     s.attacking.FieldD = move;
 
-                    int off = (Game.RandomInt() * fight_anim_max[move]) >> 16;
-                    int a = fight_anim[move * 16 + off];
+                    int off = (Game.RandomInt() * fightAnimMax[move]) >> 16;
+                    int a = fightAnim[move * 16 + off];
 
                     Animation = 146 + ((a >> 4) & 0xf);
-                    def_serf.Animation = 156 + (a & 0xf);
+                    defSerf.Animation = 156 + (a & 0xf);
                     Counter = 72 + (Game.RandomInt() & 0x18);
-                    def_serf.Counter = Counter;
+                    defSerf.Counter = Counter;
                 }
             }
         }
 
-        void handle_serf_knight_attacking_victory_state()
-		{
-            Serf* def_serf = Game.get_serf(s.attacking.def_index);
+        void HandleSerfKnightAttackingVictoryState()
+        {
+            Serf* defSerf = Game.getSerf(s.attacking.defIndex);
 
-            uint16_t delta = Game.Tick - def_serf.tick;
-            def_serf.tick = Game.Tick;
-            def_serf.Counter -= delta;
+            uint16T delta = Game.Tick - defSerf.tick;
+            defSerf.tick = Game.Tick;
+            defSerf.Counter -= delta;
 
-            if (def_serf.Counter < 0)
+            if (defSerf.Counter < 0)
             {
-                Game.delete_serf(def_serf);
-                s.attacking.def_index = 0;
+                Game.deleteSerf(defSerf);
+                s.attacking.defIndex = 0;
 
                 SerfState = State.KnightEngagingBuilding);
                 tick = Game.Tick;
@@ -5902,8 +5907,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_knight_attacking_defeat_state()
-		{
+        void HandleSerfKnightAttackingDefeatState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -5911,12 +5916,12 @@ namespace Freeserf
             if (Counter < 0)
             {
                 Game.Map.SetSerfIndex(Position, 0);
-                Game.delete_serf(this);
+                Game.deleteSerf(this);
             }
         }
 
-        void handle_knight_occupy_enemy_building()
-		{
+        void HandleKnightOccupyEnemyBuilding()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -5927,34 +5932,34 @@ namespace Freeserf
             }
 
             Building building =
-                            Game.GetBuildingAtPos(Game.Map.move_up_left(Position));
+                            Game.GetBuildingAtPos(Game.Map.moveUpLeft(Position));
             if (building != NULL)
             {
-                if (!building.is_burning() && building.is_military())
+                if (!building.isBurning() && building.isMilitary())
                 {
                     if (building.GetOwner() == owner)
                     {
                         /* Enter building if there is space. */
                         if (building.GetSerfType() == Building.TypeCastle)
                         {
-                            enter_building(-2, 0);
+                            enterBuilding(-2, 0);
                             return;
                         }
                         else
                         {
-                            if (building.is_enough_place_for_knight())
+                            if (building.isEnoughPlaceForKnight())
                             {
                                 /* Enter building */
-                                enter_building(-1, 0);
-                                building.knight_occupy();
+                                enterBuilding(-1, 0);
+                                building.knightOccupy();
                                 return;
                             }
                         }
                     }
-                    else if (!building.has_knight())
+                    else if (!building.hasKnight())
                     {
                         /* Occupy the building. */
-                        Game.occupy_enemy_building(building, Player);
+                        Game.occupyEnemyBuilding(building, Player);
 
                         if (building.GetSerfType() == Building.TypeCastle)
                         {
@@ -5963,8 +5968,8 @@ namespace Freeserf
                         else
                         {
                             /* Enter building */
-                            enter_building(-1, 0);
-                            building.knight_occupy();
+                            enterBuilding(-1, 0);
+                            building.knightOccupy();
                         }
                         return;
                     }
@@ -5984,17 +5989,18 @@ namespace Freeserf
             Counter = 0;
         }
 
-        void handle_state_knight_free_walking()
-		{
+        void HandleStateKnightFreeWalking()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
 
             Map map = Game.Map;
+
             while (Counter < 0)
             {
                 /* Check for enemy knights nearby. */
-                for (Direction d : cycle_directions_cw())
+                for (Direction d : cycleDirectionsCw())
                 {
                     MapPos pos_ = map.move(Position, d);
 
@@ -6005,55 +6011,57 @@ namespace Freeserf
                         {
                             if (other.state == State.KnightFreeWalking)
                             {
-                                pos = map.move_left(pos_);
-                                if (can_pass_map_pos(pos_))
+                                pos = map.moveLeft(pos_);
+                                if (canPassMapPos(pos_))
                                 {
-                                    int dist_col = s.FreeWalking.Dist1;
-                                    int dist_row = s.FreeWalking.Dist2;
+                                    int distCol = s.FreeWalking.Dist1;
+                                    int distRow = s.FreeWalking.Dist2;
 
-                                    SerfState = State.KnightEngageDefendingFree);
+                                    SerfState = State.KnightEngageDefendingFree;
 
-                                    s.defending_free.dist_col = dist_col;
-                                    s.defending_free.dist_row = dist_row;
-                                    s.defending_free.other_dist_col = other.s.FreeWalking.Dist1;
-                                    s.defending_free.other_dist_row = other.s.FreeWalking.Dist2;
-                                    s.defending_free.FieldD = 1;
+                                    s.defendingFree.distCol = distCol;
+                                    s.defendingFree.distRow = distRow;
+                                    s.defendingFree.otherDistCol = other.s.FreeWalking.Dist1;
+                                    s.defendingFree.otherDistRow = other.s.FreeWalking.Dist2;
+                                    s.defendingFree.FieldD = 1;
                                     Animation = 99;
                                     Counter = 255;
 
-                                    set_other_state(other, StateKnightEngageAttackingFree);
+                                    setOtherState(other, StateKnightEngageAttackingFree);
                                     other.s.attacking.FieldD = d;
-                                    other.s.attacking.def_index = get_index();
+                                    other.s.attacking.defIndex = getIndex();
                                     return;
                                 }
                             }
                             else if (other.state == State.Walking &&
-                                     other.GetSerfType() >= Type.Knight0 &&
-                                     other.GetSerfType() <= Type.Knight4)
+                                        other.GetSerfType() >= Type.Knight0 &&
+                                        other.GetSerfType() <= Type.Knight4)
                             {
-                                pos_ = map.move_left(pos_);
-                                if (can_pass_map_pos(pos_))
+                                pos_ = map.moveLeft(pos_);
+                                if (canPassMapPos(pos_))
                                 {
-                                    int dist_col = s.FreeWalking.Dist1;
-                                    int dist_row = s.FreeWalking.Dist2;
+                                    int distCol = s.FreeWalking.Dist1;
+                                    int distRow = s.FreeWalking.Dist2;
 
-                                    SerfState = State.KnightEngageDefendingFree);
-                                    s.defending_free.dist_col = dist_col;
-                                    s.defending_free.dist_row = dist_row;
-                                    s.defending_free.FieldD = 0;
+                                    SerfState = State.KnightEngageDefendingFree;
+                                    s.defendingFree.distCol = distCol;
+                                    s.defendingFree.distRow = distRow;
+                                    s.defendingFree.FieldD = 0;
                                     Animation = 99;
                                     Counter = 255;
 
                                     Flag dest = Game.GetFlag(other.s.Walking.dest);
                                     Building building = dest.GetBuilding();
-                                    if (!building.has_inventory())
+
+                                    if (!building.hasInventory())
                                     {
-                                        building.requested_knight_attacking_on_walk();
+                                        building.requestedKnightAttackingOnWalk();
                                     }
 
-                                    set_other_state(other, StateKnightEngageAttackingFree);
+                                    setOtherState(other, StateKnightEngageAttackingFree);
                                     other.s.attacking.FieldD = d;
-                                    other.s.attacking.def_index = get_index();
+                                    other.s.attacking.defIndex = getIndex();
+
                                     return;
                                 }
                             }
@@ -6065,8 +6073,8 @@ namespace Freeserf
             }
         }
 
-        void handle_state_knight_engage_defending_free()
-		{
+        void HandleStateKnightEngageDefendingFree()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -6074,8 +6082,8 @@ namespace Freeserf
             while (Counter < 0) Counter += 256;
         }
 
-        void handle_state_knight_engage_attacking_free()
-		{
+        void HandleStateKnightEngageAttackingFree()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -6088,8 +6096,8 @@ namespace Freeserf
             }
         }
 
-        void handle_state_knight_engage_attacking_free_join()
-		{
+        void HandleStateKnightEngageAttackingFreeJoin()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -6100,53 +6108,53 @@ namespace Freeserf
                 Animation = 168;
                 Counter = 0;
 
-                Serf* other = Game.get_serf(s.attacking.def_index);
-                MapPos other_pos = other.pos;
-                set_other_state(other, StateKnightPrepareDefendingFree);
+                Serf* other = Game.getSerf(s.attacking.defIndex);
+                MapPos otherPos = other.pos;
+                setOtherState(other, StateKnightPrepareDefendingFree);
                 other.Counter = Counter;
 
                 /* Adjust distance to final destination. */
                 Direction d = (Direction)s.attacking.FieldD;
                 if (d == DirectionRight || d == DirectionDownRight)
                 {
-                    other.s.defending_free.dist_col -= 1;
+                    other.s.defendingFree.distCol -= 1;
                 }
                 else if (d == DirectionLeft || d == DirectionUpLeft)
                 {
-                    other.s.defending_free.dist_col += 1;
+                    other.s.defendingFree.distCol += 1;
                 }
 
                 if (d == DirectionDownRight || d == DirectionDown)
                 {
-                    other.s.defending_free.dist_row -= 1;
+                    other.s.defendingFree.distRow -= 1;
                 }
                 else if (d == DirectionUpLeft || d == DirectionUp)
                 {
-                    other.s.defending_free.dist_row += 1;
+                    other.s.defendingFree.distRow += 1;
                 }
 
-                other.start_walking(d, 32, 0);
-                Game.Map.SetSerfIndex(other_pos, 0);
+                other.startWalking(d, 32, 0);
+                Game.Map.SetSerfIndex(otherPos, 0);
             }
         }
 
-        void handle_state_knight_prepare_attacking_free()
-		{
-            Serf* other = Game.get_serf(s.attacking.def_index);
+        void HandleStateKnightPrepareAttackingFree()
+        {
+            Serf* other = Game.getSerf(s.attacking.defIndex);
             if (other.state == State.KnightPrepareDefendingFreeWait)
             {
                 SerfState = State.KnightAttackingFree);
                 Counter = 0;
 
-                set_other_state(other, StateKnightDefendingFree);
+                setOtherState(other, StateKnightDefendingFree);
                 other.Counter = 0;
 
-                set_fight_outcome(this, other);
+                setFightOutcome(this, other);
             }
         }
 
-        void handle_state_knight_prepare_defending_free()
-		{
+        void HandleStateKnightPrepareDefendingFree()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -6158,25 +6166,25 @@ namespace Freeserf
             }
         }
 
-        void handle_knight_attacking_victory_free()
-		{
-            Serf* other = Game.get_serf(s.attacking.def_index);
+        void HandleKnightAttackingVictoryFree()
+        {
+            Serf* other = Game.getSerf(s.attacking.defIndex);
 
-            uint16_t delta = Game.Tick - other.tick;
+            uint16T delta = Game.Tick - other.tick;
             other.tick = Game.Tick;
             other.Counter -= delta;
 
             if (other.Counter < 0)
             {
-                Game.delete_serf(other);
+                Game.deleteSerf(other);
 
-                int dist_col = s.attacking.FieldC;
-                int dist_row = s.attacking.FieldD;
+                int distCol = s.attacking.FieldC;
+                int distRow = s.attacking.FieldD;
 
                 SerfState = State.KnightAttackingFreeWait);
 
-                s.FreeWalking.Dist1 = dist_col;
-                s.FreeWalking.Dist2 = dist_row;
+                s.FreeWalking.Dist1 = distCol;
+                s.FreeWalking.Dist2 = distRow;
                 s.FreeWalking.NegDist1 = 0;
                 s.FreeWalking.NegDist2 = 0;
 
@@ -6195,14 +6203,14 @@ namespace Freeserf
             }
         }
 
-        void handle_knight_defending_victory_free()
-		{
+        void HandleKnightDefendingVictoryFree()
+        {
             Animation = 180;
             Counter = 0;
         }
 
-        void handle_serf_knight_attacking_defeat_free_state()
-		{
+        void HandleSerfKnightAttackingDefeatFreeState()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -6210,14 +6218,14 @@ namespace Freeserf
             if (Counter < 0)
             {
                 /* Change state of other. */
-                Serf* other = Game.get_serf(s.attacking.def_index);
-                int dist_col = other.s.defending_free.dist_col;
-                int dist_row = other.s.defending_free.dist_row;
+                Serf* other = Game.getSerf(s.attacking.defIndex);
+                int distCol = other.s.defendingFree.distCol;
+                int distRow = other.s.defendingFree.distRow;
 
-                set_other_state(other, StateKnightFreeWalking);
+                setOtherState(other, StateKnightFreeWalking);
 
-                other.s.FreeWalking.Dist1 = dist_col;
-                other.s.FreeWalking.Dist2 = dist_row;
+                other.s.FreeWalking.Dist1 = distCol;
+                other.s.FreeWalking.Dist2 = distRow;
                 other.s.FreeWalking.NegDist1 = 0;
                 other.s.FreeWalking.NegDist2 = 0;
                 other.s.FreeWalking.Flags = 0;
@@ -6228,12 +6236,12 @@ namespace Freeserf
 
                 /* Remove itself. */
                 Game.Map.SetSerfIndex(Position, other.index);
-                Game.delete_serf(this);
+                Game.deleteSerf(this);
             }
         }
 
-        void handle_knight_attacking_free_wait()
-		{
+        void HandleKnightAttackingFreeWait()
+        {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;
@@ -6253,8 +6261,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_state_knight_leave_for_walk_to_fight()
-		{
+        void HandleSerfStateKnightLeaveForWalkToFight()
+        {
             tick = Game.Tick;
             Counter = 0;
 
@@ -6267,30 +6275,30 @@ namespace Freeserf
             }
 
             Building building = Game.GetBuilding(map.GetObjectIndex(Position));
-            MapPos new_pos = map.move_down_right(Position);
+            MapPos newPos = map.moveDownRight(Position);
 
-            if (!map.HasSerf(new_pos))
+            if (!map.HasSerf(newPos))
             {
                 /* For clean state change, save the values first. */
-                /* TODO maybe knight_leave_for_walk_to_fight can
-                   share leaving_building state vars. */
-                int dist_col = s.leave_for_walk_to_fight.dist_col;
-                int dist_row = s.leave_for_walk_to_fight.dist_row;
-                int field_D = s.leave_for_walk_to_fight.FieldD;
-                int field_E = s.leave_for_walk_to_fight.FieldE;
-                Serf.State next_state = s.leave_for_walk_to_fight.next_state;
+                /* TODO maybe knightLeaveForWalkToFight can
+                   share leavingBuilding state vars. */
+                int distCol = s.leaveForWalkToFight.distCol;
+                int distRow = s.leaveForWalkToFight.distRow;
+                int fieldD = s.leaveForWalkToFight.FieldD;
+                int fieldE = s.leaveForWalkToFight.FieldE;
+                Serf.State nextState = s.leaveForWalkToFight.nextState;
 
-                leave_building(0);
-                /* TODO names for leaving_building vars make no sense here. */
-                s.LeavingBuilding.FieldB = dist_col;
-                s.LeavingBuilding.dest = dist_row;
-                s.LeavingBuilding.dest2 = field_D;
-                s.LeavingBuilding.dir = field_E;
-                s.LeavingBuilding.next_state = next_state;
+                leaveBuilding(0);
+                /* TODO names for leavingBuilding vars make no sense here. */
+                s.LeavingBuilding.FieldB = distCol;
+                s.LeavingBuilding.dest = distRow;
+                s.LeavingBuilding.dest2 = fieldD;
+                s.LeavingBuilding.dir = fieldE;
+                s.LeavingBuilding.nextState = nextState;
             }
             else
             {
-                Serf* other = Game.GetSerfAtPos(new_pos);
+                Serf* other = Game.GetSerfAtPos(newPos);
                 if (Player == other.Player)
                 {
                     Animation = 82;
@@ -6311,11 +6319,11 @@ namespace Freeserf
                             SerfState = State.DefendingFortress);
                             break;
                         default:
-                            NOT_REACHED();
+                            NOTREACHED();
                             break;
                     }
 
-                    if (!building.knight_come_back_from_fight(this))
+                    if (!building.knightComeBackFromFight(this))
                     {
                         Animation = 82;
                         Counter = 0;
@@ -6324,23 +6332,23 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_idle_on_path_state()
-		{
+        void HandleSerfIdleOnPathState()
+        {
             Flag flag = s.IdleOnPath.flag;
-            Direction rev_dir = s.IdleOnPath.rev_dir;
+            Direction revDir = s.IdleOnPath.revDir;
 
-            /* Set walking dir in field_E. */
-            if (flag.is_scheduled(rev_dir))
+            /* Set walking dir in fieldE. */
+            if (flag.isScheduled(revDir))
             {
                 s.IdleOnPath.FieldE = (tick & 0xff) + 6;
             }
             else
             {
-                Flag other_flag = flag.get_other_end_flag(rev_dir);
-                Direction other_dir = flag.get_other_end_dir((Direction)rev_dir);
-                if (other_flag && other_flag.is_scheduled(other_dir))
+                Flag otherFlag = flag.getOtherEndFlag(revDir);
+                Direction otherDir = flag.getOtherEndDir((Direction)revDir);
+                if (otherFlag && otherFlag.isScheduled(otherDir))
                 {
-                    s.IdleOnPath.FieldE = reverse_direction(rev_dir);
+                    s.IdleOnPath.FieldE = reverseDirection(revDir);
                 }
                 else
                 {
@@ -6351,14 +6359,14 @@ namespace Freeserf
             Map map = Game.Map;
             if (!map.HasSerf(Position))
             {
-                map.clear_idle_serf(Position);
+                map.clearIdleSerf(Position);
                 map.SetSerfIndex(Position, (int)Index);
 
                 int dir = s.IdleOnPath.FieldE;
 
                 SerfState = State.Transporting);
                 s.Walking.res = Resource.TypeNone;
-                s.Walking.wait_Counter = 0;
+                s.Walking.waitCounter = 0;
                 s.Walking.dir = dir;
                 tick = Game.Tick;
                 Counter = 0;
@@ -6369,28 +6377,28 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_wait_idle_on_path_state()
-		{
+        void HandleSerfWaitIdleOnPathState()
+        {
             Map map = Game.Map;
             if (!map.HasSerf(Position))
             {
-                /* Duplicate code from handle_serf_idle_on_path_state() */
-                map.clear_idle_serf(Position);
+                /* Duplicate code from handleSerfIdleOnPathState() */
+                map.clearIdleSerf(Position);
                 map.SetSerfIndex(Position, (int)Index);
 
                 int dir = s.IdleOnPath.FieldE;
 
                 SerfState = State.Transporting);
                 s.Walking.res = Resource.TypeNone;
-                s.Walking.wait_Counter = 0;
+                s.Walking.waitCounter = 0;
                 s.Walking.dir = dir;
                 tick = Game.Tick;
                 Counter = 0;
             }
         }
 
-        void handle_scatter_state()
-		{
+        void HandleScatterState()
+        {
             /* Choose a random, empty destination */
             while (true)
             {
@@ -6402,7 +6410,7 @@ namespace Freeserf
 
                 Map map = Game.Map;
                 MapPos dest = map.PosAdd(Position, col, row);
-                if (map.GetObject(dest) == 0 && map.get_height(dest) > 0)
+                if (map.GetObject(dest) == 0 && map.getHeight(dest) > 0)
                 {
                     if (GetSerfType() >= Type.Knight0 && GetSerfType() <= Type.Knight4)
                     {
@@ -6424,16 +6432,16 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_finished_building_state()
-		{
+        void HandleSerfFinishedBuildingState()
+        {
             Map map = Game.Map;
-            if (!map.HasSerf(map.move_down_right(Position)))
+            if (!map.HasSerf(map.moveDownRight(Position)))
             {
                 SerfState = State.ReadyToLeave);
                 s.LeavingBuilding.dest = 0;
                 s.LeavingBuilding.FieldB = -2;
                 s.LeavingBuilding.dir = 0;
-                s.LeavingBuilding.next_state = State.Walking;
+                s.LeavingBuilding.nextState = State.Walking;
 
                 if (map.GetSerfIndex(Position) != index && map.HasSerf(Position))
                 {
@@ -6442,12 +6450,12 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_wake_at_flag_state()
-		{
+        void HandleSerfWakeAtFlagState()
+        {
             Map map = Game.Map;
             if (!map.HasSerf(Position))
             {
-                map.clear_idle_serf(Position);
+                map.clearIdleSerf(Position);
                 map.SetSerfIndex(Position, (int)Index);
                 tick = Game.Tick;
                 Counter = 0;
@@ -6464,11 +6472,11 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_wake_on_path_state()
-		{
+        void HandleSerfWakeOnPathState()
+        {
             SerfState = State.WaitIdleOnPath);
 
-            for (Direction d : cycle_directions_ccw())
+            for (Direction d : cycleDirectionsCcw())
             {
                 if (Misc.BitTest(Game.Map.Paths(Position), d))
                 {
@@ -6478,8 +6486,8 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_defending_state(int[] trainingParams)
-		{
+        void HandleSerfDefendingState(int[] trainingParams)
+        {
             switch (GetSerfType())
             {
                 case Type.Knight0:
@@ -6496,24 +6504,24 @@ namespace Freeserf
             }
         }
 
-        void handle_serf_defending_hut_state()
-		{
+        void HandleSerfDefendingHutState()
+        {
 
-		}
+        }
 
-        void handle_serf_defending_tower_state()
-		{
+        void HandleSerfDefendingTowerState()
+        {
 
-		}
+        }
 
-        void handle_serf_defending_fortress_state()
-		{
+        void HandleSerfDefendingFortressState()
+        {
 
-		}
+        }
 
-        void handle_serf_defending_castle_state()
-		{
+        void HandleSerfDefendingCastleState()
+        {
 
-		}
+        }
     }
 }
