@@ -916,7 +916,7 @@ namespace Freeserf
         }
 
         /* Mapping from Object to Space. */
-        static readonly Space[] MapSpaceFromObject = new Space[128]
+        internal static readonly Space[] MapSpaceFromObject = new Space[128]
         {
             Space.Open,             // Object.None = 0,
             Space.Filled,           // Object.Flag,
