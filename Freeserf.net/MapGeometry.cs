@@ -170,11 +170,13 @@ namespace Freeserf
 
         public static bool operator ==(DirectionCycle self, DirectionCycle rhs)
         {
+#pragma warning disable IDE0041
             if (ReferenceEquals(self, null))
                 return ReferenceEquals(rhs, null);
 
             if (ReferenceEquals(rhs, null))
                 return false;
+#pragma warning restore IDE0041
 
             return self.start == rhs.start && self.length == rhs.length;
         }
@@ -533,11 +535,13 @@ namespace Freeserf
 
         public static bool operator ==(MapGeometry self, MapGeometry rhs)
         {
+#pragma warning disable IDE0041
             if (ReferenceEquals(self, null))
                 return ReferenceEquals(rhs, null);
 
             if (ReferenceEquals(rhs, null))
                 return false;
+#pragma warning restore IDE0041
 
             return self.Size == rhs.Size;
         }
