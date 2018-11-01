@@ -145,6 +145,11 @@ namespace Freeserf
             return uint.Parse(value);
         }
 
+        public bool ReadBool()
+        {
+            return ReadInt() != 0;
+        }
+
         public Direction ReadDirection()
         {
             return (Direction)ReadInt();
@@ -190,6 +195,11 @@ namespace Freeserf
         public void Write(Enum val)
         {
             Write(Enum.GetName(val.GetType(), val));
+        }
+
+        public void Write(bool val)
+        {
+            Value += ((Value.Length > 0) ? "," : "") + ((val) ? "1" : "0");
         }
     }
 
