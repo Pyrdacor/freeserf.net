@@ -34,6 +34,7 @@ namespace Freeserf
     using SerfMap = Dictionary<Serf.Type, uint>;
 
     // TODO: Can't we just replace things like Game.GetFlag(map.GetObjectIndex(Position)) with Game.GetFlagAtPos(Position) ???
+    // TODO: Give the state values plausible names instead of FieldX and so on!
 
     public class Serf : GameObject
     {
