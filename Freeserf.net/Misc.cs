@@ -123,5 +123,15 @@ namespace Freeserf
         {
             return Math.Max(low, Math.Min(value, high));
         }
+
+        public static void Clamp(uint low, ref uint value, uint high)
+        {
+            value = Clamp(low, value, high);
+        }
+
+        public static uint Clamp(uint low, uint value, uint high)
+        {
+            return Math.Max(low, Math.Min(value, high));
+        }
     }
 }
