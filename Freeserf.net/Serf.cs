@@ -6494,21 +6494,21 @@ namespace Freeserf
                         /* Create notification for found resource. */
                         if (showNotification)
                         {
-                            Message.Type messageType;
+                            Message.Type messageType = Message.Type.None;
 
                             switch (map.GetResourceType(Position))
                             {
                                 case Map.Minerals.Coal:
-                                    messageType = Message.TypeFoundCoal;
+                                    messageType = Message.Type.FoundCoal;
                                     break;
                                 case Map.Minerals.Iron:
-                                    messageType = Message.TypeFoundIron;
+                                    messageType = Message.Type.FoundIron;
                                     break;
                                 case Map.Minerals.Gold:
-                                    messageType = Message.TypeFoundGold;
+                                    messageType = Message.Type.FoundGold;
                                     break;
                                 case Map.Minerals.Stone:
-                                    messageType = Message.TypeFoundStone;
+                                    messageType = Message.Type.FoundStone;
                                     break;
                                 default:
                                     Debug.NotReached();
@@ -6554,7 +6554,7 @@ namespace Freeserf
                     {
                         if (building.IsUnderAttack())
                         {
-                            Game.GetPlayer(building.Player).AddNotification(Message.TypeUnderAttack, building.Position, Player);
+                            Game.GetPlayer(building.Player).AddNotification(Message.Type.UnderAttack, building.Position, Player);
                         }
 
                         /* Change state of attacking knight */
