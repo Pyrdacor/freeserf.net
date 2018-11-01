@@ -517,7 +517,7 @@ namespace Freeserf
 
             if (HasBuilding())
             {
-                OtherEndPoints[(int)Direction.UpLeft].SetPriorityInStock(0, prio);
+                OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(0, prio);
             }
 
             buildingFlags2 = reader.ReadByte(); // 68
@@ -526,7 +526,7 @@ namespace Freeserf
 
             if (HasBuilding())
             {
-                OtherEndPoints[(int)Direction.UpLeft].SetPriorityInStock(1, prio);
+                OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(1, prio);
             }
         }
 
@@ -690,13 +690,23 @@ namespace Freeserf
             }
         }
 
+        class IntPointerHelper
+        {
+            public int Value = 0;
+        }
+
+        class FlagPointerHelper
+        {
+            public Flag Value = null;
+        }
+
         static bool FindNearestInventorySearchCB(Flag flag, object data)
         {
-            Flag dest = data as Flag;
+            FlagPointerHelper dest = data as FlagPointerHelper;
 
             if (flag.AcceptsResources())
             {
-                dest = flag;
+                dest.Value = flag;
                 return true;
             }
 
@@ -705,13 +715,13 @@ namespace Freeserf
 
         static bool FlagSearchInventorySearchCB(Flag flag, object data)
         {
-            int destIndex = (int)data;
+            IntPointerHelper destIndex = data as IntPointerHelper;
 
             if (flag.AcceptsSerfs())
             {
                 Building building = flag.GetBuilding();
 
-                destIndex = building.GetFlagIndex();
+                destIndex.Value = (int)building.GetFlagIndex();
 
                 return true;
             }
@@ -721,23 +731,29 @@ namespace Freeserf
 
         public int FindNearestInventoryForResource()
         {
-            Flag dest = null;
+            FlagPointerHelper dest = new FlagPointerHelper()
+            {
+                Value = null
+            };
 
             FlagSearch.Single(this, FindNearestInventorySearchCB, false, true, dest);
 
-            if (dest != null)
-                return (int)dest.Index;
+            if (dest.Value != null)
+                return (int)dest.Value.Index;
 
             return -1;
         }
 
         public int FindNearestInventoryForSerf()
         {
-            int destIndex = -1;
+            IntPointerHelper destIndex = new IntPointerHelper()
+            {
+                Value = -1
+            };
 
             FlagSearch.Single(this, FlagSearchInventorySearchCB, true, false, destIndex);
 
-            return destIndex;
+            return destIndex.Value;
         }
 
         public void LinkWithFlag(Flag destFlag, bool waterPath, uint length, Direction inDir, Direction outDir)
@@ -832,7 +848,7 @@ namespace Freeserf
                         }
                         else if (FreeTransporterCount(j) != 0)
                         {
-                            transporter |= Misc.Bit(j);
+                            transporter |= Misc.Bit((int)j);
                         }
                     }
                     else if (FreeTransporterCount(j) == 0 || Misc.BitTest(resWaiting[2], (int)j))
@@ -970,7 +986,7 @@ namespace Freeserf
         {
             Map map = Game.Map;
 
-            if (!map.Paths(pos))
+            if (map.Paths(pos) == 0)
             {
                 return;
             }
@@ -1094,7 +1110,7 @@ namespace Freeserf
             {
                 Serf serf = game.GetSerfAtPos(pos);
 
-                if (serf.GetState() == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
+                if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                 {
                     int d = serf.GetWalkingDir();
 
@@ -1116,7 +1132,7 @@ namespace Freeserf
             {
                 ++pathLength;
                 pos = map.Move(pos, dir);
-                paths = map.Paths(pos);
+                paths = (int)map.Paths(pos);
                 paths &= ~Misc.Bit((int)dir.Reverse());
 
                 if (map.HasFlag(pos))
@@ -1148,7 +1164,7 @@ namespace Freeserf
                 {
                     Serf serf = game.GetSerfAtPos(pos);
 
-                    if (serf.GetState() == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
+                    if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                     {
                         serf.SetWalkingWaitCounter(0);
                         data.Serfs[serfCounter++] = (int)serf.Index;
@@ -1161,7 +1177,7 @@ namespace Freeserf
             {
                 Serf serf = game.GetSerfAtPos(pos);
 
-                if ((serf.GetState() == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1) || serf.GetState() == Serf.State.Delivering)
+                if ((serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1) || serf.SerfState == Serf.State.Delivering)
                 {
                     int d = serf.GetWalkingDir();
 
@@ -1179,7 +1195,7 @@ namespace Freeserf
             /* Fill the rest of the struct. */
             data.PathLength = pathLength;
             data.SerfCount = serfCounter;
-            data.FlagIndex = map.GetObjectIndex(pos);
+            data.FlagIndex = (int)map.GetObjectIndex(pos);
             data.FlagDir = dir.Reverse();
         }
 
@@ -1207,7 +1223,7 @@ namespace Freeserf
 
                 int buildPrio = building.GetMaxPriorityForResource(destData.Resource);
 
-                if (buildPrio > data.MaxPrio)
+                if (buildPrio > destData.MaxPrio)
                 {
                     destData.MaxPrio = buildPrio;
                     destData.Flag = flag;
@@ -1318,7 +1334,7 @@ namespace Freeserf
 
                 if (data.Flag != null)
                 {
-                    Log.Verbose.Write("game", $"dest for flag {index} res {slot} found: flag {data.Flag.Index}");
+                    Log.Verbose.Write("game", $"dest for flag {Index} res {slot} found: flag {data.Flag.Index}");
                     Building destBuilding = data.Flag.OtherEndPoints[(int)Direction.UpLeft].Building;
 
                     if (!destBuilding.AddRequestedResource(res, true))
@@ -1600,7 +1616,7 @@ namespace Freeserf
                 dir = dir2;
             }
 
-            serf.GoOutFromInventory(inventory.Index, source.Index, dir);
+            serf.GoOutFromInventory(inventory.Index, source.Index, (int)dir);
 
             return true;
         }
@@ -1612,9 +1628,9 @@ namespace Freeserf
     {
         public const int SEARCH_MAX_DEPTH = 0x10000;
 
-        Game game;
-        Queue<Flag> queue = new Queue<Flag>();
-        int id;
+        readonly Game game;
+        readonly Queue<Flag> queue = new Queue<Flag>();
+        readonly int id;
 
         public FlagSearch(Game game)
         {

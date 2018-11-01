@@ -62,7 +62,7 @@ namespace Freeserf
         }
 
         // Max number of different types of resources accepted by buildings.
-        const uint kMaxStock = 3;
+        const uint MaxStock = 3;
 
         class Stock
         {
@@ -133,7 +133,7 @@ namespace Freeserf
         /* Index of flag connected to this building */
         uint flag = 0;
         /* Stock of this building */
-        readonly Stock[] stock = new Stock[kMaxStock];
+        readonly Stock[] stock = new Stock[MaxStock];
         uint firstKnight = 0;
         int burningCounter = 0;
         uint progress = 0;
@@ -165,7 +165,7 @@ namespace Freeserf
         public Building(Game game, uint index)
             : base(game, index)
         {
-            for (int j = 0; j < kMaxStock; ++j)
+            for (int j = 0; j < MaxStock; ++j)
             {
                 stock[j].Type = Resource.Type.None;
                 stock[j].Priority = 0;
@@ -656,7 +656,7 @@ namespace Freeserf
                 BuildingType == Type.Tower ||
                 BuildingType == Type.Fortress)
             {
-                for (int j = 0; j < kMaxStock; ++j)
+                for (int j = 0; j < MaxStock; ++j)
                 {
                     if (stock[j].Type == Resource.Type.GoldBar)
                     {
@@ -679,7 +679,7 @@ namespace Freeserf
 
             int inStock = -1;
 
-            for (int i = 0; i < kMaxStock; ++i)
+            for (int i = 0; i < MaxStock; ++i)
             {
                 if (stock[i].Type == res)
                 {
@@ -750,7 +750,7 @@ namespace Freeserf
 
         public bool AddRequestedResource(Resource.Type res, bool fixPriority)
         {
-            for (int j = 0; j < kMaxStock; ++j)
+            for (int j = 0; j < MaxStock; ++j)
             {
                 if (stock[j].Type == res)
                 {
@@ -811,7 +811,7 @@ namespace Freeserf
         {
             int maxPrio = -1;
 
-            for (int i = 0; i < kMaxStock; i++)
+            for (int i = 0; i < MaxStock; i++)
             {
                 if (stock[i].Type == resource &&
                     stock[i].Priority >= minimum &&
@@ -865,7 +865,7 @@ namespace Freeserf
                 }
 
                 /* Add to building stock */
-                for (int i = 0; i < kMaxStock; ++i)
+                for (int i = 0; i < MaxStock; ++i)
                 {
                     if (stock[i].Type == resource)
                     {
@@ -1416,7 +1416,7 @@ namespace Freeserf
                             Inventory inventory = Game.GetInventory((uint)u.InvIndex);
 
                             if (holder &&
-                                !inventory.HaveAnyOutMode() == 0 && /* Not serf or res OUT mode */
+                                !inventory.HaveAnyOutMode() && /* Not serf or res OUT mode */
                                 inventory.FreeSerfCount() == 0)
                             {
                                 if (player.TickSendGenericDelay())

@@ -31,7 +31,6 @@ using System.Runtime.InteropServices;
 namespace Freeserf
 {
     using MapPos = UInt32;
-    using SerfMap = Dictionary<Serf.Type, uint>;
 
     // TODO: Can't we just replace things like Game.GetFlag(map.GetObjectIndex(Position)) with Game.GetFlagAtPos(Position) ???
     // TODO: Give the state values plausible names instead of FieldX and so on!
@@ -896,9 +895,9 @@ namespace Freeserf
         public void InitGeneric(Inventory inventory)
         {
             SetSerfType(Type.Generic);
-            Player = inventory.Owner;
+            Player = inventory.Player;
 
-            Building building = Game.GetBuilding(inventory.BuildingIndex);
+            Building building = Game.GetBuilding(inventory.GetBuildingIndex());
             Position = building.Position;
             tick = (ushort)Game.Tick;
             SetState(State.IdleInStock);
@@ -1383,17 +1382,17 @@ namespace Freeserf
             return s.Attacking.DefIndex;
         }
 
-        int GetWalkingWaitCounter()
+        internal int GetWalkingWaitCounter()
         {
             return s.Walking.WaitCounter;
-
         }
-        void SetWalkingWaitCounter(int newCounter)
+
+        internal void SetWalkingWaitCounter(int newCounter)
         {
             s.Walking.WaitCounter = newCounter;
         }
 
-        int GetWalkingDir()
+        internal int GetWalkingDir()
         {
             return s.Walking.Dir;
         }
@@ -1439,7 +1438,7 @@ namespace Freeserf
 
         // Commands
 
-        void GoOutFromInventory(uint inventory, MapPos dest, int mode)
+        internal void GoOutFromInventory(uint inventory, MapPos dest, int mode)
         {
             SetState(State.ReadyToLeaveInventory);
             s.ReadyToLeaveInventory.Mode = mode;
@@ -2698,7 +2697,7 @@ namespace Freeserf
             Inventory inventory = Game.GetInventory(s.IdleInStock.InvIndex);
 
             if (inventory.GetSerfMode() == 0
-                || inventory.GetSerfMode() == 1 /* in, stop */
+                || inventory.GetSerfMode() == Inventory.Mode.Stop /* in, stop */
                 || inventory.GetSerfQueueLength() >= 3)
             {
                 switch (GetSerfType())
@@ -3351,7 +3350,7 @@ namespace Freeserf
                                 Building building = Game.GetBuildingAtPos(Position);
                                 Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
 
-                                building.SetInitialResInStock(1, 1);
+                                building.SetInitialResourcesInStock(1, 1);
 
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Wheat, 8);
@@ -3566,7 +3565,7 @@ namespace Freeserf
                                     s.Defending.NextKnight = building.GetFirstKnight();
                                     building.SetFirstKnight(Index);
 
-                                    Game.GetPlayer(building.GetOwner()).IncreaseCastleKnights();
+                                    Game.GetPlayer(building.Player).IncreaseCastleKnights();
 
                                     return;
                                 }
@@ -3926,7 +3925,7 @@ namespace Freeserf
                         if (!Misc.BitTest(MaterialOrder[(int)building.BuildingType], materialStep))
                         {
                             /* Planks */
-                            if (building.GetResCountInStock(0) == 0)
+                            if (building.GetResourceCountInStock(0) == 0)
                             {
                                 Counter += 256;
 
@@ -3941,7 +3940,7 @@ namespace Freeserf
                         else
                         {
                             /* Stone */
-                            if (building.GetResCountInStock(1) == 0)
+                            if (building.GetResourceCountInStock(1) == 0)
                             {
                                 Counter += 256;
 
@@ -3976,7 +3975,7 @@ namespace Freeserf
                     if (!Misc.BitTest(MaterialOrder[(int)building.BuildingType], materialStep))
                     {
                         /* Planks */
-                        if (building.GetResCountInStock(0) == 0)
+                        if (building.GetResourceCountInStock(0) == 0)
                         {
                             Counter += 256;
 
@@ -3991,7 +3990,7 @@ namespace Freeserf
                     else
                     {
                         /* Stone */
-                        if (building.GetResCountInStock(1) == 0)
+                        if (building.GetResourceCountInStock(1) == 0)
                         {
                             Counter += 256;
 
@@ -6550,12 +6549,12 @@ namespace Freeserf
 
                     if (building.IsDone() &&
                         building.IsMilitary() &&
-                        building.GetOwner() != Player &&
+                        building.Player != Player &&
                         building.HasKnight())
                     {
                         if (building.IsUnderAttack())
                         {
-                            Game.GetPlayer(building.GetOwner()).AddNotification(Message.TypeUnderAttack, building.Position, Player);
+                            Game.GetPlayer(building.Player).AddNotification(Message.TypeUnderAttack, building.Position, Player);
                         }
 
                         /* Change state of attacking knight */
@@ -6784,7 +6783,7 @@ namespace Freeserf
             {
                 if (!building.IsBurning() && building.IsMilitary())
                 {
-                    if (building.GetOwner() == Player)
+                    if (building.Player == Player)
                     {
                         /* Enter building if there is space. */
                         if (building.BuildingType == Building.Type.Castle)
