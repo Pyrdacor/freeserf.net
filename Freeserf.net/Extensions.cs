@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Freeserf
@@ -27,6 +28,17 @@ namespace Freeserf
         public static T GetValue<T>(this string value)
         {
             return (T)Convert.ChangeType(value, typeof(T));
+        }
+    }
+
+    public static class ArrayExtensions
+    {
+        public static IEnumerable<T> SliceRow<T>(this T[,] array, int row)
+        {
+            for (var i = 0; i < array.GetLength(0); ++i)
+            {
+                yield return array[i, row];
+            }
         }
     }
 }
