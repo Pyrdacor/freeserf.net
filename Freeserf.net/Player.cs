@@ -31,6 +31,7 @@ namespace Freeserf
     using MapPos = UInt32;
     using Messages = Queue<Message>;
     using PosTimers = List<PosTimer>;
+    using ListInventories = List<Inventory>;
 
     public class Message
     {
@@ -78,365 +79,1615 @@ namespace Freeserf
             public byte Blue;
         }
 
-        int[] tool_prio = new int[9];
-        int[] resource_count = new int[26];
-        int[] flag_prio = new int[26];
-        int[] serf_count = new int[27];
-        int[] knight_occupation = new int[4];
+        int[] toolPriorities = new int[9];
+        uint[] resourceCount = new uint[26];
+        int[] flagPriorities = new int[26];
+        uint[] serfCount = new uint[27];
+        uint[] knightOccupation = new uint[4];
 
-        Color color;
-        uint face;
-        int flags;
-        int build;
-        int[] completed_building_count = new int[24];
-        int[] incomplete_building_count = new int[24];
-        int[] inventory_prio = new int[26];
-        int[] attacking_buildings = new int[64];
+        Color color = new Color()
+        {
+            Red = 0, Green = 0, Blue = 0
+        };
+        uint face = uint.MaxValue;
+        int flags = 0;
+        int build = 0;
+        uint[] completedBuildingCount = new uint[24];
+        uint[] incompleteBuildingCount = new uint[24];
+        int[] inventoryPriorities = new int[26];
+        uint[] attackingBuildings = new uint[64];
 
         Messages messages = new Messages();
         PosTimers timers = new PosTimers();
 
-        int building;
-        int castle_inventory;
-        int cont_search_after_non_optimal_find;
-        int knights_to_spawn;
-        uint total_land_area;
-        uint total_building_score;
-        uint total_military_score;
-        ushort last_tick;
+        int building = 0;
+        int castleInventory = 0;
+        //int contSearchAfterNonOptimalFind = 7;
+        int knightsToSpawn = 0;
+        uint totalLandArea = 0;
+        uint totalBuildingScore = 0;
+        uint totalMilitaryScore = 0;
+        ushort lastTick = 0;
 
-        int reproduction_counter;
-        uint reproduction_reset;
-        int serf_to_knight_rate;
-        ushort serf_to_knight_counter; /* Overflow is important */
-        int analysis_goldore;
-        int analysis_ironore;
-        int analysis_coal;
-        int analysis_stone;
+        int reproductionCounter = 0;
+        uint reproductionReset = 0;
+        int serfToKnightRate = 20000;
+        ushort serfToKnightCounter = 0x8000; /* Overflow is important */
+        int analysisGoldore = 0;
+        int analysisIronore = 0;
+        int analysisCoal = 0;
+        int analysisStone = 0;
 
-        int food_stonemine; /* Food delivery priority of food for mines. */
-        int food_coalmine;
-        int food_ironmine;
-        int food_goldmine;
-        int planks_construction; /* Planks delivery priority. */
-        int planks_boatbuilder;
-        int planks_toolmaker;
-        int steel_toolmaker;
-        int steel_weaponsmith;
-        int coal_steelsmelter;
-        int coal_goldsmelter;
-        int coal_weaponsmith;
-        int wheat_pigfarm;
-        int wheat_mill;
+        uint foodStonemine = 0 ; /* Food delivery priority of food for mines. */
+        uint foodCoalmine = 0;
+        uint foodIronmine = 0;
+        uint foodGoldmine = 0;
+        uint planksConstruction = 0; /* Planks delivery priority. */
+        uint planksBoatbuilder = 0;
+        uint planksToolmaker = 0;
+        uint steelToolmaker = 0;
+        uint steelWeaponsmith = 0;
+        uint coalSteelsmelter = 0;
+        uint coalGoldsmelter = 0;
+        uint coalWeaponsmith = 0;
+        uint wheatPigfarm = 0;
+        uint wheatMill = 0;
 
         /* +1 for every castle defeated,
            -1 for own castle lost. */
-        int castle_score;
-        int send_generic_delay;
-        uint initial_supplies;
-        int serf_index;
-        int knight_cycle_counter;
-        int send_knight_delay;
-        int military_max_gold;
+        int castleScore = 0;
+        int sendGenericDelay = 0;
+        uint initialSupplies = 0;
+        int serfIndex = 0;
+        int knightCycleCounter = 0;
+        int sendKnightDelay = 0;
+        int militaryMaxGold = 0;
 
-        int knight_morale;
-        int gold_deposited;
-        int castle_knights_wanted;
-        int castle_knights;
-        int ai_value_0;
-        int ai_value_1;
-        int ai_value_2;
-        int ai_value_3;
-        int ai_value_4;
-        int ai_value_5;
-        uint ai_intelligence;
+        int knightMorale = 0;
+        uint goldDeposited = 0;
+        uint castleKnightsWanted = 3;
+        uint castleKnights = 0;
+        int aiValue0 = 0;
+        int aiValue1 = 0;
+        int aiValue2 = 0;
+        int aiValue3 = 0;
+        int aiValue4 = 0;
+        int aiValue5 = 0;
+        uint aiIntelligence = 0;
 
-        int[,] player_stat_history = new int[16,112];
-        int[,] resource_count_history = new int[26,120];
+        int[,] playerStatHistory = new int[16,112];
+        int[,] resourceCountHistory = new int[26,120];
 
         // TODO(Digger): remove it to UI
-        public int building_attacked;
-        public int knights_attacking;
-        public int attacking_building_count;
-        public int[] attacking_knights = new int[4];
-        public int total_attacking_knights;
-        public uint temp_index;
+        public int buildingAttacked = 0;
+        public int knightsAttacking = 0;
+        public int attackingBuildingCount = 0;
+        public int[] attackingKnights = new int[4];
+        public int totalAttackingKnights = 0;
+        //public uint tempIndex = 0;
 
         public Player(Game game, uint index)
             : base(game, index)
         {
+            ResetFoodPriority();
+            ResetPlanksPriority();
+            ResetSteelPriority();
+            ResetCoalPriority();
+            ResetWheatPriority();
+            ResetToolPriority();
 
+            ResetFlagPriority();
+            ResetInventoryPriority();
+
+            /* player.field_1b0 = 0; AI */
+            /* player.field_1b2 = 0; AI */
+
+            /* TODO AI: Set array field_402 of length 25 to -1. */
+            /* TODO AI: Set array field_434 of length 280*2 to 0 */
+            /* TODO AI: Set array field_1bc of length 8 to -1 */
         }
 
-        public void init(uint intelligence, uint supplies, uint reproduction)
+        // Initialize player values.
+        //
+        // Supplies and reproduction are usually limited to 0-40 in random map games.
+        //
+        // Args:
+        //     face: the face image that represents this player.
+        //           1-12 is AI, 13-14 is human player.
+        //     color: Color of player as palette color index.
+        //     supplies: Initial resource supplies at castle (0-50).
+        //     reproduction: How quickly new serfs spawn during the game (0-60).
+        //     intelligence: AI only (unused) (0-40).
+        public void Init(uint intelligence, uint supplies, uint reproduction)
         {
+            flags = 0;
 
+            initialSupplies = supplies;
+            reproductionReset = (60 - reproduction) * 50;
+            aiIntelligence = (1300 * intelligence) + 13535;
+            reproductionCounter = (int)reproductionReset;
         }
 
-        public void init_view(Color color, uint face)
+        public void InitView(Color color, uint face)
         {
+            this.face = face;
 
+            if (face < 12)
+            { 
+                /* AI player */
+                flags |= Misc.Bit(7); /* Set AI bit */
+                                      /* TODO ... */
+                                      /*Game.max_next_index = 49;*/
+            }
+
+            if (IsAi())
+                InitAiValues(face);
+
+            this.color = color;
         }
 
-        public Color get_color()
+        public Color GetColor()
         {
             return color;
         }
 
-        public uint get_face()
+        public uint GetFace()
         {
             return face;
         }
 
         /* Whether player has built the initial castle. */
-        public bool has_castle() { return (flags & 1); }
+        public bool HasCastle()
+        {
+            return (flags & 1) != 0;
+        }
+
         /* Whether the strongest knight should be sent to fight. */
-        public bool send_strongest() { return ((flags >> 1) & 1); }
-        public void drop_send_strongest() { flags &= ~BIT(1); }
-        public void set_send_strongest() { flags |= BIT(1); }
+        public bool SendStrongest()
+        {
+            return ((flags >> 1) & 1) != 0;
+        }
+
+        public void DropSendStrongest()
+        {
+            flags &= ~Misc.Bit(1);
+        }
+
+        public void SetSendStrongest()
+        {
+            flags |= Misc.Bit(1);
+        }
+
         /* Whether cycling of knights is in progress. */
-        public bool cycling_knight() { return ((flags >> 2) & 1); }
+        public bool CyclingKnight()
+        {
+            return ((flags >> 2) & 1) != 0;
+        }
+
         /* Whether a message is queued for this player. */
-        public bool has_message() { return ((flags >> 3) & 1); }
-        public void drop_message() { flags &= ~BIT(3); }
+        public bool HasMessage()
+        {
+            return ((flags >> 3) & 1) != 0;
+        }
+
+        public void DropMessage()
+        {
+            flags &= ~Misc.Bit(3);
+        }
+
         /* Whether the knight level of military buildings is temporarily
         reduced bacause of cycling of the knights. */
-        public bool reduced_knight_level() { return ((flags >> 4) & 1); }
+        public bool ReducedKnightLevel()
+        {
+            return ((flags >> 4) & 1) != 0;
+        }
+
         /* Whether the cycling of knights is in the second phase. */
-        public bool cycling_second() const { return ((flags >> 5) & 1); }
+        public bool CyclingSecond()
+        {
+            return ((flags >> 5) & 1) != 0;
+        }
+
         /* Whether this player is a computer controlled opponent. */
-        public bool is_ai() const { return ((flags >> 7) & 1); }
+        public bool IsAi()
+        {
+            return ((flags >> 7) & 1) != 0;
+        }
 
         /* Whether player is prohibited from building military
-        buildings at current position. */
-        public bool allow_military() const { return !(build & 1); }
+           buildings at current position. */
+        public bool AllowMilitary()
+        {
+            return (build & 1) == 0;
+        }
+
         /* Whether player is prohibited from building flag at
-        current position. */
-        public bool allow_flag() const { return !((build >> 1) & 1); }
+           current position. */
+        public bool AllowFlag()
+        {
+            return ((build >> 1) & 1) == 0;
+        }
+
         /* Whether player can spawn new serfs. */
-        public bool can_spawn() const { return ((build >> 2) & 1); }
-
-        public unsigned int get_serf_count(int type) const { return serf_count[type]; }
-        public int get_flag_prio(int res) const { return flag_prio[res]; }
-
-        public void add_notification(Message::Type type, MapPos pos, unsigned int data);
-
-        public bool has_notification();
-
-        public Message pop_notification();
-
-        public Message peek_notification();
-
-
-        public void add_timer(int timeout, MapPos pos);
-
-
-        public void reset_food_priority();
-
-        public void reset_planks_priority();
-
-        public void reset_steel_priority();
-
-        public void reset_coal_priority();
-
-        public void reset_wheat_priority();
-
-        public void reset_tool_priority();
-
-
-        public void reset_flag_priority();
-
-        public void reset_inventory_priority();
-
-
-        public int get_knight_occupation(size_t threat_level) const {
-        public return knight_occupation[threat_level]; }
-        public void change_knight_occupation(int index, int adjust_max, int delta);
-
-        public void increase_castle_knights() { castle_knights++; }
-
-        public void decrease_castle_knights() { castle_knights--; }
-
-        public int get_castle_knights() const { return castle_knights; }
-        public int get_castle_knights_wanted() const { return castle_knights_wanted; }
-        public void increase_castle_knights_wanted();
-
-        public void decrease_castle_knights_wanted();
-
-        public int get_knight_morale() const { return knight_morale; }
-        public int get_gold_deposited() const { return gold_deposited; }
-
-        public int promote_serfs_to_knights(int number);
-
-        public int knights_available_for_attack(MapPos pos);
-
-        public void start_attack();
-
-        public void cycle_knights();
-
-
-        public void create_initial_castle_serfs(Building* castle);
-
-        public Serf* spawn_serf_generic();
-
-        public int spawn_serf(Serf** serf, Inventory** inventory, bool want_knight);
-
-        public bool tick_send_generic_delay();
-
-        public bool tick_send_knight_delay();
-
-        public Serf::Type get_cycling_sert_type(Serf::Type type) const;
-
-
-        public void increase_serf_count(unsigned int type) { serf_count[type]++; }
-
-        public void decrease_serf_count(unsigned int type);
-
-        public int* get_serfs() { return reinterpret_cast<int*>(serf_count); }
-
-
-        public void increase_res_count(unsigned int type) { resource_count[type]++; }
-
-        public void decrease_res_count(unsigned int type) { resource_count[type]--; }
-
-
-        public void building_founded(Building* building);
-
-        public void building_built(Building* building);
-
-        public void building_captured(Building* building);
-
-        public void building_demolished(Building* building);
-
-
-        public int get_completed_building_count(int type)
+        public bool CanSpawn()
         {
-            return completed_building_count[type];
+            return ((build >> 2) & 1) != 0;
         }
 
-        public int get_incomplete_building_count(int type)
+        public uint GetSerfCount(int type)
         {
-            return incomplete_building_count[type];
+            return serfCount[type];
         }
 
-        public int get_tool_prio(int type) const { return tool_prio[type]; }
-        public void set_tool_prio(int type, int prio) { tool_prio[type] = prio; }
+        public int get_flag_prio(int res)
+        {
+            return flagPriorities[res];
+        }
 
-        public int* get_flag_prio() { return flag_prio; }
+        /* Enqueue a new notification message for player. */
+        public void AddNotification(Message.Type type, MapPos pos, uint data)
+        {
+            flags |= Misc.Bit(3); /* Message in queue. */
 
-        public int get_inventory_prio(int type) const { return inventory_prio[type]; }
-        public int* get_inventory_prio() { return inventory_prio; }
+            Message newMessage = new Message();
+            newMessage.MessageType = type;
+            newMessage.Pos = pos;
+            newMessage.Data = data;
 
-        public int get_total_military_score() const { return total_military_score; }
+            messages.Enqueue(newMessage);
+        }
 
-        public void update();
+        public bool has_notification()
+        {
+            return messages.Count > 0;
+        }
 
-        public void update_stats(int res);
+        public Message pop_notification()
+        {
+            return messages.Dequeue();
+        }
+
+        public Message peek_notification()
+        {
+            return messages.Peek();
+        }
+
+
+        public void add_timer(int timeout, MapPos pos)
+        {
+            PosTimer newTimer = new PosTimer();
+
+            newTimer.Timeout = timeout;
+            newTimer.Pos = pos;
+
+            timers.Add(newTimer);
+        }
+
+        /* Set defaults for food distribution priorities. */
+        public void ResetFoodPriority()
+        {
+            foodStonemine = 13100;
+            foodCoalmine = 45850;
+            foodIronmine = 45850;
+            foodGoldmine = 65500;
+        }
+
+        /* Set defaults for planks distribution priorities. */
+        public void ResetPlanksPriority()
+        {
+            planksConstruction = 65500;
+            planksBoatbuilder = 3275;
+            planksToolmaker = 19650;
+        }
+
+        /* Set defaults for steel distribution priorities. */
+        public void ResetSteelPriority()
+        {
+            steelToolmaker = 45850;
+            steelWeaponsmith = 65500;
+        }
+
+        /* Set defaults for coal distribution priorities. */
+        public void ResetCoalPriority()
+        {
+            coalSteelsmelter = 32750;
+            coalGoldsmelter = 65500;
+            coalWeaponsmith = 52400;
+        }
+
+        /* Set defaults for wheat distribution priorities. */
+        public void ResetWheatPriority()
+		{
+            wheatPigfarm = 65500;
+            wheatMill = 32750;
+        }
+
+        /* Set defaults for tool production priorities. */
+        public void ResetToolPriority()
+		{
+            toolPriorities[0] = 9825; /* SHOVEL */
+            toolPriorities[1] = 65500; /* HAMMER */
+            toolPriorities[2] = 13100; /* ROD */
+            toolPriorities[3] = 6550; /* CLEAVER */
+            toolPriorities[4] = 13100; /* SCYTHE */
+            toolPriorities[5] = 26200; /* AXE */
+            toolPriorities[6] = 32750; /* SAW */
+            toolPriorities[7] = 45850; /* PICK */
+            toolPriorities[8] = 6550; /* PINCER */
+        }
+
+        /* Set defaults for flag priorities. */
+        public void ResetFlagPriority()
+		{
+            flagPriorities[(int)Resource.Type.GoldOre] = 1;
+            flagPriorities[(int)Resource.Type.GoldBar] = 2;
+            flagPriorities[(int)Resource.Type.Wheat] = 3;
+            flagPriorities[(int)Resource.Type.Flour] = 4;
+            flagPriorities[(int)Resource.Type.Pig] = 5;
+
+            flagPriorities[(int)Resource.Type.Boat] = 6;
+            flagPriorities[(int)Resource.Type.Pincer] = 7;
+            flagPriorities[(int)Resource.Type.Scythe] = 8;
+            flagPriorities[(int)Resource.Type.Rod] = 9;
+            flagPriorities[(int)Resource.Type.Cleaver] = 10;
+
+            flagPriorities[(int)Resource.Type.Saw] = 11;
+            flagPriorities[(int)Resource.Type.Axe] = 12;
+            flagPriorities[(int)Resource.Type.Pick] = 13;
+            flagPriorities[(int)Resource.Type.Shovel] = 14;
+            flagPriorities[(int)Resource.Type.Hammer] = 15;
+
+            flagPriorities[(int)Resource.Type.Shield] = 16;
+            flagPriorities[(int)Resource.Type.Sword] = 17;
+            flagPriorities[(int)Resource.Type.Bread] = 18;
+            flagPriorities[(int)Resource.Type.Meat] = 19;
+            flagPriorities[(int)Resource.Type.Fish] = 20;
+
+            flagPriorities[(int)Resource.Type.IronOre] = 21;
+            flagPriorities[(int)Resource.Type.Lumber] = 22;
+            flagPriorities[(int)Resource.Type.Coal] = 23;
+            flagPriorities[(int)Resource.Type.Steel] = 24;
+            flagPriorities[(int)Resource.Type.Stone] = 25;
+            flagPriorities[(int)Resource.Type.Plank] = 26;
+        }
+
+        /* Set defaults for inventory priorities. */
+        public void ResetInventoryPriority()
+		{
+            inventoryPriorities[(int)Resource.Type.Wheat] = 1;
+            inventoryPriorities[(int)Resource.Type.Flour] = 2;
+            inventoryPriorities[(int)Resource.Type.Pig] = 3;
+            inventoryPriorities[(int)Resource.Type.Bread] = 4;
+            inventoryPriorities[(int)Resource.Type.Fish] = 5;
+
+            inventoryPriorities[(int)Resource.Type.Meat] = 6;
+            inventoryPriorities[(int)Resource.Type.Lumber] = 7;
+            inventoryPriorities[(int)Resource.Type.Plank] = 8;
+            inventoryPriorities[(int)Resource.Type.Boat] = 9;
+            inventoryPriorities[(int)Resource.Type.Stone] = 10;
+
+            inventoryPriorities[(int)Resource.Type.Coal] = 11;
+            inventoryPriorities[(int)Resource.Type.IronOre] = 12;
+            inventoryPriorities[(int)Resource.Type.Steel] = 13;
+            inventoryPriorities[(int)Resource.Type.Shovel] = 14;
+            inventoryPriorities[(int)Resource.Type.Hammer] = 15;
+
+            inventoryPriorities[(int)Resource.Type.Rod] = 16;
+            inventoryPriorities[(int)Resource.Type.Cleaver] = 17;
+            inventoryPriorities[(int)Resource.Type.Scythe] = 18;
+            inventoryPriorities[(int)Resource.Type.Axe] = 19;
+            inventoryPriorities[(int)Resource.Type.Saw] = 20;
+
+            inventoryPriorities[(int)Resource.Type.Pick] = 21;
+            inventoryPriorities[(int)Resource.Type.Pincer] = 22;
+            inventoryPriorities[(int)Resource.Type.Shield] = 23;
+            inventoryPriorities[(int)Resource.Type.Sword] = 24;
+            inventoryPriorities[(int)Resource.Type.GoldOre] = 25;
+            inventoryPriorities[(int)Resource.Type.GoldBar] = 26;
+        }
+
+        public uint GetKnightOccupation(uint threatLevel)
+        {
+            return knightOccupation[(int)threatLevel];
+        }
+
+        public void ChangeKnightOccupation(int index, bool adjustMax, int delta)
+		{
+            uint max = (knightOccupation[index] >> 4) & 0xf;
+            uint min = knightOccupation[index] & 0xf;
+
+            if (adjustMax)
+            {
+                max = (uint)Misc.Clamp((int)min, (int)max + delta, 4);
+            }
+            else
+            {
+                min = (uint)Misc.Clamp(0, (int)min + delta, (int)max);
+            }
+
+            knightOccupation[index] = (max << 4) | min;
+        }
+
+        public void IncreaseCastleKnights()
+        {
+            ++castleKnights;
+        }
+
+        public void DecreaseCastleKnights()
+        {
+            --castleKnights;
+        }
+
+        public uint GetCastleKnights()
+        {
+            return castleKnights;
+        }
+
+        public uint GetCastleKnightsWanted()
+        {
+            return castleKnightsWanted;
+        }
+
+        public void IncreaseCastleKnightsWanted()
+		{
+            castleKnightsWanted = Math.Min(castleKnightsWanted + 1, 99);
+        }
+
+        public void DecreaseCastleKnightsWanted()
+		{
+            castleKnightsWanted = Math.Max(1, castleKnightsWanted - 1);
+        }
+
+        public int GetKnightMorale()
+        {
+            return knightMorale;
+        }
+
+        public uint GetGoldDeposited()
+        {
+            return goldDeposited;
+        }
+
+        /* Turn a number of serfs into knight for the given player. */
+        public int PromoteSerfsToKnights(int number)
+		{
+            int promoted = 0;
+
+            foreach (Serf serf in Game.GetPlayerSerfs(this))
+            {
+                if (serf.SerfState == Serf.State.IdleInStock &&
+                    serf.GetSerfType() == Serf.Type.Generic)
+                {
+                    Inventory inv = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
+
+                    if (inv.PromoteSerfToKnight(serf))
+                    {
+                        ++promoted;
+                        --number;
+                    }
+                }
+            }
+
+            return promoted;
+        }
+
+        public int KnightsAvailableForAttack(MapPos pos)
+		{
+            /* Reset counters. */
+            for (int i = 0; i < 4; i++)
+            {
+                attackingKnights[i] = 0;
+            }
+
+            int count = 0;
+            Map map = Game.Map;
+
+            /* Iterate each shell around the position.*/
+            for (int i = 0; i < 32; ++i)
+            {
+                pos = map.MoveRight(pos);
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPos(pos, count, i >> 3);
+                    pos = map.MoveDown(pos);
+                }
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPos(pos, count, i >> 3);
+                    pos = map.MoveLeft(pos);
+                }
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPos(pos, count, i >> 3);
+                    pos = map.MoveUpLeft(pos);
+                }
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPos(pos, count, i >> 3);
+                    pos = map.MoveUp(pos);
+                }
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPos(pos, count, i >> 3);
+                    pos = map.MoveRight(pos);
+                }
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPos(pos, count, i >> 3);
+                    pos = map.MoveDownRight(pos);
+                }
+            }
+
+            attackingBuildingCount = count;
+            totalAttackingKnights = 0;
+
+            for (int i = 0; i < 4; ++i)
+            {
+                totalAttackingKnights += attackingKnights[i];
+            }
+
+            return totalAttackingKnights;
+        }
+
+        public void StartAttack()
+		{
+            Building target = Game.GetBuilding((uint)buildingAttacked);
+
+            if (!target.IsDone()   || !target.IsMilitary() ||
+                !target.IsActive() || target.GetThreatLevel() != 3)
+            {
+                return;
+            }
+
+            Map map = Game.Map;
+
+            for (int i = 0; i < attackingBuildingCount; i++)
+            {
+                /* TODO building index may not be valid any more(?). */
+                Building b = Game.GetBuilding((uint)attackingBuildings[i]);
+
+                if (b.IsBurning() || map.GetOwner(b.Position) != Index)
+                {
+                    continue;
+                }
+
+                MapPos flagPos = map.MoveDownRight(b.Position);
+
+                if (map.HasSerf(flagPos))
+                {
+                    /* Check if building is under siege. */
+                    Serf s = Game.GetSerfAtPos(flagPos);
+
+                    if (s.Player != Index)
+                        continue;
+                }
+
+                int[] minLevel = null;
+
+                switch (b.BuildingType)
+                {
+                    case Building.Type.Hut: minLevel = minLevelHut; break;
+                    case Building.Type.Tower: minLevel = minLevelTower; break;
+                    case Building.Type.Fortress: minLevel = minLevelFortress; break;
+                    default: continue;
+                }
+
+                uint state = b.GetThreatLevel();
+                uint knightsPresent = b.GetKnightCount();
+                int toSend = (int)knightsPresent - minLevel[knightOccupation[state] & 0xf];
+
+                for (int j = 0; j < toSend; ++j)
+                {
+                    /* Find most appropriate knight to send according to player settings. */
+                    var bestType = SendStrongest() ? Serf.Type.Knight0 : Serf.Type.Knight4;
+                    uint bestIndex = 0;
+
+                    uint knightIndex = b.GetFirstKnight();
+
+                    while (knightIndex != 0)
+                    {
+                        Serf knight = Game.GetSerf(knightIndex);
+
+                        if (SendStrongest())
+                        {
+                            if (knight.GetSerfType() >= bestType)
+                            {
+                                bestIndex = knightIndex;
+                                bestType = knight.GetSerfType();
+                            }
+                        }
+                        else
+                        {
+                            if (knight.GetSerfType() <= bestType)
+                            {
+                                bestIndex = knightIndex;
+                                bestType = knight.GetSerfType();
+                            }
+                        }
+
+                        knightIndex = knight.GetNextKnight();
+                    }
+
+                    Serf defSerf = b.CallAttackerOut(bestIndex);
+
+                    target.SetUnderAttack();
+
+                    /* Calculate distance to target. */
+                    int distColumn = map.DistX(target.Position, defSerf.Position);
+                    int distRow = map.DistY(target.Position, defSerf.Position);
+
+                    /* Send this serf off to fight. */
+                    defSerf.SendOffToFight(distColumn, distRow);
+
+                    if (--knightsAttacking == 0)
+                        return;
+                }
+            }
+        }
+
+        /* Begin cycling knights by sending knights from military buildings
+           to inventories. The knights can then be replaced by more experienced
+           knights. */
+        public void CycleKnights()
+		{
+            flags |= Misc.Bit(2) | Misc.Bit(4);
+            knightCycleCounter = 2400;
+        }
+
+        /* Create the initial serfs that occupies the castle. */
+        public void CreateInitialCastleSerfs(Building castle)
+		{
+            build |= Misc.Bit(2);
+
+            /* Spawn serf 4 */
+            Inventory inventory = castle.GetInventory();
+            Serf serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+            {
+                return;
+            }
+
+            inventory.SpecializeSerf(serf, Serf.Type.TransporterInventory);
+            serf.InitInventoryTransporter(inventory);
+
+            Game.Map.SetSerfIndex(serf.Position, (int)serf.Index);
+
+            Building building = Game.GetBuilding((uint)this.building);
+            building.SetFirstKnight(serf.Index);
+
+            /* Spawn generic serfs */
+            for (int i = 0; i < 5; i++)
+            {
+                SpawnSerf(null, null, false);
+            }
+
+            /* Spawn three knights */
+            for (int i = 0; i < 3; i++)
+            {
+                serf = inventory.SpawnSerfGeneric();
+
+                if (serf == null)
+                    return;
+
+                inventory.PromoteSerfToKnight(serf);
+            }
+
+            /* Spawn toolmaker */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Toolmaker);
+
+            /* Spawn timberman */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Lumberjack);
+
+            /* Spawn sawmiller */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Sawmiller);
+
+            /* Spawn stonecutter */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Stonecutter);
+
+            /* Spawn digger */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Digger);
+
+            /* Spawn builder */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Builder);
+
+            /* Spawn fisherman */
+            serf = inventory.SpawnSerfGeneric();
+
+            if (serf == null)
+                return;
+
+            inventory.SpecializeSerf(serf, Serf.Type.Fisher);
+
+            /* Spawn two geologists */
+            for (int i = 0; i < 2; i++)
+            {
+                serf = inventory.SpawnSerfGeneric();
+
+                if (serf == null)
+                    return;
+
+                inventory.SpecializeSerf(serf, Serf.Type.Geologist);
+            }
+
+            /* Spawn two miners */
+            for (int i = 0; i < 2; i++)
+            {
+                serf = inventory.SpawnSerfGeneric();
+
+                if (serf == null)
+                    return;
+
+                inventory.SpecializeSerf(serf, Serf.Type.Miner);
+            }
+        }
+
+        public Serf SpawnSerfGeneric()
+		{
+            Serf serf = Game.CreateSerf();
+
+            if (serf == null)
+                return null;
+
+            serf.Player = Index;
+
+            ++serfCount[(int)Serf.Type.Generic];
+
+            return serf;
+        }
+
+        public sealed class Pointer<T> where T : class
+        {
+            public T Value = null;
+        }
+
+        /* Spawn new serf. Returns 0 on success.
+           The serf object and inventory are returned if non-NULL. */
+        public int SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
+		{
+            if (!CanSpawn())
+                return -1;
+
+            ListInventories inventories = Game.GetPlayerInventories(this);
+
+            if (inventories.Count < 1)
+            {
+                return -1;
+            }
+
+            Inventory inv = null;
+
+            foreach (Inventory loopInv in inventories)
+            {
+                if (loopInv.GetSerfMode() == Inventory.Mode.In)
+                {
+                    if (wantKnight && (loopInv.GetCountOf(Resource.Type.Sword) == 0 ||
+                                       loopInv.GetCountOf(Resource.Type.Shield) == 0))
+                    {
+                        continue;
+                    }
+                    else if (loopInv.FreeSerfCount() == 0)
+                    {
+                        inv = loopInv;
+                        break;
+                    }
+                    else if (inv == null || loopInv.FreeSerfCount() < inv.FreeSerfCount())
+                    {
+                        inv = loopInv;
+                    }
+                }
+            }
+
+            if (inv == null)
+            {
+                if (wantKnight)
+                {
+                    return SpawnSerf(serf, inventory, false);
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+
+            Serf s = inv.SpawnSerfGeneric();
+
+            if (s == null)
+            {
+                return -1;
+            }
+
+            if (serf != null)
+                serf.Value = s;
+
+            if (inventory != null)
+                inventory.Value = inv;
+
+            return 0;
+        }
+
+        public bool TickSendGenericDelay()
+		{
+            --sendGenericDelay;
+
+            if (sendGenericDelay < 0)
+            {
+                sendGenericDelay = 5;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TickSendKnightDelay()
+		{
+            --sendKnightDelay;
+
+            if (sendKnightDelay < 0)
+            {
+                sendKnightDelay = 5;
+                return true;
+            }
+
+            return false;
+        }
+
+        public Serf.Type GetCyclingSerfType(Serf.Type type)
+        {
+            if (CyclingSecond())
+            {
+                type = (Serf.Type)(-((knightCycleCounter >> 8) + 1)); // TODO: ??? Is this right with minus?
+            }
+
+            return type;
+        }
+
+        public void IncreaseSerfCount(uint type)
+        {
+            ++serfCount[type];
+        }
+
+        public void DecreaseSerfCount(uint type)
+		{
+            if (serfCount[type] == 0)
+            {
+                throw new ExceptionFreeserf("Failed to decrease serf count");
+            }
+
+            --serfCount[type];
+        }
+
+        public int[] GetSerfCounts()
+        {
+            return serfCount;
+        }
+
+        public void IncreaseResourceCount(uint type)
+        {
+            ++resourceCount[type];
+        }
+
+        public void DecreaseResourceCount(uint type)
+        {
+            --resourceCount[type];
+        }
+
+        public void BuildingFounded(Building building)
+		{
+            building.Player = Index;
+
+            if (building.BuildingType == Building.Type.Castle)
+            {
+                flags |= Misc.Bit(0); /* Has castle */
+                build |= Misc.Bit(3);
+                totalBuildingScore += Building.BuildingGetScoreFromType(Building.Type.Castle);
+                castleInventory = (int)building.GetInventory().Index;
+                this.building = (int)building.Index;
+                CreateInitialCastleSerfs(building);
+                lastTick = Game.Tick;
+            }
+            else
+            {
+                ++incompleteBuildingCount[(int)building.BuildingType];
+            }
+        }
+
+        public void BuildingBuilt(Building building)
+		{
+            Building.Type type = building.BuildingType;
+
+            totalBuildingScore += Building.BuildingGetScoreFromType(type);
+            ++completedBuildingCount[(int)type];
+            --incompleteBuildingCount[(int)type];
+        }
+
+        public void BuildingCaptured(Building building)
+		{
+            Player defPlayer = Game.GetPlayer(building.Player);
+
+            defPlayer.AddNotification(Message.Type.LoseFight, building.Position, Index);
+            AddNotification(Message.Type.WinFight, building.Position, Index);
+
+            if (building.BuildingType == Building.Type.Castle)
+            {
+                ++castleScore;
+            }
+            else
+            {
+                var buildingType = building.BuildingType;
+
+                /* Update player scores. */
+                defPlayer.totalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
+                defPlayer.totalLandArea -= 7;
+                --defPlayer.completedBuildingCount[(int)buildingType];
+
+                totalBuildingScore += Building.BuildingGetScoreFromType(buildingType);
+                totalLandArea += 7;
+                ++completedBuildingCount[(int)buildingType];
+
+                /* Change owner of building */
+                building.Player = Index;
+
+                if (IsAi())
+                {
+                    /* TODO AI */
+                }
+            }
+        }
+
+        public void BuildingDemolished(Building building)
+		{
+            var buildingType = building.BuildingType;
+
+            /* Update player fields. */
+            if (building.IsDone())
+            {
+                totalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
+
+                if (buildingType != Building.Type.Castle)
+                {
+                    completedBuildingCount[(int)buildingType] -= 1;
+                }
+                else
+                {
+                    build &= ~Misc.Bit(3);
+                    --castleScore;
+                }
+            }
+            else
+            {
+                --incompleteBuildingCount[(int)buildingType];
+            }
+        }
+
+        public int GetCompletedBuildingCount(int type)
+        {
+            return completedBuildingCount[type];
+        }
+
+        public int GetIncompleteBuildingCount(int type)
+        {
+            return incompleteBuildingCount[type];
+        }
+
+        public int GetToolPriority(int type)
+        {
+            return toolPriorities[type];
+        }
+
+        public void SetToolPriority(int type, int priority)
+        {
+            toolPriorities[type] = priority;
+        }
+
+        public int[] GetFlagPriorities()
+        {
+            return flagPriorities;
+        }
+
+        public int GetInventoryPriority(int type)
+        {
+            return inventoryPriorities[type];
+        }
+
+        public int[] GetInventoryPriorities()
+        {
+            return inventoryPriorities;
+        }
+
+        public uint GetTotalMilitaryScore()
+        {
+            return totalMilitaryScore;
+        }
+
+        /* Update player game state as part of the game progression. */
+        public void Update()
+		{
+            ushort delta = (ushort)(Game.Tick - lastTick);
+            lastTick = Game.Tick;
+
+            if (totalLandArea > 0xffff0000)
+                totalLandArea = 0;
+            if (totalMilitaryScore > 0xffff0000)
+                totalMilitaryScore = 0;
+            if (totalBuildingScore > 0xffff0000)
+                totalBuildingScore = 0;
+
+            if (IsAi())
+            {
+                /*if (player.field_1B2 != 0) player.field_1B2 -= 1;*/
+                /*if (player.field_1B0 != 0) player.field_1B0 -= 1;*/
+            }
+
+            if (CyclingKnight())
+            {
+                knightCycleCounter -= delta;
+
+                if (knightCycleCounter < 1)
+                {
+                    flags &= ~Misc.Bit(5);
+                    flags &= ~Misc.Bit(2);
+                }
+                else if (knightCycleCounter < 2048 && ReducedKnightLevel())
+                {
+                    flags |= Misc.Bit(5);
+                    flags &= ~Misc.Bit(4);
+                }
+            }
+
+            if (HasCastle())
+            {
+                reproductionCounter -= delta;
+
+                while (reproductionCounter < 0)
+                {
+                    serfToKnightCounter = (ushort)(serfToKnightCounter + serfToKnightRate);
+
+                    if (serfToKnightCounter < serfToKnightRate)
+                    {
+                        ++knightsToSpawn;
+
+                        if (knightsToSpawn > 2)
+                            knightsToSpawn = 2;
+                    }
+
+                    if (knightsToSpawn == 0)
+                    {
+                        /* Create unassigned serf */
+                        SpawnSerf(null, null, false);
+                    }
+                    else
+                    {
+                        /* Create knight serf */
+                        Pointer<Serf> serf = new Pointer<Serf>();
+                        Pointer<Inventory> inventory = new Pointer<Inventory>();
+                        int r = SpawnSerf(serf, inventory, true);
+
+                        if (r >= 0)
+                        {
+                            if (inventory.Value.GetCountOf(Resource.Type.Sword) != 0 &&
+                                inventory.Value.GetCountOf(Resource.Type.Shield) != 0)
+                            {
+                                --knightsToSpawn;
+                                inventory.Value.SpecializeSerf(serf.Value, Serf.Type.Knight0);
+                            }
+                        }
+                    }
+
+                    reproductionCounter += (int)reproductionReset;
+                }
+            }
+
+            /* Update timers */
+            List<int> timersToErase = new List<int>();
+
+            for (int i = 0; i < timers.Count; ++i)
+            {
+                timers[i].Timeout -= delta;
+
+                if (timers[i].Timeout < 0)
+                {
+                    /* Timer has expired. */
+                    /* TODO box (+ pos) timer */
+                    AddNotification(Message.Type.CallToLocation, timers[i].Pos, 0);
+                    timersToErase.Add(i);
+                }
+            }
+
+            for (int i = timersToErase.Count - 1; i >= 0; --i)
+                timers.RemoveAt(timersToErase[i]);
+        }
+
+        public void UpdateStats(int resource)
+		{
+            resourceCountHistory[resource, Index] = resourceCount[resource];
+            resourceCount[resource] = 0;
+        }
 
         // Stats
-        public void update_knight_morale();
+        public void UpdateKnightMorale()
+		{
+            uint inventoryGold = 0;
+            uint militaryGold = 0;
 
-        public int get_land_area() const { return total_land_area; }
-        public void increase_land_area() { total_land_area++; }
+            /* Sum gold collected in inventories */
+            foreach (Inventory inventory in Game.GetPlayerInventories(this))
+            {
+                inventoryGold += inventory.GetCountOf(Resource.Type.GoldBar);
+            }
 
-        public void decrease_land_area() { total_land_area--; }
+            /* Sum gold deposited in military buildings */
+            foreach (Building building in Game.GetPlayerBuildings(this))
+            {
+                militaryGold += building.MilitaryGoldCount();
+            }
 
-        public int get_building_score() const { return total_building_score; }
-        public int get_military_score() const;
+            uint depot = inventoryGold + militaryGold;
+            goldDeposited = inventoryGold + militaryGold;
 
-        public void increase_military_score(int val) { total_military_score += val; }
+            /* Calculate according to gold collected. */
+            uint total_gold = Game.get_gold_total();
+            if (total_gold != 0)
+            {
+                while (total_gold > 0xffff)
+                {
+                    total_gold >>= 1;
+                    depot >>= 1;
+                }
+                depot = Math.Min(depot, total_gold - 1);
+                knightMorale = 1024 + (Game.get_gold_morale_factor() * depot) / total_gold;
+            }
+            else
+            {
+                knightMorale = 4096;
+            }
 
-        public void decrease_military_score(int val) { total_military_score -= val; }
+            /* Adjust based on castle score. */
+            if (castleScore < 0)
+            {
+                knightMorale = Math.Max(1, knightMorale - 1023);
+            }
+            else if (castleScore > 0)
+            {
+                knightMorale = Math.Min(knightMorale + 1024 * castleScore, 0xffff);
+            }
 
-        public void increase_military_max_gold(int val) { military_max_gold += val; }
+            uint military_score = totalMilitaryScore;
+            uint morale = knightMorale >> 5;
+            while (military_score > 0xffff)
+            {
+                military_score >>= 1;
+                morale <<= 1;
+            }
 
-        public int get_score() const;
+            /* Calculate fractional score used by AI */
+            uint player_score = (military_score * morale) >> 7;
+            uint enemy_score = Game.get_enemy_score(this);
 
-        public unsigned int get_initial_supplies() const { return initial_supplies; }
-  
-        public int* get_resource_count_history(Resource::Type type)
+            while (player_score > 0xffff && enemy_score > 0xffff)
+            {
+                player_score >>= 1;
+                enemy_score >>= 1;
+            }
+            /*
+              player_score >>= 1;
+              uint frac_score = 0;
+              if (player_score != 0 && enemy_score != 0) {
+                if (player_score > enemy_score) {
+                  frac_score = 0xffffffff;
+                } else {
+                  frac_score = (player_score * 0x10000) / enemy_score;
+                }
+              }
+            */
+            militaryMaxGold = 0;
+        }
+
+        public int get_land_area()
         {
-            return resource_count_history[type];
+            return totalLandArea;
+        }
+
+        public void increase_land_area()
+        {
+            ++totalLandArea;
+        }
+
+        public void decrease_land_area()
+        {
+            --totalLandArea;
+        }
+
+        public int get_building_score()
+        {
+            return totalBuildingScore;
+        }
+
+        /* Calculate condensed score from military score and knight morale. */
+        public int get_military_score()
+        {
+            return (2048 + (knightMorale >> 1)) * (totalMilitaryScore << 6);
+        }
+
+        public void increase_military_score(int val)
+        {
+            totalMilitaryScore += val;
+        }
+
+        public void decrease_military_score(int val)
+        {
+            totalMilitaryScore -= val;
+        }
+
+        public void increase_military_max_gold(int val)
+        {
+            militaryMaxGold += val;
+        }
+
+        public int get_score()
+        {
+            int mil_score = get_military_score();
+            return totalBuildingScore + ((totalLandArea + mil_score) >> 4);
+        }
+
+        public uint get_initial_supplies()
+        {
+            return initialSupplies;
+        }
+  
+        public int* get_resource_count_history(Resource.Type type)
+        {
+            return resourceCountHistory[type];
         }
 
         public void set_player_stat_history(int mode, int ind, int val)
         {
-            player_stat_history[mode][ind] = val;
+            playerStatHistory[mode][ind] = val;
         }
 
-        public int* get_player_stat_history(int mode) { return player_stat_history[mode]; }
+        public int* get_player_stat_history(int mode)
+        {
+            return playerStatHistory[mode];
+        }
 
         public ResourceMap get_stats_resources()
         {
+            ResourceMap resources;
 
+            /* Sum up resources of all inventories. */
+            for (Inventory* inventory : Game.get_player_inventories(this))
+            {
+                for (int j = 0; j < 26; j++)
+                {
+                    resources[(Resource.Type.)j] +=
+                                                   inventory.get_count_of((Resource.Type.)j);
+                }
+            }
+
+            return resources;
         }
 
         public Serf::SerfMap get_stats_serfs_idle()
         {
+            Serf::SerfMap res;
 
+            /* Sum up all existing serfs. */
+            for (Serf serf : Game.get_player_serfs(this))
+            {
+                if (serf.get_state() == Serf::StateIdleInStock)
+                {
+                    res[serf.get_type()] += 1;
+                }
+            }
+
+            return res;
         }
 
         public Serf::SerfMap get_stats_serfs_potential()
         {
+            Serf::SerfMap res;
 
+            /* Sum up potential serfs of all inventories. */
+            for (Inventory* inventory : Game.get_player_inventories(this))
+            {
+                if (inventory.free_serf_count() > 0)
+                {
+                    for (int i = 0; i < 27; i++)
+                    {
+                        res[(Serf.Type.)i] += inventory.serf_potential_count((Serf.Type.)i);
+                    }
+                }
+            }
+
+            return res;
         }
 
         // Settings
-        public int get_serf_to_knight_rate() const { return serf_to_knight_rate; }
-        public void set_serf_to_knight_rate(int rate) { serf_to_knight_rate = rate; }
-
-        public unsigned int get_food_for_building(unsigned int bld_type) const;
-
-        public int get_food_stonemine() const { return food_stonemine; }
-        public void set_food_stonemine(int val) { food_stonemine = val; }
-
-        public int get_food_coalmine() const { return food_coalmine; }
-        public void set_food_coalmine(int val) { food_coalmine = val; }
-
-        public int get_food_ironmine() const { return food_ironmine; }
-        public void set_food_ironmine(int val) { food_ironmine = val; }
-
-        public int get_food_goldmine() const { return food_goldmine; }
-        public void set_food_goldmine(int val) { food_goldmine = val; }
-
-        public int get_planks_construction() const { return planks_construction; }
-        public void set_planks_construction(int val) { planks_construction = val; }
-
-        public int get_planks_boatbuilder() const { return planks_boatbuilder; }
-        public void set_planks_boatbuilder(int val) { planks_boatbuilder = val; }
-
-        public int get_planks_toolmaker() const { return planks_toolmaker; }
-        public void set_planks_toolmaker(int val) { planks_toolmaker = val; }
-
-        public int get_steel_toolmaker() const { return steel_toolmaker; }
-        public void set_steel_toolmaker(int val) { steel_toolmaker = val; }
-
-        public int get_steel_weaponsmith() const { return steel_weaponsmith; }
-        public void set_steel_weaponsmith(int val) { steel_weaponsmith = val; }
-
-        public int get_coal_steelsmelter() const { return coal_steelsmelter; }
-        public void set_coal_steelsmelter(int val) { coal_steelsmelter = val; }
-
-        public int get_coal_goldsmelter() const { return coal_goldsmelter; }
-        public void set_coal_goldsmelter(int val) { coal_goldsmelter = val; }
-
-        public int get_coal_weaponsmith() const { return coal_weaponsmith; }
-        public void set_coal_weaponsmith(int val) { coal_weaponsmith = val; }
-
-        public int get_wheat_pigfarm() const { return wheat_pigfarm; }
-        public void set_wheat_pigfarm(int val) { wheat_pigfarm = val; }
-
-        public int get_wheat_mill() const { return wheat_mill; }
-        public void set_wheat_mill(int val) { wheat_mill = val; }
-
-        protected void init_ai_values(size_t face)
+        public int get_serf_to_knight_rate()
         {
-
+            return serfToKnightRate;
         }
 
-        protected int available_knights_at_pos(MapPos pos, int index, int dist)
+        public void set_serf_to_knight_rate(int rate)
         {
+            serfToKnightRate = rate;
+        }
 
+        public uint get_food_for_building(uint bld_type)
+        {
+            uint res = 0;
+
+            switch (bld_type)
+            {
+                case Building.Type.StoneMine:
+                    res = GetFoodStonemine();
+                    break;
+                case Building.Type.CoalMine:
+                    res = GetFoodCoalmine();
+                    break;
+                case Building.Type.IronMine:
+                    res = GetFoodIronmine();
+                    break;
+                case Building.Type.GoldMine:
+                    res = GetFoodGoldmine();
+                    break;
+                default:
+                    break;
+            }
+
+            return res;
+        }
+
+        public uint GetFoodStonemine()
+        {
+            return foodStonemine;
+        }
+
+        public void SetFoodStonemine(uint val)
+        {
+            foodStonemine = val;
+        }
+
+        public uint GetFoodCoalmine()
+        {
+            return foodCoalmine;
+        }
+
+        public void SetFoodCoalmine(uint val)
+        {
+            foodCoalmine = val;
+        }
+
+        public uint GetFoodIronmine()
+        {
+            return foodIronmine;
+        }
+
+        public void SetFoodIronmine(uint val)
+        {
+            foodIronmine = val;
+        }
+
+        public uint GetFoodGoldmine()
+        {
+            return foodGoldmine;
+        }
+
+        public void SetFoodGoldmine(uint val)
+        {
+            foodGoldmine = val;
+        }
+
+        public uint GetPlanksConstruction()
+        {
+            return planksConstruction;
+        }
+
+        public void SetPlanksConstruction(uint val)
+        {
+            planksConstruction = val;
+        }
+
+        public uint GetPlanksBoatbuilder()
+        {
+            return planksBoatbuilder;
+        }
+
+        public void SetPlanksBoatbuilder(uint val)
+        {
+            planksBoatbuilder = val;
+        }
+
+        public uint GetPlanksToolmaker()
+        {
+            return planksToolmaker;
+        }
+
+        public void SetPlanksToolmaker(uint val)
+        {
+            planksToolmaker = val;
+        }
+
+        public uint GetSteelToolmaker()
+        {
+            return steelToolmaker;
+        }
+
+        public void SetSteelToolmaker(uint val)
+        {
+            steelToolmaker = val;
+        }
+
+        public uint GetSteelWeaponsmith()
+        {
+            return steelWeaponsmith;
+        }
+
+        public void SetSteelWeaponsmith(uint val)
+        {
+            steelWeaponsmith = val;
+        }
+
+        public uint GetCoalSteelsmelter()
+        {
+            return coalSteelsmelter;
+        }
+
+        public void SetCoalSteelsmelter(uint val)
+        {
+            coalSteelsmelter = val;
+        }
+
+        public uint GetCoalGoldsmelter()
+        {
+            return coalGoldsmelter;
+        }
+
+        public void SetCoalGoldsmelter(uint val)
+        {
+            coalGoldsmelter = val;
+        }
+
+        public uint GetCoalWeaponsmith()
+        {
+            return coalWeaponsmith;
+        }
+
+        public void SetCoalWeaponsmith(uint val)
+        {
+            coalWeaponsmith = val;
+        }
+
+        public uint GetWheatPigfarm()
+        {
+            return wheatPigfarm;
+        }
+
+        public void SetWheatPigfarm(uint val)
+        {
+            wheatPigfarm = val;
+        }
+
+        public uint GetWheatMill()
+        {
+            return wheatMill;
+        }
+
+        public void SetWheatMill(uint val)
+        {
+            wheatMill = val;
+        }
+
+        /* Initialize AI parameters. */
+        protected void InitAiValues(uint face)
+        {
+            // TODO
+            /*const int ai_values_0[] = { 13, 10, 16, 9, 10, 8, 6, 10, 12, 5, 8 };
+            const int ai_values_1[] = { 10000, 13000, 16000, 16000, 18000, 20000,
+                                  19000, 18000, 30000, 23000, 26000 };
+            const int ai_values_2[] = { 10000, 35000, 20000, 27000, 37000, 25000,
+                                  40000, 30000, 50000, 35000, 40000 };
+            const int ai_values_3[] = { 0, 36, 0, 31, 8, 480, 3, 16, 0, 193, 39 };
+            const int ai_values_4[] = { 0, 30000, 5000, 40000, 50000, 20000, 45000,
+                                  35000, 65000, 25000, 30000 };
+            const int ai_values_5[] = { 60000, 61000, 60000, 65400, 63000, 62000,
+                                  65000, 63000, 64000, 64000, 64000 };
+
+            ai_value_0 = ai_values_0[face_ - 1];
+            ai_value_1 = ai_values_1[face_ - 1];
+            ai_value_2 = ai_values_2[face_ - 1];
+            ai_value_3 = ai_values_3[face_ - 1];
+            ai_value_4 = ai_values_4[face_ - 1];
+            ai_value_5 = ai_values_5[face_ - 1];*/
+        }
+
+        static readonly int[] minLevelHut = new int[] { 1, 1, 2, 2, 3 };
+        static readonly int[] minLevelTower = new int[] { 1, 2, 3, 4, 6 };
+        static readonly int[] minLevelFortress = new int[] { 1, 3, 6, 9, 12 };
+
+        int AvailableKnightsAtPos(MapPos pos, int index, int dist)
+        {
+            Map map = Game.Map;
+
+            if (map.GetOwner(pos) != Index ||
+                map.TypeUp(pos) <= Map.Terrain.Water3 ||
+                map.TypeDown(pos) <= Map.Terrain.Water3 ||
+                map.GetObject(pos) < Map.Object.SmallBuilding ||
+                map.GetObject(pos) > Map.Object.Castle)
+            {
+                return index;
+            }
+
+            uint buildingIndex = map.GetObjectIndex(pos);
+
+            for (int i = 0; i < index; ++i)
+            {
+                if (attackingBuildings[i] == buildingIndex)
+                {
+                    return index; // TODO: is index right here? not i?
+                }
+            }
+
+            Building building = Game.GetBuilding(buildingIndex);
+
+            if (!building.IsDone() || building.IsBurning())
+            {
+                return index;
+            }
+
+            int[] minLevel = null;
+
+            switch (building.BuildingType)
+            {
+                case Building.Type.Hut: minLevel = minLevelHut; break;
+                case Building.Type.Tower: minLevel = minLevelTower; break;
+                case Building.Type.Fortress: minLevel = minLevelFortress; break;
+                default: return index;
+            }
+
+            if (index >= 64)
+                return index;
+
+            attackingBuildings[index] = buildingIndex;
+
+            uint state = building.GetThreatLevel();
+            uint knightsPresent = building.GetKnightCount();
+            int toSend = (int)knightsPresent - minLevel[knightOccupation[state] & 0xf];
+
+            if (toSend > 0)
+                attackingKnights[dist] += toSend;
+
+            return index + 1;
         }
     }
 }

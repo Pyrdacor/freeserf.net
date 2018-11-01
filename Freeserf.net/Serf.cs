@@ -1397,7 +1397,7 @@ namespace Freeserf
             return s.Walking.Dir;
         }
 
-        uint GetIdleInStockInvIndex()
+        internal uint GetIdleInStockInventoryIndex()
         {
             return s.IdleInStock.InvIndex;
         }
@@ -1446,7 +1446,7 @@ namespace Freeserf
             s.ReadyToLeaveInventory.InvIndex = inventory;
         }
 
-        void SendOffToFight(int distColumn, int distRow)
+        internal void SendOffToFight(int distColumn, int distRow)
         {
             /* Send this serf off to fight. */
             SetState(State.KnightLeaveForWalkToFight);

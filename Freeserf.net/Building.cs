@@ -160,7 +160,7 @@ namespace Freeserf
         public Type BuildingType { get; private set; } = Type.None;
 
         /* Building owner */
-        public uint Player { get; private set; } = 0;
+        public uint Player { get; internal set; } = 0;
 
         public Building(Game game, uint index)
             : base(game, index)
@@ -732,12 +732,12 @@ namespace Freeserf
             return defSerf;
         }
 
-        public Serf CallAttackerOut()
+        public Serf CallAttackerOut(uint knightIndex) // TODO: is this workigng with knightIndex?
         {
             --stock[0].Available;
 
             /* Unlink knight from list. */
-            Serf firstSerf = Game.GetSerf(firstKnight);
+            Serf firstSerf = Game.GetSerf((knightIndex != 0) ? knightIndex : firstKnight);
             Serf defSerf = firstSerf.ExtractLastKnightFromList();
 
             if (defSerf.Index == firstKnight)
@@ -2029,14 +2029,14 @@ namespace Freeserf
             return Game.SendSerfToFlag(Game.GetFlag(flag), type, res1, res2);
         }
 
-        static readonly int[] BuildingScoreFromType = new int[]
+        static readonly uint[] BuildingScoreFromType = new uint[]
         {
             2, 2, 2, 2, 5, 5, 5, 5, 2, 10,
             3, 6, 4, 6, 5, 4, 7, 7, 9, 4,
             8, 15, 6, 20
         };
 
-        static int BuildingGetScoreFromType(Type type)
+        internal static uint BuildingGetScoreFromType(Type type)
         {
             return BuildingScoreFromType[(int)type - 1];
         }
