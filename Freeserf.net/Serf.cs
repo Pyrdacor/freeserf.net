@@ -1422,17 +1422,17 @@ namespace Freeserf
             return defSerf;
         }
 
-        void InsertBefore(Serf knight)
+        internal void InsertKnightBefore(Serf knight)
         {
             s.Defending.NextKnight = knight.Index;
         }
 
-        uint GetNextKnight()
+        internal uint GetNextKnight()
         {
             return s.Defending.NextKnight;
         }
 
-        void SetNextKnight(uint next)
+        internal void SetNextKnight(uint next)
         {
             s.Defending.NextKnight = next;
         }
@@ -1458,13 +1458,13 @@ namespace Freeserf
             s.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
         }
 
-        void StayIdleInStock(uint inventory)
+        internal void StayIdleInStock(uint inventory)
         {
             SetState(State.IdleInStock);
             s.IdleInStock.InvIndex = inventory;
         }
 
-        void GoOutFromBuilding(MapPos dest, int dir, int fieldB)
+        internal void GoOutFromBuilding(MapPos dest, int dir, int fieldB)
         {
             SetState(State.ReadyToLeave);
             s.LeavingBuilding.FieldB = fieldB;
@@ -5630,7 +5630,7 @@ namespace Freeserf
                         break;
                     case 9:
                         s.Mining.Substate = 10;
-                        building.IncreaseMining(s.Mining.Res);
+                        building.IncreaseMining((int)s.Mining.Res);
                         Animation = 128;
                         Counter = 384; /* TODO CounterFromAnimation[128] == 383 */
                         break;
@@ -5976,7 +5976,7 @@ namespace Freeserf
                         /* Done milling. */
                         building.StopActivity();
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Res = 1 + Resource.Type.Flour;
+                        s.MoveResourceOut.Res = 1 + (uint)Resource.Type.Flour;
                         s.MoveResourceOut.ResDest = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 

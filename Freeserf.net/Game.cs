@@ -164,7 +164,7 @@ namespace Freeserf
 
         }
 
-        public int GetLevelingHeight(MapPos pos)
+        public uint GetLevelingHeight(MapPos pos)
         {
 
         }
@@ -279,7 +279,7 @@ namespace Freeserf
 
         }
 
-        void UpdateLandOwnership(MapPos pos)
+        internal void UpdateLandOwnership(MapPos pos)
         {
 
         }
@@ -304,7 +304,7 @@ namespace Freeserf
 
         }
 
-        bool SendSerfToFlag(Flag dest, Serf.Type type, Resource.Type res1, Resource.Type res2)
+        internal bool SendSerfToFlag(Flag dest, Serf.Type type, Resource.Type res1, Resource.Type res2)
         {
 
         }
@@ -339,12 +339,17 @@ namespace Freeserf
 
         }
 
-        Inventory CreateInventory(int index = -1)
+        internal Inventory CreateInventory(int index = -1)
         {
 
         }
 
-        void DeleteInventory(Inventory inventory)
+        internal void DeleteInventory(uint index)
+        {
+            DeleteInventory(GetInventory(index));
+        }
+
+        internal void DeleteInventory(Inventory inventory)
         {
 
         }
@@ -354,7 +359,7 @@ namespace Freeserf
 
         }
 
-        void DeleteBuilding(Building building)
+        internal void DeleteBuilding(Building building)
         {
 
         }
@@ -424,7 +429,7 @@ namespace Freeserf
 
         }
 
-        void BuildingCaptured(Building building)
+        internal void BuildingCaptured(Building building)
         {
 
         }
