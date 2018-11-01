@@ -1076,17 +1076,265 @@ namespace Freeserf
 
         public void ReadFrom(SaveReaderBinary reader)
         {
+            Position = Game.Map.PosFromSavedValue(reader.ReadDWord()); // 0
 
+            byte v8 = reader.ReadByte(); // 4
+            BuildingType = (Type)((v8 >> 2) & 0x1f);
+            Player = v8 & 3u;
+            constructing = (v8 & 0x80) != 0;
+
+            v8 = reader.ReadByte(); // 5
+            threatLevel = v8 & 3u;
+            serfRequestFailed = (v8 & 4) != 0;
+            playingSfx = (v8 & 8) != 0;
+            active = (v8 & 16) != 0;
+            burning = (v8 & 32) != 0;
+            holder = (v8 & 64) != 0;
+            serfRequested = (v8 & 128) != 0;
+
+            flag = reader.ReadWord(); // 6
+
+            for (int i = 0; i < 2; ++i)
+            {
+                v8 = reader.ReadByte(); // 8, 9
+                stock[i].Type = Resource.Type.None;
+                stock[i].Available = 0;
+                stock[i].Requested = 0;
+
+                if (v8 != 0xff)
+                {
+                    stock[i].Available = (uint)(v8 >> 4) & 0xfu;
+                    stock[i].Requested = v8 & 0xfu;
+                }
+            }
+
+            firstKnight = reader.ReadWord(); // 10
+            progress = reader.ReadWord(); // 12
+
+            if (!burning && IsDone() &&
+                (BuildingType == Type.Stock ||
+                BuildingType == Type.Castle))
+            {
+                int offset = (int)reader.ReadDWord(); // 14
+                u.InvIndex = (int)Game.CreateInventory(offset / 120).Index;
+                stock[0].Requested = 0xff;
+                return;
+            }
+            else
+            {
+                u.Level = reader.ReadWord(); // 14
+            }
+
+            if (!IsDone())
+            {
+                stock[0].Type = Resource.Type.Plank;
+                stock[0].Maximum = reader.ReadByte(); // 16
+                stock[1].Type = Resource.Type.Stone;
+                stock[1].Maximum = reader.ReadByte(); // 17
+            }
+            else if (holder)
+            {
+                switch (BuildingType)
+                {
+                    case Type.Boatbuilder:
+                        stock[0].Type = Resource.Type.Plank;
+                        stock[0].Maximum = 8;
+                        break;
+                    case Type.StoneMine:
+                    case Type.CoalMine:
+                    case Type.IronMine:
+                    case Type.GoldMine:
+                        stock[0].Type = Resource.Type.GroupFood;
+                        stock[0].Maximum = 8;
+                        break;
+                    case Type.Hut:
+                        stock[1].Type = Resource.Type.GoldBar;
+                        stock[1].Maximum = 2;
+                        break;
+                    case Type.Tower:
+                        stock[1].Type = Resource.Type.GoldBar;
+                        stock[1].Maximum = 4;
+                        break;
+                    case Type.Fortress:
+                        stock[1].Type = Resource.Type.GoldBar;
+                        stock[1].Maximum = 8;
+                        break;
+                    case Type.Butcher:
+                        stock[0].Type = Resource.Type.Pig;
+                        stock[0].Maximum = 8;
+                        break;
+                    case Type.PigFarm:
+                        stock[0].Type = Resource.Type.Wheat;
+                        stock[0].Maximum = 8;
+                        break;
+                    case Type.Mill:
+                        stock[0].Type = Resource.Type.Wheat;
+                        stock[0].Maximum = 8;
+                        break;
+                    case Type.Baker:
+                        stock[0].Type = Resource.Type.Flour;
+                        stock[0].Maximum = 8;
+                        break;
+                    case Type.Sawmill:
+                        stock[1].Type = Resource.Type.Lumber;
+                        stock[1].Maximum = 8;
+                        break;
+                    case Type.SteelSmelter:
+                        stock[0].Type = Resource.Type.Coal;
+                        stock[0].Maximum = 8;
+                        stock[1].Type = Resource.Type.IronOre;
+                        stock[1].Maximum = 8;
+                        break;
+                    case Type.ToolMaker:
+                        stock[0].Type = Resource.Type.Plank;
+                        stock[0].Maximum = 8;
+                        stock[1].Type = Resource.Type.Steel;
+                        stock[1].Maximum = 8;
+                        break;
+                    case Type.WeaponSmith:
+                        stock[0].Type = Resource.Type.Coal;
+                        stock[0].Maximum = 8;
+                        stock[1].Type = Resource.Type.Steel;
+                        stock[1].Maximum = 8;
+                        break;
+                    case Type.GoldSmelter:
+                        stock[0].Type = Resource.Type.Coal;
+                        stock[0].Maximum = 8;
+                        stock[1].Type = Resource.Type.GoldOre;
+                        stock[1].Maximum = 8;
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         public void ReadFrom(SaveReaderText reader)
         {
+            uint x = reader.Value("pos")[0].ReadUInt();
+            uint y = reader.Value("pos")[1].ReadUInt();
+            Position = Game.Map.Pos(x, y);
+            BuildingType = (Type)reader.Value("type").ReadInt();
 
+            try
+            {
+                Player = reader.Value("owner").ReadUInt();
+                constructing = reader.Value("constructing").ReadBool();
+            }
+            catch
+            {
+                uint n = reader.Value("bld").ReadUInt();
+                Player = n & 3;
+                constructing = (n & 0x80) != 0;
+            }
+            try
+            {
+                threatLevel = reader.Value("military_state").ReadUInt();
+                serfRequestFailed = reader.Value("serf_request_failed").ReadBool();
+                playingSfx = reader.Value("playing_sfx").ReadBool();
+                active = reader.Value("active").ReadBool();
+                burning = reader.Value("burning").ReadBool();
+                holder = reader.Value("holder").ReadBool();
+                serfRequested = reader.Value("serf_requested").ReadBool();
+            }
+            catch
+            {
+                uint n = reader.Value("serf").ReadUInt();
+                threatLevel = n & 3;
+                serfRequestFailed = (n & 4) != 0;
+                playingSfx = (n & 8) != 0;
+                active = (n & 16) != 0;
+                burning = (n & 32) != 0;
+                holder = (n & 64) != 0;
+                serfRequested = (n & 128) != 0;
+            }
+
+            flag = reader.Value("flag").ReadUInt();
+
+            stock[0].Type = (Resource.Type)reader.Value("stock[0].type").ReadInt();
+            stock[0].Priority = reader.Value("stock[0].prio").ReadUInt();
+            stock[0].Available = reader.Value("stock[0].available").ReadUInt();
+            stock[0].Requested = reader.Value("stock[0].requested").ReadUInt();
+            stock[0].Maximum = reader.Value("stock[0].maximum").ReadUInt();
+
+            stock[1].Type = (Resource.Type)reader.Value("stock[1].type").ReadInt();
+            stock[1].Priority = reader.Value("stock[1].prio").ReadUInt();
+            stock[1].Available = reader.Value("stock[1].available").ReadUInt();
+            stock[1].Requested = reader.Value("stock[1].requested").ReadUInt();
+            stock[1].Maximum = reader.Value("stock[1].maximum").ReadUInt();
+
+            firstKnight = reader.Value("serf_index").ReadUInt();
+            progress = reader.Value("progress").ReadUInt();
+
+            /* Load various values that depend on the building type. */
+            /* TODO Check validity of pointers when loading. */
+            if (!burning && (IsDone() || BuildingType == Type.Castle))
+            {
+                if (BuildingType == Type.Stock || BuildingType == Type.Castle)
+                {
+                    u.InvIndex = reader.Value("inventory").ReadInt();
+                    Game.CreateInventory((int)u.InvIndex);
+                }
+            }
+            else if (burning)
+            {
+                u.Tick = reader.Value("tick").ReadUInt();
+            }
+            else
+            {
+                u.Level = reader.Value("level").ReadUInt();
+            }
         }
 
         public void WriteTo(SaveWriterText writer)
         {
+            writer.Value("pos").Write(Game.Map.PosColumn(Position));
+            writer.Value("pos").Write(Game.Map.PosRow(Position));
+            writer.Value("type").Write((int)BuildingType);
+            writer.Value("owner").Write(Player);
+            writer.Value("constructing").Write(constructing);
 
+            writer.Value("military_state").Write(threatLevel);
+            writer.Value("playing_sfx").Write(playingSfx);
+            writer.Value("serf_request_failed").Write(serfRequestFailed);
+            writer.Value("serf_requested").Write(serfRequested);
+            writer.Value("burning").Write(burning);
+            writer.Value("active").Write(active);
+            writer.Value("holder").Write(holder);
+
+            writer.Value("flag").Write(flag);
+
+            writer.Value("stock[0].type").Write((int)stock[0].Type);
+            writer.Value("stock[0].prio").Write(stock[0].Priority);
+            writer.Value("stock[0].available").Write(stock[0].Available);
+            writer.Value("stock[0].requested").Write(stock[0].Requested);
+            writer.Value("stock[0].maximum").Write(stock[0].Maximum);
+
+            writer.Value("stock[1].type").Write((int)stock[1].Type);
+            writer.Value("stock[1].prio").Write(stock[1].Priority);
+            writer.Value("stock[1].available").Write(stock[1].Available);
+            writer.Value("stock[1].requested").Write(stock[1].Requested);
+            writer.Value("stock[1].maximum").Write(stock[1].Maximum);
+
+            writer.Value("serf_index").Write(firstKnight);
+            writer.Value("progress").Write(progress);
+
+            if (!IsBurning() && (IsDone() || BuildingType == Type.Castle))
+            {
+                if (BuildingType == Type.Stock ||
+                    BuildingType == Type.Castle)
+                {
+                    writer.Value("inventory").Write(u.InvIndex);
+                }
+            }
+            else if (IsBurning())
+            {
+                writer.Value("tick").Write(u.Tick);
+            }
+            else
+            {
+                writer.Value("level").Write(u.Level);
+            }
         }
 
         void Update()
