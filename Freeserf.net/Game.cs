@@ -284,7 +284,7 @@ namespace Freeserf
 
         }
 
-        void OccupyEnemyBuilding(Building building, int player)
+        internal void OccupyEnemyBuilding(Building building, int player)
         {
 
         }
