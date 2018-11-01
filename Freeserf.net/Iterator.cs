@@ -41,11 +41,13 @@ namespace Freeserf
 
         public static bool operator ==(Iterator<T> self, Iterator<T> other)
         {
+#pragma warning disable IDE0041
             if (ReferenceEquals(self, null))
                 return ReferenceEquals(other, null);
 
             if (ReferenceEquals(other, null))
                 return false;
+#pragma warning restore IDE0041
 
             return self.Equals(other);
         }
