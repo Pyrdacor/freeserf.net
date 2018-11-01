@@ -1504,7 +1504,7 @@ namespace Freeserf
 
                     try
                     {
-                        gameTile.IdleSerf = reader.Value("idle_serf")[index].ReadInt() != 0;
+                        gameTile.IdleSerf = reader.Value("idle_serf")[index].ReadBool();
                         landscapeTile.Object = (Object)reader.Value("object")[index].ReadInt();
                     }
                     catch
@@ -1542,10 +1542,10 @@ namespace Freeserf
                             MapPos pos = Pos(tx + x, ty + y);
 
                             mapWriter.Value("height").Write(GetHeight(pos));
-                            mapWriter.Value("type.up").Write(TypeUp(pos));
-                            mapWriter.Value("type.down").Write(TypeDown(pos));
+                            mapWriter.Value("type.up").Write((int)TypeUp(pos));
+                            mapWriter.Value("type.down").Write((int)TypeDown(pos));
                             mapWriter.Value("paths").Write(Paths(pos));
-                            mapWriter.Value("object").Write(GetObject(pos));
+                            mapWriter.Value("object").Write((int)GetObject(pos));
                             mapWriter.Value("serf").Write(GetSerfIndex(pos));
                             mapWriter.Value("idle_serf").Write(GetIdleSerf(pos));
 
@@ -1556,7 +1556,7 @@ namespace Freeserf
                             }
                             else
                             {
-                                mapWriter.Value("resource.type").Write(GetResourceType(pos));
+                                mapWriter.Value("resource.type").Write((int)GetResourceType(pos));
                                 mapWriter.Value("resource.amount").Write(GetResourceAmount(pos));
                             }
                         }
