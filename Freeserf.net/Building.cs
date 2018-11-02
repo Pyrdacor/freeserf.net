@@ -204,7 +204,7 @@ namespace Freeserf
             {
                 active = true;
 
-                int militaryType = -1;
+                uint militaryType = 0;
                 uint maxGold = uint.MaxValue;
 
                 switch (BuildingType)
@@ -365,7 +365,7 @@ namespace Freeserf
                     /* TODO Burn building. */
                 }
 
-                player.AddNotification(Message.Type.MineEmpty, Position, BuildingType - Type.StoneMine);
+                player.AddNotification(Message.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));
             }
 
             progress = (progress << 1) & 0xffff;
@@ -1356,31 +1356,31 @@ namespace Freeserf
                     case Type.Boatbuilder:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetPlanksBoatbuilder(); // Planks
+                            GetPrioFuncResource1 = player.GetPlanksBoatbuilder; // Planks
                         }
                         break;
                     case Type.StoneMine:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodStonemine(); // Food
+                            GetPrioFuncResource1 = player.GetFoodStonemine; // Food
                         }
                         break;
                     case Type.CoalMine:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodCoalmine(); // Food
+                            GetPrioFuncResource1 = player.GetFoodCoalmine; // Food
                         }
                         break;
                     case Type.IronMine:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodIronmine(); // Food
+                            GetPrioFuncResource1 = player.GetFoodIronmine; // Food
                         }
                         break;
                     case Type.GoldMine:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodGoldmine(); // Food
+                            GetPrioFuncResource1 = player.GetFoodGoldmine; // Food
                         }
                         break;
                     case Type.Stock:
@@ -1461,13 +1461,13 @@ namespace Freeserf
                     case Type.PigFarm:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetWheatPigfarm(); // Wheat
+                            GetPrioFuncResource1 = player.GetWheatPigfarm; // Wheat
                         }
                         break;
                     case Type.Mill:
                         if (holder)
                         {
-                            GetPrioFuncResource1 = player.GetWheatMill(); // Wheat
+                            GetPrioFuncResource1 = player.GetWheatMill; // Wheat
                         }
                         break;
                     case Type.Baker:
@@ -1496,7 +1496,7 @@ namespace Freeserf
                         if (holder)
                         {
                             /* Request more coal */
-                            GetPrioFuncResource1 = player.GetCoalSteelsmelter();
+                            GetPrioFuncResource1 = player.GetCoalSteelsmelter;
 
                             /* Request more iron ore */
                             GetPrioFuncResource2 = () =>
@@ -1510,27 +1510,27 @@ namespace Freeserf
                         if (holder)
                         {
                             /* Request more planks. */
-                            GetPrioFuncResource1 = player.GetPlanksToolmaker();
+                            GetPrioFuncResource1 = player.GetPlanksToolmaker;
 
                             /* Request more steel. */
-                            GetPrioFuncResource2 = player.GetSteelToolmaker();
+                            GetPrioFuncResource2 = player.GetSteelToolmaker;
                         }
                         break;
                     case Type.WeaponSmith:
                         if (holder)
                         {
                             /* Request more coal. */
-                            GetPrioFuncResource1 = player.GetCoalWeaponsmith();
+                            GetPrioFuncResource1 = player.GetCoalWeaponsmith;
 
                             /* Request more steel. */
-                            GetPrioFuncResource2 = player.GetSteelWeaponsmith();
+                            GetPrioFuncResource2 = player.GetSteelWeaponsmith;
                         }
                         break;
                     case Type.GoldSmelter:
                         if (holder)
                         {
                             /* Request more coal. */
-                            GetPrioFuncResource1 = player.GetCoalGoldsmelter();
+                            GetPrioFuncResource1 = player.GetCoalGoldsmelter;
 
                             /* Request more gold ore. */
                             GetPrioFuncResource2 = () =>
@@ -1625,7 +1625,7 @@ namespace Freeserf
 
             if (totalPlanks < stock[0].Maximum)
             {
-                uint planksPrio = player.GetPlanksConstruction() >> (8 + totalPlanks);
+                uint planksPrio = player.GetPlanksConstruction() >> (8 + (int)totalPlanks);
 
                 if (!holder)
                     planksPrio >>= 2;

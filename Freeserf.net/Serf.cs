@@ -770,13 +770,13 @@ namespace Freeserf
             if (oldType >= Type.Knight0 &&
                 oldType <= Type.Knight4)
             {
-                int value = 1 << (oldType - Type.Knight0);
+                uint value = 1u << (oldType - Type.Knight0);
                 player.DecreaseMilitaryScore(value);
             }
             if (newType >= Type.Knight0 &&
                 newType <= Type.Knight4)
             {
-                int value = 1 << (type - Type.Knight0);
+                uint value = 1u << (type - Type.Knight0);
                 player.IncreaseMilitaryScore(value);
             }
             if (newType == Type.Transporter)
@@ -2581,14 +2581,14 @@ namespace Freeserf
             s.IdleInStock.InvIndex = building.GetInventory().Index;
         }
 
-        void DropResource(Resource.Type res)
+        void DropResource(Resource.Type resourceType)
         {
             Flag flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
 
             /* Resource is lost if no free slot is found */
-            if (flag.DropResource(res, 0))
+            if (flag.DropResource(resourceType, 0))
             {
-                Game.GetPlayer(Player).IncreaseResCount(res);
+                Game.GetPlayer(Player).IncreaseResourceCount(resourceType);
             }
         }
 
@@ -2627,31 +2627,31 @@ namespace Freeserf
         void SetFightOutcome(Serf attacker, Serf defender)
         {
             /* Calculate "morale" for attacker. */
-            int expFactor = 1 << (attacker.GetSerfType() - Type.Knight0);
-            int landFactor = 0x1000;
+            uint expFactor = 1u << (attacker.GetSerfType() - Type.Knight0);
+            uint landFactor = 0x1000u;
 
             if (attacker.Player != Game.Map.GetOwner(attacker.Position))
             {
                 landFactor = Game.GetPlayer(attacker.Player).GetKnightMorale();
             }
 
-            int morale = (0x400 * expFactor * landFactor) >> 16;
+            uint morale = (0x400u * expFactor * landFactor) >> 16;
 
             /* Calculate "morale" for defender. */
-            int defExpFactor = 1 << (defender.GetSerfType() - Type.Knight0);
-            int defLandFactor = 0x1000;
+            uint defExpFactor = 1u << (defender.GetSerfType() - Type.Knight0);
+            uint defLandFactor = 0x1000u;
 
             if (defender.Player != Game.Map.GetOwner(defender.Position))
             {
                 defLandFactor = Game.GetPlayer(defender.Player).GetKnightMorale();
             }
 
-            int defMorale = (0x400 * defExpFactor * defLandFactor) >> 16;
+            uint defMorale = (0x400u * defExpFactor * defLandFactor) >> 16;
 
             uint playerIndex;
-            int value = -1;
+            uint value = 0;
             Type ktype = Type.None;
-            int result = ((morale + defMorale) * Game.RandomInt()) >> 16;
+            uint result = ((morale + defMorale) * Game.RandomInt()) >> 16;
 
             if (result < morale)
             {
@@ -5320,7 +5320,7 @@ namespace Freeserf
 
                 /* Update resource stats. */
                 Player player = Game.GetPlayer(Player);
-                player.IncreaseResCount(Resource.Type.Plank);
+                player.IncreaseResourceCount(Resource.Type.Plank);
             }
         }
 
@@ -5652,7 +5652,7 @@ namespace Freeserf
 
                             /* Update resource stats. */
                             Player player = Game.GetPlayer(Player);
-                            player.IncreaseResCount(res - 1);
+                            player.IncreaseResourceCount((Resource.Type)(res - 1));
 
                             return;
                         }
@@ -5725,7 +5725,7 @@ namespace Freeserf
 
                         /* Update resource stats. */
                         Player player = Game.GetPlayer(Player);
-                        player.IncreaseResCount(res - 1);
+                        player.IncreaseResourceCount((Resource.Type)(res - 1));
 
                         return;
                     }
@@ -5980,7 +5980,7 @@ namespace Freeserf
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
                         Player player = Game.GetPlayer(Player);
-                        player.IncreaseResCount(Resource.Type.Flour);
+                        player.IncreaseResourceCount(Resource.Type.Flour);
                         return;
                     }
                     else if (s.Milling.Mode == 3)
@@ -6035,7 +6035,7 @@ namespace Freeserf
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
                         Player player = Game.GetPlayer(Player);
-                        player.IncreaseResCount(Resource.Type.Bread);
+                        player.IncreaseResourceCount(Resource.Type.Bread);
                         return;
                     }
                     else
@@ -6104,7 +6104,7 @@ namespace Freeserf
 
                             /* Update resource stats. */
                             Player player = Game.GetPlayer(Player);
-                            player.IncreaseResCount(Resource.Type.Pig);
+                            player.IncreaseResourceCount(Resource.Type.Pig);
                         }
                         else if ((Game.RandomInt() & 0xf) != 0)
                         {
@@ -6170,7 +6170,7 @@ namespace Freeserf
 
                     /* Update resource stats. */
                     Player player = Game.GetPlayer(Player);
-                    player.IncreaseResCount(Resource.Type.Meat);
+                    player.IncreaseResourceCount(Resource.Type.Meat);
                 }
             }
         }
@@ -6236,7 +6236,7 @@ namespace Freeserf
 
                         /* Update resource stats. */
                         Player player = Game.GetPlayer(Player);
-                        player.IncreaseResCount(res);
+                        player.IncreaseResourceCount(res);
                         return;
                     }
                     else
@@ -6282,7 +6282,7 @@ namespace Freeserf
                         int totalToolPrio = 0;
 
                         for (int i = 0; i < 9; ++i)
-                            totalToolPrio += player.GetToolPrio(i);
+                            totalToolPrio += player.GetToolPriority(i);
 
                         totalToolPrio >>= 4;
 
@@ -6295,7 +6295,7 @@ namespace Freeserf
 
                             for (int i = 0; i < 9; ++i)
                             {
-                                prioOffset -= player.GetToolPrio(i) >> 4;
+                                prioOffset -= player.GetToolPriority(i) >> 4;
 
                                 if (prioOffset < 0)
                                 {
@@ -6316,7 +6316,7 @@ namespace Freeserf
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
                         /* Update resource stats. */
-                        player.IncreaseResCount(res);
+                        player.IncreaseResourceCount((Resource.Type)res);
 
                         return;
                     }
@@ -6381,7 +6381,7 @@ namespace Freeserf
 
                             /* Update resource stats. */
                             Player player = Game.GetPlayer(Player);
-                            player.IncreaseResCount(Resource.Type.Boat);
+                            player.IncreaseResourceCount(Resource.Type.Boat);
 
                             break;
                         }
@@ -6515,7 +6515,7 @@ namespace Freeserf
                                     break;
                             }
 
-                            Game.GetPlayer(Player).AddNotification(messageType, Position, map.GetResourceType(Position) - 1);
+                            Game.GetPlayer(Player).AddNotification(messageType, Position, (uint)map.GetResourceType(Position) - 1);
                         }
 
                         Counter += 64;

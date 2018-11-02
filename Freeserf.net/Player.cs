@@ -32,6 +32,8 @@ namespace Freeserf
     using Messages = Queue<Message>;
     using PosTimers = List<PosTimer>;
     using ListInventories = List<Inventory>;
+    using ResourceMap = Dictionary<Resource.Type, uint>;
+    using SerfMap = Dictionary<Serf.Type, uint>;
 
     public class Message
     {
@@ -143,7 +145,7 @@ namespace Freeserf
         int sendKnightDelay = 0;
         int militaryMaxGold = 0;
 
-        int knightMorale = 0;
+        uint knightMorale = 0;
         uint goldDeposited = 0;
         uint castleKnightsWanted = 3;
         uint castleKnights = 0;
@@ -155,8 +157,8 @@ namespace Freeserf
         int aiValue5 = 0;
         uint aiIntelligence = 0;
 
-        int[,] playerStatHistory = new int[16,112];
-        int[,] resourceCountHistory = new int[26,120];
+        uint[,] playerStatHistory = new uint[16,112];
+        uint[,] resourceCountHistory = new uint[26,120];
 
         // TODO(Digger): remove it to UI
         public int buildingAttacked = 0;
@@ -319,9 +321,9 @@ namespace Freeserf
             return serfCount[type];
         }
 
-        public int get_flag_prio(int res)
+        public int GetFlagPriority(int resource)
         {
-            return flagPriorities[res];
+            return flagPriorities[resource];
         }
 
         /* Enqueue a new notification message for player. */
@@ -337,23 +339,23 @@ namespace Freeserf
             messages.Enqueue(newMessage);
         }
 
-        public bool has_notification()
+        public bool HasNotification()
         {
             return messages.Count > 0;
         }
 
-        public Message pop_notification()
+        public Message PopNotification()
         {
             return messages.Dequeue();
         }
 
-        public Message peek_notification()
+        public Message PeekNotification()
         {
             return messages.Peek();
         }
 
 
-        public void add_timer(int timeout, MapPos pos)
+        public void AddTimer(int timeout, MapPos pos)
         {
             PosTimer newTimer = new PosTimer();
 
@@ -538,7 +540,7 @@ namespace Freeserf
             castleKnightsWanted = Math.Max(1, castleKnightsWanted - 1);
         }
 
-        public int GetKnightMorale()
+        public uint GetKnightMorale()
         {
             return knightMorale;
         }
@@ -574,7 +576,7 @@ namespace Freeserf
         public int KnightsAvailableForAttack(MapPos pos)
 		{
             /* Reset counters. */
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; ++i)
             {
                 attackingKnights[i] = 0;
             }
@@ -586,11 +588,13 @@ namespace Freeserf
             for (int i = 0; i < 32; ++i)
             {
                 pos = map.MoveRight(pos);
+
                 for (int j = 0; j < i + 1; ++j)
                 {
                     count = AvailableKnightsAtPos(pos, count, i >> 3);
                     pos = map.MoveDown(pos);
                 }
+
                 for (int j = 0; j < i + 1; ++j)
                 {
                     count = AvailableKnightsAtPos(pos, count, i >> 3);
@@ -601,16 +605,19 @@ namespace Freeserf
                     count = AvailableKnightsAtPos(pos, count, i >> 3);
                     pos = map.MoveUpLeft(pos);
                 }
+
                 for (int j = 0; j < i + 1; ++j)
                 {
                     count = AvailableKnightsAtPos(pos, count, i >> 3);
                     pos = map.MoveUp(pos);
                 }
+
                 for (int j = 0; j < i + 1; ++j)
                 {
                     count = AvailableKnightsAtPos(pos, count, i >> 3);
                     pos = map.MoveRight(pos);
                 }
+
                 for (int j = 0; j < i + 1; ++j)
                 {
                     count = AvailableKnightsAtPos(pos, count, i >> 3);
@@ -644,27 +651,27 @@ namespace Freeserf
             for (int i = 0; i < attackingBuildingCount; i++)
             {
                 /* TODO building index may not be valid any more(?). */
-                Building b = Game.GetBuilding((uint)attackingBuildings[i]);
+                Building building = Game.GetBuilding((uint)attackingBuildings[i]);
 
-                if (b.IsBurning() || map.GetOwner(b.Position) != Index)
+                if (building.IsBurning() || map.GetOwner(building.Position) != Index)
                 {
                     continue;
                 }
 
-                MapPos flagPos = map.MoveDownRight(b.Position);
+                MapPos flagPos = map.MoveDownRight(building.Position);
 
                 if (map.HasSerf(flagPos))
                 {
                     /* Check if building is under siege. */
-                    Serf s = Game.GetSerfAtPos(flagPos);
+                    Serf serf = Game.GetSerfAtPos(flagPos);
 
-                    if (s.Player != Index)
+                    if (serf.Player != Index)
                         continue;
                 }
 
                 int[] minLevel = null;
 
-                switch (b.BuildingType)
+                switch (building.BuildingType)
                 {
                     case Building.Type.Hut: minLevel = minLevelHut; break;
                     case Building.Type.Tower: minLevel = minLevelTower; break;
@@ -672,8 +679,8 @@ namespace Freeserf
                     default: continue;
                 }
 
-                uint state = b.GetThreatLevel();
-                uint knightsPresent = b.GetKnightCount();
+                uint state = building.GetThreatLevel();
+                uint knightsPresent = building.GetKnightCount();
                 int toSend = (int)knightsPresent - minLevel[knightOccupation[state] & 0xf];
 
                 for (int j = 0; j < toSend; ++j)
@@ -682,7 +689,7 @@ namespace Freeserf
                     var bestType = SendStrongest() ? Serf.Type.Knight0 : Serf.Type.Knight4;
                     uint bestIndex = 0;
 
-                    uint knightIndex = b.GetFirstKnight();
+                    uint knightIndex = building.GetFirstKnight();
 
                     while (knightIndex != 0)
                     {
@@ -708,7 +715,7 @@ namespace Freeserf
                         knightIndex = knight.GetNextKnight();
                     }
 
-                    Serf defSerf = b.CallAttackerOut(bestIndex);
+                    Serf defSerf = building.CallAttackerOut(bestIndex);
 
                     target.SetUnderAttack();
 
@@ -972,34 +979,34 @@ namespace Freeserf
             return type;
         }
 
-        public void IncreaseSerfCount(uint type)
+        public void IncreaseSerfCount(Serf.Type type)
         {
-            ++serfCount[type];
+            ++serfCount[(int)type];
         }
 
-        public void DecreaseSerfCount(uint type)
+        public void DecreaseSerfCount(Serf.Type type)
 		{
-            if (serfCount[type] == 0)
+            if (serfCount[(int)type] == 0)
             {
                 throw new ExceptionFreeserf("Failed to decrease serf count");
             }
 
-            --serfCount[type];
+            --serfCount[(int)type];
         }
 
-        public int[] GetSerfCounts()
+        public uint[] GetSerfCounts()
         {
             return serfCount;
         }
 
-        public void IncreaseResourceCount(uint type)
+        public void IncreaseResourceCount(Resource.Type type)
         {
-            ++resourceCount[type];
+            ++resourceCount[(int)type];
         }
 
-        public void DecreaseResourceCount(uint type)
+        public void DecreaseResourceCount(Resource.Type type)
         {
-            --resourceCount[type];
+            --resourceCount[(int)type];
         }
 
         public void BuildingFounded(Building building)
@@ -1090,12 +1097,12 @@ namespace Freeserf
             }
         }
 
-        public int GetCompletedBuildingCount(int type)
+        public uint GetCompletedBuildingCount(int type)
         {
             return completedBuildingCount[type];
         }
 
-        public int GetIncompleteBuildingCount(int type)
+        public uint GetIncompleteBuildingCount(int type)
         {
             return incompleteBuildingCount[type];
         }
@@ -1256,20 +1263,22 @@ namespace Freeserf
             goldDeposited = inventoryGold + militaryGold;
 
             /* Calculate according to gold collected. */
-            uint total_gold = Game.get_gold_total();
-            if (total_gold != 0)
+            uint totalGold = Game.GoldTotal;
+
+            if (totalGold != 0)
             {
-                while (total_gold > 0xffff)
+                while (totalGold > 0xffff)
                 {
-                    total_gold >>= 1;
+                    totalGold >>= 1;
                     depot >>= 1;
                 }
-                depot = Math.Min(depot, total_gold - 1);
-                knightMorale = 1024 + (Game.get_gold_morale_factor() * depot) / total_gold;
+
+                depot = Math.Min(depot, totalGold - 1);
+                knightMorale = 1024u + (Game.MapGoldMoraleFactor * depot) / totalGold;
             }
             else
             {
-                knightMorale = 4096;
+                knightMorale = 4096u;
             }
 
             /* Adjust based on castle score. */
@@ -1279,25 +1288,26 @@ namespace Freeserf
             }
             else if (castleScore > 0)
             {
-                knightMorale = Math.Min(knightMorale + 1024 * castleScore, 0xffff);
+                knightMorale = Math.Min((uint)(knightMorale + 1024 * castleScore), 0xffffu);
             }
 
-            uint military_score = totalMilitaryScore;
+            uint militaryScore = totalMilitaryScore;
             uint morale = knightMorale >> 5;
-            while (military_score > 0xffff)
+
+            while (militaryScore > 0xffff)
             {
-                military_score >>= 1;
+                militaryScore >>= 1;
                 morale <<= 1;
             }
 
             /* Calculate fractional score used by AI */
-            uint player_score = (military_score * morale) >> 7;
-            uint enemy_score = Game.get_enemy_score(this);
+            uint playerScore = (militaryScore * morale) >> 7;
+            uint enemyScore = Game.GetEnemyScore(this);
 
-            while (player_score > 0xffff && enemy_score > 0xffff)
+            while (playerScore > 0xffff && enemyScore > 0xffff)
             {
-                player_score >>= 1;
-                enemy_score >>= 1;
+                playerScore >>= 1;
+                enemyScore >>= 1;
             }
             /*
               player_score >>= 1;
@@ -1313,159 +1323,159 @@ namespace Freeserf
             militaryMaxGold = 0;
         }
 
-        public int get_land_area()
+        public uint GetLandArea()
         {
             return totalLandArea;
         }
 
-        public void increase_land_area()
+        public void IncreaseLandArea()
         {
             ++totalLandArea;
         }
 
-        public void decrease_land_area()
+        public void DecreaseLandArea()
         {
             --totalLandArea;
         }
 
-        public int get_building_score()
+        public uint GetBuildingScore()
         {
             return totalBuildingScore;
         }
 
         /* Calculate condensed score from military score and knight morale. */
-        public int get_military_score()
+        public uint GetMilitaryScore()
         {
-            return (2048 + (knightMorale >> 1)) * (totalMilitaryScore << 6);
+            return 2048u + (knightMorale >> 1) * (totalMilitaryScore << 6);
         }
 
-        public void increase_military_score(int val)
+        public void IncreaseMilitaryScore(uint val)
         {
             totalMilitaryScore += val;
         }
 
-        public void decrease_military_score(int val)
+        public void DecreaseMilitaryScore(uint val)
         {
             totalMilitaryScore -= val;
         }
 
-        public void increase_military_max_gold(int val)
+        public void IncreaseMilitaryMaxGold(int val)
         {
             militaryMaxGold += val;
         }
 
-        public int get_score()
+        public uint GetScore()
         {
-            int mil_score = get_military_score();
-            return totalBuildingScore + ((totalLandArea + mil_score) >> 4);
+            uint militaryScore = GetMilitaryScore();
+
+            return totalBuildingScore + ((totalLandArea + militaryScore) >> 4);
         }
 
-        public uint get_initial_supplies()
+        public uint GetInitialSupplies()
         {
             return initialSupplies;
         }
   
-        public int* get_resource_count_history(Resource.Type type)
+        public IEnumerable<uint> GetResourceCountHistory(Resource.Type type)
         {
-            return resourceCountHistory[type];
+            return resourceCountHistory.SliceRow((int)type);
         }
 
-        public void set_player_stat_history(int mode, int ind, int val)
+        public void SetPlayerStatHistory(int mode, int index, uint val)
         {
-            playerStatHistory[mode][ind] = val;
+            playerStatHistory[mode, index] = val;
         }
 
-        public int* get_player_stat_history(int mode)
+        public IEnumerable<uint> GetPlayerStatHistory(int mode)
         {
-            return playerStatHistory[mode];
+            return playerStatHistory.SliceRow(mode);
         }
 
-        public ResourceMap get_stats_resources()
+        public ResourceMap GetStatsResources()
         {
-            ResourceMap resources;
+            ResourceMap resources = new ResourceMap();
 
             /* Sum up resources of all inventories. */
-            for (Inventory* inventory : Game.get_player_inventories(this))
+            foreach (Inventory inventory in Game.GetPlayerInventories(this))
             {
-                for (int j = 0; j < 26; j++)
+                for (int j = 0; j < 26; ++j)
                 {
-                    resources[(Resource.Type.)j] +=
-                                                   inventory.get_count_of((Resource.Type.)j);
+                    resources[(Resource.Type)j] += inventory.GetCountOf((Resource.Type)j);
                 }
             }
 
             return resources;
         }
 
-        public Serf::SerfMap get_stats_serfs_idle()
+        public SerfMap GetStatsSerfsIdle()
         {
-            Serf::SerfMap res;
+            SerfMap serfs = new SerfMap();
 
             /* Sum up all existing serfs. */
-            for (Serf serf : Game.get_player_serfs(this))
+            foreach (Serf serf in Game.GetPlayerSerfs(this))
             {
-                if (serf.get_state() == Serf::StateIdleInStock)
+                if (serf.SerfState == Serf.State.IdleInStock)
                 {
-                    res[serf.get_type()] += 1;
+                    ++serfs[serf.GetSerfType()];
                 }
             }
 
-            return res;
+            return serfs;
         }
 
-        public Serf::SerfMap get_stats_serfs_potential()
+        public SerfMap GetStatsSerfsPotential()
         {
-            Serf::SerfMap res;
+            SerfMap serfs = new SerfMap();
 
             /* Sum up potential serfs of all inventories. */
-            for (Inventory* inventory : Game.get_player_inventories(this))
+            foreach (Inventory inventory in Game.GetPlayerInventories(this))
             {
-                if (inventory.free_serf_count() > 0)
+                if (inventory.FreeSerfCount() > 0)
                 {
-                    for (int i = 0; i < 27; i++)
+                    for (int i = 0; i < 27; ++i)
                     {
-                        res[(Serf.Type.)i] += inventory.serf_potential_count((Serf.Type.)i);
+                        serfs[(Serf.Type)i] += inventory.SerfPotentialCount((Serf.Type)i);
                     }
                 }
             }
 
-            return res;
+            return serfs;
         }
 
         // Settings
-        public int get_serf_to_knight_rate()
+        public int GetSerfToKnightRate()
         {
             return serfToKnightRate;
         }
 
-        public void set_serf_to_knight_rate(int rate)
+        public void SetSerfToKnightRate(int rate)
         {
             serfToKnightRate = rate;
         }
 
-        public uint get_food_for_building(uint bld_type)
+        public uint GetFoodForBuilding(Building.Type buildingType)
         {
-            uint res = 0;
+            uint resource = 0;
 
-            switch (bld_type)
+            switch (buildingType)
             {
                 case Building.Type.StoneMine:
-                    res = GetFoodStonemine();
+                    resource = GetFoodStonemine();
                     break;
                 case Building.Type.CoalMine:
-                    res = GetFoodCoalmine();
+                    resource = GetFoodCoalmine();
                     break;
                 case Building.Type.IronMine:
-                    res = GetFoodIronmine();
+                    resource = GetFoodIronmine();
                     break;
                 case Building.Type.GoldMine:
-                    res = GetFoodGoldmine();
+                    resource = GetFoodGoldmine();
                     break;
                 default:
                     break;
             }
 
-            return res;
+            return resource;
         }
 
         public uint GetFoodStonemine()
