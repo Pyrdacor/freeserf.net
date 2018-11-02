@@ -91,7 +91,7 @@ namespace Freeserf
         public bool Invalid => begin != Global.BadMapPos;
         public MapPos Source => begin;
         public Dirs Dirs => dirs;
-        public int Length => dirs.Count;
+        public uint Length => (uint)dirs.Count;
         public Direction Last => dirs.Peek();
         public bool Extendable => Length < MaxLength;
 

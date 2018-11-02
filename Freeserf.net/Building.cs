@@ -811,7 +811,7 @@ namespace Freeserf
         {
             int maxPrio = -1;
 
-            for (int i = 0; i < MaxStock; i++)
+            for (int i = 0; i < MaxStock; ++i)
             {
                 if (stock[i].Type == resource &&
                     stock[i].Priority >= minimum &&

@@ -1472,7 +1472,7 @@ namespace Freeserf
             s.LeavingBuilding.NextState = State.Walking;
         }
 
-        void Update()
+        internal void Update()
         {
             switch (SerfState)
             {

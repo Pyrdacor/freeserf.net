@@ -179,7 +179,7 @@ namespace Freeserf
         public int attackingBuildingCount = 0;
         public int[] attackingKnights = new int[4];
         public int totalAttackingKnights = 0;
-        //public uint tempIndex = 0;
+        public uint tempIndex = 0; // used by Game.BuildingRemovePlayerRefs
 
         public Player(Game game, uint index)
             : base(game, index)
@@ -298,7 +298,7 @@ namespace Freeserf
         }
 
         /* Whether the cycling of knights is in the second phase. */
-        public bool CyclingSecond()
+        public bool CyclingKnightsInSecondPhase()
         {
             return (flags & 32) != 0;
         }
@@ -977,14 +977,14 @@ namespace Freeserf
             return false;
         }
 
-        public Serf.Type GetCyclingSerfType(Serf.Type type)
+        public int GetCyclingSerfType(Serf.Type type)
         {
-            if (CyclingSecond())
+            if (CyclingKnightsInSecondPhase())
             {
-                type = (Serf.Type)(-((knightCycleCounter >> 8) + 1)); // TODO: ??? Is this right with minus?
+                return -((knightCycleCounter >> 8) + 1);
             }
 
-            return type;
+            return (int)type;
         }
 
         public void IncreaseSerfCount(Serf.Type type)

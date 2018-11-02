@@ -55,6 +55,7 @@ namespace Freeserf
         public MapPos Position { get; private set; } /* ADDITION */
         public Direction SearchDir { get; set; }
         public int SearchNum { get; internal set; }
+        public object Tag { get; set; } = null; // General purpose tagged object (used in Game.UpdateInventories)
 
         // Bit 0: Has connected road right
         // Bit 1: Has connected road down right
