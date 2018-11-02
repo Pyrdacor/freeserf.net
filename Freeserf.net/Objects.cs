@@ -64,7 +64,7 @@ namespace Freeserf
         }
     }
 
-    public class Collection<T> : IEnumerable<KeyValuePair<uint, T>> where T : class, IGameObject
+    public class Collection<T> : IEnumerable<T> where T : class, IGameObject
     {
         Game game;
         uint firstFreeIndex = 0;
@@ -120,14 +120,15 @@ namespace Freeserf
             }
         }
 
-        public IEnumerator<KeyValuePair<uint, T>> GetEnumerator()
+        public IEnumerator<T> GetEnumerator()
         {
-            return ((IEnumerable<KeyValuePair<uint, T>>)objects).GetEnumerator();
+            foreach (var entry in objects)
+                yield return entry.Value;
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<KeyValuePair<uint, T>>)objects).GetEnumerator();
+            return GetEnumerator();
         }
 
         public int Size => objects.Count;
