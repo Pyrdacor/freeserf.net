@@ -92,8 +92,21 @@ namespace Freeserf
             Red = 0, Green = 0, Blue = 0
         };
         uint face = uint.MaxValue;
-        int flags = 0;
-        int build = 0;
+
+        //Bit 0: Has castle
+        //Bit 1: Send strongest knights
+        //Bit 2: Cycling knights is in progress
+        //Bit 3: Message/Notification in queue/active
+        //Bit 4: Knight level reduces due to knight cycling
+        //Bit 5: Knight cycling in phase 2 (new knights from inventory to buildings)
+        //Bit 6: Unused
+        //Bit 7: AI
+        uint flags = 0u;
+        //Bit 0: Allow military building at current pos
+        //Bit 1: Allow flag at current pos
+        //Bit 2: Player can spawn new serfs
+        //Bit 3-7: Unused
+        uint build = 0u;
         uint[] completedBuildingCount = new uint[24];
         uint[] incompleteBuildingCount = new uint[24];
         int[] inventoryPriorities = new int[26];
@@ -104,7 +117,7 @@ namespace Freeserf
 
         int building = 0;
         int castleInventory = 0;
-        //int contSearchAfterNonOptimalFind = 7;
+        int contSearchAfterNonOptimalFind = 7;
         int knightsToSpawn = 0;
         uint totalLandArea = 0;
         uint totalBuildingScore = 0;
@@ -217,9 +230,9 @@ namespace Freeserf
             if (face < 12)
             { 
                 /* AI player */
-                flags |= Misc.Bit(7); /* Set AI bit */
-                                      /* TODO ... */
-                                      /*Game.max_next_index = 49;*/
+                flags |= Misc.BitU(7); /* Set AI bit */
+                                       /* TODO ... */
+                                       /*Game.max_next_index = 49;*/
             }
 
             if (IsAi())
@@ -247,53 +260,53 @@ namespace Freeserf
         /* Whether the strongest knight should be sent to fight. */
         public bool SendStrongest()
         {
-            return ((flags >> 1) & 1) != 0;
+            return (flags & 2) != 0;
         }
 
         public void DropSendStrongest()
         {
-            flags &= ~Misc.Bit(1);
+            flags &= ~Misc.BitU(1);
         }
 
         public void SetSendStrongest()
         {
-            flags |= Misc.Bit(1);
+            flags |= Misc.BitU(1);
         }
 
         /* Whether cycling of knights is in progress. */
         public bool CyclingKnight()
         {
-            return ((flags >> 2) & 1) != 0;
+            return (flags & 4) != 0;
         }
 
         /* Whether a message is queued for this player. */
         public bool HasMessage()
         {
-            return ((flags >> 3) & 1) != 0;
+            return (flags& 8) != 0;
         }
 
         public void DropMessage()
         {
-            flags &= ~Misc.Bit(3);
+            flags &= ~Misc.BitU(3);
         }
 
         /* Whether the knight level of military buildings is temporarily
         reduced bacause of cycling of the knights. */
         public bool ReducedKnightLevel()
         {
-            return ((flags >> 4) & 1) != 0;
+            return (flags & 16) != 0;
         }
 
         /* Whether the cycling of knights is in the second phase. */
         public bool CyclingSecond()
         {
-            return ((flags >> 5) & 1) != 0;
+            return (flags & 32) != 0;
         }
 
         /* Whether this player is a computer controlled opponent. */
         public bool IsAi()
         {
-            return ((flags >> 7) & 1) != 0;
+            return (flags & 128) != 0;
         }
 
         /* Whether player is prohibited from building military
@@ -307,13 +320,13 @@ namespace Freeserf
            current position. */
         public bool AllowFlag()
         {
-            return ((build >> 1) & 1) == 0;
+            return (build & 2) == 0;
         }
 
         /* Whether player can spawn new serfs. */
         public bool CanSpawn()
         {
-            return ((build >> 2) & 1) != 0;
+            return (build & 4) != 0;
         }
 
         public uint GetSerfCount(int type)
@@ -329,7 +342,7 @@ namespace Freeserf
         /* Enqueue a new notification message for player. */
         public void AddNotification(Message.Type type, MapPos pos, uint data)
         {
-            flags |= Misc.Bit(3); /* Message in queue. */
+            flags |= Misc.BitU(3); /* Message in queue. */
 
             Message newMessage = new Message();
             newMessage.MessageType = type;
@@ -737,14 +750,14 @@ namespace Freeserf
            knights. */
         public void CycleKnights()
 		{
-            flags |= Misc.Bit(2) | Misc.Bit(4);
+            flags |= Misc.BitU(2) | Misc.BitU(4);
             knightCycleCounter = 2400;
         }
 
         /* Create the initial serfs that occupies the castle. */
         public void CreateInitialCastleSerfs(Building castle)
 		{
-            build |= Misc.Bit(2);
+            build |= Misc.BitU(2);
 
             /* Spawn serf 4 */
             Inventory inventory = castle.GetInventory();
@@ -1015,8 +1028,8 @@ namespace Freeserf
 
             if (building.BuildingType == Building.Type.Castle)
             {
-                flags |= Misc.Bit(0); /* Has castle */
-                build |= Misc.Bit(3);
+                flags |= Misc.BitU(0); /* Has castle */
+                build |= Misc.BitU(3);
                 totalBuildingScore += Building.BuildingGetScoreFromType(Building.Type.Castle);
                 castleInventory = (int)building.GetInventory().Index;
                 this.building = (int)building.Index;
@@ -1087,7 +1100,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    build &= ~Misc.Bit(3);
+                    build &= ~Misc.BitU(3);
                     --castleScore;
                 }
             }
@@ -1162,13 +1175,13 @@ namespace Freeserf
 
                 if (knightCycleCounter < 1)
                 {
-                    flags &= ~Misc.Bit(5);
-                    flags &= ~Misc.Bit(2);
+                    flags &= ~Misc.BitU(5);
+                    flags &= ~Misc.BitU(2);
                 }
                 else if (knightCycleCounter < 2048 && ReducedKnightLevel())
                 {
-                    flags |= Misc.Bit(5);
-                    flags &= ~Misc.Bit(4);
+                    flags |= Misc.BitU(5);
+                    flags &= ~Misc.BitU(4);
                 }
             }
 
@@ -1698,6 +1711,288 @@ namespace Freeserf
                 attackingKnights[dist] += toSend;
 
             return index + 1;
+        }
+
+        static readonly Color[] DefaultPlayerColors = new Color[4]
+        {
+            new Color { Red = 0x00, Green = 0xe3, Blue = 0xe3},
+            new Color { Red = 0xcf, Green = 0x63, Blue = 0x63},
+            new Color { Red = 0xdf, Green = 0x7f, Blue = 0xef},
+            new Color { Red = 0xef, Green = 0xef, Blue = 0x8f}
+        };
+
+        public void ReadFrom(SaveReaderBinary reader)
+        {
+            for (int j = 0; j < 9; ++j)
+            {
+                toolPriorities[j] = reader.ReadWord(); // 0
+            }
+
+            for (int j = 0; j < 26; ++j)
+            {
+                resourceCount[j] = reader.ReadByte(); // 18
+            }
+
+            for (int j = 0; j < 26; ++j)
+            {
+                flagPriorities[j] = reader.ReadByte(); // 44
+            }
+
+            for (int j = 0; j < 27; ++j)
+            {
+                serfCount[j] = reader.ReadWord(); // 70
+            }
+
+            for (int j = 0; j < 4; ++j)
+            {
+                knightOccupation[j] = reader.ReadByte(); // 124
+            }
+
+            Index = reader.ReadWord(); // 128
+            color = DefaultPlayerColors[Index];
+            flags = reader.ReadByte(); // 130
+            build = reader.ReadByte(); // 131
+
+            for (int j = 0; j < 23; ++j)
+            {
+                completedBuildingCount[j] = reader.ReadWord(); // 132
+            }
+            for (int j = 0; j < 23; ++j)
+            {
+                incompleteBuildingCount[j] = reader.ReadWord(); // 178
+            }
+
+            for (int j = 0; j < 26; ++j)
+            {
+                inventoryPriorities[j] = reader.ReadByte(); // 224
+            }
+
+            for (int j = 0; j < 64; ++j)
+            {
+                attackingBuildings[j] = reader.ReadWord(); // 250
+            }
+
+            reader.ReadWord();  // 378, player.current_sett_5_item = reader.ReadWord();
+            reader.ReadWord();  // 380 ???
+            reader.ReadWord();  // 382 ???
+            reader.ReadWord();  // 384 ???
+            reader.ReadWord();  // 386 ???
+            building = reader.ReadWord(); // 388
+
+            reader.ReadWord();  // 390 // castleflag
+            castleInventory = reader.ReadWord(); // 392
+            contSearchAfterNonOptimalFind = reader.ReadWord(); // 394
+            knightsToSpawn = reader.ReadWord(); // 396
+            reader.ReadWord();  // 398
+            reader.ReadWord();  // 400, player->field_110 = v16;
+            reader.ReadWord();  // 402 ???
+            reader.ReadWord();  // 404 ???
+
+            totalBuildingScore = reader.ReadDWord(); // 406
+            totalMilitaryScore = reader.ReadDWord(); // 410
+
+            lastTick = reader.ReadWord(); // 414
+
+            reproductionCounter = reader.ReadWord(); // 416
+            reproductionReset = reader.ReadWord(); // 418
+            serfToKnightRate = reader.ReadWord(); // 420
+            serfToKnightCounter = reader.ReadWord(); // 422
+
+            attackingBuildingCount = reader.ReadWord(); // 424
+
+            for (int j = 0; j < 4; ++j)
+            {
+                attackingKnights[j] = reader.ReadWord(); // 426
+            }
+
+            totalAttackingKnights = reader.ReadWord(); // 434
+            buildingAttacked = reader.ReadWord(); // 436
+            knightsAttacking = reader.ReadWord(); // 438
+
+            analysisGoldore = reader.ReadWord(); // 440
+            analysisIronore = reader.ReadWord(); // 442
+            analysisCoal = reader.ReadWord(); // 444
+            analysisStone = reader.ReadWord(); // 446
+
+            foodStonemine = reader.ReadWord(); // 448
+            foodCoalmine = reader.ReadWord(); // 450
+            foodIronmine = reader.ReadWord(); // 452
+            foodGoldmine = reader.ReadWord(); // 454
+
+            planksConstruction = reader.ReadWord(); // 456
+            planksBoatbuilder = reader.ReadWord(); // 458
+            planksToolmaker = reader.ReadWord(); // 460
+
+            steelToolmaker = reader.ReadWord(); // 462
+            steelWeaponsmith = reader.ReadWord(); // 464
+
+            coalSteelsmelter = reader.ReadWord(); // 466
+            coalGoldsmelter = reader.ReadWord(); // 468
+            coalWeaponsmith = reader.ReadWord(); // 470
+
+            wheatPigfarm = reader.ReadWord(); // 472
+            wheatMill = reader.ReadWord(); // 474
+
+            reader.ReadWord(); // 476, currentett_6tem = reader.ReadWord();
+
+            castleScore = reader.ReadWord(); // 478
+
+            /* TODO */
+        }
+
+        public void ReadFrom(SaveReaderText reader)
+        {
+            flags = reader.Value("flags").ReadUInt();
+            build = reader.Value("build").ReadUInt();
+            color.Red = (byte)reader.Value("color")[0].ReadUInt();
+            color.Green = (byte)reader.Value("color")[1].ReadUInt();
+            color.Blue = (byte)reader.Value("color")[2].ReadUInt();
+            face = reader.Value("face").ReadUInt();
+
+            for (int i = 0; i < 9; ++i)
+            {
+                toolPriorities[i] = reader.Value("toolPrio")[i].ReadInt();
+            }
+
+            for (int i = 0; i < 26; ++i)
+            {
+                resourceCount[i] = reader.Value("resourceCount")[i].ReadUInt();
+                flagPriorities[i] = reader.Value("flagPrio")[i].ReadInt();
+                serfCount[i] = reader.Value("serfCount")[i].ReadUInt();
+                inventoryPriorities[i] = reader.Value("inventoryPrio")[i].ReadInt();
+            }
+            serfCount[26] = reader.Value("serfCount")[26].ReadUInt();
+
+            for (int i = 0; i < 4; ++i)
+            {
+                knightOccupation[i] = reader.Value("knightOccupation")[i].ReadUInt();
+                attackingKnights[i] = reader.Value("attackingKnights")[i].ReadInt();
+            }
+
+            for (int i = 0; i < 23; ++i)
+            {
+                completedBuildingCount[i] = reader.Value("completedBuildingCount")[i].ReadUInt();
+                incompleteBuildingCount[i] = reader.Value("incompleteBuildingCount")[i].ReadUInt();
+            }
+
+            for (int i = 0; i < 64; ++i)
+            {
+                attackingBuildings[i] = reader.Value("attackingBuildings")[i].ReadUInt();
+            }
+
+            initialSupplies = reader.Value("initialSupplies").ReadUInt();
+            knightsToSpawn = reader.Value("knightsToSpawn").ReadInt();
+            totalBuildingScore = reader.Value("totalBuildingScore").ReadUInt();
+            totalMilitaryScore = reader.Value("totalMilitaryScore").ReadUInt();
+            lastTick = (ushort)reader.Value("lastTick").ReadUInt();
+            reproductionCounter = reader.Value("reproductionCounter").ReadInt();
+            reproductionReset = reader.Value("reproductionReset").ReadUInt();
+            serfToKnightRate = reader.Value("serfToKnightRate").ReadInt();
+            serfToKnightCounter = (ushort)reader.Value("serfToKnightCounter").ReadUInt();
+            attackingBuildingCount = reader.Value("attackingBuildingCount").ReadInt();
+            totalAttackingKnights = reader.Value("totalAttackingKnights").ReadInt();
+            buildingAttacked = reader.Value("buildingAttacked").ReadInt();
+            knightsAttacking = reader.Value("knightsAttacking").ReadInt();
+            foodStonemine = reader.Value("foodStonemine").ReadUInt();
+            foodCoalmine = reader.Value("foodCoalmine").ReadUInt();
+            foodIronmine = reader.Value("foodIronmine").ReadUInt();
+            foodGoldmine = reader.Value("foodGoldmine").ReadUInt();
+            planksConstruction = reader.Value("planksConstruction").ReadUInt();
+            planksBoatbuilder = reader.Value("planksBoatbuilder").ReadUInt();
+            planksToolmaker = reader.Value("planksToolmaker").ReadUInt();
+            steelToolmaker = reader.Value("steelToolmaker").ReadUInt();
+            steelWeaponsmith = reader.Value("steelWeaponsmith").ReadUInt();
+            coalSteelsmelter = reader.Value("coalSteelsmelter").ReadUInt();
+            coalGoldsmelter = reader.Value("coalGoldsmelter").ReadUInt();
+            coalWeaponsmith = reader.Value("coalWeaponsmith").ReadUInt();
+            wheatPigfarm = reader.Value("wheatPigfarm").ReadUInt();
+            wheatMill = reader.Value("wheatMill").ReadUInt();
+            castleScore = reader.Value("castleScore").ReadInt();
+            castleKnights = reader.Value("castleKnights").ReadUInt();
+            castleKnightsWanted = reader.Value("castleKnightsWanted").ReadUInt();
+        }
+
+        public void WriteTo(SaveWriterText writer)
+        {
+            writer.Value("flags").Write(flags);
+            writer.Value("build").Write(build);
+            writer.Value("color").Write((uint)color.Red);
+            writer.Value("color").Write((uint)color.Green);
+            writer.Value("color").Write((uint)color.Blue);
+            writer.Value("face").Write(face);
+
+            for (int i = 0; i < 9; ++i)
+            {
+                writer.Value("tool_prio").Write(toolPriorities[i]);
+            }
+
+            for (int i = 0; i < 26; ++i)
+            {
+                writer.Value("resource_count").Write(resourceCount[i]);
+                writer.Value("flag_prio").Write(flagPriorities[i]);
+                writer.Value("serf_count").Write(serfCount[i]);
+                writer.Value("inventory_prio").Write(inventoryPriorities[i]);
+            }
+            writer.Value("serf_count").Write(serfCount[26]);
+
+            for (int i = 0; i < 4; ++i)
+            {
+                writer.Value("knight_occupation").Write(knightOccupation[i]);
+                writer.Value("attacking_knights").Write(attackingKnights[i]);
+            }
+
+            for (int i = 0; i < 23; ++i)
+            {
+                writer.Value("completed_building_count").Write(completedBuildingCount[i]);
+                writer.Value("incomplete_building_count").Write(incompleteBuildingCount[i]);
+            }
+
+            for (int i = 0; i< 64; ++i)
+            {
+                writer.Value("attacking_buildings").Write(attackingBuildings[i]);
+            }
+
+            writer.Value("initial_supplies").Write(initialSupplies);
+            writer.Value("knights_to_spawn").Write(knightsToSpawn);
+
+            writer.Value("total_building_score").Write(totalBuildingScore);
+            writer.Value("total_military_score").Write(totalMilitaryScore);
+
+            writer.Value("last_tick").Write(lastTick);
+
+            writer.Value("reproduction_counter").Write(reproductionCounter);
+            writer.Value("reproduction_reset").Write(reproductionReset);
+            writer.Value("serf_to_knight_rate").Write(serfToKnightRate);
+            writer.Value("serf_to_knight_counter").Write(serfToKnightCounter);
+
+            writer.Value("attacking_building_count").Write(attackingBuildingCount);
+            writer.Value("total_attacking_knights").Write(totalAttackingKnights);
+            writer.Value("building_attacked").Write(buildingAttacked);
+            writer.Value("knights_attacking").Write(knightsAttacking);
+
+            writer.Value("food_stonemine").Write(foodStonemine);
+            writer.Value("food_coalmine").Write(foodCoalmine);
+            writer.Value("food_ironmine").Write(foodIronmine);
+            writer.Value("food_goldmine").Write(foodGoldmine);
+
+            writer.Value("planks_construction").Write(planksConstruction);
+            writer.Value("planks_boatbuilder").Write(planksBoatbuilder);
+            writer.Value("planks_toolmaker").Write(planksToolmaker);
+
+            writer.Value("steel_toolmaker").Write(steelToolmaker);
+            writer.Value("steel_weaponsmith").Write(steelWeaponsmith);
+
+            writer.Value("coal_steelsmelter").Write(coalSteelsmelter);
+            writer.Value("coal_goldsmelter").Write(coalGoldsmelter);
+            writer.Value("coal_weaponsmith").Write(coalWeaponsmith);
+
+            writer.Value("wheat_pigfarm").Write(wheatPigfarm);
+            writer.Value("wheat_mill").Write(wheatMill);
+
+            writer.Value("castle_score").Write(castleScore);
+
+            writer.Value("castle_knights").Write(castleKnights);
+            writer.Value("castle_knights_wanted").Write(castleKnightsWanted);
         }
     }
 }
