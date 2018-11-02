@@ -459,7 +459,7 @@ namespace Freeserf
             public abstract void OnObjectChanged(MapPos pos);
         }
 
-        class LandscapeTile : IEquatable<LandscapeTile>
+        public class LandscapeTile : IEquatable<LandscapeTile>
         {
             // Landscape filds
             public uint Height = 0;
