@@ -334,9 +334,9 @@ namespace Freeserf
             return serfCount[type];
         }
 
-        public int GetFlagPriority(int resource)
+        public int GetFlagPriority(Resource.Type resource)
         {
-            return flagPriorities[resource];
+            return flagPriorities[(int)resource];
         }
 
         /* Enqueue a new notification message for player. */
@@ -893,9 +893,9 @@ namespace Freeserf
             if (!CanSpawn())
                 return -1;
 
-            ListInventories inventories = Game.GetPlayerInventories(this);
+            var inventories = Game.GetPlayerInventories(this);
 
-            if (inventories.Count < 1)
+            if (inventories.Count() < 1)
             {
                 return -1;
             }

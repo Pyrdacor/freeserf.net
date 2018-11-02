@@ -6805,7 +6805,7 @@ namespace Freeserf
                     else if (!building.HasKnight())
                     {
                         /* Occupy the building. */
-                        Game.OccupyEnemyBuilding(building, (int)Player);
+                        Game.OccupyEnemyBuilding(building, Player);
 
                         if (building.BuildingType == Building.Type.Castle)
                         {

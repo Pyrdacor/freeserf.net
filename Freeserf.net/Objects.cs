@@ -100,7 +100,7 @@ namespace Freeserf
         public T GetOrInsert(uint index)
         {
             if (!objects.ContainsKey(index))
-                objects.Add(index, new GameObject(game, index));
+                objects.Add(index, new GameObject(game, index)); // TODO: Factory?
 
             return objects[index];
         }
@@ -130,6 +130,8 @@ namespace Freeserf
         {
             return GetEnumerator();
         }
+
+        public T First => (objects.Count == 0) ? null : objects.First().Value;
 
         public int Size => objects.Count;
 

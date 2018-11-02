@@ -52,7 +52,7 @@ namespace Freeserf
         public const int FLAG_MAX_RES_COUNT = 8;
         static readonly int[] MaxTransporters = new[] { 1, 2, 3, 4, 6, 8, 11, 15 };
 
-        public MapPos Position { get; private set; } /* ADDITION */
+        public MapPos Position { get; internal set; }
         public Direction SearchDir { get; set; }
         public int SearchNum { get; internal set; }
         public object Tag { get; set; } = null; // General purpose tagged object (used in Game.UpdateInventories)
@@ -208,7 +208,7 @@ namespace Freeserf
                     /* Use flag_prio to prioritize resource pickup. */
                     Direction resDir = slot[i].Dir;
                     Resource.Type resType = slot[i].Type;
-                    var flagPrio = player.GetFlagPrio(resType);
+                    var flagPrio = player.GetFlagPriority(resType);
 
                     if (resDir == dir && flagPrio > resPrio)
                     {
@@ -1061,8 +1061,8 @@ namespace Freeserf
             }
 
             /* Update serfs with reference to this flag. */
-            ListSerfs serfs = Game.GetSerfsRelatedTo(flag1.Index, dir1);
-            ListSerfs serfs2 = Game.GetSerfsRelatedTo(flag2.Index, dir2);
+            var serfs = Game.GetSerfsRelatedTo(flag1.Index, dir1);
+            var serfs2 = Game.GetSerfsRelatedTo(flag2.Index, dir2);
 
             serfs.AddRange(serfs2);
 
@@ -1253,8 +1253,8 @@ namespace Freeserf
                     {
                         Player player = Game.GetPlayer(GetOwner());
                         int otherDir = src.otherEndDir[(int)SearchDir];
-                        int prioOld = player.GetFlagPrio(src.slot[otherDir & 7].Type);
-                        int prioNew = player.GetFlagPrio(src.slot[slot].Type);
+                        int prioOld = player.GetFlagPriority(src.slot[otherDir & 7].Type);
+                        int prioNew = player.GetFlagPriority(src.slot[slot].Type);
 
                         if (prioNew > prioOld)
                         {

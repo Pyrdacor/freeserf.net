@@ -154,7 +154,7 @@ namespace Freeserf
         U u = new U();
 
         /* Map position of building */
-        public MapPos Position { get; private set; } = 0;
+        public MapPos Position { get; internal set; } = 0;
 
         /* Type of building. */
         public Type BuildingType { get; private set; } = Type.None;
@@ -1670,7 +1670,7 @@ namespace Freeserf
 
             /* Check whether building needs leveling */
             bool needLeveling = false;
-            uint height = Game.GetLevelingHeight(Position);
+            uint height = (uint)Game.GetLevelingHeight(Position);
 
             for (uint i = 0; i < 7; ++i)
             {
