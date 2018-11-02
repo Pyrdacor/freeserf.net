@@ -618,17 +618,80 @@ namespace Freeserf
 
         public void ReadFrom(SaveReaderBinary reader)
         {
+            Player = reader.ReadByte();  // 0
+            resourceDir = reader.ReadByte();  // 1
+            flag = reader.ReadWord(); // 2
+            building = reader.ReadWord(); // 4
 
+            for (int j = 0; j < 26; ++j)
+            {
+                resources[(Resource.Type)j] = reader.ReadWord(); // 6 + 2*j
+            }
+
+            for (int j = 0; j < 2; ++j)
+            {
+                outQueue[j].Type = (Resource.Type)(reader.ReadByte() - 1); // 58 + j
+            }
+
+            for (int j = 0; j < 2; ++j)
+            {
+                outQueue[j].Dest = reader.ReadWord(); // 60 + 2*j
+            }
+
+            genericCount = reader.ReadWord(); // 64
+
+            for (int j = 0; j < 27; ++j)
+            {
+                serfs[(Serf.Type)j] = reader.ReadWord(); // 66 + 2*j
+            }
         }
 
         public void ReadFrom(SaveReaderText reader)
         {
+            Player = reader.Value("player").ReadUInt();
+            resourceDir = reader.Value("res_dir").ReadUInt();
+            flag = reader.Value("flag").ReadUInt();
+            building = reader.Value("building").ReadUInt();
 
+            for (int i = 0; i < 2; ++i)
+            {
+                outQueue[i].Type = (Resource.Type)reader.Value("queue.type")[i].ReadInt();
+                outQueue[i].Dest = reader.Value("queue.dest")[i].ReadUInt();
+            }
+
+            genericCount = reader.Value("generic_count").ReadUInt();
+
+            for (int i = 0; i < 26; ++i)
+            {
+                resources[(Resource.Type)i] = reader.Value("resources")[i].ReadUInt();
+                serfs[(Serf.Type)i] = reader.Value("serfs")[i].ReadUInt();
+            }
+
+            serfs[(Serf.Type)26] = reader.Value("serfs")[26].ReadUInt();
         }
 
         public void WriteTo(SaveWriterText writer)
         {
+            writer.Value("player").Write(Player);
+            writer.Value("res_dir").Write(resourceDir);
+            writer.Value("flag").Write(flag);
+            writer.Value("building").Write(building);
 
+            for (int i = 0; i < 2; ++i)
+            {
+                writer.Value("queue.type").Write((int)outQueue[i].Type);
+                writer.Value("queue.dest").Write(outQueue[i].Dest);
+            }
+
+            writer.Value("generic_count").Write(genericCount);
+
+            for (int i = 0; i < 26; ++i)
+            {
+                writer.Value("resources").Write(resources[(Resource.Type)i]);
+                writer.Value("serfs").Write(serfs[(Serf.Type)i]);
+            }
+
+            writer.Value("serfs").Write(serfs[(Serf.Type)26]);
         }
 
 
