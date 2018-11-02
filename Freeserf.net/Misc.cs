@@ -24,6 +24,11 @@ using System;
 
 namespace Freeserf
 {
+    public sealed class Pointer<T> where T : class
+    {
+        public T Value = null;
+    }
+
     public static class Misc
     {
         unsafe public static void CopyByte(byte* pointer, byte value, uint count)

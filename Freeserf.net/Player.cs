@@ -886,11 +886,6 @@ namespace Freeserf
             return serf;
         }
 
-        public sealed class Pointer<T> where T : class
-        {
-            public T Value = null;
-        }
-
         /* Spawn new serf. Returns 0 on success.
            The serf object and inventory are returned if non-NULL. */
         public int SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
