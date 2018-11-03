@@ -83,6 +83,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AutoParseableString.cs" />
+    <Compile Include="Random.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="Savegame.cs" />
     <Compile Include="Serf.cs" />
