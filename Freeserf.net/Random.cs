@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace Freeserf
 {
-    class Random
+    public class Random
     {
         System.Random internalRandom;
         ushort[] state = new ushort[3];
@@ -89,7 +89,7 @@ namespace Freeserf
             state[2] = base2;
         }
 
-        ushort random()
+        public ushort Next()
         {
             ushort[] rnd = state;
             ushort r = (ushort)((rnd[0] + rnd[1]) ^ rnd[2]);

@@ -1151,7 +1151,7 @@ namespace Freeserf
         /* Copy tile data from map generator into map tile data. */
         public void InitTiles(MapGenerator generator)
         {
-            generator.GetLandscape(landscapeTiles);
+            landscapeTiles = generator.GetLandscape();
         }
 
         /* Update map data as part of the game progression. */
