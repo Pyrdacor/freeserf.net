@@ -92,6 +92,7 @@
     <Compile Include="Freeserf.cs" />
     <Compile Include="FreeserfSettings.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="GameInfo.cs" />
     <Compile Include="GameManager.cs" />
     <Compile Include="Graphics.cs" />
     <Compile Include="Gui.cs" />
