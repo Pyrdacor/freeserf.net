@@ -30,7 +30,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
-    public class Interface : GuiObject
+    public class Interface : GuiObject, GameManager.IHandler
     {
         // Interval between automatic save games
         const int AUTOSAVE_INTERVAL = 10 * 60 * Freeserf.TICKS_PER_SEC;
@@ -120,6 +120,11 @@ namespace Freeserf
 
             GameManager.Instance.AddHandler(this);
             SetGame(GameManager.Instance.GetCurrentGame());
+        }
+
+        protected override void InternalDraw()
+        {
+            // empty
         }
 
         public void SetGame(Game game)
