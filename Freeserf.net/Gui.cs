@@ -35,7 +35,7 @@ namespace Freeserf
         IFrame frame = null;
         static GuiObject FocusedObject = null;
         bool focused = false;
-        bool displayed = false;
+        protected bool displayed = false;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
@@ -181,14 +181,14 @@ namespace Freeserf
             }
         }
 
-        public void PlaySound(int sound)
+        public void PlaySound(Audio.TypeSfx sound)
         {
             Audio audio = Audio.Instance;
             Audio.Player player = audio.GetSoundPlayer();
 
             if (player != null)
             {
-                player.PlayTrack(sound);
+                player.PlayTrack((int)sound);
             }
         }
 
@@ -197,7 +197,7 @@ namespace Freeserf
             return 1310 * Misc.Clamp(0, x - 7, 50);
         }
 
-        public bool HandleEvent(Event.EventArgs e)
+        public virtual bool HandleEvent(Event.EventArgs e)
         {
             if (!Enabled || !Displayed)
             {

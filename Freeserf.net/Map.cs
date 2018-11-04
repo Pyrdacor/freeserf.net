@@ -88,7 +88,7 @@ namespace Freeserf
             begin = Global.BadMapPos;
         }
 
-        public bool Invalid => begin != Global.BadMapPos;
+        public bool Valid => begin != Global.BadMapPos;
         public MapPos Source => begin;
         public Dirs Dirs => dirs;
         public uint Length => (uint)dirs.Count;
