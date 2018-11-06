@@ -49,11 +49,8 @@ namespace Freeserf
             2
         };
 
-        public static Texture ActiveTexture { get; protected set; } = null;
-
-        public abstract uint Index { get; }
-        public abstract uint Width { get; }
-        public abstract uint Height { get; }
+        public abstract int Width { get; }
+        public abstract int Height { get; }
 
         protected static byte[] Convert16BitColorWithAlpha(byte[] pixelData)
         {
@@ -123,24 +120,6 @@ namespace Freeserf
                 default:
                     return pixelData;
             }
-        }
-
-        public virtual void Bind()
-        {
-            if (ActiveTexture != this)
-                ActiveTexture = this;
-        }
-
-        public virtual void Unbind()
-        {
-            if (ActiveTexture == this)
-                ActiveTexture = null;
-        }
-
-        public static void UnbindAll()
-        {
-            if (ActiveTexture != null)
-                ActiveTexture.Unbind();
         }
     }
 }
