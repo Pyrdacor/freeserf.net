@@ -98,7 +98,7 @@ namespace Freeserf
 
         public Game()
         {
-            random = new Random(DateTime.Now.Millisecond);
+            random = new Random();
 
             players = new Players(this);
             flags = new Flags(this);
@@ -1427,7 +1427,7 @@ namespace Freeserf
 
         internal ushort RandomInt()
         {
-            return (ushort)random.Next(0, 65536);
+            return random.Next();
         }
 
         /* Dispatch serf from (nearest?) inventory to flag. */
