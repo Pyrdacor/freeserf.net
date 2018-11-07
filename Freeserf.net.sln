@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2041
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Freeserf.net", "Freeserf.net\Freeserf.net.csproj", "{AAC32A82-4D6E-4054-B271-568AD32E7ECB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Renderer.OpenTK", "Freeserf.net\Freeserf.Renderer.OpenTK\Freeserf.Renderer.OpenTK.csproj", "{0422159D-BDBA-4739-8B90-ECCBB2679D13}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{AAC32A82-4D6E-4054-B271-568AD32E7ECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AAC32A82-4D6E-4054-B271-568AD32E7ECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AAC32A82-4D6E-4054-B271-568AD32E7ECB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0422159D-BDBA-4739-8B90-ECCBB2679D13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0422159D-BDBA-4739-8B90-ECCBB2679D13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0422159D-BDBA-4739-8B90-ECCBB2679D13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0422159D-BDBA-4739-8B90-ECCBB2679D13}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
