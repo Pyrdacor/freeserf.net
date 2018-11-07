@@ -32,7 +32,7 @@ namespace Freeserf
     {
         readonly List<GuiObject> floatWindows = new List<GuiObject>();
         bool redraw = true;
-        IFrame frame = null;
+        Render.IRenderLayer layer = null;
         static GuiObject FocusedObject = null;
         bool focused = false;
         protected bool displayed = false;
@@ -64,11 +64,6 @@ namespace Freeserf
             // empty
         }
 
-        void DeleteFrame()
-        {
-            frame = Graphics.Instance.RecreateFrame(frame, Width, Height);
-        }
-
         protected virtual bool HandleClickLeft(int x, int y)
         {
             return false;
@@ -94,16 +89,11 @@ namespace Freeserf
             return false;
         }
 
-        public void Draw(IFrame frame)
+        public void Draw(Render.IRenderLayer layer)
         {
             if (!Displayed)
             {
                 return;
-            }
-
-            if (this.frame == null)
-            {
-                this.frame = Graphics.Instance.CreateFrame(Width, Height);
             }
 
             if (redraw)
@@ -112,13 +102,14 @@ namespace Freeserf
 
                 foreach (GuiObject floatWindow in floatWindows)
                 {
-                    floatWindow.Draw(this.frame);
+                    floatWindow.Draw(layer);
                 }
 
                 redraw = false;
             }
 
-            frame.DrawFrame(X, Y, 0, 0, this.frame, Width, Height);
+            // TODO
+            // Draw to layer
         }
 
         public void MoveTo(int x, int y)

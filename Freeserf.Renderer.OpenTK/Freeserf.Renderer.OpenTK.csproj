@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Freeserf.net.csproj" />
+    <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
   </ItemGroup>
 
 </Project>

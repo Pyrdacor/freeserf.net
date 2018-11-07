@@ -25,10 +25,5 @@ namespace Freeserf
         {
 
         }
-
-        public IFrame CreateFrame(uint width, uint height)
-        {
-
-        }
     }
 }

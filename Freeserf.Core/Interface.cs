@@ -32,7 +32,7 @@ namespace Freeserf
         // Interval between automatic save games
         const int AUTOSAVE_INTERVAL = 10 * 60 * Freeserf.TICKS_PER_SEC;
 
-        static readonly uint[] map_building_sprite = new uint[]
+        static readonly uint[] MapBuildingSprite = new uint[]
         {
             0, 0xa7, 0xa8, 0xae, 0xa9,
             0xa3, 0xa4, 0xa5, 0xa6,
@@ -1184,14 +1184,14 @@ namespace Freeserf
                 /* Debug */
                 case 'g':
                     {
-                        Viewport.SwitchLayer(Viewport.Layer.Grid);
+                        Viewport.SwitchLayer(Layer.Grid);
                         break;
                     }
 
                 /* Game control */
                 case 'b':
                     {
-                        Viewport.SwitchLayer(Viewport.Layer.Builds);
+                        Viewport.SwitchLayer(Layer.Builds);
                         break;
                     }
                 case 'j':
