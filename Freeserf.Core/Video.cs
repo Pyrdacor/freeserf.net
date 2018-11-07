@@ -84,9 +84,9 @@ namespace Freeserf
 
         void DrawImage(IImage image, int x, int y, int y_offset, Frame dest);
         void DrawFrame(int dx, int dy, Frame dest, int sx, int sy, Frame src, int w, int h);
-        void DrawRect(int x, int y, uint width, uint height, Color color, Frame dest);
-        void FillRect(int x, int y, uint width, uint height, Color color, Frame dest);
-        void DrawLine(int x, int y, int x1, int y1, Color color, Frame dest);
+        void DrawRect(int x, int y, uint width, uint height, Render.Color color, Frame dest);
+        void FillRect(int x, int y, uint width, uint height, Render.Color color, Frame dest);
+        void DrawLine(int x, int y, int x1, int y1, Render.Color color, Frame dest);
 
         void SwapBuffers();
 
