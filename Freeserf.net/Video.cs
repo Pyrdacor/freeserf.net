@@ -64,14 +64,6 @@ namespace Freeserf
         Texture Texture { get; }
     }
 
-    public class Color
-    {
-        public byte R;
-        public byte G;
-        public byte B;
-        public byte A;
-    }
-
     public interface IVideo
     {
         IVideoFactory Factory { get; }

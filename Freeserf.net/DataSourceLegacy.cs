@@ -58,56 +58,53 @@ namespace Freeserf
             // Second byte is a signed horizontal sprite offset.
             // Third byte is a signed vertical offset.
 
-            fixed (byte* pointer = data.Data)
+            uint* animationBlock = (uint*)data.Data;
+
+            // Endianess convert from big endian.
+            for (uint i = 0; i < 200; ++i)
             {
-                uint* animationBlock = (uint*)pointer;
+                animationBlock[i] = Endian.Betoh(animationBlock[i]);
+            }
 
-                // Endianess convert from big endian.
-                for (uint i = 0; i < 200; ++i)
+            uint[] sizes = new uint[200];
+
+            for (uint i = 0; i < 200; ++i)
+            {
+                uint a = animationBlock[i];
+                uint next = data.Size;
+
+                for (int j = 0; j < 200; ++j)
                 {
-                    animationBlock[i] = Endian.Betoh(animationBlock[i]);
-                }
+                    uint b = animationBlock[j];
 
-                uint[] sizes = new uint[200];
-
-                for (uint i = 0; i < 200; ++i)
-                {
-                    uint a = animationBlock[i];
-                    uint next = data.Size;
-
-                    for (int j = 0; j < 200; ++j)
+                    if (b > a)
                     {
-                        uint b = animationBlock[j];
-
-                        if (b > a)
-                        {
-                            next = Math.Min(next, b);
-                        }
+                        next = Math.Min(next, b);
                     }
-
-                    sizes[i] = (next - a) / 3;
                 }
 
-                for (uint i = 0; i < 200; ++i)
+                sizes[i] = (next - a) / 3;
+            }
+
+            for (uint i = 0; i < 200; ++i)
+            {
+                uint offset = animationBlock[i];
+
+                AnimationPhase* anims = (AnimationPhase*)(byte*)animationBlock + offset;
+                List<Animation> animations = new List<Animation>();
+
+                for (uint j = 0; j < sizes[i]; ++j)
                 {
-                    uint offset = animationBlock[i];
+                    Animation a = new Animation();
 
-                    AnimationPhase* anims = (AnimationPhase*)(byte*)animationBlock + offset;
-                    List<Animation> animations = new List<Animation>();
+                    a.Sprite = anims[j].Sprite;
+                    a.X = anims[j].X;
+                    a.Y = anims[j].Y;
 
-                    for (uint j = 0; j < sizes[i]; ++j)
-                    {
-                        Animation a = new Animation();
-
-                        a.Sprite = anims[j].Sprite;
-                        a.X = anims[j].X;
-                        a.Y = anims[j].Y;
-
-                        animations.Add(a);
-                    }
-
-                    animationTable.Add(animations);
+                    animations.Add(a);
                 }
+
+                animationTable.Add(animations);
             }
 
             return true;

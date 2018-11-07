@@ -21,10 +21,7 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Freeserf.Render;
 
 namespace Freeserf
 {
@@ -1101,7 +1098,7 @@ namespace Freeserf
             SetRedraw();
         }
 
-        protected virtual bool HandleKeyPressed(char key, int modifier)
+        protected override bool HandleKeyPressed(char key, int modifier)
         {
             switch ((int)key)
             {

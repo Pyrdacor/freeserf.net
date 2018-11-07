@@ -46,7 +46,7 @@ namespace Freeserf
             state[1] = RandomInt();
             state[2] = RandomInt();
 
-            random();
+            Next();
         }
 
         public Random(ushort value)

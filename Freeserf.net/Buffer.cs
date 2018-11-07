@@ -384,7 +384,7 @@ namespace Freeserf
             return Pop(Size - offset);
         }
 
-        object PopInternal(int size)
+        object PopInternal(uint size)
         {
             uint offset = (uint)(read - Data);
 

@@ -127,9 +127,9 @@ namespace Freeserf.Event
             return RunHandler(Update, new EventArgs(Type.Update, 0, 0, 0, 0));
         }
 
-        protected bool NotifyDraw(Frame frame)
+        protected bool NotifyDraw(Render.IRenderLayer layer)
         {
-            return RunHandler(Draw, new EventArgs(Type.Draw, 0, 0, 0, 0, Button.None, frame));
+            return RunHandler(Draw, new EventArgs(Type.Draw, 0, 0, 0, 0, Button.None, layer));
         }
     }
 }
