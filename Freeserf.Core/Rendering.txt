@@ -1,0 +1,16 @@
+﻿In freeserf.net the rendering interface is flexible. It is based on the interfaces provides in subdirectory "Render".
+
+The general approach is to create a sprite or triangle for every object and set its Layer property to an existing render layer.
+
+There will be one render layer for each game layer. All these layers must be added to a render view.
+
+To move game objects the only thing to do is to change the X and Y properties of the sprite.
+To show or hide an object the property Visible of the sprite is used.
+
+The render view provides a virtual screen which is the render resolution. All render positions are relative to this
+virtual screen and independent of the real screen resolution.
+
+For input events that need a position (like mouse clicks) the render view provides the methods "ScreenToView" to
+convert screen coordinates to view coordinates.
+
+There will be an OpenTK renderer which will show the implementation of a renderer with modern OpenGL and shaders.
