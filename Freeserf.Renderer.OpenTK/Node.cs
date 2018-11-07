@@ -33,6 +33,7 @@ namespace Freeserf.Renderer.OpenTK
         bool visible = false;
         IRenderLayer layer = null;
         bool visibleRequest = false;
+        bool deleted = false;
 
         protected Node(Shape shape, int width, int height)
         {
@@ -45,9 +46,12 @@ namespace Freeserf.Renderer.OpenTK
 
         public bool Visible
         {
-            get => visible;
+            get => visible && !deleted;
             set
             {
+                if (deleted)
+                    return;
+
                 if (layer == null)
                 {
                     visibleRequest = value;
@@ -85,7 +89,7 @@ namespace Freeserf.Renderer.OpenTK
 
                 layer = value;
 
-                if (layer != null && visibleRequest)
+                if (layer != null && visibleRequest && !deleted)
                 {
                     visible = true;
                     visibleRequest = false;
@@ -97,7 +101,7 @@ namespace Freeserf.Renderer.OpenTK
                     visible = false;
                 }
 
-                if (layer != null && visible)
+                if (layer != null && visible && !deleted)
                     AddToLayer();
             }
         }
@@ -108,15 +112,25 @@ namespace Freeserf.Renderer.OpenTK
 
         protected virtual void AddToLayer()
         {
-            layer.AddNode(this);
+            if (!deleted)
+                layer.AddNode(this);
         }
 
         protected virtual void RemoveFromLayer()
         {
-            layer.RemoveNode(this);
+            if (!deleted)
+                layer.RemoveNode(this);
         }
 
         protected abstract void UpdatePosition();
+
+        public void Delete()
+        {
+            RemoveFromLayer();
+            deleted = true;
+            visible = false;
+            visibleRequest = false;            
+        }
 
         public int X
         {
@@ -127,7 +141,9 @@ namespace Freeserf.Renderer.OpenTK
                     return;
 
                 x = value;
-                UpdatePosition();
+
+                if (!deleted)
+                    UpdatePosition();
             }
         }
 
@@ -140,7 +156,9 @@ namespace Freeserf.Renderer.OpenTK
                     return;
 
                 y = value;
-                UpdatePosition();
+
+                if (!deleted)
+                    UpdatePosition();
             }
         }
 
