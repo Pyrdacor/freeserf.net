@@ -46,49 +46,55 @@ namespace Freeserf
         public const int DEFAULT_GAME_SPEED = 2;
         public const int GAME_MAX_PLAYER_COUNT = 4;
 
-        protected Map map;
+        Map map;
 
-        protected uint mapGoldMoraleFactor;
-        protected uint goldTotal;
+        uint mapGoldMoraleFactor;
+        uint goldTotal;
 
-        protected Players players;
-        protected Flags flags;
-        protected Inventories inventories;
-        protected Buildings buildings;
-        protected Serfs serfs;
+        Players players;
+        Flags flags;
+        Inventories inventories;
+        Buildings buildings;
+        Serfs serfs;
 
-        protected Random initMapRandom;
-        protected uint gameSpeedSave;
-        protected uint gameSpeed;
-        protected ushort tick;
-        protected uint lastTick;
-        protected uint constTick;
-        protected uint gameStatsCounter;
-        protected uint historyCounter;
-        protected Random random;
-        protected ushort nextIndex;
-        protected ushort flagSearchCounter;
+        // Rendering
+        Render.IRenderView renderView = null;
+        readonly Dictionary<Serf, Render.RenderSerf> renderSerfs = new Dictionary<Serf, Render.RenderSerf>();
+        readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
+        readonly Dictionary<Flag, Render.RenderFlag> renderFlags = new Dictionary<Flag, Render.RenderFlag>();
 
-        protected ushort updateMapLastTick;
-        protected short updateMapCounter;
-        protected MapPos updateMapInitialPos;
-        protected int tickDiff;
-        protected ushort maxNextIndex;
-        protected short updateMap16Loop;
-        protected int[] playerHistoryIndex = new int[4];
-        protected int[] playerHistoryCounter = new int[3];
-        protected int resourceHistoryIndex;
-        protected ushort field340;
-        protected ushort field342;
-        protected Inventory field344;
-        protected int gameType;
-        protected int tutorialLevel;
-        protected int missionLevel;
-        protected int mapPreserveBugs;
-        protected int playerScoreLeader;
+        Random initMapRandom;
+        uint gameSpeedSave;
+        uint gameSpeed;
+        ushort tick;
+        uint lastTick;
+        uint constTick;
+        uint gameStatsCounter;
+        uint historyCounter;
+        Random random;
+        ushort nextIndex;
+        ushort flagSearchCounter;
 
-        protected int knightMoraleCounter;
-        protected int inventoryScheduleCounter;
+        ushort updateMapLastTick;
+        short updateMapCounter;
+        MapPos updateMapInitialPos;
+        int tickDiff;
+        ushort maxNextIndex;
+        short updateMap16Loop;
+        int[] playerHistoryIndex = new int[4];
+        int[] playerHistoryCounter = new int[3];
+        int resourceHistoryIndex;
+        ushort field340;
+        ushort field342;
+        Inventory field344;
+        int gameType;
+        int tutorialLevel;
+        int missionLevel;
+        int mapPreserveBugs;
+        int playerScoreLeader;
+
+        int knightMoraleCounter;
+        int inventoryScheduleCounter;
 
         public Map Map => map;
         public ushort Tick => tick;
@@ -96,8 +102,10 @@ namespace Freeserf
         public uint MapGoldMoraleFactor => mapGoldMoraleFactor;
         public uint GoldTotal => goldTotal;
 
-        public Game()
+        public Game(Render.IRenderView renderView)
         {
+            this.renderView = renderView;
+
             random = new Random();
 
             players = new Players(this);
@@ -1539,31 +1547,46 @@ namespace Freeserf
 
         internal Serf CreateSerf(int index = -1)
         {
+            Serf serf;
+
             if (index == -1)
             {
-                return serfs.Allocate();
+                serf = serfs.Allocate();
             }
             else
             {
-                return serfs.GetOrInsert((uint)index);
+                serf = serfs.GetOrInsert((uint)index);
             }
+
+            renderSerfs.Add(serf, new Render.RenderSerf(serf, renderView.SpriteFactory));
+
+            return serf;
         }
 
         internal void DeleteSerf(Serf serf)
         {
+            renderSerfs[serf].Delete();
+            renderSerfs.Remove(serf);
+
             serfs.Erase(serf.Index);
         }
 
         internal Flag CreateFlag(int index = -1)
         {
+            Flag flag;
+
             if (index == -1)
             {
-                return flags.Allocate();
+                flag = flags.Allocate();
             }
             else
             {
-                return flags.GetOrInsert((uint)index);
+                flag = flags.GetOrInsert((uint)index);
             }
+
+            renderFlags.Add(flag, new Render.RenderFlag(flag, renderView.SpriteFactory));
+
+            return flag;
         }
 
         internal Inventory CreateInventory(int index = -1)
@@ -1590,19 +1613,29 @@ namespace Freeserf
 
         internal Building CreateBuilding(int index = -1)
         {
+            Building building;
+
             if (index == -1)
             {
-                return buildings.Allocate();
+                building = buildings.Allocate();
             }
             else
             {
-                return buildings.GetOrInsert((uint)index);
+                building = buildings.GetOrInsert((uint)index);
             }
+
+            renderBuildings.Add(building, new Render.RenderBuilding(building, renderView.SpriteFactory));
+
+            return building;
         }
 
         internal void DeleteBuilding(Building building)
         {
             map.SetObject(building.Position, Map.Object.None, 0);
+
+            renderBuildings[building].Delete();
+            renderBuildings.Remove(building);
+
             buildings.Erase(building.Index);
         }
 
@@ -2596,6 +2629,9 @@ namespace Freeserf
 
             /* Remove resources from flag. */
             flag.RemoveAllResources();
+
+            renderFlags[flag].Delete();
+            renderFlags.Remove(flag);
 
             flags.Erase(flag.Index);
 

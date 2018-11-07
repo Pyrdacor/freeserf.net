@@ -1,5 +1,5 @@
 ﻿/*
- * RenderSerf.cs - Handles serf rendering
+ * RenderBuilding.cs - Handles building rendering
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -21,16 +21,16 @@
 
 namespace Freeserf.Render
 {
-    public class RenderSerf
+    public class RenderBuilding
     {
-        Serf serf = null;
-        ISprite sprite = null;
+        Building building = null;
+        protected ISprite sprite = null;
 
-        public RenderSerf(Serf serf, ISpriteFactory spriteFactory)
+        public RenderBuilding(Building building, ISpriteFactory spriteFactory)
         {
-            this.serf = serf;
+            this.building = building;
 
-            Create(spriteFactory);
+             Create(spriteFactory);
         }
 
         void Create(ISpriteFactory spriteFactory)
@@ -43,19 +43,15 @@ namespace Freeserf.Render
         {
             sprite.Delete();
             sprite = null;
-            serf = null;
+            building = null;
         }
 
         public void Draw(Rect visibleMapArea)
         {
-            if (sprite == null || serf == null)
+            if (sprite == null || building == null)
                 return;
 
-            // TODO: if serf is outside the visible map area -> return
-            // TODO: set position and texture coords based on:
-            // serf.Position
-            // serf.Animation
-            // serf.Counter
+            // TODO
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿/*
- * RenderSerf.cs - Handles serf rendering
+ * RenderFlag.cs - Handles flag rendering
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -21,14 +21,14 @@
 
 namespace Freeserf.Render
 {
-    public class RenderSerf
+    public class RenderFlag
     {
-        Serf serf = null;
-        ISprite sprite = null;
+        Flag flag = null;
+        protected ISprite sprite = null;
 
-        public RenderSerf(Serf serf, ISpriteFactory spriteFactory)
+        public RenderFlag(Flag flag, ISpriteFactory spriteFactory)
         {
-            this.serf = serf;
+            this.flag = flag;
 
             Create(spriteFactory);
         }
@@ -43,19 +43,15 @@ namespace Freeserf.Render
         {
             sprite.Delete();
             sprite = null;
-            serf = null;
+            flag = null;
         }
 
         public void Draw(Rect visibleMapArea)
         {
-            if (sprite == null || serf == null)
+            if (sprite == null || flag == null)
                 return;
 
-            // TODO: if serf is outside the visible map area -> return
-            // TODO: set position and texture coords based on:
-            // serf.Position
-            // serf.Animation
-            // serf.Counter
+            // TODO
         }
     }
 }

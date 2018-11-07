@@ -1,5 +1,5 @@
 ﻿/*
- * RenderSerf.cs - Handles serf rendering
+ * RenderObject.cs - Handles map object rendering
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -21,14 +21,14 @@
 
 namespace Freeserf.Render
 {
-    public class RenderSerf
+    public class RenderObject
     {
-        Serf serf = null;
+        Map.Object objectType = Map.Object.None;
         ISprite sprite = null;
 
-        public RenderSerf(Serf serf, ISpriteFactory spriteFactory)
+        public RenderObject(Map.Object objectType, ISpriteFactory spriteFactory)
         {
-            this.serf = serf;
+            this.objectType = objectType;
 
             Create(spriteFactory);
         }
@@ -39,23 +39,38 @@ namespace Freeserf.Render
             // sprite = spriteFactory.Create(...);
         }
 
+        public void ChangeObjectType(Map.Object objectType)
+        {
+            if (objectType == this.objectType)
+                return; // nothing changed
+
+            if (this.objectType == Map.Object.None) // from None to something valid
+            {
+                // do we support this? can this even happen?
+            }
+
+            if (objectType == Map.Object.None) // from something valid to None
+            {
+                Delete();
+                return;
+            }
+
+            // TODO: set tex coords and size
+        }
+
         public void Delete()
         {
             sprite.Delete();
             sprite = null;
-            serf = null;
+            objectType = Map.Object.None;
         }
 
         public void Draw(Rect visibleMapArea)
         {
-            if (sprite == null || serf == null)
+            if (sprite == null || objectType == Map.Object.None)
                 return;
 
-            // TODO: if serf is outside the visible map area -> return
-            // TODO: set position and texture coords based on:
-            // serf.Position
-            // serf.Animation
-            // serf.Counter
+            // TODO
         }
     }
 }

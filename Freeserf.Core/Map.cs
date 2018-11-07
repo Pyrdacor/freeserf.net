@@ -614,11 +614,15 @@ namespace Freeserf
         ushort regions;
         UpdateState updateState;
         MapPos[] spiralPosPattern;
+        Render.IRenderView renderView;
+
+        List<Render.RenderMapTile> mapTiles = null; // TODO
+        // TODO: road segments
 
         /* Callback for map height changes */
         ChangeHandlers changeHandlers = new ChangeHandlers();
 
-        public Map(MapGeometry geometry)
+        public Map(MapGeometry geometry, Render.IRenderView renderView)
         {
             // Some code may still assume that map has at least size 3.
             if (geometry.Size < 3)
@@ -627,6 +631,7 @@ namespace Freeserf
             }
 
             Geometry = geometry;
+            this.renderView = renderView;
             spiralPosPattern = new MapPos[295];
 
             landscapeTiles = new List<LandscapeTile>((int)geometry.TileCount);
