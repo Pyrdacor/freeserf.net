@@ -30,18 +30,20 @@ namespace Freeserf
     // SerfsBehind
     // Objects(MapObjects, Flags, Buildings), Resources on Flags, Shadows of the object
     // Serfs
+    // Builds
     // Cursor
 
     public enum Layer
     {
         None = 0,
         Landscape = 1 << 0,
-        Paths = 1 << 1,
-        Objects = 1 << 2,
-        Serfs = 1 << 3,
-        Cursor = 1 << 4,
-        Grid = 1 << 5,
+        Grid = 1 << 1,
+        Paths = 1 << 2,
+        SerfsBehind = 1 << 3,
+        Objects = 1 << 4,
+        Serfs = 1 << 5,
         Builds = 1 << 6,
-        All = Landscape | Paths | Objects | Serfs | Cursor
+        Cursor = 1 << 7,        
+        All = Landscape | Paths | SerfsBehind | Objects | Serfs | Cursor
     }
 }
