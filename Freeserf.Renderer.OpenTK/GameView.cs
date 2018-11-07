@@ -195,6 +195,11 @@ namespace Freeserf.Renderer.OpenTK
             layers.Add(layer.Layer, layer as RenderLayer);
         }
 
+        public IRenderLayer GetLayer(Layer layer)
+        {
+            return layers[layer];
+        }
+
         public void Render()
         {
             context.SetRotation(rotation);

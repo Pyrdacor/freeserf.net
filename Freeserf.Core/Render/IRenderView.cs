@@ -25,6 +25,7 @@ namespace Freeserf.Render
     {
         void Render();
         void AddLayer(IRenderLayer layer);
+        IRenderLayer GetLayer(Layer layer);
         void Resize(int width, int height);
 
         Position ScreenToView(Position position);
