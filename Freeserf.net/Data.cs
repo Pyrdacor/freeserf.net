@@ -183,7 +183,7 @@ namespace Freeserf
 
                     if (source.Check())
                     {
-                        Log.Info.Write("data", $"Game data found in '{source->get_path()}'...");
+                        Log.Info.Write("data", $"Game data found in '{source.Path}'...");
 
                         if (source.Load())
                         {
