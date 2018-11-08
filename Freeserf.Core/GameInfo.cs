@@ -8,5 +8,15 @@ namespace Freeserf
 {
     public class GameInfo
     {
+        public GameInfo(Random random)
+        {
+
+        }
+
+        public Game Instantiate(Render.IRenderView renderView)
+        {
+            // TODO
+            return null;
+        }
     }
 }
