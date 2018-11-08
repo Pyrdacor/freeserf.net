@@ -6,13 +6,18 @@ namespace Freeserf.Render
 {
     public interface ITextureAtlas
     {
+        Texture Texture
+        {
+            get;
+        }
+
         Position GetOffset(uint spriteIndex);
     }
 
     public interface ITextureAtlasBuilder
     {
         void AddSprite(uint spriteIndex, Sprite sprite);
-        ITextureAtlas Create();
+        ITextureAtlas Create(int numMipMapLevels = 1);
     }
 
     public interface ITextureAtlasBuilderFactory

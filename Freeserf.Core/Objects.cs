@@ -55,10 +55,16 @@ namespace Freeserf
 
         public static T Create(Game game, uint index)
         {
-            if (IsType<GameObject>())
-                return (T)(IGameObject)new GameObject(game, index);
-
-            // TODO
+            if (IsType<Serf>())
+                return (T)(object)new Serf(game, index);
+            else if (IsType<Building>())
+                return (T)(object)new Building(game, index);
+            else if (IsType<Flag>())
+                return (T)(object)new Flag(game, index);
+            else if (IsType<Player>())
+                return (T)(object)new Player(game, index);
+            else if (IsType<Inventory>())
+                return (T)(object)new Inventory(game, index);
 
             return null;
         }

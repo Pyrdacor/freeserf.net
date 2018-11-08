@@ -36,6 +36,7 @@ namespace Freeserf.Renderer.OpenTK
 
         protected Texture(int width, int height)
         {
+            Index = GL.GenTexture();
             Width = width;
             Height = height;
         }
@@ -96,7 +97,7 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
-        void Create(PixelFormat format, byte[] pixelData, int numMipMapLevels)
+        protected void Create(PixelFormat format, byte[] pixelData, int numMipMapLevels)
         {
             if (format >= PixelFormat.RGB5A1)
             {

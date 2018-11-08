@@ -16,8 +16,8 @@ namespace Freeserf.Render
     // Note: Scrolling is only possible by full tile columns or rows
     public class RenderMap
     {
-        const int TILE_WIDTH = 32;
-        const int TILE_HEIGHT = 20;
+        internal const int TILE_WIDTH = 32;
+        internal const int TILE_HEIGHT = 20;
 
         static readonly int[] TileMask = new int[81]
         {
@@ -77,9 +77,13 @@ namespace Freeserf.Render
             for (uint i = 0; i < numTriangles; ++i)
                 triangles.Add(triangleFactory.Create(i % 2 == 0, TILE_WIDTH, TILE_HEIGHT, 0, 0));
 
-            // TODO: add the triangles to the map layer
-
             UpdatePosition();
+        }
+
+        public void AttachToRenderLayer(IRenderLayer renderLayer)
+        {
+            foreach (var triangle in triangles)
+                triangle.Layer = renderLayer;
         }
 
         public void Scroll(int x, int y)

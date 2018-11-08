@@ -609,13 +609,13 @@ namespace Freeserf
         }
 
         public MapGeometry Geometry { get; }
-        List<LandscapeTile> landscapeTiles;
-        List<GameTile> gameTiles;
+        LandscapeTile[] landscapeTiles;
+        GameTile[] gameTiles;
         ushort regions;
-        UpdateState updateState;
+        UpdateState updateState = new UpdateState();
         MapPos[] spiralPosPattern;
         Render.IRenderView renderView;
-        Render.RenderMap renderMap;
+        Render.RenderMap renderMap = null;
         // TODO: road segments
 
         /* Callback for map height changes */
@@ -631,12 +631,11 @@ namespace Freeserf
 
             Geometry = geometry;
             this.renderView = renderView;
-            // TODO
-            //renderMap = new Render.RenderMap(?, ?, this, renderView.TriangleFactory, ?);
+
             spiralPosPattern = new MapPos[295];
 
-            landscapeTiles = new List<LandscapeTile>((int)geometry.TileCount);
-            gameTiles = new List<GameTile>((int)geometry.TileCount);
+            landscapeTiles = new LandscapeTile[(int)geometry.TileCount];
+            gameTiles = new GameTile[(int)geometry.TileCount];
 
             updateState.LastTick = 0;
             updateState.Counter = 0;
@@ -647,6 +646,25 @@ namespace Freeserf
 
             InitSpiralPattern();
             InitSpiralPosPattern();
+        }
+
+        public void AttachToRenderLayer(Render.IRenderLayer renderLayer)
+        {
+            if (renderMap == null)
+            {
+                int virtualScreenWidth = renderView.VirtualScreen.Size.Width;
+                int virtualScreenHeight = renderView.VirtualScreen.Size.Height;
+                int tileWidth = Render.RenderMap.TILE_WIDTH;
+                int tileHeight = Render.RenderMap.TILE_HEIGHT;
+
+                renderMap = new Render.RenderMap(
+                    (uint)(virtualScreenWidth / tileWidth),
+                    (uint)(virtualScreenHeight / tileHeight),
+                    this, renderView.TriangleFactory,
+                    Render.TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape));
+            }
+
+            renderMap.AttachToRenderLayer(renderLayer);
         }
 
         public uint Size => Geometry.Size;

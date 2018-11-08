@@ -118,9 +118,12 @@ namespace Freeserf
 
             for (int j = 0; j < FLAG_MAX_RES_COUNT; ++j)
             {
-                slot[j].Type = Resource.Type.None;
-                slot[j].Dest = 0u;
-                slot[j].Dir = Direction.None;
+                slot[j] = new ResourceSlot()
+                {
+                    Type = Resource.Type.None,
+                    Dest = 0u,
+                    Dir = Direction.None
+                };
             }
 
             buildingFlags = 0u;

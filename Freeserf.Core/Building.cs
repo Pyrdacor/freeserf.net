@@ -167,11 +167,14 @@ namespace Freeserf
         {
             for (int j = 0; j < MaxStock; ++j)
             {
-                stock[j].Type = Resource.Type.None;
-                stock[j].Priority = 0;
-                stock[j].Available = 0;
-                stock[j].Requested = 0;
-                stock[j].Maximum = 0;
+                stock[j] = new Stock()
+                {
+                    Type = Resource.Type.None,
+                    Priority = 0,
+                    Available = 0,
+                    Requested = 0,
+                    Maximum = 0
+                };
             }
         }
 

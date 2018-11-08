@@ -22,9 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -46,32 +43,39 @@ namespace Freeserf
         public abstract Map.Object GetObject(MapPos pos);
         public abstract Map.Minerals GetResourceType(MapPos pos);
         public abstract int GetResourceAmount(MapPos pos);
-        public abstract List<Map.LandscapeTile> GetLandscape();
+        public abstract Map.LandscapeTile[] GetLandscape();
     }
 
     /* Classic map generator as in original game. */
     public class ClassicMapGenerator : MapGenerator
     {
-        const uint default_max_lake_area = 14;
-        const uint default_water_level = 20;
-        const int default_terrain_spikyness = 0x9999;
+        const uint DefaultMaxLakeArea = 14;
+        const uint DefaultWaterLevel = 20;
+        const int DefaultTerrainSpikyness = 0x9999;
 
         public ClassicMapGenerator(Map map, Random random)
         {
-            tiles = new List<Map.LandscapeTile>((int)map.Geometry.TileCount);
-            tags = new List<int>((int)map.Geometry.TileCount);
+            int tileCount = (int)map.Geometry.TileCount;
+
+            tiles = new Map.LandscapeTile[tileCount];
+            tags = new int[tileCount];
+
+            for (int i = 0; i < tileCount; ++i)
+                tiles[i] = new Map.LandscapeTile();
+
+            this.map = map;
         }
 
-        public void Init(HeightGenerator height_generator, bool preserve_bugs,
-            uint max_lake_area = default_max_lake_area,
-            uint water_level = default_water_level,
-            int terrain_spikyness = default_terrain_spikyness)
+        public void Init(HeightGenerator heightGenerator, bool preserveBugs,
+            uint maxLakeArea = DefaultMaxLakeArea,
+            uint waterLevel = DefaultWaterLevel,
+            int terrainSpikyness = DefaultTerrainSpikyness)
         {
-            this.height_generator = height_generator;
-            this.preserveBugs = preserve_bugs;
-            this.maxLakeArea = max_lake_area;
-            this.waterLevel = water_level;
-            this.terrainSpikyness = terrain_spikyness;
+            this.heightGenerator = heightGenerator;
+            this.preserveBugs = preserveBugs;
+            this.maxLakeArea = maxLakeArea;
+            this.waterLevel = waterLevel;
+            this.terrainSpikyness = terrainSpikyness;
         }
 
         public override void Generate()
@@ -83,7 +87,7 @@ namespace Freeserf
 
             InitHeightsSquares();
 
-            switch (height_generator)
+            switch (heightGenerator)
             {
                 case HeightGenerator.Midpoints:
                     InitHeightsMidpoints(); /* Midpoint displacement algorithm */
@@ -123,7 +127,7 @@ namespace Freeserf
             return tiles[(int)pos].Height;
         }
 
-        public override List<Map.LandscapeTile> GetLandscape()
+        public override Map.LandscapeTile[] GetLandscape()
         {
             return tiles;
         }
@@ -154,16 +158,16 @@ namespace Freeserf
         }
 
         Map map;
-        Random rnd;
+        Random rnd = new Random();
 
-        List<Map.LandscapeTile> tiles;
-        List<int> tags;
-        HeightGenerator height_generator;
+        readonly Map.LandscapeTile[] tiles;
+        readonly int[] tags;
+        HeightGenerator heightGenerator;
         bool preserveBugs;
 
-        uint waterLevel = default_water_level;
-        uint maxLakeArea = default_max_lake_area;
-        int terrainSpikyness = default_terrain_spikyness;
+        uint waterLevel = DefaultWaterLevel;
+        uint maxLakeArea = DefaultMaxLakeArea;
+        int terrainSpikyness = DefaultTerrainSpikyness;
 
         ushort RandomInt()
         {

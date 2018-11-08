@@ -17,7 +17,6 @@
     <Compile Remove="NodeTransformContext.cs" />
     <Compile Remove="Renderer.cs" />
     <Compile Remove="Sprite - Kopie.cs" />
-    <Compile Remove="TextureAtlas.cs" />
     <Compile Remove="TextureShader - Kopie.cs" />
     <Compile Remove="VertexArrayObject - Kopie.cs" />
     <Compile Remove="VertexBufferObject.cs" />

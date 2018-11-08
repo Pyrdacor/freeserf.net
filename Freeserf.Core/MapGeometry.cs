@@ -277,7 +277,11 @@ namespace Freeserf
             var end = End() as Iterator<Direction>;
 
             while (iter != end)
-                yield return (iter++).Current;
+            {
+                yield return iter.Current;
+
+                ++iter;
+            }
         }
     }
 
@@ -336,7 +340,11 @@ namespace Freeserf
             var end = End() as Iterator<Direction>;
 
             while (iter != end)
-                yield return (iter++).Current;
+            {
+                yield return iter.Current;
+
+                ++iter;
+            }
         }
     }
 
@@ -577,7 +585,11 @@ namespace Freeserf
             var end = End() as Iterator<MapPos>;
 
             while (iter != end)
-                yield return (iter++).Current;
+            {
+                yield return iter.Current;
+
+                ++iter;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

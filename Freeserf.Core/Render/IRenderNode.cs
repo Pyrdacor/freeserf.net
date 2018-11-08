@@ -30,7 +30,7 @@ namespace Freeserf.Render
         float ScaleX { get; set; }
         float ScaleY { get; set; }
         bool Visible { get; set; }
-        IRenderLayer Layer { get; }
+        IRenderLayer Layer { get; set; }
 
         void Delete();
     }
