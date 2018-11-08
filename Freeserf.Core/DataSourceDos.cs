@@ -541,9 +541,10 @@ namespace Freeserf
 
             try
             {
-                ConvertorSFX2WAV convertor = new ConvertorSFX2WAV(data, -32);
+                /*ConvertorSFX2WAV convertor = new ConvertorSFX2WAV(data, -32);
 
-                return convertor.Convert();
+                return convertor.Convert();*/
+                return null;
             }
             catch
             {
@@ -564,9 +565,10 @@ namespace Freeserf
 
             try
             {
-                ConvertorXMI2MID convertor = new ConvertorXMI2MID(data, -32);
+                /*ConvertorXMI2MID convertor = new ConvertorXMI2MID(data, -32);
 
-                return convertor.Convert();
+                return convertor.Convert();*/
+                return null;
             }
             catch
             {

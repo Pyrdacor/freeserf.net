@@ -49,9 +49,28 @@ namespace Freeserf
 
         public static T ByteSwap<T>(T x)
         {
+            if (TypeSize<T>.Size == 1)
+                return x;
+
             var ul = (ulong)Convert.ChangeType(x, typeof(ulong));
 
-            return (T)Convert.ChangeType(SwapBytes(ul), typeof(T));
+            ul = SwapBytes(ul);
+
+            switch (TypeSize<T>.Size)
+            {
+                case 2:
+                    ul >>= 48;
+                    break;
+                case 4:
+                    ul >>= 32;
+                    break;
+                case 8:
+                    break;
+                default:
+                    throw new ExceptionFreeserf("Data type");
+            }
+
+            return (T)Convert.ChangeType(ul, typeof(T));
         }
 
         public static T Betoh<T>(T x)

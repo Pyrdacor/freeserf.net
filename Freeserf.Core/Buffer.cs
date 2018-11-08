@@ -53,6 +53,7 @@ namespace Freeserf
             var size = TypeSize<T>.Size * count;
 
             var stream = new BufferStream(size);
+            stream.size = size;
             dynamic v = value;
 
             fixed (byte* pointer = stream.data)
@@ -176,11 +177,23 @@ namespace Freeserf
 
         internal byte[] GetData()
         {
+            if (this.data != null)
+                return this.data;
+
+            byte[] data = new byte[size];
+
+            fixed (byte* ptr = data)
+            {
+                System.Buffer.MemoryCopy(start, ptr, data.Length, data.Length);
+            }
+
             return data;
         }
 
         public void CopyTo(BufferStream stream)
         {
+            int offset = 0;
+
             if (stream.data == null)
             {
                 // TODO: should we add data from base stream before the copy action? is there a use case?
@@ -194,18 +207,21 @@ namespace Freeserf
                 }
             }
             else
+            {
+                offset = (int)stream.size;
                 stream.size += size;
+            }
 
             // Note: If stream.data already exists we might want to check for size exceeding here.
             // But as the Buffer class handles this, we omit it here.
 
             if (data != null)
-                System.Buffer.BlockCopy(data, 0, stream.data, 0, (int)size);
+                System.Buffer.BlockCopy(data, 0, stream.data, offset, (int)size);
             else
             {
                 byte* current = start;
                 byte* end = start + size;
-                byte* streamCurrent = stream.start;
+                byte* streamCurrent = stream.start + offset;
 
                 while (current != end)
                     *streamCurrent++ = *current++;
@@ -351,7 +367,9 @@ namespace Freeserf
 
         public virtual byte[] Unfix()
         {
-            byte[] result = data.GetData();
+            byte[] result = new byte[data.Size];
+
+            System.Buffer.BlockCopy(data.GetData(), 0, result, 0, result.Length);
 
             data = null;
 
@@ -389,14 +407,14 @@ namespace Freeserf
             return Pop(Size - offset);
         }
 
-        object PopInternal(uint size)
+        ulong PopInternal(uint size)
         {
             uint offset = (uint)(read - Data);
 
             if (offset + size > Size)
                 throw new IndexOutOfRangeException("Read beyond buffer size.");
 
-            object result = null;
+            ulong result = 0;
 
             switch (size)
             {
@@ -423,7 +441,9 @@ namespace Freeserf
 
         public T Pop<T>() where T : struct
         {
-            T value = (T)Convert.ChangeType(PopInternal(TypeSize<T>.Size), typeof(T));
+            ulong val = PopInternal(TypeSize<T>.Size);
+
+            T value = (T)Convert.ChangeType(new TypeConverter(val), typeof(T));
 
             return (endianess == Endianess.Big) ? Endian.Betoh(value) : Endian.Letoh(value);
         }
