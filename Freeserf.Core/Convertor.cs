@@ -6,7 +6,7 @@ namespace Freeserf
 {
     internal abstract class Convertor
     {
-        Buffer buffer;
+        protected Buffer buffer;
 
         public Convertor(Buffer buffer)
         {
