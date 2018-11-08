@@ -19,7 +19,7 @@ namespace Freeserf.Render
         internal const int TILE_WIDTH = 32;
         internal const int TILE_HEIGHT = 20;
 
-        static readonly int[] TileMask = new int[81]
+        static readonly int[] TileMaskUp = new int[81]
         {
             0,  1,  3,  6,  7, -1, -1, -1, -1,
             0,  1,  2,  5,  6,  7, -1, -1, -1,
@@ -30,6 +30,19 @@ namespace Freeserf.Render
             -1, -1,  0,  1,  2,  4,  5,  6,  7,
             -1, -1, -1,  0,  1,  2,  5,  6,  7,
             -1, -1, -1, -1,  0,  1,  4,  6,  7
+        };
+
+        static readonly int[] TileMaskDown = new int[81]
+        {
+            0,  0,  0,  0,  0, -1, -1, -1, -1,
+            1,  1,  1,  1,  1,  0, -1, -1, -1,
+            3,  2,  2,  2,  2,  1,  0, -1, -1,
+            6,  5,  3,  3,  3,  2,  1,  0, -1,
+            7,  6,  5,  4,  4,  3,  2,  1,  0,
+            -1,  7,  6,  5,  4,  4,  4,  2,  1,
+            -1, -1,  7,  6,  5,  5,  5,  5,  4,
+            -1, -1, -1,  7,  6,  6,  6,  6,  6,
+            -1, -1, -1, -1,  7,  7,  7,  7,  7
         };
 
         static readonly uint[] TileSprites = new uint[]
@@ -148,6 +161,7 @@ namespace Freeserf.Render
                         MapPos left;
                         MapPos right;
                         MapPos m;
+                        int[] tileMask;
 
                         if (i == 0) // up
                         {
@@ -155,6 +169,7 @@ namespace Freeserf.Render
                             right = map.MoveRight(left);
                             m = pos;
                             terrain = map.TypeUp(pos);
+                            tileMask = TileMaskUp;
                         }
                         else // down
                         {
@@ -162,6 +177,7 @@ namespace Freeserf.Render
                             right = map.MoveRight(left);
                             m = map.MoveDown(pos);
                             terrain = map.TypeDown(pos);
+                            tileMask = TileMaskDown;
                         }
 
                         int hLeft = (int)map.GetHeight(left);
@@ -177,14 +193,19 @@ namespace Freeserf.Render
                             throw new ExceptionFreeserf("Failed to draw triangle (2).");
                         }
 
-                        int mask = 4 + hM - hLeft + 9 * (4 + hM - hRight);
+                        int mask;
 
-                        if (TileMask[mask] < 0)
+                        if (i == 0) // up
+                            mask = 4 + hM - hLeft + 9 * (4 + hM - hRight);
+                        else // down
+                            mask = 4 + hLeft - hM + 9 * (4 + hRight - hM);
+
+                        if (tileMask[mask] < 0)
                         {
                             throw new ExceptionFreeserf("Failed to draw triangle (3).");
                         }
 
-                        int spriteIndex = (int)terrain + TileMask[mask];
+                        int spriteIndex = (int)terrain + tileMask[mask];
                         uint sprite = TileSprites[spriteIndex];
 
                         triangles[offset * 2 + i].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
