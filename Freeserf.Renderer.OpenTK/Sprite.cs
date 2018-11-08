@@ -30,14 +30,27 @@ namespace Freeserf.Renderer.OpenTK
     public class Sprite : Node, ISprite
     {
         protected int drawIndex = -1;
+        Position textureAtlasOffset = null;
 
         public Sprite(int width, int height, int textureAtlasX, int textureAtlasY)
             : base(Shape.Rect, width, height)
         {
-            TextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
+            textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
         }
 
-        public Position TextureAtlasOffset { get; } = null;
+        public Position TextureAtlasOffset
+        {
+            get => textureAtlasOffset;
+            set
+            {
+                if (textureAtlasOffset == value)
+                    return;
+
+                textureAtlasOffset = value;
+
+                UpdateTextureAtlasOffset();
+            }
+        }
 
         protected override void AddToLayer()
         {
@@ -58,6 +71,12 @@ namespace Freeserf.Renderer.OpenTK
         {
             if (drawIndex != -1) // -1 means not attached to a layer
                 (Layer as RenderLayer).UpdatePosition(drawIndex, this);
+        }
+
+        protected virtual void UpdateTextureAtlasOffset()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateTextureAtlasOffset(drawIndex, this);
         }
     }
 

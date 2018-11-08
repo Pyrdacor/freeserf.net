@@ -615,8 +615,7 @@ namespace Freeserf
         UpdateState updateState;
         MapPos[] spiralPosPattern;
         Render.IRenderView renderView;
-
-        List<Render.RenderMapTile> mapTiles = null; // TODO
+        Render.RenderMap renderMap;
         // TODO: road segments
 
         /* Callback for map height changes */
@@ -632,6 +631,8 @@ namespace Freeserf
 
             Geometry = geometry;
             this.renderView = renderView;
+            // TODO
+            //renderMap = new Render.RenderMap(?, ?, this, renderView.TriangleFactory, ?);
             spiralPosPattern = new MapPos[295];
 
             landscapeTiles = new List<LandscapeTile>((int)geometry.TileCount);

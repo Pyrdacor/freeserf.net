@@ -70,6 +70,11 @@ namespace Freeserf.Renderer.OpenTK
             positionBuffer.Update(index, (short)sprite.X, (short)sprite.Y);
         }
 
+        public void UpdateTextureAtlasOffset(int index, Sprite sprite)
+        {
+            textureAtlasOffsetBuffer.Update(index, (short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
+        }
+
         public void FreeDrawIndex(int index)
         {
             int newSize = -1;

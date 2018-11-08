@@ -27,7 +27,6 @@ using Freeserf.Render;
 namespace Freeserf.Renderer.OpenTK
 {
     // TODO: scaling
-    // TODO: set tex coords for shader
     public class RenderLayer : IRenderLayer
     {
         public Layer Layer { get; } = Layer.None;
@@ -91,6 +90,11 @@ namespace Freeserf.Renderer.OpenTK
             renderBuffer.UpdatePosition(index, sprite);
         }
 
+        public void UpdateTextureAtlasOffset(int index, Sprite sprite)
+        {
+            renderBuffer.UpdateTextureAtlasOffset(index, sprite);
+        }
+
         public void AddNode(IRenderNode node)
         {
             if (!(node is Node))
@@ -120,61 +124,6 @@ namespace Freeserf.Renderer.OpenTK
         }
     }
 
-    public class MapRenderLayer : IRenderLayer
-    {
-        readonly RenderLayer triangleUpLayer = null;
-        readonly RenderLayer triangleDownLayer = null;
-
-        // TODO
-        public Color ColorKey
-        {
-            get;
-            set;
-        } = null;
-
-        public MapRenderLayer(Layer layer, Texture texture, Color colorKey = null)
-        {
-            triangleUpLayer = new RenderLayer(layer, Shape.TriangleUp, texture, colorKey);
-            triangleDownLayer = new RenderLayer(layer, Shape.TriangleDown, texture, colorKey);
-
-            Layer = layer;
-        }
-
-        public Layer Layer { get; }
-
-        public void AddNode(IRenderNode node)
-        {
-            if (!(node is Triangle))
-                throw new InvalidCastException("The given render node is not valid for this renderer.");
-
-            var triangle = node as Triangle;
-
-            if (triangle.Up)
-                triangleUpLayer.AddNode(triangle);
-            else
-                triangleDownLayer.AddNode(triangle);
-        }
-
-        public void RemoveNode(IRenderNode node)
-        {
-            if (!(node is Triangle))
-                throw new InvalidCastException("The given render node is not valid for this renderer.");
-
-            var triangle = node as Triangle;
-
-            if (triangle.Up)
-                triangleUpLayer.RemoveNode(triangle);
-            else
-                triangleDownLayer.RemoveNode(triangle);
-        }
-
-        public void Render()
-        {
-            triangleUpLayer.Render();
-            triangleDownLayer.Render();
-        }
-    }
-
     public class RenderLayerFactory : IRenderLayerFactory
     {
         public IRenderLayer Create(Layer layer, Render.Texture texture, Color colorKey = null)
@@ -185,7 +134,7 @@ namespace Freeserf.Renderer.OpenTK
             switch (layer)
             {
                 case Layer.Landscape:
-                    return new MapRenderLayer(layer, texture as Texture, colorKey);
+                    return new RenderLayer(layer, Shape.Triangle, texture as Texture, colorKey);
                 case Layer.All:
                 case Layer.None:
                     throw new InvalidOperationException($"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");

@@ -26,6 +26,7 @@ namespace Freeserf.Render
         Position TextureAtlasOffset
         {
             get;
+            set;
         }
     }
 
