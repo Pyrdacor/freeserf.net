@@ -455,7 +455,7 @@ namespace Freeserf
 
         public virtual Sprite GetSprite(Data.Resource resource, uint index, Sprite.Color color)
         {
-            if (index >= Data.GetAssetCount(resource))
+            if (index >= Data.GetResourceCount(resource))
             {
                 return null;
             }

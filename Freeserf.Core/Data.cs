@@ -208,18 +208,18 @@ namespace Freeserf
             return dataSource;
         }
 
-        public static Type GetAssetType(Resource asset)
+        public static Type GetResourceType(Resource resource)
         {
-            return dataResources[(int)asset].Type;
+            return dataResources[(int)resource].Type;
         }
-        public static uint GetAssetCount(Resource asset)
+        public static uint GetResourceCount(Resource resource)
         {
-            return dataResources[(int)asset].Count;
+            return dataResources[(int)resource].Count;
         }
 
-        public static string GetAssetName(Resource asset)
+        public static string GetResourceName(Resource resource)
         {
-            return dataResources[(int)asset].Name;
+            return dataResources[(int)resource].Name;
         }
 
         // Return standard game data search paths for current platform.

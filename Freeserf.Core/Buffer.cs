@@ -174,6 +174,11 @@ namespace Freeserf
             return start;
         }
 
+        internal byte[] GetData()
+        {
+            return data;
+        }
+
         public void CopyTo(BufferStream stream)
         {
             if (stream.data == null)
@@ -344,9 +349,9 @@ namespace Freeserf
         public uint Size => (data == null) ? 0 : data.Size;
         public byte* Data => (data == null) ? null : data.GetPointer();
 
-        public virtual byte* Unfix()
+        public virtual byte[] Unfix()
         {
-            byte* result = data.GetPointer();
+            byte[] result = data.GetData();
 
             data = null;
 
@@ -448,6 +453,24 @@ namespace Freeserf
             return new string((sbyte*)read, 0, num);
         }
 
+        unsafe public byte[] ReinterpretAsArray(uint length)
+        {
+            byte* end = Data + Size;
+            uint remaining = (uint)(end - read);
+
+            if (remaining < length)
+                throw new ExceptionFreeserf("Buffer is not large enough.");
+
+            byte[] array = new byte[length];
+
+            fixed (byte* ptr = array)
+            {
+                System.Buffer.MemoryCopy(read, ptr, length, length);
+            }
+
+            return array;
+        }
+
         protected void CopyTo(Buffer other)
         {
             if (data == null)
@@ -541,7 +564,7 @@ namespace Freeserf
             this.reserved = reserved;
         }
 
-        public override unsafe byte* Unfix()
+        public override unsafe byte[] Unfix()
         {
             reserved = 0;
 
