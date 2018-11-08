@@ -72,14 +72,14 @@ namespace Freeserf
             return currentGame;
         }
 
-        public bool StartRandomGame()
+        public bool StartRandomGame(Render.IRenderView renderView)
         {
-            return StartGame(new GameInfo(new Random()));
+            return StartGame(new GameInfo(new Random()), renderView);
         }
 
-        public bool StartGame(GameInfo gameInfo)
+        public bool StartGame(GameInfo gameInfo, Render.IRenderView renderView)
         {
-            Game newGame = gameInfo.Instantiate();
+            Game newGame = gameInfo.Instantiate(renderView);
 
             if (newGame == null)
             {
@@ -91,9 +91,10 @@ namespace Freeserf
             return true;
         }
 
-        public bool LoadGame(string path)
+        public bool LoadGame(string path, Render.IRenderView renderView)
         {
-            Game newGame = new Game();
+            // TODO
+            Game newGame = new Game(renderView);
 
             if (!GameStore.Instance.Load(path, newGame))
             {

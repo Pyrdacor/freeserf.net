@@ -216,7 +216,7 @@ namespace Freeserf
         {
             initMapRandom = random;
 
-            map = new Map(new MapGeometry(mapSize));
+            map = new Map(new MapGeometry(mapSize), renderView);
             var generator = new ClassicMissionMapGenerator(map, initMapRandom);
 
             generator.Init();
