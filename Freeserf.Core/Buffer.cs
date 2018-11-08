@@ -433,6 +433,21 @@ namespace Freeserf
             return GetSubBuffer(offset, Size - offset);
         }
 
+        public override string ToString()
+        {
+            byte* end = Data + Size;
+
+            return new string((sbyte*)read, 0, (int)(end - read));
+        }
+
+        public string ToString(int length)
+        {
+            byte* end = Data + Size;
+            int num = Math.Min(length, (int)(end - read));
+
+            return new string((sbyte*)read, 0, num);
+        }
+
         protected void CopyTo(Buffer other)
         {
             if (data == null)
