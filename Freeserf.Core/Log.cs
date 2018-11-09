@@ -115,7 +115,6 @@ namespace Freeserf
             protected Level level;
             protected string prefix;
             protected System.IO.Stream stream;
-            protected static System.IO.Stream dummy = null;
 
             public Logger(Level level, string prefix)
             {
@@ -128,6 +127,9 @@ namespace Freeserf
             public virtual void Write(string subsystem, string text)
             {
                 var stream = this[subsystem];
+
+                if (stream == null)
+                    return;
 
                 stream += text;
             }
@@ -151,7 +153,7 @@ namespace Freeserf
             {
                 if (level < Log.level)
                 {
-                    stream = dummy;
+                    stream = null;
                 }
                 else
                 {
