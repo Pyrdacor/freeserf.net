@@ -32,12 +32,6 @@ namespace Freeserf.Renderer.OpenTK
         protected int drawIndex = -1;
         Position textureAtlasOffset = null;
 
-        protected Sprite(Shape shape, int width, int height, int textureAtlasX, int textureAtlasY)
-            : base(shape, width, height)
-        {
-            textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
-        }
-
         public Sprite(int width, int height, int textureAtlasX, int textureAtlasY)
             : base(Shape.Rect, width, height)
         {
@@ -52,7 +46,7 @@ namespace Freeserf.Renderer.OpenTK
                 if (textureAtlasOffset == value)
                     return;
 
-                textureAtlasOffset = value;
+                textureAtlasOffset = new Position(value);
 
                 UpdateTextureAtlasOffset();
             }

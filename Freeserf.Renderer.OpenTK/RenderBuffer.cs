@@ -72,7 +72,7 @@ namespace Freeserf.Renderer.OpenTK
             vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, textureAtlasOffsetBuffer);
         }
 
-        public int GetDrawIndex(Sprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public int GetDrawIndex(Render.ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
             int index = positionBuffer.Add((short)sprite.X, (short)sprite.Y);
             textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
@@ -97,17 +97,28 @@ namespace Freeserf.Renderer.OpenTK
             return index;
         }
 
-        public void UpdatePosition(int index, Sprite sprite)
+        public void UpdatePosition(int index, Render.ISprite sprite)
         {
             positionBuffer.Update(index, (short)sprite.X, (short)sprite.Y);
+            positionBuffer.Update(index + 1, (short)(sprite.X + sprite.Width), (short)sprite.Y);
+            positionBuffer.Update(index + 2, (short)(sprite.X + sprite.Width), (short)(sprite.Y + sprite.Height));
+            positionBuffer.Update(index + 3, (short)sprite.X, (short)(sprite.Y + sprite.Height));
         }
 
-        public void UpdateTextureAtlasOffset(int index, Sprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public void UpdateTextureAtlasOffset(int index, Render.ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
             textureAtlasOffsetBuffer.Update(index, (short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
+            textureAtlasOffsetBuffer.Update(index + 1, (short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y);
+            textureAtlasOffsetBuffer.Update(index + 2, (short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
+            textureAtlasOffsetBuffer.Update(index + 3, (short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
 
             if (Shape == Shape.Triangle && maskSpriteTextureAtlasOffset != null)
-                maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y);
+            {
+                maskTextureAtlasOffsetBuffer.Update(index, (short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y);
+                maskTextureAtlasOffsetBuffer.Update(index + 1, (short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)maskSpriteTextureAtlasOffset.Y);
+                maskTextureAtlasOffsetBuffer.Update(index + 2, (short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
+                maskTextureAtlasOffsetBuffer.Update(index + 3, (short)maskSpriteTextureAtlasOffset.X, (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
+            }
         }
 
         public void FreeDrawIndex(int index)

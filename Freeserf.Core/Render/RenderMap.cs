@@ -267,7 +267,7 @@ namespace Freeserf.Render
 
                         triangles[index].Y = (int)(r * TILE_HEIGHT - 4 * m) - 2 * TILE_HEIGHT;
                         triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
-                        triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset(33/*(uint)maskSprites[mask]*/);
+                        triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)maskSprites[mask]);
 
                         ++index;
                     }

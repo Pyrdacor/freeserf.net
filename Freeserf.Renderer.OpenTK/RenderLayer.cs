@@ -75,7 +75,7 @@ namespace Freeserf.Renderer.OpenTK
             renderBuffer.Render();
          }
 
-        public int GetDrawIndex(Sprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public int GetDrawIndex(ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
             return renderBuffer.GetDrawIndex(sprite, maskSpriteTextureAtlasOffset);
         }
@@ -85,12 +85,12 @@ namespace Freeserf.Renderer.OpenTK
             renderBuffer.FreeDrawIndex(index);
         }
 
-        public void UpdatePosition(int index, Sprite sprite)
+        public void UpdatePosition(int index, ISprite sprite)
         {
             renderBuffer.UpdatePosition(index, sprite);
         }
 
-        public void UpdateTextureAtlasOffset(int index, Sprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public void UpdateTextureAtlasOffset(int index, ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
             renderBuffer.UpdateTextureAtlasOffset(index, sprite, maskSpriteTextureAtlasOffset);
         }

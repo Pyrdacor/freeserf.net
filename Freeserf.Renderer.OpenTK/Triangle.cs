@@ -23,18 +23,35 @@ using Freeserf.Render;
 
 namespace Freeserf.Renderer.OpenTK
 {
-    public class Triangle : Sprite, ITriangle
+    public class Triangle : Node, ITriangle
     {
+        protected int drawIndex = -1;
+        Position textureAtlasOffset = null;
         Position maskTextureAtlasOffset = null;
 
         public Triangle(bool up, int width, int height, int textureAtlasX, int textureAtlasY)
-            : base(Shape.Triangle, width, height, textureAtlasX, textureAtlasY)
+            : base(Shape.Triangle, width, height)
         {
             Up = up;
+            textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
             maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
         }
 
         public bool Up { get; }
+
+        public Position TextureAtlasOffset
+        {
+            get => textureAtlasOffset;
+            set
+            {
+                if (textureAtlasOffset == value)
+                    return;
+
+                textureAtlasOffset = new Position(value);
+
+                UpdateTextureAtlasOffset();
+            }
+        }
 
         public Position MaskTextureAtlasOffset
         {
@@ -44,7 +61,7 @@ namespace Freeserf.Renderer.OpenTK
                 if (maskTextureAtlasOffset == value)
                     return;
 
-                maskTextureAtlasOffset = value;
+                maskTextureAtlasOffset = new Position(value);
 
                 UpdateTextureAtlasOffset();
             }
@@ -65,7 +82,13 @@ namespace Freeserf.Renderer.OpenTK
             drawIndex = -1;
         }
 
-        protected override void UpdateTextureAtlasOffset()
+        protected override void UpdatePosition()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdatePosition(drawIndex, this);
+        }
+
+        protected virtual void UpdateTextureAtlasOffset()
         {
             if (drawIndex != -1) // -1 means not attached to a layer
                 (Layer as RenderLayer).UpdateTextureAtlasOffset(drawIndex, this, maskTextureAtlasOffset);
