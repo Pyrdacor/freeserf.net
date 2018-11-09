@@ -67,7 +67,7 @@ namespace Freeserf
 
             game.Init(3, new Random("3762665523225478")); // mission 1
 
-            game.Map.AttachToRenderLayer(layerLandscape);
+            game.Map.AttachToRenderLayer(layerLandscape, dosData);
 
             FrameTimer.Start();
         }

@@ -18,6 +18,8 @@ namespace Freeserf.Render
         internal const int TILE_WIDTH = 32;
         internal const int TILE_HEIGHT = 20;
         internal const int TILE_RENDER_MAX_HEIGHT = 41; // the heighest mask is 41 pixels height
+        const int MAX_OVERLAP_Y = 4 * 31; // the last tile may have a negative offset of this
+        const int ADDITIONAL_Y_TILES = (MAX_OVERLAP_Y + TILE_HEIGHT - 1) / TILE_HEIGHT;
 
         static readonly int[] TileMaskUp = new int[81]
         {
@@ -93,6 +95,8 @@ namespace Freeserf.Render
              -1,  -1,  -1, 144, 145, 146, 147, 148, 149,
              -1,  -1,  -1,  -1, 150, 151, 152, 153, 154
         };
+
+        readonly Dictionary<uint, Position> maskOffsets = new Dictionary<MapPos, Position>(81 + 81);
         
         uint x = 0; // in columns
         uint y = 0; // in rows
@@ -103,7 +107,8 @@ namespace Freeserf.Render
         readonly List<ITriangle> triangles = null;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
-            ITriangleFactory triangleFactory, ITextureAtlas textureAtlas)
+            ITriangleFactory triangleFactory, ITextureAtlas textureAtlas,
+            DataSource dataSource)
         {
             x = 0;
             y = 0;
@@ -112,7 +117,23 @@ namespace Freeserf.Render
             this.map = map;
             this.textureAtlas = textureAtlas;
 
-            uint numTriangles = (numColumns + 1) * (numRows + 4) * 2u;
+            // store map sprite offsets
+            var color = new Sprite.Color() { Red = 0, Green = 0, Blue = 0, Alpha = 0 };
+
+            for (uint i = 0; i < 81; ++i)
+            {
+                var sprite = dataSource.GetSprite(Data.Resource.MapMaskUp, i, color);
+
+                if (sprite != null)
+                    maskOffsets.Add(i, new Position(sprite.OffsetX, sprite.OffsetY));
+
+                sprite = dataSource.GetSprite(Data.Resource.MapMaskDown, i, color);
+
+                if (sprite != null)
+                    maskOffsets.Add(81u + i, new Position(sprite.OffsetX, sprite.OffsetY));
+            }
+
+            uint numTriangles = (numColumns + 1) * (numRows + ADDITIONAL_Y_TILES) * 2u;
 
             triangles = new List<ITriangle>((int)numTriangles);
 
@@ -120,7 +141,7 @@ namespace Freeserf.Render
             {
                 for (int i = 0; i < 2; ++i) // up and down row
                 {
-                    for (uint r = 0; r < numRows + 4; ++r)
+                    for (uint r = 0; r < numRows + ADDITIONAL_Y_TILES; ++r)
                     {
                         // the triangles are created with the max mask height of 41.
                         // also see comments in TextureAtlasManager.AddAll for further details.
@@ -128,7 +149,7 @@ namespace Freeserf.Render
                         var triangle = triangleFactory.Create(TILE_WIDTH, TILE_RENDER_MAX_HEIGHT, 0, 0);
 
                         triangle.X = (int)(c * TILE_WIDTH) - TILE_WIDTH / 2 + i * TILE_WIDTH / 2;
-                        triangle.Y = (int)(r * TILE_HEIGHT) - 2 * TILE_HEIGHT;
+                        triangle.Y = (int)(r * TILE_HEIGHT);
                         triangle.Visible = true;
 
                         triangles.Add(triangle);
@@ -206,7 +227,7 @@ namespace Freeserf.Render
             int spriteIndex = (int)terrain * 8 + TileMaskUp[mask];
             uint sprite = TileSprites[spriteIndex];
 
-            triangles[index].Y = yOffset;
+            triangles[index].Y = yOffset + maskOffsets[(uint)mask].Y;
             triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
             triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)MaskUpSprites[mask]);
         }
@@ -233,7 +254,7 @@ namespace Freeserf.Render
             int spriteIndex = (int)terrain * 8 + TileMaskDown[mask];
             uint sprite = TileSprites[spriteIndex];
 
-            triangles[index].Y = yOffset;// + TILE_HEIGHT;
+            triangles[index].Y = yOffset + TILE_HEIGHT + maskOffsets[81u + (uint)mask].Y;
             triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
             triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)MaskDownSprites[mask]);
         }
@@ -247,7 +268,7 @@ namespace Freeserf.Render
             int left = (int)map.GetHeight(pos);
             int right = (int)map.GetHeight(map.MoveRight(pos));
 
-            for (int i = 0; i < (numRows + 4) / 2; ++i)
+            for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
             {
                 UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
 
@@ -276,7 +297,7 @@ namespace Freeserf.Render
 
             int m = (int)map.GetHeight(pos);
 
-            for (int i = 0; i < (numRows + 4) / 2; ++i)
+            for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
             {
                 UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
 
@@ -306,13 +327,12 @@ namespace Freeserf.Render
                 y -= map.Rows;
 
             int index = 0;
-            int yOffset = -2 * TILE_HEIGHT;
             MapPos pos = map.Pos(x, y);
 
             for (uint c = 0; c < numColumns + 1; ++c)
             {
-                UpdateUpTileColumn(pos, ref index, yOffset);
-                UpdateDownTileColumn(pos, ref index, yOffset);
+                UpdateUpTileColumn(pos, ref index, 0);
+                UpdateDownTileColumn(pos, ref index, 0);
 
                 pos = map.MoveRight(pos);
             }

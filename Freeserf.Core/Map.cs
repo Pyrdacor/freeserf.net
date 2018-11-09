@@ -648,7 +648,7 @@ namespace Freeserf
             InitSpiralPosPattern();
         }
 
-        public void AttachToRenderLayer(Render.IRenderLayer renderLayer)
+        public void AttachToRenderLayer(Render.IRenderLayer renderLayer, DataSource dataSource)
         {
             if (renderMap == null)
             {
@@ -661,7 +661,8 @@ namespace Freeserf
                     (uint)(virtualScreenWidth / tileWidth),
                     (uint)(virtualScreenHeight / tileHeight),
                     this, renderView.TriangleFactory,
-                    Render.TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape));
+                    Render.TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape),
+                    dataSource);
             }
 
             renderMap.AttachToRenderLayer(renderLayer);
