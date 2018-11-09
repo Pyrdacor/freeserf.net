@@ -125,7 +125,7 @@ namespace Freeserf.Render
                         // the triangles are created with the max mask height of 41.
                         // also see comments in  TextureAtlasManager.AddAll for further details.
 
-                        var triangle = triangleFactory.Create((r + c + i) % 2 == 0, TILE_WIDTH, TILE_RENDER_MAX_HEIGHT, 0, 0);
+                        var triangle = triangleFactory.Create(TILE_WIDTH, TILE_RENDER_MAX_HEIGHT, 0, 0);
 
                         triangle.X = (int)(c * TILE_WIDTH) - TILE_WIDTH / 2 + i * TILE_WIDTH / 2;
                         triangle.Y = (int)(r * TILE_HEIGHT) - 2 * TILE_HEIGHT;

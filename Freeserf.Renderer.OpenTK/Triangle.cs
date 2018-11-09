@@ -29,17 +29,14 @@ namespace Freeserf.Renderer.OpenTK
         Position textureAtlasOffset = null;
         Position maskTextureAtlasOffset = null;
 
-        public Triangle(bool up, int width, int height, int textureAtlasX, int textureAtlasY)
+        public Triangle(int width, int height, int textureAtlasX, int textureAtlasY)
             : base(Shape.Triangle, width, height)
         {
-            Up = up;
             textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
             maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
         }
 
-        public bool Up { get; }
-
-        public Position TextureAtlasOffset
+         public Position TextureAtlasOffset
         {
             get => textureAtlasOffset;
             set
@@ -97,9 +94,9 @@ namespace Freeserf.Renderer.OpenTK
 
     public class TriangleFactory : ITriangleFactory
     {
-        public ITriangle Create(bool up, int width, int height, int textureAtlasX, int textureAtlasY)
+        public ITriangle Create(int width, int height, int textureAtlasX, int textureAtlasY)
         {
-            return new Triangle(up, width, height, textureAtlasX, textureAtlasY);
+            return new Triangle(width, height, textureAtlasX, textureAtlasY);
         }
     }
 }
