@@ -26,7 +26,7 @@ namespace Freeserf.Renderer.OpenTK
     public class Triangle : Sprite, ITriangle
     {
         public Triangle(bool up, int width, int height, int textureAtlasX, int textureAtlasY)
-            : base(width, height, textureAtlasX, textureAtlasY)
+            : base(Shape.Triangle, width, height, textureAtlasX, textureAtlasY)
         {
             Up = up;
         }

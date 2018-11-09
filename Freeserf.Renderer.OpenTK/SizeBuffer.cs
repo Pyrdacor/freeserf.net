@@ -118,9 +118,12 @@ namespace Freeserf.Renderer.OpenTK
                     {
                         GL.DeleteBuffer(index);
 
-                        lock (buffer)
+                        if (buffer != null)
                         {
-                            buffer = null;
+                            lock (buffer)
+                            {
+                                buffer = null;
+                            }
                         }
 
                         size = 0;
@@ -144,7 +147,7 @@ namespace Freeserf.Renderer.OpenTK
 
         void Recreate() // is only called when the buffer is bound (see Bind())
         {
-            if (!changedSinceLastCreation)
+            if (!changedSinceLastCreation || buffer == null)
                 return;
 
             lock (buffer)
@@ -158,7 +161,7 @@ namespace Freeserf.Renderer.OpenTK
 
         internal override bool RecreateUnbound()
         {
-            if (!changedSinceLastCreation)
+            if (!changedSinceLastCreation || buffer == null)
                 return false;
 
             if (disposed)

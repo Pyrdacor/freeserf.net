@@ -88,7 +88,15 @@ namespace Freeserf.Render
             triangles = new List<ITriangle>((int)numTriangles);
 
             for (uint i = 0; i < numTriangles; ++i)
-                triangles.Add(triangleFactory.Create(i % 2 == 0, TILE_WIDTH, TILE_HEIGHT, 0, 0));
+            {
+                var triangle = triangleFactory.Create(i % 2 == 0, TILE_WIDTH, TILE_HEIGHT, 0, 0);
+
+                triangle.X = (int)((i % (numColumns + 1)) * TILE_WIDTH);
+                triangle.Y = (int)((i / (numColumns + 1)) * TILE_HEIGHT);
+                triangle.Visible = true;
+
+                triangles.Add(triangle);
+            }
 
             UpdatePosition();
         }
@@ -148,13 +156,14 @@ namespace Freeserf.Render
 
             MapPos columnBegin = map.Pos(x, y);
 
-            for (uint r = 0; r < numRows + 1; ++r)
+            for (uint c = 0; c < numColumns + 1; ++c)
             {
                 MapPos pos = columnBegin;
+                uint startMask = map.PosRow(pos) % 2;
 
                 for (int i = 0; i < 2; ++i) // first up and then down columns
                 {
-                    for (uint c = 0; c < numColumns + 1; ++c)
+                    for (uint r = 0; r < numRows + 1; ++r)
                     {
                         int offset = (int)(c + r * (numColumns + 1));
                         Map.Terrain terrain;
@@ -162,8 +171,9 @@ namespace Freeserf.Render
                         MapPos right;
                         MapPos m;
                         int[] tileMask;
+                        bool up = (r + i + startMask) % 2 == 0;
 
-                        if (i == 0) // up
+                        if (up) // up
                         {
                             left = map.MoveDown(pos);
                             right = map.MoveRight(left);
@@ -173,9 +183,9 @@ namespace Freeserf.Render
                         }
                         else // down
                         {
-                            left = pos;
+                            left = map.MoveDown(pos);
                             right = map.MoveRight(left);
-                            m = map.MoveDown(pos);
+                            m = map.MoveDown(right);
                             terrain = map.TypeDown(pos);
                             tileMask = TileMaskDown;
                         }
@@ -195,7 +205,7 @@ namespace Freeserf.Render
 
                         int mask;
 
-                        if (i == 0) // up
+                        if (up) // up
                             mask = 4 + hM - hLeft + 9 * (4 + hM - hRight);
                         else // down
                             mask = 4 + hLeft - hM + 9 * (4 + hRight - hM);
@@ -205,15 +215,17 @@ namespace Freeserf.Render
                             throw new ExceptionFreeserf("Failed to draw triangle (3).");
                         }
 
-                        int spriteIndex = (int)terrain + tileMask[mask];
+                        int spriteIndex = (int)terrain * 8 + tileMask[mask];
                         uint sprite = TileSprites[spriteIndex];
 
                         triangles[offset * 2 + i].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
 
-                        pos = map.MoveDown(pos);
+                        if (!up)
+                            pos = map.MoveDown(pos);
                     }
 
                     pos = map.MoveRight(columnBegin);
+                    startMask = 1 - startMask;
                 }
 
                 columnBegin = map.MoveRight(columnBegin);
