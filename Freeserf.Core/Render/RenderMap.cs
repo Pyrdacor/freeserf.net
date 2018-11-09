@@ -123,7 +123,7 @@ namespace Freeserf.Render
                     for (uint r = 0; r < numRows + 4; ++r)
                     {
                         // the triangles are created with the max mask height of 41.
-                        // also see comments in  TextureAtlasManager.AddAll for further details.
+                        // also see comments in TextureAtlasManager.AddAll for further details.
 
                         var triangle = triangleFactory.Create(TILE_WIDTH, TILE_RENDER_MAX_HEIGHT, 0, 0);
 
@@ -184,6 +184,119 @@ namespace Freeserf.Render
             ScrollTo((uint)column, (uint)row);
         }
 
+        void UpdateTriangleUp(int index, int yOffset, int m, int left, int right, MapPos pos)
+        {
+            if (((left - m) < -4) || ((left - m) > 4))
+            {
+                throw new ExceptionFreeserf("Failed to draw triangle up (1).");
+            }
+            if (((right - m) < -4) || ((right - m) > 4))
+            {
+                throw new ExceptionFreeserf("Failed to draw triangle up (2).");
+            }
+
+            int mask = 4 + m - left + 9 * (4 + m - right);
+
+            if (TileMaskUp[mask] < 0)
+            {
+                throw new ExceptionFreeserf("Failed to draw triangle up (3).");
+            }
+
+            var terrain = map.TypeUp(pos);
+            int spriteIndex = (int)terrain * 8 + TileMaskUp[mask];
+            uint sprite = TileSprites[spriteIndex];
+
+            triangles[index].Y = yOffset;
+            triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
+            triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)MaskUpSprites[mask]);
+        }
+
+        void UpdateTriangleDown(int index, int yOffset, int m, int left, int right, MapPos pos)
+        {
+            if (((left - m) < -4) || ((left - m) > 4))
+            {
+                throw new ExceptionFreeserf("Failed to draw triangle down (1).");
+            }
+            if (((right - m) < -4) || ((right - m) > 4))
+            {
+                throw new ExceptionFreeserf("Failed to draw triangle down (2).");
+            }
+
+            int mask = 4 + left - m + 9 * (4 + right - m);
+
+            if (TileMaskDown[mask] < 0)
+            {
+                throw new ExceptionFreeserf("Failed to draw triangle down (3).");
+            }
+
+            var terrain = map.TypeDown(pos);
+            int spriteIndex = (int)terrain * 8 + TileMaskDown[mask];
+            uint sprite = TileSprites[spriteIndex];
+
+            triangles[index].Y = yOffset;// + TILE_HEIGHT;
+            triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
+            triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)MaskDownSprites[mask]);
+        }
+
+        void UpdateUpTileColumn(MapPos pos, ref int index, int yOffset)
+        {
+            int m = (int)map.GetHeight(pos);
+
+            pos = map.MoveDown(pos);
+
+            int left = (int)map.GetHeight(pos);
+            int right = (int)map.GetHeight(map.MoveRight(pos));
+
+            for (int i = 0; i < (numRows + 4) / 2; ++i)
+            {
+                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
+
+                yOffset += TILE_HEIGHT;
+
+                pos = map.MoveDownRight(pos);
+                m = (int)map.GetHeight(pos);
+
+                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
+
+                yOffset += TILE_HEIGHT;
+
+                pos = map.MoveDown(pos);
+
+                left = (int)map.GetHeight(pos);
+                right = (int)map.GetHeight(map.MoveRight(pos));
+            }
+        }
+
+        void UpdateDownTileColumn(MapPos pos, ref int index, int yOffset)
+        {
+            int left = (int)map.GetHeight(pos);
+            int right = (int)map.GetHeight(map.MoveRight(pos));
+
+            pos = map.MoveDownRight(pos);
+
+            int m = (int)map.GetHeight(pos);
+
+            for (int i = 0; i < (numRows + 4) / 2; ++i)
+            {
+                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
+
+                yOffset += TILE_HEIGHT;
+
+                pos = map.MoveDown(pos);
+
+                left = (int)map.GetHeight(pos);
+                right = (int)map.GetHeight(map.MoveRight(pos));
+
+                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
+
+                yOffset += TILE_HEIGHT;
+
+                pos = map.MoveDownRight(pos);
+
+                m = (int)map.GetHeight(pos);
+            }
+        }
+
         void UpdatePosition()
         {
             if (x >= map.Columns)
@@ -193,87 +306,15 @@ namespace Freeserf.Render
                 y -= map.Rows;
 
             int index = 0;
-            MapPos columnBegin = map.Pos(x, y);
+            int yOffset = -2 * TILE_HEIGHT;
+            MapPos pos = map.Pos(x, y);
 
             for (uint c = 0; c < numColumns + 1; ++c)
             {
-                for (int i = 0; i < 2; ++i)
-                {
-                    MapPos pos = columnBegin;
-                    int left = 0, right = 0, m = 0;
+                UpdateUpTileColumn(pos, ref index, yOffset);
+                UpdateDownTileColumn(pos, ref index, yOffset);
 
-                    if ((x + c + y + i) % 2 == 1) // column starts with down
-                    {
-                        left = (int)map.GetHeight(pos);
-                        right = (int)map.GetHeight(map.MoveRight(pos));
-
-                        pos = map.MoveDownRight(pos);
-                    }
-                    else
-                    {
-                        m = (int)map.GetHeight(pos);
-
-                        pos = map.MoveDown(pos);
-                    }
-
-                    for (uint r = 0; r < numRows + 4; ++r)
-                    {
-                        Map.Terrain terrain;
-                        int[] tileMask;
-                        int[] maskSprites;
-                        bool up = (x + c + y + r + i) % 2 == 0;
-
-                        if (up) // up
-                        {
-                            terrain = map.TypeUp(pos);
-                            left = (int)map.GetHeight(pos);
-                            right = (int)map.GetHeight(map.MoveRight(pos));
-                            tileMask = TileMaskUp;
-                            maskSprites = MaskUpSprites;
-                            pos = map.MoveDownRight(pos);
-                        }
-                        else // down
-                        {
-                            terrain = map.TypeDown(pos);
-                            m = (int)map.GetHeight(pos);
-                            tileMask = TileMaskDown;
-                            maskSprites = MaskDownSprites;
-                            pos = map.MoveDown(pos);
-                        }
-
-                        if (((left - m) < -4) || ((left - m) > 4))
-                        {
-                            throw new ExceptionFreeserf("Failed to draw triangle (1).");
-                        }
-                        if (((right - m) < -4) || ((right - m) > 4))
-                        {
-                            throw new ExceptionFreeserf("Failed to draw triangle (2).");
-                        }
-
-                        int mask;
-
-                        if (up) // up
-                            mask = 4 + m - left + 9 * (4 + m - right);
-                        else // down
-                            mask = 4 + left - m + 9 * (4 + right - m);
-
-                        if (tileMask[mask] < 0)
-                        {
-                            throw new ExceptionFreeserf("Failed to draw triangle (3).");
-                        }
-
-                        int spriteIndex = (int)terrain * 8 + tileMask[mask];
-                        uint sprite = TileSprites[spriteIndex];
-
-                        triangles[index].Y = (int)(r * TILE_HEIGHT - 4 * m) - 2 * TILE_HEIGHT;
-                        triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
-                        triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)maskSprites[mask]);
-
-                        ++index;
-                    }
-                }
-
-                columnBegin = map.MoveRight(columnBegin);
+                pos = map.MoveRight(pos);
             }
         }
     }
