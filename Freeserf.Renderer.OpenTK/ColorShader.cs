@@ -26,7 +26,6 @@ namespace Freeserf.Renderer.OpenTK
         static ColorShader colorShader = null;
         internal static readonly string DefaultFragmentOutColorName = "outColor";
         internal static readonly string DefaultPositionName = "position";
-        internal static readonly string DefaultSizeName = "size";
         internal static readonly string DefaultModelViewMatrixName = "mvMat";
         internal static readonly string DefaultProjectionMatrixName = "projMat";
         internal static readonly string DefaultColorName = "color";
@@ -39,7 +38,6 @@ namespace Freeserf.Renderer.OpenTK
         readonly string colorName;
         readonly string zName;
         readonly string positionName;
-        readonly string sizeName;
 
         // gl_FragColor is deprecated beginning in GLSL version 1.30
         protected static bool HasGLFragColor()
@@ -107,7 +105,6 @@ namespace Freeserf.Renderer.OpenTK
         {
             GetVertexShaderHeader(),
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
-            $"{GetInName(false)} uvec2 {DefaultSizeName};",
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
             $"uniform mat4 {DefaultModelViewMatrixName};",
@@ -115,22 +112,6 @@ namespace Freeserf.Renderer.OpenTK
             $"void main()",
             $"{{",
             $"    vec2 pos = vec2({DefaultPositionName}.x, {DefaultPositionName}.y);",
-            $"    ",
-            $"    uint i = gl_VertexID % 4;",
-            $"    ",
-            $"    if (i == 1)",
-            $"    {{",
-            $"        pos.x += {DefaultSizeName}.x;",
-            $"    }}",
-            $"    else if (i == 2)",
-            $"    {{",
-            $"        pos.x += {DefaultSizeName}.x;",
-            $"        pos.y += {DefaultSizeName}.y;",
-            $"    }}",
-            $"    else if (i == 3)",
-            $"    {{",
-            $"        pos.y += {DefaultSizeName}.y;",
-            $"    }}",
             $"    ",
             $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName}, 1.0f);",
             $"}}"
@@ -150,13 +131,13 @@ namespace Freeserf.Renderer.OpenTK
 
         ColorShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultColorName, DefaultZName,
-                  DefaultPositionName, DefaultSizeName, ColorFragmentShader, ColorVertexShader)
+                  DefaultPositionName, ColorFragmentShader, ColorVertexShader)
         {
 
         }
 
         protected ColorShader(string modelViewMatrixName, string projectionMatrixName, string colorName, string zName,
-            string positionName, string sizeName, string[] fragmentShaderLines, string[] vertexShaderLines)
+            string positionName, string[] fragmentShaderLines, string[] vertexShaderLines)
         {
             fragmentOutColorName = (State.OpenGLVersionMajor > 2) ? DefaultFragmentOutColorName : "gl_FragColor";
 
@@ -165,7 +146,6 @@ namespace Freeserf.Renderer.OpenTK
             this.colorName = colorName;
             this.zName = zName;
             this.positionName = positionName;
-            this.sizeName = sizeName;
 
             var fragmentShader = new Shader(Shader.Type.Fragment, string.Join("\n", fragmentShaderLines));
             var vertexShader = new Shader(Shader.Type.Vertex, string.Join("\n", vertexShaderLines));

@@ -55,7 +55,7 @@ namespace Freeserf.Renderer.OpenTK
             if (texture == null)
                 return;
 
-            var shader = TextureShader.Instance;
+            var shader = (renderBuffer.Shape == Shape.Rect) ? TextureShader.Instance : MaskedTriangleShader.Instance;
 
             shader.UpdateMatrices(); // TODO: maybe do this in game view
 
@@ -75,9 +75,9 @@ namespace Freeserf.Renderer.OpenTK
             renderBuffer.Render();
          }
 
-        public int GetDrawIndex(Sprite sprite)
+        public int GetDrawIndex(Sprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
-            return renderBuffer.GetDrawIndex(sprite);
+            return renderBuffer.GetDrawIndex(sprite, maskSpriteTextureAtlasOffset);
         }
 
         public void FreeDrawIndex(int index)
@@ -90,9 +90,9 @@ namespace Freeserf.Renderer.OpenTK
             renderBuffer.UpdatePosition(index, sprite);
         }
 
-        public void UpdateTextureAtlasOffset(int index, Sprite sprite)
+        public void UpdateTextureAtlasOffset(int index, Sprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
-            renderBuffer.UpdateTextureAtlasOffset(index, sprite);
+            renderBuffer.UpdateTextureAtlasOffset(index, sprite, maskSpriteTextureAtlasOffset);
         }
 
         public void AddNode(IRenderNode node)

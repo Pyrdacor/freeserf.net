@@ -34,12 +34,8 @@ namespace Freeserf
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
-
-            // add all normal landscape tile sprites
-            var color = new Sprite.Color() { Red = 0, Green = 0, Blue = 0, Alpha = 255 };
-            for (uint i = 0; i < 33; ++i) // 33 map tile sprites
-                TextureAtlasManager.Instance.AddSprite((int)Layer.Landscape, i, dosData.GetSprite(Data.Resource.MapGround, i, color));
-
+            TextureAtlasManager.Instance.AddAll(dosData);
+            
             // TODO: create texture atlas for every layer
             Renderer.OpenTK.Texture textureDummy = null; // dummy
 
@@ -69,7 +65,7 @@ namespace Freeserf
 
             Game game = new Game(gameView);
 
-            game.Init(10, new Random("3762665523225478")); // mission 1
+            game.Init(3, new Random("3762665523225478")); // mission 1
 
             game.Map.AttachToRenderLayer(layerLandscape);
 

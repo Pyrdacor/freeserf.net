@@ -32,7 +32,6 @@ namespace Freeserf.Renderer.OpenTK
         public virtual int Index { get; private set; } = 0;
         public override int Width { get; } = 0;
         public override int Height { get; } = 0;
-        public virtual int SizeInBytes { get; private set; } = 0;
 
         protected Texture(int width, int height)
         {
@@ -113,13 +112,12 @@ namespace Freeserf.Renderer.OpenTK
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
 
+            // TODO: use TexImage2D in older OpenGL versions!
             GL.TexStorage2D(TextureTarget2d.Texture2D, 1 + numMipMapLevels, SizedInternalFormat.Rgba8, Width, Height);
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, Width, Height, ToOpenGLPixelFormat(format), PixelType.UnsignedByte, pixelData);
 
             if (numMipMapLevels > 0)
                 GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-            SizeInBytes = pixelData.Length;
         }
 
         public virtual void Bind()

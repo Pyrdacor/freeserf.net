@@ -55,6 +55,7 @@ namespace Freeserf
 
         public ClassicMapGenerator(Map map, Random random)
         {
+            rnd = random;
             int tileCount = (int)map.Geometry.TileCount;
 
             tiles = new Map.LandscapeTile[tileCount];

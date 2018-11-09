@@ -24,6 +24,7 @@ namespace Freeserf.Render
     public interface ITriangle : ISprite
     {
         bool Up { get; }
+        Position MaskTextureAtlasOffset { get; set; }
     }
 
     public interface ITriangleFactory

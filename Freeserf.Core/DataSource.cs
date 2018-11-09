@@ -80,6 +80,63 @@ namespace Freeserf
         public virtual int OffsetX => offsetX;
         public virtual int OffsetY => offsetY;
 
+        // Enlarges a sprite in height by adding pixel rows from the beginning
+        public Sprite RepeatTo(int height)
+        {
+            if (height < Height)
+                throw new ExceptionFreeserf("Height must be greater or equal to previous height.");
+
+            if (height == Height)
+                return this;
+
+            Sprite sprite = new Sprite(Width, (uint)height);
+
+            sprite.deltaX = DeltaX;
+            sprite.deltaY = DeltaY;
+            sprite.offsetX = OffsetX;
+            sprite.offsetY = OffsetY;
+
+            // copy original sprite data
+            System.Buffer.BlockCopy(data, 0, sprite.data, 0, (int)(Width * Height * 4u));
+
+            int additionalHeight = height - (int)Height;
+
+            for (int i = 0; i < additionalHeight; ++i)
+            {
+                int destRow = (int)Height + i;
+                int sourceRow = i % (int)Height;
+
+                System.Buffer.BlockCopy(data, sourceRow * (int)Width * 4, sprite.data,
+                    destRow * (int)Width * 4, (int)Width * 4);
+            }
+
+            return sprite;
+        }
+
+        // Enlarges a sprite in height by adding full transparent pixel rows
+        public Sprite ClearTo(int height)
+        {
+            if (height < Height)
+                throw new ExceptionFreeserf("Height must be greater or equal to previous height.");
+
+            if (height == Height)
+                return this;
+
+            Sprite sprite = new Sprite(Width, (uint)height);
+
+            sprite.deltaX = DeltaX;
+            sprite.deltaY = DeltaY;
+            sprite.offsetX = OffsetX;
+            sprite.offsetY = OffsetY;
+
+            // copy original sprite data
+            System.Buffer.BlockCopy(data, 0, sprite.data, 0, (int)(Width * Height * 4u));
+
+            // the rest is already filled with zeros cause of array initialization, so nothing to do anymore
+
+            return sprite;
+        }
+
         // Apply mask to map tile sprite
         // The resulting sprite will be extended to the height of the mask
         // by repeating lines from the top of the sprite. The width of the

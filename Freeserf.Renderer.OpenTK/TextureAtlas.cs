@@ -150,7 +150,7 @@ namespace Freeserf.Renderer.OpenTK
 
             foreach (var offset in textureOffsets)
             {
-                var sprite= sprites[offset.Key];
+                var sprite = sprites[offset.Key];
 
                 texture.AddSprite(offset.Value, sprite.GetData(), (int)sprite.Width, (int)sprite.Height);
             }

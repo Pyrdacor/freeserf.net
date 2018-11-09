@@ -41,7 +41,6 @@ namespace Freeserf.Renderer.OpenTK
         public override int Dimension => 2;
 
         public PositionBuffer(bool staticData)
-            : base(false)
         {
             index = GL.GenBuffer();
 
@@ -51,7 +50,12 @@ namespace Freeserf.Renderer.OpenTK
 
         public bool IsPositionValid(int index)
         {
-            return buffer[index * 2] != short.MaxValue;
+            index *= 2; // 2 coords each
+
+            if (index < 0 || index >= buffer.Length)
+                return false;
+
+            return buffer[index] != short.MaxValue;
         }
 
         public int Add(short x, short y)
@@ -60,26 +64,33 @@ namespace Freeserf.Renderer.OpenTK
 
             if (buffer == null)
             {
-                buffer = new short[128];
+                buffer = new short[256];
                 buffer[0] = x;
                 buffer[1] = y;
-                changedSinceLastCreation = true;
                 size = 2;
+                changedSinceLastCreation = true;
             }
             else
             {
                 if (index == buffer.Length / 2) // we need to recreate the buffer
                 {
-                    Array.Resize(ref buffer, buffer.Length + 128);
+                    if (buffer.Length < 1024)
+                        Array.Resize(ref buffer, buffer.Length + 256);
+                    else if (buffer.Length < 4096)
+                        Array.Resize(ref buffer, buffer.Length + 512);
+                    else
+                        Array.Resize(ref buffer, buffer.Length + 1024);
                 }
 
                 size += 2;
+                int bufferIndex = index * 2;
 
-                if (buffer[index * 2 + 0] != x ||
-                    buffer[index * 2 + 1] != y)
+                if (buffer[bufferIndex + 0] != x ||
+                    buffer[bufferIndex + 1] != y)
                 {
-                    buffer[index * 2 + 0] = x;
-                    buffer[index * 2 + 1] = y;
+                    buffer[bufferIndex + 0] = x;
+                    buffer[bufferIndex + 1] = y;
+
                     changedSinceLastCreation = true;
                 }
             }
@@ -89,15 +100,23 @@ namespace Freeserf.Renderer.OpenTK
 
         public void Update(int index, short x, short y)
         {
-            buffer[index * 2 + 0] = x;
-            buffer[index * 2 + 1] = y;
+            int bufferIndex = index * 2;
+
+            buffer[bufferIndex + 0] = x;
+            buffer[bufferIndex + 1] = y;
+
             changedSinceLastCreation = true;
         }
 
         public void Remove(int index)
         {
             indices.UnassignIndex(index);
-            buffer[index * 2] = short.MaxValue; // not displayed anymore
+
+            int bufferIndex = index * 2;
+
+            buffer[bufferIndex] = short.MaxValue; // not displayed anymore
+
+            changedSinceLastCreation = true;
         }
 
         public void ReduceSizeTo(int size)

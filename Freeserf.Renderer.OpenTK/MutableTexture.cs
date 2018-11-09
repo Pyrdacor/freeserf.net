@@ -24,7 +24,8 @@ namespace Freeserf.Renderer.OpenTK
 
         public void Finish(int numMipMapLevels)
         {
-            Create(PixelFormat.RGBA8, data, numMipMapLevels);
+            Create(PixelFormat.BGRA8, data, numMipMapLevels);
+
             data = null;
         }
     }

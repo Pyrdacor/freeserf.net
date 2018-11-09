@@ -29,13 +29,7 @@ namespace Freeserf.Renderer.OpenTK
         public abstract int Dimension { get; }
         public bool Normalized { get; protected set; } = false;
         public abstract int Size { get; }
-        public bool PerVertex { get; }
         public abstract VertexAttribIntegerType Type { get; }
-
-        public BufferObject(bool perVertex = true)
-        {
-            PerVertex = perVertex;
-        }
 
         public abstract void Dispose();
 

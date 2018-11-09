@@ -25,13 +25,51 @@ namespace Freeserf.Renderer.OpenTK
 {
     public class Triangle : Sprite, ITriangle
     {
+        Position maskTextureAtlasOffset = null;
+
         public Triangle(bool up, int width, int height, int textureAtlasX, int textureAtlasY)
             : base(Shape.Triangle, width, height, textureAtlasX, textureAtlasY)
         {
             Up = up;
+            maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
         }
 
         public bool Up { get; }
+
+        public Position MaskTextureAtlasOffset
+        {
+            get => maskTextureAtlasOffset;
+            set
+            {
+                if (maskTextureAtlasOffset == value)
+                    return;
+
+                maskTextureAtlasOffset = value;
+
+                UpdateTextureAtlasOffset();
+            }
+        }
+
+        protected override void AddToLayer()
+        {
+            base.AddToLayer();
+
+            drawIndex = (Layer as RenderLayer).GetDrawIndex(this, maskTextureAtlasOffset);
+        }
+
+        protected override void RemoveFromLayer()
+        {
+            base.RemoveFromLayer();
+
+            (Layer as RenderLayer).FreeDrawIndex(drawIndex);
+            drawIndex = -1;
+        }
+
+        protected override void UpdateTextureAtlasOffset()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateTextureAtlasOffset(drawIndex, this, maskTextureAtlasOffset);
+        }
     }
 
     public class TriangleFactory : ITriangleFactory

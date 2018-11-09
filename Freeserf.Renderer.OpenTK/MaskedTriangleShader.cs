@@ -21,101 +21,86 @@
 
 namespace Freeserf.Renderer.OpenTK
 {
-    internal class TextureShader : ColorShader
+    internal sealed class MaskedTriangleShader : TextureShader
     {
-        static TextureShader textureShader = null;
-        internal static readonly string DefaultTexCoordName = "texCoord";
-        internal static readonly string DefaultSamplerName = "sampler";
-        internal static readonly string DefaultColorKeyName = "colorKey";
-        internal static readonly string DefaultAtlasSizeName = "atlasSize";
+        static MaskedTriangleShader maskedTriangleShader = null;
+        internal static readonly string DefaultMaskTexCoordName = "maskTexCoord";
 
-        readonly string texCoordName;
-        readonly string samplerName;
-        readonly string colorKeyName;
-        readonly string atlasSizeName;
+        readonly string maskTexCoordName;
 
-        static readonly string[] TextureFragmentShader = new string[]
+        static readonly string[] MaskedTriangleFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
             $"uniform vec3 {DefaultColorKeyName} = vec3(1, 0, 1);",
             $"uniform sampler2D {DefaultSamplerName};",
             $"{GetInName(true)} vec2 varTexCoord;",
+            $"{GetInName(true)} vec2 varMaskTexCoord;",
             $"",
             $"void main()",
             $"{{",
             $"    vec4 pixelColor = texture2D({DefaultSamplerName}, varTexCoord);",
+            $"    vec4 maskColor = texture2D({DefaultSamplerName}, varMaskTexCoord);",
             $"    ",
-            $"    if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
+            $"    if (maskColor.a == 0)",
+            $"        pixelColor.a = 0;",
+            $"    else if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
             $"        pixelColor.a = 0;",
             $"    ",
             $"    {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = pixelColor;",
             $"}}"
         };
 
-        static readonly string[] TextureVertexShader = new string[]
+        static readonly string[] MaskedTriangleVertexShader = new string[]
         {
             GetVertexShaderHeader(),
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
             $"{GetInName(false)} ivec2 {DefaultTexCoordName};",
+            $"{GetInName(false)} ivec2 {DefaultMaskTexCoordName};",
             $"uniform uvec2 {DefaultAtlasSizeName};",
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
             $"uniform mat4 {DefaultModelViewMatrixName};",
             $"{GetOutName()} vec2 varTexCoord;",
+            $"{GetOutName()} vec2 varMaskTexCoord;",
             $"",
             $"void main()",
             $"{{",
             $"    vec2 atlasFactor = vec2(1.0f / {DefaultAtlasSizeName}.x, 1.0f / {DefaultAtlasSizeName}.y);",
             $"    vec2 pos = vec2({DefaultPositionName}.x, {DefaultPositionName}.y);",
             $"    varTexCoord = vec2({DefaultTexCoordName}.x, {DefaultTexCoordName}.y);",
+            $"    varMaskTexCoord = vec2({DefaultMaskTexCoordName}.x, {DefaultMaskTexCoordName}.y);",
             $"    ",
             $"    varTexCoord *= atlasFactor;",
+            $"    varMaskTexCoord *= atlasFactor;",
             $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName}, 1.0f);",
             $"}}"
         };
 
-        TextureShader()
+        MaskedTriangleShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName,
-                  DefaultAtlasSizeName, TextureFragmentShader, TextureVertexShader)
+                  DefaultAtlasSizeName, DefaultMaskTexCoordName, MaskedTriangleFragmentShader, MaskedTriangleVertexShader)
         {
 
         }
 
-        protected TextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
+        MaskedTriangleShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName,
-            string atlasSizeName, string[] fragmentShaderLines, string[] vertexShaderLines)
-            : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, fragmentShaderLines, vertexShaderLines)
+            string atlasSizeName, string maskTexCoordName, string[] fragmentShaderLines, string[] vertexShaderLines)
+            : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName, 
+                  samplerName, colorKeyName, atlasSizeName, fragmentShaderLines, vertexShaderLines)
         {
-            this.texCoordName = texCoordName;
-            this.samplerName = samplerName;
-            this.colorKeyName = colorKeyName;
-            this.atlasSizeName = atlasSizeName;
+            this.maskTexCoordName = maskTexCoordName;
         }
 
-        public void SetSampler(int textureUnit = 0)
-        {
-            shaderProgram.SetInput(samplerName, textureUnit);
-        }
-
-        public void SetColorKey(float r, float g, float b)
-        {
-            shaderProgram.SetInputVector3(colorKeyName, r, g, b);
-        }
-
-        public void SetAtlasSize(uint width, uint height)
-        {
-            shaderProgram.SetInputVector2(atlasSizeName, width, height);
-        }
-
-        public new static TextureShader Instance
+        public new static MaskedTriangleShader Instance
         {
             get
             {
-                if (textureShader == null)
-                    textureShader = new TextureShader();
+                if (maskedTriangleShader == null)
+                    maskedTriangleShader = new MaskedTriangleShader();
 
-                return textureShader;
+                return maskedTriangleShader;
             }
         }
     }

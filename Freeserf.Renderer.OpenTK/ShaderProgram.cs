@@ -176,7 +176,6 @@ namespace Freeserf.Renderer.OpenTK
             buffer.Bind();
 
             GL.EnableVertexAttribArray(location);
-            GL.VertexAttribDivisor(location, (buffer.PerVertex) ? 0 : 1);
 
             GL.VertexAttribIPointer(location, buffer.Dimension, buffer.Type, 0, IntPtr.Zero);
 
