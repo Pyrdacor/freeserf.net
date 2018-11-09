@@ -69,7 +69,7 @@ namespace Freeserf
 
             Game game = new Game(gameView);
 
-            game.Init(10, new Random());
+            game.Init(10, new Random("3762665523225478")); // mission 1
 
             game.Map.AttachToRenderLayer(layerLandscape);
 
