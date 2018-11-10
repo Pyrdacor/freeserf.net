@@ -42,10 +42,11 @@
             this.RenderControl.Size = new System.Drawing.Size(800, 606);
             this.RenderControl.TabIndex = 0;
             this.RenderControl.VSync = false;
+            this.RenderControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseMove);
             // 
             // FrameTimer
             // 
-            this.FrameTimer.Interval = 2000;
+            this.FrameTimer.Interval = 20;
             this.FrameTimer.Tick += new System.EventHandler(this.FrameTimer_Tick);
             // 
             // FreeserfForm

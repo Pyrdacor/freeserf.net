@@ -8,7 +8,8 @@ namespace Freeserf
 {
     public partial class FreeserfForm : Form
     {
-        GameView gameView = null;   
+        GameView gameView = null;
+        Game game = null;
 
         public FreeserfForm()
         {
@@ -63,7 +64,7 @@ namespace Freeserf
             // serfSprite.Visible = true;
             // serfSprite.Layer = layerSerfs;
 
-            Game game = new Game(gameView);
+            game = new Game(gameView);
 
             game.Init(3, new Random("3762665523225478")); // mission 1
 
@@ -72,13 +73,57 @@ namespace Freeserf
             FrameTimer.Start();
         }
 
+        int scrollX = 0;
+
         private void FrameTimer_Tick(object sender, EventArgs e)
         {
             RenderControl.MakeCurrent();
 
+            //game.Map.Scroll(scrollX++, 0);
+
             gameView.Render();
 
+
             RenderControl.SwapBuffers();
+        }
+
+        int lastX = int.MinValue;
+        int lastY = int.MinValue;
+
+        private void RenderControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            Position pos = gameView.ScreenToView(new Position(e.X, e.Y));
+
+            if (e.Button == MouseButtons.Right)
+            {
+                if (pos == null)
+                    return;
+
+                if (lastX == int.MinValue)
+                {
+                    lastX = pos.X;
+                    lastY = pos.Y;
+
+                    return;
+                }
+
+                int diffX = pos.X - lastX;
+                int diffY = pos.Y - lastY;
+                int scrollX = diffX / 32;
+                int scrollY = diffY / 20;
+
+                game.Map.Scroll(-scrollX, -scrollY);
+
+                int remainingX = diffX % 32;
+                int remainingY = diffY % 20;
+
+                lastX = pos.X - remainingX;
+                lastY = pos.Y - remainingY;
+            }
+            else
+            {
+                lastX = int.MinValue;
+            }
         }
     }
 }

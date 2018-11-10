@@ -676,6 +676,21 @@ namespace Freeserf
         public int RowShift => Geometry.RowShift;
         public uint RegionCount => regions;
 
+        public void Scroll(int x, int y)
+        {
+            renderMap?.Scroll(x, y);
+        }
+
+        public void ScrollTo(uint x, uint y)
+        {
+            renderMap?.ScrollTo(x, y);
+        }
+
+        public void CenterMapPos(MapPos pos)
+        {
+            renderMap?.CenterMapPos(pos);
+        }
+
         // Extract col and row from MapPos
         public MapPos PosColumn(MapPos pos)
         {
