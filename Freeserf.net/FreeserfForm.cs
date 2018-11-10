@@ -73,13 +73,9 @@ namespace Freeserf
             FrameTimer.Start();
         }
 
-        int scrollX = 0;
-
         private void FrameTimer_Tick(object sender, EventArgs e)
         {
             RenderControl.MakeCurrent();
-
-            //game.Map.Scroll(scrollX++, 0);
 
             gameView.Render();
 
