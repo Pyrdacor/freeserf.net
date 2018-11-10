@@ -105,7 +105,7 @@ namespace Freeserf.Renderer.OpenTK
 
             Bind();
 
-            var minMode = (numMipMapLevels > 0) ? TextureMinFilter.LinearMipmapLinear : TextureMinFilter.Nearest;
+            var minMode = (numMipMapLevels > 0) ? TextureMinFilter.NearestMipmapNearest : TextureMinFilter.Nearest;
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)minMode);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);

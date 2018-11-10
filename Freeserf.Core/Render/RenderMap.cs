@@ -137,7 +137,7 @@ namespace Freeserf.Render
 
             triangles = new List<ITriangle>((int)numTriangles);
 
-            for (uint c = 0; c < numColumns + 1; ++c)
+            for (uint c = 0; c < numColumns + 2; ++c)
             {
                 for (int i = 0; i < 2; ++i) // up and down row
                 {
@@ -148,7 +148,7 @@ namespace Freeserf.Render
 
                         var triangle = triangleFactory.Create(TILE_WIDTH, TILE_RENDER_MAX_HEIGHT, 0, 0);
 
-                        triangle.X = (int)(c * TILE_WIDTH) - TILE_WIDTH / 2 + i * TILE_WIDTH / 2;
+                        triangle.X = (int)(c * TILE_WIDTH) - TILE_WIDTH + i * TILE_WIDTH / 2;
                         triangle.Y = (int)(r * TILE_HEIGHT);
                         triangle.Visible = true;
 
@@ -327,9 +327,9 @@ namespace Freeserf.Render
                 y -= map.Rows;
 
             int index = 0;
-            MapPos pos = map.Pos(x, y);
+            MapPos pos = map.MoveLeft(map.Pos(x, y)); // cause we display 1 to the left
 
-            for (uint c = 0; c < numColumns + 1; ++c)
+            for (uint c = 0; c < numColumns + 2; ++c)
             {
                 UpdateUpTileColumn(pos, ref index, 0);
                 UpdateDownTileColumn(pos, ref index, 0);
