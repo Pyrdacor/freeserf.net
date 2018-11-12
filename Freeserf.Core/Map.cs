@@ -620,6 +620,7 @@ namespace Freeserf
         Render.IRenderView renderView = null;
         Render.RenderMap renderMap = null;
         // TODO: road segments
+        public Rect RenderArea => renderMap.RenderArea;
         
         /* Callback for map height changes */
         ChangeHandlers changeHandlers = new ChangeHandlers();

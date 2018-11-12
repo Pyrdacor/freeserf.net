@@ -2003,6 +2003,8 @@ namespace Freeserf
             foreach (Flag flag in flags)
             {
                 flag.Update();
+
+                renderFlags[flag].Update(tick, Map.RenderArea, Map.PosColumn(flag.Position), Map.PosRow(flag.Position));
             }
         }
 
@@ -2137,6 +2139,9 @@ namespace Freeserf
                             renderBuildingsInProgress.Add(renderBuildings[buildingList[i]]);
                     }
                 }
+
+                renderBuildings[buildingList[i]].Update(tick, map.RenderArea,
+                    Map.PosColumn(buildingList[i].Position), Map.PosRow(buildingList[i].Position));
             }
 
             for (int i = renderBuildingsInProgress.Count - 1; i >= 0; --i)
@@ -3265,7 +3270,7 @@ namespace Freeserf
                      obj == Map.Object.Castle)
             {
                 var building = GetBuildingAtPos(pos);
-                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), renderView.SpriteFactory, renderView.DataSource);
 
                 renderBuilding.Visible = true; // TODO: test if inside visible area
 

@@ -22,6 +22,7 @@
 namespace Freeserf.Render
 {
     // TODO: burning
+    // TODO: build material at spot
     internal class RenderBuilding : RenderObject
     {
         static readonly uint[] MapBuildingFrameSprite = new uint[]
@@ -72,7 +73,9 @@ namespace Freeserf.Render
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
 
             sprite.TextureAtlasOffset = textureAtlas.GetOffset(MapBuildingSprite[(int)building.BuildingType]);
+            (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + MapBuildingSprite[(int)building.BuildingType]);
+            (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
 
             if (frameSprite != null)
                 frameSprite.TextureAtlasOffset = textureAtlas.GetOffset(MapBuildingFrameSprite[(int)building.BuildingType]);
@@ -93,6 +96,12 @@ namespace Freeserf.Render
 
                 if (frameShadowSprite != null)
                     frameShadowSprite.Visible = value;
+
+                if (crossOrStoneSprite != null)
+                    crossOrStoneSprite.Visible = value;
+
+                if (burningSprite != null)
+                    burningSprite.Visible = value;
             }
         }
 
@@ -189,6 +198,14 @@ namespace Freeserf.Render
 
                 return offset;
             }
+        }
+
+        public void Update(int tick, Rect renderArea, uint column, uint row)
+        {
+            if (!Visible)
+                return;
+
+            // TODO
         }
 
         /// <summary>

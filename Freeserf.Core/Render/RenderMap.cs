@@ -100,6 +100,7 @@ namespace Freeserf.Render
         
         uint x = 0; // in columns
         uint y = 0; // in rows
+        Rect renderArea = new Rect();
         uint numColumns = 0;
         uint numRows = 0;
         Map map = null;
@@ -108,6 +109,7 @@ namespace Freeserf.Render
 
         public uint ScrollX => x;
         public uint ScrollY => y;
+        public Rect RenderArea => renderArea;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
             ITriangleFactory triangleFactory, ITextureAtlas textureAtlas,
@@ -328,6 +330,9 @@ namespace Freeserf.Render
 
             if (y >= map.Rows)
                 y -= map.Rows;
+
+            renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)y * TILE_HEIGHT,
+                ((int)numColumns + 1) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             int index = 0;
             MapPos pos = map.MoveLeft(map.Pos(x, y)); // cause we display 1 to the left

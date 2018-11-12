@@ -142,6 +142,54 @@ namespace Freeserf.Render
 
             #endregion
 
+
+            #region Map Objects
+
+            atlasIndex = (int)Layer.Objects;
+
+            // sprites 0 - 127 are normal map objects
+            for (uint objectSprite = 0; objectSprite < 128; ++objectSprite)
+            {
+                var sprite = data.GetSprite(Data.Resource.MapObject, objectSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, objectSprite, sprite);
+
+                // shadow
+                sprite = data.GetSprite(Data.Resource.MapShadow, objectSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 1000u + objectSprite, sprite); // we use 1000 as the shadow offset
+            }
+
+            // 128 - 143 are flags
+            for (uint objectSprite = 128; objectSprite <= 143; ++objectSprite)
+            {
+                var sprite = data.GetSprite(Data.Resource.MapObject, objectSprite, color);
+
+                if (sprite != null)
+                {
+                    if (sprite.Height == 18)
+                        AddSprite(atlasIndex, objectSprite, sprite.ClearTo(19));
+                    else
+                        AddSprite(atlasIndex, objectSprite, sprite);
+                }
+
+                // shadow
+                sprite = data.GetSprite(Data.Resource.MapShadow, objectSprite, color);
+
+                if (sprite != null)
+                {
+                    if (sprite.Height == 18)
+                        AddSprite(atlasIndex, 1000u + objectSprite, sprite.ClearTo(19)); // we use 1000 as the shadow offset
+                    else
+                        AddSprite(atlasIndex, 1000u + objectSprite, sprite); // we use 1000 as the shadow offset
+                }
+            }
+
+            #endregion
+
+
             // TODO
         }
     }

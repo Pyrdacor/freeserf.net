@@ -45,7 +45,7 @@ namespace Freeserf
             var layerLandscape = new RenderLayer(Layer.Landscape, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape).Texture as Renderer.OpenTK.Texture);
             var layerGrid = new RenderLayer(Layer.Grid, textureDummy);
             var layerPaths = new RenderLayer(Layer.Paths, textureDummy);
-            var layerObjects = new RenderLayer(Layer.Objects, textureDummy);
+            var layerObjects = new RenderLayer(Layer.Objects, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects).Texture as Renderer.OpenTK.Texture);
             var layerBuildings = new RenderLayer(Layer.Buildings, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings).Texture as Renderer.OpenTK.Texture);
             var layerSerfs = new RenderLayer(Layer.Serfs, textureDummy);
             var layerBuilds = new RenderLayer(Layer.Builds, textureDummy);

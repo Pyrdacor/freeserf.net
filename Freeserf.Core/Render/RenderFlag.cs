@@ -19,12 +19,28 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Collections.Generic;
+
 namespace Freeserf.Render
 {
     internal class RenderFlag : RenderObject
     {
         Flag flag = null;
-        protected ISprite sprite = null;
+        // sprite index 128-143 (16 sprites)
+        static Position[] spriteOffsets = null;
+        static Position[] shadowSpriteOffsets = null;
+
+        static readonly int[] ResPos = new int[] 
+        {
+             6, -4,
+            10, -2,
+            -4, -4,
+            10,  2,
+            -8, -2,
+             6,  4,
+            -8,  2,
+            -4,  4
+        };
 
         public RenderFlag(Flag flag, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
@@ -34,10 +50,61 @@ namespace Freeserf.Render
             Initialize();
         }
 
+        static void InitOffsets(DataSource dataSource)
+        {
+            spriteOffsets = new Position[16];
+            shadowSpriteOffsets = new Position[16];
+
+            for (int i = 0; i < 16; ++i)
+            {
+                var sprite = dataSource.GetSprite(Data.Resource.MapObject, (uint)i, Sprite.Color.Transparent);
+
+                spriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
+
+                sprite = dataSource.GetSprite(Data.Resource.MapShadow, (uint)i, Sprite.Color.Transparent);
+
+                shadowSpriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
+            }
+        }
+
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
-            // TODO
-            // sprite = spriteFactory.Create(...);
+            if (spriteOffsets == null)
+            {
+                InitOffsets(dataSource);
+            }
+
+            // max sprite size is 16x19 pixels
+
+            var playerColor = PlayerInfo.PlayerColors[(int)flag.GetOwner()];
+            var color = new Sprite.Color()
+            {
+                Red = playerColor.Red,
+                Green = playerColor.Green,
+                Blue = playerColor.Blue,
+                Alpha = 255
+            };
+
+            sprite = spriteFactory.Create(16, 19, 0, 0, false);
+            shadowSprite = spriteFactory.Create(16, 19, 0, 0, false);
+        }
+
+        public void Update(uint tick, Rect renderArea, uint column, uint row)
+        {
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
+            uint offset = (tick >> 3) & 3;
+            uint spriteIndex = 128u + offset;
+
+            int x = (int)column * RenderMap.TILE_WIDTH - renderArea.Position.X;
+            int y = (int)row * RenderMap.TILE_HEIGHT - renderArea.Position.Y;
+
+            sprite.X = x + spriteOffsets[(int)offset].X;
+            sprite.Y = y + spriteOffsets[(int)offset].Y;
+            shadowSprite.X = x + shadowSpriteOffsets[(int)offset].X;
+            shadowSprite.Y = y + shadowSpriteOffsets[(int)offset].Y;
+
+            sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
+            shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
         }
     }
 }

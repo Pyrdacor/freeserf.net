@@ -73,6 +73,11 @@ namespace Freeserf
                 outQueue[i].Type = Resource.Type.None;
                 outQueue[i].Dest = 0;
             }
+
+            foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
+            {
+                serfs.Add(type, 0u);
+            }
         }
 
         /* Inventory owner */
