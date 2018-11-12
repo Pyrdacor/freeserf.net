@@ -31,7 +31,7 @@ namespace Freeserf
                 Close();
             }
 
-            gameView = new GameView(new Size(1024, 768), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+            gameView = new GameView(dosData, new Size(1024, 768), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
 
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
@@ -42,21 +42,23 @@ namespace Freeserf
             Renderer.OpenTK.Texture textureDummy = null; // dummy
 
             // TODO: color keys?
-            var layerLandscape = new RenderLayer(Layer.Landscape, Shape.Triangle, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape).Texture as Renderer.OpenTK.Texture);
-            var layerGrid = new RenderLayer(Layer.Grid, Shape.Triangle, textureDummy);
-            var layerPaths = new RenderLayer(Layer.Paths, Shape.Rect, textureDummy);
-            var layerObjects = new RenderLayer(Layer.Objects, Shape.Rect, textureDummy);
-            var layerSerfs = new RenderLayer(Layer.Serfs, Shape.Rect, textureDummy);
-            var layerBuilds = new RenderLayer(Layer.Builds, Shape.Rect, textureDummy);
-            var layerCursor = new RenderLayer(Layer.Cursor, Shape.Rect, textureDummy);
+            var layerLandscape = new RenderLayer(Layer.Landscape, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape).Texture as Renderer.OpenTK.Texture);
+            var layerGrid = new RenderLayer(Layer.Grid, textureDummy);
+            var layerPaths = new RenderLayer(Layer.Paths, textureDummy);
+            var layerObjects = new RenderLayer(Layer.Objects, textureDummy);
+            var layerBuildings = new RenderLayer(Layer.Buildings, textureDummy);
+            var layerSerfs = new RenderLayer(Layer.Serfs, textureDummy);
+            var layerBuilds = new RenderLayer(Layer.Builds, textureDummy);
+            var layerCursor = new RenderLayer(Layer.Cursor, textureDummy);
 
             gameView.AddLayer(layerLandscape);
-            gameView.AddLayer(layerGrid);
+            /*gameView.AddLayer(layerGrid);
             gameView.AddLayer(layerPaths);
             gameView.AddLayer(layerObjects);
+            gameView.AddLayer(layerBuildings);
             gameView.AddLayer(layerSerfs);
             gameView.AddLayer(layerBuilds);
-            gameView.AddLayer(layerCursor);
+            gameView.AddLayer(layerCursor);*/
 
             // Example for adding a sprite
             // var serfSprite = new Sprite(32, 34, 0, 0);

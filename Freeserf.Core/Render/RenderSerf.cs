@@ -21,41 +21,22 @@
 
 namespace Freeserf.Render
 {
-    public class RenderSerf
+    internal class RenderSerf : RenderObject
     {
         Serf serf = null;
-        ISprite sprite = null;
 
-        public RenderSerf(Serf serf, ISpriteFactory spriteFactory)
+        public RenderSerf(Serf serf, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+            : base(renderLayer, spriteFactory, dataSource)
         {
             this.serf = serf;
 
-            Create(spriteFactory);
+            Initialize();
         }
 
-        void Create(ISpriteFactory spriteFactory)
+        protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
             // TODO
             // sprite = spriteFactory.Create(...);
-        }
-
-        public void Delete()
-        {
-            sprite.Delete();
-            sprite = null;
-            serf = null;
-        }
-
-        public void Draw(Rect visibleMapArea)
-        {
-            if (sprite == null || serf == null)
-                return;
-
-            // TODO: if serf is outside the visible map area -> return
-            // TODO: set position and texture coords based on:
-            // serf.Position
-            // serf.Animation
-            // serf.Counter
         }
     }
 }

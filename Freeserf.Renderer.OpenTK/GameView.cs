@@ -42,7 +42,10 @@ namespace Freeserf.Renderer.OpenTK
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
 
-        public GameView(Size virtualScreenSize, DeviceType deviceType = DeviceType.Desktop, SizingPolicy sizingPolicy = SizingPolicy.FitRatio, OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
+        public GameView(DataSource dataSource, Size virtualScreenSize,
+            DeviceType deviceType = DeviceType.Desktop, 
+            SizingPolicy sizingPolicy = SizingPolicy.FitRatio, 
+            OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
         {
             VirtualScreen = new Rect(0, 0, virtualScreenSize.Width, virtualScreenSize.Height);
             virtualScreenDisplay = new Rect(VirtualScreen);
@@ -52,7 +55,14 @@ namespace Freeserf.Renderer.OpenTK
             isLandscapeRatio = virtualScreenSize.Width > virtualScreenSize.Height;
 
             context = new Context(virtualScreenSize.Width, virtualScreenSize.Height);
+
+            if (dataSource == null || !dataSource.IsLoaded)
+                throw new ExceptionFreeserf("Given data source is not useable.");
+
+            DataSource = dataSource;
         }
+
+        public DataSource DataSource { get; }
 
         public Rect VirtualScreen { get; }
 

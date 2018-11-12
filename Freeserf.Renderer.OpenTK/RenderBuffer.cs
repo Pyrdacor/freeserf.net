@@ -32,6 +32,7 @@ namespace Freeserf.Renderer.OpenTK
     public class RenderBuffer
     {
         public Shape Shape { get; } = Shape.Rect;
+        public bool Masked { get; } = false;
 
         readonly VertexArrayObject vertexArrayObject = null;
         readonly PositionBuffer positionBuffer = null;
@@ -39,13 +40,17 @@ namespace Freeserf.Renderer.OpenTK
         readonly PositionBuffer maskTextureAtlasOffsetBuffer = null; // is null for normal sprites
         readonly BaseLineBuffer baseLineBuffer = null;
 
-        public RenderBuffer(Shape shape)
+        public RenderBuffer(Shape shape, bool masked)
         {
             Shape = shape;
+            Masked = masked;
 
-            if (shape != Shape.Rect)
+            if (masked)
             {
-                vertexArrayObject = new VertexArrayObject(MaskedTriangleShader.Instance.ShaderProgram);
+                if (shape == Shape.Triangle)
+                    vertexArrayObject = new VertexArrayObject(MaskedTriangleShader.Instance.ShaderProgram);
+                else
+                    vertexArrayObject = new VertexArrayObject(MaskedTextureShader.Instance.ShaderProgram);
             }
             else
             {
@@ -58,18 +63,24 @@ namespace Freeserf.Renderer.OpenTK
             {
                 // map rendering will change the texture offsets often to change the terrain so use non-static buffers
                 textureAtlasOffsetBuffer = new PositionBuffer(false);
-                maskTextureAtlasOffsetBuffer = new PositionBuffer(false);
-
-                vertexArrayObject.AddBuffer(MaskedTriangleShader.DefaultMaskTexCoordName, maskTextureAtlasOffsetBuffer);
             }
             else
             {
                 // TODO: static buffer? is this the case? animations are everywhere for serfs and some buildings (but ui etc are very static)
                 // most sprites won't change their appearances much so use static buffer
                 textureAtlasOffsetBuffer = new PositionBuffer(true);
+
+                // base line only for rectangular sprites
                 baseLineBuffer = new BaseLineBuffer(false);
 
                 vertexArrayObject.AddBuffer(TextureShader.DefaultBaseLineName, baseLineBuffer);
+            }
+
+            if (masked)
+            {
+                maskTextureAtlasOffsetBuffer = new PositionBuffer(false);
+
+                vertexArrayObject.AddBuffer(MaskedTextureShader.DefaultMaskTexCoordName, maskTextureAtlasOffsetBuffer);
             }
 
             vertexArrayObject.AddBuffer(TextureShader.DefaultPositionName, positionBuffer);
@@ -90,7 +101,7 @@ namespace Freeserf.Renderer.OpenTK
             positionBuffer.Add((short)sprite.X, (short)(sprite.Y + sprite.Height));
             textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
 
-            if (Shape == Shape.Triangle && maskSpriteTextureAtlasOffset != null)
+            if (Masked && maskSpriteTextureAtlasOffset != null)
             {
                 maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y);
                 maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)maskSpriteTextureAtlasOffset.Y);

@@ -27,8 +27,8 @@ namespace Freeserf
     // Landscape(including WaterWaves)
     // Grid
     // Paths
-    // SerfsBehind
-    // Objects(MapObjects, Flags, Buildings), Resources on Flags, Shadows of the object
+    // Objects(MapObjects, Flags), Resources on Flags, Shadows of the object
+    // Buildings (like Objects but masked for build progress)
     // Serfs
     // Builds
     // Cursor
@@ -40,15 +40,16 @@ namespace Freeserf
         Grid = 1 << 1,
         Paths = 1 << 2,
         Objects = 1 << 3,
-        Serfs = 1 << 4,
-        Builds = 1 << 5,
-        Cursor = 1 << 6,        
-        All = Landscape | Paths | Objects | Serfs | Cursor
+        Buildings = 1 << 4,
+        Serfs = 1 << 5,
+        Builds = 1 << 6,
+        Cursor = 1 << 7,        
+        All = Landscape | Paths | Objects | Buildings | Serfs | Cursor
     }
 
     public partial class Global
     {
-        // Objects and Serfs share a base Z value range from 0.05 to 0.95.
+        // Objects, Buildings and Serfs share a base Z value range from 0.05 to 0.95.
         // Higher values mean drawing over lower valued sprites.
         public static readonly float[] LayerBaseZ = new float[]
         {
@@ -57,6 +58,7 @@ namespace Freeserf
             0.01f,  // Grid
             0.02f,  // Paths
             0.05f,  // Objects
+            0.05f,  // Buildings
             0.05f,  // Serfs
             0.96f,  // Builds
             0.97f   // Cursor

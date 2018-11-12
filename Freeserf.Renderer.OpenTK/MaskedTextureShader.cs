@@ -1,5 +1,5 @@
 ﻿/*
- * MaskedTriangleShader.cs - Shader for masked map triangles
+ * TextureShader.cs - Shader for textured objects
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -82,7 +82,7 @@ namespace Freeserf.Renderer.OpenTK
         };
 
         MaskedTriangleShader()
-            : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName,
+            : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName,
                   DefaultAtlasSizeName, DefaultMaskTexCoordName, MaskedTriangleFragmentShader, MaskedTriangleVertexShader)
         {
@@ -92,7 +92,7 @@ namespace Freeserf.Renderer.OpenTK
         MaskedTriangleShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName,
             string atlasSizeName, string maskTexCoordName, string[] fragmentShaderLines, string[] vertexShaderLines)
-            : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName,
+            : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName, 
                   samplerName, colorKeyName, atlasSizeName, DefaultBaseLineName, fragmentShaderLines, vertexShaderLines)
         {
             this.maskTexCoordName = maskTexCoordName;

@@ -36,5 +36,7 @@ namespace Freeserf.Render
 
         ISpriteFactory SpriteFactory { get; }
         ITriangleFactory TriangleFactory { get; }
+
+        DataSource DataSource { get; }
     }
 }

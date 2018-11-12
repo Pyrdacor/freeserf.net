@@ -42,9 +42,12 @@ namespace Freeserf.Renderer.OpenTK
         readonly Texture texture = null;
         readonly int layerIndex = 0;
 
-        public RenderLayer(Layer layer, Shape shape, Texture texture, Color colorKey = null)
+        public RenderLayer(Layer layer, Texture texture, Color colorKey = null)
         {
-            renderBuffer = new RenderBuffer(shape);
+            var shape = (layer == Layer.Landscape || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
+            bool masked = layer == Layer.Landscape || layer == Layer.Buildings; // we need the mask for slope display and drawing of building progress
+
+            renderBuffer = new RenderBuffer(shape, masked);
 
             Layer = layer;
             this.texture = texture;
@@ -57,7 +60,19 @@ namespace Freeserf.Renderer.OpenTK
             if (texture == null)
                 return;
 
-            var shader = (renderBuffer.Shape == Shape.Rect) ? TextureShader.Instance : MaskedTriangleShader.Instance;
+            TextureShader shader;
+
+            if (renderBuffer.Masked)
+            {
+                if (renderBuffer.Shape == Shape.Triangle)
+                    shader = MaskedTriangleShader.Instance;
+                else
+                    shader = MaskedTextureShader.Instance;
+            }
+            else
+            {
+                shader = TextureShader.Instance;
+            }
 
             shader.UpdateMatrices(); // TODO: maybe do this in game view
 
@@ -135,13 +150,11 @@ namespace Freeserf.Renderer.OpenTK
 
             switch (layer)
             {
-                case Layer.Landscape:
-                    return new RenderLayer(layer, Shape.Triangle, texture as Texture, colorKey);
                 case Layer.All:
                 case Layer.None:
                     throw new InvalidOperationException($"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
                 default:
-                    return new RenderLayer(layer, Shape.Rect, texture as Texture, colorKey);
+                    return new RenderLayer(layer, texture as Texture, colorKey);
             }
         }
     }

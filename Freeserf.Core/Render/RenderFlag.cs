@@ -21,37 +21,23 @@
 
 namespace Freeserf.Render
 {
-    public class RenderFlag
+    internal class RenderFlag : RenderObject
     {
         Flag flag = null;
         protected ISprite sprite = null;
 
-        public RenderFlag(Flag flag, ISpriteFactory spriteFactory)
+        public RenderFlag(Flag flag, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+            : base(renderLayer, spriteFactory, dataSource)
         {
             this.flag = flag;
 
-            Create(spriteFactory);
+            Initialize();
         }
 
-        void Create(ISpriteFactory spriteFactory)
+        protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
             // TODO
             // sprite = spriteFactory.Create(...);
-        }
-
-        public void Delete()
-        {
-            sprite.Delete();
-            sprite = null;
-            flag = null;
-        }
-
-        public void Draw(Rect visibleMapArea)
-        {
-            if (sprite == null || flag == null)
-                return;
-
-            // TODO
         }
     }
 }

@@ -457,6 +457,7 @@ namespace Freeserf
         {
             public abstract void OnHeightChanged(MapPos pos);
             public abstract void OnObjectChanged(MapPos pos);
+            public abstract void OnObjectPlaced(MapPos pos);
         }
 
         public class LandscapeTile : IEquatable<LandscapeTile>
@@ -614,10 +615,12 @@ namespace Freeserf
         ushort regions;
         UpdateState updateState = new UpdateState();
         MapPos[] spiralPosPattern;
-        Render.IRenderView renderView;
+
+        // Rendering
+        Render.IRenderView renderView = null;
         Render.RenderMap renderMap = null;
         // TODO: road segments
-
+        
         /* Callback for map height changes */
         ChangeHandlers changeHandlers = new ChangeHandlers();
 
@@ -1143,6 +1146,11 @@ namespace Freeserf
                 {
                     handler.OnObjectChanged(Move(pos, d));
                 }
+            }
+
+            foreach (Handler handler in changeHandlers)
+            {
+                handler.OnObjectPlaced(pos);
             }
         }
 

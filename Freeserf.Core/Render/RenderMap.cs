@@ -13,7 +13,7 @@ namespace Freeserf.Render
     using MapPos = System.UInt32;
 
     // Note: Scrolling is only possible by full tile columns or rows
-    public class RenderMap
+    internal class RenderMap
     {
         internal const int TILE_WIDTH = 32;
         internal const int TILE_HEIGHT = 20;
@@ -105,6 +105,9 @@ namespace Freeserf.Render
         Map map = null;
         ITextureAtlas textureAtlas = null;
         readonly List<ITriangle> triangles = null;
+
+        public uint ScrollX => x;
+        public uint ScrollY => y;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
             ITriangleFactory triangleFactory, ITextureAtlas textureAtlas,

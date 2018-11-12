@@ -1,5 +1,5 @@
 ﻿/*
- * RenderObject.cs - Handles map object rendering
+ * RenderObject.cs - Base class for game object rendering
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -19,58 +19,82 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
+
 namespace Freeserf.Render
 {
-    public class RenderObject
+    internal abstract class RenderObject
     {
-        Map.Object objectType = Map.Object.None;
-        ISprite sprite = null;
+        IRenderLayer renderLayer = null;
+        ISpriteFactory spriteFactory = null;
+        DataSource dataSource = null;
+        protected ISprite sprite = null;
+        protected ISprite shadowSprite = null;
 
-        public RenderObject(Map.Object objectType, ISpriteFactory spriteFactory)
+        public virtual bool Visible
         {
-            this.objectType = objectType;
-
-            Create(spriteFactory);
-        }
-
-        void Create(ISpriteFactory spriteFactory)
-        {
-            // TODO
-            // sprite = spriteFactory.Create(...);
-        }
-
-        public void ChangeObjectType(Map.Object objectType)
-        {
-            if (objectType == this.objectType)
-                return; // nothing changed
-
-            if (this.objectType == Map.Object.None) // from None to something valid
+            get => sprite.Visible;
+            set
             {
-                // do we support this? can this even happen?
-            }
+                sprite.Visible = value;
 
-            if (objectType == Map.Object.None) // from something valid to None
-            {
-                Delete();
-                return;
+                if (shadowSprite != null)
+                    shadowSprite.Visible = value;
             }
-
-            // TODO: set tex coords and size
         }
+
+        protected RenderObject(IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+        {
+            this.renderLayer = renderLayer;
+            this.spriteFactory = spriteFactory;
+            this.dataSource = dataSource;
+        }
+
+        protected void Initialize()
+        {
+            Create(spriteFactory, dataSource);
+
+            if (sprite == null)
+                throw new ExceptionFreeserf("Failed to create sprite");
+
+            sprite.Layer = renderLayer;
+
+            if (shadowSprite != null)
+                shadowSprite.Layer = renderLayer;
+        }
+
+        protected abstract void Create(ISpriteFactory spriteFactory, DataSource dataSource);
 
         public void Delete()
         {
-            sprite.Delete();
-            sprite = null;
-            objectType = Map.Object.None;
+            if (sprite != null)
+            {
+                sprite.Delete();
+                sprite = null;
+            }
+
+            if (shadowSprite != null)
+            {
+                shadowSprite.Delete();
+                shadowSprite = null;
+            }
         }
 
-        public void Draw(Rect visibleMapArea)
+        public bool IsVisibleIn(Rect rect)
         {
-            if (sprite == null || objectType == Map.Object.None)
-                return;
+            if (shadowSprite == null)
+            {
+                return rect.IntersectsWith(new Rect(sprite.X, sprite.Y, sprite.Width, sprite.Height));
+            }
+            else
+            {
+                int left = Math.Min(sprite.X, shadowSprite.X);
+                int top = Math.Min(sprite.Y, shadowSprite.Y);
+                int right = Math.Max(sprite.X + sprite.Width, shadowSprite.X + shadowSprite.Width);
+                int bottom = Math.Max(sprite.Y + sprite.Height, shadowSprite.Y + shadowSprite.Height);
 
-            // TODO
+                return rect.IntersectsWith(new Rect(left, top, right - left, bottom - top));
+            }
         }
     }
 }

@@ -722,8 +722,31 @@ namespace Freeserf
             s = new StateInfo();
         }
 
+        State serfState = State.Null;
+
         public uint Player { get; set; }
-        public State SerfState { get; private set; }
+        public State SerfState
+        {
+            get => serfState;
+            private set
+            {
+                if (serfState == value)
+                    return;
+
+                serfState = value;
+
+                switch (serfState)
+                {
+                    case State.IdleInStock:
+                        Game.RemoveSerfFromDrawing(this);
+                        break;
+                    case State.Walking:
+                    case State.KnightFreeWalking:
+                        Game.AddSerfForDrawing(this, Position);
+                        break;
+                }
+            }
+        }
         public int Animation { get; private set; } /* Index to animation table in data file. */
         public int Counter { get; private set; }
         public MapPos Position { get; private set; }
@@ -2569,6 +2592,8 @@ namespace Freeserf
             StartWalking(Direction.DownRight, slope, !joinPos);
 
             SetState(State.LeavingBuilding);
+
+            Game.AddSerfForDrawing(this, Position);
         }
 
         void EnterInventory()
@@ -5518,6 +5543,8 @@ namespace Freeserf
 
                 SetState(State.Lost);
                 s.Lost.FieldB = 0;
+
+                Game.AddSerfForDrawing(this, Position);
             }
         }
 

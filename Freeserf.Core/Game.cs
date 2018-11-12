@@ -23,8 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -41,7 +39,7 @@ namespace Freeserf
     using Values = Dictionary<uint, uint>;
     using Dirs = Stack<Direction>;
 
-    public class Game
+    public class Game : Map.Handler
     {
         public const int DEFAULT_GAME_SPEED = 2;
         public const int GAME_MAX_PLAYER_COUNT = 4;
@@ -62,6 +60,7 @@ namespace Freeserf
         readonly Dictionary<Serf, Render.RenderSerf> renderSerfs = new Dictionary<Serf, Render.RenderSerf>();
         readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
         readonly Dictionary<Flag, Render.RenderFlag> renderFlags = new Dictionary<Flag, Render.RenderFlag>();
+        readonly Dictionary<MapPos, Render.RenderMapObject> renderObjects = new Dictionary<MapPos, Render.RenderMapObject>();
 
         Random initMapRandom;
         uint gameSpeedSave;
@@ -223,6 +222,9 @@ namespace Freeserf
             generator.Generate();
             map.InitTiles(generator);
             goldTotal = map.GetGoldDeposit();
+
+
+            map.AddChangeHandler(this);
 
             return true;
         }
@@ -1558,15 +1560,16 @@ namespace Freeserf
                 serf = serfs.GetOrInsert((uint)index);
             }
 
-            renderSerfs.Add(serf, new Render.RenderSerf(serf, renderView.SpriteFactory));
-
             return serf;
         }
 
         internal void DeleteSerf(Serf serf)
         {
-            renderSerfs[serf].Delete();
-            renderSerfs.Remove(serf);
+            if (renderSerfs.ContainsKey(serf))
+            {
+                renderSerfs[serf].Delete();
+                renderSerfs.Remove(serf);
+            }
 
             serfs.Erase(serf.Index);
         }
@@ -1583,8 +1586,6 @@ namespace Freeserf
             {
                 flag = flags.GetOrInsert((uint)index);
             }
-
-            renderFlags.Add(flag, new Render.RenderFlag(flag, renderView.SpriteFactory));
 
             return flag;
         }
@@ -1623,8 +1624,6 @@ namespace Freeserf
             {
                 building = buildings.GetOrInsert((uint)index);
             }
-
-            renderBuildings.Add(building, new Render.RenderBuilding(building, renderView.SpriteFactory));
 
             return building;
         }
@@ -3216,6 +3215,72 @@ namespace Freeserf
             //}
 
             //return true;
+        }
+
+        public override void OnHeightChanged(uint pos)
+        {
+            // TODO
+        }
+
+        public override void OnObjectChanged(uint pos)
+        {
+            // TODO
+        }
+
+        public override void OnObjectPlaced(uint pos)
+        {
+            var obj = map.GetObject(pos);
+
+            // rendering
+            if (obj == Map.Object.Flag)
+            {
+                var flag = GetFlagAtPos(pos);
+                var renderFlag = new Render.RenderFlag(flag, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+
+                renderFlag.Visible = true; // TODO: test if inside visible area
+
+                renderFlags.Add(flag, renderFlag);
+            }
+            else if (obj == Map.Object.SmallBuilding ||
+                     obj == Map.Object.LargeBuilding ||
+                     obj == Map.Object.Castle)
+            {
+                var building = GetBuildingAtPos(pos);
+                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+
+                renderBuilding.Visible = true; // TODO: test if inside visible area
+
+                renderBuildings.Add(building, renderBuilding);
+            }
+            else // map object
+            {
+                var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+
+                renderObject.Visible = true; // TODO: test if inside visible area
+
+                renderObjects.Add(pos, renderObject);
+            }
+        }
+
+        public void AddSerfForDrawing(Serf serf, MapPos pos)
+        {
+            if (renderSerfs.ContainsKey(serf))
+                return;
+
+            var renderSerf = new Render.RenderSerf(serf, renderView.GetLayer(Layer.Serfs), renderView.SpriteFactory, renderView.DataSource);
+
+            renderSerf.Visible = true; // TODO: test if inside visible area
+
+            renderSerfs.Add(serf, renderSerf);
+        }
+
+        public void RemoveSerfFromDrawing(Serf serf)
+        {
+            if (renderSerfs.ContainsKey(serf))
+            {
+                renderSerfs[serf].Delete();
+                renderSerfs.Remove(serf);
+            }
         }
     }
 }
