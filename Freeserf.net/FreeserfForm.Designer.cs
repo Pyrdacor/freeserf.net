@@ -42,6 +42,7 @@
             this.RenderControl.Size = new System.Drawing.Size(800, 606);
             this.RenderControl.TabIndex = 0;
             this.RenderControl.VSync = false;
+            this.RenderControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDown);
             this.RenderControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseMove);
             // 
             // FrameTimer

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows.Forms;
 using Freeserf.Renderer.OpenTK;
 using Orientation = Freeserf.Renderer.OpenTK.Orientation;
@@ -18,11 +19,11 @@ namespace Freeserf
 
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
-            Log.SetFile(System.IO.File.Create(@"D:\Programmierung\C#\Projects\freeserf.net\Freeserf.net\log.txt"));
+            Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
             Log.SetLevel(Log.Level.Verbose);
 
             // TODO: for now we just load DOS data (test path)
-            DataSourceDos dosData = new DataSourceDos(@"D:\Programmierung\C#\Projects\freeserf.net\Freeserf.net\SPAE.PA");
+            DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
 
             if (!dosData.Load())
             {
@@ -64,9 +65,13 @@ namespace Freeserf
             // serfSprite.Visible = true;
             // serfSprite.Layer = layerSerfs;
 
-            game = new Game(gameView);
+            var random = new Random();
+            var gameInfo = new GameInfo(random);
 
-            game.Init(3, new Random("3762665523225478")); // mission 1
+            if (!GameManager.Instance.StartGame(gameInfo.GetMission(0), gameView))
+                throw new ExceptionFreeserf("Failed to start game.");
+
+            game = GameManager.Instance.GetCurrentGame();
 
             game.Map.AttachToRenderLayer(layerLandscape, dosData);
 
@@ -92,16 +97,8 @@ namespace Freeserf
 
             if (e.Button == MouseButtons.Right)
             {
-                if (pos == null)
+                if (pos == null || lastX == int.MinValue)
                     return;
-
-                if (lastX == int.MinValue)
-                {
-                    lastX = pos.X;
-                    lastY = pos.Y;
-
-                    return;
-                }
 
                 int diffX = pos.X - lastX;
                 int diffY = pos.Y - lastY;
@@ -120,6 +117,19 @@ namespace Freeserf
             {
                 lastX = int.MinValue;
             }
+        }
+
+        private void RenderControl_MouseDown(object sender, MouseEventArgs e)
+        {
+            lastX = int.MinValue;
+
+            Position pos = gameView.ScreenToView(new Position(e.X, e.Y));
+
+            if (pos == null)
+                return;
+
+            lastX = pos.X;
+            lastY = pos.Y;
         }
     }
 }
