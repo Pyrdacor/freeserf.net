@@ -80,11 +80,83 @@ namespace Freeserf.Renderer.OpenTK
         }
     }
 
+    public class MaskedSprite : Node, IMaskedSprite
+    {
+        protected int drawIndex = -1;
+        Position textureAtlasOffset = null;
+        Position maskTextureAtlasOffset = null;
+
+        public MaskedSprite(int width, int height, int textureAtlasX, int textureAtlasY)
+            : base(Shape.Rect, width, height)
+        {
+            textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
+            maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
+        }
+
+        public Position TextureAtlasOffset
+        {
+            get => textureAtlasOffset;
+            set
+            {
+                if (textureAtlasOffset == value)
+                    return;
+
+                textureAtlasOffset = new Position(value);
+
+                UpdateTextureAtlasOffset();
+            }
+        }
+
+        public Position MaskTextureAtlasOffset
+        {
+            get => maskTextureAtlasOffset;
+            set
+            {
+                if (maskTextureAtlasOffset == value)
+                    return;
+
+                maskTextureAtlasOffset = new Position(value);
+
+                UpdateTextureAtlasOffset();
+            }
+        }
+
+        protected override void AddToLayer()
+        {
+            base.AddToLayer();
+
+            drawIndex = (Layer as RenderLayer).GetDrawIndex(this, maskTextureAtlasOffset);
+        }
+
+        protected override void RemoveFromLayer()
+        {
+            base.RemoveFromLayer();
+
+            (Layer as RenderLayer).FreeDrawIndex(drawIndex);
+            drawIndex = -1;
+        }
+
+        protected override void UpdatePosition()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdatePosition(drawIndex, this);
+        }
+
+        protected virtual void UpdateTextureAtlasOffset()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateTextureAtlasOffset(drawIndex, this, maskTextureAtlasOffset);
+        }
+    }
+
     public class SpriteFactory : ISpriteFactory
     {
-        public ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY)
+        public ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked)
         {
-            return new Sprite(width, height, textureAtlasX, textureAtlasY);
+            if (masked)
+                return new MaskedSprite(width, height, textureAtlasX, textureAtlasY);
+            else
+                return new Sprite(width, height, textureAtlasX, textureAtlasY);
         }
     }
 }

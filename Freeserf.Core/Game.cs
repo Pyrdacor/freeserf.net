@@ -61,6 +61,7 @@ namespace Freeserf
         readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
         readonly Dictionary<Flag, Render.RenderFlag> renderFlags = new Dictionary<Flag, Render.RenderFlag>();
         readonly Dictionary<MapPos, Render.RenderMapObject> renderObjects = new Dictionary<MapPos, Render.RenderMapObject>();
+        readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
 
         Random initMapRandom;
         uint gameSpeedSave;
@@ -2114,7 +2115,7 @@ namespace Freeserf
 
         protected void UpdateBuildings()
         {
-            // Note: Do not use foreac here as building.Update()
+            // Note: Do not use foreach here as building.Update()
             // may delete the building and therefore change the
             // collection while we iterate through it!
 
@@ -2124,6 +2125,22 @@ namespace Freeserf
             for (int i = 0; i < buildingList.Count; ++i)
             {
                 buildingList[i].Update(tick);
+
+                // if a building burns we have to update its rendering so ensure that is is updated when visible
+                if (buildingList[i].IsBurning())
+                {
+                    if (renderBuildings.ContainsKey(buildingList[i]) && renderBuildings[buildingList[i]].Visible)
+                    {
+                        if (!renderBuildingsInProgress.Contains(renderBuildings[buildingList[i]]))
+                            renderBuildingsInProgress.Add(renderBuildings[buildingList[i]]);
+                    }
+                }
+            }
+
+            for (int i = renderBuildingsInProgress.Count - 1; i >= 0; --i)
+            {
+                if (!renderBuildingsInProgress[i].UpdateProgress()) // no more updating needed
+                    renderBuildingsInProgress.RemoveAt(i);
             }
         }
 
@@ -3251,6 +3268,9 @@ namespace Freeserf
                 renderBuilding.Visible = true; // TODO: test if inside visible area
 
                 renderBuildings.Add(building, renderBuilding);
+
+                if (!building.IsDone())
+                    renderBuildingsInProgress.Add(renderBuilding);
             }
             else // map object
             {

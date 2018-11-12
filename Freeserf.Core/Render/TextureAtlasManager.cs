@@ -57,9 +57,15 @@ namespace Freeserf.Render
         public void AddAll(DataSource data)
         {
             uint i;
+            int atlasIndex;
 
-            // use black color (TODO: correct for all?)
-            var color = new Sprite.Color() { Red = 0, Green = 0, Blue = 0, Alpha = 255 };
+            // use transparent color (TODO: correct for all?)
+            var color = Sprite.Color.Transparent;
+
+
+            #region Landscape
+
+            atlasIndex = (int)Layer.Landscape;
 
             // Note:
             // We enlarge all tile sprites to the maximum height of 41 (max mask height) with repeated texture data.
@@ -68,7 +74,7 @@ namespace Freeserf.Render
 
             // add all normal landscape tile sprites
             for (i = 0; i < 33u; ++i) // 33 map tile sprites
-                AddSprite((int)Layer.Landscape, i, data.GetSprite(Data.Resource.MapGround, i, color).RepeatTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
+                AddSprite(atlasIndex, i, data.GetSprite(Data.Resource.MapGround, i, color).RepeatTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
 
             // add all tile up mask sprites
             uint numUpMasks = 61u; // 61 tile up mask sprites
@@ -81,7 +87,7 @@ namespace Freeserf.Render
 
                 if (mask != null)
                 {
-                    AddSprite((int)Layer.Landscape, maskIndex + 33u, mask.ClearTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
+                    AddSprite(atlasIndex, maskIndex + 33u, mask.ClearTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
                     ++maskIndex;
                 }
 
@@ -99,12 +105,36 @@ namespace Freeserf.Render
 
                 if (mask != null)
                 {
-                    AddSprite((int)Layer.Landscape, maskIndex + 33u + 61u, mask.ClearTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
+                    AddSprite(atlasIndex, maskIndex + 33u + 61u, mask.ClearTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
                     ++maskIndex;
                 }
 
                 ++i;
             }
+
+            #endregion
+
+
+            #region Buildings
+
+            atlasIndex = (int)Layer.Buildings;
+
+            // building sprites are located in sprites 144 to 193 (with some gaps)
+            for (uint buildingSprite = 144; buildingSprite <= 193; ++buildingSprite)
+            {
+                var sprite = data.GetSprite(Data.Resource.MapObject, buildingSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, buildingSprite, sprite);
+            }
+
+            // we also add the build-in-progress mask
+            AddSprite(atlasIndex, 0u, Sprite.CreateHalfMask(64u, 200u, true));
+
+            // we also add the burning sprites
+            // TODO
+
+            #endregion
 
             // TODO
         }

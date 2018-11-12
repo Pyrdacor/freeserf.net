@@ -30,8 +30,17 @@ namespace Freeserf.Render
         }
     }
 
+    public interface IMaskedSprite : ISprite
+    {
+        Position MaskTextureAtlasOffset
+        {
+            get;
+            set;
+        }
+    }
+
     public interface ISpriteFactory
     {
-        ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY);
+        ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked);
     }
 }

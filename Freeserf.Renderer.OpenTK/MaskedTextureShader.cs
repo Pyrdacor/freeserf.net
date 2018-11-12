@@ -1,5 +1,5 @@
 ﻿/*
- * TextureShader.cs - Shader for textured objects
+ * MaskedTextureShader.cs - Shader for masked textured objects
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -21,14 +21,14 @@
 
 namespace Freeserf.Renderer.OpenTK
 {
-    internal sealed class MaskedTriangleShader : TextureShader
+    internal sealed class MaskedTextureShader : TextureShader
     {
-        static MaskedTriangleShader maskedTriangleShader = null;
+        static MaskedTextureShader maskedTextureShader = null;
         internal static readonly string DefaultMaskTexCoordName = "maskTexCoord";
 
         readonly string maskTexCoordName;
 
-        static readonly string[] MaskedTriangleFragmentShader = new string[]
+        static readonly string[] MaskedTextureFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
             $"uniform vec3 {DefaultColorKeyName} = vec3(1, 0, 1);",
@@ -55,12 +55,13 @@ namespace Freeserf.Renderer.OpenTK
             $"}}"
         };
 
-        static readonly string[] MaskedTriangleVertexShader = new string[]
+        static readonly string[] MaskedTextureVertexShader = new string[]
         {
             GetVertexShaderHeader(),
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
             $"{GetInName(false)} ivec2 {DefaultTexCoordName};",
             $"{GetInName(false)} ivec2 {DefaultMaskTexCoordName};",
+            $"{GetInName(false)} uint {DefaultBaseLineName};",
             $"uniform uvec2 {DefaultAtlasSizeName};",
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
@@ -77,35 +78,35 @@ namespace Freeserf.Renderer.OpenTK
             $"    ",
             $"    varTexCoord *= atlasFactor;",
             $"    varMaskTexCoord *= atlasFactor;",
-            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName}, 1.0f);",
+            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName} + {DefaultBaseLineName} * 0.0001f, 1.0f);",
             $"}}"
         };
 
-        MaskedTriangleShader()
+        MaskedTextureShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
-                  DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName,
-                  DefaultAtlasSizeName, DefaultMaskTexCoordName, MaskedTriangleFragmentShader, MaskedTriangleVertexShader)
+                  DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultAtlasSizeName,
+                  DefaultMaskTexCoordName, DefaultBaseLineName, MaskedTextureFragmentShader, MaskedTextureVertexShader)
         {
 
         }
 
-        MaskedTriangleShader(string modelViewMatrixName, string projectionMatrixName, string zName,
+        MaskedTextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName,
-            string atlasSizeName, string maskTexCoordName, string[] fragmentShaderLines, string[] vertexShaderLines)
+            string atlasSizeName, string maskTexCoordName, string baseLineName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName, 
-                  samplerName, colorKeyName, atlasSizeName, DefaultBaseLineName, fragmentShaderLines, vertexShaderLines)
+                  samplerName, colorKeyName, atlasSizeName, baseLineName, fragmentShaderLines, vertexShaderLines)
         {
             this.maskTexCoordName = maskTexCoordName;
         }
 
-        public new static MaskedTriangleShader Instance
+        public new static MaskedTextureShader Instance
         {
             get
             {
-                if (maskedTriangleShader == null)
-                    maskedTriangleShader = new MaskedTriangleShader();
+                if (maskedTextureShader == null)
+                    maskedTextureShader = new MaskedTextureShader();
 
-                return maskedTriangleShader;
+                return maskedTextureShader;
             }
         }
     }

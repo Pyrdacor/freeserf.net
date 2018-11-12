@@ -65,7 +65,7 @@ namespace Freeserf.Render
 
         protected abstract void Create(ISpriteFactory spriteFactory, DataSource dataSource);
 
-        public void Delete()
+        public virtual void Delete()
         {
             if (sprite != null)
             {

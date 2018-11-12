@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Freeserf
@@ -135,6 +136,19 @@ namespace Freeserf
             System.Buffer.BlockCopy(data, 0, sprite.data, 0, (int)(Width * Height * 4u));
 
             // the rest is already filled with zeros cause of array initialization, so nothing to do anymore
+
+            return sprite;
+        }
+
+        public static Sprite CreateHalfMask(uint width, uint height, bool secondHalfFilled)
+        {
+            var sprite = new Sprite(width, height);
+
+            int halfSize = (int)height * 2; // * 2 because 4 bytes per pixel and height * 4 / 2 = height * 2
+
+            int offset = secondHalfFilled ? halfSize : 0; 
+
+            System.Buffer.BlockCopy(Enumerable.Repeat((byte)0xFF, halfSize).ToArray(), 0, sprite.data, offset, halfSize);
 
             return sprite;
         }
