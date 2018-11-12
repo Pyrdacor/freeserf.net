@@ -53,7 +53,10 @@ namespace Freeserf
         /* Count of resources */
         readonly ResourceMap resources = new ResourceMap();
         /* Resources waiting to be moved out */
-        readonly OutQueue[] outQueue = new OutQueue[2];
+        readonly OutQueue[] outQueue = new OutQueue[2]
+        {
+            new OutQueue(), new OutQueue()
+        };
         /* Count of serfs waiting to move out */
         uint serfsOut = 0;
         /* Count of generic serfs */

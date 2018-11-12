@@ -126,6 +126,12 @@ namespace Freeserf.Render
 
                 if (sprite != null)
                     AddSprite(atlasIndex, buildingSprite, sprite);
+
+                // shadow
+                sprite = data.GetSprite(Data.Resource.MapShadow, buildingSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 1000u + buildingSprite, sprite); // we use 1000 as the shadow offset (see RenderBuilding)
             }
 
             // we also add the build-in-progress mask

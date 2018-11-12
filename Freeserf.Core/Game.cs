@@ -1060,6 +1060,8 @@ namespace Freeserf
 
             castle.UpdateMilitaryFlagState();
 
+            player.CastlePos = pos;
+
             return true;
         }
 

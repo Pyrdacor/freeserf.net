@@ -42,6 +42,7 @@ namespace Freeserf.Render
 
         const uint CrossSprite = 0x90;
         const uint CornerStoneSprite = 0x91;
+        const uint ShadowOffset = 1000u;
 
         Building building = null;
         ISprite frameSprite = null;
@@ -67,6 +68,17 @@ namespace Freeserf.Render
 
             if (burningSprite != null)
                 burningSprite.Layer = renderLayer;
+
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+
+            sprite.TextureAtlasOffset = textureAtlas.GetOffset(MapBuildingSprite[(int)building.BuildingType]);
+            shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + MapBuildingSprite[(int)building.BuildingType]);
+
+            if (frameSprite != null)
+                frameSprite.TextureAtlasOffset = textureAtlas.GetOffset(MapBuildingFrameSprite[(int)building.BuildingType]);
+
+            if (frameShadowSprite != null)
+                frameShadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + MapBuildingFrameSprite[(int)building.BuildingType]);
         }
 
         public override bool Visible
@@ -94,7 +106,7 @@ namespace Freeserf.Render
             sprite = spriteFactory.Create((int)spriteData.Width, (int)spriteData.Height, 0, 0, true);
             shadowSprite = spriteFactory.Create((int)spriteShadowData.Width, (int)spriteShadowData.Height, 0, 0, true);
 
-            if (!building.IsDone())
+            if (!building.IsDone() && building.BuildingType != Building.Type.Castle)
             {
                 uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
 
@@ -208,9 +220,6 @@ namespace Freeserf.Render
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
 
-            float factorX = 1.0f / textureAtlas.Texture.Width;  // pixel factor x direction
-            float factorY = 1.0f / textureAtlas.Texture.Height; // pixel factor y direction
-
             if (building.IsDone())
             {
                 // If the building is finished we no longer need
@@ -228,7 +237,6 @@ namespace Freeserf.Render
                     frameShadowSprite = null;
                 }
 
-                sprite.TextureAtlasOffset = textureAtlas.GetOffset(MapBuildingSprite[(int)building.BuildingType]);
                 (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
 
                 if (!building.IsBurning()) // we need updates while burning
@@ -236,33 +244,43 @@ namespace Freeserf.Render
             }
             else
             {
-                // Progress = 0: Leveling is active
-                // Progress = 1: Leveling is done (or not necessary)
-                // BitTest(Progress, 15) = true: Frame finished         [This means Progress >= 32768]
-                // Progress = 0xffff: Building finished                 [This means Progress >= 65536]
-
-                var progress = building.GetProgress();
-
-                if (progress == 0) // cross
+                if (building.BuildingType == Building.Type.Castle)
                 {
-                    
-                }
-                else if (progress == 1) // corner stone
-                {
+                    (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
 
+                    if (shadowSprite != null)
+                        (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height); // it is correct to use sprite.Height here
                 }
                 else
                 {
+                    // Progress = 0: Leveling is active
+                    // Progress = 1: Leveling is done (or not necessary)
+                    // BitTest(Progress, 15) = true: Frame finished         [This means Progress >= 32768]
+                    // Progress = 0xffff: Building finished                 [This means Progress >= 65536]
+
+                    var progress = building.GetProgress();
+
                     uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
+
+                    (frameSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, frameSprite.Height);
+
+                    if (frameShadowSprite != null)
+                        (frameShadowSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, frameSprite.Height); // it is correct to use sprite.Height here
+
 
                     if (!Misc.BitTest(progress, 15)) // building frame
                     {
+                        (sprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(0u); // the sprite is not visible
 
+                        if (shadowSprite != null)
+                            (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(0u); // the sprite is not visible
                     }
                     else // building on top of frame
                     {
-                        // draw full frame
-                        textureAtlas.GetOffset(frameSpriteIndex);
+                        (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
+
+                        if (shadowSprite != null)
+                            (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height); // it is correct to use sprite.Height here
                     }
                 }
             }

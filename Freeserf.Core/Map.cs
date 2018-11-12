@@ -640,6 +640,12 @@ namespace Freeserf
             landscapeTiles = new LandscapeTile[(int)geometry.TileCount];
             gameTiles = new GameTile[(int)geometry.TileCount];
 
+            for (int i = 0; i < (int)geometry.TileCount; ++i)
+            {
+                landscapeTiles[i] = new LandscapeTile();
+                gameTiles[i] = new GameTile();
+            }
+
             updateState.LastTick = 0;
             updateState.Counter = 0;
             updateState.RemoveSignsCounter = 0;

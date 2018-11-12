@@ -46,19 +46,19 @@ namespace Freeserf
             var layerGrid = new RenderLayer(Layer.Grid, textureDummy);
             var layerPaths = new RenderLayer(Layer.Paths, textureDummy);
             var layerObjects = new RenderLayer(Layer.Objects, textureDummy);
-            var layerBuildings = new RenderLayer(Layer.Buildings, textureDummy);
+            var layerBuildings = new RenderLayer(Layer.Buildings, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings).Texture as Renderer.OpenTK.Texture);
             var layerSerfs = new RenderLayer(Layer.Serfs, textureDummy);
             var layerBuilds = new RenderLayer(Layer.Builds, textureDummy);
             var layerCursor = new RenderLayer(Layer.Cursor, textureDummy);
 
             gameView.AddLayer(layerLandscape);
-            /*gameView.AddLayer(layerGrid);
+            gameView.AddLayer(layerGrid);
             gameView.AddLayer(layerPaths);
             gameView.AddLayer(layerObjects);
             gameView.AddLayer(layerBuildings);
             gameView.AddLayer(layerSerfs);
             gameView.AddLayer(layerBuilds);
-            gameView.AddLayer(layerCursor);*/
+            gameView.AddLayer(layerCursor);
 
             // Example for adding a sprite
             // var serfSprite = new Sprite(32, 34, 0, 0);
@@ -68,12 +68,18 @@ namespace Freeserf
             var random = new Random();
             var gameInfo = new GameInfo(random);
 
-            if (!GameManager.Instance.StartGame(gameInfo.GetMission(0), gameView))
+            if (!GameManager.Instance.StartGame(gameInfo.GetMission(29), gameView))
                 throw new ExceptionFreeserf("Failed to start game.");
 
             game = GameManager.Instance.GetCurrentGame();
 
             game.Map.AttachToRenderLayer(layerLandscape, dosData);
+
+            var pos = game.GetPlayer(0u).CastlePos;
+            uint column = game.Map.PosColumn(pos);
+            uint row = game.Map.PosRow(pos);
+
+            game.Map.ScrollTo(column, row);
 
             FrameTimer.Start();
         }
