@@ -556,7 +556,9 @@ namespace Freeserf
                 Log.Warn.Write("data", "Failed to load 'gfxpics'");
             }
 
-            return LoadAnimationTable(dataPointers[1].GetSubBuffer(0, 30528));
+            loaded = LoadAnimationTable(dataPointers[1].GetSubBuffer(0, 30528));
+
+            return loaded;
         }
 
         public override Tuple<Sprite, Sprite> GetSpriteParts(Data.Resource resource, uint index)

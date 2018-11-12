@@ -402,7 +402,9 @@ namespace Freeserf
 
             anim = anim.PopTail();
 
-            return LoadAnimationTable(anim);
+            loaded = LoadAnimationTable(anim);
+
+            return loaded;
         }
 
         // Create sprite object
