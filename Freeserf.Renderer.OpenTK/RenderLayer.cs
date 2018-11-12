@@ -40,6 +40,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly RenderBuffer renderBuffer = null;
         readonly Dictionary<Size, List<IRenderNode>> nodes = new Dictionary<Size, List<IRenderNode>>();
         readonly Texture texture = null;
+        readonly int layerIndex = 0;
 
         public RenderLayer(Layer layer, Shape shape, Texture texture, Color colorKey = null)
         {
@@ -48,6 +49,7 @@ namespace Freeserf.Renderer.OpenTK
             Layer = layer;
             this.texture = texture;
             ColorKey = colorKey;
+            layerIndex = Misc.Round(Math.Log((int)layer, 2.0));
         }
 
         public void Render()
@@ -65,7 +67,10 @@ namespace Freeserf.Renderer.OpenTK
 
             shader.SetAtlasSize((uint)texture.Width, (uint)texture.Height);
 
-            shader.SetZ(0.0f); // TODO: set dependent of layer?
+            // the layer level provides a base z (layerIndex * 0.1f)
+            // in some shaders the y-value will add 0.00001f per pixel to display
+            // sprites that are more to the bottom in front of others
+            shader.SetZ(layerIndex * 0.1f);
 
             if (ColorKey == null)
                 shader.SetColorKey(1.0f, 0.0f, 1.0f);
