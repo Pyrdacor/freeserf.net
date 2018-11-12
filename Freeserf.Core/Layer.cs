@@ -39,11 +39,27 @@ namespace Freeserf
         Landscape = 1 << 0,
         Grid = 1 << 1,
         Paths = 1 << 2,
-        SerfsBehind = 1 << 3,
-        Objects = 1 << 4,
-        Serfs = 1 << 5,
-        Builds = 1 << 6,
-        Cursor = 1 << 7,        
-        All = Landscape | Paths | SerfsBehind | Objects | Serfs | Cursor
+        Objects = 1 << 3,
+        Serfs = 1 << 4,
+        Builds = 1 << 5,
+        Cursor = 1 << 6,        
+        All = Landscape | Paths | Objects | Serfs | Cursor
+    }
+
+    public partial class Global
+    {
+        // Objects and Serfs share a base Z value range from 0.05 to 0.95.
+        // Higher values mean drawing over lower valued sprites.
+        public static readonly float[] LayerBaseZ = new float[]
+        {
+            0.00f,  // None
+            0.00f,  // Landscape
+            0.01f,  // Grid
+            0.02f,  // Paths
+            0.05f,  // Objects
+            0.05f,  // Serfs
+            0.96f,  // Builds
+            0.97f   // Cursor
+        };
     }
 }

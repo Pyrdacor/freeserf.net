@@ -45,7 +45,6 @@ namespace Freeserf
             var layerLandscape = new RenderLayer(Layer.Landscape, Shape.Triangle, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape).Texture as Renderer.OpenTK.Texture);
             var layerGrid = new RenderLayer(Layer.Grid, Shape.Triangle, textureDummy);
             var layerPaths = new RenderLayer(Layer.Paths, Shape.Rect, textureDummy);
-            var layerSerfsBehind = new RenderLayer(Layer.SerfsBehind, Shape.Rect, textureDummy);
             var layerObjects = new RenderLayer(Layer.Objects, Shape.Rect, textureDummy);
             var layerSerfs = new RenderLayer(Layer.Serfs, Shape.Rect, textureDummy);
             var layerBuilds = new RenderLayer(Layer.Builds, Shape.Rect, textureDummy);
@@ -54,7 +53,6 @@ namespace Freeserf
             gameView.AddLayer(layerLandscape);
             gameView.AddLayer(layerGrid);
             gameView.AddLayer(layerPaths);
-            gameView.AddLayer(layerSerfsBehind);
             gameView.AddLayer(layerObjects);
             gameView.AddLayer(layerSerfs);
             gameView.AddLayer(layerBuilds);

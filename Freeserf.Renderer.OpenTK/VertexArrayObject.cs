@@ -30,6 +30,7 @@ namespace Freeserf.Renderer.OpenTK
     {
     	Int32 index = 0;
         readonly Dictionary<string, PositionBuffer> positionBuffers = new Dictionary<string, PositionBuffer>();
+        readonly Dictionary<string, BaseLineBuffer> baseLineBuffers = new Dictionary<string, BaseLineBuffer>();
         readonly Dictionary<string, int> bufferLocations = new Dictionary<string, int>();
         bool disposed = false;
         bool buffersAreBound = false;
@@ -54,6 +55,11 @@ namespace Freeserf.Renderer.OpenTK
             positionBuffers.Add(name, buffer);
         }
 
+        public void AddBuffer(string name, BaseLineBuffer buffer)
+        {
+            baseLineBuffers.Add(name, buffer);
+        }
+
         public void BindBuffers()
         {
             if (buffersAreBound)
@@ -63,6 +69,11 @@ namespace Freeserf.Renderer.OpenTK
             InternalBind(true);
 
             foreach (var buffer in positionBuffers)
+            {
+                bufferLocations[buffer.Key] = program.BindInputBuffer(buffer.Key, buffer.Value);
+            }
+
+            foreach (var buffer in baseLineBuffers)
             {
                 bufferLocations[buffer.Key] = program.BindInputBuffer(buffer.Key, buffer.Value);
             }
@@ -79,6 +90,12 @@ namespace Freeserf.Renderer.OpenTK
             InternalBind(true);            
 
             foreach (var buffer in positionBuffers)
+            {
+                program.UnbindInputBuffer(bufferLocations[buffer.Key]);
+                bufferLocations[buffer.Key] = -1;
+            }
+
+            foreach (var buffer in baseLineBuffers)
             {
                 program.UnbindInputBuffer(bufferLocations[buffer.Key]);
                 bufferLocations[buffer.Key] = -1;
@@ -103,6 +120,12 @@ namespace Freeserf.Renderer.OpenTK
 
                 // ensure that all buffers are up to date
                 foreach (var buffer in positionBuffers)
+                {
+                    if (buffer.Value.RecreateUnbound())
+                        buffersChanged = true;
+                }
+
+                foreach (var buffer in baseLineBuffers)
                 {
                     if (buffer.Value.RecreateUnbound())
                         buffersChanged = true;

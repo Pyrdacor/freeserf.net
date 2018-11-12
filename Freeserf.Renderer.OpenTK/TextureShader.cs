@@ -28,11 +28,13 @@ namespace Freeserf.Renderer.OpenTK
         internal static readonly string DefaultSamplerName = "sampler";
         internal static readonly string DefaultColorKeyName = "colorKey";
         internal static readonly string DefaultAtlasSizeName = "atlasSize";
+        internal static readonly string DefaultBaseLineName = "baseLine";
 
         readonly string texCoordName;
         readonly string samplerName;
         readonly string colorKeyName;
         readonly string atlasSizeName;
+        readonly string baseLineName;
 
         static readonly string[] TextureFragmentShader = new string[]
         {
@@ -57,6 +59,7 @@ namespace Freeserf.Renderer.OpenTK
             GetVertexShaderHeader(),
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
             $"{GetInName(false)} ivec2 {DefaultTexCoordName};",
+            $"{GetInName(false)} uint {DefaultBaseLineName};",
             $"uniform uvec2 {DefaultAtlasSizeName};",
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
@@ -70,27 +73,28 @@ namespace Freeserf.Renderer.OpenTK
             $"    varTexCoord = vec2({DefaultTexCoordName}.x, {DefaultTexCoordName}.y);",
             $"    ",
             $"    varTexCoord *= atlasFactor;",
-            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName} + pos.y * 0.00001f, 1.0f);",
+            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName} + {DefaultBaseLineName} * 0.0001f, 1.0f);",
             $"}}"
         };
 
         TextureShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName,
-                  DefaultAtlasSizeName, TextureFragmentShader, TextureVertexShader)
+                  DefaultAtlasSizeName, DefaultBaseLineName, TextureFragmentShader, TextureVertexShader)
         {
 
         }
 
         protected TextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName,
-            string atlasSizeName, string[] fragmentShaderLines, string[] vertexShaderLines)
+            string atlasSizeName, string baseLineName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, fragmentShaderLines, vertexShaderLines)
         {
             this.texCoordName = texCoordName;
             this.samplerName = samplerName;
             this.colorKeyName = colorKeyName;
             this.atlasSizeName = atlasSizeName;
+            this.baseLineName = baseLineName;
         }
 
         public void SetSampler(int textureUnit = 0)
