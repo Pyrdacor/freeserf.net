@@ -133,7 +133,7 @@ namespace Freeserf.Render
                     maskOffsets.Add(81u + i, new Position(sprite.OffsetX, sprite.OffsetY));
             }
 
-            uint numTriangles = (numColumns + 1) * (numRows + ADDITIONAL_Y_TILES) * 2u;
+            uint numTriangles = (numColumns + 2) * (numRows + ADDITIONAL_Y_TILES) * 2u;
 
             triangles = new List<ITriangle>((int)numTriangles);
 

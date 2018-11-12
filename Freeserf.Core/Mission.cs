@@ -510,11 +510,11 @@ namespace Freeserf
                 Player player = game.GetPlayer(index);
                 player.InitView(playerInfo.Color, playerInfo.Face);
 
-                PlayerInfo.Pos castle_pos = playerInfo.CastlePos;
+                PlayerInfo.Pos castlePos = playerInfo.CastlePos;
 
-                if (castle_pos.Column > -1 && castle_pos.Row > -1)
+                if (castlePos.Column > -1 && castlePos.Row > -1)
                 {
-                    uint pos = game.Map.Pos((uint)castle_pos.Column, (uint)castle_pos.Row);
+                    uint pos = game.Map.Pos((uint)castlePos.Column, (uint)castlePos.Row);
 
                     game.BuildCastle(pos, player);
                 }
