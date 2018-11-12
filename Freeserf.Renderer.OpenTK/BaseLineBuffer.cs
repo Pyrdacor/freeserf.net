@@ -1,5 +1,5 @@
 ﻿/*
- * PositionBuffer.cs - Buffer for shader position data
+ * BaseLineBuffer.cs - Buffer for shader baseline data
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -24,12 +24,12 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Freeserf.Renderer.OpenTK
 {
-    internal class PositionBuffer : BufferObject<short>
+    internal class BaseLineBuffer : BufferObject<ushort>
     {
         int index = 0;
         bool disposed = false;
-        short[] buffer = null;
-        int size; // count of x,y pairs
+        ushort[] buffer = null;
+        int size; // count of values
         readonly IndexPool indices = new IndexPool();
         bool changedSinceLastCreation = true;
         readonly BufferUsageHint usageHint = BufferUsageHint.DynamicDraw;
@@ -38,9 +38,9 @@ namespace Freeserf.Renderer.OpenTK
 
         public override VertexAttribIntegerType Type => VertexAttribIntegerType.Short;
 
-        public override int Dimension => 2;
+        public override int Dimension => 1;
 
-        public PositionBuffer(bool staticData)
+        public BaseLineBuffer(bool staticData)
         {
             index = GL.GenBuffer();
 
@@ -48,48 +48,34 @@ namespace Freeserf.Renderer.OpenTK
                 usageHint = BufferUsageHint.StaticDraw;
         }
 
-        public bool IsPositionValid(int index)
-        {
-            index *= 2; // 2 coords each
-
-            if (index < 0 || index >= buffer.Length)
-                return false;
-
-            return buffer[index] != short.MaxValue;
-        }
-
-        public int Add(short x, short y)
+        public int Add(ushort baseLine)
         {
             int index = indices.AssignNextFreeIndex();
 
             if (buffer == null)
             {
-                buffer = new short[256];
-                buffer[0] = x;
-                buffer[1] = y;
-                size = 2;
+                buffer = new ushort[128];
+                buffer[0] = baseLine;
+                size = 1;
                 changedSinceLastCreation = true;
             }
             else
             {
-                if (index == buffer.Length / 2) // we need to recreate the buffer
+                if (index == buffer.Length) // we need to recreate the buffer
                 {
-                    if (buffer.Length < 1024)
+                    if (buffer.Length < 512)
+                        Array.Resize(ref buffer, buffer.Length + 128);
+                    else if (buffer.Length < 2048)
                         Array.Resize(ref buffer, buffer.Length + 256);
-                    else if (buffer.Length < 4096)
-                        Array.Resize(ref buffer, buffer.Length + 512);
                     else
-                        Array.Resize(ref buffer, buffer.Length + 1024);
+                        Array.Resize(ref buffer, buffer.Length + 512);
                 }
 
-                size += 2;
-                int bufferIndex = index * 2;
+                ++size;
 
-                if (buffer[bufferIndex + 0] != x ||
-                    buffer[bufferIndex + 1] != y)
+                if (buffer[index] != baseLine)
                 {
-                    buffer[bufferIndex + 0] = x;
-                    buffer[bufferIndex + 1] = y;
+                    buffer[index] = baseLine;
 
                     changedSinceLastCreation = true;
                 }
@@ -98,15 +84,11 @@ namespace Freeserf.Renderer.OpenTK
             return index;
         }
 
-        public void Update(int index, short x, short y)
+        public void Update(int index, ushort baseLine)
         {
-            int bufferIndex = index * 2;
-
-            if (buffer[bufferIndex + 0] != x ||
-                buffer[bufferIndex + 1] != y)
+            if (buffer[index] != baseLine)
             {
-                buffer[bufferIndex + 0] = x;
-                buffer[bufferIndex + 1] = y;
+                buffer[index] = baseLine;
 
                 changedSinceLastCreation = true;
             }
@@ -115,12 +97,6 @@ namespace Freeserf.Renderer.OpenTK
         public void Remove(int index)
         {
             indices.UnassignIndex(index);
-
-            int bufferIndex = index * 2;
-
-            buffer[bufferIndex] = short.MaxValue; // not displayed anymore
-
-            changedSinceLastCreation = true;
         }
 
         public void ReduceSizeTo(int size)

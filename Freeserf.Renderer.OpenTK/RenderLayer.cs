@@ -67,10 +67,7 @@ namespace Freeserf.Renderer.OpenTK
 
             shader.SetAtlasSize((uint)texture.Width, (uint)texture.Height);
 
-            // the layer level provides a base z (layerIndex * 0.1f)
-            // in some shaders the y-value will add 0.00001f per pixel to display
-            // sprites that are more to the bottom in front of others
-            shader.SetZ(layerIndex * 0.1f);
+            shader.SetZ(Global.LayerBaseZ[layerIndex]);
 
             if (ColorKey == null)
                 shader.SetColorKey(1.0f, 0.0f, 1.0f);

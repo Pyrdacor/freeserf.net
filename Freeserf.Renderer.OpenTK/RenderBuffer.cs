@@ -37,6 +37,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly PositionBuffer positionBuffer = null;
         readonly PositionBuffer textureAtlasOffsetBuffer = null;
         readonly PositionBuffer maskTextureAtlasOffsetBuffer = null; // is null for normal sprites
+        readonly BaseLineBuffer baseLineBuffer = null;
 
         public RenderBuffer(Shape shape)
         {
@@ -63,9 +64,12 @@ namespace Freeserf.Renderer.OpenTK
             }
             else
             {
-                // TODO: is this the case? animations are everywhere for serfs and some buildings (but ui etc are very static)
+                // TODO: static buffer? is this the case? animations are everywhere for serfs and some buildings (but ui etc are very static)
                 // most sprites won't change their appearances much so use static buffer
                 textureAtlasOffsetBuffer = new PositionBuffer(true);
+                baseLineBuffer = new BaseLineBuffer(false);
+
+                vertexArrayObject.AddBuffer(TextureShader.DefaultBaseLineName, baseLineBuffer);
             }
 
             vertexArrayObject.AddBuffer(TextureShader.DefaultPositionName, positionBuffer);
@@ -94,6 +98,16 @@ namespace Freeserf.Renderer.OpenTK
                 maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
             }
 
+            if (Shape != Shape.Triangle && baseLineBuffer != null)
+            {
+                ushort baseLine = (ushort)(sprite.Y + sprite.Height);
+
+                baseLineBuffer.Add(baseLine);
+                baseLineBuffer.Add(baseLine);
+                baseLineBuffer.Add(baseLine);
+                baseLineBuffer.Add(baseLine);
+            }
+
             return index;
         }
 
@@ -103,6 +117,16 @@ namespace Freeserf.Renderer.OpenTK
             positionBuffer.Update(index + 1, (short)(sprite.X + sprite.Width), (short)sprite.Y);
             positionBuffer.Update(index + 2, (short)(sprite.X + sprite.Width), (short)(sprite.Y + sprite.Height));
             positionBuffer.Update(index + 3, (short)sprite.X, (short)(sprite.Y + sprite.Height));
+
+            if (Shape != Shape.Triangle && baseLineBuffer != null)
+            {
+                ushort baseLine = (ushort)(sprite.Y + sprite.Height);
+
+                baseLineBuffer.Update(index, baseLine);
+                baseLineBuffer.Update(index + 1, baseLine);
+                baseLineBuffer.Update(index + 2, baseLine);
+                baseLineBuffer.Update(index + 3, baseLine);
+            }
         }
 
         public void UpdateTextureAtlasOffset(int index, Render.ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
@@ -143,6 +167,9 @@ namespace Freeserf.Renderer.OpenTK
             if (maskTextureAtlasOffsetBuffer != null)
                 maskTextureAtlasOffsetBuffer.Remove(index);
 
+            if (baseLineBuffer != null)
+                baseLineBuffer.Remove(index);
+
             if (newSize != -1)
             {
                 positionBuffer.ReduceSizeTo(newSize);
@@ -150,6 +177,9 @@ namespace Freeserf.Renderer.OpenTK
 
                 if (maskTextureAtlasOffsetBuffer != null)
                     maskTextureAtlasOffsetBuffer.ReduceSizeTo(newSize);
+
+                if (baseLineBuffer != null)
+                    baseLineBuffer.ReduceSizeTo(newSize);
             }
         }
 

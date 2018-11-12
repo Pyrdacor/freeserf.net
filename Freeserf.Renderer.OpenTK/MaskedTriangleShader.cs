@@ -93,7 +93,7 @@ namespace Freeserf.Renderer.OpenTK
             string positionName, string texCoordName, string samplerName, string colorKeyName,
             string atlasSizeName, string maskTexCoordName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName, 
-                  samplerName, colorKeyName, atlasSizeName, fragmentShaderLines, vertexShaderLines)
+                  samplerName, colorKeyName, atlasSizeName, DefaultBaseLineName, fragmentShaderLines, vertexShaderLines)
         {
             this.maskTexCoordName = maskTexCoordName;
         }
