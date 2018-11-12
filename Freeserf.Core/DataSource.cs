@@ -38,6 +38,8 @@ namespace Freeserf
             public byte Green;
             public byte Red;
             public byte Alpha;
+
+            public static readonly Color Transparent = new Color() { Blue = 0, Green = 0, Red = 0, Alpha = 0 };
         }
 
         protected int deltaX;
