@@ -1,0 +1,9 @@
+﻿Map Rendering:
+
+- Black lines / artifacts
+- Scrolling map is shaky
+- Some tiles appear/disappear/change location while scrolling
+- Some terrain types seem dislocated
+- Scrolling along the map origin (y-axis) leads to jumps
+- Building and flag locations not completely right
+- Map objects appear at multiple locations
