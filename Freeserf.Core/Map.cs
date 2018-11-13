@@ -1206,6 +1206,19 @@ namespace Freeserf
         public void InitTiles(MapGenerator generator)
         {
             landscapeTiles = generator.GetLandscape();
+
+            MapPos pos = 0;
+
+            foreach (var tile in landscapeTiles)
+            {
+                if (tile.Object != Object.None)
+                {
+                    foreach (var handler in changeHandlers)
+                        handler.OnObjectPlaced(pos);
+                }
+
+                ++pos;
+            }
         }
 
         /* Update map data as part of the game progression. */

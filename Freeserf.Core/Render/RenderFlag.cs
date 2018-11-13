@@ -47,32 +47,32 @@ namespace Freeserf.Render
             this.flag = flag;
 
             Initialize();
+
+            InitOffsets(dataSource);
         }
 
         static void InitOffsets(DataSource dataSource)
         {
-            spriteOffsets = new Position[16];
-            shadowSpriteOffsets = new Position[16];
-
-            for (int i = 0; i < 16; ++i)
+            if (spriteOffsets == null)
             {
-                var sprite = dataSource.GetSprite(Data.Resource.MapObject, (uint)i, Sprite.Color.Transparent);
+                spriteOffsets = new Position[16];
+                shadowSpriteOffsets = new Position[16];
 
-                spriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
+                for (int i = 0; i < 16; ++i)
+                {
+                    var sprite = dataSource.GetSprite(Data.Resource.MapObject, (uint)i, Sprite.Color.Transparent);
 
-                sprite = dataSource.GetSprite(Data.Resource.MapShadow, (uint)i, Sprite.Color.Transparent);
+                    spriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
 
-                shadowSpriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
+                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, (uint)i, Sprite.Color.Transparent);
+
+                    shadowSpriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
+                }
             }
         }
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
-            if (spriteOffsets == null)
-            {
-                InitOffsets(dataSource);
-            }
-
             // max sprite size is 16x19 pixels
 
             var playerColor = PlayerInfo.PlayerColors[(int)flag.GetOwner()];

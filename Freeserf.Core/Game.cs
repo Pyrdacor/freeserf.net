@@ -221,11 +221,10 @@ namespace Freeserf
 
             generator.Init();
             generator.Generate();
-            map.InitTiles(generator);
-            goldTotal = map.GetGoldDeposit();
-
 
             map.AddChangeHandler(this);
+            map.InitTiles(generator);
+            goldTotal = map.GetGoldDeposit();
 
             return true;
         }
@@ -292,10 +291,11 @@ namespace Freeserf
               }
 #endif
 
+            UpdateMapObjects();
             UpdateFlags();
             UpdateBuildings();
             UpdateSerfs();
-            UpdateGameStats();
+            UpdateGameStats();            
         }
 
         public void Pause()
@@ -1998,7 +1998,13 @@ namespace Freeserf
             }
         }
 
-        protected void UpdateFlags()
+        void UpdateMapObjects()
+        {
+            foreach (var renderObject in renderObjects)
+                renderObject.Value.Update(tick, map.RenderMap, renderObject.Key);
+        }
+
+        void UpdateFlags()
         {
             foreach (Flag flag in flags)
             {
