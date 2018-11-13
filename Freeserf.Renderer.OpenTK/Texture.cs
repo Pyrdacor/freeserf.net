@@ -108,9 +108,11 @@ namespace Freeserf.Renderer.OpenTK
             var minMode = (numMipMapLevels > 0) ? TextureMinFilter.NearestMipmapNearest : TextureMinFilter.Nearest;
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)minMode);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+            GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
 
             // TODO: use TexImage2D in older OpenGL versions!
             GL.TexStorage2D(TextureTarget2d.Texture2D, 1 + numMipMapLevels, SizedInternalFormat.Rgba8, Width, Height);

@@ -62,6 +62,12 @@ namespace Freeserf.Renderer.OpenTK
             DataSource = dataSource;
         }
 
+        public float Zoom
+        {
+            get => context.Zoom;
+            set => context.Zoom = value;
+        }
+
         public DataSource DataSource { get; }
 
         public Rect VirtualScreen { get; }

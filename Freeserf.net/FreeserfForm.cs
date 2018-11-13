@@ -81,7 +81,17 @@ namespace Freeserf
 
             game.Map.ScrollTo(column, row);
 
+            RenderControl.MouseWheel += RenderControl_MouseWheel;
+
             FrameTimer.Start();
+        }
+
+        private void RenderControl_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (gameView.Zoom > 0.0f && e.Delta < 0)
+                gameView.Zoom -= 0.5f;
+            else if (gameView.Zoom < 4.0f && e.Delta > 0)
+                gameView.Zoom += 0.5f;
         }
 
         private void FrameTimer_Tick(object sender, EventArgs e)
