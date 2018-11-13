@@ -19,6 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Collections.Generic;
+
 namespace Freeserf.Render
 {
     // TODO: burning
@@ -51,6 +53,12 @@ namespace Freeserf.Render
         ISprite crossOrStoneSprite = null;
         ISprite burningSprite = null;
 
+        static readonly Dictionary<uint, Position> spriteOffsets = new Dictionary<uint, Position>();
+        static readonly Dictionary<uint, Position> shadowSpriteOffsets = new Dictionary<uint, Position>();
+        static readonly Dictionary<uint, Position> frameSpriteOffsets = new Dictionary<uint, Position>();
+        static readonly Dictionary<uint, Position> frameShadowSpriteOffsets = new Dictionary<uint, Position>();
+        static Position crossOrStoneSpriteOffset = null;
+
         public RenderBuilding(Building building, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
         {
@@ -82,6 +90,8 @@ namespace Freeserf.Render
 
             if (frameShadowSprite != null)
                 frameShadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + MapBuildingFrameSprite[(int)building.BuildingType]);
+
+            InitOffsets(dataSource);
         }
 
         public override bool Visible
@@ -102,6 +112,43 @@ namespace Freeserf.Render
 
                 if (burningSprite != null)
                     burningSprite.Visible = value;
+            }
+        }
+
+        void InitOffsets(DataSource dataSource)
+        {
+            Sprite sprite;
+            var color = Sprite.Color.Transparent;
+
+            if (crossOrStoneSpriteOffset == null)
+            {
+                sprite = dataSource.GetSprite(Data.Resource.MapObject, CrossSprite, color);
+                crossOrStoneSpriteOffset = new Position(sprite.OffsetX, sprite.OffsetY);
+            }
+
+            uint spriteIndex = MapBuildingSprite[(int)building.BuildingType];
+
+            if (!spriteOffsets.ContainsKey(spriteIndex))
+            {
+                sprite = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, color);
+                spriteOffsets.Add(spriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+
+                sprite = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, color);
+                shadowSpriteOffsets.Add(spriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+            }
+
+            if (building.BuildingType != Building.Type.Castle)
+            {
+                uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
+
+                if (!frameSpriteOffsets.ContainsKey(frameSpriteIndex))
+                {
+                    sprite = dataSource.GetSprite(Data.Resource.MapObject, frameSpriteIndex, color);
+                    frameSpriteOffsets.Add(frameSpriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+
+                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, frameSpriteIndex, color);
+                    frameShadowSpriteOffsets.Add(frameSpriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                }
             }
         }
 
@@ -211,10 +258,12 @@ namespace Freeserf.Render
         {
             var renderPosition = map.GetObjectRenderPosition(pos);
 
-            sprite.X = renderPosition.X;// + spriteOffsets[(int)offset].X;
-            sprite.Y = renderPosition.Y;// + spriteOffsets[(int)offset].Y;
-            shadowSprite.X = renderPosition.X;// + shadowSpriteOffsets[(int)offset].X;
-            shadowSprite.Y = renderPosition.Y;// + shadowSpriteOffsets[(int)offset].Y;
+            uint spriteIndex = MapBuildingSprite[(int)building.BuildingType];
+
+            sprite.X = renderPosition.X + spriteOffsets[spriteIndex].X;
+            sprite.Y = renderPosition.Y + spriteOffsets[spriteIndex].Y;
+            shadowSprite.X = renderPosition.X + shadowSpriteOffsets[spriteIndex].X;
+            shadowSprite.Y = renderPosition.Y + shadowSpriteOffsets[spriteIndex].Y;
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
 
