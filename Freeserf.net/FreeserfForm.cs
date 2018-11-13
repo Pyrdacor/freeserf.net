@@ -88,8 +88,8 @@ namespace Freeserf
         {
             RenderControl.MakeCurrent();
 
+            game.Update();
             gameView.Render();
-
 
             RenderControl.SwapBuffers();
         }

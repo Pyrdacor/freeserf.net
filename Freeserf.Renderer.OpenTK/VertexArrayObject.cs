@@ -112,7 +112,10 @@ namespace Freeserf.Renderer.OpenTK
         void InternalBind(bool bindOnly)
         {
             if (ActiveVAO != this)
+            {
                 GL.BindVertexArray(index);
+                program.Use();
+            }
 
             if (!bindOnly)
             {

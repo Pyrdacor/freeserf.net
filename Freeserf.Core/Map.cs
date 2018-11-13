@@ -618,10 +618,9 @@ namespace Freeserf
 
         // Rendering
         Render.IRenderView renderView = null;
-        Render.RenderMap renderMap = null;
         // TODO: road segments
-        public Rect RenderArea => renderMap.RenderArea;
-        
+        internal Render.RenderMap RenderMap { get; private set; } = null;
+
         /* Callback for map height changes */
         ChangeHandlers changeHandlers = new ChangeHandlers();
 
@@ -660,14 +659,14 @@ namespace Freeserf
 
         public void AttachToRenderLayer(Render.IRenderLayer renderLayer, DataSource dataSource)
         {
-            if (renderMap == null)
+            if (RenderMap == null)
             {
                 int virtualScreenWidth = renderView.VirtualScreen.Size.Width;
                 int virtualScreenHeight = renderView.VirtualScreen.Size.Height;
                 int tileWidth = Render.RenderMap.TILE_WIDTH;
                 int tileHeight = Render.RenderMap.TILE_HEIGHT;
 
-                renderMap = new Render.RenderMap(
+                RenderMap = new Render.RenderMap(
                     (uint)(virtualScreenWidth / tileWidth),
                     (uint)(virtualScreenHeight / tileHeight),
                     this, renderView.TriangleFactory,
@@ -675,7 +674,7 @@ namespace Freeserf
                     dataSource);
             }
 
-            renderMap.AttachToRenderLayer(renderLayer);
+            RenderMap.AttachToRenderLayer(renderLayer);
         }
 
         public uint Size => Geometry.Size;
@@ -688,17 +687,17 @@ namespace Freeserf
 
         public void Scroll(int x, int y)
         {
-            renderMap?.Scroll(x, y);
+            RenderMap?.Scroll(x, y);
         }
 
         public void ScrollTo(uint x, uint y)
         {
-            renderMap?.ScrollTo(x, y);
+            RenderMap?.ScrollTo(x, y);
         }
 
         public void CenterMapPos(MapPos pos)
         {
-            renderMap?.CenterMapPos(pos);
+            RenderMap?.CenterMapPos(pos);
         }
 
         // Extract col and row from MapPos

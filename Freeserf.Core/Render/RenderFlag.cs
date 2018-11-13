@@ -19,10 +19,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System.Collections.Generic;
-
 namespace Freeserf.Render
 {
+    // TODO: flag colors
     internal class RenderFlag : RenderObject
     {
         Flag flag = null;
@@ -89,19 +88,18 @@ namespace Freeserf.Render
             shadowSprite = spriteFactory.Create(16, 19, 0, 0, false);
         }
 
-        public void Update(uint tick, Rect renderArea, uint column, uint row)
+        public void Update(uint tick, RenderMap map, uint pos)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
             uint offset = (tick >> 3) & 3;
             uint spriteIndex = 128u + offset;
 
-            int x = (int)column * RenderMap.TILE_WIDTH - renderArea.Position.X;
-            int y = (int)row * RenderMap.TILE_HEIGHT - renderArea.Position.Y;
+            var renderPosition = map.GetObjectRenderPosition(pos);
 
-            sprite.X = x + spriteOffsets[(int)offset].X;
-            sprite.Y = y + spriteOffsets[(int)offset].Y;
-            shadowSprite.X = x + shadowSpriteOffsets[(int)offset].X;
-            shadowSprite.Y = y + shadowSpriteOffsets[(int)offset].Y;
+            sprite.X = renderPosition.X + spriteOffsets[(int)offset].X;
+            sprite.Y = renderPosition.Y + spriteOffsets[(int)offset].Y;
+            shadowSprite.X = renderPosition.X + shadowSpriteOffsets[(int)offset].X;
+            shadowSprite.Y = renderPosition.Y + shadowSpriteOffsets[(int)offset].Y;
 
             sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);

@@ -144,7 +144,7 @@ namespace Freeserf
         {
             var sprite = new Sprite(width, height);
 
-            int halfSize = (int)height * 2; // * 2 because 4 bytes per pixel and height * 4 / 2 = height * 2
+            int halfSize = (int)width * (int)height * 2; // * 2 because 4 bytes per pixel and height * 4 / 2 = height * 2
 
             int offset = secondHalfFilled ? halfSize : 0; 
 

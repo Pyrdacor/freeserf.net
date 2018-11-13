@@ -22,7 +22,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public Position GetOffset(uint spriteIndex)
         {
-            return textureOffsets[spriteIndex];
+            return new Position(textureOffsets[spriteIndex]);
         }
     }
 
@@ -53,6 +53,7 @@ namespace Freeserf.Renderer.OpenTK
             Dictionary<uint, List<uint>> spriteCategories = new Dictionary<uint, List<uint>>();
             Dictionary<uint, uint> spriteCategoryMinValues = new Dictionary<uint, uint>();
             Dictionary<uint, uint> spriteCategoryMaxValues = new Dictionary<uint, uint>();
+            Dictionary<uint, uint> spriteCategoryTotalWidth = new Dictionary<uint, uint>();
 
             foreach (var sprite in sprites)
             {
@@ -63,6 +64,7 @@ namespace Freeserf.Renderer.OpenTK
                     spriteCategories.Add(category, new List<uint>());
                     spriteCategoryMinValues.Add(category, sprite.Value.Height);
                     spriteCategoryMaxValues.Add(category, sprite.Value.Height);
+                    spriteCategoryTotalWidth.Add(category, sprite.Value.Width);
                 }
                 else
                 {
@@ -70,6 +72,7 @@ namespace Freeserf.Renderer.OpenTK
                         spriteCategoryMinValues[category] = sprite.Value.Height;
                     if (sprite.Value.Height > spriteCategoryMaxValues[category])
                         spriteCategoryMaxValues[category] = sprite.Value.Height;
+                    spriteCategoryTotalWidth[category] += sprite.Value.Width;
                 }
 
                 spriteCategories[category].Add(sprite.Key);
@@ -141,8 +144,11 @@ namespace Freeserf.Renderer.OpenTK
                     }
                 }
 
-                xOffset = 0;
-                yOffset = height;
+                if (xOffset > maxWidth / 2) // we do not expect sprites with a width greater than 256
+                {
+                    xOffset = 0;
+                    yOffset = height;
+                }
             }
 
             // create texture

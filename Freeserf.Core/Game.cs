@@ -2004,7 +2004,8 @@ namespace Freeserf
             {
                 flag.Update();
 
-                renderFlags[flag].Update(tick, Map.RenderArea, Map.PosColumn(flag.Position), Map.PosRow(flag.Position));
+                if (flag.Index > 0u)
+                    renderFlags[flag].Update(tick, map.RenderMap, flag.Position);
             }
         }
 
@@ -2130,18 +2131,20 @@ namespace Freeserf
             {
                 buildingList[i].Update(tick);
 
-                // if a building burns we have to update its rendering so ensure that is is updated when visible
-                if (buildingList[i].IsBurning())
+                if (buildingList[i].Index > 0u)
                 {
-                    if (renderBuildings.ContainsKey(buildingList[i]) && renderBuildings[buildingList[i]].Visible)
+                    // if a building burns we have to update its rendering so ensure that is is updated when visible
+                    if (buildingList[i].IsBurning())
                     {
-                        if (!renderBuildingsInProgress.Contains(renderBuildings[buildingList[i]]))
-                            renderBuildingsInProgress.Add(renderBuildings[buildingList[i]]);
+                        if (renderBuildings.ContainsKey(buildingList[i]) && renderBuildings[buildingList[i]].Visible)
+                        {
+                            if (!renderBuildingsInProgress.Contains(renderBuildings[buildingList[i]]))
+                                renderBuildingsInProgress.Add(renderBuildings[buildingList[i]]);
+                        }
                     }
-                }
 
-                renderBuildings[buildingList[i]].Update(tick, map.RenderArea,
-                    Map.PosColumn(buildingList[i].Position), Map.PosRow(buildingList[i].Position));
+                    renderBuildings[buildingList[i]].Update(tick, map.RenderMap, buildingList[i].Position);
+                }
             }
 
             for (int i = renderBuildingsInProgress.Count - 1; i >= 0; --i)
@@ -3276,7 +3279,7 @@ namespace Freeserf
 
                 renderBuildings.Add(building, renderBuilding);
 
-                if (!building.IsDone())
+                if (!building.IsDone() || building.IsBurning())
                     renderBuildingsInProgress.Add(renderBuilding);
             }
             else // map object

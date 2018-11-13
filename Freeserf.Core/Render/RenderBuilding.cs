@@ -136,6 +136,13 @@ namespace Freeserf.Render
                 // burning is in Data.Resource.GameObject beginning at 135
                 // TODO
             }
+
+            if (building.IsDone())
+            {
+                var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+
+                (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
+            }
         }
 
         public override void Delete()
@@ -170,7 +177,7 @@ namespace Freeserf.Render
 
             if (building.IsDone())
             {
-                offset.Y = 100;
+                offset.Y += 100;
                 return offset;
             }
             else
@@ -182,13 +189,13 @@ namespace Freeserf.Render
                 {
                     return offset;
                 }
-                else if (Misc.BitTest(buildingProgess, 15))
+                else if (Misc.BitTest(buildingProgess, 15) && building.BuildingType != Building.Type.Castle)
                 {
-                    progress = 2 * (buildingProgess & 0x7fffu) / 0xffffu;
+                    progress = 2.0f * (buildingProgess & 0x7fffu) / 0xffffu;
                 }
                 else
                 {
-                    progress = 2 * buildingProgess / 0xffffu;
+                    progress = 2.0f * buildingProgess / 0xffffu;
                 }
 
                 int pixelOffset = 100 - spriteHeight;
@@ -200,12 +207,18 @@ namespace Freeserf.Render
             }
         }
 
-        public void Update(int tick, Rect renderArea, uint column, uint row)
+        public void Update(int tick, RenderMap map, uint pos)
         {
-            if (!Visible)
-                return;
+            var renderPosition = map.GetObjectRenderPosition(pos);
 
-            // TODO
+            sprite.X = renderPosition.X;// + spriteOffsets[(int)offset].X;
+            sprite.Y = renderPosition.Y;// + spriteOffsets[(int)offset].Y;
+            shadowSprite.X = renderPosition.X;// + shadowSpriteOffsets[(int)offset].X;
+            shadowSprite.Y = renderPosition.Y;// + shadowSpriteOffsets[(int)offset].Y;
+
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+
+            (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
         }
 
         /// <summary>
