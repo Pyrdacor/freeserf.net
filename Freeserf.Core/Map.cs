@@ -458,6 +458,8 @@ namespace Freeserf
             public abstract void OnHeightChanged(MapPos pos);
             public abstract void OnObjectChanged(MapPos pos);
             public abstract void OnObjectPlaced(MapPos pos);
+            public abstract void OnRoadSegmentPlaced(MapPos pos, Direction dir);
+            public abstract void OnRoadSegmentDeleted(MapPos pos, Direction dir);
         }
 
         public class LandscapeTile : IEquatable<LandscapeTile>
@@ -824,11 +826,17 @@ namespace Freeserf
         public void AddPath(MapPos pos, Direction dir)
         {
             gameTiles[(int)pos].Paths |= (byte)Misc.BitU((int)dir);
+
+            foreach (var handler in changeHandlers)
+                handler.OnRoadSegmentPlaced(pos, dir);
         }
 
         public void DeletePath(MapPos pos, Direction dir)
         {
             gameTiles[(int)pos].Paths &= (byte)~Misc.BitU((int)dir);
+
+            foreach (var handler in changeHandlers)
+                handler.OnRoadSegmentDeleted(pos, dir);
         }
 
         public bool HasOwner(MapPos pos)
@@ -1310,6 +1318,9 @@ namespace Freeserf
                         gameTiles[(int)pos].Paths &= (byte)~Misc.BitU((int)dir);
                         gameTiles[(int)Move(pos, dir)].Paths &= (byte)~Misc.BitU((int)revDir);
 
+                        foreach (var handler in changeHandlers)
+                            handler.OnRoadSegmentDeleted(pos, dir);
+
                         pos = Move(pos, dir);
                     }
 
@@ -1318,6 +1329,9 @@ namespace Freeserf
 
                 gameTiles[(int)pos].Paths |= (byte)Misc.BitU((int)dir);
                 gameTiles[(int)Move(pos, dir)].Paths |= (byte)Misc.BitU((int)revDir);
+
+                foreach (var handler in changeHandlers)
+                    handler.OnRoadSegmentPlaced(pos, dir);
 
                 pos = Move(pos, dir);
             }

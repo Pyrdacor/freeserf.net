@@ -38,7 +38,7 @@ namespace Freeserf
         None = 0,
         Landscape = 1 << 0,
         Grid = 1 << 1,
-        Paths = 1 << 2,
+        Paths = 1 << 2, // paths and borders
         Objects = 1 << 3,
         Buildings = 1 << 4,
         Serfs = 1 << 5,
@@ -53,15 +53,14 @@ namespace Freeserf
         // Higher values mean drawing over lower valued sprites.
         public static readonly float[] LayerBaseZ = new float[]
         {
-            0.00f,  // None
-            0.00f,  // Landscape
-            0.01f,  // Grid
-            0.02f,  // Paths
+            0.01f,  // Landscape
+            0.02f,  // Grid
+            0.03f,  // Paths
             0.05f,  // Objects
             0.05f,  // Buildings
             0.05f,  // Serfs
             0.96f,  // Builds
-            0.97f   // Cursor
+            0.97f    // Cursor
         };
     }
 }

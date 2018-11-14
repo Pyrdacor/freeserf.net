@@ -165,26 +165,74 @@ namespace Freeserf.Render
             // 128 - 143 are flags
             for (uint objectSprite = 128; objectSprite <= 143; ++objectSprite)
             {
-                var sprite = data.GetSprite(Data.Resource.MapObject, objectSprite, color);
-
-                if (sprite != null)
-                {
-                    if (sprite.Height == 18)
-                        AddSprite(atlasIndex, objectSprite, sprite.ClearTo(19));
-                    else
-                        AddSprite(atlasIndex, objectSprite, sprite);
-                }
-
                 // shadow
-                sprite = data.GetSprite(Data.Resource.MapShadow, objectSprite, color);
+                var sprite = data.GetSprite(Data.Resource.MapShadow, objectSprite, color);
 
                 if (sprite != null)
                 {
-                    if (sprite.Height == 18)
-                        AddSprite(atlasIndex, 1000u + objectSprite, sprite.ClearTo(19)); // we use 1000 as the shadow offset
-                    else
-                        AddSprite(atlasIndex, 1000u + objectSprite, sprite); // we use 1000 as the shadow offset
+                    AddSprite(atlasIndex, 1000u + objectSprite, sprite.ClearTo(20)); // we use 1000 as the shadow offset
                 }
+
+                // all 4 player colors
+                for (uint c = 0; c < 4; ++c)
+                {
+                    var playerColor = PlayerInfo.PlayerColors[c];
+                    var flagColor = new Sprite.Color()
+                    {
+                        Red = playerColor.Red,
+                        Green = playerColor.Green,
+                        Blue = playerColor.Blue,
+                        Alpha = 255
+                    };
+
+                    sprite = data.GetSprite(Data.Resource.MapObject, objectSprite, flagColor);
+
+                    if (sprite != null)
+                    {
+                        // We enlarge the height to 20 as for example the castle
+                        // will have a lower/equal baseline otherwise.
+                        AddSprite(atlasIndex, objectSprite + c * 16u, sprite.ClearTo(20));
+                    }
+                }
+            }
+
+            #endregion
+
+
+            #region Paths (and borders)
+
+            atlasIndex = (int)Layer.Paths;
+
+            // Note:
+            // We enlarge all path sprites to the maximum height of 41 (max mask height) with repeated texture data.
+            // The masks are also enlarged to this height but with cleared data (full transparency).
+            // This way the masked tiles will show up correctly and we don't need to change sizes when tiles change.
+
+            // 10 path grounds
+            for (i = 0; i < 10; ++i)
+            {
+                var sprite = data.GetSprite(Data.Resource.PathGround, i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, i, sprite.RepeatTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
+            }
+
+            // 27 path masks
+            for (i = 0; i < 27; ++i)
+            {
+                var sprite = data.GetSprite(Data.Resource.PathMask, i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 10u + i, sprite.ClearTo(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT));
+            }
+
+            // 10 borders
+            for (i = 0; i < 10; ++i)
+            {
+                var sprite = data.GetSprite(Data.Resource.MapBorder, i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 100u + i, sprite);
             }
 
             #endregion

@@ -140,6 +140,34 @@ namespace Freeserf
             return sprite;
         }
 
+        // Enlarges a sprite in width and height by adding full transparent pixel rows
+        public Sprite ClearTo(int width, int height)
+        {
+            if (width < Width)
+                throw new ExceptionFreeserf("Width must be greater or equal to previous width.");
+
+            if (height < Height)
+                throw new ExceptionFreeserf("Height must be greater or equal to previous height.");
+
+            if (width == Width && height == Height)
+                return this;
+
+            Sprite sprite = new Sprite((uint)width, (uint)height);
+
+            sprite.deltaX = DeltaX;
+            sprite.deltaY = DeltaY;
+            sprite.offsetX = OffsetX;
+            sprite.offsetY = OffsetY;
+
+            // copy original sprite data
+            for (int i = 0; i < Height; ++i)
+                System.Buffer.BlockCopy(data, i * (int)Width * 4, sprite.data, i * width * 4, (int)Width * 4);
+
+            // the rest is already filled with zeros cause of array initialization, so nothing to do anymore
+
+            return sprite;
+        }
+
         public static Sprite CreateHalfMask(uint width, uint height, bool secondHalfFilled)
         {
             var sprite = new Sprite(width, height);

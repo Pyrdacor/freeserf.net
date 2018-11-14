@@ -40,9 +40,15 @@ namespace Freeserf.Renderer.OpenTK
 
             GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-            GL.Enable(EnableCap.Blend);
-            GL.BlendEquationSeparate(BlendEquationMode.FuncAdd, BlendEquationMode.FuncAdd);
-            GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.Zero);
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Lequal);
+            GL.DepthRange(0, 1);
+            GL.Enable(EnableCap.AlphaTest);
+            GL.AlphaFunc(AlphaFunction.Greater, 0);
+
+            //GL.Enable(EnableCap.Blend);
+            //GL.BlendEquationSeparate(BlendEquationMode.FuncAdd, BlendEquationMode.FuncAdd);
+            //GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.Zero);
 
             Resize(width, height);
         }
@@ -51,7 +57,7 @@ namespace Freeserf.Renderer.OpenTK
         {
             State.ClearMatrices();
             State.PushModelViewMatrix(Matrix4.Identity);
-            State.PushProjectionMatrix(Matrix4.CreateOrtho2D(0, width, 0, height));
+            State.PushProjectionMatrix(Matrix4.CreateOrtho2D(0, width, 0, height, 0, 1));
 
             this.width = width;
             this.height = height;

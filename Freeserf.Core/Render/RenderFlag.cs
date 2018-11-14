@@ -73,19 +73,9 @@ namespace Freeserf.Render
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
-            // max sprite size is 16x19 pixels
-
-            var playerColor = PlayerInfo.PlayerColors[(int)flag.GetOwner()];
-            var color = new Sprite.Color()
-            {
-                Red = playerColor.Red,
-                Green = playerColor.Green,
-                Blue = playerColor.Blue,
-                Alpha = 255
-            };
-
-            sprite = spriteFactory.Create(16, 19, 0, 0, false);
-            shadowSprite = spriteFactory.Create(16, 19, 0, 0, false);
+            // max sprite size is 16x19 pixels but we use 16x20 for better base line matching
+            sprite = spriteFactory.Create(16, 20, 0, 0, false);
+            shadowSprite = spriteFactory.Create(16, 20, 0, 0, false);
         }
 
         public void Update(uint tick, RenderMap map, uint pos)
@@ -94,6 +84,8 @@ namespace Freeserf.Render
             uint offset = (tick >> 3) & 3;
             uint spriteIndex = 128u + offset;
 
+            uint flagSpriteIndex = spriteIndex + flag.GetOwner() * 16u; // player colors
+
             var renderPosition = map.GetObjectRenderPosition(pos);
 
             sprite.X = renderPosition.X + spriteOffsets[(int)offset].X;
@@ -101,7 +93,7 @@ namespace Freeserf.Render
             shadowSprite.X = renderPosition.X + shadowSpriteOffsets[(int)offset].X;
             shadowSprite.Y = renderPosition.Y + shadowSpriteOffsets[(int)offset].Y;
 
-            sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
+            sprite.TextureAtlasOffset = textureAtlas.GetOffset(flagSpriteIndex);
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
         }
     }

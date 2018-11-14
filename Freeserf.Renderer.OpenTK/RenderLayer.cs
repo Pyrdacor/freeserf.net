@@ -45,7 +45,7 @@ namespace Freeserf.Renderer.OpenTK
         public RenderLayer(Layer layer, Texture texture, Color colorKey = null)
         {
             var shape = (layer == Layer.Landscape || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
-            bool masked = layer == Layer.Landscape || layer == Layer.Buildings; // we need the mask for slope display and drawing of building progress
+            bool masked = layer == Layer.Landscape || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
 
             renderBuffer = new RenderBuffer(shape, masked);
 

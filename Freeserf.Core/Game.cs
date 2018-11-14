@@ -61,6 +61,7 @@ namespace Freeserf
         readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
         readonly Dictionary<Flag, Render.RenderFlag> renderFlags = new Dictionary<Flag, Render.RenderFlag>();
         readonly Dictionary<MapPos, Render.RenderMapObject> renderObjects = new Dictionary<MapPos, Render.RenderMapObject>();
+        readonly Dictionary<long, Render.RenderRoadSegment> renderRoadSegments = new Dictionary<long, Render.RenderRoadSegment>();
         readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
 
         Random initMapRandom;
@@ -291,6 +292,7 @@ namespace Freeserf
               }
 #endif
 
+            UpdateRoads();
             UpdateMapObjects();
             UpdateFlags();
             UpdateBuildings();
@@ -1160,6 +1162,8 @@ namespace Freeserf
                     UpdateLandOwnership(building.Position);
                 }
             }
+
+            UpdateBorders();
         }
 
         static readonly int[] militaryInfluence = new int[]
@@ -1338,6 +1342,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            UpdateBorders(pos, calculateRadius);
         }
 
         /* The given building has been defeated and is being
@@ -2015,6 +2021,43 @@ namespace Freeserf
             }
         }
 
+        void UpdateRoads()
+        {
+            foreach (var renderRoadSegment in renderRoadSegments)
+                renderRoadSegment.Value.Update(map.RenderMap);
+        }
+
+        void UpdateBorders()
+        {
+            // TODO
+        }
+
+        void UpdateBorders(MapPos center, int radius)
+        {
+            // TODO
+        }
+
+        // This is called after loading a game.
+        // As no roads are built manually in this case
+        // we have to scan the map and add render objects
+        // for all road segments.
+        void PostLoadRoads()
+        {
+            foreach (var pos in map.Geometry)
+            {
+                if (map.Paths(pos) != 0)
+                {
+                    var cycle = new DirectionCycleCW(Direction.Right, 3u);
+
+                    foreach (Direction dir in cycle)
+                    {
+                        if (map.HasPath(pos, dir))
+                            AddRoadSegment(pos, dir);
+                    }
+                }
+            }
+        }
+
         class SendSerfToFlagData
         {
             public Inventory Inventory;
@@ -2473,6 +2516,8 @@ namespace Freeserf
                     break;
                 }
 
+                RemoveRoadSegment(pos, dir);                
+
                 inDir = dir;
                 dir = map.RemoveRoadSegment(ref pos, dir);
             }
@@ -2771,125 +2816,126 @@ namespace Freeserf
         {
             // TODO
 
-   //         /* Load these first so map dimensions can be reconstructed.
-   //            This is necessary to load map positions. */
+            //         /* Load these first so map dimensions can be reconstructed.
+            //            This is necessary to load map positions. */
 
-   //         reader.skip(74);
-   //         uint16_t v16;
-   //         reader >> v16;  // 74
-   //         game.game_type = v16;
-   //         reader >> v16;  // 76
-   //         reader >> v16;  // 78
-   //         game.tick = v16;
-   //         game.game_stats_counter = 0;
-   //         game.history_counter = 0;
+            //         reader.skip(74);
+            //         uint16_t v16;
+            //         reader >> v16;  // 74
+            //         game.game_type = v16;
+            //         reader >> v16;  // 76
+            //         reader >> v16;  // 78
+            //         game.tick = v16;
+            //         game.game_stats_counter = 0;
+            //         game.history_counter = 0;
 
-   //         reader.skip(4);
+            //         reader.skip(4);
 
-   //         uint16_t r1, r2, r3;
-   //         reader >> r1;  // 84
-   //         reader >> r2;  // 86
-   //         reader >> r3;  // 88
-   //         game.rnd = Random(r1, r2, r3);
+            //         uint16_t r1, r2, r3;
+            //         reader >> r1;  // 84
+            //         reader >> r2;  // 86
+            //         reader >> r3;  // 88
+            //         game.rnd = Random(r1, r2, r3);
 
-   //         reader >> v16;  // 90
-   //         int max_flag_index = v16;
-   //         reader >> v16;  // 92
-   //         int max_building_index = v16;
-   //         reader >> v16;  // 94
-   //         int max_serf_index = v16;
+            //         reader >> v16;  // 90
+            //         int max_flag_index = v16;
+            //         reader >> v16;  // 92
+            //         int max_building_index = v16;
+            //         reader >> v16;  // 94
+            //         int max_serf_index = v16;
 
-   //         reader >> v16;  // 96
-   //         game.next_index = v16;
-   //         reader >> v16;  // 98
-   //         game.flag_search_counter = v16;
+            //         reader >> v16;  // 96
+            //         game.next_index = v16;
+            //         reader >> v16;  // 98
+            //         game.flag_search_counter = v16;
 
-   //         reader.skip(4);
+            //         reader.skip(4);
 
-   //         for (int i = 0; i < 4; i++)
-   //         {
-   //             reader >> v16;  // 104 + i*2
-   //             game.player_history_index[i] = v16;
-   //         }
+            //         for (int i = 0; i < 4; i++)
+            //         {
+            //             reader >> v16;  // 104 + i*2
+            //             game.player_history_index[i] = v16;
+            //         }
 
-   //         for (int i = 0; i < 3; i++)
-   //         {
-   //             reader >> v16;  // 112 + i*2
-   //             game.player_history_counter[i] = v16;
-   //         }
+            //         for (int i = 0; i < 3; i++)
+            //         {
+            //             reader >> v16;  // 112 + i*2
+            //             game.player_history_counter[i] = v16;
+            //         }
 
-   //         reader >> v16;  // 118
-   //         game.resource_history_index = v16;
+            //         reader >> v16;  // 118
+            //         game.resource_history_index = v16;
 
-   //         //  if (0/*game.Gameype == GameYPE_TUTORIAL*/) {
-   //         //    game.tutorial_level = *reinterpret_cast<uint16_t*>(&data[122]);
-   //         //  } else if (0/*game.Gameype == GameYPE_MISSION*/) {
-   //         //    game.mission_level = *reinterpret_cast<uint16_t*>(&data[124]);
-   //         //  }
+            //         //  if (0/*game.Gameype == GameYPE_TUTORIAL*/) {
+            //         //    game.tutorial_level = *reinterpret_cast<uint16_t*>(&data[122]);
+            //         //  } else if (0/*game.Gameype == GameYPE_MISSION*/) {
+            //         //    game.mission_level = *reinterpret_cast<uint16_t*>(&data[124]);
+            //         //  }
 
-   //         reader.skip(54);
+            //         reader.skip(54);
 
-   //         reader >> v16;  // 174
-   //         int max_inventory_index = v16;
+            //         reader >> v16;  // 174
+            //         int max_inventory_index = v16;
 
-   //         reader.skip(4);
-   //         reader >> v16;  // 180
-   //         game.max_next_index = v16;
+            //         reader.skip(4);
+            //         reader >> v16;  // 180
+            //         game.max_next_index = v16;
 
-   //         reader.skip(8);
-   //         reader >> v16;  // 190
-   //         int map_size = v16;
+            //         reader.skip(8);
+            //         reader >> v16;  // 190
+            //         int map_size = v16;
 
-   //         // Avoid allocating a huge map if the input file is invalid
-   //         if (map_size < 3 || map_size > 10)
-   //         {
-   //             throw ExceptionFreeserf("Invalid map size in file");
-   //         }
+            //         // Avoid allocating a huge map if the input file is invalid
+            //         if (map_size < 3 || map_size > 10)
+            //         {
+            //             throw ExceptionFreeserf("Invalid map size in file");
+            //         }
 
-   //         game.map.reset(new Map(MapGeometry(map_size)));
+            //         game.map.reset(new Map(MapGeometry(map_size)));
 
-   //         reader.skip(8);
-   //         reader >> v16;  // 200
-   //         game.map_gold_morale_factor = v16;
-   //         reader.skip(2);
-   //         uint8_t v8;
-   //         reader >> v8;  // 204
-   //         game.player_score_leader = v8;
+            //         reader.skip(8);
+            //         reader >> v16;  // 200
+            //         game.map_gold_morale_factor = v16;
+            //         reader.skip(2);
+            //         uint8_t v8;
+            //         reader >> v8;  // 204
+            //         game.player_score_leader = v8;
 
-   //         reader.skip(45);
+            //         reader.skip(45);
 
-   //         /* Load players state from save game. */
-   //         for (int i = 0; i < 4; i++)
-   //         {
-   //             SaveReaderBinary player_reader = reader.extract(8628);
-   //             player_reader.skip(130);
-   //             player_reader >> v8;
-   //             if (BIT_TEST(v8, 6))
-   //             {
-   //                 player_reader.reset();
-   //                 Player* player = game.players.get_or_insert(i);
-   //                 player_reader >> *player;
-   //             }
-   //         }
+            //         /* Load players state from save game. */
+            //         for (int i = 0; i < 4; i++)
+            //         {
+            //             SaveReaderBinary player_reader = reader.extract(8628);
+            //             player_reader.skip(130);
+            //             player_reader >> v8;
+            //             if (BIT_TEST(v8, 6))
+            //             {
+            //                 player_reader.reset();
+            //                 Player* player = game.players.get_or_insert(i);
+            //                 player_reader >> *player;
+            //             }
+            //         }
 
-   //         /* Load map state from save game. */
-   //         unsigned int tile_count = game.map->get_cols() * game.map->get_rows();
-   //         SaveReaderBinary map_reader = reader.extract(8 * tile_count);
-   //         map_reader >> *(game.map);
+            //         /* Load map state from save game. */
+            //         unsigned int tile_count = game.map->get_cols() * game.map->get_rows();
+            //         SaveReaderBinary map_reader = reader.extract(8 * tile_count);
+            //         map_reader >> *(game.map);
 
-   //         game.load_serfs(&reader, max_serf_index);
-   //         game.load_flags(&reader, max_flag_index);
-   //         game.load_buildings(&reader, max_building_index);
-   //         game.load_inventories(&reader, max_inventory_index);
+            //         game.load_serfs(&reader, max_serf_index);
+            //         game.load_flags(&reader, max_flag_index);
+            //         game.load_buildings(&reader, max_building_index);
+            //         game.load_inventories(&reader, max_inventory_index);
 
-   //         game.game_speed = 0;
-   //         game.game_speed_save = DEFAULT_GAME_SPEED;
+            //         game.game_speed = 0;
+            //         game.game_speed_save = DEFAULT_GAME_SPEED;
 
-   //         game.init_land_ownership();
+            //         game.init_land_ownership();
+            //         game.PostLoadRoadUpdate();
 
-   //         game.gold_total = game.map->get_gold_deposit();
+            //         game.gold_total = game.map->get_gold_deposit();
 
-   //         return reader;
+            //         return reader;
         }
 
         public void ReadFrom(SaveReaderText reader)
@@ -3059,6 +3105,7 @@ namespace Freeserf
             //game.game_speed_save = DEFAULT_GAME_SPEED;
 
             //game.init_land_ownership();
+            //game.PostLoadRoadUpdate();
         }
 
         public void WriteTo(SaveWriterText writer)
@@ -3250,17 +3297,17 @@ namespace Freeserf
             //return true;
         }
 
-        public override void OnHeightChanged(uint pos)
+        public override void OnHeightChanged(MapPos pos)
         {
             // TODO
         }
 
-        public override void OnObjectChanged(uint pos)
+        public override void OnObjectChanged(MapPos pos)
         {
             // TODO
         }
 
-        public override void OnObjectPlaced(uint pos)
+        public override void OnObjectPlaced(MapPos pos)
         {
             var obj = map.GetObject(pos);
 
@@ -3270,7 +3317,7 @@ namespace Freeserf
                 var flag = GetFlagAtPos(pos);
                 var renderFlag = new Render.RenderFlag(flag, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
 
-                renderFlag.Visible = true; // TODO: test if inside visible area
+                renderFlag.Visible = true;
 
                 renderFlags.Add(flag, renderFlag);
             }
@@ -3281,7 +3328,7 @@ namespace Freeserf
                 var building = GetBuildingAtPos(pos);
                 var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), renderView.SpriteFactory, renderView.DataSource);
 
-                renderBuilding.Visible = true; // TODO: test if inside visible area
+                renderBuilding.Visible = true;
 
                 renderBuildings.Add(building, renderBuilding);
 
@@ -3292,7 +3339,7 @@ namespace Freeserf
             {
                 var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
 
-                renderObject.Visible = true; // TODO: test if inside visible area
+                renderObject.Visible = true;
 
                 renderObjects.Add(pos, renderObject);
             }
@@ -3305,7 +3352,7 @@ namespace Freeserf
 
             var renderSerf = new Render.RenderSerf(serf, renderView.GetLayer(Layer.Serfs), renderView.SpriteFactory, renderView.DataSource);
 
-            renderSerf.Visible = true; // TODO: test if inside visible area
+            renderSerf.Visible = true;
 
             renderSerfs.Add(serf, renderSerf);
         }
@@ -3317,6 +3364,42 @@ namespace Freeserf
                 renderSerfs[serf].Delete();
                 renderSerfs.Remove(serf);
             }
+        }
+
+        public override void OnRoadSegmentPlaced(MapPos pos, Direction dir)
+        {
+            AddRoadSegment(pos, dir);
+        }
+
+        public override void OnRoadSegmentDeleted(MapPos pos, Direction dir)
+        {
+            RemoveRoadSegment(pos, dir);
+        }
+
+        void AddRoadSegment(MapPos pos, Direction dir)
+        {
+            if (dir < Direction.Right || dir > Direction.Down)
+                return;
+
+            long index = Render.RenderRoadSegment.CreateIndex(pos, dir);
+
+            var renderRoadSegment = new Render.RenderRoadSegment(Map, pos, dir, renderView.GetLayer(Layer.Paths),
+                renderView.SpriteFactory, renderView.DataSource);
+
+            renderRoadSegment.Visible = true;
+
+            renderRoadSegments.Add(index, renderRoadSegment);
+        }
+
+        void RemoveRoadSegment(MapPos pos, Direction dir)
+        {
+            if (dir < Direction.Right || dir > Direction.Down)
+                return;
+
+            long index = Render.RenderRoadSegment.CreateIndex(pos, dir);
+
+            renderRoadSegments[index].Delete();
+            renderRoadSegments.Remove(index);
         }
     }
 }

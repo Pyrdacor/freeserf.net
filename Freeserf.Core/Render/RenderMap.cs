@@ -20,6 +20,7 @@ namespace Freeserf.Render
         internal const int TILE_RENDER_MAX_HEIGHT = 41; // the heighest mask is 41 pixels height
         const int MAX_OVERLAP_Y = 4 * 31; // the last tile may have a negative offset of this
         const int ADDITIONAL_Y_TILES = (MAX_OVERLAP_Y + TILE_HEIGHT - 1) / TILE_HEIGHT;
+        const int ADDITIOANL_X_TILES = 2;
 
         static readonly int[] TileMaskUp = new int[81]
         {
@@ -138,11 +139,11 @@ namespace Freeserf.Render
                     maskOffsets.Add(81u + i, new Position(sprite.OffsetX, sprite.OffsetY));
             }
 
-            uint numTriangles = (numColumns + 1) * (numRows + ADDITIONAL_Y_TILES) * 2u;
+            uint numTriangles = (numColumns + ADDITIOANL_X_TILES) * (numRows + ADDITIONAL_Y_TILES) * 2u;
 
             triangles = new List<ITriangle>((int)numTriangles);
 
-            for (uint c = 0; c < numColumns + 1; ++c)
+            for (uint c = 0; c < numColumns + ADDITIOANL_X_TILES; ++c)
             {
                 for (int i = 0; i < 2; ++i) // up and down row
                 {
@@ -349,7 +350,10 @@ namespace Freeserf.Render
             x -= renderArea.Position.X;
             y -= renderArea.Position.Y;
 
-            x -= TILE_WIDTH / 2;
+            if (row % 2 == 1)
+                x -= TILE_WIDTH / 2;
+
+            x -= TILE_WIDTH;
             y -= 4 * (int)map.GetHeight(pos);
 
             return new Position(x, y);
@@ -364,7 +368,7 @@ namespace Freeserf.Render
                 y &= map.RowMask;
 
             renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)(y & map.RowMask) * TILE_HEIGHT,
-                ((int)numColumns + 1) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
+                ((int)numColumns + ADDITIOANL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             bool odd = y % 2 == 1;
             int index = 0;
@@ -373,7 +377,7 @@ namespace Freeserf.Render
 
             MapPos pos = map.Pos(realColumn, realRow);
 
-            for (uint c = 0; c < numColumns + 1; ++c)
+            for (uint c = 0; c < numColumns + ADDITIOANL_X_TILES; ++c)
             {
                 if (c > 0 || !odd) // (1): this and (2) avoids x-change when scrolled to odd row numbers
                     UpdateUpTileColumn(pos, ref index, 0);

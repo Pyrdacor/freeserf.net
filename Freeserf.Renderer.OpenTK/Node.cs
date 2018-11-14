@@ -26,8 +26,8 @@ namespace Freeserf.Renderer.OpenTK
 {
     public abstract class Node : IRenderNode
     {
-        int x = 0;
-        int y = 0;
+        int x = short.MaxValue;
+        int y = short.MaxValue;
         float scaleX = 1.0f;
         float scaleY = 1.0f;
         bool visible = false;

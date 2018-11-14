@@ -77,7 +77,7 @@ namespace Freeserf.Renderer.OpenTK
             $"    ",
             $"    varTexCoord *= atlasFactor;",
             $"    varMaskTexCoord *= atlasFactor;",
-            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, {DefaultZName}, 1.0f);",
+            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName}, 1.0f);",
             $"}}"
         };
 
