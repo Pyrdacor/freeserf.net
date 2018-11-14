@@ -349,10 +349,8 @@ namespace Freeserf.Render
             x -= renderArea.Position.X;
             y -= renderArea.Position.Y;
 
-            // TODO: REMOVE
-            // These offsets seem to fix map object rendering (at least it is very close)
-            x -= (TILE_WIDTH + TILE_WIDTH / 2);
-            y -= 4 * TILE_HEIGHT;
+            x -= TILE_WIDTH / 2;
+            y -= 4 * (int)map.GetHeight(pos);
 
             return new Position(x, y);
         }
