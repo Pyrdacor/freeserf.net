@@ -29,7 +29,7 @@ namespace Freeserf.Renderer.OpenTK
         int index = 0;
         bool disposed = false;
         short[] buffer = null;
-        int size; // count of x,y pairs
+        int size;
         readonly IndexPool indices = new IndexPool();
         bool changedSinceLastCreation = true;
         readonly BufferUsageHint usageHint = BufferUsageHint.DynamicDraw;
@@ -115,12 +115,6 @@ namespace Freeserf.Renderer.OpenTK
         public void Remove(int index)
         {
             indices.UnassignIndex(index);
-
-            int bufferIndex = index * 2;
-
-            buffer[bufferIndex] = short.MaxValue; // not displayed anymore
-
-            changedSinceLastCreation = true;
         }
 
         public void ReduceSizeTo(int size)

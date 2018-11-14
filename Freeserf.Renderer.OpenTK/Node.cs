@@ -34,19 +34,22 @@ namespace Freeserf.Renderer.OpenTK
         IRenderLayer layer = null;
         bool visibleRequest = false;
         bool deleted = false;
+        bool notOnScreen = true;
+        readonly Rect virtualScreen = null;
 
-        protected Node(Shape shape, int width, int height)
+        protected Node(Shape shape, int width, int height, Rect virtualScreen)
         {
             Shape = shape;
             Width = width;
             Height = height;
+            this.virtualScreen = virtualScreen;
         }
 
         public Shape Shape { get; } = Shape.Rect;
 
         public bool Visible
         {
-            get => visible && !deleted;
+            get => visible && !deleted && !notOnScreen;
             set
             {
                 if (deleted)
@@ -66,9 +69,9 @@ namespace Freeserf.Renderer.OpenTK
 
                 visible = value;
                 
-                if (visible)
+                if (Visible)
                     AddToLayer();
-                else
+                else if (!visible)
                     RemoveFromLayer();
             }
         }
@@ -84,7 +87,7 @@ namespace Freeserf.Renderer.OpenTK
                 if (layer == value)
                     return;
 
-                if (layer != null && visible)
+                if (layer != null && Visible)
                     RemoveFromLayer();
 
                 layer = value;
@@ -93,15 +96,17 @@ namespace Freeserf.Renderer.OpenTK
                 {
                     visible = true;
                     visibleRequest = false;
+                    CheckOnScreen();
                 }
 
                 if (layer == null)
                 {
                     visibleRequest = false;
                     visible = false;
+                    notOnScreen = true;
                 }
 
-                if (layer != null && visible && !deleted)
+                if (layer != null && Visible)
                     AddToLayer();
             }
         }
@@ -124,6 +129,31 @@ namespace Freeserf.Renderer.OpenTK
 
         protected abstract void UpdatePosition();
 
+        bool CheckOnScreen()
+        {
+            bool oldNotOnScreen = notOnScreen;
+            bool oldVisible = Visible;
+
+            var rect = new Rect(X, Y, Width, Height);
+
+            notOnScreen = !virtualScreen.IntersectsWith(rect);
+
+            if (oldNotOnScreen != notOnScreen)
+            {
+                if (oldVisible != Visible)
+                {
+                    if (Visible)
+                        AddToLayer();
+                    else
+                        RemoveFromLayer();
+
+                    return true; // handled
+                }
+            }
+
+            return false;
+        }
+
         public void Delete()
         {
             RemoveFromLayer();
@@ -143,7 +173,10 @@ namespace Freeserf.Renderer.OpenTK
                 x = value;
 
                 if (!deleted)
-                    UpdatePosition();
+                {
+                    if (!CheckOnScreen())
+                        UpdatePosition();
+                }
             }
         }
 
@@ -158,7 +191,10 @@ namespace Freeserf.Renderer.OpenTK
                 y = value;
 
                 if (!deleted)
-                    UpdatePosition();
+                {
+                    if (!CheckOnScreen())
+                        UpdatePosition();
+                }
             }
         }
 

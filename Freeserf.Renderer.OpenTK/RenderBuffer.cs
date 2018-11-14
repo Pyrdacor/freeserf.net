@@ -172,6 +172,11 @@ namespace Freeserf.Renderer.OpenTK
                 }
             }
 
+            for (int i = 0; i < 4; ++i)
+            {
+                positionBuffer.Update(index + i, short.MaxValue, short.MaxValue); // ensure it is not visible
+            }
+
             positionBuffer.Remove(index);
             textureAtlasOffsetBuffer.Remove(index);
 

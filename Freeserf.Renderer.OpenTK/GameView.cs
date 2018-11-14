@@ -36,8 +36,8 @@ namespace Freeserf.Renderer.OpenTK
         readonly bool isLandscapeRatio = true;
         Rotation rotation = Rotation.None;
         readonly SortedDictionary<Layer, RenderLayer> layers = new SortedDictionary<Layer, RenderLayer>();
-        readonly SpriteFactory spriteFactory = new SpriteFactory();
-        readonly TriangleFactory triangleFactory = new TriangleFactory();
+        readonly SpriteFactory spriteFactory = null;
+        readonly TriangleFactory triangleFactory = null;
 
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
@@ -60,6 +60,9 @@ namespace Freeserf.Renderer.OpenTK
                 throw new ExceptionFreeserf("Given data source is not useable.");
 
             DataSource = dataSource;
+
+            spriteFactory = new SpriteFactory(VirtualScreen);
+            triangleFactory = new TriangleFactory(VirtualScreen);
         }
 
         public float Zoom

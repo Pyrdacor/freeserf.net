@@ -32,8 +32,8 @@ namespace Freeserf.Renderer.OpenTK
         protected int drawIndex = -1;
         Position textureAtlasOffset = null;
 
-        public Sprite(int width, int height, int textureAtlasX, int textureAtlasY)
-            : base(Shape.Rect, width, height)
+        public Sprite(int width, int height, int textureAtlasX, int textureAtlasY, Rect virtualScreen)
+            : base(Shape.Rect, width, height, virtualScreen)
         {
             textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
         }
@@ -86,8 +86,8 @@ namespace Freeserf.Renderer.OpenTK
         Position textureAtlasOffset = null;
         Position maskTextureAtlasOffset = null;
 
-        public MaskedSprite(int width, int height, int textureAtlasX, int textureAtlasY)
-            : base(Shape.Rect, width, height)
+        public MaskedSprite(int width, int height, int textureAtlasX, int textureAtlasY, Rect virtualScreen)
+            : base(Shape.Rect, width, height, virtualScreen)
         {
             textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
             maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
@@ -151,12 +151,19 @@ namespace Freeserf.Renderer.OpenTK
 
     public class SpriteFactory : ISpriteFactory
     {
+        readonly Rect virtualScreen = null;
+
+        public SpriteFactory(Rect virtualScreen)
+        {
+            this.virtualScreen = virtualScreen;
+        }
+
         public ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked)
         {
             if (masked)
-                return new MaskedSprite(width, height, textureAtlasX, textureAtlasY);
+                return new MaskedSprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
             else
-                return new Sprite(width, height, textureAtlasX, textureAtlasY);
+                return new Sprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
         }
     }
 }

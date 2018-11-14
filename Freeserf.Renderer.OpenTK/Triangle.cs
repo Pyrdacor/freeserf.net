@@ -29,8 +29,8 @@ namespace Freeserf.Renderer.OpenTK
         Position textureAtlasOffset = null;
         Position maskTextureAtlasOffset = null;
 
-        public Triangle(int width, int height, int textureAtlasX, int textureAtlasY)
-            : base(Shape.Triangle, width, height)
+        public Triangle(int width, int height, int textureAtlasX, int textureAtlasY, Rect virtualScreen)
+            : base(Shape.Triangle, width, height, virtualScreen)
         {
             textureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
             maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
@@ -94,9 +94,16 @@ namespace Freeserf.Renderer.OpenTK
 
     public class TriangleFactory : ITriangleFactory
     {
+        readonly Rect virtualScreen = null;
+
+        public TriangleFactory(Rect virtualScreen)
+        {
+            this.virtualScreen = virtualScreen;
+        }
+
         public ITriangle Create(int width, int height, int textureAtlasX, int textureAtlasY)
         {
-            return new Triangle(width, height, textureAtlasX, textureAtlasY);
+            return new Triangle(width, height, textureAtlasX, textureAtlasY, virtualScreen);
         }
     }
 }
