@@ -180,7 +180,7 @@ namespace Freeserf.Render
                 column += (int)map.Columns;
 
             if (row < 0)
-                row += (int)map.Rows;
+                row += 2 * (int)map.Rows;
 
             ScrollTo((uint)column, (uint)row);
         }
@@ -362,11 +362,14 @@ namespace Freeserf.Render
             renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)y * TILE_HEIGHT,
                 ((int)numColumns + 1) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
+            if (renderArea.Position.X < 0)
+                renderArea.Position.X += (int)map.Columns * TILE_WIDTH;
+
             int index = 0;
             uint realColumn = ((x * 2 + y) / 2) & map.ColumnMask;
             uint realRow = y & map.RowMask;
 
-            MapPos pos = map.MoveLeft(map.Pos(realColumn, realRow)); // cause we display 1 to the left
+            MapPos pos = map.Pos(realColumn, realRow);
 
             for (uint c = 0; c < numColumns + 1; ++c)
             {
