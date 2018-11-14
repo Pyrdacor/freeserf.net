@@ -60,11 +60,11 @@ namespace Freeserf.Render
 
                 for (int i = 0; i < 16; ++i)
                 {
-                    var sprite = dataSource.GetSprite(Data.Resource.MapObject, (uint)i, Sprite.Color.Transparent);
+                    var sprite = dataSource.GetSprite(Data.Resource.MapObject, 128u + (uint)i, Sprite.Color.Transparent);
 
                     spriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
 
-                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, (uint)i, Sprite.Color.Transparent);
+                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, 128u + (uint)i, Sprite.Color.Transparent);
 
                     shadowSpriteOffsets[i] = new Position(sprite.OffsetX, sprite.OffsetY);
                 }
