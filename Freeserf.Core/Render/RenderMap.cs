@@ -323,89 +323,27 @@ namespace Freeserf.Render
             }
         }
 
-        /*MapPos MapPosFromScreen(int sx, int sy)
-        {
-            int xOff = 0;
-            int yOff = 0;
-            int column = 0;
-            int row = 0;
-            GetOffset(ref xOff, ref yOff, ref column, ref row);
-
-            sx -= xOff;
-            sy -= yOff;
-
-            int yBase = -4;
-            int columnOffset = (sx + 24) >> 5;
-
-            if (!Misc.BitTest(sx + 24, 4))
-            {
-                row += 1;
-                yBase = 16;
-            }
-
-            column = (column + columnOffset) & (int)map.ColumnMask;
-            row = row & (int)map.RowMask;
-
-            int ly;
-            int lastY = -100;
-
-            while (true)
-            {
-                ly = yBase - 4 * (int)map.GetHeight(map.Pos((uint)column, (uint)row));
-
-                if (sy < ly)
-                    break;
-
-                lastY = ly;
-                column = (column + 1) & (int)map.ColumnMask;
-                row = (row + 2) & (int)map.RowMask;
-                yBase += 2 * TILE_HEIGHT;
-            }
-
-            if (sy < (ly + lastY) / 2)
-            {
-                column = (column - 1) & (int)map.ColumnMask;
-                row = (row - 2) & (int)map.RowMask;
-            }
-
-            return map.Pos((uint)column, (uint)row);
-        }
-
-        MapPos GetOffset(ref int xOff, ref int yOff, ref int column, ref int row)
-        {
-            int offsetX = (int)x;
-            int offsetY = (int)y;
-
-            xOff = -(offsetX + 16 * (offsetY / 20)) % 32;
-            yOff = -offsetY % 20;
-
-            column = (offsetX / 16 + offsetY / 20) / 2 & (int)map.ColumnMask;
-            row = (offsetY / TILE_HEIGHT) & (int)map.RowMask;
-
-            return map.Pos((uint)column, (uint)row);
-        }*/
-
         public Position GetObjectRenderPosition(MapPos pos)
         {
             uint column = map.PosColumn(pos);
             uint row = map.PosRow(pos);
 
-            int x = (int)column - (int)row / 2;
-            int y = 2 * ((int)column - x);
+            int x = ((int)column * 2 - (int)row) / 2;
+            int y = (int)row;
 
             x *= TILE_WIDTH;
             y *= TILE_HEIGHT;
 
-            if (this.y % 2 == 1)
+            if ((y + this.y) % 2 == 1)
                 x += TILE_WIDTH / 2;
 
             if (x < renderArea.Position.X)
-                x += renderArea.Size.Width - renderArea.Position.X;
+                x += (int)map.Columns * TILE_WIDTH - renderArea.Position.X;
             else
                 x -= renderArea.Position.X;
 
             if (y < renderArea.Position.Y)
-                y += renderArea.Size.Height - renderArea.Position.Y;
+                y += (int)map.Rows * TILE_HEIGHT - renderArea.Position.Y;
             else
                 y -= renderArea.Position.Y;
 
@@ -417,14 +355,15 @@ namespace Freeserf.Render
             if (x >= map.Columns)
                 x -= map.Columns;
 
-            if (y >= map.Rows)
-                y -= map.Rows;
+            // cap at double rows as half rows have influence on the column
+            if (y >= 2 * map.Rows)
+                y -= 2 * map.Rows;
 
             renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)y * TILE_HEIGHT,
                 ((int)numColumns + 1) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             int index = 0;
-            uint realColumn = (x * 2 + y) / 2 & map.ColumnMask;
+            uint realColumn = ((x * 2 + y) / 2) & map.ColumnMask;
             uint realRow = y & map.RowMask;
 
             MapPos pos = map.MoveLeft(map.Pos(realColumn, realRow)); // cause we display 1 to the left
