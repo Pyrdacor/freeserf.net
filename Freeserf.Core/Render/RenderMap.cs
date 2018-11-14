@@ -328,55 +328,70 @@ namespace Freeserf.Render
             uint column = map.PosColumn(pos);
             uint row = map.PosRow(pos);
 
-            int x = ((int)column * 2 - (int)row) / 2;
             int y = (int)row;
+
+            if (y < (this.y & map.RowMask))
+                y += (int)map.Rows;
+
+            int calcY = y;
+
+            if (this.y >= map.Rows)
+                calcY += (int)map.Rows;
+
+            int x = (int)column - calcY / 2;
+
+            if (x < this.x)
+                x += (int)map.Columns;
 
             x *= TILE_WIDTH;
             y *= TILE_HEIGHT;
 
-            if ((y + this.y) % 2 == 1)
-                x += TILE_WIDTH / 2;
-
-            if (x < renderArea.Position.X)
+            /*if (x < renderArea.Position.X)
                 x += (int)map.Columns * TILE_WIDTH - renderArea.Position.X;
             else
                 x -= renderArea.Position.X;
 
             if (y < renderArea.Position.Y)
-                y += (int)map.Rows * TILE_HEIGHT - renderArea.Position.Y;
+                y += 2 * (int)map.Rows * TILE_HEIGHT - renderArea.Position.Y;
             else
                 y -= renderArea.Position.Y;
+                */
+
+            x -= renderArea.Position.X;
+            y -= renderArea.Position.Y;
 
             return new Position(x, y);
         }
 
         void UpdatePosition()
         {
-            if (x >= map.Columns)
-                x -= map.Columns;
+            x &= map.ColumnMask;
 
             // cap at double rows as half rows have influence on the column
             if (y >= 2 * map.Rows)
-                y -= 2 * map.Rows;
+                y &= map.RowMask;
 
-            renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)y * TILE_HEIGHT,
+            renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)(y & map.RowMask) * TILE_HEIGHT,
                 ((int)numColumns + 1) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
-            if (renderArea.Position.X < 0)
-                renderArea.Position.X += (int)map.Columns * TILE_WIDTH;
-
+            bool odd = y % 2 == 1;
             int index = 0;
-            uint realColumn = ((x * 2 + y) / 2) & map.ColumnMask;
+            uint realColumn = (x + y / 2) & map.ColumnMask;
             uint realRow = y & map.RowMask;
 
             MapPos pos = map.Pos(realColumn, realRow);
 
             for (uint c = 0; c < numColumns + 1; ++c)
             {
-                UpdateUpTileColumn(pos, ref index, 0);
+                if (c > 0 || !odd) // (1): this and (2) avoids x-change when scrolled to odd row numbers
+                    UpdateUpTileColumn(pos, ref index, 0);
+
                 UpdateDownTileColumn(pos, ref index, 0);
 
                 pos = map.MoveRight(pos);
+
+                if (c == numColumns && odd) // (2): see (1)
+                    UpdateUpTileColumn(pos, ref index, 0);
             }
         }
     }
