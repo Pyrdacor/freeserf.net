@@ -20,11 +20,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -65,6 +61,7 @@ namespace Freeserf
             }
         }
         public GuiObject Parent { get; set; } = null;
+        protected bool Focused => focused;
 
         protected abstract void InternalDraw();
 

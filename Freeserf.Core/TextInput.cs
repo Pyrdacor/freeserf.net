@@ -20,6 +20,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Collections.Generic;
+
 namespace Freeserf
 {
     internal class TextInput : GuiObject
@@ -28,15 +30,18 @@ namespace Freeserf
 
         string text = "";
         Filter filter = null;
-        Render.Color color_focus = new Render.Color(0x00, 0x8b, 0x47);
-        Render.Color color_text = Render.Color.Green;
-        Render.Color color_background = Render.Color.Black;
-        bool draw_focus = true;
+        Render.Color colorFocus = new Render.Color(0x00, 0x8b, 0x47);
+        Render.Color colorText = Render.Color.Green;
+        Render.Color colorBackground = Render.Color.Black;
+        bool drawFocus = true;
         Render.IColoredRect background = null;
+        readonly List<Render.TextField> textLines = new List<Render.TextField>();
+        readonly Render.TextRenderer textRenderer = null;
         
         public TextInput(Interface interf)
         {
-            background = interf.RenderView.ColoredRectFactory.Create(0, 0, color_background);
+            background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground);
+            textRenderer = interf.TextRenderer;
         }
 
         public string Text
@@ -67,27 +72,52 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            frame->fill_rect(0, 0, width, height, color_background);
-            if (draw_focus && focused)
-            {
-                frame->draw_rect(0, 0, width, height, color_focus);
-            }
-            int ch_width = width / 8;
-            std::string str = text;
+            background.Visible = Displayed;
+
+            if (drawFocus && Focused)
+                background.Color = colorFocus;
+            else
+                background.Color = colorBackground;
+
+            int numMaxCharsPerLine = Width / 8;
+            string str = text;
             int cx = 0;
             int cy = 0;
-            if (draw_focus)
+
+            if (drawFocus)
             {
                 cx = 1;
                 cy = 1;
             }
-            while (str.length())
+
+            int textLineIndex = 0;
+
+            while (str.Length > 0)
             {
-                std::string substr = str.substr(0, ch_width);
-                str.erase(0, ch_width);
-                frame->draw_string(cx, cy, substr, color_text);
-                cy += 8;
+                string substr = str.Substring(0, numMaxCharsPerLine);
+                str.Remove(0, numMaxCharsPerLine);
+
+                if (textLineIndex == textLines.Count)
+                {
+                    var newLine = new Render.TextField(textRenderer);
+
+                    newLine.SetPosition(cx, cy);
+
+                    textLines.Add(newLine);
+                }
+
+                textLines[textLineIndex].Text = substr; // TODO: we need a possibility to set a color for textured sprites
+                textLines[textLineIndex].Visible = true;
+                // TODO: set color to colorText
+
+                ++textLineIndex;
+
+                cy += 8; // TODO: adjust size
             }
+
+            // ensure that the other lines are not visible (they can be reused later by just setting Visible to true)
+            for (int i = textLineIndex; i < textLines.Count; ++i)
+                textLines[i].Destroy();
         }
 
         public void SetFilter(Filter filter)

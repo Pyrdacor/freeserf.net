@@ -125,10 +125,13 @@ namespace Freeserf
         public NotificationBox NotificationBox { get; private set; } = null;
         public Game Game { get; private set; } = null;
         public Random Random { get; private set; } = null;
+        public TextRenderer TextRenderer { get; } = null;
 
         public Interface(IRenderView renderView)
         {
             RenderView = renderView;
+
+            TextRenderer = new TextRenderer(renderView);
 
             displayed = true;
 
