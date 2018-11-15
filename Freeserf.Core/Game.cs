@@ -3307,6 +3307,19 @@ namespace Freeserf
             // TODO
         }
 
+        public override void OnObjectExchanged(uint pos, Map.Object oldObject, Map.Object newObject)
+        {
+            if (oldObject != Map.Object.None && newObject == Map.Object.None)
+            {
+                renderObjects[pos].Delete();
+                renderObjects.Remove(pos);
+            }
+            else if (renderObjects.ContainsKey(pos))
+            {
+                renderObjects[pos].ChangeObjectType(newObject);
+            }
+        }
+
         public override void OnObjectPlaced(MapPos pos)
         {
             var obj = map.GetObject(pos);
@@ -3337,11 +3350,14 @@ namespace Freeserf
             }
             else // map object
             {
-                var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+                if (obj != Map.Object.None)
+                {
+                    var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
 
-                renderObject.Visible = true;
+                    renderObject.Visible = true;
 
-                renderObjects.Add(pos, renderObject);
+                    renderObjects.Add(pos, renderObject);
+                }
             }
         }
 

@@ -98,7 +98,8 @@ namespace Freeserf.Render
 
             if (objectType == Map.Object.None) // from something valid to None
             {
-                Delete();
+                // this is handled by Game so this should not happen at all
+                Debug.NotReached();
                 return;
             }
 

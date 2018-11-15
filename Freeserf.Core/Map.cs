@@ -458,6 +458,7 @@ namespace Freeserf
             public abstract void OnHeightChanged(MapPos pos);
             public abstract void OnObjectChanged(MapPos pos);
             public abstract void OnObjectPlaced(MapPos pos);
+            public abstract void OnObjectExchanged(MapPos pos, Map.Object oldObject, Map.Object newObject);
             public abstract void OnRoadSegmentPlaced(MapPos pos, Direction dir);
             public abstract void OnRoadSegmentDeleted(MapPos pos, Direction dir);
         }
@@ -1146,6 +1147,8 @@ namespace Freeserf
            building is removed. */
         public void SetObject(MapPos pos, Object obj, int index)
         {
+            var oldObject = landscapeTiles[(int)pos].Object;
+
             landscapeTiles[(int)pos].Object = obj;
 
             if (index >= 0)
@@ -1162,9 +1165,19 @@ namespace Freeserf
                 }
             }
 
-            foreach (Handler handler in changeHandlers)
+            if (oldObject == Object.None && obj != Object.None)
             {
-                handler.OnObjectPlaced(pos);
+                foreach (Handler handler in changeHandlers)
+                {
+                    handler.OnObjectPlaced(pos);
+                }
+            }
+            else if (oldObject != Object.None)
+            {
+                foreach (Handler handler in changeHandlers)
+                {
+                    handler.OnObjectExchanged(pos, oldObject, obj);
+                }
             }
         }
 
