@@ -33,37 +33,7 @@ namespace Freeserf
 
             gameView = new GameView(dosData, new Size(1024, 768), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
 
-            gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
-
-            TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
-            TextureAtlasManager.Instance.AddAll(dosData);
-            
-            // TODO: create texture atlas for every layer
-            Renderer.OpenTK.Texture textureDummy = null; // dummy
-
-            // TODO: color keys?
-            var layerLandscape = new RenderLayer(Layer.Landscape, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape).Texture as Renderer.OpenTK.Texture);
-            var layerGrid = new RenderLayer(Layer.Grid, textureDummy);
-            var layerPaths = new RenderLayer(Layer.Paths, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Paths).Texture as Renderer.OpenTK.Texture);
-            var layerObjects = new RenderLayer(Layer.Objects, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects).Texture as Renderer.OpenTK.Texture);
-            var layerBuildings = new RenderLayer(Layer.Buildings, TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings).Texture as Renderer.OpenTK.Texture);
-            var layerSerfs = new RenderLayer(Layer.Serfs, textureDummy);
-            var layerBuilds = new RenderLayer(Layer.Builds, textureDummy);
-            var layerCursor = new RenderLayer(Layer.Cursor, textureDummy);
-
-            gameView.AddLayer(layerLandscape);
-            gameView.AddLayer(layerGrid);
-            gameView.AddLayer(layerPaths);
-            gameView.AddLayer(layerObjects);
-            gameView.AddLayer(layerBuildings);
-            gameView.AddLayer(layerSerfs);
-            gameView.AddLayer(layerBuilds);
-            gameView.AddLayer(layerCursor);
-
-            // Example for adding a sprite
-            // var serfSprite = new Sprite(32, 34, 0, 0);
-            // serfSprite.Visible = true;
-            // serfSprite.Layer = layerSerfs;
+            gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);          
 
             var random = new Random();
             var gameInfo = new GameInfo(random);
@@ -73,7 +43,7 @@ namespace Freeserf
 
             game = GameManager.Instance.GetCurrentGame();
 
-            game.Map.AttachToRenderLayer(layerLandscape, dosData);
+            game.Map.AttachToRenderLayer(gameView.GetLayer(Layer.Landscape), dosData);
 
             var pos = game.GetPlayer(0u).CastlePos;
             uint column = game.Map.PosColumn(pos);

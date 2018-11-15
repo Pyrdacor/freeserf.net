@@ -63,6 +63,31 @@ namespace Freeserf.Renderer.OpenTK
 
             spriteFactory = new SpriteFactory(VirtualScreen);
             triangleFactory = new TriangleFactory(VirtualScreen);
+
+            TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
+
+            var textureAtlas = TextureAtlasManager.Instance;
+
+            textureAtlas.AddAll(dataSource);
+
+            foreach (Layer layer in Enum.GetValues(typeof(Layer)))
+            {
+                if (layer == Layer.None || layer == Layer.All)
+                    continue;
+
+                // TODO: color keys?
+
+                try
+                {
+                    var renderLayer = Create(layer, textureAtlas.GetOrCreate((int)layer).Texture as Texture);
+
+                    AddLayer(renderLayer);
+                }
+                catch
+                {
+                    // TODO: for now ignore but throw exception later
+                }
+            }
         }
 
         public float Zoom
