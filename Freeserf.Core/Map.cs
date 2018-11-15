@@ -673,7 +673,7 @@ namespace Freeserf
                     (uint)(virtualScreenWidth / tileWidth),
                     (uint)(virtualScreenHeight / tileHeight),
                     this, renderView.TriangleFactory,
-                    Render.TextureAtlasManager.Instance.GetOrCreate((int)Layer.Landscape),
+                    Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Landscape),
                     dataSource);
             }
 

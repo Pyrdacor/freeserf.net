@@ -33,6 +33,7 @@ namespace Freeserf.Renderer.OpenTK
     {
         public Shape Shape { get; } = Shape.Rect;
         public bool Masked { get; } = false;
+        bool supportAnimations = false;
 
         readonly VertexArrayObject vertexArrayObject = null;
         readonly PositionBuffer positionBuffer = null;
@@ -40,10 +41,11 @@ namespace Freeserf.Renderer.OpenTK
         readonly PositionBuffer maskTextureAtlasOffsetBuffer = null; // is null for normal sprites
         readonly BaseLineBuffer baseLineBuffer = null;
 
-        public RenderBuffer(Shape shape, bool masked)
+        public RenderBuffer(Shape shape, bool masked, bool supportAnimations)
         {
             Shape = shape;
             Masked = masked;
+            this.supportAnimations = supportAnimations;
 
             if (masked)
             {
@@ -66,9 +68,7 @@ namespace Freeserf.Renderer.OpenTK
             }
             else
             {
-                // TODO: static buffer? is this the case? animations are everywhere for serfs and some buildings (but ui etc are very static)
-                // most sprites won't change their appearances much so use static buffer
-                textureAtlasOffsetBuffer = new PositionBuffer(true);
+                textureAtlasOffsetBuffer = new PositionBuffer(!supportAnimations);
 
                 // base line only for rectangular sprites
                 baseLineBuffer = new BaseLineBuffer(false);
@@ -78,7 +78,7 @@ namespace Freeserf.Renderer.OpenTK
 
             if (masked)
             {
-                maskTextureAtlasOffsetBuffer = new PositionBuffer(false);
+                maskTextureAtlasOffsetBuffer = new PositionBuffer(shape != Shape.Triangle && !supportAnimations);
 
                 vertexArrayObject.AddBuffer(MaskedTextureShader.DefaultMaskTexCoordName, maskTextureAtlasOffsetBuffer);
             }

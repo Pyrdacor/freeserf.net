@@ -46,8 +46,9 @@ namespace Freeserf.Renderer.OpenTK
         {
             var shape = (layer == Layer.Landscape || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
             bool masked = layer == Layer.Landscape || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
+            bool supportAnimations = layer != Layer.Gui; // gui is mostly static
 
-            renderBuffer = new RenderBuffer(shape, masked);
+            renderBuffer = new RenderBuffer(shape, masked, supportAnimations);
 
             Layer = layer;
             this.texture = texture;

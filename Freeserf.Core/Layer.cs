@@ -45,7 +45,8 @@ namespace Freeserf
         Serfs = 1 << 5,
         Builds = 1 << 6,
         Gui = 1 << 7,
-        Cursor = 1 << 8,        
+        GuiBuildings = 1 << 8, // we have to display buildings inside some windows (e.g. build menu)
+        Cursor = 1 << 9,        
         All = Landscape | Paths | Objects | Buildings | Serfs | Cursor
     }
 
@@ -63,7 +64,8 @@ namespace Freeserf
             0.05f,  // Serfs
             0.96f,  // Builds
             0.97f,  // Gui
-            0.98f   // Cursor
+            0.98f,  // Gui Buildings
+            0.99f   // Cursor
         };
     }
 }

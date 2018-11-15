@@ -153,7 +153,7 @@ namespace Freeserf.Render
                 spriteIndex += 3;
             }
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Paths);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Paths);
 
             sprite.TextureAtlasOffset = textureAtlas.GetOffset((uint)spriteIndex);
             (sprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(10u + (uint)maskIndex);

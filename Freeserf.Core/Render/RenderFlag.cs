@@ -80,7 +80,7 @@ namespace Freeserf.Render
 
         public void Update(uint tick, RenderMap map, uint pos)
         {
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
             uint offset = (tick >> 3) & 3;
             uint spriteIndex = 128u + offset;
 

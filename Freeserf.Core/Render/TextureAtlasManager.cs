@@ -8,8 +8,8 @@ namespace Freeserf.Render
     {
         static TextureAtlasManager instance = null;
         static ITextureAtlasBuilderFactory factory = null;
-        readonly Dictionary<int, ITextureAtlasBuilder> atlasBuilders = new Dictionary<int, ITextureAtlasBuilder>();
-        readonly Dictionary<int, ITextureAtlas> atlas = new Dictionary<int, ITextureAtlas>();
+        readonly Dictionary<Layer, ITextureAtlasBuilder> atlasBuilders = new Dictionary<Layer, ITextureAtlasBuilder>();
+        readonly Dictionary<Layer, ITextureAtlas> atlas = new Dictionary<Layer, ITextureAtlas>();
 
         public static TextureAtlasManager Instance
         {
@@ -32,40 +32,49 @@ namespace Freeserf.Render
             TextureAtlasManager.factory = factory;
         }
 
-        public void AddSprite(int atlasIndex, uint spriteIndex, Sprite sprite)
+        public void AddSprite(Layer layer, uint spriteIndex, Sprite sprite)
         {
             if (factory == null)
                 throw new ExceptionFreeserf("No TextureAtlasBuilderFactory was registered.");
 
-            if (atlas.ContainsKey(atlasIndex))
+            if (layer == Layer.GuiBuildings)
+                throw new ExceptionFreeserf("Adding sprites for layer GuiBuildings is not allowed.");
+
+            if (atlas.ContainsKey(layer))
                 throw new ExceptionFreeserf("Texture atlas already created.");
 
-            if (!atlasBuilders.ContainsKey(atlasIndex))
-                atlasBuilders.Add(atlasIndex, factory.Create());
+            if (!atlasBuilders.ContainsKey(layer))
+                atlasBuilders.Add(layer, factory.Create());
 
-            atlasBuilders[atlasIndex].AddSprite(spriteIndex, sprite);
+            atlasBuilders[layer].AddSprite(spriteIndex, sprite);
         }
 
-        public ITextureAtlas GetOrCreate(int index)
+        public ITextureAtlas GetOrCreate(Layer layer)
         {
-            if (!atlas.ContainsKey(index))
-                atlas.Add(index, atlasBuilders[index].Create());
+            if (layer == Layer.GuiBuildings)
+                layer = Layer.Buildings; // Use the same atlas as for layer Buildings
 
-            return atlas[index];
+            if (!atlas.ContainsKey(layer))
+                atlas.Add(layer, atlasBuilders[layer].Create());
+
+            return atlas[layer];
         }
 
         public void AddAll(DataSource data)
         {
             uint i;
-            int atlasIndex;
+            Layer atlasIndex;
 
             // use transparent color (TODO: correct for all?)
             var color = Sprite.Color.Transparent;
 
+            // Note: Don't add sprites to the layer GuiBuildings.
+            // We use the same atlas as for layer Buildings.
+
 
             #region Landscape
 
-            atlasIndex = (int)Layer.Landscape;
+            atlasIndex = Layer.Landscape;
 
             // Note:
             // We enlarge all tile sprites to the maximum height of 41 (max mask height) with repeated texture data.
@@ -117,7 +126,7 @@ namespace Freeserf.Render
 
             #region Buildings
 
-            atlasIndex = (int)Layer.Buildings;
+            atlasIndex = Layer.Buildings;
 
             // building sprites are located in sprites 144 to 193 (with some gaps)
             for (uint buildingSprite = 144; buildingSprite <= 193; ++buildingSprite)
@@ -145,7 +154,7 @@ namespace Freeserf.Render
 
             #region Map Objects
 
-            atlasIndex = (int)Layer.Objects;
+            atlasIndex = Layer.Objects;
 
             // sprites 0 - 127 are normal map objects
             for (uint objectSprite = 0; objectSprite < 128; ++objectSprite)
@@ -201,7 +210,7 @@ namespace Freeserf.Render
 
             #region Paths (and borders)
 
-            atlasIndex = (int)Layer.Paths;
+            atlasIndex = Layer.Paths;
 
             // Note:
             // We enlarge all path sprites to the maximum height of 41 (max mask height) with repeated texture data.

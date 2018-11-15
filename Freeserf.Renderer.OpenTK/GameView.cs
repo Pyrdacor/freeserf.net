@@ -79,7 +79,7 @@ namespace Freeserf.Renderer.OpenTK
 
                 try
                 {
-                    var renderLayer = Create(layer, textureAtlas.GetOrCreate((int)layer).Texture as Texture);
+                    var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture);
 
                     AddLayer(renderLayer);
                 }

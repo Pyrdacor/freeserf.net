@@ -100,7 +100,7 @@ namespace Freeserf.Render
 
             // the tree sprite sizes are the same per tree type, so no resize is necessary
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
             var renderPosition = map.GetObjectRenderPosition(pos);
 
@@ -144,7 +144,7 @@ namespace Freeserf.Render
             sprite.Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
             shadowSprite.Resize((int)shadowInfo.Width, (int)shadowInfo.Height);
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
             sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);

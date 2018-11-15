@@ -78,7 +78,7 @@ namespace Freeserf.Render
             if (burningSprite != null)
                 burningSprite.Layer = renderLayer;
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
             sprite.TextureAtlasOffset = textureAtlas.GetOffset(MapBuildingSprite[(int)building.BuildingType]);
             (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
@@ -186,7 +186,7 @@ namespace Freeserf.Render
 
             if (building.IsDone())
             {
-                var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+                var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
                 (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
             }
@@ -265,7 +265,7 @@ namespace Freeserf.Render
             shadowSprite.X = renderPosition.X + shadowSpriteOffsets[spriteIndex].X;
             shadowSprite.Y = renderPosition.Y + shadowSpriteOffsets[spriteIndex].Y;
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
             (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
         }
@@ -297,7 +297,7 @@ namespace Freeserf.Render
             // Note: The biggest building is the castle with 64x97 therefore we use 100 pixels
             // for the height areas.
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Buildings);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
             if (building.IsDone())
             {

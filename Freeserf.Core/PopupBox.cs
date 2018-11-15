@@ -549,7 +549,7 @@ namespace Freeserf
 
             while (sprites[index] > 0)
             {
-                DrawPopupIcon(sprites[index + 1], sprites[index + 2], sprites[index + 0]);
+                DrawPopupIcon(sprites[index + 1], sprites[index + 2], (uint)sprites[index + 0]);
                 index += 3;
             }
         }
