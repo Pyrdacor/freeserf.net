@@ -145,11 +145,9 @@ namespace Freeserf
             Layout();
         }
 
-        public Color GetPlayerColor(uint playerIndex)
+        public Player.Color GetPlayerColor(uint playerIndex)
         {
-            Player.Color playerColor = Game.GetPlayer(playerIndex).GetColor();
-
-            return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+            return Game.GetPlayer(playerIndex).GetColor();
         }
 
         public bool GetConfig(int i)

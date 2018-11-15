@@ -4,7 +4,16 @@ using System.Text;
 
 namespace Freeserf
 {
-    internal class MinimapGame
+    internal class MinimapGame : GuiObject
     {
+        public MinimapGame(Interface interf, Game game)
+        {
+
+        }
+
+        protected override void InternalDraw()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

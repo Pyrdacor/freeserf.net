@@ -113,6 +113,255 @@ namespace Freeserf
             Shield = 163
         }
 
+        public enum Action
+        {
+            MinimapClick = 0,
+            MinimapMode,
+            MinimapRoads,
+            MinimapBuildings,
+            MinimapGrid,
+            BuildStonemine,
+            BuildCoalmine,
+            BuildIronmine,
+            BuildGoldmine,
+            BuildFlag,
+            BuildStonecutter,
+            BuildHut,
+            BuildLumberjack,
+            BuildForester,
+            BuildFisher,
+            BuildMill,
+            BuildBoatbuilder,
+            BuildButcher,
+            BuildWeaponsmith,
+            BuildSteelsmelter,
+            BuildSawmill,
+            BuildBaker,
+            BuildGoldsmelter,
+            BuildFortress,
+            BuildTower,
+            BuildToolmaker,
+            BuildFarm,
+            BuildPigfarm,
+            BldFlipPage,
+            ShowStat1,
+            ShowStat2,
+            ShowStat8,
+            ShowStatBld,
+            ShowStat6,
+            ShowStat7,
+            ShowStat4,
+            ShowStat3,
+            ShowStatSelect,
+            StatBldFlip,
+            CloseBox,
+            Sett8SetAspectAll,
+            Sett8SetAspectLand,
+            Sett8SetAspectBuildings,
+            Sett8SetAspectMilitary,
+            Sett8SetScale30Min,
+            Sett8SetScale60Min,
+            Sett8SetScale600Min,
+            Sett8SetScale3000Min,
+            Stat7SelectFish,
+            Stat7SelectPig,
+            Stat7SelectMeat,
+            Stat7SelectWheat,
+            Stat7SelectFlour,
+            Stat7SelectBread,
+            Stat7SelectLumber,
+            Stat7SelectPlank,
+            Stat7SelectBoat,
+            Stat7SelectStone,
+            Stat7SelectIronore,
+            Stat7SelectSteel,
+            Stat7SelectCoal,
+            Stat7SelectGoldore,
+            Stat7SelectGoldbar,
+            Stat7SelectShovel,
+            Stat7SelectHammer,
+            Stat7SelectRod,
+            Stat7SelectCleaver,
+            Stat7SelectScythe,
+            Stat7SelectAxe,
+            Stat7SelectSaw,
+            Stat7SelectPick,
+            Stat7SelectPincer,
+            Stat7SelectSword,
+            Stat7SelectShield,
+            AttackingKnightsDec,
+            AttackingKnightsInc,
+            StartAttack,
+            CloseAttackBox,
+            /* ... 78 - 91 ... */
+            CloseSettBox = 92,
+            ShowSett1,
+            ShowSett2,
+            ShowSett3,
+            ShowSett7,
+            ShowSett4,
+            ShowSett5,
+            ShowSettSelect,
+            Sett1AdjustStonemine,
+            Sett1AdjustCoalmine,
+            Sett1AdjustIronmine,
+            Sett1AdjustGoldmine,
+            Sett2AdjustConstruction,
+            Sett2AdjustBoatbuilder,
+            Sett2AdjustToolmakerPlanks,
+            Sett2AdjustToolmakerSteel,
+            Sett2AdjustWeaponsmith,
+            Sett3AdjustSteelsmelter,
+            Sett3AdjustGoldsmelter,
+            Sett3AdjustWeaponsmith,
+            Sett3AdjustPigfarm,
+            Sett3AdjustMill,
+            KnightLevelClosestMinDec,
+            KnightLevelClosestMinInc,
+            KnightLevelClosestMaxDec,
+            KnightLevelClosestMaxInc,
+            KnightLevelCloseMinDec,
+            KnightLevelCloseMinInc,
+            KnightLevelCloseMaxDec,
+            KnightLevelCloseMaxInc,
+            KnightLevelFarMinDec,
+            KnightLevelFarMinInc,
+            KnightLevelFarMaxDec,
+            KnightLevelFarMaxInc,
+            KnightLevelFarthestMinDec,
+            KnightLevelFarthestMinInc,
+            KnightLevelFarthestMaxDec,
+            KnightLevelFarthestMaxInc,
+            Sett4AdjustShovel,
+            Sett4AdjustHammer,
+            Sett4AdjustAxe,
+            Sett4AdjustSaw,
+            Sett4AdjustScythe,
+            Sett4AdjustPick,
+            Sett4AdjustPincer,
+            Sett4AdjustCleaver,
+            Sett4AdjustRod,
+            Sett56Item1,
+            Sett56Item2,
+            Sett56Item3,
+            Sett56Item4,
+            Sett56Item5,
+            Sett56Item6,
+            Sett56Item7,
+            Sett56Item8,
+            Sett56Item9,
+            Sett56Item10,
+            Sett56Item11,
+            Sett56Item12,
+            Sett56Item13,
+            Sett56Item14,
+            Sett56Item15,
+            Sett56Item16,
+            Sett56Item17,
+            Sett56Item18,
+            Sett56Item19,
+            Sett56Item20,
+            Sett56Item21,
+            Sett56Item22,
+            Sett56Item23,
+            Sett56Item24,
+            Sett56Item25,
+            Sett56Item26,
+            Sett56Top,
+            Sett56Up,
+            Sett56Down,
+            Sett56Bottom,
+            QuitConfirm,
+            QuitCancel,
+            NoSaveQuitConfirm,
+            ShowQuit,
+            Actionshowoptions,
+            ShowSave,
+            Sett8Cycle,
+            CloseOptions,
+            OptionsPathwayScrolling1,
+            OptionsPathwayScrolling2,
+            OptionsFastMapClick1,
+            OptionsFastMapClick2,
+            OptionsFastBuilding1,
+            OptionsFastBuilding2,
+            OptionsMessageCount1,
+            OptionsMessageCount2,
+            ShowSettSelectFile, /* Unused */
+            ShowStatSelectFile, /* Unused */
+            DefaultSett1,
+            DefaultSett2,
+            DefaultSett56,
+            BuildStock,
+            ShowCastleSerf,
+            ShowResdir,
+            ShowCastleRes,
+            SendGeologist,
+            ResModeIn,
+            ResModeStop,
+            ResModeOut,
+            SerfModeIn,
+            SerfModeStop,
+            SerfModeOut,
+            ShowSett8,
+            ShowSett6,
+            Sett8AdjustRate,
+            Sett8Train1,
+            Sett8Train5,
+            Sett8Train20,
+            Sett8Train100,
+            DefaultSett3,
+            Sett8SetCombatModeWeak,
+            Sett8SetCombatModeStrong,
+            AttackingSelectAll1,
+            AttackingSelectAll2,
+            AttackingSelectAll3,
+            AttackingSelectAll4,
+            MinimapBld1,
+            MinimapBld2,
+            MinimapBld3,
+            MinimapBld4,
+            MinimapBld5,
+            MinimapBld6,
+            MinimapBld7,
+            MinimapBld8,
+            MinimapBld9,
+            MinimapBld10,
+            MinimapBld11,
+            MinimapBld12,
+            MinimapBld13,
+            MinimapBld14,
+            MinimapBld15,
+            MinimapBld16,
+            MinimapBld17,
+            MinimapBld18,
+            MinimapBld19,
+            MinimapBld20,
+            MinimapBld21,
+            MinimapBld22,
+            MinimapBld23,
+            MinimapBldFlag,
+            MinimapBldNext,
+            MinimapBldExit,
+            CloseMessage,
+            DefaultSett4,
+            ShowPlayerFaces,
+            MinimapScale,
+            OptionsRightSide,
+            CloseGroundAnalysis,
+            UnknownTpInfoFlag,
+            Sett8CastleDefDec,
+            Sett8CastleDefInc,
+            OptionsMusic,
+            OptionsFullscreen,
+            OptionsVolumeMinus,
+            OptionsVolumePlus,
+            Demolish,
+            OptionsSfx,
+            Save,
+            NewNamE
+        }
+
         Interface interf;
         ListSavedFiles fileList;
         TextInput fileField;
@@ -120,14 +369,44 @@ namespace Freeserf
         public Type Box { get; }
         public MinimapGame MiniMap { get; }
 
-        int current_sett_5_item;
-        int current_sett_6_item;
-        int current_stat_7_item;
-        int current_stat_8_mode;
+        int currentSett5Item;
+        int currentSett6Item;
+        int currentStat7Item;
+        int currentStat8Mode;
 
         public PopupBox(Interface interf)
         {
             this.interf = interf;
+            MiniMap = new MinimapGame(interf, interf.Game);
+            fileList = new ListSavedFiles();
+            fileField = new TextInput();
+
+            currentSett5Item = 8;
+            currentSett6Item = 15;
+            currentStat7Item = 7;
+            currentStat8Mode = 0;
+
+            // TODO: the locations should be relative to the virtual screen!
+
+            /* Initialize minimap */
+            MiniMap.Displayed = false;
+            MiniMap.Parent = this;
+            MiniMap.SetSize(128, 128);
+            AddFloatWindow(MiniMap, 8, 9);
+
+            fileList.SetSize(120, 100);
+            fileList.Displayed = false;
+            fileList.SetSelectionHandler((string item) =>
+            {
+                int pos = item.LastIndexOfAny(new char[] { '/', '\\' });
+                string fileName = item.Substring(pos + 1);
+                fileField.SetText(fileName);
+            });
+            AddFloatWindow(fileList, 12, 22);
+
+            fileField.SetSize(120, 10);
+            fileField.Displayed = false;
+            AddFloatWindow(fileField, 12, 124);
         }
 
         public void Show(Type box)
@@ -140,70 +419,140 @@ namespace Freeserf
 
         }
 
+        /* Draw the frame around the popup box. */
         void draw_popup_box_frame()
 		{
 			
 		}
 
-        void draw_popup_icon(int x, int y, int sprite)
+        /* Draw icon in a popup frame. */
+        void DrawPopupIcon(int x, int y, uint sprite)
 		{
 			
 		}
 
-        void draw_popup_building(int x, int y, int sprite)
+        /* Draw building in a popup frame. */
+        void draw_popup_building(int x, int y, uint sprite)
 		{
 			
 		}
 
+        /* Fill the background of a popup frame. */
         void draw_box_background(BackgroundPattern sprite)
 		{
 			
 		}
 
-        void draw_box_row(int sprite, int y)
+        /* Fill one row of a popup frame. */
+        void draw_box_row(uint sprite, int y)
 		{
 			
 		}
 
+        /* Draw a green string in a popup frame. */
         void draw_green_string(int x, int y, string str)
 		{
 			
 		}
 
-        void draw_green_number(int x, int y, int n)
+        /* Draw a green number in a popup frame.
+           n must be non-negative. If > 999 simply draw ">999" (three characters). */
+        void draw_green_number(int x, int y, uint n)
+		{
+            if (n >= 1000)
+            {
+                DrawPopupIcon(x, y, 0xd5u); /* Draw >999 */
+                DrawPopupIcon(x + 1, y, 0xd6u);
+                DrawPopupIcon(x + 2, y, 0xd7u);
+            }
+            else
+            {
+                /* Not the same sprites as are used to draw numbers
+                   in gfx_draw_number(). */
+                bool drawZero = false;
+
+                if (n >= 100)
+                {
+                    uint n100 = (uint)((n / 100.0f) + 0.5f);
+                    n -= n100 * 100;
+                    DrawPopupIcon(x, y, 0x4e + n100);
+                    ++x;
+                    drawZero = true;
+                }
+
+                if (n >= 10 || drawZero)
+                {
+                    uint n10 = (uint)((n / 10.0f) + 0.5f);
+                    n -= n10 * 10;
+                    DrawPopupIcon(x, y, 0x4e + n10);
+                    ++x;
+                }
+
+                DrawPopupIcon(x, y, 0x4e + n);
+            }
+        }
+
+        /* Draw a green number in a popup frame.
+           No limits on n. */
+        void draw_green_large_number(int x, int y, uint n)
 		{
 			
 		}
 
-        void draw_green_large_number(int x, int y, int n)
+        /* Draw small green number. */
+        void draw_additional_number(int x, int y, uint n)
 		{
-			
-		}
+            if (n > 0)
+            {
+                DrawPopupIcon(x, y, 240u + Math.Min(n, 10u));
+            }
+        }
 
-        void draw_additional_number(int x, int y, int n)
-		{
-			
-		}
-
+        /* Get the sprite number for a face. */
         uint get_player_face_sprite(uint face)
 		{
-            return 0;
-		}
+            if (face != 0)
+            {
+                return 0x10bu + face;
+            }
 
-        void draw_player_face(int x, int y, int player)
+            return 0x119u; /* sprite_face_none */
+        }
+
+        /* Draw player face in popup frame. */
+        void draw_player_face(int x, int y, uint playerIndex)
 		{
-			
-		}
+            Player.Color color;
+            uint face = 0;
+            Player player = interf.Game.GetPlayer(playerIndex);
 
+            if (player != null)
+            {
+                color = interf.GetPlayerColor(playerIndex);
+                face = player.GetFace();
+            }
+
+            //frame->fill_rect(8 * x, y + 5, 48, 72, color);
+            DrawPopupIcon(x, y, get_player_face_sprite(face));
+        }
+
+        /* Draw a layout of buildings in a popup box. */
         void draw_custom_bld_box(int[] sprites)
 		{
 			
 		}
 
+        /* Draw a layout of icons in a popup box. */
         void draw_custom_icon_box(int[] sprites)
 		{
-			
-		}
+            int index = 0;
+
+            while (sprites[index] > 0)
+            {
+                DrawPopupIcon(sprites[index + 1], sprites[index + 2], sprites[index + 0]);
+                index += 3;
+            }
+        }
 
         string prepare_res_amount_text(int amount)
 		{
