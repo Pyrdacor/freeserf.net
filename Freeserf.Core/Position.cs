@@ -1,5 +1,5 @@
 ﻿/*
- * Size.cs - Basic position implementation
+ * Position.cs - Basic position implementation
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *

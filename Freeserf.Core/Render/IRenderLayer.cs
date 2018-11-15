@@ -29,14 +29,17 @@ namespace Freeserf.Render
             get;
             set;
         }
+        bool Visible
+        {
+            get;
+            set;
+        }
 
         void Render();
-        void AddNode(IRenderNode node);
-        void RemoveNode(IRenderNode node);
     }
 
     public interface IRenderLayerFactory
     {
-        IRenderLayer Create(Layer layer, Texture texture, Color colorKey = null);
+        IRenderLayer Create(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null);
     }
 }

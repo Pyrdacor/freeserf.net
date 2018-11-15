@@ -38,6 +38,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly SortedDictionary<Layer, RenderLayer> layers = new SortedDictionary<Layer, RenderLayer>();
         readonly SpriteFactory spriteFactory = null;
         readonly TriangleFactory triangleFactory = null;
+        readonly IColoredRectFactory coloredRectFactory = null;
 
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
@@ -63,6 +64,7 @@ namespace Freeserf.Renderer.OpenTK
 
             spriteFactory = new SpriteFactory(VirtualScreen);
             triangleFactory = new TriangleFactory(VirtualScreen);
+            coloredRectFactory = new ColoredRectFactory(VirtualScreen);
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
 
@@ -79,7 +81,11 @@ namespace Freeserf.Renderer.OpenTK
 
                 try
                 {
-                    var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture);
+                    var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture,
+                        layer == Layer.Gui); // the gui supports colored rects
+
+                    // initial we only show the gui + cursor
+                    renderLayer.Visible = layer == Layer.Gui || layer == Layer.Cursor;
 
                     AddLayer(renderLayer);
                 }
@@ -103,6 +109,8 @@ namespace Freeserf.Renderer.OpenTK
         public ISpriteFactory SpriteFactory => spriteFactory;
 
         public ITriangleFactory TriangleFactory => triangleFactory;
+
+        public IColoredRectFactory ColoredRectFactory => coloredRectFactory;
 
         void SetRotation(Orientation orientation)
         {
@@ -263,6 +271,11 @@ namespace Freeserf.Renderer.OpenTK
         public IRenderLayer GetLayer(Layer layer)
         {
             return layers[layer];
+        }
+
+        public void ShowLayer(Layer layer, bool show)
+        {
+            layers[layer].Visible = show;
         }
 
         public void Render()

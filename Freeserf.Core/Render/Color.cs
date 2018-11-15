@@ -23,25 +23,25 @@ namespace Freeserf.Render
 {
     public class Color
     {
-        public float R;
-        public float G;
-        public float B;
-        public float A;
+        public byte R;
+        public byte G;
+        public byte B;
+        public byte A;
 
         public Color()
         {
-            R = 0.0f;
-            G = 0.0f;
-            B = 0.0f;
-            A = 1.0f;
+            R = 0;
+            G = 0;
+            B = 0;
+            A = 255;
         }
 
         public Color(byte r, byte g, byte b, byte a = 255)
         {
-            R = r / 255.0f;
-            G = g / 255.0f;
-            B = b / 255.0f;
-            A = a / 255.0f;
+            R = r;
+            G = g;
+            B = b;
+            A = a;
         }
 
         public Color(int r, int g, int b, int a = 255)
@@ -52,12 +52,14 @@ namespace Freeserf.Render
 
         public Color(float r, float g, float b, float a = 1.0f)
         {
-            R = r;
-            G = g;
-            B = b;
-            A = a;
+            R = (byte)Misc.Round(r * 255.0f);
+            G = (byte)Misc.Round(g * 255.0f);
+            B = (byte)Misc.Round(b * 255.0f);
+            A = (byte)Misc.Round(a * 255.0f);
         }
 
-        public static readonly Color Transparent = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+        public static readonly Color Transparent = new Color(0x00, 0x00, 0x00, 0x00);
+        public static readonly Color Black = new Color(0x00, 0x00, 0x00);
+        public static readonly Color Green = new Color(0x73, 0xb3, 0x43);
     }
 }

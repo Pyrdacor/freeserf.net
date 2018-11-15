@@ -10,6 +10,7 @@ namespace Freeserf.Render
         static ITextureAtlasBuilderFactory factory = null;
         readonly Dictionary<Layer, ITextureAtlasBuilder> atlasBuilders = new Dictionary<Layer, ITextureAtlasBuilder>();
         readonly Dictionary<Layer, ITextureAtlas> atlas = new Dictionary<Layer, ITextureAtlas>();
+        readonly Dictionary<Data.Resource, uint> guiResourceOffsets = new Dictionary<Data.Resource, uint>();
 
         public static TextureAtlasManager Instance
         {
@@ -30,6 +31,14 @@ namespace Freeserf.Render
         public static void RegisterFactory(ITextureAtlasBuilderFactory factory)
         {
             TextureAtlasManager.factory = factory;
+        }
+
+        public uint GetGuiTypeOffset(Data.Resource type)
+        {
+            if (!guiResourceOffsets.ContainsKey(type))
+                throw new ExceptionFreeserf("The given resource type is not part of the gui.");
+
+            return guiResourceOffsets[type];
         }
 
         public void AddSprite(Layer layer, uint spriteIndex, Sprite sprite)
@@ -247,7 +256,46 @@ namespace Freeserf.Render
             #endregion
 
 
+            #region Gui
+
+            uint index = 0u;
+
+            AddGuiElements(Data.Resource.ArtBox, 14, ref index, data);
+            AddGuiElements(Data.Resource.ArtFlag, 7, ref index, data);
+            AddGuiElements(Data.Resource.ArtLandscape, 1, ref index, data);
+            AddGuiElements(Data.Resource.CreditsBg, 1, ref index, data);
+            AddGuiElements(Data.Resource.DottedLines, 7, ref index, data);
+            AddGuiElements(Data.Resource.Font, 44, ref index, data);
+            AddGuiElements(Data.Resource.FontShadow, 44, ref index, data);
+            AddGuiElements(Data.Resource.FrameBottom, 26, ref index, data); // actually there are only 23 sprites but we have to pass the max sprite number + 1 (non-existent sprites are skipped)
+            AddGuiElements(Data.Resource.FramePopup, 4, ref index, data);
+            AddGuiElements(Data.Resource.FrameSplit, 3, ref index, data);
+            AddGuiElements(Data.Resource.FrameTop, 4, ref index, data);
+            AddGuiElements(Data.Resource.Icon, 318, ref index, data);
+            AddGuiElements(Data.Resource.Indicator, 8, ref index, data);
+            AddGuiElements(Data.Resource.Logo, 1, ref index, data);
+            AddGuiElements(Data.Resource.PanelButton, 25, ref index, data);
+            //AddGuiElements(Data.Resource.Symbol, 16, ref index, data); // TODO: skip them for now. maybe re-add later
+
+            #endregion
+
+
             // TODO
+        }
+
+        void AddGuiElements(Data.Resource resourceType, uint num, ref uint index, DataSource data)
+        {
+            guiResourceOffsets.Add(resourceType, index);
+
+            for (uint i = 0; i < num; ++i)
+            {
+                var sprite = data.GetSprite(Data.Resource.ArtFlag, i, Sprite.Color.Transparent);
+
+                if (sprite != null)
+                    AddSprite(Layer.Gui, index, sprite);
+
+                ++index;
+            }
         }
     }
 }

@@ -30,6 +30,15 @@ namespace Freeserf
 {
     public abstract class GuiObject
     {
+        public static Position GetTextureAtlasOffset(Data.Resource resourceType, uint spriteIndex)
+        {
+            var textureAtlasManager = Render.TextureAtlasManager.Instance;
+            var textureAtlas = textureAtlasManager.GetOrCreate(Layer.Gui);
+            var offset = textureAtlasManager.GetGuiTypeOffset(resourceType);
+
+            return textureAtlas.GetOffset(offset + spriteIndex);
+        }
+
         readonly List<GuiObject> floatWindows = new List<GuiObject>();
         bool redraw = true;
         Render.IRenderLayer layer = null;
@@ -39,8 +48,8 @@ namespace Freeserf
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
-        public uint Width { get; private set; } = 0;
-        public uint Height { get; private set; } = 0;
+        public int Width { get; private set; } = 0;
+        public int Height { get; private set; } = 0;
         public bool Enabled { get; set; } = true;
         public bool Displayed
         {
@@ -119,7 +128,7 @@ namespace Freeserf
             SetRedraw();
         }
 
-        public void SetSize(uint width, uint height)
+        public void SetSize(int width, int height)
         {
             Width = width;
             Height = height;

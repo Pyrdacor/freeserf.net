@@ -20,7 +20,6 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Freeserf
 {
     // Drawing order

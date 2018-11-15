@@ -1,6 +1,27 @@
-﻿using System;
+﻿/*
+ * PopupBox.cs - Popup GUI component
+ *
+ * Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ *
+ * This file is part of freeserf.net. freeserf.net is based on freeserf.
+ *
+ * freeserf.net is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * freeserf.net is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Freeserf
 {
@@ -362,12 +383,18 @@ namespace Freeserf
             NewNamE
         }
 
+        // rendering
+        Render.ISprite borderUp = null;
+        Render.ISprite borderLeft = null;
+        Render.ISprite borderRight = null;
+        Render.ISprite borderDown = null;
+
         Interface interf;
         ListSavedFiles fileList;
         TextInput fileField;
 
         public Type Box { get; }
-        public MinimapGame MiniMap { get; }
+        public Minimap MiniMap { get; }
 
         int currentSett5Item;
         int currentSett6Item;
@@ -377,7 +404,7 @@ namespace Freeserf
         public PopupBox(Interface interf)
         {
             this.interf = interf;
-            MiniMap = new MinimapGame(interf, interf.Game);
+            MiniMap = new Minimap(interf, interf.Game);
             fileList = new ListSavedFiles();
             fileField = new TextInput();
 
@@ -407,6 +434,42 @@ namespace Freeserf
             fileField.SetSize(120, 10);
             fileField.Displayed = false;
             AddFloatWindow(fileField, 12, 124);
+
+            InitRenderComponents();
+        }
+
+        void InitRenderComponents()
+        {
+            // Top: 144x9
+            // Bottom: 144x7
+            // Left: 8x144
+            // Right: 8x144
+
+            var renderView = interf.RenderView;
+
+            // Top
+            var position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 0));
+            var size = Global.TransformSizeFromOriginalSize(renderView, new Size(144, 9));
+            var offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 0u);
+            borderUp = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+
+            // Bottom
+            position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 153));
+            size = Global.TransformSizeFromOriginalSize(renderView, new Size(144, 7));
+            offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 1u);
+            borderDown = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+
+            // Left
+            position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 9));
+            size = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 144));
+            offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 2u);
+            borderLeft = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+
+            // Right
+            position = Global.TransformPositionFromOriginalPosition(renderView, new Position(136, 9));
+            size = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 144));
+            offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 3u);
+            borderRight = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
         }
 
         public void Show(Type box)

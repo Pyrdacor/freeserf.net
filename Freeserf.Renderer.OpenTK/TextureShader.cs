@@ -28,13 +28,11 @@ namespace Freeserf.Renderer.OpenTK
         internal static readonly string DefaultSamplerName = "sampler";
         internal static readonly string DefaultColorKeyName = "colorKey";
         internal static readonly string DefaultAtlasSizeName = "atlasSize";
-        internal static readonly string DefaultBaseLineName = "baseLine";
 
         readonly string texCoordName;
         readonly string samplerName;
         readonly string colorKeyName;
         readonly string atlasSizeName;
-        readonly string baseLineName;
 
         static readonly string[] TextureFragmentShader = new string[]
         {
@@ -88,13 +86,12 @@ namespace Freeserf.Renderer.OpenTK
         protected TextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName,
             string atlasSizeName, string baseLineName, string[] fragmentShaderLines, string[] vertexShaderLines)
-            : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, fragmentShaderLines, vertexShaderLines)
+            : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, baseLineName, fragmentShaderLines, vertexShaderLines)
         {
             this.texCoordName = texCoordName;
             this.samplerName = samplerName;
             this.colorKeyName = colorKeyName;
             this.atlasSizeName = atlasSizeName;
-            this.baseLineName = baseLineName;
         }
 
         public void SetSampler(int textureUnit = 0)

@@ -1,5 +1,5 @@
 ﻿/*
- * BaseLineBuffer.cs - Buffer for shader baseline data
+ * ColorBuffer.cs - Buffer for shader color data
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -24,11 +24,11 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Freeserf.Renderer.OpenTK
 {
-    internal class BaseLineBuffer : BufferObject<ushort>
+    internal class ColorBuffer : BufferObject<byte>
     {
         int index = 0;
         bool disposed = false;
-        ushort[] buffer = null;
+        byte[] buffer = null;
         int size; // count of values
         readonly IndexPool indices = new IndexPool();
         bool changedSinceLastCreation = true;
@@ -36,11 +36,11 @@ namespace Freeserf.Renderer.OpenTK
 
         public override int Size => size;
 
-        public override VertexAttribIntegerType Type => VertexAttribIntegerType.Short;
+        public override VertexAttribIntegerType Type => VertexAttribIntegerType.Byte;
 
-        public override int Dimension => 1;
+        public override int Dimension => 4;
 
-        public BaseLineBuffer(bool staticData)
+        public ColorBuffer(bool staticData)
         {
             index = GL.GenBuffer();
 
@@ -48,20 +48,23 @@ namespace Freeserf.Renderer.OpenTK
                 usageHint = BufferUsageHint.StaticDraw;
         }
 
-        public int Add(ushort baseLine)
+        public int Add(Render.Color color)
         {
             int index = indices.AssignNextFreeIndex();
 
             if (buffer == null)
             {
-                buffer = new ushort[128];
-                buffer[0] = baseLine;
-                size = 1;
+                buffer = new byte[128];
+                buffer[0] = color.R;
+                buffer[1] = color.G;
+                buffer[2] = color.B;
+                buffer[3] = color.A;
+                size = 4;
                 changedSinceLastCreation = true;
             }
             else
             {
-                if (index == buffer.Length) // we need to recreate the buffer
+                if (index == buffer.Length / 4) // we need to recreate the buffer
                 {
                     if (buffer.Length < 512)
                         Array.Resize(ref buffer, buffer.Length + 128);
@@ -71,11 +74,19 @@ namespace Freeserf.Renderer.OpenTK
                         Array.Resize(ref buffer, buffer.Length + 512);
                 }
 
-                ++size;
+                size += 4;
 
-                if (buffer[index] != baseLine)
+                int bufferIndex = index * 4;
+
+                if (buffer[bufferIndex + 0] != color.R ||
+                    buffer[bufferIndex + 1] != color.G ||
+                    buffer[bufferIndex + 2] != color.B ||
+                    buffer[bufferIndex + 3] != color.A)
                 {
-                    buffer[index] = baseLine;
+                    buffer[bufferIndex + 0] = color.R;
+                    buffer[bufferIndex + 1] = color.G;
+                    buffer[bufferIndex + 2] = color.B;
+                    buffer[bufferIndex + 3] = color.A;
 
                     changedSinceLastCreation = true;
                 }
@@ -84,11 +95,19 @@ namespace Freeserf.Renderer.OpenTK
             return index;
         }
 
-        public void Update(int index, ushort baseLine)
+        public void Update(int index, Render.Color color)
         {
-            if (buffer[index] != baseLine)
+            int bufferIndex = index * 4;
+
+            if (buffer[bufferIndex + 0] != color.R ||
+                buffer[bufferIndex + 1] != color.G ||
+                buffer[bufferIndex + 2] != color.B ||
+                buffer[bufferIndex + 3] != color.A)
             {
-                buffer[index] = baseLine;
+                buffer[bufferIndex + 0] = color.R;
+                buffer[bufferIndex + 1] = color.G;
+                buffer[bufferIndex + 2] = color.B;
+                buffer[bufferIndex + 3] = color.A;
 
                 changedSinceLastCreation = true;
             }
@@ -155,7 +174,7 @@ namespace Freeserf.Renderer.OpenTK
 
             lock (buffer)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, Size * sizeof(ushort),
+                GL.BufferData(BufferTarget.ArrayBuffer, Size * sizeof(byte),
                     buffer, usageHint);
             }
 
@@ -174,7 +193,7 @@ namespace Freeserf.Renderer.OpenTK
 
             lock (buffer)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, Size * sizeof(ushort),
+                GL.BufferData(BufferTarget.ArrayBuffer, Size * sizeof(byte),
                     buffer, usageHint);
             }
 

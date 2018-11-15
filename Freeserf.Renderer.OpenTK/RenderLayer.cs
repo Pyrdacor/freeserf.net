@@ -37,18 +37,28 @@ namespace Freeserf.Renderer.OpenTK
             set;
         } = null;
 
+        public bool Visible
+        {
+            get;
+            set;
+        }
+
         readonly RenderBuffer renderBuffer = null;
+        readonly RenderBuffer renderBufferColorRects = null;
         readonly Dictionary<Size, List<IRenderNode>> nodes = new Dictionary<Size, List<IRenderNode>>();
         readonly Texture texture = null;
         readonly int layerIndex = 0;
 
-        public RenderLayer(Layer layer, Texture texture, Color colorKey = null)
+        public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null)
         {
             var shape = (layer == Layer.Landscape || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
             bool masked = layer == Layer.Landscape || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
             bool supportAnimations = layer != Layer.Gui; // gui is mostly static
 
             renderBuffer = new RenderBuffer(shape, masked, supportAnimations);
+
+            if (supportColoredRects)
+                renderBufferColorRects = new RenderBuffer(Shape.Rect, false, supportAnimations, true);
 
             Layer = layer;
             this.texture = texture;
@@ -58,8 +68,17 @@ namespace Freeserf.Renderer.OpenTK
 
         public void Render()
         {
-            if (texture == null)
+            if (!Visible || texture == null)
                 return;
+            if (renderBufferColorRects != null)
+            {
+                var colorShader = ColorShader.Instance;
+
+                colorShader.UpdateMatrices();
+                colorShader.SetZ(Global.LayerBaseZ[layerIndex]);
+
+                renderBufferColorRects.Render();
+            }
 
             TextureShader shader;
 
@@ -91,7 +110,7 @@ namespace Freeserf.Renderer.OpenTK
                 shader.SetColorKey(ColorKey.R, ColorKey.G, ColorKey.B);
 
             renderBuffer.Render();
-         }
+        }
 
         public int GetDrawIndex(ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
@@ -113,7 +132,22 @@ namespace Freeserf.Renderer.OpenTK
             renderBuffer.UpdateTextureAtlasOffset(index, sprite, maskSpriteTextureAtlasOffset);
         }
 
-        public void AddNode(IRenderNode node)
+        public int GetColoredRectDrawIndex(ColoredRect coloredRect)
+        {
+            return renderBufferColorRects.GetDrawIndex(coloredRect);
+        }
+
+        public void FreeColoredRectDrawIndex(int index)
+        {
+            renderBufferColorRects.FreeDrawIndex(index);
+        }
+
+        public void UpdateColoredRectPosition(int index, ColoredRect coloredRect)
+        {
+            renderBufferColorRects.UpdatePosition(index, coloredRect);
+        }
+
+        public void TestNode(IRenderNode node)
         {
             if (!(node is Node))
                 throw new InvalidCastException("The given render node is not valid for this renderer.");
@@ -121,30 +155,14 @@ namespace Freeserf.Renderer.OpenTK
             if ((node as Node).Shape != renderBuffer.Shape)
                 throw new InvalidOperationException($"Only nodes with shape {Enum.GetName(typeof(Shape), renderBuffer.Shape)} are allowed for this layer.");
 
-            var size = new Size(node.Width, node.Height);
-
-            if (!nodes.ContainsKey(size))
-                nodes[size] = new List<IRenderNode>() { node };
-            else if (!nodes[size].Contains(node))
-            {
-                nodes[size].Add(node);
-            }
-        }
-
-        public void RemoveNode(IRenderNode node)
-        {
-            var size = new Size(node.Width, node.Height);
-
-            if (nodes.ContainsKey(size) && nodes[size].Contains(node))
-            {
-                nodes[size].Remove(node);
-            }
+            if (node is ColoredRect && renderBufferColorRects == null)
+                throw new ExceptionFreeserf("This layer does not support colored rects.");
         }
     }
 
     public class RenderLayerFactory : IRenderLayerFactory
     {
-        public IRenderLayer Create(Layer layer, Render.Texture texture, Color colorKey = null)
+        public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Color colorKey = null)
         {
             if (!(texture is Texture))
                 throw new InvalidCastException("The given texture is not valid for this renderer.");
@@ -155,7 +173,7 @@ namespace Freeserf.Renderer.OpenTK
                 case Layer.None:
                     throw new InvalidOperationException($"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
                 default:
-                    return new RenderLayer(layer, texture as Texture, colorKey);
+                    return new RenderLayer(layer, texture as Texture, supportColoredRects, colorKey);
             }
         }
     }

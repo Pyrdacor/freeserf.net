@@ -1,5 +1,5 @@
 ﻿/*
- * Rect.cs - Basic rect implementation
+ * Rect.cs - Basic rectangle implementation
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *

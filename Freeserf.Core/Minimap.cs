@@ -1,7 +1,8 @@
 ﻿/*
- * IRenderView.cs - Render view interface
+ * Minimap.cs - Minimap GUI component
  *
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2013   Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018   Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -19,25 +20,29 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf.Render
+using System;
+
+namespace Freeserf
 {
-    public interface IRenderView : IRenderLayerFactory
+    internal class Minimap : GuiObject
     {
-        void Render();
-        void AddLayer(IRenderLayer layer);
-        IRenderLayer GetLayer(Layer layer);
-        void Resize(int width, int height);
+        public Minimap(Interface interf)
+        {
 
-        Position ScreenToView(Position position);
-        Size ScreenToView(Size size);
-        Rect ScreenToView(Rect rect);
+        }
 
-        Rect VirtualScreen { get; }
+        protected override void InternalDraw()
+        {
+            throw new NotImplementedException();
+        }
+    }
 
-        ISpriteFactory SpriteFactory { get; }
-        ITriangleFactory TriangleFactory { get; }
-        IColoredRectFactory ColoredRectFactory { get; }
+    internal class MinimapGame : Minimap
+    {
+        public MinimapGame(Interface interf, Game game)
+            : base(interf)
+        {
 
-        DataSource DataSource { get; }
+        }
     }
 }

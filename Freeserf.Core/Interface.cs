@@ -27,6 +27,28 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
+    public partial class Global
+    {
+        public const int OriginalResolutionWidth = 640;
+        public const int OriginalResolutionHeight = 480;
+
+        public static Size TransformSizeFromOriginalSize(IRenderView renderView, Size size)
+        {
+            float factorX = (float)renderView.VirtualScreen.Size.Width / (float)OriginalResolutionWidth;
+            float factorY = (float)renderView.VirtualScreen.Size.Height / (float)OriginalResolutionHeight;
+
+            return new Size(Misc.Round(size.Width * factorX), Misc.Round(size.Height * factorY));
+        }
+
+        public static Position TransformPositionFromOriginalPosition(IRenderView renderView, Position position)
+        {
+            float factorX = (float)renderView.VirtualScreen.Size.Width / (float)OriginalResolutionWidth;
+            float factorY = (float)renderView.VirtualScreen.Size.Height / (float)OriginalResolutionHeight;
+
+            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+        }
+    }
+
     internal class Interface : GuiObject, GameManager.IHandler
     {
         // Interval between automatic save games
@@ -96,6 +118,7 @@ namespace Freeserf
         int returnTimeout;
         int returnPos;
 
+        public IRenderView RenderView { get; } = null;
         public Viewport Viewport { get; private set; } = null;
         public PanelBar PanelBar { get; private set; } = null;
         public PopupBox PopupBox { get; private set; } = null;
@@ -103,8 +126,10 @@ namespace Freeserf
         public Game Game { get; private set; } = null;
         public Random Random { get; private set; } = null;
 
-        public Interface()
+        public Interface(IRenderView renderView)
         {
+            RenderView = renderView;
+
             displayed = true;
 
             mapCursorSprites[0] = new SpriteLocation { Sprite = 32 };
@@ -116,7 +141,13 @@ namespace Freeserf
             mapCursorSprites[6] = new SpriteLocation { Sprite = 33 };
 
             GameManager.Instance.AddHandler(this);
-            SetGame(GameManager.Instance.GetCurrentGame());
+
+            var size = renderView.VirtualScreen.Size;
+
+            SetSize(size.Width, size.Height);
+
+            // TODO: later show the whole start screen
+            OpenGameInit();
         }
 
         protected override void InternalDraw()
@@ -1051,40 +1082,45 @@ namespace Freeserf
 
             if (PanelBar != null)
             {
-                uint panelWidth = 352;
-                uint panelHeight = 40;
-                panelX = ((int)Width - (int)panelWidth) / 2;
-                panelY = (int)Height - (int)panelHeight;
+                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(352, 40));
+                int panelWidth = size.Width;
+                int panelHeight = size.Height;
+                panelX = (Width - panelWidth) / 2;
+                panelY = Height - panelHeight;
                 PanelBar.MoveTo(panelX, panelY);
                 PanelBar.SetSize(panelWidth, panelHeight);
             }
 
             if (PopupBox != null)
             {
-                uint popupWidth = 144;
-                uint popupHeight = 160;
-                int popupX = ((int)Width - (int)popupWidth) / 2;
-                int popupY = ((int)Height - (int)popupHeight) / 2;
+                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(144, 160));
+                int popupWidth = size.Width;
+                int popupHeight = size.Height;
+                int popupX = (Width - popupWidth) / 2;
+                int popupY = (Height - popupHeight) / 2;
                 PopupBox.MoveTo(popupX, popupY);
                 PopupBox.SetSize(popupWidth, popupHeight);
             }
 
             if (initBox != null)
             {
-                uint initBoxWidth = 360;
-                uint initBoxHeight = 256;
-                int initBoxX = ((int)Width - (int)initBoxWidth) / 2;
-                int initBoxY = ((int)Height - (int)initBoxHeight) / 2;
+                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(360, 256));
+                int initBoxWidth = size.Width;
+                int initBoxHeight = size.Height;
+                int initBoxX = (Width - initBoxWidth) / 2;
+                int initBoxY = (Height - initBoxHeight) / 2;
                 initBox.MoveTo(initBoxX, initBoxY);
                 initBox.SetSize(initBoxWidth, initBoxHeight);
             }
 
             if (NotificationBox != null)
             {
-                uint notificationBoxWidth = 200;
-                uint notificationBoxHeight = 88;
-                int notificationBoxX = panelX + 40;
-                int notificationBoxY = panelY - (int)notificationBoxHeight;
+                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(200, 88));
+                var offset = Global.TransformSizeFromOriginalSize(RenderView, new Size(40, 0));
+                int notificationBoxWidth = size.Width;
+                int notificationBoxHeight = size.Height;
+                int notificationBoxX = panelX + offset.Width;
+                int notificationBoxY = panelY - notificationBoxHeight;
                 NotificationBox.MoveTo(notificationBoxX, notificationBoxY);
                 NotificationBox.SetSize(notificationBoxWidth, notificationBoxHeight);
             }

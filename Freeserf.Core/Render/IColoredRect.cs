@@ -1,5 +1,5 @@
 ﻿/*
- * IRenderView.cs - Render view interface
+ * IColoredRect.cs - Colored rectangle interface
  *
  * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -21,23 +21,16 @@
 
 namespace Freeserf.Render
 {
-    public interface IRenderView : IRenderLayerFactory
+    public interface IColoredRect : IRenderNode
     {
-        void Render();
-        void AddLayer(IRenderLayer layer);
-        IRenderLayer GetLayer(Layer layer);
-        void Resize(int width, int height);
+        Color Color
+        {
+            get;
+        }
+    }
 
-        Position ScreenToView(Position position);
-        Size ScreenToView(Size size);
-        Rect ScreenToView(Rect rect);
-
-        Rect VirtualScreen { get; }
-
-        ISpriteFactory SpriteFactory { get; }
-        ITriangleFactory TriangleFactory { get; }
-        IColoredRectFactory ColoredRectFactory { get; }
-
-        DataSource DataSource { get; }
+    public interface IColoredRectFactory
+    {
+        IColoredRect Create(int width, int height, Color color);
     }
 }
