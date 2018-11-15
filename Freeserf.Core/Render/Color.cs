@@ -19,9 +19,12 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
+using System.Collections.Generic;
+
 namespace Freeserf.Render
 {
-    public class Color
+    public class Color : IEquatable<Color>, IEqualityComparer<Color>
     {
         public byte R;
         public byte G;
@@ -61,5 +64,73 @@ namespace Freeserf.Render
         public static readonly Color Transparent = new Color(0x00, 0x00, 0x00, 0x00);
         public static readonly Color Black = new Color(0x00, 0x00, 0x00);
         public static readonly Color Green = new Color(0x73, 0xb3, 0x43);
+
+        public static bool operator ==(Color color1, Color color2)
+        {
+            if (ReferenceEquals(color1, color2))
+                return true;
+
+            if (ReferenceEquals(color1, null) || ReferenceEquals(color2, null))
+                return false;
+
+            return color1.R == color2.R && color1.G == color2.G &&
+                color1.B == color2.B && color1.A == color2.A;
+        }
+
+        public static bool operator !=(Color color1, Color color2)
+        {
+            if (ReferenceEquals(color1, color2))
+                return false;
+
+            if (ReferenceEquals(color1, null) || ReferenceEquals(color2, null))
+                return true;
+
+            return color1.R != color2.R || color1.G != color2.G ||
+                color1.B != color2.B || color1.A != color2.A;
+        }
+
+        public bool Equals(Color other)
+        {
+            return this == other;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj is Color)
+                return Equals(obj as Color);
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked // overflow is fine, just wrap
+            {
+                int hash = 17;
+
+                hash = hash * 23 + R.GetHashCode();
+                hash = hash * 23 + G.GetHashCode();
+                hash = hash * 23 + B.GetHashCode();
+                hash = hash * 23 + A.GetHashCode();
+
+                return hash;
+            }
+        }
+
+        public bool Equals(Color x, Color y)
+        {
+            if (ReferenceEquals(x, null))
+                return ReferenceEquals(y, null);
+
+            return x == y;
+        }
+
+        public int GetHashCode(Color obj)
+        {
+            return (obj == null) ? 0 : obj.GetHashCode();
+        }
     }
 }
