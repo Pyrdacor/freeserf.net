@@ -26,6 +26,7 @@ namespace Freeserf.Render
         Color Color
         {
             get;
+            set;
         }
     }
 

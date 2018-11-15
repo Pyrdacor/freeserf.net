@@ -26,16 +26,26 @@ namespace Freeserf.Renderer.OpenTK
     public class ColoredRect : Node, IColoredRect
     {
         protected int drawIndex = -1;
+        Color color;
 
         public ColoredRect(int width, int height, Color color, Rect virtualScreen)
             : base(Shape.Rect, width, height, virtualScreen)
         {
-            Color = color;
+            this.color = color;
         }
 
         public Color Color
         {
-            get;
+            get => color;
+            set
+            {
+                if (color == value) // TODO: add comparison operator to Color!
+                    return;
+
+                color = value;
+
+                UpdateColor();
+            }
         }
 
         protected override void AddToLayer()
@@ -57,6 +67,12 @@ namespace Freeserf.Renderer.OpenTK
         {
             if (drawIndex != -1) // -1 means not attached to a layer
                 (Layer as RenderLayer).UpdateColoredRectPosition(drawIndex, this);
+        }
+
+        protected virtual void UpdateColor()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateColoredRectColor(drawIndex, color);
         }
     }
 

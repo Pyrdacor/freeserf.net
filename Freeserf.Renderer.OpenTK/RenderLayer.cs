@@ -147,6 +147,11 @@ namespace Freeserf.Renderer.OpenTK
             renderBufferColorRects.UpdatePosition(index, coloredRect);
         }
 
+        public void UpdateColoredRectColor(int index, Color color)
+        {
+            renderBufferColorRects.UpdateColor(index, color);
+        }
+
         public void TestNode(IRenderNode node)
         {
             if (!(node is Node))
