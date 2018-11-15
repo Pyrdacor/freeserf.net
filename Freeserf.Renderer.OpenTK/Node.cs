@@ -111,9 +111,15 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
-        public int Width { get; }
+        public int Width { get; private set; }
 
-        public int Height { get; }
+        public int Height { get; private set; }
+
+        public virtual void Resize(int width, int height)
+        {
+            Width = width;
+            Height = height;
+        }
 
         protected virtual void AddToLayer()
         {

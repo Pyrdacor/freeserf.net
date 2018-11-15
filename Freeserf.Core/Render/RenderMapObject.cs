@@ -26,33 +26,43 @@ namespace Freeserf.Render
     internal class RenderMapObject : RenderObject
     {
         Map.Object objectType = Map.Object.None;
-        static readonly Dictionary<uint, Position> spriteOffsets = new Dictionary<uint, Position>();
-        static readonly Dictionary<uint, Position> shadowSpriteOffsets = new Dictionary<uint, Position>();
+        DataSource dataSource = null;
+        static Dictionary<uint, Position> spriteOffsets = null;
+        static Dictionary<uint, Position> shadowSpriteOffsets = null;
 
         public RenderMapObject(Map.Object objectType, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.objectType = objectType;
+            this.dataSource = dataSource;
 
             Initialize();
 
             InitOffsets(dataSource);
         }
 
-        void InitOffsets(DataSource dataSource)
+        static void InitOffsets(DataSource dataSource)
         {
-            Sprite sprite;
-            var color = Sprite.Color.Transparent;
-
-            uint spriteIndex = (uint)objectType - 8;
-
-            if (!spriteOffsets.ContainsKey(spriteIndex))
+            if (spriteOffsets == null)
             {
-                sprite = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, color);
-                spriteOffsets.Add(spriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                spriteOffsets = new Dictionary<uint, Position>(79);
+                shadowSpriteOffsets = new Dictionary<uint, Position>(79);
 
-                sprite = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, color);
-                shadowSpriteOffsets.Add(spriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                Sprite sprite;
+                var color = Sprite.Color.Transparent;
+
+                for (uint i = 0; i <= 118; ++i)
+                {
+                    sprite = dataSource.GetSprite(Data.Resource.MapObject, i, color);
+
+                    if (sprite != null)
+                        spriteOffsets.Add(i, new Position(sprite.OffsetX, sprite.OffsetY));
+
+                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, i, color);
+
+                    if (sprite != null)
+                        shadowSpriteOffsets.Add(i, new Position(sprite.OffsetX, sprite.OffsetY));
+                }
             }
         }
 
@@ -69,9 +79,28 @@ namespace Freeserf.Render
 
         public void Update(uint tick, RenderMap map, uint pos)
         {
-            // TODO: animations
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
             uint spriteIndex = (uint)objectType - 8;
+
+            if (spriteIndex < 24) // tree
+            {
+                /* Adding sprite number to animation ensures
+                   that the tree animation won't be synchronized
+                   for all trees on the map. */
+                uint treeAnim = (tick + spriteIndex) >> 4;
+
+                if (spriteIndex < 16) // pine and normal tree (8 sprites each)
+                {
+                    spriteIndex = (uint)((spriteIndex & ~7) + (treeAnim & 7));
+                }
+                else // palm and water tree (4 sprites each)
+                {
+                    spriteIndex = (uint)((spriteIndex & ~3) + (treeAnim & 3));
+                }
+            }
+
+            // the tree sprite sizes are the same per tree type, so no resize is necessary
+
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
 
             var renderPosition = map.GetObjectRenderPosition(pos);
 
@@ -84,8 +113,8 @@ namespace Freeserf.Render
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
         }
 
-        // TODO:
-        // trees, stones etc
+        // Note: this is not used for tree animations!
+        // Only if objects types change (like logging a tree, digging stones and so on).
         public void ChangeObjectType(Map.Object objectType)
         {
             if (objectType == this.objectType)
@@ -93,7 +122,9 @@ namespace Freeserf.Render
 
             if (this.objectType == Map.Object.None) // from None to something valid
             {
-                // do we support this? can this even happen?
+                // this is handled by Game so this should not happen at all
+                Debug.NotReached();
+                return;
             }
 
             if (objectType == Map.Object.None) // from something valid to None
@@ -103,7 +134,20 @@ namespace Freeserf.Render
                 return;
             }
 
-            // TODO: set tex coords and size
+            this.objectType = objectType;
+
+            uint spriteIndex = (uint)objectType - 8;
+
+            var spriteInfo = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
+            var shadowInfo = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, Sprite.Color.Transparent);
+
+            sprite.Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
+            shadowSprite.Resize((int)shadowInfo.Width, (int)shadowInfo.Height);
+
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate((int)Layer.Objects);
+
+            sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
+            shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
         }
     }
 }

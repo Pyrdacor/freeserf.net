@@ -33,5 +33,6 @@ namespace Freeserf.Render
         IRenderLayer Layer { get; set; }
 
         void Delete();
+        void Resize(int width, int height);
     }
 }

@@ -121,6 +121,17 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
+        public override void Resize(int width, int height)
+        {
+            if (Width == width && Height == height)
+                return;
+
+            base.Resize(width, height);
+
+            UpdatePosition();
+            UpdateTextureAtlasOffset();
+        }
+
         protected override void AddToLayer()
         {
             base.AddToLayer();
