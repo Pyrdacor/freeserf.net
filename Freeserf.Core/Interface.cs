@@ -27,7 +27,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
-    public class Interface : GuiObject, GameManager.IHandler
+    internal class Interface : GuiObject, GameManager.IHandler
     {
         // Interval between automatic save games
         const int AUTOSAVE_INTERVAL = 10 * 60 * Freeserf.TICKS_PER_SEC;
@@ -79,7 +79,7 @@ namespace Freeserf
         Road buildingRoad;
         int buildingRoadValidDir;
 
-        int[] sfx_queue = new int[4];
+        int[] sfxQueue = new int[4];
 
         Player player;
         int config = 0x39;
@@ -218,7 +218,7 @@ namespace Freeserf
         }
 
         /* Open popup box */
-        public void OpenPopup(int box)
+        public void OpenPopup(PopupBox.Type box)
         {
             if (PopupBox == null)
             {
@@ -227,7 +227,7 @@ namespace Freeserf
             }
 
             base.Layout();
-            PopupBox.Show((PopupBox.Type)box);
+            PopupBox.Show(box);
 
             if (PanelBar != null)
             {
@@ -308,7 +308,7 @@ namespace Freeserf
 
                 MapPos pos = Viewport.GetCurrentMapPos();
 
-                returnPos = pos;
+                returnPos = (int)pos;
             }
 
             Message message = player.PopNotification();
@@ -348,9 +348,9 @@ namespace Freeserf
                 msgFlags &= ~Misc.Bit(3);
 
                 returnTimeout = 0;
-                Viewport.MoveToMapPos(returnPos);
+                Viewport.MoveToMapPos((uint)returnPos);
 
-                if (PopupBox != null && PopupBox.GetBox() == PopupBox.Type.Message)
+                if (PopupBox != null && PopupBox.Box == PopupBox.Type.Message)
                 {
                     ClosePopup();
                 }
@@ -766,7 +766,8 @@ namespace Freeserf
                   Update();
                   break;
                 case Event.Type.Draw:
-                  Draw(e.Object as IFrame);
+                    // TODO
+                  //Draw(e.Object as IFrame);
                   break;
                 default:
                   return base.HandleEvent(e);
