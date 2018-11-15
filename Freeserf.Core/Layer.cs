@@ -31,6 +31,7 @@ namespace Freeserf
     // Buildings (like Objects but masked for build progress)
     // Serfs
     // Builds
+    // Gui
     // Cursor
 
     public enum Layer
@@ -43,13 +44,14 @@ namespace Freeserf
         Buildings = 1 << 4,
         Serfs = 1 << 5,
         Builds = 1 << 6,
-        Cursor = 1 << 7,        
+        Gui = 1 << 7,
+        Cursor = 1 << 8,        
         All = Landscape | Paths | Objects | Buildings | Serfs | Cursor
     }
 
     public partial class Global
     {
-        // Objects, Buildings and Serfs share a base Z value range from 0.05 to 0.95.
+        // Objects (inlcuding Flags), Buildings and Serfs share a base Z value range from 0.05 to 0.95.
         // Higher values mean drawing over lower valued sprites.
         public static readonly float[] LayerBaseZ = new float[]
         {
@@ -60,7 +62,8 @@ namespace Freeserf
             0.05f,  // Buildings
             0.05f,  // Serfs
             0.96f,  // Builds
-            0.97f    // Cursor
+            0.97f,  // Gui
+            0.98f   // Cursor
         };
     }
 }
