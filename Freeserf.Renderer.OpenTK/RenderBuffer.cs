@@ -102,18 +102,27 @@ namespace Freeserf.Renderer.OpenTK
                 vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, textureAtlasOffsetBuffer);
         }
 
-        public int GetDrawIndex(Render.IColoredRect coloredRect)
+        public int GetDrawIndex(Render.IColoredRect coloredRect, 
+            Render.PositionTransformation positionTransformation, 
+            Render.SizeTransformation sizeTransformation)
         {
-            var scaledRect = (coloredRect as ColoredRect).ScaledRect;
+            var position = new Position(coloredRect.X, coloredRect.Y);
+            var size = new Size(coloredRect.Width, coloredRect.Height);
 
-            int index = positionBuffer.Add((short)scaledRect.Position.X, (short)scaledRect.Position.Y);
-            positionBuffer.Add((short)(scaledRect.Position.X + scaledRect.Size.Width), (short)scaledRect.Position.Y);
-            positionBuffer.Add((short)(scaledRect.Position.X + scaledRect.Size.Width), (short)(scaledRect.Position.Y + scaledRect.Size.Height));
-            positionBuffer.Add((short)scaledRect.Position.X, (short)(scaledRect.Position.Y + scaledRect.Size.Height));
+            if (positionTransformation != null)
+                position = positionTransformation(position);
+
+            if (sizeTransformation != null)
+                size = sizeTransformation(size);
+
+            int index = positionBuffer.Add((short)position.X, (short)position.Y);
+            positionBuffer.Add((short)(position.X + size.Width), (short)position.Y);
+            positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height));
+            positionBuffer.Add((short)position.X, (short)(position.Y + size.Height));
 
             if (Shape != Shape.Triangle && baseLineBuffer != null)
             {
-                ushort baseLine = (ushort)(scaledRect.Position.Y + scaledRect.Size.Height);
+                ushort baseLine = (ushort)(position.Y + size.Height);
 
                 baseLineBuffer.Add(baseLine);
                 baseLineBuffer.Add(baseLine);
@@ -135,14 +144,22 @@ namespace Freeserf.Renderer.OpenTK
             return index;
         }
 
-        public int GetDrawIndex(Render.ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public int GetDrawIndex(Render.ISprite sprite, Render.PositionTransformation positionTransformation,
+            Render.SizeTransformation sizeTransformation, Position maskSpriteTextureAtlasOffset = null)
         {
-            var scaledRect = (sprite as Sprite).ScaledRect;
+            var position = new Position(sprite.X, sprite.Y);
+            var size = new Size(sprite.Width, sprite.Height);
 
-            int index = positionBuffer.Add((short)scaledRect.Position.X, (short)scaledRect.Position.Y);
-            positionBuffer.Add((short)(scaledRect.Position.X + scaledRect.Size.Width), (short)scaledRect.Position.Y);
-            positionBuffer.Add((short)(scaledRect.Position.X + scaledRect.Size.Width), (short)(scaledRect.Position.Y + scaledRect.Size.Height));
-            positionBuffer.Add((short)scaledRect.Position.X, (short)(scaledRect.Position.Y + scaledRect.Size.Height));
+            if (positionTransformation != null)
+                position = positionTransformation(position);
+
+            if (sizeTransformation != null)
+                size = sizeTransformation(size);
+
+            int index = positionBuffer.Add((short)position.X, (short)position.Y);
+            positionBuffer.Add((short)(position.X + size.Width), (short)position.Y);
+            positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height));
+            positionBuffer.Add((short)position.X, (short)(position.Y + size.Height));
 
             if (textureAtlasOffsetBuffer != null)
             {
@@ -162,7 +179,7 @@ namespace Freeserf.Renderer.OpenTK
 
             if (Shape != Shape.Triangle && baseLineBuffer != null)
             {
-                ushort baseLine = (ushort)(scaledRect.Position.Y + scaledRect.Size.Height);
+                ushort baseLine = (ushort)(position.Y + size.Height);
 
                 baseLineBuffer.Add(baseLine);
                 baseLineBuffer.Add(baseLine);
@@ -173,18 +190,26 @@ namespace Freeserf.Renderer.OpenTK
             return index;
         }
 
-        public void UpdatePosition(int index, Render.IRenderNode renderNode)
+        public void UpdatePosition(int index, Render.IRenderNode renderNode,
+            Render.PositionTransformation positionTransformation, Render.SizeTransformation sizeTransformation)
         {
-            var scaledRect = (renderNode as Node).ScaledRect;
+            var position = new Position(renderNode.X, renderNode.Y);
+            var size = new Size(renderNode.Width, renderNode.Height);
 
-            positionBuffer.Update(index, (short)scaledRect.Position.X, (short)scaledRect.Position.Y);
-            positionBuffer.Update(index + 1, (short)(scaledRect.Position.X + scaledRect.Size.Width), (short)scaledRect.Position.Y);
-            positionBuffer.Update(index + 2, (short)(scaledRect.Position.X + scaledRect.Size.Width), (short)(scaledRect.Position.Y + scaledRect.Size.Height));
-            positionBuffer.Update(index + 3, (short)scaledRect.Position.X, (short)(scaledRect.Position.Y + scaledRect.Size.Height));
+            if (positionTransformation != null)
+                position = positionTransformation(position);
+
+            if (sizeTransformation != null)
+                size = sizeTransformation(size);
+
+            positionBuffer.Update(index, (short)position.X, (short)position.Y);
+            positionBuffer.Update(index + 1, (short)(position.X + size.Width), (short)position.Y);
+            positionBuffer.Update(index + 2, (short)(position.X + size.Width), (short)(position.Y + size.Height));
+            positionBuffer.Update(index + 3, (short)position.X, (short)(position.Y + size.Height));
 
             if (Shape != Shape.Triangle && baseLineBuffer != null)
             {
-                ushort baseLine = (ushort)(scaledRect.Position.Y + scaledRect.Size.Height);
+                ushort baseLine = (ushort)(position.Y + size.Height);
 
                 baseLineBuffer.Update(index, baseLine);
                 baseLineBuffer.Update(index + 1, baseLine);

@@ -72,8 +72,8 @@ namespace Freeserf.Render
             layer = renderView.GetLayer(Layer.Gui);
 
             // original size is 8x8 pixels
-            characterSize = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 8));
-            characterGapSize = Global.TransformSizeFromOriginalSize(renderView, new Size(9, 0)).Width;
+            characterSize = new Size(8, 8);
+            characterGapSize = 9; // distance betwee starts of characters in x direction
 
             textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Gui);
         }

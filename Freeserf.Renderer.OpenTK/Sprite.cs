@@ -168,15 +168,5 @@ namespace Freeserf.Renderer.OpenTK
             else
                 return new Sprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
         }
-
-        public ISprite CreateScaled(int width, int height, int scaledWidth, int scaledHeight, int textureAtlasX, int textureAtlasY, bool masked)
-        {
-            var sprite = Create(width, height, textureAtlasX, textureAtlasY, masked);
-
-            (sprite as Sprite).ScaleX = (float)scaledWidth / (float)width;
-            (sprite as Sprite).ScaleY = (float)scaledHeight / (float)height;
-
-            return sprite;
-        }
     }
 }

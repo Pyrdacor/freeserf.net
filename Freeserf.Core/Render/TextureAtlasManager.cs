@@ -271,11 +271,30 @@ namespace Freeserf.Render
             AddGuiElements(Data.Resource.FramePopup, 4, ref index, data);
             AddGuiElements(Data.Resource.FrameSplit, 3, ref index, data);
             AddGuiElements(Data.Resource.FrameTop, 4, ref index, data);
-            AddGuiElements(Data.Resource.Icon, 318, ref index, data);
             AddGuiElements(Data.Resource.Indicator, 8, ref index, data);
             AddGuiElements(Data.Resource.Logo, 1, ref index, data);
             AddGuiElements(Data.Resource.PanelButton, 25, ref index, data);
             //AddGuiElements(Data.Resource.Symbol, 16, ref index, data); // TODO: skip them for now. maybe re-add later
+            AddGuiElements(Data.Resource.Icon, 318, ref index, data);
+
+            // we add a compound background of sprites 290-293 with a bigger size
+            var bgSprites = new Sprite[5];
+            bgSprites[0] = data.GetSprite(Data.Resource.Icon, 290u, Sprite.Color.Transparent);
+            bgSprites[1] = data.GetSprite(Data.Resource.Icon, 291u, Sprite.Color.Transparent);
+            bgSprites[2] = data.GetSprite(Data.Resource.Icon, 292u, Sprite.Color.Transparent);
+            bgSprites[3] = data.GetSprite(Data.Resource.Icon, 293u, Sprite.Color.Transparent);
+            bgSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, Sprite.Color.Transparent);
+            var bgCompoundSprite = new Sprite(360u, 80u);
+
+            for (int r = 0; r < 10; ++r) // 10 rows with 8 pixels each = 80 pixels
+            {
+                for (int c = 0; c < 9; ++c) // 9 columns with 40 pixels eahc = 360 pixels
+                {
+                    bgCompoundSprite.Add(c * 40, r * 8, bgSprites[r]);
+                }
+            }
+
+            AddSprite(Layer.Gui, index, bgCompoundSprite);
 
             #endregion
 
@@ -289,7 +308,7 @@ namespace Freeserf.Render
 
             for (uint i = 0; i < num; ++i)
             {
-                var sprite = data.GetSprite(Data.Resource.ArtFlag, i, Sprite.Color.Transparent);
+                var sprite = data.GetSprite(resourceType, i, Sprite.Color.Transparent);
 
                 if (sprite != null)
                     AddSprite(Layer.Gui, index, sprite);

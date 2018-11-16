@@ -35,6 +35,14 @@ namespace Freeserf
             return textureAtlas.GetOffset(offset + spriteIndex);
         }
 
+        public static Render.ISprite CreateSprite(Render.ISpriteFactory spriteFactory, int width, int height,
+            Data.Resource resourceType, uint spriteIndex)
+        {
+            var offset = GetTextureAtlasOffset(resourceType, spriteIndex);
+
+            return spriteFactory.Create(width, height, offset.X, offset.Y, false);
+        }
+
         readonly List<GuiObject> floatWindows = new List<GuiObject>();
         bool redraw = true;
         protected Render.IRenderLayer Layer { get; private set; } = null;

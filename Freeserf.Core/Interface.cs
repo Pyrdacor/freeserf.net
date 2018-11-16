@@ -20,34 +20,24 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Note:
+ * 
+ * The gui positions and sizes are the same as in the original game.
+ * The gui layer has builtin transformations for positions and sizes
+ * so the rendering will scale the gui in relation to the games virtual
+ * screen. The only thing that has to be done is to transform mouse
+ * inputs to the original gui locations.
+ */
+
+// TODO: transform mouse coordinates to orignal gui coordiantes (see note above)
+
 using System;
 using Freeserf.Render;
 
 namespace Freeserf
 {
     using MapPos = UInt32;
-
-    public partial class Global
-    {
-        public const int OriginalResolutionWidth = 640;
-        public const int OriginalResolutionHeight = 480;
-
-        public static Size TransformSizeFromOriginalSize(IRenderView renderView, Size size)
-        {
-            float factorX = (float)renderView.VirtualScreen.Size.Width / (float)OriginalResolutionWidth;
-            float factorY = (float)renderView.VirtualScreen.Size.Height / (float)OriginalResolutionHeight;
-
-            return new Size(Misc.Round(size.Width * factorX), Misc.Round(size.Height * factorY));
-        }
-
-        public static Position TransformPositionFromOriginalPosition(IRenderView renderView, Position position)
-        {
-            float factorX = (float)renderView.VirtualScreen.Size.Width / (float)OriginalResolutionWidth;
-            float factorY = (float)renderView.VirtualScreen.Size.Height / (float)OriginalResolutionHeight;
-
-            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
-        }
-    }
 
     internal class Interface : GuiObject, GameManager.IHandler
     {
@@ -1086,9 +1076,8 @@ namespace Freeserf
 
             if (PanelBar != null)
             {
-                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(352, 40));
-                int panelWidth = size.Width;
-                int panelHeight = size.Height;
+                int panelWidth = 352;
+                int panelHeight = 40;
                 panelX = (Width - panelWidth) / 2;
                 panelY = Height - panelHeight;
                 PanelBar.MoveTo(panelX, panelY);
@@ -1097,9 +1086,8 @@ namespace Freeserf
 
             if (PopupBox != null)
             {
-                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(144, 160));
-                int popupWidth = size.Width;
-                int popupHeight = size.Height;
+                int popupWidth = 144;
+                int popupHeight = 160;
                 int popupX = (Width - popupWidth) / 2;
                 int popupY = (Height - popupHeight) / 2;
                 PopupBox.MoveTo(popupX, popupY);
@@ -1108,9 +1096,8 @@ namespace Freeserf
 
             if (initBox != null)
             {
-                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(360, 256));
-                int initBoxWidth = size.Width;
-                int initBoxHeight = size.Height;
+                int initBoxWidth = 360;
+                int initBoxHeight = 256;
                 int initBoxX = (Width - initBoxWidth) / 2;
                 int initBoxY = (Height - initBoxHeight) / 2;
                 initBox.MoveTo(initBoxX, initBoxY);
@@ -1119,11 +1106,9 @@ namespace Freeserf
 
             if (NotificationBox != null)
             {
-                var size = Global.TransformSizeFromOriginalSize(RenderView, new Size(200, 88));
-                var offset = Global.TransformSizeFromOriginalSize(RenderView, new Size(40, 0));
-                int notificationBoxWidth = size.Width;
-                int notificationBoxHeight = size.Height;
-                int notificationBoxX = panelX + offset.Width;
+                int notificationBoxWidth = 200;
+                int notificationBoxHeight = 88;
+                int notificationBoxX = panelX + 40;
                 int notificationBoxY = panelY - notificationBoxHeight;
                 NotificationBox.MoveTo(notificationBoxX, notificationBoxY);
                 NotificationBox.SetSize(notificationBoxWidth, notificationBoxHeight);

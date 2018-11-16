@@ -21,6 +21,9 @@
 
 namespace Freeserf.Render
 {
+    public delegate Position PositionTransformation(Position position);
+    public delegate Size SizeTransformation(Size size);
+
     public interface IRenderLayer
     {
         Layer Layer { get; }
@@ -30,6 +33,16 @@ namespace Freeserf.Render
             set;
         }
         bool Visible
+        {
+            get;
+            set;
+        }
+        PositionTransformation PositionTransformation
+        {
+            get;
+            set;
+        }
+        SizeTransformation SizeTransformation
         {
             get;
             set;

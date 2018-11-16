@@ -84,6 +84,26 @@ namespace Freeserf.Renderer.OpenTK
                     var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture,
                         layer == Layer.Gui); // the gui supports colored rects
 
+                    if (layer == Layer.Gui)
+                    {
+                        // the gui needs scaling
+                        renderLayer.PositionTransformation = (Position position) =>
+                        {
+                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
+                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
+
+                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                        };
+
+                        renderLayer.SizeTransformation = (Size size) =>
+                        {
+                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
+                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
+
+                            return new Size(Misc.Round(size.Width * factorX), Misc.Round(size.Height * factorY));
+                        };
+                    }
+
                     // initial we only show the gui + cursor
                     renderLayer.Visible = layer == Layer.Gui || layer == Layer.Cursor;
 

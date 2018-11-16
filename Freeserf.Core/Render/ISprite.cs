@@ -42,6 +42,5 @@ namespace Freeserf.Render
     public interface ISpriteFactory
     {
         ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked);
-        ISprite CreateScaled(int width, int height, int scaledWidth, int scaledHeight, int textureAtlasX, int textureAtlasY, bool masked);
     }
 }

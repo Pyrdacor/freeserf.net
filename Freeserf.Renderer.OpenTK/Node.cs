@@ -28,8 +28,6 @@ namespace Freeserf.Renderer.OpenTK
     {
         int x = short.MaxValue;
         int y = short.MaxValue;
-        float scaleX = 1.0f;
-        float scaleY = 1.0f;
         bool visible = false;
         IRenderLayer layer = null;
         bool visibleRequest = false;
@@ -115,19 +113,6 @@ namespace Freeserf.Renderer.OpenTK
 
         public int Height { get; private set; }
 
-        internal Rect ScaledRect
-        {
-            get
-            {
-                float scaledWidth = scaleX * Width;
-                float scaledHeight = scaleY * Height;
-                int xSub = Misc.Round(0.5f * (scaledWidth - Width));
-                int ySub = Misc.Round(0.5f * (scaledHeight - Height));
-
-                return new Rect(X - xSub, Y - ySub, Misc.Round(scaledWidth), Misc.Round(scaledHeight));
-            }
-        }
-
         public virtual void Resize(int width, int height)
         {
             Width = width;
@@ -145,7 +130,7 @@ namespace Freeserf.Renderer.OpenTK
             bool oldNotOnScreen = notOnScreen;
             bool oldVisible = Visible;
 
-            notOnScreen = !virtualScreen.IntersectsWith(ScaledRect);
+            notOnScreen = !virtualScreen.IntersectsWith(new Rect(X, Y, Width, Height));
 
             if (oldNotOnScreen != notOnScreen)
             {
@@ -204,36 +189,6 @@ namespace Freeserf.Renderer.OpenTK
                     if (!CheckOnScreen())
                         UpdatePosition();
                 }
-            }
-        }
-
-        public float ScaleX
-        {
-            get => scaleX;
-            set
-            {
-                if (Misc.FloatEqual(scaleX, value))
-                    return;
-
-                scaleX = value;
-
-                if (!CheckOnScreen())
-                    UpdatePosition();
-            }
-        }
-
-        public float ScaleY
-        {
-            get => scaleY;
-            set
-            {
-                if (Misc.FloatEqual(scaleY, value))
-                    return;
-
-                scaleY = value;
-
-                if (!CheckOnScreen())
-                    UpdatePosition();
             }
         }
     }

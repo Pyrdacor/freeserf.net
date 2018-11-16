@@ -66,15 +66,11 @@ namespace Freeserf.Renderer.OpenTK
 
         protected override void AddToLayer()
         {
-            base.AddToLayer();
-
             drawIndex = (Layer as RenderLayer).GetDrawIndex(this, maskTextureAtlasOffset);
         }
 
         protected override void RemoveFromLayer()
         {
-            base.RemoveFromLayer();
-
             (Layer as RenderLayer).FreeDrawIndex(drawIndex);
             drawIndex = -1;
         }

@@ -449,31 +449,31 @@ namespace Freeserf
             var renderView = interf.RenderView;
 
             // Top
-            var position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 0));
-            var size = Global.TransformSizeFromOriginalSize(renderView, new Size(144, 9));
             var offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 0u);
-            borderUp = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderUp = renderView.SpriteFactory.Create(144, 9, offset.X, offset.Y, false);
+            borderUp.X = X;
+            borderUp.Y = Y;
             borderUp.Layer = Layer;
 
             // Bottom
-            position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 153));
-            size = Global.TransformSizeFromOriginalSize(renderView, new Size(144, 7));
             offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 1u);
-            borderDown = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderDown = renderView.SpriteFactory.Create(144, 7, offset.X, offset.Y, false);
+            borderDown.X = X;
+            borderDown.Y = Y + 153;
             borderDown.Layer = Layer;
 
             // Left
-            position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 9));
-            size = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 144));
             offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 2u);
-            borderLeft = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderLeft = renderView.SpriteFactory.Create(8, 144, offset.X, offset.Y, false);
+            borderLeft.X = X;
+            borderLeft.Y = Y + 9;
             borderLeft.Layer = Layer;
 
             // Right
-            position = Global.TransformPositionFromOriginalPosition(renderView, new Position(136, 9));
-            size = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 144));
             offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 3u);
-            borderRight = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderRight = renderView.SpriteFactory.Create(8, 144, offset.X, offset.Y, false);
+            borderRight.X = X + 136;
+            borderRight.Y = Y + 9;
             borderRight.Layer = Layer;
         }
 
