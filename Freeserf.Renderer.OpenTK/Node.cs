@@ -115,23 +115,28 @@ namespace Freeserf.Renderer.OpenTK
 
         public int Height { get; private set; }
 
+        internal Rect ScaledRect
+        {
+            get
+            {
+                float scaledWidth = scaleX * Width;
+                float scaledHeight = scaleY * Height;
+                int xSub = Misc.Round(0.5f * (scaledWidth - Width));
+                int ySub = Misc.Round(0.5f * (scaledHeight - Height));
+
+                return new Rect(X - xSub, Y - ySub, Misc.Round(scaledWidth), Misc.Round(scaledHeight));
+            }
+        }
+
         public virtual void Resize(int width, int height)
         {
             Width = width;
             Height = height;
         }
 
-        protected virtual void AddToLayer()
-        {
-            if (!deleted)
-                layer.AddNode(this);
-        }
+        protected abstract void AddToLayer();
 
-        protected virtual void RemoveFromLayer()
-        {
-            if (!deleted)
-                layer.RemoveNode(this);
-        }
+        protected abstract void RemoveFromLayer();
 
         protected abstract void UpdatePosition();
 
@@ -140,9 +145,7 @@ namespace Freeserf.Renderer.OpenTK
             bool oldNotOnScreen = notOnScreen;
             bool oldVisible = Visible;
 
-            var rect = new Rect(X, Y, Width, Height);
-
-            notOnScreen = !virtualScreen.IntersectsWith(rect);
+            notOnScreen = !virtualScreen.IntersectsWith(ScaledRect);
 
             if (oldNotOnScreen != notOnScreen)
             {
@@ -213,7 +216,9 @@ namespace Freeserf.Renderer.OpenTK
                     return;
 
                 scaleX = value;
-                // TODO
+
+                if (!CheckOnScreen())
+                    UpdatePosition();
             }
         }
 
@@ -226,7 +231,9 @@ namespace Freeserf.Renderer.OpenTK
                     return;
 
                 scaleY = value;
-                // TODO
+
+                if (!CheckOnScreen())
+                    UpdatePosition();
             }
         }
     }

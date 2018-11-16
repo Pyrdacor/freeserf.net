@@ -50,15 +50,11 @@ namespace Freeserf.Renderer.OpenTK
 
         protected override void AddToLayer()
         {
-            base.AddToLayer();
-
             drawIndex = (Layer as RenderLayer).GetColoredRectDrawIndex(this);
         }
 
         protected override void RemoveFromLayer()
         {
-            base.RemoveFromLayer();
-
             (Layer as RenderLayer).FreeColoredRectDrawIndex(drawIndex);
             drawIndex = -1;
         }
