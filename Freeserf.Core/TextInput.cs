@@ -40,6 +40,7 @@ namespace Freeserf
         readonly Render.TextRenderer textRenderer = null;
         
         public TextInput(Interface interf)
+            : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground);
             textRenderer = interf.TextRenderer;

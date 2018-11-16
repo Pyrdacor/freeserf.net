@@ -29,6 +29,7 @@ namespace Freeserf
     internal class Viewport : GuiObject
     {
         public Viewport(Interface interf, Map map)
+            : base(interf)
         {
 
         }

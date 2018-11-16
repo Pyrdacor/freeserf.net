@@ -27,6 +27,7 @@ namespace Freeserf
     internal class Minimap : GuiObject
     {
         public Minimap(Interface interf)
+            : base(interf)
         {
 
         }
@@ -34,6 +35,11 @@ namespace Freeserf
         protected override void InternalDraw()
         {
             throw new NotImplementedException();
+        }
+
+        public void SetMap(Map map)
+        {
+
         }
     }
 

@@ -24,12 +24,12 @@ using System.Collections.Generic;
 
 namespace Freeserf
 {
-    public abstract class GuiObject
+    internal abstract class GuiObject
     {
         public static Position GetTextureAtlasOffset(Data.Resource resourceType, uint spriteIndex)
         {
             var textureAtlasManager = Render.TextureAtlasManager.Instance;
-            var textureAtlas = textureAtlasManager.GetOrCreate(Layer.Gui);
+            var textureAtlas = textureAtlasManager.GetOrCreate(global::Freeserf.Layer.Gui);
             var offset = textureAtlasManager.GetGuiTypeOffset(resourceType);
 
             return textureAtlas.GetOffset(offset + spriteIndex);
@@ -37,7 +37,7 @@ namespace Freeserf
 
         readonly List<GuiObject> floatWindows = new List<GuiObject>();
         bool redraw = true;
-        Render.IRenderLayer layer = null;
+        protected Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
         protected bool focused = false;
         protected bool displayed = false;
@@ -61,6 +61,22 @@ namespace Freeserf
             }
         }
         public GuiObject Parent { get; set; } = null;
+
+        protected GuiObject(Interface interf)
+            : this(interf.RenderView)
+        {
+
+        }
+
+        protected GuiObject(Render.IRenderView renderView)
+        {
+            Layer = renderView.GetLayer(global::Freeserf.Layer.Gui);
+        }
+
+        protected GuiObject(Render.IRenderLayer renderLayer)
+        {
+            Layer = renderLayer;
+        }
 
         protected abstract void InternalDraw();
 

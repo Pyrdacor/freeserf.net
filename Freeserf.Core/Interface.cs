@@ -128,6 +128,7 @@ namespace Freeserf
         public TextRenderer TextRenderer { get; } = null;
 
         public Interface(IRenderView renderView)
+            : base(renderView)
         {
             RenderView = renderView;
 
@@ -792,7 +793,7 @@ namespace Freeserf
             switch (e.Type)
             {
                 case Event.Type.Resize:
-                  SetSize((uint)e.Dx, (uint)e.Dy);
+                  SetSize(e.Dx, e.Dy);
                   break;
                 case Event.Type.Update:
                   Update();
@@ -1222,14 +1223,14 @@ namespace Freeserf
                 /* Debug */
                 case 'g':
                     {
-                        Viewport.SwitchLayer(Layer.Grid);
+                        Viewport.SwitchLayer(global::Freeserf.Layer.Grid);
                         break;
                     }
 
                 /* Game control */
                 case 'b':
                     {
-                        Viewport.SwitchLayer(Layer.Builds);
+                        Viewport.SwitchLayer(global::Freeserf.Layer.Builds);
                         break;
                     }
                 case 'j':

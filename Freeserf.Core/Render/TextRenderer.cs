@@ -57,6 +57,7 @@ namespace Freeserf.Render
             }
         }
 
+        readonly IRenderLayer layer = null;
         readonly ISpriteFactory spriteFactory = null;
         readonly Size characterSize = null;
         readonly int characterGapSize = 0;
@@ -67,7 +68,8 @@ namespace Freeserf.Render
 
         public TextRenderer(IRenderView renderView)
         {
-            this.spriteFactory = renderView.SpriteFactory;
+            spriteFactory = renderView.SpriteFactory;
+            layer = renderView.GetLayer(Layer.Gui);
 
             // original size is 8x8 pixels
             characterSize = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 8));
@@ -252,11 +254,15 @@ namespace Freeserf.Render
 
             for (int i = 0; i < num; ++i)
             {
-                sprites.Add(new SpriteInfo()
+                var spriteInfo = new SpriteInfo()
                 {
                     Sprite = spriteFactory.Create(characterSize.Width, characterSize.Height, 0, 0, false),
                     InUse = false
-                });
+                };
+
+                spriteInfo.Sprite.Layer = layer;
+
+                sprites.Add(spriteInfo);
             }
 
             characterSprites.AddRange(sprites);

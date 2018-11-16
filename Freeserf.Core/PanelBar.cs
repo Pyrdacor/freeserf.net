@@ -27,6 +27,7 @@ namespace Freeserf
     internal class PanelBar : GuiObject
     {
         public PanelBar(Interface interf)
+            : base(interf)
         {
 
         }

@@ -27,6 +27,7 @@ namespace Freeserf
     internal class NotificationBox : GuiObject
     {
         public NotificationBox(Interface interf)
+            : base(interf)
         {
 
         }

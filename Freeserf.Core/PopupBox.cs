@@ -394,7 +394,7 @@ namespace Freeserf
         TextInput fileField;
 
         public Type Box { get; }
-        public Minimap MiniMap { get; }
+        public MinimapGame MiniMap { get; }
 
         int currentSett5Item;
         int currentSett6Item;
@@ -402,11 +402,12 @@ namespace Freeserf
         int currentStat8Mode;
 
         public PopupBox(Interface interf)
+            : base(interf)
         {
             this.interf = interf;
-            MiniMap = new Minimap(interf, interf.Game);
-            fileList = new ListSavedFiles();
-            fileField = new TextInput();
+            MiniMap = new MinimapGame(interf, interf.Game);
+            fileList = new ListSavedFiles(interf);
+            fileField = new TextInput(interf);
 
             currentSett5Item = 8;
             currentSett6Item = 15;
@@ -427,7 +428,7 @@ namespace Freeserf
             {
                 int pos = item.LastIndexOfAny(new char[] { '/', '\\' });
                 string fileName = item.Substring(pos + 1);
-                fileField.SetText(fileName);
+                fileField.Text = fileName;
             });
             AddFloatWindow(fileList, 12, 22);
 
@@ -452,24 +453,28 @@ namespace Freeserf
             var size = Global.TransformSizeFromOriginalSize(renderView, new Size(144, 9));
             var offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 0u);
             borderUp = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderUp.Layer = Layer;
 
             // Bottom
             position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 153));
             size = Global.TransformSizeFromOriginalSize(renderView, new Size(144, 7));
             offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 1u);
             borderDown = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderDown.Layer = Layer;
 
             // Left
             position = Global.TransformPositionFromOriginalPosition(renderView, new Position(0, 9));
             size = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 144));
             offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 2u);
             borderLeft = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderLeft.Layer = Layer;
 
             // Right
             position = Global.TransformPositionFromOriginalPosition(renderView, new Position(136, 9));
             size = Global.TransformSizeFromOriginalSize(renderView, new Size(8, 144));
             offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 3u);
             borderRight = renderView.SpriteFactory.Create(size.Width, size.Height, offset.X, offset.Y, false);
+            borderRight.Layer = Layer;
         }
 
         public void Show(Type box)

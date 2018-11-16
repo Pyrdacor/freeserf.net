@@ -21,13 +21,17 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Freeserf
 {
     internal class ListSavedFiles : GuiObject
     {
+        public ListSavedFiles(Interface interf)
+            : base(interf)
+        {
+
+        }
+
         public void SetSelectionHandler(Action<string> selectionHandler)
         {
 
