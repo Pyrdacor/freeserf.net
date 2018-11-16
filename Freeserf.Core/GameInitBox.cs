@@ -30,19 +30,20 @@ namespace Freeserf
     {
         string savedText = "";
 
-        public RandomInput()
+        public RandomInput(Interface interf)
+            : base(interf)
         {
             SetFilter(TextInputFilter);
             SetSize(34, 34);
             MaxLength = 16;
         }
 
-        void SetRandom(Random rnd)
+        public void SetRandom(Random rnd)
         {
             Text = rnd.ToString();
         }
 
-        Random GetRandom()
+        public Random GetRandom()
         {
             return new Random(Text);
         }
@@ -109,20 +110,65 @@ namespace Freeserf
 
         Interface interf = null;
 
-        GameType game_type;
-        int game_mission;
+        GameType gameType = GameType.Custom;
+        int gameMission = 0;
 
-        GameInfo custom_mission;
-        GameInfo mission;
+        GameInfo customMission = null;
+        GameInfo mission = null;
 
-        RandomInput random_input;
-        Map map;
-        Minimap minimap;
-        ListSavedFiles file_list;
+        RandomInput randomInput = null;
+        Map map = null;
+        Minimap minimap = null;
+        ListSavedFiles fileList = null;
+
+        // rendering
+        Render.ISprite background = null;
+        Render.ISprite buttonStart = null;
+        Render.ISprite buttonOptions = null;
+        Render.ISprite iconGameType = null;
 
         public GameInitBox(Interface interf)
         {
             this.interf = interf;
+
+            randomInput = new RandomInput(interf);
+
+            var size = Global.TransformSizeFromOriginalSize(interf.RenderView, new Size(360, 254));
+            SetSize(size.Width, size.Height);
+
+            customMission = new GameInfo(new Random());
+            customMission.AddPlayer(12, PlayerInfo.PlayerColors[0], 40, 40, 40);
+            customMission.AddPlayer(1, PlayerInfo.PlayerColors[1], 20, 30, 40);
+            mission = customMission;
+
+            minimap.Displayed = true;
+            size = Global.TransformSizeFromOriginalSize(interf.RenderView, new Size(150, 160));
+            minimap.SetSize(size.Width, size.Height);
+            var position = Global.TransformPositionFromOriginalPosition(interf.RenderView, new Position(190, 55));
+            AddFloatWindow(minimap, position.X, position.Y);
+
+            generate_map_preview();
+
+            randomInput.SetRandom(customMission.RandomBase);
+            randomInput.Displayed = true;
+            position = Global.TransformPositionFromOriginalPosition(interf.RenderView, new Position(19 + 31 * 8, 15));
+            AddFloatWindow(randomInput, position.X, position.Y);
+
+            size = Global.TransformSizeFromOriginalSize(interf.RenderView, new Size(160, 160));
+            fileList.SetSize(size.Width, size.Height);
+            fileList.Displayed = false;
+            fileList.SetSelectionHandler((string item) =>
+            {
+                Game game = new Game(interf.RenderView);
+
+                if (GameStore.Instance.Load(item, game))
+                {
+                    map = game.Map;
+                    minimap.SetMap(map);
+                }
+            });
+            position = Global.TransformPositionFromOriginalPosition(interf.RenderView, new Position(20, 55));
+            AddFloatWindow(fileList, position.X, position.Y);
         }
 
         protected override void InternalDraw()
