@@ -43,13 +43,13 @@ namespace Freeserf
             public static readonly Color Transparent = new Color() { Blue = 0, Green = 0, Red = 0, Alpha = 0 };
         }
 
-        protected int deltaX;
-        protected int deltaY;
-        protected int offsetX;
-        protected int offsetY;
-        protected uint width;
-        protected uint height;
-        protected byte[] data;
+        protected int deltaX = 0;
+        protected int deltaY = 0;
+        protected int offsetX = 0;
+        protected int offsetY = 0;
+        protected uint width = 0u;
+        protected uint height = 0u;
+        protected byte[] data = null;
 
         public Sprite()
         {
@@ -286,6 +286,32 @@ namespace Freeserf
                     }
 
                     res++;
+                }
+            }
+        }
+
+        unsafe public virtual void Add(int x, int y, Sprite other)
+        {
+            if (x < 0 || y < 0)
+                throw new ExceptionFreeserf("Offset is negative.");
+
+            if (width < x + other.Width || height < y + other.Height)
+                throw new ExceptionFreeserf("Sprite can not be added at this position.");
+
+            fixed (byte* srcPointer = other.GetData())
+            fixed (byte* resPointer = data)
+            {
+                uint* src = (uint*)srcPointer;
+                uint* res = (uint*)resPointer + x + y * width;
+
+                for (int r = 0; r < other.height; ++r)
+                {
+                    for (uint c = 0; c < other.width; ++c)
+                    {
+                        *res++ += *src++;
+                    }
+
+                    res += width - other.width;
                 }
             }
         }
