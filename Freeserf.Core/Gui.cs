@@ -39,7 +39,7 @@ namespace Freeserf
         bool redraw = true;
         Render.IRenderLayer layer = null;
         static GuiObject FocusedObject = null;
-        bool focused = false;
+        protected bool focused = false;
         protected bool displayed = false;
 
         public int X { get; private set; } = 0;
@@ -61,7 +61,6 @@ namespace Freeserf
             }
         }
         public GuiObject Parent { get; set; } = null;
-        protected bool Focused => focused;
 
         protected abstract void InternalDraw();
 

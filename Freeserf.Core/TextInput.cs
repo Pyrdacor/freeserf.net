@@ -29,6 +29,7 @@ namespace Freeserf
         public delegate bool Filter(char key, TextInput textInput);
 
         string text = "";
+        int maxLength = 0;
         Filter filter = null;
         Render.Color colorFocus = new Render.Color(0x00, 0x8b, 0x47);
         Render.Color colorText = Render.Color.Green;
@@ -59,9 +60,20 @@ namespace Freeserf
 
         public int MaxLength
         {
-            get;
-            set;
-        } = 0;
+            get => maxLength;
+            set
+            {
+                maxLength = value;
+
+                if (maxLength != 0)
+                {
+                    if (text.Length > maxLength)
+                    {
+                        Text = Text.Substring(0, maxLength);
+                    }
+                }
+            }
+        }
 
         protected override void Layout()
         {
@@ -74,7 +86,7 @@ namespace Freeserf
         {
             background.Visible = Displayed;
 
-            if (drawFocus && Focused)
+            if (drawFocus && focused)
                 background.Color = colorFocus;
             else
                 background.Color = colorBackground;
@@ -125,19 +137,51 @@ namespace Freeserf
             this.filter = filter;
         }
 
-        protected virtual bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y)
         {
-
+            SetFocused();
+            return true;
         }
 
-        protected virtual bool HandleKeyPressed(char key, int modifier)
+        protected override bool HandleKeyPressed(char key, int modifier)
         {
+            if (!focused)
+            {
+                return false;
+            }
 
+            if (MaxLength != 0 && text.Length >= MaxLength)
+            {
+                return true;
+            }
+
+            if (key == '\b' && text.Length > 0)
+            {
+                text = text.Substring(0, text.Length - 1);
+                SetRedraw();
+                return true;
+            }
+
+            if (filter != null)
+            {
+                if (!filter(key, this))
+                {
+                    return true;
+                }
+            }
+
+            text += key;
+
+            SetRedraw();
+
+            return true;
         }
 
-        protected virtual bool HandleFocusLoose()
+        protected override bool HandleFocusLoose()
         {
-
+            focused = false;
+            SetRedraw();
+            return true;
         }
     }
 }
