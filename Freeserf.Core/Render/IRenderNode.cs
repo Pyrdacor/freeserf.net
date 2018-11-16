@@ -27,8 +27,6 @@ namespace Freeserf.Render
         int Y { get; set; }
         int Width { get; }
         int Height { get; }
-        float ScaleX { get; set; }
-        float ScaleY { get; set; }
         bool Visible { get; set; }
         IRenderLayer Layer { get; set; }
 
