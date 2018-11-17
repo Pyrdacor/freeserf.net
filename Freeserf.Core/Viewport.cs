@@ -59,6 +59,11 @@ namespace Freeserf
 
         }
 
+        protected override void InternalHide()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void InternalDraw()
         {
             throw new NotImplementedException();

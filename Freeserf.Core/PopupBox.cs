@@ -1133,6 +1133,14 @@ namespace Freeserf
 			
 		}
 
+        protected override void InternalHide()
+        {
+            borderUp.Visible = false ;
+            borderLeft.Visible = false;
+            borderRight.Visible = false;
+            borderDown.Visible = false;
+        }
+
         protected override void InternalDraw()
         {
 

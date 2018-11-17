@@ -418,6 +418,23 @@ namespace Freeserf
             DrawButton(36, 0, buttonOptions);
         }
 
+        protected override void InternalHide()
+        {
+            background.Visible = false;
+            buttonStart.Visible = false;
+            buttonOptions.Visible = false;
+            iconGameType.Visible = false;
+            textFieldHeader.Visible = false;
+            textFieldName.Visible = false;
+            textFieldValue.Visible = false;
+            buttonUp.Visible = false;
+            buttonDown.Visible = false;
+            buttonMapSize.Visible = false;
+
+            for (int i = 0; i < 4; ++i)
+                playerBoxes[i].Visible = false;
+        }
+
         protected override void InternalDraw()
         {
             DrawBackground();

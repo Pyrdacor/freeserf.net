@@ -143,6 +143,11 @@ namespace Freeserf
             OpenGameInit();
         }
 
+        protected override void InternalHide()
+        {
+            // empty
+        }
+
         protected override void InternalDraw()
         {
             // empty
@@ -265,7 +270,7 @@ namespace Freeserf
                 return;
             }
 
-            PopupBox.Hide();
+            PopupBox.InternalHide();
             DeleteFloatWindow(PopupBox);
             PopupBox = null;
             UpdateMapCursorPos(mapCursorPos);

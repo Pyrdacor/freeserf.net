@@ -64,6 +64,9 @@ namespace Freeserf
                 {
                     displayed = value;
 
+                    if (!displayed)
+                        InternalHide();
+
                     SetRedraw();
                 }
             }
@@ -87,6 +90,7 @@ namespace Freeserf
         }
 
         protected abstract void InternalDraw();
+        protected abstract void InternalHide();
 
         protected virtual void Layout()
         {
@@ -136,9 +140,6 @@ namespace Freeserf
 
                 redraw = false;
             }
-
-            // TODO
-            // Draw to layer
         }
 
         public void MoveTo(int x, int y)

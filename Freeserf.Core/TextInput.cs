@@ -83,6 +83,14 @@ namespace Freeserf
             background.Resize(Width, Height);
         }
 
+        protected override void InternalHide()
+        {
+            background.Visible = false;
+
+            foreach (var textLine in textLines)
+                textLine.Visible = false;
+        }
+
         protected override void InternalDraw()
         {
             background.Visible = Displayed;

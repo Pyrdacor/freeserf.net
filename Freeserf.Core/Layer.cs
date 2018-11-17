@@ -23,6 +23,7 @@
 namespace Freeserf
 {
     // Drawing order
+    // -------------
     // Landscape(including WaterWaves)
     // Grid
     // Paths
@@ -31,6 +32,7 @@ namespace Freeserf
     // Serfs
     // Builds
     // Gui
+    // Gui Buildings
     // Cursor
 
     public enum Layer
