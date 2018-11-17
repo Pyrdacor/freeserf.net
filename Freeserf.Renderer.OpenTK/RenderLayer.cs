@@ -26,7 +26,6 @@ using Freeserf.Render;
 
 namespace Freeserf.Renderer.OpenTK
 {
-    // TODO: scaling
     public class RenderLayer : IRenderLayer
     {
         public Layer Layer { get; } = Layer.None;

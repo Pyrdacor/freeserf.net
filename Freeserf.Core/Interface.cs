@@ -140,7 +140,6 @@ namespace Freeserf
 
             SetSize(size.Width, size.Height);
 
-            // TODO: later show the whole start screen
             OpenGameInit();
         }
 
