@@ -66,7 +66,7 @@ namespace Freeserf.Renderer.OpenTK
 
         // it is not the best sprite packing algorithm but it will do its job
         // TODO: improve later
-        public ITextureAtlas Create(int numMipMapLevels = 0)
+        public ITextureAtlas Create()
         {
             // sort sprites by similar heights (16-pixel bands)
             // heights of items are < key * 16
@@ -182,7 +182,7 @@ namespace Freeserf.Renderer.OpenTK
                 texture.AddSprite(offset.Value, sprite.GetData(), (int)sprite.Width, (int)sprite.Height);
             }
 
-            texture.Finish(numMipMapLevels);
+            texture.Finish(0);
 
             return new TextureAtlas(texture, textureOffsets);
         }

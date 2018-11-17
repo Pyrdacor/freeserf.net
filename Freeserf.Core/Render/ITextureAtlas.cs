@@ -17,7 +17,7 @@ namespace Freeserf.Render
     public interface ITextureAtlasBuilder
     {
         void AddSprite(uint spriteIndex, Sprite sprite);
-        ITextureAtlas Create(int numMipMapLevels = 0);
+        ITextureAtlas Create();
     }
 
     public interface ITextureAtlasBuilderFactory
