@@ -22,11 +22,11 @@
 
 namespace Freeserf
 {
-    internal abstract class Convertor
+    internal abstract class Converter
     {
         protected Buffer buffer;
 
-        public Convertor(Buffer buffer)
+        public Converter(Buffer buffer)
         {
             this.buffer = buffer;
         }

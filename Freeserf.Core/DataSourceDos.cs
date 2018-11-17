@@ -28,7 +28,7 @@ namespace Freeserf
 {
     using MaskImage = Tuple<Sprite, Sprite>;
 
-    class UnpackerTPWM : Convertor
+    class UnpackerTPWM : Converter
     {
         public UnpackerTPWM(Buffer buffer)
             : base(buffer)
