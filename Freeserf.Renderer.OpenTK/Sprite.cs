@@ -59,8 +59,11 @@ namespace Freeserf.Renderer.OpenTK
 
         protected override void RemoveFromLayer()
         {
-            (Layer as RenderLayer).FreeDrawIndex(drawIndex);
-            drawIndex = -1;
+            if (drawIndex != -1)
+            {
+                (Layer as RenderLayer).FreeDrawIndex(drawIndex);
+                drawIndex = -1;
+            }
         }
 
         protected override void UpdatePosition()
@@ -135,8 +138,11 @@ namespace Freeserf.Renderer.OpenTK
 
         protected override void RemoveFromLayer()
         {
-            (Layer as RenderLayer).FreeDrawIndex(drawIndex);
-            drawIndex = -1;
+            if (drawIndex != -1)
+            {
+                (Layer as RenderLayer).FreeDrawIndex(drawIndex);
+                drawIndex = -1;
+            }
         }
 
         protected override void UpdatePosition()
