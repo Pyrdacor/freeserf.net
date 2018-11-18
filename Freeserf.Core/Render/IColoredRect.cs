@@ -28,10 +28,16 @@ namespace Freeserf.Render
             get;
             set;
         }
+
+        byte DisplayLayer
+        {
+            get;
+            set;
+        }
     }
 
     public interface IColoredRectFactory
     {
-        IColoredRect Create(int width, int height, Color color);
+        IColoredRect Create(int width, int height, Color color, byte displayLayer);
     }
 }

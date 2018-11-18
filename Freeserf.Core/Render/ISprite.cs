@@ -39,8 +39,22 @@ namespace Freeserf.Render
         }
     }
 
+    public interface ILayerSprite : ISprite
+    {
+        byte DisplayLayer
+        {
+            get;
+            set;
+        }
+    }
+
+    public interface IMaskedLayerSprite : IMaskedSprite, ILayerSprite
+    {
+
+    }
+
     public interface ISpriteFactory
     {
-        ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked);
+        ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked, bool layered, byte displayLayer = 0);
     }
 }

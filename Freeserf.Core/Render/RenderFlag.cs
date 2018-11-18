@@ -74,8 +74,8 @@ namespace Freeserf.Render
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
             // max sprite size is 16x19 pixels but we use 16x20 for better base line matching
-            sprite = spriteFactory.Create(16, 20, 0, 0, false);
-            shadowSprite = spriteFactory.Create(16, 20, 0, 0, false);
+            sprite = spriteFactory.Create(16, 20, 0, 0, false, false);
+            shadowSprite = spriteFactory.Create(16, 20, 0, 0, false, false);
         }
 
         public void Update(uint tick, RenderMap map, uint pos)

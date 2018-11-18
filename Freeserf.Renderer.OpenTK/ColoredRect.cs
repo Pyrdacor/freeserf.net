@@ -27,11 +27,13 @@ namespace Freeserf.Renderer.OpenTK
     {
         protected int drawIndex = -1;
         Color color;
+        byte displayLayer = 0;
 
-        public ColoredRect(int width, int height, Color color, Rect virtualScreen)
+        public ColoredRect(int width, int height, Color color, byte displayLayer, Rect virtualScreen)
             : base(Shape.Rect, width, height, virtualScreen)
         {
             this.color = color;
+            this.displayLayer = displayLayer;
         }
 
         public Color Color
@@ -46,6 +48,26 @@ namespace Freeserf.Renderer.OpenTK
 
                 UpdateColor();
             }
+        }
+
+        public byte DisplayLayer
+        {
+            get => displayLayer;
+            set
+            {
+                if (displayLayer == value)
+                    return;
+
+                displayLayer = value;
+
+                UpdateDisplayLayer();
+            }
+        }
+
+        protected virtual void UpdateDisplayLayer()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateDisplayLayer(drawIndex, displayLayer);
         }
 
         protected override void AddToLayer()
@@ -81,9 +103,9 @@ namespace Freeserf.Renderer.OpenTK
             this.virtualScreen = virtualScreen;
         }
 
-        public IColoredRect Create(int width, int height, Color color)
+        public IColoredRect Create(int width, int height, Color color, byte displayLayer)
         {
-            return new ColoredRect(width, height, color, virtualScreen);
+            return new ColoredRect(width, height, color, displayLayer, virtualScreen);
         }
     }
 }

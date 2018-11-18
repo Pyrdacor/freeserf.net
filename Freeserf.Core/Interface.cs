@@ -136,16 +136,11 @@ namespace Freeserf
 
             GameManager.Instance.AddHandler(this);
 
-            var size = renderView.VirtualScreen.Size;
+            SetSize(640, 480); // original size
 
-            SetSize(size.Width, size.Height);
+            Viewport = new Viewport(this, null);
 
             OpenGameInit();
-        }
-
-        protected override void InternalHide()
-        {
-            // empty
         }
 
         protected override void InternalDraw()
@@ -270,7 +265,7 @@ namespace Freeserf
                 return;
             }
 
-            PopupBox.InternalHide();
+            PopupBox.Hide();
             DeleteFloatWindow(PopupBox);
             PopupBox = null;
             UpdateMapCursorPos(mapCursorPos);
@@ -451,7 +446,7 @@ namespace Freeserf
         {
             mapCursorPos = pos;
 
-            if (buildingRoad.Valid)
+            if (IsBuildingRoad())
             {
                 DetermineMapCursorTypeRoad();
             }
@@ -465,7 +460,7 @@ namespace Freeserf
 
         public bool IsBuildingRoad()
         {
-            return buildingRoad.Valid;
+            return buildingRoad != null && buildingRoad.Valid;
         }
 
         public Road GetBuildingRoad()
@@ -782,27 +777,6 @@ namespace Freeserf
             SetRedraw();
         }
 
-        public override bool HandleEvent(Event.EventArgs e)
-        {
-            switch (e.Type)
-            {
-                case Event.Type.Resize:
-                  SetSize(e.Dx, e.Dy);
-                  break;
-                case Event.Type.Update:
-                  Update();
-                  break;
-                case Event.Type.Draw:
-                    // TODO
-                  //Draw(e.Object as IFrame);
-                  break;
-                default:
-                  return base.HandleEvent(e);
-            }
-
-            return true;
-        }
-
         void GetMapCursorType(Player player, MapPos pos,
                            out BuildPossibility buildPossibility,
                            out CursorType cursorType)
@@ -968,7 +942,7 @@ namespace Freeserf
         /* Set the appropriate sprites for the panel buttons and the map cursor. */
         void UpdateInterface()
         {
-            if (!buildingRoad.Valid)
+            if (!IsBuildingRoad())
             {
                 switch (mapCursorType)
                 {
@@ -1101,7 +1075,7 @@ namespace Freeserf
             if (initBox != null)
             {
                 int initBoxWidth = 360;
-                int initBoxHeight = 256;
+                int initBoxHeight = 254;
                 int initBoxX = (Width - initBoxWidth) / 2;
                 int initBoxY = (Height - initBoxHeight) / 2;
                 initBox.MoveTo(initBoxX, initBoxY);
@@ -1265,6 +1239,14 @@ namespace Freeserf
         public  void OnEndGame(Game game)
         {
             SetGame(null);
+        }
+
+        protected internal override void UpdateParent()
+        {
+            Viewport?.UpdateParent();
+            PanelBar?.UpdateParent();
+            PopupBox?.UpdateParent();
+            NotificationBox?.UpdateParent();
         }
     }
 }

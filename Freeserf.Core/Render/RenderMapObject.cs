@@ -73,8 +73,8 @@ namespace Freeserf.Render
             var spriteInfo = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
             var shadowInfo = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, Sprite.Color.Transparent);
 
-            sprite = spriteFactory.Create((int)spriteInfo.Width, (int)spriteInfo.Height, 0, 0, false);
-            shadowSprite = spriteFactory.Create((int)shadowInfo.Width, (int)shadowInfo.Height, 0, 0, false);
+            sprite = spriteFactory.Create((int)spriteInfo.Width, (int)spriteInfo.Height, 0, 0, false, false);
+            shadowSprite = spriteFactory.Create((int)shadowInfo.Width, (int)shadowInfo.Height, 0, 0, false, false);
         }
 
         public void Update(uint tick, RenderMap map, uint pos)

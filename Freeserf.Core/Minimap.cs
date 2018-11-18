@@ -34,17 +34,24 @@ namespace Freeserf
 
         protected override void InternalHide()
         {
-            throw new NotImplementedException();
+            base.InternalHide();
+
+            // TODO
         }
 
         protected override void InternalDraw()
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void SetMap(Map map)
         {
 
+        }
+
+        protected internal override void UpdateParent()
+        {
+            // TODO
         }
     }
 

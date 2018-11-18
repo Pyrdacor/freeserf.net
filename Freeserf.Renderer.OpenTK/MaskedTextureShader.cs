@@ -61,7 +61,7 @@ namespace Freeserf.Renderer.OpenTK
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
             $"{GetInName(false)} ivec2 {DefaultTexCoordName};",
             $"{GetInName(false)} ivec2 {DefaultMaskTexCoordName};",
-            $"{GetInName(false)} uint {DefaultBaseLineName};",
+            $"{GetInName(false)} uint {DefaultLayerName};",
             $"uniform uvec2 {DefaultAtlasSizeName};",
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
@@ -78,23 +78,23 @@ namespace Freeserf.Renderer.OpenTK
             $"    ",
             $"    varTexCoord *= atlasFactor;",
             $"    varMaskTexCoord *= atlasFactor;",
-            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultBaseLineName}) * 0.0001f, 1.0f);",
+            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultLayerName}) * 0.00001f, 1.0f);",
             $"}}"
         };
 
         MaskedTextureShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultAtlasSizeName,
-                  DefaultMaskTexCoordName, DefaultBaseLineName, MaskedTextureFragmentShader, MaskedTextureVertexShader)
+                  DefaultMaskTexCoordName, DefaultLayerName, MaskedTextureFragmentShader, MaskedTextureVertexShader)
         {
 
         }
 
         MaskedTextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName,
-            string atlasSizeName, string maskTexCoordName, string baseLineName, string[] fragmentShaderLines, string[] vertexShaderLines)
+            string atlasSizeName, string maskTexCoordName, string layerName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName, 
-                  samplerName, colorKeyName, atlasSizeName, baseLineName, fragmentShaderLines, vertexShaderLines)
+                  samplerName, colorKeyName, atlasSizeName, layerName, fragmentShaderLines, vertexShaderLines)
         {
             this.maskTexCoordName = maskTexCoordName;
         }

@@ -30,8 +30,9 @@ namespace Freeserf.Renderer.OpenTK
     {
     	Int32 index = 0;
         readonly Dictionary<string, PositionBuffer> positionBuffers = new Dictionary<string, PositionBuffer>(4);
-        readonly Dictionary<string, BaseLineBuffer> baseLineBuffers = new Dictionary<string, BaseLineBuffer>(4);
+        readonly Dictionary<string, BaseLineBuffer> baseLineBuffers = new Dictionary<string, BaseLineBuffer>(1);
         readonly Dictionary<string, ColorBuffer> colorBuffers = new Dictionary<string, ColorBuffer>(4);
+        readonly Dictionary<string, LayerBuffer> layerBuffers = new Dictionary<string, LayerBuffer>(1);
         readonly Dictionary<string, int> bufferLocations = new Dictionary<string, int>();
         bool disposed = false;
         bool buffersAreBound = false;
@@ -66,6 +67,11 @@ namespace Freeserf.Renderer.OpenTK
             colorBuffers.Add(name, buffer);
         }
 
+        public void AddBuffer(string name, LayerBuffer buffer)
+        {
+            layerBuffers.Add(name, buffer);
+        }
+
         public void BindBuffers()
         {
             if (buffersAreBound)
@@ -85,6 +91,11 @@ namespace Freeserf.Renderer.OpenTK
             }
 
             foreach (var buffer in colorBuffers)
+            {
+                bufferLocations[buffer.Key] = program.BindInputBuffer(buffer.Key, buffer.Value);
+            }
+
+            foreach (var buffer in layerBuffers)
             {
                 bufferLocations[buffer.Key] = program.BindInputBuffer(buffer.Key, buffer.Value);
             }
@@ -113,6 +124,12 @@ namespace Freeserf.Renderer.OpenTK
             }
 
             foreach (var buffer in colorBuffers)
+            {
+                program.UnbindInputBuffer(bufferLocations[buffer.Key]);
+                bufferLocations[buffer.Key] = -1;
+            }
+
+            foreach (var buffer in layerBuffers)
             {
                 program.UnbindInputBuffer(bufferLocations[buffer.Key]);
                 bufferLocations[buffer.Key] = -1;
@@ -152,6 +169,12 @@ namespace Freeserf.Renderer.OpenTK
                 }
 
                 foreach (var buffer in colorBuffers)
+                {
+                    if (buffer.Value.RecreateUnbound())
+                        buffersChanged = true;
+                }
+
+                foreach (var buffer in layerBuffers)
                 {
                     if (buffer.Value.RecreateUnbound())
                         buffersChanged = true;

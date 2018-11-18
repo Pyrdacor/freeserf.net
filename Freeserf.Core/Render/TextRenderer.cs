@@ -9,7 +9,7 @@ namespace Freeserf.Render
     {
         class SpriteInfo
         {
-            public ISprite Sprite;
+            public ILayerSprite Sprite;
             public bool InUse;
         }
 
@@ -55,6 +55,14 @@ namespace Freeserf.Render
                     x += charGapSize;
                 }
             }
+
+            public void UpdateDisplayLayer(byte displayLayer)
+            {
+                foreach (var character in Characters)
+                {
+                    character.Sprite.DisplayLayer = displayLayer;
+                }
+            }
         }
 
         readonly IRenderLayer layer = null;
@@ -78,7 +86,7 @@ namespace Freeserf.Render
             textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Gui);
         }
 
-        public int CreateText(string text, Position position = null)
+        public int CreateText(string text, byte displayLayer, Position position = null)
         {
             var spritePool = characterSprites.Where(s => !s.InUse);
 
@@ -111,6 +119,8 @@ namespace Freeserf.Render
 
                 renderText.UpdatePositions(characterGapSize);
             }
+
+            renderText.UpdateDisplayLayer(displayLayer);
 
             renderTexts.Add(renderText);
 
@@ -191,6 +201,14 @@ namespace Freeserf.Render
             renderTexts.RemoveAt(index);
         }
 
+        public void ChangeDisplayLayer(int index, byte displayLayer)
+        {
+            var renderText = renderTexts[index];
+
+            foreach (var character in renderText.Characters)
+                character.Sprite.DisplayLayer = displayLayer;
+        }
+
         public void SetPosition(int index, Position position)
         {
             var renderText = renderTexts[index];
@@ -256,7 +274,7 @@ namespace Freeserf.Render
             {
                 var spriteInfo = new SpriteInfo()
                 {
-                    Sprite = spriteFactory.Create(characterSize.Width, characterSize.Height, 0, 0, false),
+                    Sprite = spriteFactory.Create(characterSize.Width, characterSize.Height, 0, 0, false, true, 255) as Render.ILayerSprite,
                     InUse = false
                 };
 
@@ -276,9 +294,25 @@ namespace Freeserf.Render
         readonly TextRenderer textRenderer;
         int index = -1;
         string text = "";
+        byte displayLayer = 0;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
+
+        public byte DisplayLayer
+        {
+            get => displayLayer;
+            set
+            {
+                if (displayLayer == value)
+                    return;
+
+                displayLayer = value;
+
+                if (index != -1)
+                    textRenderer.ChangeDisplayLayer(index, displayLayer);
+            }
+        }
 
         public TextField(TextRenderer textRenderer)
         {
@@ -305,7 +339,7 @@ namespace Freeserf.Render
                 text = value;
 
                 if (index == -1)
-                    index = textRenderer.CreateText(text, new Position(X, Y));
+                    index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
                 else
                     textRenderer.ChangeText(index, text);
             }
@@ -326,7 +360,7 @@ namespace Freeserf.Render
                     return;
 
                 if (index == -1 && value)
-                    index = textRenderer.CreateText(text, new Position(X, Y));
+                    index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
 
                 textRenderer.ShowText(index, value);
             }

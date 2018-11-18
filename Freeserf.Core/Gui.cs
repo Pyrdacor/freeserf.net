@@ -20,6 +20,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace Freeserf
@@ -35,12 +36,12 @@ namespace Freeserf
             return textureAtlas.GetOffset(offset + spriteIndex);
         }
 
-        public static Render.ISprite CreateSprite(Render.ISpriteFactory spriteFactory, int width, int height,
-            Data.Resource resourceType, uint spriteIndex)
+        public static Render.ILayerSprite CreateSprite(Render.ISpriteFactory spriteFactory, int width, int height,
+            Data.Resource resourceType, uint spriteIndex, byte displayLayer)
         {
             var offset = GetTextureAtlasOffset(resourceType, spriteIndex);
 
-            return spriteFactory.Create(width, height, offset.X, offset.Y, false);
+            return spriteFactory.Create(width, height, offset.X, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
         }
 
         readonly List<GuiObject> floatWindows = new List<GuiObject>();
@@ -49,6 +50,7 @@ namespace Freeserf
         static GuiObject FocusedObject = null;
         protected bool focused = false;
         protected bool displayed = false;
+        GuiObject parent = null;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
@@ -71,7 +73,32 @@ namespace Freeserf
                 }
             }
         }
-        public GuiObject Parent { get; set; } = null;
+        public GuiObject Parent
+        {
+            get => parent;
+            set
+            {
+                if (parent == value)
+                    return;
+
+                parent = value;
+
+                UpdateParent();
+            }
+        }
+        // This is the base display layer from the gui hierarchy.
+        // The distance is 10 per parent-child relation.
+        // Inside the 10 layers the controls can be freely assigned.
+        public byte BaseDisplayLayer
+        {
+            get
+            {
+                if (Parent == null)
+                    return 0;
+
+                return (byte)Math.Min(255, Parent.BaseDisplayLayer + 10);
+            }
+        }
 
         protected GuiObject(Interface interf)
             : this(interf.RenderView)
@@ -89,8 +116,16 @@ namespace Freeserf
             Layer = renderLayer;
         }
 
+        protected internal abstract void UpdateParent();
         protected abstract void InternalDraw();
-        protected abstract void InternalHide();
+        protected virtual void InternalHide()
+        {
+            if (!Displayed)
+            {
+                foreach (var floatWindow in floatWindows)
+                    floatWindow.Displayed = false;
+            }
+        }
 
         protected virtual void Layout()
         {
@@ -122,7 +157,7 @@ namespace Freeserf
             return false;
         }
 
-        public void Draw(Render.IRenderLayer layer)
+        public void Draw()
         {
             if (!Displayed)
             {
@@ -135,7 +170,7 @@ namespace Freeserf
 
                 foreach (GuiObject floatWindow in floatWindows)
                 {
-                    floatWindow.Draw(layer);
+                    floatWindow.Draw();
                 }
 
                 redraw = false;
@@ -286,6 +321,59 @@ namespace Freeserf
             }
 
             return result;
+        }
+    }
+
+    public class Gui
+    {
+        readonly Render.IRenderView renderView = null;
+        readonly Interface interf = null;
+
+        public Gui(Render.IRenderView renderView)
+        {
+            this.renderView = renderView;
+            interf = new Interface(renderView);
+
+            renderView.Click += RenderView_Click;
+            renderView.DoubleClick += RenderView_DoubleClick;
+            renderView.Drag += RenderView_Drag;
+            renderView.KeyPress += RenderView_KeyPress;
+        }
+
+        private bool RenderView_KeyPress(object sender, Event.EventArgs args)
+        {
+            return HandleEvent(args);
+        }
+
+        private bool RenderView_Drag(object sender, Event.EventArgs args)
+        {
+            return HandleEvent(args);
+        }
+
+        private bool RenderView_DoubleClick(object sender, Event.EventArgs args)
+        {
+            return HandleEvent(args);
+        }
+
+        private bool RenderView_Click(object sender, Event.EventArgs args)
+        {
+            return HandleEvent(args);
+        }
+
+        public void Draw()
+        {
+            interf.Update();
+            interf.Draw();
+        }
+
+        bool HandleEvent(Event.EventArgs args)
+        {
+            // TODO: adjust x and y
+
+            if (!args.Done)
+                args.Done = interf.HandleEvent(args);
+
+            return args.Done;
         }
     }
 }

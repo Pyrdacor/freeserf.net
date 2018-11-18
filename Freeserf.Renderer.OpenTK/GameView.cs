@@ -23,9 +23,14 @@ using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using Freeserf.Render;
+using Freeserf.Event;
 
 namespace Freeserf.Renderer.OpenTK
 {
+    using EventArgs = Event.EventArgs;
+    using EventHandler = Event.EventHandler;
+    using EventType = Event.Type;
+
     public class GameView : RenderLayerFactory, IRenderView
     {
         Context context;
@@ -38,10 +43,17 @@ namespace Freeserf.Renderer.OpenTK
         readonly SortedDictionary<Layer, RenderLayer> layers = new SortedDictionary<Layer, RenderLayer>();
         readonly SpriteFactory spriteFactory = null;
         readonly TriangleFactory triangleFactory = null;
-        readonly IColoredRectFactory coloredRectFactory = null;
+        readonly ColoredRectFactory coloredRectFactory = null;
+        readonly Gui gui = null;
 
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
+
+        public event EventHandler Click;
+        public event EventHandler DoubleClick;
+        public event EventHandler SpecialClick;
+        public event EventHandler Drag;
+        public event EventHandler KeyPress;
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
             DeviceType deviceType = DeviceType.Desktop, 
@@ -105,7 +117,8 @@ namespace Freeserf.Renderer.OpenTK
                     }
 
                     // initial we only show the gui + cursor
-                    renderLayer.Visible = layer == Layer.Gui || layer == Layer.Cursor;
+                    // TODO: set back to below comment
+                    renderLayer.Visible = true;// layer == Layer.Gui || layer == Layer.Cursor;
 
                     AddLayer(renderLayer);
                 }
@@ -114,6 +127,8 @@ namespace Freeserf.Renderer.OpenTK
                     // TODO: for now ignore but throw exception later
                 }
             }
+
+            gui = new Gui(this);
         }
 
         public float Zoom
@@ -304,6 +319,9 @@ namespace Freeserf.Renderer.OpenTK
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            if (layers[Layer.Gui].Visible)
+                gui.Draw(); // this will prepare gui components for rendering
+
             foreach (var layer in layers)
                 layer.Value.Render();
         }
@@ -368,6 +386,51 @@ namespace Freeserf.Renderer.OpenTK
             var size = ScreenToView(clippedRect.Size);
 
             return new Rect(position, size);
+        }
+
+        bool RunHandler(EventHandler handler, EventArgs args)
+        {
+            handler?.Invoke(this, args);
+
+            return args.Done;
+        }
+
+        public bool NotifyClick(int x, int y, Button button)
+        {
+            // transform from screen to view
+            var position = ScreenToView(new Position(x, y));
+
+            return RunHandler(Click, new EventArgs(EventType.Click, position.X, position.Y, 0, 0, button));
+        }
+
+        public bool NotifyDoubleClick(int x, int y, Button button)
+        {
+            // transform from screen to view
+            var position = ScreenToView(new Position(x, y));
+
+            return RunHandler(DoubleClick, new EventArgs(EventType.DoubleClick, position.X, position.Y, 0, 0, button));
+        }
+
+        public bool NotifySpecialClick(int x, int y)
+        {
+            // transform from screen to view
+            var position = ScreenToView(new Position(x, y));
+
+            return RunHandler(SpecialClick, new EventArgs(EventType.SpecialClick, position.X, position.Y, 0, 0));
+        }
+
+        public bool NotifyDrag(int x, int y, int dx, int dy, Button button)
+        {
+            // transform from screen to view
+            var position = ScreenToView(new Position(x, y));
+            var delta = ScreenToView(new Size(dx, dy));
+
+            return RunHandler(Drag, new EventArgs(EventType.Drag, position.X, position.Y, delta.Width, delta.Height, button));
+        }
+
+        public bool NotifyKeyPressed(char key, byte modifier)
+        {
+            return RunHandler(KeyPress, new EventArgs(EventType.KeyPressed, 0, 0, (byte)key, modifier));
         }
     }
 }

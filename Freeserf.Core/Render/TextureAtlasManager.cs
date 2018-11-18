@@ -290,7 +290,7 @@ namespace Freeserf.Render
             {
                 for (int c = 0; c < 9; ++c) // 9 columns with 40 pixels eahc = 360 pixels
                 {
-                    bgCompoundSprite.Add(c * 40, r * 8, bgSprites[r]);
+                    bgCompoundSprite.Add(c * 40, r * 8, bgSprites[r % 5]);
                 }
             }
 

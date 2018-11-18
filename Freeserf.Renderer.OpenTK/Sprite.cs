@@ -152,6 +152,68 @@ namespace Freeserf.Renderer.OpenTK
         }
     }
 
+    public class LayerSprite : Sprite, ILayerSprite
+    {
+        byte displayLayer = 0;
+
+        public LayerSprite(int width, int height, int textureAtlasX, int textureAtlasY, byte displayLayer, Rect virtualScreen)
+            : base(width, height, textureAtlasX, textureAtlasY, virtualScreen)
+        {
+            this.displayLayer = displayLayer;
+        }
+
+        public byte DisplayLayer
+        {
+            get => displayLayer;
+            set
+            {
+                if (displayLayer == value)
+                    return;
+
+                displayLayer = value;
+
+                UpdateDisplayLayer();
+            }
+        }
+
+        protected virtual void UpdateDisplayLayer()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateDisplayLayer(drawIndex, displayLayer);
+        }
+    }
+
+    public class MaskedLayerSprite : MaskedSprite, IMaskedLayerSprite
+    {
+        byte displayLayer = 0;
+
+        public MaskedLayerSprite(int width, int height, int textureAtlasX, int textureAtlasY, byte displayLayer, Rect virtualScreen)
+            : base(width, height, textureAtlasX, textureAtlasY, virtualScreen)
+        {
+            this.displayLayer = displayLayer;
+        }
+
+        public byte DisplayLayer
+        {
+            get => displayLayer;
+            set
+            {
+                if (displayLayer == value)
+                    return;
+
+                displayLayer = value;
+
+                UpdateDisplayLayer();
+            }
+        }
+
+        protected virtual void UpdateDisplayLayer()
+        {
+            if (drawIndex != -1) // -1 means not attached to a layer
+                (Layer as RenderLayer).UpdateDisplayLayer(drawIndex, displayLayer);
+        }
+    }
+
     public class SpriteFactory : ISpriteFactory
     {
         readonly Rect virtualScreen = null;
@@ -161,12 +223,22 @@ namespace Freeserf.Renderer.OpenTK
             this.virtualScreen = virtualScreen;
         }
 
-        public ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked)
+        public ISprite Create(int width, int height, int textureAtlasX, int textureAtlasY, bool masked, bool layered, byte displayLayer = 0)
         {
             if (masked)
-                return new MaskedSprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
+            {
+                if (layered)
+                    return new MaskedLayerSprite(width, height, textureAtlasX, textureAtlasY, displayLayer, virtualScreen);
+                else
+                    return new MaskedSprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
+            }
             else
-                return new Sprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
+            {
+                if (layered)
+                    return new LayerSprite(width, height, textureAtlasX, textureAtlasY, displayLayer, virtualScreen);
+                else
+                    return new Sprite(width, height, textureAtlasX, textureAtlasY, virtualScreen);
+            }
         }
     }
 }

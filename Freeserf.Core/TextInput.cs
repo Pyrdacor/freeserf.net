@@ -42,7 +42,7 @@ namespace Freeserf
         public TextInput(Interface interf)
             : base(interf)
         {
-            background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground);
+            background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             textRenderer = interf.TextRenderer;
         }
 
@@ -83,8 +83,18 @@ namespace Freeserf
             background.Resize(Width, Height);
         }
 
+        protected internal override void UpdateParent()
+        {
+            background.DisplayLayer = BaseDisplayLayer;
+
+            foreach (var textLine in textLines)
+                textLine.DisplayLayer = (byte)(BaseDisplayLayer + 1);
+        }
+
         protected override void InternalHide()
         {
+            base.InternalHide();
+
             background.Visible = false;
 
             foreach (var textLine in textLines)
@@ -116,7 +126,7 @@ namespace Freeserf
             while (str.Length > 0)
             {
                 string substr = str.Substring(0, numMaxCharsPerLine);
-                str.Remove(0, numMaxCharsPerLine);
+                str = str.Remove(0, numMaxCharsPerLine);
 
                 if (textLineIndex == textLines.Count)
                 {

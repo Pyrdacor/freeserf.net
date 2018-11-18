@@ -42,6 +42,10 @@
             this.RenderControl.Size = new System.Drawing.Size(800, 606);
             this.RenderControl.TabIndex = 0;
             this.RenderControl.VSync = false;
+            this.RenderControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RenderControl_KeyDown);
+            this.RenderControl.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.RenderControl_KeyPress);
+            this.RenderControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseClick);
+            this.RenderControl.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDoubleClick);
             this.RenderControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDown);
             this.RenderControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseMove);
             // 
@@ -62,6 +66,8 @@
             this.Name = "FreeserfForm";
             this.Text = "Freeserf.net";
             this.Load += new System.EventHandler(this.FreeserfForm_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FreeserfForm_KeyDown);
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FreeserfForm_KeyPress);
             this.ResumeLayout(false);
 
         }

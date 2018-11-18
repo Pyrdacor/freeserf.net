@@ -65,7 +65,7 @@ namespace Freeserf.Render
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
-            sprite = spriteFactory.Create(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT, 0, 0, true);
+            sprite = spriteFactory.Create(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT, 0, 0, true, false);
 
             UpdateAppearance();
         }

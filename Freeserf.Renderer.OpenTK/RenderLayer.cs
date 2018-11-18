@@ -66,10 +66,10 @@ namespace Freeserf.Renderer.OpenTK
             bool masked = layer == Layer.Landscape || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
             bool supportAnimations = layer != Layer.Gui; // gui is mostly static
 
-            renderBuffer = new RenderBuffer(shape, masked, supportAnimations);
+            renderBuffer = new RenderBuffer(shape, masked, supportAnimations, layer == Layer.Gui);
 
             if (supportColoredRects)
-                renderBufferColorRects = new RenderBuffer(Shape.Rect, false, supportAnimations, true);
+                renderBufferColorRects = new RenderBuffer(Shape.Rect, false, supportAnimations, true, true);
 
             Layer = layer;
             this.texture = texture;
@@ -81,6 +81,7 @@ namespace Freeserf.Renderer.OpenTK
         {
             if (!Visible || texture == null)
                 return;
+
             if (renderBufferColorRects != null)
             {
                 var colorShader = ColorShader.Instance;
@@ -141,6 +142,11 @@ namespace Freeserf.Renderer.OpenTK
         public void UpdateTextureAtlasOffset(int index, ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
         {
             renderBuffer.UpdateTextureAtlasOffset(index, sprite, maskSpriteTextureAtlasOffset);
+        }
+
+        public void UpdateDisplayLayer(int index, byte displayLayer)
+        {
+            renderBuffer.UpdateDisplayLayer(index, displayLayer);
         }
 
         public int GetColoredRectDrawIndex(ColoredRect coloredRect)

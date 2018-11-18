@@ -21,7 +21,7 @@
 
 namespace Freeserf.Render
 {
-    public interface IRenderView : IRenderLayerFactory
+    public interface IRenderView : IRenderLayerFactory, Event.IEventHandlers
     {
         void Render();
         void AddLayer(IRenderLayer layer);

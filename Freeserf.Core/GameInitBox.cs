@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Freeserf
 {
@@ -135,23 +134,25 @@ namespace Freeserf
         ListSavedFiles fileList = null;
 
         // rendering
-        Render.ISprite background = null;
-        Render.ISprite buttonStart = null;
-        Render.ISprite buttonOptions = null;
-        Render.ISprite iconGameType = null;
+        readonly List<Render.ILayerSprite> background = new List<Render.ILayerSprite>();
+        Render.ILayerSprite buttonStart = null;
+        Render.ILayerSprite buttonOptions = null;
+        Render.ILayerSprite iconGameType = null;
         Render.TextField textFieldHeader = null;
         Render.TextField textFieldName = null;
         Render.TextField textFieldValue = null;
-        Render.ISprite buttonUp = null;
-        Render.ISprite buttonDown = null;
-        Render.ISprite buttonMapSize = null;
+        Render.ILayerSprite buttonUp = null;
+        Render.ILayerSprite buttonDown = null;
+        Render.ILayerSprite buttonMapSize = null;
         readonly PlayerBox[] playerBoxes = new PlayerBox[4];
+        Render.TextField textFieldVersion = null;
+        Render.ILayerSprite buttonExit = null;
 
         class PlayerBox
         {
-            readonly Render.ISprite[] borders = new Render.ISprite[5];
-            readonly Render.ISprite playerImage = null;
-            readonly Render.ISprite playerValueBox = null;
+            readonly Render.ILayerSprite[] borders = new Render.ILayerSprite[5];
+            readonly Render.ILayerSprite playerImage = null;
+            readonly Render.ILayerSprite playerValueBox = null;
             readonly Render.IColoredRect suppliesValue = null;
             readonly Render.IColoredRect intelligenceValue = null;
             readonly Render.IColoredRect reproductionValue = null;
@@ -160,32 +161,32 @@ namespace Freeserf
             int y = -1;
             int playerFace = -1;
 
-            public PlayerBox(Interface interf)
+            public PlayerBox(Interface interf, byte baseDisplayLayer)
             {
                 var spriteFactory = interf.RenderView.SpriteFactory;
                 var coloredRectFactory = interf.RenderView.ColoredRectFactory;
                 var type = Data.Resource.Icon;
                 var layer = interf.RenderView.GetLayer(global::Freeserf.Layer.Gui);
 
-                borders[0] = CreateSprite(spriteFactory, 80, 8, type, 251u);
-                borders[1] = CreateSprite(spriteFactory, 80, 8, type, 252u);
-                borders[2] = CreateSprite(spriteFactory, 8, 64, type, 255u); // the order of the last 3 is reversed so drawing order is correct
-                borders[3] = CreateSprite(spriteFactory, 8, 64, type, 254u);
-                borders[4] = CreateSprite(spriteFactory, 8, 64, type, 253u);
+                borders[0] = CreateSprite(spriteFactory, 80, 8, type, 251u, baseDisplayLayer);
+                borders[1] = CreateSprite(spriteFactory, 80, 8, type, 252u, baseDisplayLayer);
+                borders[2] = CreateSprite(spriteFactory, 8, 64, type, 255u, baseDisplayLayer); // the order of the last 3 is reversed so drawing order is correct
+                borders[3] = CreateSprite(spriteFactory, 8, 64, type, 254u, baseDisplayLayer);
+                borders[4] = CreateSprite(spriteFactory, 8, 64, type, 253u, baseDisplayLayer);
 
                 for (int i = 0; i < 5; ++i)
                     borders[i].Layer = layer;
 
-                playerImage = CreateSprite(spriteFactory, 32, 64, type, 281u); // empty player box
+                playerImage = CreateSprite(spriteFactory, 32, 64, type, 281u, (byte)(baseDisplayLayer + 1)); // empty player box
                 playerImage.Layer = layer;
 
-                playerValueBox = CreateSprite(spriteFactory, 24, 64, type, 282u);
+                playerValueBox = CreateSprite(spriteFactory, 24, 64, type, 282u, (byte)(baseDisplayLayer + 1));
                 playerValueBox.Layer = layer;
 
                 // max values for the values seem to be 40
-                suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87));
-                intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b));
-                reproductionValue = coloredRectFactory.Create(4, 40, new Render.Color(0xa7, 0x27, 0x27));
+                suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87), 2);
+                intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b), 2);
+                reproductionValue = coloredRectFactory.Create(4, 40, new Render.Color(0xa7, 0x27, 0x27), 2);
                 suppliesValue.Layer = layer;
                 intelligenceValue.Layer = layer;
                 reproductionValue.Layer = layer;
@@ -304,16 +305,19 @@ namespace Freeserf
             customMission.AddPlayer(1, PlayerInfo.PlayerColors[1], 20, 30, 40);
             mission = customMission;
 
-            minimap.Displayed = true;
+            minimap = new Minimap(interf);
+            minimap.Displayed = false;// //TODO: true;
             minimap.SetSize(150, 160);
             AddFloatWindow(minimap, 190, 55);
 
-            generate_map_preview();
+            // TODO
+            // generate_map_preview();
 
             randomInput.SetRandom(customMission.RandomBase);
-            randomInput.Displayed = true;
+            randomInput.Displayed = false;// //TODO: true;
             AddFloatWindow(randomInput, 19 + 31 * 8, 15);
 
+            fileList = new ListSavedFiles(interf);
             fileList.SetSize(160, 160);
             fileList.Displayed = false;
             fileList.SetSelectionHandler((string item) =>
@@ -335,40 +339,71 @@ namespace Freeserf
         {
             var spriteFactory = interf.RenderView.SpriteFactory;
             var type = Data.Resource.Icon;
+            var buttonLayer = (byte)(BaseDisplayLayer + 1);
+            var bgLayer = BaseDisplayLayer;
 
-            // We create a compound background in the TextureAtlasManager with
-            // sprite index 318 inside the icon resources.
-            background = CreateSprite(spriteFactory, Width, Height, type, 318u);
-            background.Layer = Layer;
-
-            buttonStart = CreateSprite(spriteFactory, 32, 32, type, 266u);
+            buttonStart = CreateSprite(spriteFactory, 32, 32, type, 266u, buttonLayer);
             buttonStart.Layer = Layer;
-            buttonOptions = CreateSprite(spriteFactory, 32, 32, type, 267u);
+            buttonOptions = CreateSprite(spriteFactory, 32, 32, type, 267u, buttonLayer);
             buttonOptions.Layer = Layer;
 
             textFieldHeader = new Render.TextField(interf.TextRenderer);
             textFieldName = new Render.TextField(interf.TextRenderer);
             textFieldValue = new Render.TextField(interf.TextRenderer);
 
-            iconGameType = spriteFactory.Create(32, 32, 0, 0, false);
+            iconGameType = spriteFactory.Create(32, 32, 0, 0, false, true, buttonLayer) as Render.ILayerSprite;
             iconGameType.Layer = Layer;
 
-            buttonUp = CreateSprite(spriteFactory, 16, 16, type, 237u);
+            buttonUp = CreateSprite(spriteFactory, 16, 16, type, 237u, buttonLayer);
             buttonUp.Layer = Layer;
-            buttonDown = CreateSprite(spriteFactory, 16, 16, type, 240u);
+            buttonDown = CreateSprite(spriteFactory, 16, 16, type, 240u, buttonLayer);
             buttonDown.Layer = Layer;
-            buttonMapSize = CreateSprite(spriteFactory, 40, 32, type, 265u);
+            buttonMapSize = CreateSprite(spriteFactory, 40, 32, type, 265u, buttonLayer);
             buttonMapSize.Layer = Layer;
 
             for (int i = 0; i < 4; ++i)
-                playerBoxes[i] = new PlayerBox(interf);
+                playerBoxes[i] = new PlayerBox(interf, buttonLayer);
+
+            textFieldVersion = new Render.TextField(interf.TextRenderer);
+
+            buttonExit = CreateSprite(spriteFactory, 16, 16, type, 60u, buttonLayer);
+            buttonExit.Layer = Layer;
+
+            // We create a compound background in the TextureAtlasManager with
+            // sprite index 318 inside the icon resources.
+            // It is 360x80 in size
+            int bgX = 0;
+            int bgY = 0;
+            while (bgY < Height)
+            {
+                var bg = CreateSprite(spriteFactory, Math.Min(360, Width - bgX), Math.Min(80, Height - bgY), type, 318u, bgLayer);
+                bg.Layer = Layer;
+
+                background.Add(bg);
+
+                bgX += bg.Width;
+
+                if (bgX == Width)
+                {
+                    bgX = 0;
+                    bgY += bg.Height;
+                }
+            }
         }
 
-        void DrawButton(int x, int y, Render.ISprite button)
+        protected internal override void UpdateParent()
+        {
+            randomInput?.UpdateParent();
+            minimap?.UpdateParent();
+            fileList?.UpdateParent();
+        }
+
+        void DrawButton(int x, int y, Render.ILayerSprite button)
         {
             button.X = X + 8 * x + 20;
             button.Y = Y + y + 16;
             button.Visible = Displayed;
+            button.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 
         void HideButton(Render.ISprite button)
@@ -381,11 +416,12 @@ namespace Freeserf
             textField.Visible = false;
         }
 
-        void DrawBoxIcon(int x, int y, Render.ISprite sprite, uint spriteIndex)
+        void DrawBoxIcon(int x, int y, Render.ILayerSprite sprite, uint spriteIndex)
         {
             sprite.X = X + 8 * x + 20;
             sprite.Y = Y + y + 16;
             sprite.Visible = Displayed;
+            sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
 
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, spriteIndex);
         }
@@ -400,6 +436,7 @@ namespace Freeserf
             textField.SetPosition(X + 8 * x + 20, Y + y + 16);
             textField.Text = str;
             textField.Visible = Displayed;
+            textField.DisplayLayer = (byte)(BaseDisplayLayer + 1);
 
             // TODO: textField.ColorText = Color.Green;
             // TODO: textField.ColorBg = Color.Black;
@@ -407,9 +444,27 @@ namespace Freeserf
 
         void DrawBackground()
         {
-            background.X = X;
-            background.Y = Y;
-            background.Visible = Displayed;
+            int bgX = 0;
+            int bgY = 0;
+            int i = 0;
+
+            while (bgY < Height)
+            {
+                background[i].X = X + bgX;
+                background[i].Y = Y + bgY;
+                background[i].Visible = Displayed;
+                background[i].DisplayLayer = BaseDisplayLayer;
+
+                bgX += background[i].Width;
+
+                if (bgX == Width)
+                {
+                    bgX = 0;
+                    bgY += background[i].Height;
+                }
+
+                ++i;
+            }
         }
 
         void DrawDefaultButtons()
@@ -420,7 +475,11 @@ namespace Freeserf
 
         protected override void InternalHide()
         {
-            background.Visible = false;
+            base.InternalHide();
+
+            foreach (var bg in background)
+                bg.Visible = false;
+
             buttonStart.Visible = false;
             buttonOptions.Visible = false;
             iconGameType.Visible = false;
@@ -433,6 +492,9 @@ namespace Freeserf
 
             for (int i = 0; i < 4; ++i)
                 playerBoxes[i].Visible = false;
+
+            textFieldVersion.Visible = false;
+            buttonExit.Visible = false;
         }
 
         protected override void InternalDraw()
@@ -440,6 +502,7 @@ namespace Freeserf
             DrawBackground();
             DrawDefaultButtons();
             DrawGameTypeIcon(5, 0);
+            return; // TODO: REMOVE
 
             switch (gameType)
             {
@@ -511,9 +574,9 @@ namespace Freeserf
             }
 
             /* Display program name and version in caption */
-            draw_box_string(0, 212, FREESERF_VERSION);
+            DrawBoxString(0, 212, textFieldVersion, Freeserf.VERSION);
 
-            draw_box_icon(38, 208, 60); /* exit */
+            DrawButton(38, 208, buttonExit);
         }
     }
 }

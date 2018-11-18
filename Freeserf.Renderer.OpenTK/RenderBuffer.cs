@@ -41,8 +41,9 @@ namespace Freeserf.Renderer.OpenTK
         readonly PositionBuffer maskTextureAtlasOffsetBuffer = null; // is null for normal sprites
         readonly BaseLineBuffer baseLineBuffer = null;
         readonly ColorBuffer colorBuffer = null;
+        readonly LayerBuffer layerBuffer = null;
 
-        public RenderBuffer(Shape shape, bool masked, bool supportAnimations, bool noTexture = false)
+        public RenderBuffer(Shape shape, bool masked, bool supportAnimations, bool layered, bool noTexture = false)
         {
             Shape = shape;
             Masked = masked;
@@ -59,6 +60,10 @@ namespace Freeserf.Renderer.OpenTK
                 else
                     vertexArrayObject = new VertexArrayObject(MaskedTextureShader.Instance.ShaderProgram);
             }
+            /*else if (layered)
+            {
+                vertexArrayObject = new VertexArrayObject(LayeredTextureShader.Instance.ShaderProgram);
+            }*/
             else
             {
                 vertexArrayObject = new VertexArrayObject(TextureShader.Instance.ShaderProgram);
@@ -69,10 +74,10 @@ namespace Freeserf.Renderer.OpenTK
             if (noTexture)
             {
                 colorBuffer = new ColorBuffer(true);
-                baseLineBuffer = new BaseLineBuffer(false);
+                layerBuffer = new LayerBuffer(true);
 
                 vertexArrayObject.AddBuffer(ColorShader.DefaultColorName, colorBuffer);
-                vertexArrayObject.AddBuffer(TextureShader.DefaultBaseLineName, baseLineBuffer);
+                vertexArrayObject.AddBuffer(ColorShader.DefaultLayerName, layerBuffer);
             }
             else if (shape == Shape.Triangle)
             {
@@ -83,10 +88,18 @@ namespace Freeserf.Renderer.OpenTK
             {
                 textureAtlasOffsetBuffer = new PositionBuffer(!supportAnimations);
 
-                // base line only for rectangular sprites
-                baseLineBuffer = new BaseLineBuffer(false);
+                if (layered)
+                {
+                    layerBuffer = new LayerBuffer(true);
 
-                vertexArrayObject.AddBuffer(TextureShader.DefaultBaseLineName, baseLineBuffer);
+                    vertexArrayObject.AddBuffer(ColorShader.DefaultLayerName, layerBuffer);
+                }
+                else
+                {
+                    baseLineBuffer = new BaseLineBuffer(false);
+
+                    vertexArrayObject.AddBuffer(ColorShader.DefaultLayerName, baseLineBuffer);
+                }
             }
 
             if (masked && !noTexture)
@@ -96,7 +109,7 @@ namespace Freeserf.Renderer.OpenTK
                 vertexArrayObject.AddBuffer(MaskedTextureShader.DefaultMaskTexCoordName, maskTextureAtlasOffsetBuffer);
             }
 
-            vertexArrayObject.AddBuffer(TextureShader.DefaultPositionName, positionBuffer);
+            vertexArrayObject.AddBuffer(ColorShader.DefaultPositionName, positionBuffer);
 
             if (!noTexture)
                 vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, textureAtlasOffsetBuffer);
@@ -120,19 +133,16 @@ namespace Freeserf.Renderer.OpenTK
             positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height));
             positionBuffer.Add((short)position.X, (short)(position.Y + size.Height));
 
-            if (Shape != Shape.Triangle && baseLineBuffer != null)
+            if (layerBuffer != null)
             {
-                ushort baseLine = (ushort)(position.Y + size.Height);
-
-                baseLineBuffer.Add(baseLine);
-                baseLineBuffer.Add(baseLine);
-                baseLineBuffer.Add(baseLine);
-                baseLineBuffer.Add(baseLine);
+                layerBuffer.Add(coloredRect.DisplayLayer);
+                layerBuffer.Add(coloredRect.DisplayLayer);
+                layerBuffer.Add(coloredRect.DisplayLayer);
+                layerBuffer.Add(coloredRect.DisplayLayer);
             }
 
             if (colorBuffer != null)
             {
-                // initialize with black
                 var color = coloredRect.Color;
 
                 colorBuffer.Add(color);
@@ -185,6 +195,16 @@ namespace Freeserf.Renderer.OpenTK
                 baseLineBuffer.Add(baseLine);
                 baseLineBuffer.Add(baseLine);
                 baseLineBuffer.Add(baseLine);
+            }
+
+            if (layerBuffer != null)
+            {
+                byte layer = (sprite is Render.ILayerSprite) ? (sprite as Render.ILayerSprite).DisplayLayer : (byte)0;
+
+                layerBuffer.Add(layer);
+                layerBuffer.Add(layer);
+                layerBuffer.Add(layer);
+                layerBuffer.Add(layer);
             }
 
             return index;
@@ -248,6 +268,17 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
+        public void UpdateDisplayLayer(int index, byte displayLayer)
+        {
+            if (layerBuffer != null)
+            {
+                layerBuffer.Update(index, displayLayer);
+                layerBuffer.Update(index + 1, displayLayer);
+                layerBuffer.Update(index + 2, displayLayer);
+                layerBuffer.Update(index + 3, displayLayer);
+            }
+        }
+
         public void FreeDrawIndex(int index)
         {
             int newSize = -1;
@@ -283,6 +314,9 @@ namespace Freeserf.Renderer.OpenTK
             if (colorBuffer != null)
                 colorBuffer.Remove(index);
 
+            if (layerBuffer != null)
+                layerBuffer.Remove(index);
+
             if (newSize != -1)
             {
                 positionBuffer.ReduceSizeTo(newSize);
@@ -298,6 +332,9 @@ namespace Freeserf.Renderer.OpenTK
 
                 if (colorBuffer != null)
                     colorBuffer.ReduceSizeTo(newSize * 2);
+
+                if (layerBuffer != null)
+                    layerBuffer.ReduceSizeTo(newSize / 2);
             }
         }
 

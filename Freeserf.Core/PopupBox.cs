@@ -384,10 +384,10 @@ namespace Freeserf
         }
 
         // rendering
-        Render.ISprite borderUp = null;
-        Render.ISprite borderLeft = null;
-        Render.ISprite borderRight = null;
-        Render.ISprite borderDown = null;
+        Render.ILayerSprite borderUp = null;
+        Render.ILayerSprite borderLeft = null;
+        Render.ILayerSprite borderRight = null;
+        Render.ILayerSprite borderDown = null;
 
         Interface interf;
         ListSavedFiles fileList;
@@ -447,31 +447,29 @@ namespace Freeserf
             // Right: 8x144
 
             var renderView = interf.RenderView;
+            var spriteFactory = renderView.SpriteFactory;
+            var type = Data.Resource.FramePopup;
 
             // Top
-            var offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 0u);
-            borderUp = renderView.SpriteFactory.Create(144, 9, offset.X, offset.Y, false);
+            borderUp = CreateSprite(renderView.SpriteFactory, 144, 9, type, 0u, BaseDisplayLayer);
             borderUp.X = X;
             borderUp.Y = Y;
             borderUp.Layer = Layer;
 
             // Bottom
-            offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 1u);
-            borderDown = renderView.SpriteFactory.Create(144, 7, offset.X, offset.Y, false);
+            borderDown = CreateSprite(renderView.SpriteFactory, 144, 7, type, 1u, BaseDisplayLayer);
             borderDown.X = X;
             borderDown.Y = Y + 153;
             borderDown.Layer = Layer;
 
             // Left
-            offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 2u);
-            borderLeft = renderView.SpriteFactory.Create(8, 144, offset.X, offset.Y, false);
+            borderLeft = CreateSprite(renderView.SpriteFactory, 8, 144, type, 2u, BaseDisplayLayer);
             borderLeft.X = X;
             borderLeft.Y = Y + 9;
             borderLeft.Layer = Layer;
 
             // Right
-            offset = GetTextureAtlasOffset(Data.Resource.FramePopup, 3u);
-            borderRight = renderView.SpriteFactory.Create(8, 144, offset.X, offset.Y, false);
+            borderRight = CreateSprite(renderView.SpriteFactory, 8, 144, type, 3u, BaseDisplayLayer);
             borderRight.X = X + 136;
             borderRight.Y = Y + 9;
             borderRight.Layer = Layer;
@@ -1135,6 +1133,8 @@ namespace Freeserf
 
         protected override void InternalHide()
         {
+            base.InternalHide();
+
             borderUp.Visible = false ;
             borderLeft.Visible = false;
             borderRight.Visible = false;
@@ -1149,6 +1149,18 @@ namespace Freeserf
         protected override bool HandleClickLeft(int x, int y)
         {
             return base.HandleClickLeft(x, y);
+        }
+
+        protected internal override void UpdateParent()
+        {
+            borderUp.DisplayLayer = BaseDisplayLayer;
+            borderLeft.DisplayLayer = BaseDisplayLayer;
+            borderRight.DisplayLayer = BaseDisplayLayer;
+            borderDown.DisplayLayer = BaseDisplayLayer;
+
+            fileList.UpdateParent();
+            fileField.UpdateParent();
+            MiniMap.UpdateParent();
         }
     }
 }

@@ -159,8 +159,8 @@ namespace Freeserf.Render
             var spriteData = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
             var spriteShadowData = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, Sprite.Color.Transparent);
 
-            sprite = spriteFactory.Create((int)spriteData.Width, (int)spriteData.Height, 0, 0, true);
-            shadowSprite = spriteFactory.Create((int)spriteShadowData.Width, (int)spriteShadowData.Height, 0, 0, true);
+            sprite = spriteFactory.Create((int)spriteData.Width, (int)spriteData.Height, 0, 0, true, false);
+            shadowSprite = spriteFactory.Create((int)spriteShadowData.Width, (int)spriteShadowData.Height, 0, 0, true, false);
 
             if (!building.IsDone() && building.BuildingType != Building.Type.Castle)
             {
@@ -169,13 +169,13 @@ namespace Freeserf.Render
                 var frameSpriteData = dataSource.GetSprite(Data.Resource.MapObject, frameSpriteIndex, Sprite.Color.Transparent);
                 var frameSpriteShadowData = dataSource.GetSprite(Data.Resource.MapShadow, frameSpriteIndex, Sprite.Color.Transparent);
 
-                frameSprite = spriteFactory.Create((int)frameSpriteData.Width, (int)frameSpriteData.Height, 0, 0, true);
-                frameShadowSprite = spriteFactory.Create((int)frameSpriteShadowData.Width, (int)frameSpriteShadowData.Height, 0, 0, true);
+                frameSprite = spriteFactory.Create((int)frameSpriteData.Width, (int)frameSpriteData.Height, 0, 0, true, false);
+                frameShadowSprite = spriteFactory.Create((int)frameSpriteShadowData.Width, (int)frameSpriteShadowData.Height, 0, 0, true, false);
 
                 // we expect the same sprite size for cross and corner stone!
                 var crossOrStoneSpriteData = dataSource.GetSprite(Data.Resource.MapObject, CrossSprite, Sprite.Color.Transparent);
 
-                crossOrStoneSprite = spriteFactory.Create((int)crossOrStoneSpriteData.Width, (int)crossOrStoneSpriteData.Height, 0, 0, false);
+                crossOrStoneSprite = spriteFactory.Create((int)crossOrStoneSpriteData.Width, (int)crossOrStoneSpriteData.Height, 0, 0, false, false);
             }
 
             if (building.IsBurning())

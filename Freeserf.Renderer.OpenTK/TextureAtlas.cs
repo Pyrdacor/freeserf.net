@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Freeserf.Render;
 
 namespace Freeserf.Renderer.OpenTK
@@ -123,7 +124,7 @@ namespace Freeserf.Renderer.OpenTK
 
             // now we have a sorted category list with all sprite indices
 
-            const uint maxWidth = 512u;
+            uint maxWidth = Math.Max(512u, spriteCategoryMaxValues.Max(m => m.Value));
             uint width = 0u;
             uint height = 0u;
             uint xOffset = 0u;
@@ -165,7 +166,7 @@ namespace Freeserf.Renderer.OpenTK
                     }
                 }
 
-                if (xOffset > maxWidth / 2) // we do not expect sprites with a width greater than 256
+                if (xOffset > maxWidth - 360) // we do not expect sprites with a width greater than 360
                 {
                     xOffset = 0;
                     yOffset = height;

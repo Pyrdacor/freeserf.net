@@ -301,18 +301,32 @@ namespace Freeserf
             fixed (byte* srcPointer = other.GetData())
             fixed (byte* resPointer = data)
             {
-                uint* src = (uint*)srcPointer;
+                byte* src = srcPointer;
+                byte* dst = resPointer + (x + y * width) * 4;
+
+                for (int r = 0; r < other.height; ++r)
+                {
+                    System.Buffer.MemoryCopy(src, dst, other.width * 4, other.width * 4);
+                    src += other.width * 4;
+                    dst += width * 4;
+                }
+
+                /*uint* src = (uint*)srcPointer;
                 uint* res = (uint*)resPointer + x + y * width;
 
                 for (int r = 0; r < other.height; ++r)
                 {
+                    uint* start = res;
+
+                    System.Buffer.MemoryCopy(src, res, other.width * 4, other.width * 4);
                     for (uint c = 0; c < other.width; ++c)
                     {
                         *res++ += *src++;
                     }
 
-                    res += width - other.width;
-                }
+                    res = start + width;
+                    //res += width - other.width;
+                }*/
             }
         }
 
