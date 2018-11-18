@@ -88,6 +88,33 @@ namespace Freeserf
 
     internal class GameInitBox : GuiObject
     {
+        static readonly Dictionary<Action, Rect> ClickmapGeneral = new Dictionary<Action, Rect>
+        {
+            { Action.StartGame,         new Rect( 20, 16,  32, 32) },
+            { Action.ToggleGameType,    new Rect( 60, 16,  32, 32) },
+            { Action.ShowOptions,       new Rect(308, 16,  32, 32) },
+            { Action.Close,             new Rect(324, 216, 16, 16) }
+        };
+
+        static readonly Dictionary<Action, Rect> ClickmapMission = new Dictionary<Action, Rect>(ClickmapGeneral)
+        {
+            { Action.Increment,         new Rect(284, 16, 16, 16) },
+            { Action.Decrement,         new Rect(284, 32, 16, 16) }
+        };
+
+        static readonly Dictionary<Action, Rect> ClickmapCustom = new Dictionary<Action, Rect>(ClickmapGeneral)
+        {
+            { Action.Increment,         new Rect(220, 24, 24, 24) },
+            { Action.Decrement,         new Rect(220, 16,  8,  8) },
+            { Action.GenRandom,         new Rect(244, 16, 16,  8) },
+            { Action.ApplyRandom,       new Rect(244, 24, 16, 24) }
+        };
+
+        static readonly Dictionary<Action, Rect> ClickmapLoad = new Dictionary<Action, Rect>(ClickmapGeneral)
+        {
+            // no additional actions
+        };
+
         public enum Action
         {
             StartGame,
@@ -588,6 +615,206 @@ namespace Freeserf
             DrawBoxString(0, 212, textFieldVersion, Freeserf.VERSION);
 
             DrawButton(38, 208, buttonExit);
+        }
+
+        public void HandleAction(Action action)
+        {
+            switch (action)
+            {
+                case Action.StartGame:
+                {
+                    if (gameType == GameType.Load)
+                    {
+                        string path = fileList.GetSelected();
+
+                        if (!GameManager.Instance.LoadGame(path, interf.RenderView))
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (!GameManager.Instance.StartGame(mission, interf.RenderView))
+                        {
+                            return;
+                        }
+                    }
+
+                    interf.CloseGameInit();
+                    break;
+                }
+                case Action.ToggleGameType:
+                    if (++gameType > GameType.Load)
+                    {
+                        gameType = GameType.Custom;
+                    }
+
+                    switch (gameType)
+                    {
+                        case GameType.Mission:
+                            {
+                                mission = GameInfo.GetMission((uint)gameMission);
+                                randomInput.Displayed = false;
+                                fileList.Displayed = false;
+                                GenerateMapPreview();
+                                break;
+                            }
+                        case GameType.Custom:
+                            {
+                                mission = customMission;
+                                randomInput.Displayed = true;
+                                randomInput.SetRandom(customMission.RandomBase);
+                                fileList.Displayed = false;
+                                GenerateMapPreview();
+                                break;
+                            }
+                        case GameType.Load:
+                            {
+                                randomInput.Displayed = false;
+                                fileList.Displayed = true;
+                                break;
+                            }
+                        }
+                    break;
+                case Action.ShowOptions:
+                    // TODO
+                    break;
+                case Action.Increment:
+                    switch (gameType)
+                    {
+                        case GameType.Mission:
+                            gameMission = Math.Min(gameMission + 1, (int)GameInfo.GetMissionCount() - 1);
+                            mission = GameInfo.GetMission((uint)gameMission);
+                            break;
+                        case GameType.Custom:
+                            customMission.MapSize = Math.Min(10u, customMission.MapSize + 1u);
+                        break;
+                    }
+
+                    GenerateMapPreview();
+                    break;
+                case Action.Decrement:
+                    switch (gameType)
+                    {
+                        case GameType.Mission:
+                            gameMission = Math.Max(0, gameMission - 1);
+                            mission = GameInfo.GetMission((uint)gameMission);
+                            break;
+                        case GameType.Custom:
+                            customMission.MapSize = Math.Max(3u, customMission.MapSize - 1u);
+                            break;
+                    }
+
+                    GenerateMapPreview();
+                    break;
+                case Action.Close:
+                    // TODO: what happens then? close whole app?
+                    interf.CloseGameInit();
+                    break;
+                case Action.GenRandom:
+                    {
+                        randomInput.SetRandom(new Random());
+                        SetRedraw();
+                        break;
+                    }
+                case Action.ApplyRandom:
+                    {
+                        string str = randomInput.Text;
+
+                        if (str.Length == 16)
+                        {
+                            customMission.SetRandomBase(randomInput.GetRandom());
+                            mission = customMission;
+                            GenerateMapPreview();
+                        }
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            Dictionary<Action, Rect> clickmap = null;
+
+            switch (gameType)
+            {
+                case GameType.Mission:
+                    clickmap = ClickmapMission;
+                    break;
+                case GameType.Custom:
+                    clickmap = ClickmapCustom;
+                    break;
+                case GameType.Load:
+                    clickmap = ClickmapLoad;
+                    break;
+                default:
+                    return false;
+            }
+
+            var clickPosition = new Position(x, y);
+
+            foreach (var clickArea in  clickmap)
+            {
+                if (clickArea.Value.Contains(clickPosition))
+                {
+                    SetRedraw();
+                    HandleAction(clickArea.Key);
+                    return true;
+                }
+            }
+
+            /* Check player area */
+            int lx = 0;
+            int ly = 0;
+
+            for (uint i = 0; i < 4; ++i)
+            {
+                var playerRect = new Rect(20 + lx * 80, 56 + ly * 80, 80, 80);
+                
+                if (playerRect.Contains(clickPosition))
+                {
+                    if (HandlePlayerClick(i, clickPosition.X - playerRect.Position.X, clickPosition.Y - playerRect.Position.Y))
+                    {
+                        break;
+                    }
+                }
+
+                ++lx;
+            }
+
+            return true;
+        }
+
+        bool HandlePlayerClick(uint player_index, int cx, int cy)
+        {
+            // TODO
+            return false;
+        }
+
+        void GenerateMapPreview()
+        {
+            map = new Map(new MapGeometry(mission.MapSize), interf.RenderView);
+
+            if (gameType == GameType.Mission)
+            {
+                ClassicMissionMapGenerator generator = new ClassicMissionMapGenerator(map, mission.RandomBase);
+                generator.Init();
+                generator.Generate();
+                map.InitTiles(generator);
+            }
+            else
+            {
+                ClassicMapGenerator generator = new ClassicMapGenerator(map, mission.RandomBase);
+                generator.Init(MapGenerator.HeightGenerator.Midpoints, true);
+                generator.Generate();
+                map.InitTiles(generator);
+            }
+
+            minimap.SetMap(map);
+
+            SetRedraw();
         }
     }
 }

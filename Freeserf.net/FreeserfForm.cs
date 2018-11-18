@@ -39,7 +39,7 @@ namespace Freeserf
             var random = new Random();
             var gameInfo = new GameInfo(random);
 
-            if (!GameManager.Instance.StartGame(gameInfo.GetMission(29), gameView))
+            if (!GameManager.Instance.StartGame(GameInfo.GetMission(29), gameView))
                 throw new ExceptionFreeserf("Failed to start game.");
 
             game = GameManager.Instance.GetCurrentGame();
@@ -159,19 +159,19 @@ namespace Freeserf
             switch (e.KeyCode)
             {
                 case Keys.Left:
-                    gameView.NotifyDrag(0, 0, -32, 0, Event.Button.Left);
+                    gameView?.NotifyDrag(0, 0, -32, 0, Event.Button.Left);
                     e.Handled = true;
                     break;
                 case Keys.Right:
-                    gameView.NotifyDrag(0, 0, 32, 0, Event.Button.Left);
+                    gameView?.NotifyDrag(0, 0, 32, 0, Event.Button.Left);
                     e.Handled = true;
                     break;
                 case Keys.Up:
-                    gameView.NotifyDrag(0, 0, 0, -32, Event.Button.Left);
+                    gameView?.NotifyDrag(0, 0, 0, -32, Event.Button.Left);
                     e.Handled = true;
                     break;
                 case Keys.Down:
-                    gameView.NotifyDrag(0, 0, 0, 32, Event.Button.Left);
+                    gameView?.NotifyDrag(0, 0, 0, 32, Event.Button.Left);
                     e.Handled = true;
                     break;
                 case Keys.F:
@@ -182,7 +182,7 @@ namespace Freeserf
                     }
                     break;
                 case Keys.F10:
-                    gameView.NotifyKeyPressed('n', 1);
+                    gameView?.NotifyKeyPressed('n', 1);
                     e.Handled = true;
                     break;
                 case Keys.F11:
@@ -190,7 +190,7 @@ namespace Freeserf
                     e.Handled = true;
                     break;
                 case Keys.Enter:
-                    gameView.NotifyKeyPressed('\n', 0);
+                    gameView?.NotifyKeyPressed('\n', 0);
                     e.SuppressKeyPress = true;
                     e.Handled = true;
                     break;
@@ -207,7 +207,7 @@ namespace Freeserf
                             if (e.Alt)
                                 modifier |= 4;
 
-                            gameView.NotifyKeyPressed((char)e.KeyValue, modifier);
+                            gameView?.NotifyKeyPressed((char)e.KeyValue, modifier);
                             e.Handled = true;
                         }
                     }
@@ -223,14 +223,14 @@ namespace Freeserf
         private void RenderControl_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == (MouseButtons.Left | MouseButtons.Right))
-                gameView.NotifySpecialClick(e.X, e.Y);
+                gameView?.NotifySpecialClick(e.X, e.Y);
             else
-                gameView.NotifyClick(e.X, e.Y, ConvertMouseButton(e.Button));
+                gameView?.NotifyClick(e.X, e.Y, ConvertMouseButton(e.Button));
         }
 
         private void RenderControl_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            gameView.NotifyDoubleClick(e.X, e.Y, ConvertMouseButton(e.Button));
+            gameView?.NotifyDoubleClick(e.X, e.Y, ConvertMouseButton(e.Button));
         }
 
         private void RenderControl_KeyPress(object sender, KeyPressEventArgs e)
@@ -254,7 +254,7 @@ namespace Freeserf
                 case 'ü':
                 case 'Ü':
                     // TODO: Encoding                    
-                    gameView.NotifyKeyPressed(e.KeyChar, 0);
+                    gameView?.NotifyKeyPressed(e.KeyChar, 0);
                     e.Handled = true;
                     break;
             }

@@ -462,7 +462,7 @@ namespace Freeserf
             players.Clear();
         }
 
-        public GameInfo GetMission(uint mission)
+        public static GameInfo GetMission(uint mission)
         {
             if (mission >= GetMissionCount())
             {
@@ -472,7 +472,7 @@ namespace Freeserf
             return new GameInfo(missions[(int)mission]);
         }
 
-        public uint GetMissionCount()
+        public static uint GetMissionCount()
         {
             return (uint)missions.Length;
         }

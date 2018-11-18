@@ -43,10 +43,10 @@ namespace Freeserf.Event
     {
         bool done = false;
 
-        public int X { get; private set; }
-        public int Y { get; private set; }
-        public int Dx { get; private set; }
-        public int Dy { get; private set; }
+        public int X { get; internal set; }
+        public int Y { get; internal set; }
+        public int Dx { get; internal set; }
+        public int Dy { get; internal set; }
         public Type Type { get; private set; }
         public Button Button { get; private set; }
         public bool Done // Can not be reset

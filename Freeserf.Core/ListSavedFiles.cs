@@ -37,6 +37,12 @@ namespace Freeserf
 
         }
 
+        public string GetSelected()
+        {
+            // TODO
+            return "";
+        }
+
         protected override void InternalHide()
         {
             base.InternalHide();

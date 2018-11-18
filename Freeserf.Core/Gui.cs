@@ -349,16 +349,43 @@ namespace Freeserf
 
         private bool RenderView_Drag(object sender, Event.EventArgs args)
         {
+            float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
+            float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
+
+            var position = new Position((int)Math.Floor((args.X - 0.49f) * factorX), (int)Math.Floor((args.Y - 0.49f) * factorY));
+            var delta = new Size((int)Math.Ceiling((args.Dx + 0.49f) * factorX), (int)Math.Ceiling((args.Dy + 0.49f) * factorY));
+
+            args.X = position.X;
+            args.Y = position.Y;
+            args.Dx = delta.Width;
+            args.Dy = delta.Height;
+
             return HandleEvent(args);
         }
 
         private bool RenderView_DoubleClick(object sender, Event.EventArgs args)
         {
+            float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
+            float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
+
+            var position = new Position((int)Math.Floor((args.X - 0.49f) * factorX), (int)Math.Floor((args.Y - 0.49f) * factorY));
+
+            args.X = position.X;
+            args.Y = position.Y;
+
             return HandleEvent(args);
         }
 
         private bool RenderView_Click(object sender, Event.EventArgs args)
         {
+            float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
+            float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
+
+            var position = new Position((int)Math.Floor((args.X - 0.49f) * factorX), (int)Math.Floor((args.Y - 0.49f) * factorY));
+
+            args.X = position.X;
+            args.Y = position.Y;
+
             return HandleEvent(args);
         }
 
@@ -370,8 +397,6 @@ namespace Freeserf
 
         bool HandleEvent(Event.EventArgs args)
         {
-            // TODO: adjust x and y
-
             if (!args.Done)
                 args.Done = interf.HandleEvent(args);
 
