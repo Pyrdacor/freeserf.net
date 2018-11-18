@@ -93,11 +93,11 @@ namespace Freeserf.Renderer.OpenTK
         static readonly string[] ColorFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
-            $"{GetInName(true)} vec4 {DefaultColorName};",
+            $"flat {GetInName(true)} vec4 pixelColor;",
             $"",
             $"void main()",
             $"{{",
-            $"    {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = {DefaultColorName};",
+            $"    {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = pixelColor;",
             $"}}"
         };
 
@@ -106,13 +106,16 @@ namespace Freeserf.Renderer.OpenTK
             GetVertexShaderHeader(),
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
             $"{GetInName(false)} uint {DefaultLayerName};",
+            $"{GetInName(false)} uvec4 {DefaultColorName};",
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
             $"uniform mat4 {DefaultModelViewMatrixName};",
+            $"{GetOutName()} vec4 pixelColor;",
             $"",
             $"void main()",
             $"{{",
             $"    vec2 pos = vec2({DefaultPositionName}.x, {DefaultPositionName}.y);",
+            $"    pixelColor = vec4({DefaultColorName}.r / 255.0f, {DefaultColorName}.g / 255.0f, {DefaultColorName}.b / 255.0f, {DefaultColorName}.a / 255.0f);",
             $"    ",
             $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultLayerName}) * 0.0001f, 1.0f);",
             $"}}"

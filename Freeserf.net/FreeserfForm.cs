@@ -31,7 +31,7 @@ namespace Freeserf
                 Close();
             }
 
-            gameView = new GameView(dosData, new Size(1024, 768), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+            gameView = new GameView(dosData, new Size(1280, 960), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
 
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);          
 

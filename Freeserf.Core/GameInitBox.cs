@@ -160,6 +160,7 @@ namespace Freeserf
             int x = -1;
             int y = -1;
             int playerFace = -1;
+            int valueBaseLineY = 0;
 
             public PlayerBox(Interface interf, byte baseDisplayLayer)
             {
@@ -204,6 +205,7 @@ namespace Freeserf
                     visible = value;
 
                     playerImage.Visible = visible;
+                    playerValueBox.Visible = visible;
 
                     for (int i = 0; i < 5; ++i)
                         borders[i].Visible = visible;
@@ -236,37 +238,40 @@ namespace Freeserf
                 reproductionValue.DisplayLayer = (byte)(displayLayer + 3);
             }
 
-            public void SetPosition(int x, int y)
+            public void SetPosition(int baseX, int baseY, int x, int y)
             {
-                if (this.x == x && this.y == y)
+                if (this.x  == baseX + x && this.y == baseY + y)
                     return;
 
-                this.x = x;
-                this.y = y;
+                this.x = baseX + x;
+                this.y = baseY + y;
 
-                playerImage.X = x + 1;
-                playerImage.Y = y + 8;
+                SetChildPosition(baseX, baseY, x + 1, y + 8, playerImage);
+                SetChildPosition(baseX, baseY, x + 6, y + 8, playerValueBox);
 
-                playerValueBox.X = x + 6; // is this right? do we need the sprite offsets?
-                playerValueBox.Y = y + 8;
+                SetChildPosition(baseX, baseY, x, y, borders[0]);
+                SetChildPosition(baseX, baseY, x, y + 72, borders[1]);
+                SetChildPosition(baseX, baseY, x + 9, y + 8, borders[2]);
+                SetChildPosition(baseX, baseY, x + 5, y + 8, borders[3]);
+                SetChildPosition(baseX, baseY, x, y + 8, borders[4]);
 
-                borders[0].X = x;
-                borders[0].Y = y;
-                borders[1].X = x;
-                borders[1].Y = y + 72;
-                borders[2].X = x + 9;
-                borders[2].Y = y + 8;
-                borders[3].X = x + 5;
-                borders[3].Y = y + 8;
-                borders[4].X = x;
-                borders[4].Y = y + 8;
+                ++x;
+                y += 8;
 
-                suppliesValue.X = x * 8 + 64;
-                suppliesValue.Y = y + 76 - suppliesValue.Height;
-                intelligenceValue.X = x * 8 + 70;
-                intelligenceValue.Y = y + 76 - intelligenceValue.Height;
-                reproductionValue.X = x * 8 + 76;
-                reproductionValue.Y = y + 76 - reproductionValue.Height;
+                suppliesValue.X = baseX + 8 * x + 64;
+                suppliesValue.Y = baseY + y + 76 - suppliesValue.Height;
+                intelligenceValue.X = baseX + 8 * x + 70;
+                intelligenceValue.Y = baseY + y + 76 - intelligenceValue.Height;
+                reproductionValue.X = baseX + 8 * x + 76;
+                reproductionValue.Y = baseY + y + 76 - reproductionValue.Height;
+
+                valueBaseLineY = baseY + y + 76 + 16;
+            }
+
+            void SetChildPosition(int baseX, int baseY, int x, int y, Render.IRenderNode child)
+            {
+                child.X = baseX + 8 * x + 20;
+                child.Y = baseY + y + 16;
             }
 
             public void SetPlayerFace(int face)
@@ -279,7 +284,7 @@ namespace Freeserf
                 if (playerFace == -1)
                     playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 281u);
                 else
-                    playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 268u + (uint)playerFace);
+                    playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 268u + (uint)playerFace - 1u);
 
                 bool showValues = playerFace != -1 && visible;
 
@@ -300,7 +305,7 @@ namespace Freeserf
                 if (valueRect.Height != value)
                 {
                     valueRect.Resize(4, value);
-                    valueRect.Y = y + 76 - valueRect.Height;
+                    valueRect.Y = valueBaseLineY - valueRect.Height;
                 }
             }
         }
@@ -315,8 +320,6 @@ namespace Freeserf
             SetSize(360, 254);
 
             customMission = new GameInfo(new Random());
-            customMission.AddPlayer(12, PlayerInfo.PlayerColors[0], 40, 40, 40);
-            customMission.AddPlayer(1, PlayerInfo.PlayerColors[1], 20, 30, 40);
             mission = customMission;
 
             minimap = new Minimap(interf);
@@ -568,17 +571,11 @@ namespace Freeserf
                         playerBoxes[i].SetPlayerValues(player.Supplies, player.Intelligence, player.Reproduction);
                     }
 
-                    playerBoxes[i].SetPosition(X + 10 * bx, Y + 40 + by * 80);
+                    playerBoxes[i].SetPosition(X, Y, 10 * bx, 40 + by * 80);
                     playerBoxes[i].Visible = true;
                     playerBoxes[i].SetBaseDisplayLayer(BaseDisplayLayer);
 
                     ++bx;
-
-                    if (i == 1)
-                    {
-                        ++by;
-                        bx = 0;
-                    }
                 }
             }
             else

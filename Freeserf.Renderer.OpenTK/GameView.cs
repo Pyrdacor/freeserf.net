@@ -104,7 +104,7 @@ namespace Freeserf.Renderer.OpenTK
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
-                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                            return new Position(Misc.Floor((position.X - 0.49f) * factorX), Misc.Floor((position.Y - 0.49f) * factorY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
@@ -112,7 +112,7 @@ namespace Freeserf.Renderer.OpenTK
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
-                            return new Size(Misc.Round(size.Width * factorX), Misc.Round(size.Height * factorY));
+                            return new Size(Misc.Ceiling((size.Width + 0.49f) * factorX), Misc.Ceiling((size.Height + 0.49f) * factorY));
                         };
                     }
 

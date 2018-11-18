@@ -67,7 +67,7 @@ namespace Freeserf.Renderer.OpenTK
         protected virtual void UpdateDisplayLayer()
         {
             if (drawIndex != -1) // -1 means not attached to a layer
-                (Layer as RenderLayer).UpdateDisplayLayer(drawIndex, displayLayer);
+                (Layer as RenderLayer).UpdateColoredRectDisplayLayer(drawIndex, displayLayer);
         }
 
         protected override void AddToLayer()

@@ -30,6 +30,16 @@ namespace Freeserf.Renderer.OpenTK
             return Math.Abs(f1 - f2) < 0.00001f;
         }
 
+        public static int Floor(float f)
+        {
+            return (int)Math.Floor(f);
+        }
+
+        public static int Ceiling(float f)
+        {
+            return (int)Math.Ceiling(f);
+        }
+
         public static int Round(float f)
         {
             return (int)Math.Round(f);
