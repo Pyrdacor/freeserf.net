@@ -167,26 +167,27 @@ namespace Freeserf
                 var coloredRectFactory = interf.RenderView.ColoredRectFactory;
                 var type = Data.Resource.Icon;
                 var layer = interf.RenderView.GetLayer(global::Freeserf.Layer.Gui);
+                var displayLayer = (byte)(baseDisplayLayer + 1);
 
-                borders[0] = CreateSprite(spriteFactory, 80, 8, type, 251u, baseDisplayLayer);
-                borders[1] = CreateSprite(spriteFactory, 80, 8, type, 252u, baseDisplayLayer);
-                borders[2] = CreateSprite(spriteFactory, 8, 64, type, 255u, baseDisplayLayer); // the order of the last 3 is reversed so drawing order is correct
-                borders[3] = CreateSprite(spriteFactory, 8, 64, type, 254u, baseDisplayLayer);
-                borders[4] = CreateSprite(spriteFactory, 8, 64, type, 253u, baseDisplayLayer);
+                borders[0] = CreateSprite(spriteFactory, 80, 8, type, 251u, displayLayer);
+                borders[1] = CreateSprite(spriteFactory, 80, 8, type, 252u, displayLayer);
+                borders[2] = CreateSprite(spriteFactory, 8, 64, type, 255u, displayLayer); // the order of the last 3 is reversed so drawing order is correct
+                borders[3] = CreateSprite(spriteFactory, 8, 64, type, 254u, displayLayer);
+                borders[4] = CreateSprite(spriteFactory, 8, 64, type, 253u, displayLayer);
 
                 for (int i = 0; i < 5; ++i)
                     borders[i].Layer = layer;
 
-                playerImage = CreateSprite(spriteFactory, 32, 64, type, 281u, (byte)(baseDisplayLayer + 1)); // empty player box
+                playerImage = CreateSprite(spriteFactory, 32, 64, type, 281u, (byte)(baseDisplayLayer + 2)); // empty player box
                 playerImage.Layer = layer;
 
-                playerValueBox = CreateSprite(spriteFactory, 24, 64, type, 282u, (byte)(baseDisplayLayer + 1));
+                playerValueBox = CreateSprite(spriteFactory, 24, 64, type, 282u, (byte)(baseDisplayLayer + 2));
                 playerValueBox.Layer = layer;
 
                 // max values for the values seem to be 40
-                suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87), 2);
-                intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b), 2);
-                reproductionValue = coloredRectFactory.Create(4, 40, new Render.Color(0xa7, 0x27, 0x27), 2);
+                suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87), (byte)(baseDisplayLayer + 3));
+                intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b), (byte)(baseDisplayLayer + 3));
+                reproductionValue = coloredRectFactory.Create(4, 40, new Render.Color(0xa7, 0x27, 0x27), (byte)(baseDisplayLayer + 3));
                 suppliesValue.Layer = layer;
                 intelligenceValue.Layer = layer;
                 reproductionValue.Layer = layer;
@@ -220,6 +221,19 @@ namespace Freeserf
                         reproductionValue.Visible = false;
                     }
                 }
+            }
+
+            public void SetBaseDisplayLayer(byte displayLayer)
+            {
+                for (int i = 0; i < 5; ++i)
+                    borders[i].DisplayLayer = (byte)(displayLayer + 1);
+
+                playerImage.DisplayLayer = (byte)(displayLayer + 2);
+                playerValueBox.DisplayLayer = (byte)(displayLayer + 2);
+
+                suppliesValue.DisplayLayer = (byte)(displayLayer + 3);
+                intelligenceValue.DisplayLayer = (byte)(displayLayer + 3);
+                reproductionValue.DisplayLayer = (byte)(displayLayer + 3);
             }
 
             public void SetPosition(int x, int y)
@@ -502,7 +516,6 @@ namespace Freeserf
             DrawBackground();
             DrawDefaultButtons();
             DrawGameTypeIcon(5, 0);
-            return; // TODO: REMOVE
 
             switch (gameType)
             {
@@ -555,8 +568,9 @@ namespace Freeserf
                         playerBoxes[i].SetPlayerValues(player.Supplies, player.Intelligence, player.Reproduction);
                     }
 
-                    playerBoxes[i].SetPosition(10 * bx, 40 + by * 80);
+                    playerBoxes[i].SetPosition(X + 10 * bx, Y + 40 + by * 80);
                     playerBoxes[i].Visible = true;
+                    playerBoxes[i].SetBaseDisplayLayer(BaseDisplayLayer);
 
                     ++bx;
 

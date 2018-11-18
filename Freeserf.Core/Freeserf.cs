@@ -26,7 +26,7 @@ namespace Freeserf
 {
     public static class Freeserf
     {
-        public static readonly string VERSION = "v0.1"; // TODO: VERSION_VCS;
+        public static readonly string VERSION = "freeserf.net v0.1"; // TODO: VERSION_VCS;
 
         /* The length between game updates in miliseconds. */
         public const int TICK_LENGTH = 20;

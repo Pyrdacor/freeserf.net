@@ -259,31 +259,33 @@ namespace Freeserf.Render
             #region Gui
 
             uint index = 0u;
+            var fontColor = new Sprite.Color() { Red = 0x73, Green = 0xb3, Blue = 0x43, Alpha = 0xff };
+            var fontShadowColor = new Sprite.Color() { Red = 0x00, Green = 0x00, Blue = 0x00, Alpha = 0xff };
 
-            AddGuiElements(Data.Resource.ArtBox, 14, ref index, data);
-            AddGuiElements(Data.Resource.ArtFlag, 7, ref index, data);
-            AddGuiElements(Data.Resource.ArtLandscape, 1, ref index, data);
-            AddGuiElements(Data.Resource.CreditsBg, 1, ref index, data);
-            AddGuiElements(Data.Resource.DottedLines, 7, ref index, data);
-            AddGuiElements(Data.Resource.Font, 44, ref index, data);
-            AddGuiElements(Data.Resource.FontShadow, 44, ref index, data);
-            AddGuiElements(Data.Resource.FrameBottom, 26, ref index, data); // actually there are only 23 sprites but we have to pass the max sprite number + 1 (non-existent sprites are skipped)
-            AddGuiElements(Data.Resource.FramePopup, 4, ref index, data);
-            AddGuiElements(Data.Resource.FrameSplit, 3, ref index, data);
-            AddGuiElements(Data.Resource.FrameTop, 4, ref index, data);
-            AddGuiElements(Data.Resource.Indicator, 8, ref index, data);
-            AddGuiElements(Data.Resource.Logo, 1, ref index, data);
-            AddGuiElements(Data.Resource.PanelButton, 25, ref index, data);
+            AddGuiElements(Data.Resource.ArtBox, 14, ref index, data, color);
+            AddGuiElements(Data.Resource.ArtFlag, 7, ref index, data, color);
+            AddGuiElements(Data.Resource.ArtLandscape, 1, ref index, data, color);
+            AddGuiElements(Data.Resource.CreditsBg, 1, ref index, data, color);
+            AddGuiElements(Data.Resource.DottedLines, 7, ref index, data, fontColor); // not sure about the color here
+            AddGuiElements(Data.Resource.Font, 44, ref index, data, fontColor);
+            AddGuiElements(Data.Resource.FontShadow, 44, ref index, data, fontShadowColor);
+            AddGuiElements(Data.Resource.FrameBottom, 26, ref index, data, color); // actually there are only 23 sprites but we have to pass the max sprite number + 1 (non-existent sprites are skipped)
+            AddGuiElements(Data.Resource.FramePopup, 4, ref index, data, color);
+            AddGuiElements(Data.Resource.FrameSplit, 3, ref index, data, color);
+            AddGuiElements(Data.Resource.FrameTop, 4, ref index, data, color);
+            AddGuiElements(Data.Resource.Indicator, 8, ref index, data, color);
+            AddGuiElements(Data.Resource.Logo, 1, ref index, data, color);
+            AddGuiElements(Data.Resource.PanelButton, 25, ref index, data, color);
             //AddGuiElements(Data.Resource.Symbol, 16, ref index, data); // TODO: skip them for now. maybe re-add later
-            AddGuiElements(Data.Resource.Icon, 318, ref index, data);
+            AddGuiElements(Data.Resource.Icon, 318, ref index, data, color);
 
             // we add a compound background of sprites 290-293 with a bigger size
             var bgSprites = new Sprite[5];
-            bgSprites[0] = data.GetSprite(Data.Resource.Icon, 290u, Sprite.Color.Transparent);
-            bgSprites[1] = data.GetSprite(Data.Resource.Icon, 291u, Sprite.Color.Transparent);
-            bgSprites[2] = data.GetSprite(Data.Resource.Icon, 292u, Sprite.Color.Transparent);
-            bgSprites[3] = data.GetSprite(Data.Resource.Icon, 293u, Sprite.Color.Transparent);
-            bgSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, Sprite.Color.Transparent);
+            bgSprites[0] = data.GetSprite(Data.Resource.Icon, 290u, color);
+            bgSprites[1] = data.GetSprite(Data.Resource.Icon, 291u, color);
+            bgSprites[2] = data.GetSprite(Data.Resource.Icon, 292u, color);
+            bgSprites[3] = data.GetSprite(Data.Resource.Icon, 293u, color);
+            bgSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, color);
             var bgCompoundSprite = new Sprite(360u, 80u);
 
             for (int r = 0; r < 10; ++r) // 10 rows with 8 pixels each = 80 pixels
@@ -302,13 +304,13 @@ namespace Freeserf.Render
             // TODO
         }
 
-        void AddGuiElements(Data.Resource resourceType, uint num, ref uint index, DataSource data)
+        void AddGuiElements(Data.Resource resourceType, uint num, ref uint index, DataSource data, Sprite.Color color)
         {
             guiResourceOffsets.Add(resourceType, index);
 
             for (uint i = 0; i < num; ++i)
             {
-                var sprite = data.GetSprite(resourceType, i, Sprite.Color.Transparent);
+                var sprite = data.GetSprite(resourceType, i, color);
 
                 if (sprite != null)
                     AddSprite(Layer.Gui, index, sprite);

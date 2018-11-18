@@ -46,11 +46,16 @@ namespace Freeserf.Render
             public void UpdatePositions(int charGapSize)
             {
                 int x = 0;
+                int charIndex = 0;
 
-                foreach (var character in Characters)
+                foreach (var character in Text)
                 {
-                    character.Sprite.X = Position.X + x;
-                    character.Sprite.Y = Position.Y;
+                    if (character != ' ')
+                    {
+                        Characters[charIndex].Sprite.X = Position.X + x;
+                        Characters[charIndex].Sprite.Y = Position.Y;
+                        ++charIndex;
+                    }
 
                     x += charGapSize;
                 }
@@ -81,7 +86,7 @@ namespace Freeserf.Render
 
             // original size is 8x8 pixels
             characterSize = new Size(8, 8);
-            characterGapSize = 9; // distance betwee starts of characters in x direction
+            characterGapSize = 9; // distance between starts of characters in x direction
 
             textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Gui);
         }
@@ -91,17 +96,18 @@ namespace Freeserf.Render
             var spritePool = characterSprites.Where(s => !s.InUse);
 
             int numAvailableChars = spritePool.Count();
+            int lengthWithoutSpaces = text.Replace(" ", "").Length;
 
             List<SpriteInfo> sprites;
 
-            if (numAvailableChars < text.Length)
+            if (numAvailableChars < lengthWithoutSpaces)
             {
                 sprites = new List<SpriteInfo>(spritePool);
-                sprites.AddRange(AddCharSprites(text.Length - numAvailableChars));
+                sprites.AddRange(AddCharSprites(lengthWithoutSpaces - numAvailableChars));
             }
             else
             {
-                sprites = new List<SpriteInfo>(spritePool.Take(text.Length));
+                sprites = new List<SpriteInfo>(spritePool.Take(lengthWithoutSpaces));
             }
 
             // mark all as in use
@@ -121,6 +127,7 @@ namespace Freeserf.Render
             }
 
             renderText.UpdateDisplayLayer(displayLayer);
+            SetTextToSprites(renderText.Characters, text);
 
             renderTexts.Add(renderText);
 
@@ -147,11 +154,13 @@ namespace Freeserf.Render
             if (renderText.Text == newText)
                 return;
 
-            if (renderText.Text.Length < newText.Length)
+            int newLengthWithoutSpaces = newText.Replace(" ", "").Length;
+
+            if (renderText.Characters.Count < newLengthWithoutSpaces)
             {
                 var spritePool = characterSprites.Where(s => !s.InUse);
 
-                int numAdditionalChars = newText.Length - renderText.Text.Length;
+                int numAdditionalChars = newLengthWithoutSpaces - renderText.Characters.Count;
                 int numAvailableChars = spritePool.Count();
 
                 List<SpriteInfo> sprites;
@@ -172,15 +181,15 @@ namespace Freeserf.Render
 
                 renderText.Characters.AddRange(sprites);
             }
-            else if (renderText.Text.Length > newText.Length)
+            else if (renderText.Characters.Count > newLengthWithoutSpaces)
             {
-                for (int i = newText.Length; i < renderText.Text.Length; ++i)
+                for (int i = newLengthWithoutSpaces; i < renderText.Characters.Count; ++i)
                 {
                     renderText.Characters[i].Sprite.Visible = false;
                     renderText.Characters[i].InUse = false;
                 }
 
-                renderText.Characters.RemoveRange(newText.Length, renderText.Text.Length - newText.Length);
+                renderText.Characters.RemoveRange(newLengthWithoutSpaces, renderText.Characters.Count - newLengthWithoutSpaces);
             }
 
             SetTextToSprites(renderText.Characters, newText);
@@ -258,11 +267,13 @@ namespace Freeserf.Render
         void SetTextToSprites(List<SpriteInfo> sprites, string text)
         {
             var bytes = encoding.GetBytes(text);
+            int charIndex = 0;
 
             // the length of sprites is the same than the text length
             for (int i = 0; i < bytes.Length; ++i)
             {
-                sprites[i].Sprite.TextureAtlasOffset = textureAtlas.GetOffset(MapCharToSpriteIndex(bytes[i]));
+                if (bytes[i] != 32) // space
+                    sprites[charIndex++].Sprite.TextureAtlasOffset = GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharToSpriteIndex(bytes[i]));
             }
         }
 
@@ -274,7 +285,7 @@ namespace Freeserf.Render
             {
                 var spriteInfo = new SpriteInfo()
                 {
-                    Sprite = spriteFactory.Create(characterSize.Width, characterSize.Height, 0, 0, false, true, 255) as Render.ILayerSprite,
+                    Sprite = spriteFactory.Create(characterSize.Width, characterSize.Height, 0, 0, false, true, 0) as ILayerSprite,
                     InUse = false
                 };
 
