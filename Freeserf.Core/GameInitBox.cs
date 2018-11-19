@@ -134,20 +134,20 @@ namespace Freeserf
         {
             Custom = 0,
             Mission = 1,
-            Load = 2
-            // TODO: Later add: Multiplayer = ?
-            // TODO: Later add: Tutorial = ?
-            // TODO: Later add: AIvsAI = ?
+            Load = 2,
+            Multiplayer = 3,
+            Tutorial = 4,
+            AIvsAI = 5
         }
 
         static readonly uint[] GameTypeSprites = new uint[]
         {
             262u,
             260u,
-            316u
-            // TODO: Later add index for multiplayer: 263u
-            // TODO: Later add index for tutorial: 261u
-            // TODO: Later add index for ai vs ai: 264u
+            316u,
+            263u,
+            261u,
+            264u
         };
 
         Interface interf = null;
@@ -789,10 +789,107 @@ namespace Freeserf
             return true;
         }
 
-        bool HandlePlayerClick(uint player_index, int cx, int cy)
+        bool HandlePlayerClick(uint playerIndex, int cx, int cy)
         {
-            // TODO
-            return false;
+            if (cx < 8 || cx > 8 + 64 || cy < 8 || cy > 76)
+            {
+                return false;
+            }
+
+            if (playerIndex >= mission.PlayerCount)
+            {
+                return true;
+            }
+
+            PlayerInfo player = mission.GetPlayer(playerIndex);
+            
+            if (cx < 8 + 32 && cy < 72) // click on face
+            {
+                bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
+                                    (playerIndex == 1 && gameType == GameType.Multiplayer) ||
+                                    gameType == GameType.Mission ||
+                                    gameType == GameType.Tutorial ||
+                                    gameType == GameType.Load;
+
+                if (!canNotChange)
+                {
+                    /* Face */
+                    bool inUse = false;
+
+                    do
+                    {
+                        uint next = (player.Face + 1) % 11; // Note: Use 12 here to also allow the last enemy as a custom game player
+                        next = Math.Max(1u, next);
+
+                        player.SetCharacter(next);
+
+                        /* Check that face is not already in use by another player */
+                        inUse = false;
+
+                        for (uint i = 0; i < mission.PlayerCount; ++i)
+                        {
+                            if (playerIndex != i &&
+                                mission.GetPlayer(i).Face == next)
+                            {
+                                inUse = true;
+                                break;
+                            }
+                        }
+
+                    } while (inUse);
+                }
+            }
+            else // click on values
+            {
+                cx -= 8 + 32 + 8 + 3;
+
+                if (cx < 0)
+                {
+                    return false;
+                }
+
+                if (cy >= 27 && cy < 69)
+                {
+                    uint value = (uint)Misc.Clamp(0, 68 - cy, 40);
+
+                    if (cx > 0 && cx < 6)
+                    {
+                        bool canNotChange = gameType == GameType.Mission ||
+                                            gameType == GameType.Tutorial ||
+                                            gameType == GameType.Load;
+
+                        /* Supplies */
+                        if (!canNotChange)
+                            player.Supplies = value;
+                    }
+                    else if (cx > 6 && cx < 12)
+                    {
+                        bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
+                                            (playerIndex == 1 && gameType == GameType.Multiplayer) ||
+                                            gameType == GameType.Mission ||
+                                            gameType == GameType.Tutorial ||
+                                            gameType == GameType.Load;
+
+                        /* Intelligence */
+                        if (!canNotChange)
+                            player.Intelligence = value;
+                    }
+                    else if (cx > 12 && cx < 18)
+                    {
+                        bool canNotChange = gameType == GameType.Mission ||
+                                            gameType == GameType.Tutorial ||
+                                            gameType == GameType.Load;
+
+                        /* Reproduction */
+                        if (!canNotChange)
+                            player.Reproduction = value;
+                    }
+                }
+            }
+
+            SetRedraw();
+
+            return true;
         }
 
         void GenerateMapPreview()
