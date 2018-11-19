@@ -20,6 +20,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace Freeserf
@@ -43,6 +44,7 @@ namespace Freeserf
             : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
+            background.Layer = Layer;
             textRenderer = interf.TextRenderer;
         }
 
@@ -103,6 +105,8 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
+            background.X = X;
+            background.Y = Y;
             background.Visible = Displayed;
 
             if (drawFocus && focused)
@@ -125,8 +129,10 @@ namespace Freeserf
 
             while (str.Length > 0)
             {
-                string substr = str.Substring(0, numMaxCharsPerLine);
-                str = str.Remove(0, numMaxCharsPerLine);
+                int numChars = Math.Min(str.Length, numMaxCharsPerLine);
+
+                string substr = str.Substring(0, numChars);
+                str = str.Remove(0, numChars);
 
                 if (textLineIndex == textLines.Count)
                 {
@@ -148,7 +154,7 @@ namespace Freeserf
             }
 
             // ensure that the other lines are not visible (they can be reused later by just setting Visible to true)
-            for (int i = textLineIndex; i < textLines.Count; ++i)
+            for (int i = textLines.Count - 1; i >= textLineIndex; --i)
                 textLines[i].Destroy();
         }
 
@@ -170,15 +176,21 @@ namespace Freeserf
                 return false;
             }
 
-            if (MaxLength != 0 && text.Length >= MaxLength)
-            {
-                return true;
-            }
-
             if (key == '\b' && text.Length > 0)
             {
                 text = text.Substring(0, text.Length - 1);
                 SetRedraw();
+                return true;
+            }
+
+            if (key == '\n')
+            {
+                LooseFocus();
+                return true;
+            }
+
+            if (MaxLength != 0 && text.Length >= MaxLength)
+            {
                 return true;
             }
 
