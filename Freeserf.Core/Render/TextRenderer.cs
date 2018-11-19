@@ -122,12 +122,11 @@ namespace Freeserf.Render
             {
                 renderText.Position.X = position.X;
                 renderText.Position.Y = position.Y;
-
-                renderText.UpdatePositions(characterGapSize);
             }
 
-            renderText.UpdateDisplayLayer(displayLayer);
             SetTextToSprites(renderText.Characters, text);
+            renderText.UpdatePositions(characterGapSize);
+            renderText.UpdateDisplayLayer(displayLayer);
 
             renderTexts.Add(renderText);
 
@@ -147,7 +146,7 @@ namespace Freeserf.Render
             renderText.Visible = show;
         }
 
-        public void ChangeText(int index, string newText)
+        public void ChangeText(int index, string newText, byte displayLayer)
         {
             var renderText = renderTexts[index];
 
@@ -193,8 +192,14 @@ namespace Freeserf.Render
             }
 
             SetTextToSprites(renderText.Characters, newText);
-
             renderText.Text = newText;
+
+            renderText.UpdatePositions(characterGapSize);
+            renderText.UpdateDisplayLayer(displayLayer);
+
+            // update character visibility
+            foreach (var character in renderText.Characters)
+                character.Sprite.Visible = renderText.Visible;
         }
 
         public void DestroyText(int index)
@@ -352,7 +357,7 @@ namespace Freeserf.Render
                 if (index == -1)
                     index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
                 else
-                    textRenderer.ChangeText(index, text);
+                    textRenderer.ChangeText(index, text, DisplayLayer);
             }
         }
 
