@@ -361,7 +361,7 @@ namespace Freeserf
 
             randomInput.SetRandom(customMission.RandomBase);
             randomInput.Displayed = true;
-            AddFloatWindow(randomInput, 19 + 31 * 8, 15);
+            AddFloatWindow(randomInput, 15 + 31 * 8, 15);
 
             fileList = new ListSavedFiles(interf);
             fileList.SetSize(160, 160);
@@ -689,7 +689,7 @@ namespace Freeserf
                             mission = GameInfo.GetMission((uint)gameMission);
                             break;
                         case GameType.Custom:
-                            customMission.MapSize = Math.Min(10u, customMission.MapSize + 1u);
+                            customMission.MapSize = Math.Min(8u, customMission.MapSize + 1u);
                         break;
                     }
 
