@@ -23,6 +23,9 @@
 using System;
 using System.Collections.Generic;
 
+// TODO: changing from gametype load to something different will not re-show the player values in the boxes.
+// In Debug with breakpoint it seem to show up.
+
 namespace Freeserf
 {
     class RandomInput : TextInput
@@ -292,7 +295,7 @@ namespace Freeserf
                 reproductionValue.X = baseX + 8 * x + 76;
                 reproductionValue.Y = baseY + y + 76 - reproductionValue.Height;
 
-                valueBaseLineY = baseY + y + 76 + 16;
+                valueBaseLineY = baseY + y + 76;
             }
 
             void SetChildPosition(int baseX, int baseY, int x, int y, Render.IRenderNode child)
@@ -332,7 +335,7 @@ namespace Freeserf
                 if (valueRect.Height != value)
                 {
                     valueRect.Resize(4, value);
-                    valueRect.Y = valueBaseLineY - valueRect.Height;
+                    valueRect.Y = valueBaseLineY - value;
                 }
             }
         }
@@ -350,15 +353,14 @@ namespace Freeserf
             mission = customMission;
 
             minimap = new Minimap(interf);
-            minimap.Displayed = false;// //TODO: true;
+            minimap.Displayed = true;
             minimap.SetSize(150, 160);
             AddFloatWindow(minimap, 190, 55);
 
-            // TODO
-            // generate_map_preview();
+            GenerateMapPreview();
 
             randomInput.SetRandom(customMission.RandomBase);
-            randomInput.Displayed = false;// //TODO: true;
+            randomInput.Displayed = true;
             AddFloatWindow(randomInput, 19 + 31 * 8, 15);
 
             fileList = new ListSavedFiles(interf);
