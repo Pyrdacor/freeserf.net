@@ -46,7 +46,7 @@ namespace Freeserf
             return spriteFactory.Create(width, height, offset.X, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
         }
 
-        readonly List<GuiObject> floatWindows = new List<GuiObject>();
+        readonly Dictionary<GuiObject, Position> floatWindows = new Dictionary<GuiObject, Position>();
         bool redraw = true;
         protected Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
@@ -125,7 +125,7 @@ namespace Freeserf
             if (!Displayed)
             {
                 foreach (var floatWindow in floatWindows)
-                    floatWindow.Displayed = false;
+                    floatWindow.Key.Displayed = false;
             }
         }
 
@@ -170,9 +170,9 @@ namespace Freeserf
             {
                 InternalDraw();
 
-                foreach (GuiObject floatWindow in floatWindows)
+                foreach (var floatWindow in floatWindows)
                 {
-                    floatWindow.Draw();
+                    floatWindow.Key.Draw();
                 }
 
                 redraw = false;
@@ -183,6 +183,10 @@ namespace Freeserf
         {
             X = x;
             Y = y;
+
+            foreach (var floatWindow in floatWindows)
+                floatWindow.Key.MoveTo(X + floatWindow.Value.X, Y + floatWindow.Value.Y);
+
             SetRedraw();
         }
 
@@ -211,8 +215,8 @@ namespace Freeserf
         public void AddFloatWindow(GuiObject obj, int x, int y)
         {
             obj.Parent = this;
-            floatWindows.Add(obj);
-            obj.MoveTo(x, y); // will call SetRedraw
+            floatWindows.Add(obj, new Position(x, y));
+            obj.MoveTo(X + x, Y + y); // will call SetRedraw
         }
 
         public void DeleteFloatWindow(GuiObject obj)
@@ -284,7 +288,7 @@ namespace Freeserf
             /* Find the corresponding float element if any */
             foreach (var floatWindow in floatWindows)
             {
-                if (floatWindow.HandleEvent(internalEvent))
+                if (floatWindow.Key.HandleEvent(internalEvent))
                 {
                     return true;
                 }
