@@ -365,7 +365,8 @@ namespace Freeserf
 
                 if (player.IsAi())
                 {
-                    /* TODO Burn building. */
+                    if (player.AI != null)
+                        player.AI.HandleEmptyMine();
                 }
 
                 player.AddNotification(Message.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));

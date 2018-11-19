@@ -114,5 +114,15 @@ namespace Freeserf
                 // ones in inventories, than swap with better ones
             }
         }
+
+        public void HandleEmptyMine()
+        {
+            // TODO
+        }
+
+        public void Update(Game game)
+        {
+            // TODO
+        }
     }
 }

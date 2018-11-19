@@ -182,6 +182,7 @@ namespace Freeserf
         public uint tempIndex = 0; // used by Game.BuildingRemovePlayerRefs
 
         public MapPos CastlePos { get; internal set; } = Global.BadMapPos;
+        public AI AI { get; set; } = null;
 
         public Player(Game game, uint index)
             : base(game, index)

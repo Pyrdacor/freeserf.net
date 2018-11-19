@@ -73,7 +73,6 @@ namespace Freeserf
         uint gameStatsCounter;
         uint historyCounter;
         Random random;
-        ushort nextIndex;
         ushort flagSearchCounter;
 
         ushort updateMapLastTick;
@@ -139,7 +138,6 @@ namespace Freeserf
             constTick = 0;
             tickDiff = 0;
 
-            maxNextIndex = 0;
             gameType = 0;
             flagSearchCounter = 0;
             gameStatsCounter = 0;
@@ -268,29 +266,17 @@ namespace Freeserf
                 inventoryScheduleCounter += 64;
             }
 
-            // TODO: AI
-#if false
-              /* AI related updates */
-              game.next_index = (game.next_index + 1) % game.max_next_index;
-              if (game.next_index > 32) {
-                for (int i = 0; i < game.max_next_index) {
-                  int i = 33 - game.next_index;
-                  player_t *player = game.player[i & 3];
-                  if (PLAYER_IS_ACTIVE(player) && PLAYER_IS_AI(player)) {
-                    /* AI */
-                    /* TODO */
-                  }
-                  game.next_index += 1;
+            /* AI related updates */
+            foreach (var player in players)
+            {
+                if (player.IsAi())
+                {
+                    if (player.AI == null)
+                        throw new ExceptionFreeserf("AI is not set for AI player.");
+
+                    player.AI.Update(this);
                 }
-              } else if (game.game_speed > 0 &&
-                   game.max_flag_index < 50) {
-                player_t *player = game.player[game.next_index & 3];
-                if (PLAYER_IS_ACTIVE(player) && PLAYER_IS_AI(player)) {
-                  /* AI */
-                  /* TODO */
-                }
-              }
-#endif
+            }
 
             UpdateRoads();
             UpdateMapObjects();
