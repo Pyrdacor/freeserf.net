@@ -12,6 +12,8 @@ namespace Freeserf
         GameView gameView = null;
         bool fullscreen = false;
         MouseButtons pressedMouseButtons = MouseButtons.None;
+        int lastDragX = int.MinValue;
+        int lastDragY = int.MinValue;
 
         public FreeserfForm()
         {
@@ -148,37 +150,24 @@ namespace Freeserf
                 ZoomIn();
         }
 
-        int lastX = int.MinValue;
-        int lastY = int.MinValue;
-
         private void RenderControl_MouseMove(object sender, MouseEventArgs e)
         {
-            /*Position pos = gameView.ScreenToView(new Position(e.X, e.Y));
+            pressedMouseButtons = e.Button;
 
             if (e.Button == MouseButtons.Right)
             {
-                if (pos == null || lastX == int.MinValue)
+                if (lastDragX == int.MinValue)
                     return;
 
-                int diffX = pos.X - lastX;
-                int diffY = pos.Y - lastY;
-                int scrollX = diffX / 32;
-                int scrollY = diffY / 20;
-
-                game.Map.Scroll(-scrollX, -scrollY);
-
-                int remainingX = diffX % 32;
-                int remainingY = diffY % 20;
-
-                lastX = pos.X - remainingX;
-                lastY = pos.Y - remainingY;
+                gameView.NotifyDrag(0, 0, lastDragX - e.X, lastDragY - e.Y, Event.Button.Right);
+                lastDragX = e.X;
+                lastDragY = e.Y;
             }
             else
             {
-                lastX = int.MinValue;
-            }*/
-
-            pressedMouseButtons = e.Button;
+                lastDragX = int.MinValue;
+                lastDragY = int.MinValue;
+            }
         }
 
         private void RenderControl_MouseDown(object sender, MouseEventArgs e)
@@ -192,6 +181,12 @@ namespace Freeserf
 
             lastX = pos.X;
             lastY = pos.Y;*/
+
+            if (e.Button == MouseButtons.Right)
+            {
+                lastDragX = e.X;
+                lastDragY = e.Y;
+            }
 
             pressedMouseButtons |= e.Button;
 

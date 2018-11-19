@@ -258,6 +258,9 @@ namespace Freeserf
 
         public void PlaySound(Audio.TypeSfx sound)
         {
+            // TODO
+            return;
+
             Audio audio = Audio.Instance;
             Audio.Player player = audio.GetSoundPlayer();
 
@@ -368,10 +371,8 @@ namespace Freeserf
             return new Position((int)Math.Floor(position.X * factorX), (int)Math.Floor(position.Y * factorY));
         }
 
-        Position PositionToGame(Position position)
+        public static Position PositionGuiToGame(Position position, Render.IRenderView renderView)
         {
-            position = PositionToGui(position);
-
             float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
 
             position.X = Misc.Round(zoomFactor * position.X);
@@ -388,10 +389,8 @@ namespace Freeserf
             return new Size(Misc.Round(delta.Width * factorX), Misc.Round(delta.Height * factorY));
         }
 
-        Size DeltaToGame(Size delta)
+        public static Size DeltaGuiToGame(Size delta, Render.IRenderView renderView)
         {
-            delta = DeltaToGui(delta);
-
             float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
 
             delta.Width = Misc.Round(zoomFactor * delta.Width);
@@ -407,11 +406,8 @@ namespace Freeserf
 
         private bool RenderView_Drag(object sender, Event.EventArgs args)
         {
-            float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
-
-            var position = new Position((int)Math.Floor(args.X * factorX), (int)Math.Floor(args.Y * factorY));
-            var delta = new Size((int)Math.Round(args.Dx * factorX), (int)Math.Round(args.Dy * factorY));
+            var position = PositionToGui(new Position(args.X, args.Y));
+            var delta = DeltaToGui(new Size(args.Dx, args.Dy));
 
             args.X = position.X;
             args.Y = position.Y;
@@ -423,10 +419,7 @@ namespace Freeserf
 
         private bool RenderView_DoubleClick(object sender, Event.EventArgs args)
         {
-            float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
-
-            var position = new Position((int)Math.Floor(args.X * factorX), (int)Math.Floor(args.Y * factorY));
+            var position = PositionToGui(new Position(args.X, args.Y));
 
             args.X = position.X;
             args.Y = position.Y;
@@ -436,10 +429,7 @@ namespace Freeserf
 
         private bool RenderView_Click(object sender, Event.EventArgs args)
         {
-            float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
-
-            var position = new Position((int)Math.Floor(args.X  * factorX), (int)Math.Floor(args.Y * factorY));
+            var position = PositionToGui(new Position(args.X, args.Y));
 
             args.X = position.X;
             args.Y = position.Y;
