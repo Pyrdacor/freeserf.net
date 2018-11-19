@@ -36,7 +36,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public override int Size => size;
 
-        public override VertexAttribIntegerType Type => VertexAttribIntegerType.Byte;
+        public override VertexAttribIntegerType Type => VertexAttribIntegerType.UnsignedByte;
 
         public override int Dimension => 4;
 
