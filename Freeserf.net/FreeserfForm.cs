@@ -10,10 +10,19 @@ namespace Freeserf
     public partial class FreeserfForm : Form
     {
         GameView gameView = null;
+        bool fullscreen = false;
 
         public FreeserfForm()
         {
             InitializeComponent();
+        }
+
+        void SetClientSize(int width, int height)
+        {
+            int diffX = Width - RenderControl.Width;
+            int diffY = Height - RenderControl.Height;
+
+            Size = new System.Drawing.Size(width + diffX, height + diffY);
         }
 
         private void FreeserfForm_Load(object sender, EventArgs e)
@@ -29,6 +38,8 @@ namespace Freeserf
                 MessageBox.Show(this, "Error loading DOS data.", "Error");
                 Close();
             }
+
+            SetClientSize(1280, 960);
 
             gameView = new GameView(dosData, new Size(1280, 960), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
 
@@ -50,9 +61,54 @@ namespace Freeserf
             RenderControl.SwapBuffers();
         }
 
+
+        protected override void WndProc(ref System.Windows.Forms.Message m)
+        {
+            FormWindowState previousWindowState = this.WindowState;
+
+            base.WndProc(ref m);
+
+            FormWindowState currentWindowState = this.WindowState;
+
+            if (previousWindowState != currentWindowState)
+            {
+                if (currentWindowState == FormWindowState.Maximized)
+                    SetFullscreen(true);
+                else if (currentWindowState == FormWindowState.Normal)
+                    SetFullscreen(false);
+            }
+        }
+
+        void HandleFullscreenChange()
+        {
+            if (fullscreen)
+            {
+                FormBorderStyle = FormBorderStyle.None;
+                WindowState = FormWindowState.Maximized;
+                gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
+                TopMost = true;
+                BringToFront();
+            }
+            else
+            {
+                WindowState = FormWindowState.Normal;
+                FormBorderStyle = FormBorderStyle.FixedDialog;
+                SetClientSize(1280, 960);
+                gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
+                TopMost = false;
+            }
+        }
+
+        void SetFullscreen(bool fullscreen)
+        {
+            this.fullscreen = fullscreen;
+            HandleFullscreenChange();
+        }
+
         void ToggleFullscreen()
         {
-            // TODO
+            fullscreen = !fullscreen;
+            HandleFullscreenChange();
         }
 
         void ZoomIn()

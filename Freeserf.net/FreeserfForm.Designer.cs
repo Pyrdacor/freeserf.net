@@ -39,7 +39,7 @@
             this.RenderControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.RenderControl.Location = new System.Drawing.Point(0, 0);
             this.RenderControl.Name = "RenderControl";
-            this.RenderControl.Size = new System.Drawing.Size(800, 606);
+            this.RenderControl.Size = new System.Drawing.Size(184, 166);
             this.RenderControl.TabIndex = 0;
             this.RenderControl.VSync = false;
             this.RenderControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RenderControl_KeyDown);
@@ -58,11 +58,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 606);
+            this.ClientSize = new System.Drawing.Size(184, 166);
             this.Controls.Add(this.RenderControl);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.MaximizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(800, 600);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "FreeserfForm";
             this.Text = "Freeserf.net";
             this.Load += new System.EventHandler(this.FreeserfForm_Load);
