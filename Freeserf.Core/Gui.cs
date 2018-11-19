@@ -46,7 +46,7 @@ namespace Freeserf
             return spriteFactory.Create(width, height, offset.X, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
         }
 
-        readonly Dictionary<GuiObject, Position> floatWindows = new Dictionary<GuiObject, Position>();
+        readonly Dictionary<GuiObject, Position> children = new Dictionary<GuiObject, Position>();
         bool redraw = true;
         protected Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
@@ -124,8 +124,8 @@ namespace Freeserf
         {
             if (!Displayed)
             {
-                foreach (var floatWindow in floatWindows)
-                    floatWindow.Key.Displayed = false;
+                foreach (var child in children)
+                    child.Key.Displayed = false;
             }
         }
 
@@ -170,9 +170,9 @@ namespace Freeserf
             {
                 InternalDraw();
 
-                foreach (var floatWindow in floatWindows)
+                foreach (var child in children)
                 {
-                    floatWindow.Key.Draw();
+                    child.Key.Draw();
                 }
 
                 redraw = false;
@@ -184,8 +184,8 @@ namespace Freeserf
             X = x;
             Y = y;
 
-            foreach (var floatWindow in floatWindows)
-                floatWindow.Key.MoveTo(X + floatWindow.Value.X, Y + floatWindow.Value.Y);
+            foreach (var child in children)
+                child.Key.MoveTo(X + child.Value.X, Y + child.Value.Y);
 
             SetRedraw();
         }
@@ -212,17 +212,18 @@ namespace Freeserf
                    pointX < X + Width && pointY < Y + Height;
         }
 
-        public void AddFloatWindow(GuiObject obj, int x, int y)
+        public void AddChild(GuiObject obj, int x, int y, bool displayed = true)
         {
             obj.Parent = this;
-            floatWindows.Add(obj, new Position(x, y));
+            children.Add(obj, new Position(x, y));
             obj.MoveTo(X + x, Y + y); // will call SetRedraw
+            obj.Displayed = displayed;
         }
 
-        public void DeleteFloatWindow(GuiObject obj)
+        public void DeleteChild(GuiObject obj)
         {
             obj.Parent = null;
-            floatWindows.Remove(obj);
+            children.Remove(obj);
             SetRedraw();
         }
 
@@ -241,6 +242,18 @@ namespace Freeserf
                 FocusedObject = this;
                 SetRedraw();
             }
+        }
+
+        public static void LooseFocus()
+        {
+            if (FocusedObject != null)
+            {
+                FocusedObject.focused = false;
+                FocusedObject.HandleFocusLoose();
+                FocusedObject.SetRedraw();
+            }
+
+            FocusedObject = null;
         }
 
         public void PlaySound(Audio.TypeSfx sound)
@@ -273,22 +286,19 @@ namespace Freeserf
                 e.Type == Event.Type.DoubleClick ||
                 e.Type == Event.Type.Drag)
             {
-                eventX = e.X - X;
-                eventY = e.Y - Y;
+                int objectX = e.X - X;
+                int objectY = e.Y - Y;
 
-                if (eventX < 0 || eventY < 0 || eventX > Width || eventY > Height)
+                if (objectX < 0 || objectY < 0 || objectX > Width || objectY > Height)
                 {
                     return false;
                 }
             }
 
-            Event.EventArgs internalEvent = new Event.EventArgs(
-                e.Type, eventX, eventY, e.Dx, e.Dy, e.Button);
-
-            /* Find the corresponding float element if any */
-            foreach (var floatWindow in floatWindows)
+            /* Find the corresponding child element if any */
+            foreach (var child in children)
             {
-                if (floatWindow.Key.HandleEvent(internalEvent))
+                if (child.Key.HandleEvent(e))
                 {
                     return true;
                 }
@@ -405,6 +415,167 @@ namespace Freeserf
                 args.Done = interf.HandleEvent(args);
 
             return args.Done;
+        }
+    }
+
+    internal class Icon : GuiObject
+    {
+        Render.ILayerSprite sprite = null;
+        readonly byte displayLayerOffset = 0;
+        readonly Data.Resource resourceType = Data.Resource.None;
+
+        public Icon(Interface interf, int width, int height, Data.Resource resourceType, uint spriteIndex, byte displayLayerOffset)
+            : base(interf)
+        {
+            sprite = CreateSprite(interf.RenderView.SpriteFactory, width, height, resourceType, spriteIndex, (byte)(BaseDisplayLayer + displayLayerOffset));
+            this.displayLayerOffset = displayLayerOffset;
+            this.resourceType = resourceType;
+            sprite.Layer = Layer;
+
+            SetSize(width, height);
+        }
+
+        protected override void InternalDraw()
+        {
+            sprite.X = X;
+            sprite.Y = Y;
+            sprite.Visible = Displayed;
+        }
+
+        protected internal override void UpdateParent()
+        {
+            sprite.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset);
+        }
+
+        protected override void InternalHide()
+        {
+            base.InternalHide();
+
+            sprite.Visible = false;
+        }
+
+        public void SetSpriteIndex(uint spriteIndex)
+        {
+            sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, spriteIndex);
+        }
+    }
+
+    internal class Button : Icon
+    {
+        public class ClickEventArgs : EventArgs
+        {
+            public int X { get; }
+            public int Y { get; }
+
+            public ClickEventArgs(int x, int y)
+            {
+                X = x;
+                Y = y;
+            }
+        }
+
+        public delegate void ClickEventHandler(object sender, ClickEventArgs args);
+
+        public event ClickEventHandler Clicked;
+
+        public Button(Interface interf, int width, int height, Data.Resource resourceType, uint spriteIndex, byte displayLayerOffset)
+            : base(interf, width, height, resourceType, spriteIndex, displayLayerOffset)
+        {
+
+        }
+
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            Clicked?.Invoke(this, new ClickEventArgs(x - X, y - Y));
+
+            return true;
+        }
+    }
+
+    internal class TextField
+    {
+        readonly Render.TextRenderer textRenderer;
+        int index = -1;
+        string text = "";
+        byte displayLayer = 0;
+
+        public int X { get; private set; } = 0;
+        public int Y { get; private set; } = 0;
+
+        public byte DisplayLayer
+        {
+            get => displayLayer;
+            set
+            {
+                if (displayLayer == value)
+                    return;
+
+                displayLayer = value;
+
+                if (index != -1)
+                    textRenderer.ChangeDisplayLayer(index, displayLayer);
+            }
+        }
+
+        public TextField(Render.TextRenderer textRenderer)
+        {
+            this.textRenderer = textRenderer;
+        }
+
+        public void Destroy()
+        {
+            if (index != -1)
+                textRenderer.DestroyText(index);
+
+            text = "";
+            index = -1;
+        }
+
+        public string Text
+        {
+            get => text;
+            set
+            {
+                if (text == value)
+                    return;
+
+                text = value;
+
+                if (index == -1)
+                    index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
+                else
+                    textRenderer.ChangeText(index, text, DisplayLayer);
+            }
+        }
+
+        public bool Visible
+        {
+            get
+            {
+                if (index == -1)
+                    return false;
+
+                return textRenderer.IsVisible(index);
+            }
+            set
+            {
+                if (index == -1 && !value)
+                    return;
+
+                if (index == -1 && value)
+                    index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
+
+                textRenderer.ShowText(index, value);
+            }
+        }
+
+        public void SetPosition(int x, int y)
+        {
+            if (index != -1)
+                textRenderer.SetPosition(index, new Position(x, y));
+
+            X = x;
+            Y = y;
         }
     }
 }

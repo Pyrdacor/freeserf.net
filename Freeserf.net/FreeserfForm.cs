@@ -42,16 +42,6 @@ namespace Freeserf
             if (!GameManager.Instance.StartGame(GameInfo.GetMission(29), gameView))
                 throw new ExceptionFreeserf("Failed to start game.");
 
-            game = GameManager.Instance.GetCurrentGame();
-
-            game.Map.AttachToRenderLayer(gameView.GetLayer(Layer.Landscape), dosData);
-
-            var pos = game.GetPlayer(0u).CastlePos;
-            uint column = game.Map.PosColumn(pos);
-            uint row = game.Map.PosRow(pos);
-
-            game.Map.ScrollTo(column, row);
-
             RenderControl.MouseWheel += RenderControl_MouseWheel;
 
             FrameTimer.Start();
@@ -61,7 +51,7 @@ namespace Freeserf
         {
             RenderControl.MakeCurrent();
 
-            game.Update();
+            //game.Update();
             gameView.Render();
 
             RenderControl.SwapBuffers();

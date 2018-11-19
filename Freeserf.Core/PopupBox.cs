@@ -420,7 +420,7 @@ namespace Freeserf
             MiniMap.Displayed = false;
             MiniMap.Parent = this;
             MiniMap.SetSize(128, 128);
-            AddFloatWindow(MiniMap, 8, 9);
+            AddChild(MiniMap, 8, 9);
 
             fileList.SetSize(120, 100);
             fileList.Displayed = false;
@@ -430,11 +430,11 @@ namespace Freeserf
                 string fileName = item.Substring(pos + 1);
                 fileField.Text = fileName;
             });
-            AddFloatWindow(fileList, 12, 22);
+            AddChild(fileList, 12, 22);
 
             fileField.SetSize(120, 10);
             fileField.Displayed = false;
-            AddFloatWindow(fileField, 12, 124);
+            AddChild(fileField, 12, 124);
 
             InitRenderComponents();
         }

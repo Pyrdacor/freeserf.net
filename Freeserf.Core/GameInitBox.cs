@@ -23,9 +23,6 @@
 using System;
 using System.Collections.Generic;
 
-// TODO: changing from gametype load to something different will not re-show the player values in the boxes.
-// In Debug with breakpoint it seem to show up.
-
 namespace Freeserf
 {
     class RandomInput : TextInput
@@ -91,33 +88,6 @@ namespace Freeserf
 
     internal class GameInitBox : GuiObject
     {
-        static readonly Dictionary<Action, Rect> ClickmapGeneral = new Dictionary<Action, Rect>
-        {
-            { Action.StartGame,         new Rect( 20, 16,  32, 32) },
-            { Action.ToggleGameType,    new Rect( 60, 16,  32, 32) },
-            { Action.ShowOptions,       new Rect(308, 16,  32, 32) },
-            { Action.Close,             new Rect(324, 216, 16, 16) }
-        };
-
-        static readonly Dictionary<Action, Rect> ClickmapMission = new Dictionary<Action, Rect>(ClickmapGeneral)
-        {
-            { Action.Increment,         new Rect(284, 16, 16, 16) },
-            { Action.Decrement,         new Rect(284, 32, 16, 16) }
-        };
-
-        static readonly Dictionary<Action, Rect> ClickmapCustom = new Dictionary<Action, Rect>(ClickmapGeneral)
-        {
-            { Action.Increment,         new Rect(220, 24, 24, 24) },
-            { Action.Decrement,         new Rect(220, 16,  8,  8) },
-            { Action.GenRandom,         new Rect(244, 16, 16,  8) },
-            { Action.ApplyRandom,       new Rect(244, 24, 16, 24) }
-        };
-
-        static readonly Dictionary<Action, Rect> ClickmapLoad = new Dictionary<Action, Rect>(ClickmapGeneral)
-        {
-            // no additional actions
-        };
-
         public enum Action
         {
             StartGame,
@@ -165,18 +135,18 @@ namespace Freeserf
 
         // rendering
         readonly List<Render.ILayerSprite> background = new List<Render.ILayerSprite>();
-        Render.ILayerSprite buttonStart = null;
-        Render.ILayerSprite buttonOptions = null;
-        Render.ILayerSprite iconGameType = null;
-        Render.TextField textFieldHeader = null;
-        Render.TextField textFieldName = null;
-        Render.TextField textFieldValue = null;
-        Render.ILayerSprite buttonUp = null;
-        Render.ILayerSprite buttonDown = null;
-        Render.ILayerSprite buttonMapSize = null;
+        Button buttonStart = null;
+        Button buttonOptions = null;
+        Button buttonGameType = null;
+        TextField textFieldHeader = null;
+        TextField textFieldName = null;
+        TextField textFieldValue = null;
+        Button buttonUp = null;
+        Button buttonDown = null;
+        Button buttonMapSize = null;
         readonly PlayerBox[] playerBoxes = new PlayerBox[4];
-        Render.TextField textFieldVersion = null;
-        Render.ILayerSprite buttonExit = null;
+        TextField textFieldVersion = null;
+        Button buttonExit = null;
 
         class PlayerBox
         {
@@ -222,6 +192,13 @@ namespace Freeserf
                 suppliesValue.Layer = layer;
                 intelligenceValue.Layer = layer;
                 reproductionValue.Layer = layer;
+            }
+
+            public Rect Area => new Rect(x, y, 80, 80);
+
+            public Rect GetValueRect(int valueIndex)
+            {
+                return new Rect(x + 44 + valueIndex * 6, valueBaseLineY - 40, 4, 40);
             }
 
             public bool Visible
@@ -270,11 +247,11 @@ namespace Freeserf
 
             public void SetPosition(int baseX, int baseY, int x, int y)
             {
-                if (this.x  == baseX + x && this.y == baseY + y)
+                if (this.x  == baseX + 8 * x + 20 && this.y == baseY + y + 16)
                     return;
 
-                this.x = baseX + x;
-                this.y = baseY + y;
+                this.x = baseX + 8 * x + 20;
+                this.y = baseY + y + 16;
 
                 SetChildPosition(baseX, baseY, x + 1, y + 8, playerImage);
                 SetChildPosition(baseX, baseY, x + 6, y + 8, playerValueBox);
@@ -353,19 +330,16 @@ namespace Freeserf
             mission = customMission;
 
             minimap = new Minimap(interf);
-            minimap.Displayed = true;
             minimap.SetSize(150, 160);
-            AddFloatWindow(minimap, 190, 55);
+            AddChild(minimap, 190, 55, true);
 
             GenerateMapPreview();
 
             randomInput.SetRandom(customMission.RandomBase);
-            randomInput.Displayed = true;
-            AddFloatWindow(randomInput, 15 + 31 * 8, 15);
+            AddChild(randomInput, 15 + 31 * 8, 15, true);
 
             fileList = new ListSavedFiles(interf);
             fileList.SetSize(160, 160);
-            fileList.Displayed = false;
             fileList.SetSelectionHandler((string item) =>
             {
                 Game game = new Game(interf.RenderView);
@@ -376,7 +350,7 @@ namespace Freeserf
                     minimap.SetMap(map);
                 }
             });
-            AddFloatWindow(fileList, 20, 55);
+            AddChild(fileList, 20, 55, false);
 
             InitRenderComponents();
         }
@@ -385,35 +359,45 @@ namespace Freeserf
         {
             var spriteFactory = interf.RenderView.SpriteFactory;
             var type = Data.Resource.Icon;
-            var buttonLayer = (byte)(BaseDisplayLayer + 1);
-            var bgLayer = BaseDisplayLayer;
+            byte buttonLayer = 1;
+            byte bgLayer = 0;
 
-            buttonStart = CreateSprite(spriteFactory, 32, 32, type, 266u, buttonLayer);
-            buttonStart.Layer = Layer;
-            buttonOptions = CreateSprite(spriteFactory, 32, 32, type, 267u, buttonLayer);
-            buttonOptions.Layer = Layer;
+            buttonStart = new Button(interf, 32, 32, type, 266u, 1);
+            buttonStart.Clicked += ButtonStart_Clicked;
+            AddChild(buttonStart, 20, 16);
 
-            textFieldHeader = new Render.TextField(interf.TextRenderer);
-            textFieldName = new Render.TextField(interf.TextRenderer);
-            textFieldValue = new Render.TextField(interf.TextRenderer);
+            buttonOptions = new Button(interf, 32, 32, type, 267u, buttonLayer);
+            buttonOptions.Clicked += ButtonOptions_Clicked;
+            AddChild(buttonOptions, 8 * 36 + 20, 16);
 
-            iconGameType = spriteFactory.Create(32, 32, 0, 0, false, true, buttonLayer) as Render.ILayerSprite;
-            iconGameType.Layer = Layer;
+            textFieldHeader = new TextField(interf.TextRenderer);
+            textFieldName = new TextField(interf.TextRenderer);
+            textFieldValue = new TextField(interf.TextRenderer);
 
-            buttonUp = CreateSprite(spriteFactory, 16, 16, type, 237u, buttonLayer);
-            buttonUp.Layer = Layer;
-            buttonDown = CreateSprite(spriteFactory, 16, 16, type, 240u, buttonLayer);
-            buttonDown.Layer = Layer;
-            buttonMapSize = CreateSprite(spriteFactory, 40, 32, type, 265u, buttonLayer);
-            buttonMapSize.Layer = Layer;
+            buttonGameType = new Button(interf, 32, 32, type, GameTypeSprites[(int)gameType], buttonLayer);
+            buttonGameType.Clicked += ButtonGameType_Clicked;
+            AddChild(buttonGameType, 8 * 5 + 20, 16);
+
+            buttonUp = new Button(interf, 16, 16, type, 237u, buttonLayer);
+            buttonUp.Clicked += ButtonUp_Clicked;
+            AddChild(buttonUp, 8 * 33 + 20, 16, false);
+
+            buttonDown = new Button(interf, 16, 16, type, 240u, buttonLayer);
+            buttonDown.Clicked += ButtonDown_Clicked;
+            AddChild(buttonDown, 8 * 33 + 20, 32, false);
+
+            buttonMapSize = new Button(interf, 40, 32, type, 265u, buttonLayer);
+            buttonMapSize.Clicked += ButtonMapSize_Clicked;
+            AddChild(buttonMapSize, 8 * 25 + 20, 16, true);
 
             for (int i = 0; i < 4; ++i)
                 playerBoxes[i] = new PlayerBox(interf, buttonLayer);
 
-            textFieldVersion = new Render.TextField(interf.TextRenderer);
+            textFieldVersion = new TextField(interf.TextRenderer);
 
-            buttonExit = CreateSprite(spriteFactory, 16, 16, type, 60u, buttonLayer);
-            buttonExit.Layer = Layer;
+            buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
+            buttonExit.Clicked += ButtonExit_Clicked;
+            AddChild(buttonExit, 8 * 38 + 20, 224);
 
             // We create a compound background in the TextureAtlasManager with
             // sprite index 318 inside the icon resources.
@@ -437,11 +421,68 @@ namespace Freeserf
             }
         }
 
+        private void ButtonStart_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            HandleAction(Action.StartGame);
+        }
+
+        private void ButtonOptions_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            HandleAction(Action.ShowOptions);
+        }
+
+        private void ButtonGameType_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            HandleAction(Action.ToggleGameType);
+        }
+
+        private void ButtonExit_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            HandleAction(Action.Close);
+        }
+
+        private void ButtonMapSize_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            if (e.X < 8 && e.Y < 8)
+            {
+                HandleAction(Action.Decrement);
+            }
+            else if (e.X < 24 && e.Y >= 8 && e.Y < 32)
+            {
+                HandleAction(Action.Increment);
+            }
+            else if (e.X >= 24 && e.X < 40)
+            {
+                if (e.Y < 8)
+                    HandleAction(Action.GenRandom);
+                else if (e.Y < 48)
+                    HandleAction(Action.ApplyRandom);
+            }
+        }
+
+        private void ButtonUp_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            HandleAction(Action.Decrement);
+        }
+
+        private void ButtonDown_Clicked(object sender, Button.ClickEventArgs e)
+        {
+            HandleAction(Action.Increment);
+        }
+
         protected internal override void UpdateParent()
         {
             randomInput?.UpdateParent();
             minimap?.UpdateParent();
             fileList?.UpdateParent();
+
+            buttonStart?.UpdateParent();
+            buttonOptions?.UpdateParent();
+            buttonGameType?.UpdateParent();
+            buttonUp?.UpdateParent();
+            buttonDown?.UpdateParent();
+            buttonMapSize?.UpdateParent();
+            buttonExit?.UpdateParent();
         }
 
         void DrawButton(int x, int y, Render.ILayerSprite button)
@@ -457,7 +498,7 @@ namespace Freeserf
             button.Visible = false;
         }
 
-        void HideBoxString(Render.TextField textField)
+        void HideBoxString(TextField textField)
         {
             textField.Visible = false;
         }
@@ -472,12 +513,7 @@ namespace Freeserf
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, spriteIndex);
         }
 
-        void DrawGameTypeIcon(int x, int y)
-        {
-            DrawBoxIcon(x, y, iconGameType, GameTypeSprites[(int)gameType]);
-        }
-
-        void DrawBoxString(int x, int y, Render.TextField textField, string str)
+        void DrawBoxString(int x, int y, TextField textField, string str)
         {
             textField.SetPosition(X + 8 * x + 20, Y + y + 16);
             textField.Text = str;
@@ -513,12 +549,6 @@ namespace Freeserf
             }
         }
 
-        void DrawDefaultButtons()
-        {
-            DrawButton(0, 0, buttonStart);
-            DrawButton(36, 0, buttonOptions);
-        }
-
         protected override void InternalHide()
         {
             base.InternalHide();
@@ -526,28 +556,21 @@ namespace Freeserf
             foreach (var bg in background)
                 bg.Visible = false;
 
-            buttonStart.Visible = false;
-            buttonOptions.Visible = false;
-            iconGameType.Visible = false;
             textFieldHeader.Visible = false;
             textFieldName.Visible = false;
             textFieldValue.Visible = false;
-            buttonUp.Visible = false;
-            buttonDown.Visible = false;
-            buttonMapSize.Visible = false;
 
             for (int i = 0; i < 4; ++i)
                 playerBoxes[i].Visible = false;
 
             textFieldVersion.Visible = false;
-            buttonExit.Visible = false;
         }
 
         protected override void InternalDraw()
         {
             DrawBackground();
-            DrawDefaultButtons();
-            DrawGameTypeIcon(5, 0);
+
+            buttonGameType.SetSpriteIndex(GameTypeSprites[(int)gameType]);
 
             switch (gameType)
             {
@@ -556,27 +579,27 @@ namespace Freeserf
                     DrawBoxString(10, 18, textFieldName, "Mapsize:");
                     DrawBoxString(20, 18, textFieldValue, mission.MapSize.ToString());
 
-                    DrawButton(25, 0, buttonMapSize);
-                    HideButton(buttonUp);
-                    HideButton(buttonDown);
+                    buttonUp.Displayed = false;
+                    buttonDown.Displayed = false;
+                    buttonMapSize.Displayed = true;
                     break;
                 case GameType.Mission:
                     DrawBoxString(10, 2, textFieldHeader, "Start mission");
                     DrawBoxString(10, 18, textFieldName, "Mission:");
                     DrawBoxString(18, 18, textFieldValue, (gameMission + 1).ToString());
 
-                    DrawButton(33, 0, buttonUp);
-                    DrawButton(33, 16, buttonDown);
-                    HideButton(buttonMapSize);
+                    buttonUp.Displayed = true;
+                    buttonDown.Displayed = true;
+                    buttonMapSize.Displayed = false;
                     break;
                 case GameType.Load:
                     DrawBoxString(10, 2, textFieldHeader, "Load game");
                     HideBoxString(textFieldName);
                     HideBoxString(textFieldValue);
 
-                    HideButton(buttonUp);
-                    HideButton(buttonDown);
-                    HideButton(buttonMapSize);
+                    buttonUp.Displayed = false;
+                    buttonDown.Displayed = false;
+                    buttonMapSize.Displayed = false;
                     break;
             }
 
@@ -615,8 +638,6 @@ namespace Freeserf
 
             /* Display program name and version in caption */
             DrawBoxString(0, 212, textFieldVersion, Freeserf.VERSION);
-
-            DrawButton(38, 208, buttonExit);
         }
 
         public void HandleAction(Action action)
@@ -738,52 +759,19 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
-            Dictionary<Action, Rect> clickmap = null;
-
-            switch (gameType)
-            {
-                case GameType.Mission:
-                    clickmap = ClickmapMission;
-                    break;
-                case GameType.Custom:
-                    clickmap = ClickmapCustom;
-                    break;
-                case GameType.Load:
-                    clickmap = ClickmapLoad;
-                    break;
-                default:
-                    return false;
-            }
-
             var clickPosition = new Position(x, y);
-
-            foreach (var clickArea in  clickmap)
-            {
-                if (clickArea.Value.Contains(clickPosition))
-                {
-                    SetRedraw();
-                    HandleAction(clickArea.Key);
-                    return true;
-                }
-            }
-
-            /* Check player area */
-            int lx = 0;
-            int ly = 0;
 
             for (uint i = 0; i < 4; ++i)
             {
-                var playerRect = new Rect(20 + lx * 80, 56 + ly * 80, 80, 80);
-                
-                if (playerRect.Contains(clickPosition))
+                var area = playerBoxes[i].Area;
+
+                if (area.Contains(clickPosition))
                 {
-                    if (HandlePlayerClick(i, clickPosition.X - playerRect.Position.X, clickPosition.Y - playerRect.Position.Y))
+                    if (HandlePlayerClick(i, clickPosition.X - area.Position.X, clickPosition.Y - area.Position.Y))
                     {
                         break;
                     }
                 }
-
-                ++lx;
             }
 
             return true;

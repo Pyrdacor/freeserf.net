@@ -152,7 +152,7 @@ namespace Freeserf
         {
             if (Viewport != null)
             {
-                DeleteFloatWindow(Viewport);
+                DeleteChild(Viewport);
                 Viewport = null;
             }
 
@@ -163,7 +163,19 @@ namespace Freeserf
             {
                 Viewport = new Viewport(this, Game.Map);
                 Viewport.Displayed = true;
-                AddFloatWindow(Viewport, 0, 0);
+                AddChild(Viewport, 0, 0);
+
+                game.Map.AttachToRenderLayer(RenderView.GetLayer(global::Freeserf.Layer.Landscape), RenderView.DataSource);
+
+                var pos = game.GetPlayer(0u).CastlePos;
+
+                if (pos != Global.BadMapPos)
+                {
+                    uint column = game.Map.PosColumn(pos);
+                    uint row = game.Map.PosRow(pos);
+
+                    game.Map.ScrollTo(column, row);
+                }
             }
 
             Layout();
@@ -245,7 +257,7 @@ namespace Freeserf
             if (PopupBox == null)
             {
                 PopupBox = new PopupBox(this);
-                AddFloatWindow(PopupBox, 0, 0);
+                AddChild(PopupBox, 0, 0);
             }
 
             base.Layout();
@@ -266,7 +278,7 @@ namespace Freeserf
             }
 
             PopupBox.Hide();
-            DeleteFloatWindow(PopupBox);
+            DeleteChild(PopupBox);
             PopupBox = null;
             UpdateMapCursorPos(mapCursorPos);
             PanelBar.Update();
@@ -278,7 +290,7 @@ namespace Freeserf
             if (initBox == null)
             {
                 initBox = new GameInitBox(this);
-                AddFloatWindow(initBox, 0, 0);
+                AddChild(initBox, 0, 0);
             }
 
             initBox.Displayed = true;
@@ -298,7 +310,7 @@ namespace Freeserf
             if (initBox != null)
             {
                 initBox.Displayed = false;
-                DeleteFloatWindow(initBox);
+                DeleteChild(initBox);
                 initBox = null;
             }
 
@@ -343,7 +355,7 @@ namespace Freeserf
             if (NotificationBox == null)
             {
                 NotificationBox = new NotificationBox(this);
-                AddFloatWindow(NotificationBox, 0, 0);
+                AddChild(NotificationBox, 0, 0);
             }
 
             NotificationBox.Show(message);
@@ -389,7 +401,7 @@ namespace Freeserf
             }
 
             NotificationBox.Displayed = false;
-            DeleteFloatWindow(NotificationBox);
+            DeleteChild(NotificationBox);
             NotificationBox = null;
             base.Layout();
         }
@@ -413,7 +425,7 @@ namespace Freeserf
 
             if (PanelBar != null)
             {
-                DeleteFloatWindow(PanelBar);
+                DeleteChild(PanelBar);
                 PanelBar = null;
             }
 
@@ -426,7 +438,7 @@ namespace Freeserf
             {
                 PanelBar = new PanelBar(this);
                 PanelBar.Displayed = true;
-                AddFloatWindow(PanelBar, 0, 0);
+                AddChild(PanelBar, 0, 0);
                 Layout();
 
                 foreach (Building building in Game.GetPlayerBuildings(this.player))
@@ -1236,7 +1248,7 @@ namespace Freeserf
             SetPlayer(0);
         }
 
-        public  void OnEndGame(Game game)
+        public void OnEndGame(Game game)
         {
             SetGame(null);
         }

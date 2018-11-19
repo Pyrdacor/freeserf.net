@@ -37,7 +37,7 @@ namespace Freeserf
         Render.Color colorBackground = Render.Color.Black;
         bool drawFocus = true;
         Render.IColoredRect background = null;
-        readonly List<Render.TextField> textLines = new List<Render.TextField>();
+        readonly List<TextField> textLines = new List<TextField>();
         readonly Render.TextRenderer textRenderer = null;
         
         public TextInput(Interface interf)
@@ -136,7 +136,7 @@ namespace Freeserf
 
                 if (textLineIndex == textLines.Count)
                 {
-                    var newLine = new Render.TextField(textRenderer);
+                    var newLine = new TextField(textRenderer);
 
                     newLine.SetPosition(X + cx, Y + cy);
 
