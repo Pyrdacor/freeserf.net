@@ -117,8 +117,8 @@ namespace Freeserf.Renderer.OpenTK
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
                             // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Ceiling(size.Width * factorX + 0.49f);
-                            int height = (size.Height == 0) ? 0 : Misc.Ceiling(size.Height * factorY + 0.49f);
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX + 0.75f);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY + 0.75f);
 
                             return new Size(width, height);
                         };
