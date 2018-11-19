@@ -508,6 +508,10 @@ namespace Freeserf
                                             playerInfo.Supplies,
                                             playerInfo.Reproduction);
                 Player player = game.GetPlayer(index);
+
+                if (playerInfo.Face < 12) // not you or your partner
+                    player.AI = new AI(player, playerInfo);
+
                 player.InitView(playerInfo.Color, playerInfo.Face);
 
                 PlayerInfo.Pos castlePos = playerInfo.CastlePos;

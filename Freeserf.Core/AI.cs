@@ -36,6 +36,9 @@ namespace Freeserf
     /// </summary>
     public class AI
     {
+        Player player = null;
+        PlayerInfo playerInfo = null;
+
         /// <summary>
         /// How aggressive (2 = very aggressive)
         /// </summary>
@@ -86,6 +89,12 @@ namespace Freeserf
          * - Will try to attack strategic spots of the enemy
          * - Prefers attacking spots of the enemy that are able to capture
          */
+
+        public AI(Player player, PlayerInfo playerInfo)
+        {
+            this.player = player;
+            this.playerInfo = playerInfo;
+        }
 
         /// <summary>
         /// This is called if an enemy is in range to attack the castle.

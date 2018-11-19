@@ -233,9 +233,7 @@ namespace Freeserf
             if (face < 12)
             { 
                 /* AI player */
-                flags |= Misc.BitU(7); /* Set AI bit */
-                                       /* TODO ... */
-                                       /*Game.max_next_index = 49;*/
+                flags |= Misc.BitU(7);
             }
 
             if (IsAi())
