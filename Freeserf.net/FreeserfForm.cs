@@ -11,6 +11,7 @@ namespace Freeserf
     {
         GameView gameView = null;
         bool fullscreen = false;
+        MouseButtons pressedMouseButtons = MouseButtons.None;
 
         public FreeserfForm()
         {
@@ -176,6 +177,8 @@ namespace Freeserf
             {
                 lastX = int.MinValue;
             }*/
+
+            pressedMouseButtons = e.Button;
         }
 
         private void RenderControl_MouseDown(object sender, MouseEventArgs e)
@@ -190,7 +193,19 @@ namespace Freeserf
             lastX = pos.X;
             lastY = pos.Y;*/
 
-            
+            pressedMouseButtons |= e.Button;
+
+            if (pressedMouseButtons == (MouseButtons.Left | MouseButtons.Right))
+            {
+                gameView?.NotifySpecialClick(e.X, e.Y);
+                pressedMouseButtons = MouseButtons.None;
+            }
+        }
+
+        private void RenderControl_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.None)
+                pressedMouseButtons &= ~e.Button;
         }
 
         private void RenderControl_KeyDown(object sender, KeyEventArgs e)
@@ -261,10 +276,7 @@ namespace Freeserf
 
         private void RenderControl_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == (MouseButtons.Left | MouseButtons.Right))
-                gameView?.NotifySpecialClick(e.X, e.Y);
-            else
-                gameView?.NotifyClick(e.X, e.Y, ConvertMouseButton(e.Button));
+            gameView?.NotifyClick(e.X, e.Y, ConvertMouseButton(e.Button));
         }
 
         private void RenderControl_MouseDoubleClick(object sender, MouseEventArgs e)

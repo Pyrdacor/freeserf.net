@@ -316,6 +316,7 @@ namespace Freeserf
                     result = HandleDrag(e.Dx, e.Dy);
                     break;
                 case Event.Type.DoubleClick:
+                case Event.Type.SpecialClick:
                     result = HandleDoubleClick(e.X, e.Y, e.Button);
                     break;
                 case Event.Type.KeyPressed:
@@ -352,6 +353,7 @@ namespace Freeserf
 
             renderView.Click += RenderView_Click;
             renderView.DoubleClick += RenderView_DoubleClick;
+            renderView.SpecialClick += RenderView_DoubleClick;
             renderView.Drag += RenderView_Drag;
             renderView.KeyPress += RenderView_KeyPress;
         }
