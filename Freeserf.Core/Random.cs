@@ -118,7 +118,7 @@ namespace Freeserf
             {
                 byte c = (byte)(tmp & 0x07);
                 c += (byte)'1';
-                str += c;
+                str += (char)c;
                 tmp >>= 3;
             }
 
