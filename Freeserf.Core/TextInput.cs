@@ -132,7 +132,7 @@ namespace Freeserf
                 {
                     var newLine = new Render.TextField(textRenderer);
 
-                    newLine.SetPosition(cx, cy);
+                    newLine.SetPosition(X + cx, Y + cy);
 
                     textLines.Add(newLine);
                 }
@@ -140,6 +140,7 @@ namespace Freeserf
                 textLines[textLineIndex].Text = substr; // TODO: we need a possibility to set a color for textured sprites
                 textLines[textLineIndex].Visible = true;
                 // TODO: set color to colorText
+                textLines[textLineIndex].DisplayLayer = (byte)(BaseDisplayLayer + 1);
 
                 ++textLineIndex;
 
