@@ -1142,7 +1142,7 @@ namespace Freeserf
                         {
                             ClosePopup();
                         }
-                        else if (buildingRoad.Valid)
+                        else if (IsBuildingRoad())
                         {
                             BuildRoadEnd();
                         }
