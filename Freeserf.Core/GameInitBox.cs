@@ -30,10 +30,13 @@ namespace Freeserf
         string savedText = "";
 
         public RandomInput(Interface interf)
-            : base(interf)
+            : base(interf, true)
         {
+            BackgroundColor = new Render.Color(0x23, 0x43, 0x00);
+            BackgroundFocusColor = new Render.Color(0x23, 0x43, 0x00);
+
             SetFilter(TextInputFilter);
-            SetSize(34, 34);
+            SetSize(3 * 9 + 8, 3 * 9 + 8 + 1);
             MaxLength = 16;
         }
 
@@ -197,11 +200,6 @@ namespace Freeserf
 
             public Rect Area => new Rect(x, y, 80, 80);
 
-            public Rect GetValueRect(int valueIndex)
-            {
-                return new Rect(x + 44 + valueIndex * 6, valueBaseLineY - 40, 4, 40);
-            }
-
             public bool Visible
             {
                 get => visible;
@@ -332,12 +330,12 @@ namespace Freeserf
 
             minimap = new Minimap(interf);
             minimap.SetSize(150, 160);
-            AddChild(minimap, 190, 55, true);
+            AddChild(minimap, 182, 55, true);
 
             GenerateMapPreview();
 
             randomInput.SetRandom(customMission.RandomBase);
-            AddChild(randomInput, 15 + 31 * 8, 15, true);
+            AddChild(randomInput, 8 + 31 * 8, 12, true);
 
             fileList = new ListSavedFiles(interf);
             fileList.SetSize(160, 160);
@@ -370,7 +368,7 @@ namespace Freeserf
 
             buttonOptions = new Button(interf, 32, 32, type, 267u, buttonLayer);
             buttonOptions.Clicked += ButtonOptions_Clicked;
-            AddChild(buttonOptions, 8 * 36 + 20, 16);
+            AddChild(buttonOptions, 8 * 36 + 12, 16);
 
             textFieldHeader = new TextField(interf.TextRenderer);
             textFieldName = new TextField(interf.TextRenderer);
@@ -382,15 +380,15 @@ namespace Freeserf
 
             buttonUp = new Button(interf, 16, 16, type, 237u, buttonLayer);
             buttonUp.Clicked += ButtonUp_Clicked;
-            AddChild(buttonUp, 8 * 33 + 20, 16, false);
+            AddChild(buttonUp, 8 * 33 + 12, 16, false);
 
             buttonDown = new Button(interf, 16, 16, type, 240u, buttonLayer);
             buttonDown.Clicked += ButtonDown_Clicked;
-            AddChild(buttonDown, 8 * 33 + 20, 32, false);
+            AddChild(buttonDown, 8 * 33 + 12, 32, false);
 
             buttonMapSize = new Button(interf, 40, 32, type, 265u, buttonLayer);
             buttonMapSize.Clicked += ButtonMapSize_Clicked;
-            AddChild(buttonMapSize, 8 * 25 + 20, 16, true);
+            AddChild(buttonMapSize, 8 * 25 + 12, 16, true);
 
             for (int i = 0; i < 4; ++i)
                 playerBoxes[i] = new PlayerBox(interf, buttonLayer);
@@ -399,7 +397,7 @@ namespace Freeserf
 
             buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
             buttonExit.Clicked += ButtonExit_Clicked;
-            AddChild(buttonExit, 8 * 38 + 20, 224);
+            AddChild(buttonExit, 8 * 38 + 12, 170);
 
             borders[0] = CreateSprite(spriteFactory, 320, 8, Data.Resource.FrameTop, 2u, (byte)(BaseDisplayLayer + borderLayer));
             borders[1] = CreateSprite(spriteFactory, 16, 200, Data.Resource.FrameTop, 0u, (byte)(BaseDisplayLayer + borderLayer));
@@ -502,7 +500,7 @@ namespace Freeserf
 
         void DrawBoxString(int x, int y, TextField textField, string str)
         {
-            textField.SetPosition(X + 8 * x + 20, Y + y + 16);
+            textField.SetPosition(X + 8 * x + 16, Y + y + 16);
             textField.Text = str;
             textField.Visible = Displayed;
             textField.DisplayLayer = (byte)(BaseDisplayLayer + 1);
@@ -655,7 +653,7 @@ namespace Freeserf
             }
 
             /* Display program name and version in caption */
-            DrawBoxString(0, 212, textFieldVersion, Freeserf.VERSION);
+            DrawBoxString(2, 162, textFieldVersion, Freeserf.VERSION);
         }
 
         public void HandleAction(Action action)

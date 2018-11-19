@@ -39,13 +39,50 @@ namespace Freeserf
         Render.IColoredRect background = null;
         readonly List<TextField> textLines = new List<TextField>();
         readonly Render.TextRenderer textRenderer = null;
+        bool useSpecialDigits = false;
         
-        public TextInput(Interface interf)
+        public TextInput(Interface interf, bool useSpecialDigits = false)
             : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             background.Layer = Layer;
             textRenderer = interf.TextRenderer;
+            this.useSpecialDigits = useSpecialDigits;
+        }
+
+        public Render.Color BackgroundColor
+        {
+            get => colorBackground;
+            set
+            {
+                colorBackground = value;
+
+                if (!drawFocus || !focused)
+                background.Color = value;
+            }
+        }
+
+        public Render.Color BackgroundFocusColor
+        {
+            get => colorFocus;
+            set
+            {
+                colorFocus = value;
+
+                if (drawFocus && focused)
+                    background.Color = value;
+            }
+        }
+
+        public Render.Color TextColor
+        {
+            get => colorText;
+            set
+            {
+                colorText = value;
+                
+                // TODO
+            }
         }
 
         public string Text
@@ -114,16 +151,10 @@ namespace Freeserf
             else
                 background.Color = colorBackground;
 
-            int numMaxCharsPerLine = Width / 8;
+            int numMaxCharsPerLine = (Width < 8) ? 0 : 1 + (Width - 8) / 9;
             string str = text;
             int cx = 0;
             int cy = 0;
-
-            if (drawFocus)
-            {
-                cx = 1;
-                cy = 1;
-            }
 
             int textLineIndex = 0;
 
@@ -136,7 +167,7 @@ namespace Freeserf
 
                 if (textLineIndex == textLines.Count)
                 {
-                    var newLine = new TextField(textRenderer);
+                    var newLine = new TextField(textRenderer, useSpecialDigits);
 
                     newLine.SetPosition(X + cx, Y + cy);
 
@@ -150,7 +181,7 @@ namespace Freeserf
 
                 ++textLineIndex;
 
-                cy += 8; // TODO: adjust size
+                cy += 9;
             }
 
             // ensure that the other lines are not visible (they can be reused later by just setting Visible to true)

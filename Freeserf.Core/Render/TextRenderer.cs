@@ -38,6 +38,12 @@ namespace Freeserf.Render
                 get;
             } = new Position();
 
+            public bool UseSpecialDigits
+            {
+                get;
+                set;
+            }
+
             public RenderText(string text)
             {
                 Text = text;
@@ -91,7 +97,7 @@ namespace Freeserf.Render
             textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Gui);
         }
 
-        public int CreateText(string text, byte displayLayer, Position position = null)
+        public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null)
         {
             var spritePool = characterSprites.Where(s => !s.InUse);
 
@@ -116,6 +122,7 @@ namespace Freeserf.Render
 
             var renderText = new RenderText(text);
 
+            renderText.UseSpecialDigits = specialDigits;
             renderText.Characters = sprites;
 
             if (position != null)
@@ -124,7 +131,7 @@ namespace Freeserf.Render
                 renderText.Position.Y = position.Y;
             }
 
-            SetTextToSprites(renderText.Characters, text);
+            SetTextToSprites(renderText.Characters, text, renderText.UseSpecialDigits);
             renderText.UpdatePositions(characterGapSize);
             renderText.UpdateDisplayLayer(displayLayer);
 
@@ -191,7 +198,7 @@ namespace Freeserf.Render
                 renderText.Characters.RemoveRange(newLengthWithoutSpaces, renderText.Characters.Count - newLengthWithoutSpaces);
             }
 
-            SetTextToSprites(renderText.Characters, newText);
+            SetTextToSprites(renderText.Characters, newText, renderText.UseSpecialDigits);
             renderText.Text = newText;
 
             renderText.UpdatePositions(characterGapSize);
@@ -269,7 +276,7 @@ namespace Freeserf.Render
             throw new ExceptionFreeserf("Unsupported character: " + encoding.GetString(new byte[1] { ch }));
         }
 
-        void SetTextToSprites(List<SpriteInfo> sprites, string text)
+        void SetTextToSprites(List<SpriteInfo> sprites, string text, bool useSpecialDigits)
         {
             var bytes = encoding.GetBytes(text);
             int charIndex = 0;
@@ -278,7 +285,12 @@ namespace Freeserf.Render
             for (int i = 0; i < bytes.Length; ++i)
             {
                 if (bytes[i] != 32) // space
-                    sprites[charIndex++].Sprite.TextureAtlasOffset = GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharToSpriteIndex(bytes[i]));
+                {
+                    if (useSpecialDigits && bytes[i] >= '0' && bytes[i] <= '9')
+                        sprites[charIndex++].Sprite.TextureAtlasOffset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 78u + (uint)(bytes[i] - '0'));
+                    else
+                        sprites[charIndex++].Sprite.TextureAtlasOffset = GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharToSpriteIndex(bytes[i]));
+                }
             }
         }
 

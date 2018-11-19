@@ -540,6 +540,7 @@ namespace Freeserf
         int index = -1;
         string text = "";
         byte displayLayer = 0;
+        bool useSpecialDigits = false;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
@@ -559,9 +560,10 @@ namespace Freeserf
             }
         }
 
-        public TextField(Render.TextRenderer textRenderer)
+        public TextField(Render.TextRenderer textRenderer, bool useSpecialDigits = false)
         {
             this.textRenderer = textRenderer;
+            this.useSpecialDigits = useSpecialDigits;
         }
 
         public void Destroy()
@@ -584,7 +586,7 @@ namespace Freeserf
                 text = value;
 
                 if (index == -1)
-                    index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
+                    index = textRenderer.CreateText(text, DisplayLayer, useSpecialDigits, new Position(X, Y));
                 else
                     textRenderer.ChangeText(index, text, DisplayLayer);
             }
@@ -605,7 +607,7 @@ namespace Freeserf
                     return;
 
                 if (index == -1 && value)
-                    index = textRenderer.CreateText(text, DisplayLayer, new Position(X, Y));
+                    index = textRenderer.CreateText(text, DisplayLayer, useSpecialDigits, new Position(X, Y));
 
                 textRenderer.ShowText(index, value);
             }
