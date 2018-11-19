@@ -30,6 +30,7 @@ namespace Freeserf.Renderer.OpenTK
         VertexArrayObject preVAO;
         readonly Matrix4 preProjectionMatrix;
         readonly Matrix4 preModelViewMatrix;
+        readonly Matrix4 preUnzoomedModelViewMatrix;
 
         public StateContext()
         {
@@ -37,6 +38,7 @@ namespace Freeserf.Renderer.OpenTK
             preVAO = VertexArrayObject.ActiveVAO;
             preProjectionMatrix = State.CurrentProjectionMatrix;
             preModelViewMatrix = State.CurrentModelViewMatrix;
+            preUnzoomedModelViewMatrix = State.CurrentUnzoomedModelViewMatrix;
         }
 
         void Release()
@@ -49,6 +51,8 @@ namespace Freeserf.Renderer.OpenTK
                 State.RestoreProjectionMatrix(preProjectionMatrix);
             if (preModelViewMatrix != State.CurrentModelViewMatrix && preModelViewMatrix != null)
                 State.RestoreProjectionMatrix(preModelViewMatrix);
+            if (preUnzoomedModelViewMatrix != State.CurrentUnzoomedModelViewMatrix && preUnzoomedModelViewMatrix != null)
+                State.RestoreUnzoomedModelViewMatrix(preUnzoomedModelViewMatrix);
         }
 
         public void Dispose()

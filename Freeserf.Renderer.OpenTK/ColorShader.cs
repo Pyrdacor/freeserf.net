@@ -121,9 +121,13 @@ namespace Freeserf.Renderer.OpenTK
             $"}}"
         };
 
-        public void UpdateMatrices()
+        public void UpdateMatrices(bool zoom)
         {
-            shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentModelViewMatrix.ToArray(), true);
+            if (zoom)
+                shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentModelViewMatrix.ToArray(), true);
+            else
+                shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentUnzoomedModelViewMatrix.ToArray(), true);
+
             shaderProgram.SetInputMatrix(projectionMatrixName, State.CurrentProjectionMatrix.ToArray(), true);
         }
 

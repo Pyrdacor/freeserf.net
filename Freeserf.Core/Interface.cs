@@ -116,6 +116,7 @@ namespace Freeserf
         public Game Game { get; private set; } = null;
         public Random Random { get; private set; } = null;
         public TextRenderer TextRenderer { get; } = null;
+        public bool Ingame => Game != null && (initBox == null || !initBox.Displayed);
 
         public Interface(IRenderView renderView)
             : base(renderView)
@@ -287,6 +288,8 @@ namespace Freeserf
         /* Open box for starting a new game */
         public void OpenGameInit()
         {
+            RenderView.ResetZoom();
+
             if (initBox == null)
             {
                 initBox = new GameInitBox(this);
@@ -1086,8 +1089,8 @@ namespace Freeserf
 
             if (initBox != null)
             {
-                int initBoxWidth = 360;
-                int initBoxHeight = 254;
+                int initBoxWidth = 16 + 320 + 16;
+                int initBoxHeight = 200;
                 int initBoxX = (Width - initBoxWidth) / 2;
                 int initBoxY = (Height - initBoxHeight) / 2;
                 initBox.MoveTo(initBoxX, initBoxY);

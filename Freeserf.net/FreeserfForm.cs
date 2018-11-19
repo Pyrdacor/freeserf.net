@@ -10,7 +10,6 @@ namespace Freeserf
     public partial class FreeserfForm : Form
     {
         GameView gameView = null;
-        Game game = null;
 
         public FreeserfForm()
         {
@@ -33,14 +32,9 @@ namespace Freeserf
 
             gameView = new GameView(dosData, new Size(1280, 960), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
 
-            gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);          
+            gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
-            // TODO: REMOVE initialization stuff
-            var random = new Random();
-            var gameInfo = new GameInfo(random);
-
-            if (!GameManager.Instance.StartGame(GameInfo.GetMission(29), gameView))
-                throw new ExceptionFreeserf("Failed to start game.");
+            gameView.Initialize();
 
             RenderControl.MouseWheel += RenderControl_MouseWheel;
 
@@ -51,7 +45,6 @@ namespace Freeserf
         {
             RenderControl.MakeCurrent();
 
-            //game.Update();
             gameView.Render();
 
             RenderControl.SwapBuffers();

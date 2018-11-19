@@ -67,6 +67,7 @@ namespace Freeserf.Renderer.OpenTK
 
         static Stack<Matrix4> projectionMatrixStack = new Stack<Matrix4>();
         static Stack<Matrix4> modelViewMatrixStack = new Stack<Matrix4>();
+        static Stack<Matrix4> unzoomedModelViewMatrixStack = new Stack<Matrix4>();
 
         public static void PushProjectionMatrix(Matrix4 matrix)
         {
@@ -78,6 +79,11 @@ namespace Freeserf.Renderer.OpenTK
             modelViewMatrixStack.Push(matrix);
         }
 
+        public static void PushUnzoomedModelViewMatrix(Matrix4 matrix)
+        {
+            unzoomedModelViewMatrixStack.Push(matrix);
+        }
+
         public static Matrix4 PopProjectionMatrix()
         {
             return projectionMatrixStack.Pop();
@@ -86,6 +92,11 @@ namespace Freeserf.Renderer.OpenTK
         public static Matrix4 PopModelViewMatrix()
         {
             return modelViewMatrixStack.Pop();
+        }
+
+        public static Matrix4 PopUnzoomedModelViewMatrix()
+        {
+            return unzoomedModelViewMatrixStack.Pop();
         }
 
         public static void RestoreProjectionMatrix(Matrix4 matrix)
@@ -110,6 +121,17 @@ namespace Freeserf.Renderer.OpenTK
                 PushModelViewMatrix(matrix);
         }
 
+        public static void RestoreUnzoomedModelViewMatrix(Matrix4 matrix)
+        {
+            if (unzoomedModelViewMatrixStack.Contains(matrix))
+            {
+                while (CurrentUnzoomedModelViewMatrix != matrix)
+                    unzoomedModelViewMatrixStack.Pop();
+            }
+            else
+                PushUnzoomedModelViewMatrix(matrix);
+        }
+
         public static void ClearMatrices()
         {
             projectionMatrixStack.Clear();
@@ -118,5 +140,6 @@ namespace Freeserf.Renderer.OpenTK
 
         public static Matrix4 CurrentProjectionMatrix => (projectionMatrixStack.Count == 0) ? null : projectionMatrixStack.Peek();
         public static Matrix4 CurrentModelViewMatrix => (modelViewMatrixStack.Count == 0) ? null : modelViewMatrixStack.Peek();
+        public static Matrix4 CurrentUnzoomedModelViewMatrix => (unzoomedModelViewMatrixStack.Count == 0) ? null : unzoomedModelViewMatrixStack.Peek();
     }
 }

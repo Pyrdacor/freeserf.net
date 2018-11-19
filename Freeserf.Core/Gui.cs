@@ -356,6 +356,48 @@ namespace Freeserf
             renderView.KeyPress += RenderView_KeyPress;
         }
 
+        public bool Ingame => interf.Ingame;
+
+        Position PositionToGui(Position position)
+        {
+            float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;
+            float factorY = 480.0f / (float)renderView.VirtualScreen.Size.Height;
+
+            return new Position((int)Math.Floor(position.X * factorX), (int)Math.Floor(position.Y * factorY));
+        }
+
+        Position PositionToGame(Position position)
+        {
+            position = PositionToGui(position);
+
+            float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
+
+            position.X = Misc.Round(zoomFactor * position.X);
+            position.Y = Misc.Round(zoomFactor * position.Y);
+
+            return position;
+        }
+
+        Size DeltaToGui(Size delta)
+        {
+            float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;
+            float factorY = 480.0f / (float)renderView.VirtualScreen.Size.Height;
+
+            return new Size(Misc.Round(delta.Width * factorX), Misc.Round(delta.Height * factorY));
+        }
+
+        Size DeltaToGame(Size delta)
+        {
+            delta = DeltaToGui(delta);
+
+            float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
+
+            delta.Width = Misc.Round(zoomFactor * delta.Width);
+            delta.Height = Misc.Round(zoomFactor * delta.Height);
+
+            return delta;
+        }
+
         private bool RenderView_KeyPress(object sender, Event.EventArgs args)
         {
             return HandleEvent(args);
@@ -366,8 +408,8 @@ namespace Freeserf
             float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
             float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
 
-            var position = new Position((int)Math.Floor((args.X - 0.49f) * factorX), (int)Math.Floor((args.Y - 0.49f) * factorY));
-            var delta = new Size((int)Math.Ceiling((args.Dx + 0.49f) * factorX), (int)Math.Ceiling((args.Dy + 0.49f) * factorY));
+            var position = new Position((int)Math.Floor(args.X * factorX), (int)Math.Floor(args.Y * factorY));
+            var delta = new Size((int)Math.Round(args.Dx * factorX), (int)Math.Round(args.Dy * factorY));
 
             args.X = position.X;
             args.Y = position.Y;
@@ -382,7 +424,7 @@ namespace Freeserf
             float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
             float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
 
-            var position = new Position((int)Math.Floor((args.X - 0.49f) * factorX), (int)Math.Floor((args.Y - 0.49f) * factorY));
+            var position = new Position((int)Math.Floor(args.X * factorX), (int)Math.Floor(args.Y * factorY));
 
             args.X = position.X;
             args.Y = position.Y;
@@ -395,7 +437,7 @@ namespace Freeserf
             float factorX = 640.0f / (float)interf.RenderView.VirtualScreen.Size.Width;
             float factorY = 480.0f / (float)interf.RenderView.VirtualScreen.Size.Height;
 
-            var position = new Position((int)Math.Floor((args.X - 0.49f) * factorX), (int)Math.Floor((args.Y - 0.49f) * factorY));
+            var position = new Position((int)Math.Floor(args.X  * factorX), (int)Math.Floor(args.Y * factorY));
 
             args.X = position.X;
             args.Y = position.Y;

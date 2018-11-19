@@ -33,6 +33,8 @@ namespace Freeserf.Render
         Rect ScreenToView(Rect rect);
 
         Rect VirtualScreen { get; }
+        float Zoom { get; }
+        void ResetZoom();
 
         ISpriteFactory SpriteFactory { get; }
         ITriangleFactory TriangleFactory { get; }

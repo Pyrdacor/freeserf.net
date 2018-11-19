@@ -33,6 +33,10 @@ namespace Freeserf.Renderer.OpenTK
 
     public class GameView : RenderLayerFactory, IRenderView
     {
+        // these two lines are fore the background map at start
+        int mapScrollTicks = 0;
+        Random mapScrollRandom = new Random();
+
         Context context;
         Rect virtualScreenDisplay;
         readonly SizingPolicy sizingPolicy;
@@ -104,7 +108,7 @@ namespace Freeserf.Renderer.OpenTK
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
-                            return new Position(Misc.Floor((position.X - 0.49f) * factorX), Misc.Floor((position.Y - 0.49f) * factorY));
+                            return new Position(Misc.Floor(position.X * factorX - 0.49f), Misc.Floor(position.Y * factorY - 0.49f));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
@@ -112,7 +116,11 @@ namespace Freeserf.Renderer.OpenTK
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
-                            return new Size(Misc.Ceiling((size.Width + 0.49f) * factorX), Misc.Ceiling((size.Height + 0.49f) * factorY));
+                            // don't scale a dimension of 0
+                            int width = (size.Width == 0) ? 0 : Misc.Ceiling(size.Width * factorX + 0.49f);
+                            int height = (size.Height == 0) ? 0 : Misc.Ceiling(size.Height * factorY + 0.49f);
+
+                            return new Size(width, height);
                         };
                     }
 
@@ -131,10 +139,30 @@ namespace Freeserf.Renderer.OpenTK
             gui = new Gui(this);
         }
 
+        public void Initialize()
+        {
+            // the following code will generate the mission 30 map that is displayed in the background behind the game init box at startup
+            var random = new Random();
+            var gameInfo = new GameInfo(random);
+
+            GameManager.Instance.StartGame(GameInfo.GetMission(29), this);
+        }
+
         public float Zoom
         {
             get => context.Zoom;
-            set => context.Zoom = value;
+            set
+            {
+                if (gui.Ingame)
+                    context.Zoom = value;
+                else
+                    context.Zoom = 0.0f;
+            }
+        }
+
+        public void ResetZoom()
+        {
+            context.Zoom = 0.0f;
         }
 
         public DataSource DataSource { get; }
@@ -318,6 +346,20 @@ namespace Freeserf.Renderer.OpenTK
             context.SetRotation(rotation);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            if (!gui.Ingame)
+            {
+                // if we did not start a game the map in the background is scrolled
+                if (++mapScrollTicks >= 80)
+                {
+                    var game = GameManager.Instance.GetCurrentGame();
+
+                    if (game != null && game.Map != null)
+                        game.Map.ScrollTo(mapScrollRandom.Next() % game.Map.Columns, mapScrollRandom.Next() % game.Map.Rows);
+
+                    mapScrollTicks = 0;
+                }
+            }
 
             if (layers[Layer.Gui].Visible)
                 gui.Draw(); // this will prepare gui components for rendering

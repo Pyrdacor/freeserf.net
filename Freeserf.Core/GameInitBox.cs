@@ -135,6 +135,7 @@ namespace Freeserf
 
         // rendering
         readonly List<Render.ILayerSprite> background = new List<Render.ILayerSprite>();
+        readonly Render.ILayerSprite[] borders = new Render.ILayerSprite[4];
         Button buttonStart = null;
         Button buttonOptions = null;
         Button buttonGameType = null;
@@ -247,10 +248,10 @@ namespace Freeserf
 
             public void SetPosition(int baseX, int baseY, int x, int y)
             {
-                if (this.x  == baseX + 8 * x + 20 && this.y == baseY + y + 16)
+                if (this.x  == baseX + 8 * x + 16 && this.y == baseY + y + 16)
                     return;
 
-                this.x = baseX + 8 * x + 20;
+                this.x = baseX + 8 * x + 16;
                 this.y = baseY + y + 16;
 
                 SetChildPosition(baseX, baseY, x + 1, y + 8, playerImage);
@@ -265,11 +266,11 @@ namespace Freeserf
                 ++x;
                 y += 8;
 
-                suppliesValue.X = baseX + 8 * x + 64;
+                suppliesValue.X = baseX + 8 * x + 60;
                 suppliesValue.Y = baseY + y + 76 - suppliesValue.Height;
-                intelligenceValue.X = baseX + 8 * x + 70;
+                intelligenceValue.X = baseX + 8 * x + 66;
                 intelligenceValue.Y = baseY + y + 76 - intelligenceValue.Height;
-                reproductionValue.X = baseX + 8 * x + 76;
+                reproductionValue.X = baseX + 8 * x + 72;
                 reproductionValue.Y = baseY + y + 76 - reproductionValue.Height;
 
                 valueBaseLineY = baseY + y + 76;
@@ -277,7 +278,7 @@ namespace Freeserf
 
             void SetChildPosition(int baseX, int baseY, int x, int y, Render.IRenderNode child)
             {
-                child.X = baseX + 8 * x + 20;
+                child.X = baseX + 8 * x + 16;
                 child.Y = baseY + y + 16;
             }
 
@@ -324,7 +325,7 @@ namespace Freeserf
 
             randomInput = new RandomInput(interf);
 
-            SetSize(360, 254);
+            SetSize(16 + 320 + 16, 200);
 
             customMission = new GameInfo(new Random());
             mission = customMission;
@@ -359,7 +360,8 @@ namespace Freeserf
         {
             var spriteFactory = interf.RenderView.SpriteFactory;
             var type = Data.Resource.Icon;
-            byte buttonLayer = 1;
+            byte buttonLayer = 2;
+            byte borderLayer = 1;
             byte bgLayer = 0;
 
             buttonStart = new Button(interf, 32, 32, type, 266u, 1);
@@ -399,6 +401,14 @@ namespace Freeserf
             buttonExit.Clicked += ButtonExit_Clicked;
             AddChild(buttonExit, 8 * 38 + 20, 224);
 
+            borders[0] = CreateSprite(spriteFactory, 320, 8, Data.Resource.FrameTop, 2u, (byte)(BaseDisplayLayer + borderLayer));
+            borders[1] = CreateSprite(spriteFactory, 16, 200, Data.Resource.FrameTop, 0u, (byte)(BaseDisplayLayer + borderLayer));
+            borders[2] = CreateSprite(spriteFactory, 16, 200, Data.Resource.FrameTop, 1u, (byte)(BaseDisplayLayer + borderLayer));
+            borders[3] = CreateSprite(spriteFactory, 320, 8, Data.Resource.FrameTop, 2u, (byte)(BaseDisplayLayer + borderLayer));
+
+            for (int i = 0; i < 4; ++i)
+                borders[i].Layer = Layer;
+
             // We create a compound background in the TextureAtlasManager with
             // sprite index 318 inside the icon resources.
             // It is 360x80 in size
@@ -406,7 +416,7 @@ namespace Freeserf
             int bgY = 0;
             while (bgY < Height)
             {
-                var bg = CreateSprite(spriteFactory, Math.Min(360, Width - bgX), Math.Min(80, Height - bgY), type, 318u, bgLayer);
+                var bg = CreateSprite(spriteFactory, Math.Min(360, Width - bgX), Math.Min(80, Height - bgY), type, 318u, (byte)(BaseDisplayLayer + bgLayer));
                 bg.Layer = Layer;
 
                 background.Add(bg);
@@ -485,32 +495,9 @@ namespace Freeserf
             buttonExit?.UpdateParent();
         }
 
-        void DrawButton(int x, int y, Render.ILayerSprite button)
-        {
-            button.X = X + 8 * x + 20;
-            button.Y = Y + y + 16;
-            button.Visible = Displayed;
-            button.DisplayLayer = (byte)(BaseDisplayLayer + 1);
-        }
-
-        void HideButton(Render.ISprite button)
-        {
-            button.Visible = false;
-        }
-
         void HideBoxString(TextField textField)
         {
             textField.Visible = false;
-        }
-
-        void DrawBoxIcon(int x, int y, Render.ILayerSprite sprite, uint spriteIndex)
-        {
-            sprite.X = X + 8 * x + 20;
-            sprite.Y = Y + y + 16;
-            sprite.Visible = Displayed;
-            sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
-
-            sprite.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, spriteIndex);
         }
 
         void DrawBoxString(int x, int y, TextField textField, string str)
@@ -549,12 +536,42 @@ namespace Freeserf
             }
         }
 
+        void DrawBorders()
+        {
+            // top border
+            borders[0].X = X + 16;
+            borders[0].Y = Y;
+            borders[0].Visible = Displayed;
+            borders[0].DisplayLayer = (byte)(BaseDisplayLayer + 1);
+
+            // left border
+            borders[1].X = X;
+            borders[1].Y = Y;
+            borders[1].Visible = Displayed;
+            borders[1].DisplayLayer = (byte)(BaseDisplayLayer + 1);
+
+            // right border
+            borders[2].X = X + Width - 16;
+            borders[2].Y = Y;
+            borders[2].Visible = Displayed;
+            borders[2].DisplayLayer = (byte)(BaseDisplayLayer + 1);
+
+            // bottom border
+            borders[3].X = X + 16;
+            borders[3].Y = Y + Height - 8;
+            borders[3].Visible = Displayed;
+            borders[3].DisplayLayer = (byte)(BaseDisplayLayer + 1);
+        }
+
         protected override void InternalHide()
         {
             base.InternalHide();
 
             foreach (var bg in background)
                 bg.Visible = false;
+
+            foreach (var border in borders)
+                border.Visible = false;
 
             textFieldHeader.Visible = false;
             textFieldName.Visible = false;
@@ -569,6 +586,7 @@ namespace Freeserf
         protected override void InternalDraw()
         {
             DrawBackground();
+            DrawBorders();
 
             buttonGameType.SetSpriteIndex(GameTypeSprites[(int)gameType]);
 
@@ -829,16 +847,16 @@ namespace Freeserf
             }
             else // click on values
             {
-                cx -= 8 + 32 + 8 + 3;
+                cx -= 8 + 32 + 8 + 1;
 
                 if (cx < 0)
                 {
                     return false;
                 }
 
-                if (cy >= 27 && cy < 69)
+                if (cy >= 25 && cy < 72)
                 {
-                    uint value = (uint)Misc.Clamp(0, 68 - cy, 40);
+                    uint value = (uint)Misc.Clamp(0, 66 - cy, 40);
 
                     if (cx > 0 && cx < 6)
                     {

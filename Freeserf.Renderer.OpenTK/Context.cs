@@ -30,6 +30,7 @@ namespace Freeserf.Renderer.OpenTK
         int height = -1;
         Rotation rotation = Rotation.None;
         Matrix4 modelViewMatrix = Matrix4.Identity;
+        Matrix4 unzoomedModelViewMatrix = Matrix4.Identity;
         float zoom = 0.0f;
 
         public Context(int width, int height)
@@ -57,6 +58,7 @@ namespace Freeserf.Renderer.OpenTK
         {
             State.ClearMatrices();
             State.PushModelViewMatrix(Matrix4.Identity);
+            State.PushUnzoomedModelViewMatrix(Matrix4.Identity);
             State.PushProjectionMatrix(Matrix4.CreateOrtho2D(0, width, 0, height, 0, 1));
 
             this.width = width;
@@ -93,9 +95,13 @@ namespace Freeserf.Renderer.OpenTK
         {
             State.RestoreModelViewMatrix(modelViewMatrix);
             State.PopModelViewMatrix();
+            State.RestoreUnzoomedModelViewMatrix(unzoomedModelViewMatrix);
+            State.PopUnzoomedModelViewMatrix();
 
             if (rotation == Rotation.None)
+            {
                 modelViewMatrix = Matrix4.Identity;
+            }
             else
             {
                 var rotationDegree = 0.0f;
@@ -136,6 +142,10 @@ namespace Freeserf.Renderer.OpenTK
                         Matrix4.CreateTranslationMatrix(-x, -y);
                 }
             }
+
+            unzoomedModelViewMatrix = new Matrix4(modelViewMatrix);
+
+            State.PushUnzoomedModelViewMatrix(unzoomedModelViewMatrix);
 
             if (!Misc.FloatEqual(zoom, 0.0f))
             {

@@ -77,6 +77,11 @@ namespace Freeserf.Renderer.OpenTK
             layerIndex = Misc.Round(Math.Log((int)layer, 2.0));
         }
 
+        bool SupportZoom =>
+            Layer != Layer.Gui &&
+            Layer != Layer.GuiBuildings &&
+            Layer != Layer.Cursor;
+
         public void Render()
         {
             if (!Visible || texture == null)
@@ -86,7 +91,7 @@ namespace Freeserf.Renderer.OpenTK
             {
                 var colorShader = ColorShader.Instance;
 
-                colorShader.UpdateMatrices();
+                colorShader.UpdateMatrices(SupportZoom);
                 colorShader.SetZ(Global.LayerBaseZ[layerIndex]);
 
                 renderBufferColorRects.Render();
@@ -106,7 +111,7 @@ namespace Freeserf.Renderer.OpenTK
                 shader = TextureShader.Instance;
             }
 
-            shader.UpdateMatrices(); // TODO: maybe do this in game view
+            shader.UpdateMatrices(SupportZoom);
 
             shader.SetSampler(0); // we use texture unit 0 -> see GL.ActiveTexture below
             GL.ActiveTexture(TextureUnit.Texture0);
