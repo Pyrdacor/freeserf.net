@@ -178,7 +178,7 @@ namespace Freeserf
             AddChild(checkBox, 14 * 8, 128);
 
             icon = new Icon(interf, 16, 16, type, 93u, iconLayer); // initialize with save icon
-            AddChild(icon, 20 * 8, 14, false); // initially not visible
+            AddChild(icon, 64, 64, false); // initially not visible
 
             menuIcon = new Icon(interf, 16, 16, type, 230u, iconLayer);
             AddChild(menuIcon, 18 * 8, 8, false); // initially not visible
@@ -260,7 +260,7 @@ namespace Freeserf
 
         void DrawNotification(NotificationView view)
         {
-            DrawMessage(1, 10, view.Text);
+            DrawMessage(8, 12, view.Text);
 
             var mapBuildingSprite = Render.RenderBuilding.MapBuildingSprite;
 
@@ -339,7 +339,7 @@ namespace Freeserf
         {
             textField.Text = str;
             textField.DisplayLayer = (byte)(BaseDisplayLayer + 3);
-            textField.SetPosition(TotalX + 8 * x, TotalY + y);
+            textField.SetPosition(TotalX + x, TotalY + y);
             textField.Visible = Displayed;
 
             // TODO: textField.ColorText = Color.Green;

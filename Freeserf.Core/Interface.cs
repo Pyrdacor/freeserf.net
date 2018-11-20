@@ -296,7 +296,7 @@ namespace Freeserf
             }
 
             var message = new Message();
-            message.MessageType = Message.Type.EmergencyActive;
+            message.MessageType = Message.Type.FoundCoal;
             message.Data = 0;
             message.Pos = 0;
 
