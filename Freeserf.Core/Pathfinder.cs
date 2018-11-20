@@ -31,11 +31,11 @@ namespace Freeserf
 
     class SearchNode
     {
-        public SearchNode parent;
-        public uint gScore;
-        public uint fScore;
-        public MapPos pos;
-        public Direction dir;
+        public SearchNode Parent;
+        public uint GScore;
+        public uint FScore;
+        public MapPos Pos;
+        public Direction Dir;
     }
 
     class PriorityQueue<T> : IEnumerable<T> where T : class
@@ -142,7 +142,7 @@ namespace Freeserf
         {
             public int Compare(SearchNode left, SearchNode right)
             {
-                return right.fScore.CompareTo(left.fScore);
+                return right.FScore.CompareTo(left.FScore);
             }
         }
 
@@ -163,9 +163,9 @@ namespace Freeserf
             /* Create start node */
             SearchNode node = new SearchNode()
             {
-                pos = end,
-                gScore = 0,
-                fScore = HeuristicCost(map, start, end)
+                Pos = end,
+                GScore = 0,
+                FScore = HeuristicCost(map, start, end)
             };
 
             open.Push(node);
@@ -174,17 +174,17 @@ namespace Freeserf
             {
                 node = open.Pop();
 
-                if (node.pos == start)
+                if (node.Pos == start)
                 {
                     /* Construct solution */
                     Road solution = new Road();
                     solution.Start(start);
 
-                    while (node.parent != null)
+                    while (node.Parent != null)
                     {
-                        Direction dir = node.dir;
+                        Direction dir = node.Dir;
                         solution.Extend(dir.Reverse());
-                        node = node.parent;
+                        node = node.Parent;
                     }
 
                     return solution;
@@ -197,11 +197,11 @@ namespace Freeserf
 
                 foreach (Direction d in cycle)
                 {
-                    MapPos newPos = map.Move(node.pos, d);
-                    uint cost = ActualCost(map, node.pos, d);
+                    MapPos newPos = map.Move(node.Pos, d);
+                    uint cost = ActualCost(map, node.Pos, d);
 
                     /* Check if neighbour is valid. */
-                    if (!map.IsRoadSegmentValid(node.pos, d) ||
+                    if (!map.IsRoadSegmentValid(node.Pos, d) ||
                         (map.GetObject(newPos) == global::Freeserf.Map.Object.Flag && newPos != start))
                     {
                         continue;
@@ -214,7 +214,7 @@ namespace Freeserf
                     }
 
                     /* Check if neighbour is in closed list. */
-                    if (closed.Any(n => n.pos == newPos))
+                    if (closed.Any(n => n.Pos == newPos))
                         continue;
 
                     /* See if neighbour is already in open list. */
@@ -222,16 +222,16 @@ namespace Freeserf
                     
                     foreach (var n in open)
                     {
-                        if (n.pos == newPos)
+                        if (n.Pos == newPos)
                         {
                             inOpen = true;
 
-                            if (n.gScore >= node.gScore + cost)
+                            if (n.GScore >= node.GScore + cost)
                             {
-                                n.gScore = node.gScore + cost;
-                                n.fScore = n.gScore + HeuristicCost(map, newPos, start);
-                                n.parent = node;
-                                n.dir = d;
+                                n.GScore = node.GScore + cost;
+                                n.FScore = n.GScore + HeuristicCost(map, newPos, start);
+                                n.Parent = node;
+                                n.Dir = d;
 
                                 // Move element to the back and heapify
                                 open.Push(open.Pop());
@@ -246,11 +246,11 @@ namespace Freeserf
                     {
                         SearchNode newNode = new SearchNode();
 
-                        newNode.pos = newPos;
-                        newNode.gScore = node.gScore + cost;
-                        newNode.fScore = newNode.gScore + HeuristicCost(map, newPos, start);
-                        newNode.parent = node;
-                        newNode.dir = d;
+                        newNode.Pos = newPos;
+                        newNode.GScore = node.GScore + cost;
+                        newNode.FScore = newNode.GScore + HeuristicCost(map, newPos, start);
+                        newNode.Parent = node;
+                        newNode.Dir = d;
 
                         open.Push(newNode);
                     }
