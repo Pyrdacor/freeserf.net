@@ -468,14 +468,15 @@ namespace Freeserf
         void HideBoxString(TextField textField)
         {
             textField.Visible = false;
+            textField.Destroy();
         }
 
         void DrawBoxString(int x, int y, TextField textField, string str)
         {
-            textField.SetPosition(X + 8 * x + 16, Y + y + 16);
             textField.Text = str;
-            textField.Visible = Displayed;
             textField.DisplayLayer = (byte)(BaseDisplayLayer + 1);
+            textField.SetPosition(TotalX + 8 * x + 16, TotalY + y + 16);
+            textField.Visible = Displayed;
 
             // TODO: textField.ColorText = Color.Green;
             // TODO: textField.ColorBg = Color.Black;
@@ -552,7 +553,7 @@ namespace Freeserf
                         playerBoxes[i].SetPlayerValues(player.Supplies, player.Intelligence, player.Reproduction);
                     }
 
-                    playerBoxes[i].SetPosition(X, Y, 10 * bx, 40 + by * 80);
+                    playerBoxes[i].SetPosition(TotalX, TotalY, 10 * bx, 40 + by * 80);
                     playerBoxes[i].Visible = true;
                     playerBoxes[i].SetBaseDisplayLayer(BaseDisplayLayer);
 
@@ -626,7 +627,7 @@ namespace Freeserf
                                 fileList.Displayed = true;
                                 break;
                             }
-                        }
+                    }
                     break;
                 case Action.ShowOptions:
                     // TODO

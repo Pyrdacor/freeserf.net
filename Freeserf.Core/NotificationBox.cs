@@ -334,10 +334,10 @@ namespace Freeserf
 
         void DrawString(int x, int y, TextField textField, string str)
         {
-            textField.SetPosition(X + 8 * x, Y + y);
             textField.Text = str;
-            textField.Visible = Displayed;
             textField.DisplayLayer = (byte)(BaseDisplayLayer + 3);
+            textField.SetPosition(TotalX + 8 * x, TotalY + y);
+            textField.Visible = Displayed;
 
             // TODO: textField.ColorText = Color.Green;
             // TODO: textField.ColorBg = Color.Black;

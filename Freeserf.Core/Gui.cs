@@ -31,9 +31,13 @@ namespace Freeserf
     {
         public static Position GetTextureAtlasOffset(Data.Resource resourceType, uint spriteIndex)
         {
+            var layer = (resourceType == Data.Resource.MapObject) ?
+                global::Freeserf.Layer.GuiBuildings : global::Freeserf.Layer.Gui;
+
             var textureAtlasManager = Render.TextureAtlasManager.Instance;
-            var textureAtlas = textureAtlasManager.GetOrCreate(global::Freeserf.Layer.Gui);
-            var offset = textureAtlasManager.GetGuiTypeOffset(resourceType);
+            var textureAtlas = textureAtlasManager.GetOrCreate(layer);
+            var offset = (resourceType == Data.Resource.MapObject) ?
+                0 : textureAtlasManager.GetGuiTypeOffset(resourceType);
 
             return textureAtlas.GetOffset(offset + spriteIndex);
         }
@@ -46,7 +50,7 @@ namespace Freeserf
             return spriteFactory.Create(width, height, offset.X, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
         }
 
-        readonly Dictionary<GuiObject, Position> children = new Dictionary<GuiObject, Position>();
+        readonly List<GuiObject> children = new List<GuiObject>();
         bool redraw = true;
         protected internal Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
@@ -86,6 +90,7 @@ namespace Freeserf
                 parent = value;
 
                 UpdateParent();
+                SetRedraw();
             }
         }
         // This is the base display layer from the gui hierarchy.
@@ -99,6 +104,26 @@ namespace Freeserf
                     return 0;
 
                 return (byte)Math.Min(255, Parent.BaseDisplayLayer + 10);
+            }
+        }
+        public int TotalX
+        {
+            get
+            {
+                if (Parent == null)
+                    return X;
+
+                return Parent.TotalX + X;
+            }
+        }
+        public int TotalY
+        {
+            get
+            {
+                if (Parent == null)
+                    return Y;
+
+                return Parent.TotalY + Y;
             }
         }
 
@@ -125,7 +150,7 @@ namespace Freeserf
             if (!Displayed)
             {
                 foreach (var child in children)
-                    child.Key.Displayed = false;
+                    child.Displayed = false;
             }
         }
 
@@ -172,7 +197,7 @@ namespace Freeserf
 
                 foreach (var child in children)
                 {
-                    child.Key.Draw();
+                    child.Draw();
                 }
 
                 redraw = false;
@@ -183,9 +208,6 @@ namespace Freeserf
         {
             X = x;
             Y = y;
-
-            foreach (var child in children)
-                child.Key.MoveTo(X + child.Value.X, Y + child.Value.Y);
 
             SetRedraw();
         }
@@ -206,17 +228,11 @@ namespace Freeserf
                 Parent.SetRedraw();
         }
 
-        public bool PointInside(int pointX, int pointY)
-        {
-            return pointX >= X && pointY >= Y &&
-                   pointX < X + Width && pointY < Y + Height;
-        }
-
         public void AddChild(GuiObject obj, int x, int y, bool displayed = true)
         {
             obj.Parent = this;
-            children.Add(obj, new Position(x, y));
-            obj.MoveTo(X + x, Y + y); // will call SetRedraw
+            children.Add(obj);
+            obj.MoveTo(x, y); // will call SetRedraw
             obj.Displayed = displayed;
         }
 
@@ -289,8 +305,8 @@ namespace Freeserf
                 e.Type == Event.Type.DoubleClick ||
                 e.Type == Event.Type.Drag)
             {
-                int objectX = e.X - X;
-                int objectY = e.Y - Y;
+                int objectX = e.X - TotalX;
+                int objectY = e.Y - TotalY;
 
                 if (objectX < 0 || objectY < 0 || objectX > Width || objectY > Height)
                 {
@@ -301,7 +317,7 @@ namespace Freeserf
             /* Find the corresponding child element if any */
             foreach (var child in children)
             {
-                if (child.Key.HandleEvent(e))
+                if (child.HandleEvent(e))
                 {
                     return true;
                 }
@@ -464,7 +480,7 @@ namespace Freeserf
         {
             sprite = CreateSprite(interf.RenderView.SpriteFactory, width, height, Data.Resource.MapObject, spriteIndex, (byte)(BaseDisplayLayer + displayLayerOffset));
             this.displayLayerOffset = displayLayerOffset;
-            this.resourceType = Data.Resource.MapObject;
+            resourceType = Data.Resource.MapObject;
             sprite.Layer = interf.RenderView.GetLayer(global::Freeserf.Layer.GuiBuildings);
 
             SetSize(width, height);
@@ -483,8 +499,9 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            sprite.X = X;
-            sprite.Y = Y;
+            sprite.X = TotalX;
+            sprite.Y = TotalY;
+
             sprite.Visible = Displayed;
         }
 
@@ -532,7 +549,7 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
-            Clicked?.Invoke(this, new ClickEventArgs(x - X, y - Y));
+            Clicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
 
             return true;
         }
@@ -616,6 +633,9 @@ namespace Freeserf
             }
             set
             {
+                if (Visible == value)
+                    return;
+
                 if (index == -1 && !value)
                     return;
 

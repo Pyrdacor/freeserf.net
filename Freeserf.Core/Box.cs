@@ -4,6 +4,10 @@ using System.Linq;
 
 namespace Freeserf
 {
+    // See TextureAtlasManager.AddAll for details.
+    // Backgrounds are created by creating a new larger
+    // sprite and add some smaller sprites to it.
+
     struct SpriteDefinition
     {
         public SpriteDefinition(uint spriteIndex, int width, int height)
@@ -58,8 +62,8 @@ namespace Freeserf
 
             Resize(parent.Width, parent.Height);
 
-            background.X = parent.X + (parent.Width - background.Width) / 2;
-            background.Y = parent.Y + (parent.Height - background.Height) / 2;
+            background.X = parent.TotalX + (parent.Width - background.Width) / 2;
+            background.Y = parent.TotalY + (parent.Height - background.Height) / 2;
             background.DisplayLayer = parent.BaseDisplayLayer;
             background.Layer = parent.Layer;
             background.Visible = parent.Displayed;
@@ -139,29 +143,29 @@ namespace Freeserf
             int verticalYOffset = (horizontalBordersInside) ? 0 : definition[0].SpriteHeight;
 
             // top border
-            borders[0].X = parent.X + horizontalXOffset;
-            borders[0].Y = parent.Y;
+            borders[0].X = parent.TotalX + horizontalXOffset;
+            borders[0].Y = parent.TotalY;
             borders[0].DisplayLayer = displayLayer;
             borders[0].Layer = parent.Layer;
             borders[0].Visible = parent.Displayed;
 
             // left border
-            borders[1].X = parent.X;
-            borders[1].Y = parent.Y + verticalYOffset;
+            borders[1].X = parent.TotalX;
+            borders[1].Y = parent.TotalY + verticalYOffset;
             borders[1].DisplayLayer = displayLayer;
             borders[1].Layer = parent.Layer;
             borders[1].Visible = parent.Displayed;
 
             // right border
-            borders[2].X = parent.X + parent.Width - definition[2].SpriteWidth;
-            borders[2].Y = parent.Y + verticalYOffset;
+            borders[2].X = parent.TotalX + parent.Width - definition[2].SpriteWidth;
+            borders[2].Y = parent.TotalY + verticalYOffset;
             borders[2].DisplayLayer = displayLayer;
             borders[2].Layer = parent.Layer;
             borders[2].Visible = parent.Displayed;
 
             // bottom border
-            borders[3].X = parent.X + horizontalXOffset;
-            borders[3].Y = parent.Y + parent.Height - definition[3].SpriteHeight;
+            borders[3].X = parent.TotalX + horizontalXOffset;
+            borders[3].Y = parent.TotalY + parent.Height - definition[3].SpriteHeight;
             borders[3].DisplayLayer = displayLayer;
             borders[3].Layer = parent.Layer;
             borders[3].Visible = parent.Displayed;

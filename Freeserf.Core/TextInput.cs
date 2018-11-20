@@ -142,8 +142,8 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            background.X = X;
-            background.Y = Y;
+            background.X = TotalX;
+            background.Y = TotalY;
             background.Visible = Displayed;
 
             if (drawFocus && focused)
@@ -169,7 +169,7 @@ namespace Freeserf
                 {
                     var newLine = new TextField(textRenderer, useSpecialDigits);
 
-                    newLine.SetPosition(X + cx, Y + cy);
+                    newLine.SetPosition(TotalX + cx, TotalY + cy);
 
                     textLines.Add(newLine);
                 }
