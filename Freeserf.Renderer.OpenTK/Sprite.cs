@@ -77,6 +77,17 @@ namespace Freeserf.Renderer.OpenTK
             if (drawIndex != -1) // -1 means not attached to a layer
                 (Layer as RenderLayer).UpdateTextureAtlasOffset(drawIndex, this);
         }
+
+        public override void Resize(int width, int height)
+        {
+            if (Width == width && Height == height)
+                return;
+
+            base.Resize(width, height);
+
+            UpdatePosition();
+            UpdateTextureAtlasOffset();
+        }
     }
 
     public class MaskedSprite : Node, IMaskedSprite
