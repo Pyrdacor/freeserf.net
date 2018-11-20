@@ -99,6 +99,9 @@ namespace Freeserf.Render
 
         public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null)
         {
+            // look if we have a unused render text
+            int index = renderTexts.FindIndex(r => r == null);
+
             var spritePool = characterSprites.Where(s => !s.InUse);
 
             int numAvailableChars = spritePool.Count();
@@ -135,9 +138,17 @@ namespace Freeserf.Render
             renderText.UpdatePositions(characterGapSize);
             renderText.UpdateDisplayLayer(displayLayer);
 
-            renderTexts.Add(renderText);
+            if (index == -1)
+            {
+                index = renderTexts.Count;
+                renderTexts.Add(renderText);
+            }
+            else
+            {
+                renderTexts[index] = renderText;
+            }
 
-            return renderTexts.Count - 1;
+            return index;
         }
 
         public void ShowText(int index, bool show)
@@ -219,7 +230,7 @@ namespace Freeserf.Render
                 character.InUse = false;
             }
 
-            renderTexts.RemoveAt(index);
+            renderTexts[index] = null;
         }
 
         public void ChangeDisplayLayer(int index, byte displayLayer)
@@ -245,6 +256,9 @@ namespace Freeserf.Render
 
         public bool IsVisible(int index)
         {
+            if (renderTexts[index] == null)
+                return false;
+
             return renderTexts[index].Visible;
         }
 
