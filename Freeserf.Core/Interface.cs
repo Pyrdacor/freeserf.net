@@ -288,6 +288,24 @@ namespace Freeserf
         /* Open box for starting a new game */
         public void OpenGameInit()
         {
+            // TODO: REMOVE TEST CODE
+            if (NotificationBox == null)
+            {
+                NotificationBox = new NotificationBox(this);
+                AddChild(NotificationBox, 0, 0);
+            }
+
+            var message = new Message();
+            message.MessageType = Message.Type.EmergencyActive;
+            message.Data = 0;
+            message.Pos = 0;
+
+            NotificationBox.Show(message);
+            base.Layout();
+            return;
+
+
+
             RenderView.ResetZoom();
 
             if (initBox == null)
@@ -1101,8 +1119,8 @@ namespace Freeserf
             {
                 int notificationBoxWidth = 144; // was 200
                 int notificationBoxHeight = 160; // was 88
-                int notificationBoxX = panelX + 40;
-                int notificationBoxY = panelY - notificationBoxHeight;
+                int notificationBoxX = (Width - notificationBoxWidth) / 2;
+                int notificationBoxY = (Height - notificationBoxHeight) / 2;
                 NotificationBox.MoveTo(notificationBoxX, notificationBoxY);
                 NotificationBox.SetSize(notificationBoxWidth, notificationBoxHeight);
             }

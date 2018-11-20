@@ -232,6 +232,9 @@ namespace Freeserf
             base.InternalHide();
 
             playerFaceBackground.Visible = false;
+
+            foreach (var line in textFieldMessage)
+                line.Visible = false;
         }
 
         protected override void InternalDraw()
