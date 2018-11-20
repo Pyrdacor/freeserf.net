@@ -135,7 +135,9 @@ namespace Freeserf.Renderer.OpenTK
 
             if (layerBuffer != null)
             {
-                layerBuffer.Add(coloredRect.DisplayLayer);
+                if (layerBuffer.Add(coloredRect.DisplayLayer) != index)
+                    throw new System.Exception("Invalid index");
+
                 layerBuffer.Add(coloredRect.DisplayLayer);
                 layerBuffer.Add(coloredRect.DisplayLayer);
                 layerBuffer.Add(coloredRect.DisplayLayer);
@@ -145,7 +147,9 @@ namespace Freeserf.Renderer.OpenTK
             {
                 var color = coloredRect.Color;
 
-                colorBuffer.Add(color);
+                if (colorBuffer.Add(color) != index)
+                    throw new System.Exception("Invalid index");
+
                 colorBuffer.Add(color);
                 colorBuffer.Add(color);
                 colorBuffer.Add(color);
@@ -173,7 +177,9 @@ namespace Freeserf.Renderer.OpenTK
 
             if (textureAtlasOffsetBuffer != null)
             {
-                textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
+                if (textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y) != index)
+                    throw new System.Exception("Invalid index");
+
                 textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y);
                 textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
                 textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
@@ -181,7 +187,9 @@ namespace Freeserf.Renderer.OpenTK
 
             if (Masked && maskSpriteTextureAtlasOffset != null)
             {
-                maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y);
+                if (maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y) != index)
+                    throw new System.Exception("Invalid index");
+
                 maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)maskSpriteTextureAtlasOffset.Y);
                 maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
                 maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
@@ -191,7 +199,9 @@ namespace Freeserf.Renderer.OpenTK
             {
                 ushort baseLine = (ushort)(position.Y + size.Height);
 
-                baseLineBuffer.Add(baseLine);
+                if (baseLineBuffer.Add(baseLine) != index)
+                    throw new System.Exception("Invalid index");
+
                 baseLineBuffer.Add(baseLine);
                 baseLineBuffer.Add(baseLine);
                 baseLineBuffer.Add(baseLine);
@@ -201,7 +211,9 @@ namespace Freeserf.Renderer.OpenTK
             {
                 byte layer = (sprite is Render.ILayerSprite) ? (sprite as Render.ILayerSprite).DisplayLayer : (byte)0;
 
-                layerBuffer.Add(layer);
+                if (layerBuffer.Add(layer) != index)
+                    throw new System.Exception("Invalid index");
+
                 layerBuffer.Add(layer);
                 layerBuffer.Add(layer);
                 layerBuffer.Add(layer);
@@ -281,19 +293,19 @@ namespace Freeserf.Renderer.OpenTK
 
         public void FreeDrawIndex(int index)
         {
-            int newSize = -1;
+            /*int newSize = -1;
 
             if (index == (positionBuffer.Size - 8) / 8)
             {
-                int i = index - 1;
+                int i = (index - 1) * 4;
                 newSize = positionBuffer.Size - 8;
 
                 while (i >= 0 && !positionBuffer.IsPositionValid(i))
                 {
-                    --i;
+                    i -= 4;
                     newSize -= 8;
                 }
-            }
+            }*/
 
             for (int i = 0; i < 4; ++i)
             {
@@ -317,7 +329,8 @@ namespace Freeserf.Renderer.OpenTK
             if (layerBuffer != null)
                 layerBuffer.Remove(index);
 
-            if (newSize != -1)
+            // TODO: this code causes problems. commented out for now
+            /*if (newSize != -1)
             {
                 positionBuffer.ReduceSizeTo(newSize);
 
@@ -335,7 +348,7 @@ namespace Freeserf.Renderer.OpenTK
 
                 if (layerBuffer != null)
                     layerBuffer.ReduceSizeTo(newSize / 2);
-            }
+            }*/
         }
 
         public void Render()

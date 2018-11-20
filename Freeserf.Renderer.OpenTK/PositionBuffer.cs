@@ -50,7 +50,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public bool IsPositionValid(int index)
         {
-            index *= 2; // 2 coords each
+            index *= Dimension; // 2 coords each
 
             if (index < 0 || index >= buffer.Length)
                 return false;
