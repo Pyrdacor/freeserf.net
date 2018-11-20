@@ -89,7 +89,7 @@ namespace Freeserf
         }
     }
 
-    internal class GameInitBox : GuiObject
+    internal class GameInitBox : Box
     {
         public enum Action
         {
@@ -137,8 +137,6 @@ namespace Freeserf
         ListSavedFiles fileList = null;
 
         // rendering
-        readonly List<Render.ILayerSprite> background = new List<Render.ILayerSprite>();
-        readonly Render.ILayerSprite[] borders = new Render.ILayerSprite[4];
         Button buttonStart = null;
         Button buttonOptions = null;
         Button buttonGameType = null;
@@ -317,7 +315,12 @@ namespace Freeserf
         }
 
         public GameInitBox(Interface interf)
-            : base(interf)
+            : base
+            (
+                interf, 
+                BackgroundPattern.CreateGameInitBoxBackground(interf.RenderView.SpriteFactory),
+                Border.CreateGameInitBoxBorder(interf.RenderView.SpriteFactory)
+            )
         {
             this.interf = interf;
 
@@ -359,10 +362,8 @@ namespace Freeserf
             var spriteFactory = interf.RenderView.SpriteFactory;
             var type = Data.Resource.Icon;
             byte buttonLayer = 2;
-            byte borderLayer = 1;
-            byte bgLayer = 0;
 
-            buttonStart = new Button(interf, 32, 32, type, 266u, 1);
+            buttonStart = new Button(interf, 32, 32, type, 266u, buttonLayer);
             buttonStart.Clicked += ButtonStart_Clicked;
             AddChild(buttonStart, 20, 16);
 
@@ -398,35 +399,6 @@ namespace Freeserf
             buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
             buttonExit.Clicked += ButtonExit_Clicked;
             AddChild(buttonExit, 8 * 38 + 12, 170);
-
-            borders[0] = CreateSprite(spriteFactory, 320, 8, Data.Resource.FrameTop, 2u, (byte)(BaseDisplayLayer + borderLayer));
-            borders[1] = CreateSprite(spriteFactory, 16, 200, Data.Resource.FrameTop, 0u, (byte)(BaseDisplayLayer + borderLayer));
-            borders[2] = CreateSprite(spriteFactory, 16, 200, Data.Resource.FrameTop, 1u, (byte)(BaseDisplayLayer + borderLayer));
-            borders[3] = CreateSprite(spriteFactory, 320, 8, Data.Resource.FrameTop, 2u, (byte)(BaseDisplayLayer + borderLayer));
-
-            for (int i = 0; i < 4; ++i)
-                borders[i].Layer = Layer;
-
-            // We create a compound background in the TextureAtlasManager with
-            // sprite index 318 inside the icon resources.
-            // It is 360x80 in size
-            int bgX = 0;
-            int bgY = 0;
-            while (bgY < Height)
-            {
-                var bg = CreateSprite(spriteFactory, Math.Min(360, Width - bgX), Math.Min(80, Height - bgY), type, 318u, (byte)(BaseDisplayLayer + bgLayer));
-                bg.Layer = Layer;
-
-                background.Add(bg);
-
-                bgX += bg.Width;
-
-                if (bgX == Width)
-                {
-                    bgX = 0;
-                    bgY += bg.Height;
-                }
-            }
         }
 
         private void ButtonStart_Clicked(object sender, Button.ClickEventArgs e)
@@ -509,67 +481,9 @@ namespace Freeserf
             // TODO: textField.ColorBg = Color.Black;
         }
 
-        void DrawBackground()
-        {
-            int bgX = 0;
-            int bgY = 0;
-            int i = 0;
-
-            while (bgY < Height)
-            {
-                background[i].X = X + bgX;
-                background[i].Y = Y + bgY;
-                background[i].Visible = Displayed;
-                background[i].DisplayLayer = BaseDisplayLayer;
-
-                bgX += background[i].Width;
-
-                if (bgX == Width)
-                {
-                    bgX = 0;
-                    bgY += background[i].Height;
-                }
-
-                ++i;
-            }
-        }
-
-        void DrawBorders()
-        {
-            // top border
-            borders[0].X = X + 16;
-            borders[0].Y = Y;
-            borders[0].Visible = Displayed;
-            borders[0].DisplayLayer = (byte)(BaseDisplayLayer + 1);
-
-            // left border
-            borders[1].X = X;
-            borders[1].Y = Y;
-            borders[1].Visible = Displayed;
-            borders[1].DisplayLayer = (byte)(BaseDisplayLayer + 1);
-
-            // right border
-            borders[2].X = X + Width - 16;
-            borders[2].Y = Y;
-            borders[2].Visible = Displayed;
-            borders[2].DisplayLayer = (byte)(BaseDisplayLayer + 1);
-
-            // bottom border
-            borders[3].X = X + 16;
-            borders[3].Y = Y + Height - 8;
-            borders[3].Visible = Displayed;
-            borders[3].DisplayLayer = (byte)(BaseDisplayLayer + 1);
-        }
-
         protected override void InternalHide()
         {
             base.InternalHide();
-
-            foreach (var bg in background)
-                bg.Visible = false;
-
-            foreach (var border in borders)
-                border.Visible = false;
 
             textFieldHeader.Visible = false;
             textFieldName.Visible = false;
@@ -583,8 +497,7 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            DrawBackground();
-            DrawBorders();
+            base.InternalDraw();
 
             buttonGameType.SetSpriteIndex(GameTypeSprites[(int)gameType]);
 

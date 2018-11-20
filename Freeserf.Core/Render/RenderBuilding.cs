@@ -35,7 +35,7 @@ namespace Freeserf.Render
             0xb7, 0xb5, 0xb6, 0xb0, 0xb8, 0xb3, 0xaf, 0xb4
         };
 
-        static readonly uint[] MapBuildingSprite = new uint[]
+        internal static readonly uint[] MapBuildingSprite = new uint[]
         {
             0, 0xa7, 0xa8, 0xae, 0xa9,
             0xa3, 0xa4, 0xa5, 0xa6,

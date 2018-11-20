@@ -130,7 +130,6 @@ namespace Freeserf
             updateMapCounter = 0;
             updateMap16Loop = 0;
             updateMapInitialPos = 0;
-            nextIndex = 0;
 
             resourceHistoryIndex = 0;
 

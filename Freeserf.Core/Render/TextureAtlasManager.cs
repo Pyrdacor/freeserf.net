@@ -73,6 +73,7 @@ namespace Freeserf.Render
         {
             uint i;
             Layer atlasIndex;
+            Sprite sprite;
 
             // use transparent color (TODO: correct for all?)
             var color = Sprite.Color.Transparent;
@@ -140,7 +141,7 @@ namespace Freeserf.Render
             // building sprites are located in sprites 144 to 193 (with some gaps)
             for (uint buildingSprite = 144; buildingSprite <= 193; ++buildingSprite)
             {
-                var sprite = data.GetSprite(Data.Resource.MapObject, buildingSprite, color);
+                sprite = data.GetSprite(Data.Resource.MapObject, buildingSprite, color);
 
                 if (sprite != null)
                     AddSprite(atlasIndex, buildingSprite, sprite);
@@ -168,7 +169,7 @@ namespace Freeserf.Render
             // sprites 0 - 127 are normal map objects
             for (uint objectSprite = 0; objectSprite < 128; ++objectSprite)
             {
-                var sprite = data.GetSprite(Data.Resource.MapObject, objectSprite, color);
+                sprite = data.GetSprite(Data.Resource.MapObject, objectSprite, color);
 
                 if (sprite != null)
                     AddSprite(atlasIndex, objectSprite, sprite);
@@ -184,7 +185,7 @@ namespace Freeserf.Render
             for (uint objectSprite = 128; objectSprite <= 143; ++objectSprite)
             {
                 // shadow
-                var sprite = data.GetSprite(Data.Resource.MapShadow, objectSprite, color);
+                sprite = data.GetSprite(Data.Resource.MapShadow, objectSprite, color);
 
                 if (sprite != null)
                 {
@@ -229,7 +230,7 @@ namespace Freeserf.Render
             // 10 path grounds
             for (i = 0; i < 10; ++i)
             {
-                var sprite = data.GetSprite(Data.Resource.PathGround, i, color);
+                sprite = data.GetSprite(Data.Resource.PathGround, i, color);
 
                 if (sprite != null)
                     AddSprite(atlasIndex, i, sprite.RepeatTo(RenderMap.TILE_RENDER_MAX_HEIGHT));
@@ -238,7 +239,7 @@ namespace Freeserf.Render
             // 27 path masks
             for (i = 0; i < 27; ++i)
             {
-                var sprite = data.GetSprite(Data.Resource.PathMask, i, color);
+                sprite = data.GetSprite(Data.Resource.PathMask, i, color);
 
                 if (sprite != null)
                     AddSprite(atlasIndex, 10u + i, sprite.ClearTo(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT));
@@ -247,7 +248,7 @@ namespace Freeserf.Render
             // 10 borders
             for (i = 0; i < 10; ++i)
             {
-                var sprite = data.GetSprite(Data.Resource.MapBorder, i, color);
+                sprite = data.GetSprite(Data.Resource.MapBorder, i, color);
 
                 if (sprite != null)
                     AddSprite(atlasIndex, 100u + i, sprite);
@@ -286,17 +287,34 @@ namespace Freeserf.Render
             bgSprites[2] = data.GetSprite(Data.Resource.Icon, 292u, color);
             bgSprites[3] = data.GetSprite(Data.Resource.Icon, 293u, color);
             bgSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, color);
-            var bgCompoundSprite = new Sprite(360u, 80u);
+            var bgCompoundSprite = new Sprite(320u, 184u);
 
-            for (int r = 0; r < 10; ++r) // 10 rows with 8 pixels each = 80 pixels
+            for (int r = 0; r < 23; ++r) // 23 rows with 8 pixels each = 184 pixels
             {
-                for (int c = 0; c < 9; ++c) // 9 columns with 40 pixels eahc = 360 pixels
+                for (int c = 0; c < 8; ++c) // 8 columns with 40 pixels each = 320 pixels
                 {
                     bgCompoundSprite.Add(c * 40, r * 8, bgSprites[r % 5]);
                 }
             }
 
-            AddSprite(Layer.Gui, index, bgCompoundSprite);
+            // index is now 318 inside the icons
+            AddSprite(Layer.Gui, index++, bgCompoundSprite);
+
+            // we add a compound background of sprites 314 with a bigger size
+            bgCompoundSprite = new Sprite(128u, 144u);
+            sprite = data.GetSprite(Data.Resource.Icon, 314u, color);
+
+            // 9 rows, 8 columns with 16x16 pixels = 128x144
+            for (int r = 0; r < 9; ++r)
+            {
+                for (int c = 0; c < 8; ++c)
+                {
+                    bgCompoundSprite.Add(c * 16, r * 16, sprite);
+                }
+            }
+
+            // index is now 319 inside the icons
+            AddSprite(Layer.Gui, index++, bgCompoundSprite);
 
             #endregion
 

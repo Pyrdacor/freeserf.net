@@ -48,7 +48,7 @@ namespace Freeserf
 
         readonly Dictionary<GuiObject, Position> children = new Dictionary<GuiObject, Position>();
         bool redraw = true;
-        protected Render.IRenderLayer Layer { get; private set; } = null;
+        protected internal Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
         protected bool focused = false;
         protected bool displayed = false;
@@ -458,6 +458,18 @@ namespace Freeserf
         readonly byte displayLayerOffset = 0;
         readonly Data.Resource resourceType = Data.Resource.None;
 
+        // only used by BuildingIcon
+        protected Icon(Interface interf, int width, int height, uint spriteIndex, byte displayLayerOffset)
+            : base(interf)
+        {
+            sprite = CreateSprite(interf.RenderView.SpriteFactory, width, height, Data.Resource.MapObject, spriteIndex, (byte)(BaseDisplayLayer + displayLayerOffset));
+            this.displayLayerOffset = displayLayerOffset;
+            this.resourceType = Data.Resource.MapObject;
+            sprite.Layer = interf.RenderView.GetLayer(global::Freeserf.Layer.GuiBuildings);
+
+            SetSize(width, height);
+        }
+
         public Icon(Interface interf, int width, int height, Data.Resource resourceType, uint spriteIndex, byte displayLayerOffset)
             : base(interf)
         {
@@ -523,6 +535,15 @@ namespace Freeserf
             Clicked?.Invoke(this, new ClickEventArgs(x - X, y - Y));
 
             return true;
+        }
+    }
+
+    internal class BuildingIcon : Icon
+    {
+        public BuildingIcon(Interface interf, int width, int height, uint spriteIndex, byte displayLayerOffset)
+            : base(interf, width, height, spriteIndex, displayLayerOffset)
+        {
+
         }
     }
 

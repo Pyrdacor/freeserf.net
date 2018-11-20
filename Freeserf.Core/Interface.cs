@@ -1099,8 +1099,8 @@ namespace Freeserf
 
             if (NotificationBox != null)
             {
-                int notificationBoxWidth = 200;
-                int notificationBoxHeight = 88;
+                int notificationBoxWidth = 144; // was 200
+                int notificationBoxHeight = 160; // was 88
                 int notificationBoxX = panelX + 40;
                 int notificationBoxY = panelY - notificationBoxHeight;
                 NotificationBox.MoveTo(notificationBoxX, notificationBoxY);
@@ -1134,7 +1134,7 @@ namespace Freeserf
                     }
                 case 27:
                     {
-                        if ((NotificationBox != null) && NotificationBox.Displayed)
+                        if (NotificationBox != null && NotificationBox.Displayed)
                         {
                             CloseMessage();
                         }

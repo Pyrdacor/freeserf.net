@@ -21,37 +21,353 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace Freeserf
 {
-    internal class NotificationBox : GuiObject
+    enum Decoration
     {
-        public NotificationBox(Interface interf)
-            : base(interf)
-        {
+        Opponent = 0,
+        Mine,
+        Building,
+        MapObject,
+        Icon,
+        Menu
+    }
 
+    struct NotificationView
+    {
+        public NotificationView(Message.Type type, Decoration decoration, uint icon, string text)
+        {
+            Type = type;
+            Decoration = decoration;
+            Icon = icon;
+            Text = text;
+        }
+
+        public Message.Type Type;
+        public Decoration Decoration;
+        public uint Icon;
+        public string Text;
+    }
+
+    internal class NotificationBox : Box
+    {
+        static readonly Dictionary<Message.Type, NotificationView> notificationViews = new Dictionary<Message.Type, NotificationView>(20)
+        {
+            { Message.Type.UnderAttack, new NotificationView(Message.Type.UnderAttack,
+                Decoration.Opponent,
+                0,
+                "Your settlement\nis under attack") },
+            { Message.Type.LoseFight, new NotificationView(Message.Type.LoseFight,
+                Decoration.Opponent,
+                0,
+                "Your knights\njust lost the\nfight") },
+            { Message.Type.WinFight, new NotificationView(Message.Type.WinFight,
+                Decoration.Opponent,
+                0,
+                "You gained\na victory here") },
+            { Message.Type.MineEmpty, new NotificationView(Message.Type.MineEmpty,
+                Decoration.Mine,
+                0,
+                "This mine hauls\nno more raw\nmaterials") },
+            { Message.Type.CallToLocation, new NotificationView(Message.Type.CallToLocation,
+                Decoration.MapObject,
+                0x90,
+                "You wanted me\nto call you to\nthis location") },
+            { Message.Type.KnightOccupied, new NotificationView(Message.Type.KnightOccupied,
+                Decoration.Building,
+                0,
+                "A knight has\noccupied this\nnew building") },
+            { Message.Type.NewStock, new NotificationView(Message.Type.NewStock,
+                Decoration.MapObject,
+                Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
+                "A new stock\nhas been built") },
+            { Message.Type.LostLand, new NotificationView(Message.Type.LostLand,
+                Decoration.Opponent,
+                0,
+                "Because of this\nenemy building\nyou lost some\nland") },
+            { Message.Type.LostBuildings, new NotificationView(Message.Type.LostBuildings,
+                Decoration.Opponent,
+                0,
+                "Because of this\nenemy building\nyou lost some\n" +
+                "land and\nsome buildings") },
+            { Message.Type.EmergencyActive, new NotificationView(Message.Type.EmergencyActive,
+                Decoration.MapObject,
+                Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock] + 1,
+                "Emergency\nprogram\nactivated") },
+            { Message.Type.EmergencyNeutral, new NotificationView(Message.Type.EmergencyNeutral,
+                Decoration.MapObject,
+                Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Castle],
+                "Emergency\nprogram\nneutralized") },
+            { Message.Type.FoundGold, new NotificationView(Message.Type.FoundGold,
+                Decoration.Icon,
+                0x2f,
+                "A geologist\nhas found gold") },
+            { Message.Type.FoundIron, new NotificationView(Message.Type.FoundIron,
+                Decoration.Icon,
+                0x2c,
+                "A geologist\nhas found iron") },
+            { Message.Type.FoundCoal, new NotificationView(Message.Type.FoundCoal,
+                Decoration.Icon,
+                0x2e,
+                "A geologist\nhas found coal") },
+            { Message.Type.FoundStone, new NotificationView(Message.Type.FoundStone,
+                Decoration.Icon,
+                0x2b,
+                "A geologist\nhas found stone") },
+            { Message.Type.CallToMenu, new NotificationView(Message.Type.CallToMenu,
+                Decoration.Menu,
+                0,
+                "You wanted me\nto call you\nto this menu") },
+            { Message.Type.ThirtyMinutesSinceSave, new NotificationView(Message.Type.ThirtyMinutesSinceSave,
+                Decoration.Icon,
+                0x5d,
+                "30 min. passed\nsince the last\nsaving") },
+            { Message.Type.OneHourSinceSave, new NotificationView(Message.Type.OneHourSinceSave,
+                Decoration.Icon,
+                0x5d,
+                "One hour passed\nsince the last\nsaving") },
+            { Message.Type.CallToStock, new NotificationView(Message.Type.CallToStock,
+                Decoration.MapObject,
+                Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
+                "You wanted me\nto call you\nto this stock") },
+            { Message.Type.None, new NotificationView(Message.Type.None, 0, 0, null) }
+        };
+
+        static readonly uint[] MapMenuSprite = new uint[]
+        {
+            0xe6, 0xe7, 0xe8, 0xe9,
+            0xea, 0xeb, 0x12a, 0x12b
+        };
+
+        Interface interf = null;
+        Message message = null;
+
+        // rendering
+        Icon checkBox = null;
+        Icon icon = null;
+        Icon menuIcon = null;
+        Render.IColoredRect playerFaceBackground = null;
+        Icon playerFace = null;
+        BuildingIcon building = null; // cross, mine, stock, castle or military buildings
+        TextField[] textFieldMessage = new TextField[5]; // max 5 lines
+
+        public NotificationBox(Interface interf)
+            : base
+            (
+                interf,
+                BackgroundPattern.CreateNotificationBoxBackground(interf.RenderView.SpriteFactory),
+                Border.CreateNotificationBoxBorder(interf.RenderView.SpriteFactory)
+            )
+        {
+            this.interf = interf;
+
+            InitRenderComponents();
+        }
+
+        void InitRenderComponents()
+        {
+            var spriteFactory = interf.RenderView.SpriteFactory;
+            var coloredRectFactory = interf.RenderView.ColoredRectFactory;
+            var type = Data.Resource.Icon;
+            byte iconLayer = 2;
+            byte borderLayer = 1;
+
+            checkBox = new Icon(interf, 16, 16, type, 288u, iconLayer);
+            AddChild(checkBox, 14 * 8, 128);
+
+            icon = new Icon(interf, 16, 16, type, 93u, iconLayer); // initialize with save icon
+            AddChild(icon, 20 * 8, 14, false); // initially not visible
+
+            menuIcon = new Icon(interf, 16, 16, type, 230u, iconLayer);
+            AddChild(menuIcon, 18 * 8, 8, false); // initially not visible
+
+            playerFace = new Icon(interf, 32, 64, type, 281u, iconLayer); // initialize with empty face
+            AddChild(playerFace, 19 * 8, 12, false); // initially not visible
+
+            building = new BuildingIcon(interf, 64, 97, 178u, iconLayer); // initialize with castle
+            AddChild(building, 20 * 8, 14, false); // initially not visible
+
+            for (int i = 0; i < 5; ++i)
+                textFieldMessage[i] = new TextField(interf.TextRenderer);
+
+            playerFaceBackground = coloredRectFactory.Create(48, 72, Render.Color.Transparent, borderLayer);
+            playerFaceBackground.Layer = Layer;
+        }
+
+        void UpdateBuildingSprite(Decoration decoration, uint data, uint spriteIndex)
+        {
+            switch (decoration)
+            {
+                case Decoration.MapObject: // stock or castle
+                    building.MoveTo(16 * 8, 8);
+                    break;
+                case Decoration.Building: // military buildings
+                    if (data == 2u) // fortress
+                        building.MoveTo(16 * 8, 8);
+                    else // hut or tower
+                        building.MoveTo(18 * 8, 8);
+                    break;
+                case Decoration.Mine:
+                    building.MoveTo(18 * 8, 8);
+                    break;
+                default:
+                    building.Displayed = false;
+                    return;
+            }
+
+            building.SetSpriteIndex(spriteIndex);
+            building.Displayed = true;
         }
 
         public void Show(Message message)
         {
-
+            this.message = message;
+            Displayed = true;
         }
 
         protected override void InternalHide()
         {
             base.InternalHide();
 
-            // TODO
+            playerFaceBackground.Visible = false;
         }
 
         protected override void InternalDraw()
         {
-            // TODO
+            base.InternalDraw();
+
+            DrawNotification(notificationViews[message.MessageType]);
         }
 
         protected internal override void UpdateParent()
         {
-            // TODO
+            checkBox?.UpdateParent();
+            icon?.UpdateParent();
+            building?.UpdateParent();
+        }
+
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            Displayed = false;
+
+            return true;
+        }
+
+        void DrawNotification(NotificationView view)
+        {
+            DrawMessage(1, 10, view.Text);
+
+            var mapBuildingSprite = Render.RenderBuilding.MapBuildingSprite;
+
+            uint spriteIndex = 0u;
+            bool showPlayerFace = false;
+            bool showIcon = false;
+            bool showMenuIcon = false;
+            bool showBuilding = false;
+
+            switch (view.Decoration)
+            {
+                case Decoration.Opponent:
+                    {
+                        var player = interf.Game.GetPlayer(message.Data);
+                        var color = player.GetColor();
+                        playerFaceBackground.Color = new Render.Color()
+                        {
+                            R = color.Red,
+                            G = color.Green,
+                            B = color.Blue,
+                            A = 255
+                        };
+                        playerFace.SetSpriteIndex(GetPlayerFaceSprite(player.GetFace()));
+                        showPlayerFace = Displayed;
+                    }
+                    break;
+                case Decoration.Mine:
+                    spriteIndex = mapBuildingSprite[(int)Building.Type.StoneMine] + message.Data;
+                    showBuilding = Displayed;
+                    break;
+                case Decoration.Building:
+                    showBuilding = Displayed;
+                    switch (message.Data)
+                    {
+                        case 0:
+                            spriteIndex = mapBuildingSprite[(int)Building.Type.Hut];
+                            break;
+                        case 1:
+                            spriteIndex = mapBuildingSprite[(int)Building.Type.Tower];
+                            break;
+                        case 2:
+                            spriteIndex = mapBuildingSprite[(int)Building.Type.Fortress];
+                            break;
+                        default:
+                            showBuilding = false;
+                            Debug.NotReached();
+                            break;
+                    }
+                    break;
+                case Decoration.MapObject:
+                    spriteIndex = view.Icon;
+                    showBuilding = Displayed;
+                    break;
+                case Decoration.Icon:
+                    showIcon = Displayed;
+                    icon.SetSpriteIndex(view.Icon);
+                    break;
+                case Decoration.Menu:
+                    showMenuIcon = Displayed;
+                    menuIcon.SetSpriteIndex(MapMenuSprite[(int)message.Data]);
+                    break;
+                default:
+                    break;
+            }
+
+            UpdateBuildingSprite(view.Decoration, message.Data, spriteIndex);
+
+            building.Displayed = showBuilding;
+            menuIcon.Displayed = showMenuIcon;
+            icon.Displayed = showIcon;
+            playerFace.Displayed = showPlayerFace;
+            playerFaceBackground.Visible = showPlayerFace;
+        }
+
+        void DrawString(int x, int y, TextField textField, string str)
+        {
+            textField.SetPosition(X + 8 * x, Y + y);
+            textField.Text = str;
+            textField.Visible = Displayed;
+            textField.DisplayLayer = (byte)(BaseDisplayLayer + 3);
+
+            // TODO: textField.ColorText = Color.Green;
+            // TODO: textField.ColorBg = Color.Black;
+        }
+
+        void DrawMessage(int x, int y, string message)
+        {
+            var lines = message.Split('\n');
+
+            for (int i = 0; i < 5; ++i)
+            {
+                if (i >= lines.Length)
+                {
+                    textFieldMessage[i].Visible = false;
+                    textFieldMessage[i].Destroy();                    
+                }
+                else
+                {
+                    DrawString(x, y, textFieldMessage[i], lines[i]);
+                    y += 10;
+                }
+            }
+        }
+
+        uint GetPlayerFaceSprite(uint face)
+        {
+            if (face != 0u)
+                return 0x10b + face;
+
+            return 0x119u; /* sprite_face_none */
         }
     }
 }
