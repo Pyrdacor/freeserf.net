@@ -169,7 +169,7 @@ namespace Freeserf
 
         protected virtual bool HandleDrag(int dx, int dy)
         {
-            return true;
+            return false;
         }
 
         protected virtual bool HandleKeyPressed(char key, int modifier)
@@ -301,6 +301,7 @@ namespace Freeserf
           
             if (e.Type == Event.Type.Click ||
                 e.Type == Event.Type.DoubleClick ||
+                e.Type == Event.Type.SpecialClick ||
                 e.Type == Event.Type.Drag)
             {
                 int objectX = e.X - TotalX;
@@ -385,7 +386,7 @@ namespace Freeserf
             return new Position((int)Math.Floor(position.X * factorX), (int)Math.Floor(position.Y * factorY));
         }
 
-        public static Position PositionGuiToGame(Position position, Render.IRenderView renderView)
+        public static Position PositionToGame(Position position, Render.IRenderView renderView)
         {
             float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
 
@@ -403,12 +404,12 @@ namespace Freeserf
             return new Size(Misc.Round(delta.Width * factorX), Misc.Round(delta.Height * factorY));
         }
 
-        public static Size DeltaGuiToGame(Size delta, Render.IRenderView renderView)
+        public static Size DeltaToGame(Size delta, Render.IRenderView renderView)
         {
             float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
 
-            delta.Width = Misc.Round(zoomFactor * delta.Width);
-            delta.Height = Misc.Round(zoomFactor * delta.Height);
+            delta.Width = Misc.Round(delta.Width / zoomFactor);
+            delta.Height = Misc.Round(delta.Height / zoomFactor);
 
             return delta;
         }
@@ -423,10 +424,7 @@ namespace Freeserf
             var position = PositionToGui(new Position(args.X, args.Y));
             var delta = DeltaToGui(new Size(args.Dx, args.Dy));
 
-            args.X = position.X;
-            args.Y = position.Y;
-            args.Dx = delta.Width;
-            args.Dy = delta.Height;
+            args = Event.EventArgs.Transform(args, position.X, position.Y, delta.Width, delta.Height);
 
             return HandleEvent(args);
         }
@@ -435,8 +433,7 @@ namespace Freeserf
         {
             var position = PositionToGui(new Position(args.X, args.Y));
 
-            args.X = position.X;
-            args.Y = position.Y;
+            args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
 
             return HandleEvent(args);
         }
@@ -445,8 +442,7 @@ namespace Freeserf
         {
             var position = PositionToGui(new Position(args.X, args.Y));
 
-            args.X = position.X;
-            args.Y = position.Y;
+            args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
 
             return HandleEvent(args);
         }

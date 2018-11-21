@@ -257,6 +257,32 @@ namespace Freeserf.Render
             #endregion
 
 
+            #region Builds
+
+            atlasIndex = Layer.Builds;
+
+            // build sprites are located in sprites 31 to 51 (with a gap)
+            // these are build indicators and road build symbols
+            for (uint buildSprite = 31; buildSprite <= 51; ++buildSprite)
+            {
+                sprite = data.GetSprite(Data.Resource.GameObject, buildSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, buildSprite, sprite);
+            }
+
+            #endregion
+
+
+            #region Cursor
+
+            atlasIndex = Layer.Cursor;
+
+            AddSprite(atlasIndex, 0u, data.GetSprite(Data.Resource.Cursor, 0u, color));
+
+            #endregion
+
+
             #region Gui
 
             uint index = 0u;

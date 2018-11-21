@@ -21,6 +21,7 @@
  */
 
 using System;
+using Freeserf.Render;
 
 namespace Freeserf
 {
@@ -30,21 +31,93 @@ namespace Freeserf
     // It transforms and forwards mouse clicks to the game.
     internal class Viewport : GuiObject
     {
-        Interface interf = null;
-        Map map = null;
+        struct BuildSpriteInfo
+        {
+            public uint Width;
+            public uint Height;
+            public int OffsetX;
+            public int OffsetY;
+        }
+
+        static BuildSpriteInfo[] buildSpriteInfos = null;
+
+        readonly Interface interf = null;
+        readonly Map map = null;
         int totalDragX = 0;
         int totalDragY = 0;
+        readonly IRenderLayer cursorLayer = null;
+        readonly IRenderLayer buildsLayer = null;
+        readonly ILayerSprite[,] builds = null;
+        readonly ILayerSprite[] mapCursorSprites = new ILayerSprite[7];
+        bool showPossibleBuilds = false;
 
         public Viewport(Interface interf, Map map)
             : base(interf)
         {
             this.interf = interf;
             this.map = map;
+
+            cursorLayer = interf.RenderView.GetLayer(global::Freeserf.Layer.Cursor);
+            buildsLayer = interf.RenderView.GetLayer(global::Freeserf.Layer.Builds);
+
+            builds = new ILayerSprite[map.RenderMap.NumVisibleColumns, map.RenderMap.NumVisibleRows];
+
+            if (buildSpriteInfos == null)
+            {
+                buildSpriteInfos = new BuildSpriteInfo[20];
+                var data = interf.RenderView.DataSource;
+
+                for (uint i = 0; i < 20u; ++i)
+                {
+                    var sprite = data.GetSprite(Data.Resource.GameObject, 31u + i, Sprite.Color.Transparent);
+
+                    if (sprite != null)
+                    {
+                        buildSpriteInfos[i] = new BuildSpriteInfo()
+                        {
+                            Width = sprite.Width,
+                            Height = sprite.Height,
+                            OffsetX = sprite.OffsetX,
+                            OffsetY = sprite.OffsetY
+                        };
+                    }
+                }
+            }
+
+            // create map cursor sprites
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
+            var offset = textureAtlas.GetOffset(31u);
+            mapCursorSprites[0] = interf.RenderView.SpriteFactory.Create(16, 9, offset.X, offset.Y, false, true) as ILayerSprite;
+            mapCursorSprites[0].Layer = buildsLayer;
+            mapCursorSprites[0].Visible = true;
+            offset = textureAtlas.GetOffset(32u);
+
+            for (int i = 1; i < 7; ++i)
+            {
+                mapCursorSprites[i] = interf.RenderView.SpriteFactory.Create(5, 5, offset.X, offset.Y, false, true) as ILayerSprite;
+                mapCursorSprites[i].Layer = buildsLayer;
+                mapCursorSprites[i].Visible = true;
+            }
         }
 
+        public void CleanUp()
+        {
+            // destroy build sprites
+            for (uint r = 0; r < map.RenderMap.NumVisibleRows; ++r)
+            {
+                for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
+                {
+                    if (builds[c, r] != null)
+                        builds[c, r].Delete();
+                }
+            }
+        }
+
+        /* Called periodically when the game progresses. */
         public void Update()
         {
-
+            // view redraw the viewport permanently
+            SetRedraw();
         }
 
         public MapPos GetCurrentMapPos()
@@ -76,7 +149,7 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            // TODO
+            DrawMapCursor();
         }
 
         protected internal override void UpdateParent()
@@ -84,13 +157,147 @@ namespace Freeserf
             // TODO
         }
 
+
+        #region Cursor and Builds
+
+        void DrawMapCursor()
+        {
+            if (showPossibleBuilds)
+                DrawMapCursorPossibleBuild();
+
+            MapPos pos = interf.GetMapCursorPos();
+
+            DrawMapCursorSprite(pos, 0, interf.GetMapCursorSprite(0));
+
+            var cycle = DirectionCycleCW.CreateDefault();
+
+            foreach (Direction d in cycle)
+            {
+                DrawMapCursorSprite(map.Move(pos, d), 1 + (int)d, interf.GetMapCursorSprite(1 + (int)d));
+            }
+        }
+
+        void DrawMapCursorSprite(MapPos pos, int index, uint spriteIndex)
+        {
+            var renderPos = map.RenderMap.GetObjectRenderPosition(pos);
+            var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
+
+            mapCursorSprites[index].X = renderPos.X + spriteInfo.OffsetX;
+            mapCursorSprites[index].Y = renderPos.Y + spriteInfo.OffsetY;
+        }
+
+        void SetBuildSprite(uint column, uint row, int spriteIndex)
+        {
+            if (spriteIndex >= 0)
+            {
+                var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
+                var offset = textureAtlas.GetOffset((uint)spriteIndex);
+
+                if (builds[column, row] == null)
+                {
+                    var spriteInfo = buildSpriteInfos[spriteIndex - 31];
+
+                    builds[column, row] = interf.RenderView.SpriteFactory.Create((int)spriteInfo.Width, (int)spriteInfo.Height, offset.X, offset.Y, false, true) as ILayerSprite;
+                    builds[column, row].Layer = buildsLayer;
+                    builds[column, row].X = TotalX + (int)column * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH / 2;
+                    builds[column, row].Y = TotalY + (int)row * RenderMap.TILE_HEIGHT;
+                }
+                else
+                {
+                    builds[column, row].TextureAtlasOffset = offset;
+                }
+                
+                builds[column, row].Visible = true;
+                
+            }
+            else
+            {
+                if (builds[column, row] != null)
+                    builds[column, row].Visible = false;
+            }
+        }
+
+        void DrawMapCursorPossibleBuild()
+        {
+            Game game = interf.Game;
+
+            for (uint r = 0; r < map.RenderMap.NumVisibleRows; ++r)
+            {
+                for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
+                {
+                    var pos = map.RenderMap.GetMapPos(c, r);
+
+                    /* Draw possible building */
+                    int sprite = -1;
+
+                    if (game.CanBuildCastle(pos, interf.GetPlayer()))
+                    {
+                        sprite = 49;
+                    }
+                    else if (game.CanPlayerBuild(pos, interf.GetPlayer()) &&
+                             Map.MapSpaceFromObject[(int)map.GetObject(pos)] == Map.Space.Open &&
+                             (game.CanBuildFlag(map.MoveDownRight(pos), interf.GetPlayer()) || map.HasFlag(map.MoveDownRight(pos))))
+                    {
+                        if (game.CanBuildMine(pos))
+                        {
+                            sprite = 47;
+                        }
+                        else if (game.CanBuildLarge(pos))
+                        {
+                            sprite = 49;
+                        }
+                        else if (game.CanBuildSmall(pos))
+                        {
+                            sprite = 48;
+                        }
+                    }
+
+                    SetBuildSprite(c, r, sprite);
+                }
+            }
+        }
+
+        #endregion
+
+
+        public override bool HandleEvent(Event.EventArgs e)
+        {
+            if (!Enabled || !Displayed)
+            {
+                return false;
+            }
+
+            bool result = false;
+
+            switch (e.Type)
+            {
+                case Event.Type.Click:
+                    if (e.Button == Event.Button.Left)
+                        result = HandleClickLeft(e.X, e.Y);
+                    break;
+                case Event.Type.Drag:
+                    result = HandleDrag(e.Dx, e.Dy);
+                    break;
+                case Event.Type.DoubleClick:
+                case Event.Type.SpecialClick:
+                    result = HandleDoubleClick(e.X, e.Y, e.Button);
+                    break;
+                case Event.Type.KeyPressed:
+                    result = HandleKeyPressed((char)e.Dx, e.Dy);
+                    break;
+                default:
+                    break;
+            }
+
+            return result;
+        }
+
         protected override bool HandleClickLeft(int x, int y)
         {
             if (!interf.Ingame)
                 return false;
 
-            // the game may be zoomed so transform gui position to game position
-            var position = Gui.PositionGuiToGame(new Position(x, y), interf.RenderView);
+            var position = new Position(x, y);
 
             var mapPos = map.RenderMap.GetMapPosFromMousePosition(position);
 
@@ -204,8 +411,7 @@ namespace Freeserf
             if (button != Event.Button.Left)
                 return false;
 
-            // the game may be zoomed so transform gui position to game position
-            var position = Gui.PositionGuiToGame(new Position(x, y), interf.RenderView);
+            var position = new Position(x, y);
 
             var mapPos = map.RenderMap.GetMapPosFromMousePosition(position);
             Player player = interf.GetPlayer();
@@ -382,11 +588,8 @@ namespace Freeserf
             if (!interf.Ingame)
                 return false;
 
-            // the game may be zoomed so transform gui delta to game delta
-            var delta = Gui.DeltaGuiToGame(new Size(dx, dy), interf.RenderView);
-
-            totalDragX += delta.Width;
-            totalDragY += delta.Height;
+            totalDragX += dx;
+            totalDragY += dy;
 
             int scrollX = totalDragX / Render.RenderMap.TILE_WIDTH;
             int scrollY = totalDragY / Render.RenderMap.TILE_HEIGHT;

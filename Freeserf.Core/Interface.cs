@@ -76,8 +76,9 @@ namespace Freeserf
 
         public struct SpriteLocation
         {
-            public int Sprite;
-            public int X, Y;
+            public uint Sprite;
+            // TODO: are X and Y used?
+            //public int X, Y;
         }
 
         GameInitBox initBox;
@@ -127,21 +128,80 @@ namespace Freeserf
 
             displayed = true;
 
-            mapCursorSprites[0] = new SpriteLocation { Sprite = 32 };
-            mapCursorSprites[1] = new SpriteLocation { Sprite = 33 };
-            mapCursorSprites[2] = new SpriteLocation { Sprite = 33 };
-            mapCursorSprites[3] = new SpriteLocation { Sprite = 33 };
-            mapCursorSprites[4] = new SpriteLocation { Sprite = 33 };
-            mapCursorSprites[5] = new SpriteLocation { Sprite = 33 };
-            mapCursorSprites[6] = new SpriteLocation { Sprite = 33 };
+            mapCursorSprites[0] = new SpriteLocation { Sprite = 31 };
+            mapCursorSprites[1] = new SpriteLocation { Sprite = 32 };
+            mapCursorSprites[2] = new SpriteLocation { Sprite = 32 };
+            mapCursorSprites[3] = new SpriteLocation { Sprite = 32 };
+            mapCursorSprites[4] = new SpriteLocation { Sprite = 32 };
+            mapCursorSprites[5] = new SpriteLocation { Sprite = 32 };
+            mapCursorSprites[6] = new SpriteLocation { Sprite = 32 };
 
             GameManager.Instance.AddHandler(this);
 
             SetSize(640, 480); // original size
 
-            Viewport = new Viewport(this, null);
+            Viewport = null;
 
             OpenGameInit();
+        }
+
+        public override bool HandleEvent(Event.EventArgs e)
+        {
+            if (!Enabled || !Displayed)
+            {
+                return false;
+            }
+
+            bool viewportActive = Ingame && Viewport != null;
+            bool viewportEnabled = Viewport != null && Viewport.Enabled;
+            bool clickEvent = e.Type == Event.Type.Click ||
+                              e.Type == Event.Type.DoubleClick ||
+                              e.Type == Event.Type.SpecialClick ||
+                              e.Type == Event.Type.Drag;
+
+            // If the viewport is active and it is a click event
+            // we will disable the viewport temporary to avoid
+            // viewport mouse interaction handling with gui
+            // coordinates.
+            if (viewportActive && clickEvent)
+                Viewport.Enabled = false;
+
+            // Now test if there are gui elements that handle
+            // the event.
+            if (base.HandleEvent(e))
+            {
+                // Ensure viewport enable reset
+                if (viewportEnabled)
+                    Viewport.Enabled = true;
+
+                return true; // handled
+            }
+
+            // If not handled we check for viewport mouse interaction
+            if (viewportActive && clickEvent && viewportEnabled)
+            {
+                Viewport.Enabled = true;
+
+                if (e.UntransformedArgs != null)
+                {
+                    var position = new Position(e.UntransformedArgs.X, e.UntransformedArgs.Y);
+                    var delta = new Size(e.UntransformedArgs.Dx, e.UntransformedArgs.Dy);
+
+                    position = Gui.PositionToGame(position, RenderView); // this considers game zoom
+
+                    if (e.Type == Event.Type.Drag)
+                        delta = Gui.DeltaToGame(delta, RenderView);
+
+                    // pass game transformed mouse data to the viewport
+                    return Viewport.HandleEvent(Event.EventArgs.Transform(e, position.X, position.Y, delta.Width, delta.Height));
+                }
+                else
+                {
+                    Debug.NotReached();
+                }
+            }
+
+            return false;
         }
 
         protected override void InternalDraw()
@@ -153,6 +213,7 @@ namespace Freeserf
         {
             if (Viewport != null)
             {
+                Viewport.CleanUp();
                 DeleteChild(Viewport);
                 Viewport = null;
             }
@@ -162,11 +223,12 @@ namespace Freeserf
 
             if (Game != null)
             {
+                game.Map.AttachToRenderLayer(RenderView.GetLayer(global::Freeserf.Layer.Landscape), RenderView.DataSource);
+
+                // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
                 Viewport = new Viewport(this, Game.Map);
                 Viewport.Displayed = true;
                 AddChild(Viewport, 0, 0);
-
-                game.Map.AttachToRenderLayer(RenderView.GetLayer(global::Freeserf.Layer.Landscape), RenderView.DataSource);
 
                 var pos = game.GetPlayer(0u).CastlePos;
 
@@ -212,7 +274,7 @@ namespace Freeserf
             return mapCursorType;
         }
 
-        public int GetMapCursorSprite(int i)
+        public uint GetMapCursorSprite(int i)
         {
             return mapCursorSprites[i].Sprite;
         }
@@ -304,7 +366,9 @@ namespace Freeserf
                 PanelBar.Displayed = false;
             }
 
-            Viewport.Enabled = false;
+            if (Viewport != null)
+                Viewport.Enabled = false;
+
             base.Layout();
         }
 
@@ -505,12 +569,12 @@ namespace Freeserf
         /* End road construction mode for player interface. */
         public void BuildRoadEnd()
         {
-            mapCursorSprites[1].Sprite = 33;
-            mapCursorSprites[2].Sprite = 33;
-            mapCursorSprites[3].Sprite = 33;
-            mapCursorSprites[4].Sprite = 33;
-            mapCursorSprites[5].Sprite = 33;
-            mapCursorSprites[6].Sprite = 33;
+            mapCursorSprites[1].Sprite = 32;
+            mapCursorSprites[2].Sprite = 32;
+            mapCursorSprites[3].Sprite = 32;
+            mapCursorSprites[4].Sprite = 32;
+            mapCursorSprites[5].Sprite = 32;
+            mapCursorSprites[6].Sprite = 32;
 
             buildingRoad.Invalidate();
             UpdateMapCursorPos(mapCursorPos);
@@ -923,11 +987,11 @@ namespace Freeserf
 
             foreach (Direction d in cycle)
             {
-                int sprite = 0;
+                uint sprite = 0;
 
                 if (buildingRoad.IsUndo(d))
                 {
-                    sprite = 45; /* undo */
+                    sprite = 44; /* undo */
                     validDir |= Misc.Bit((int)d);
                 }
                 else if (map.IsRoadSegmentValid(pos, d))
@@ -935,17 +999,17 @@ namespace Freeserf
                     if (buildingRoad.IsValidExtension(map, d))
                     {
                         int hDiff = (int)map.GetHeight(map.Move(pos, d)) - h;
-                        sprite = 39 + hDiff; /* height indicators */
+                        sprite = (uint)(38 + hDiff); /* height indicators */
                         validDir |= Misc.Bit((int)d);
                     }
                     else
                     {
-                        sprite = 44;
+                        sprite = 43;
                     }
                 }
                 else
                 {
-                    sprite = 44; /* striped */
+                    sprite = 43; /* striped */
                 }
 
                 mapCursorSprites[(int)d + 1].Sprite = sprite;
@@ -962,59 +1026,59 @@ namespace Freeserf
                 switch (mapCursorType)
                 {
                     case CursorType.None:
-                        mapCursorSprites[0].Sprite = 32;
-                        mapCursorSprites[2].Sprite = 33;
+                        mapCursorSprites[0].Sprite = 31u;
+                        mapCursorSprites[2].Sprite = 32u;
                         break;
                     case CursorType.Flag:
-                        mapCursorSprites[0].Sprite = 51;
-                        mapCursorSprites[2].Sprite = 33;
+                        mapCursorSprites[0].Sprite = 50u;
+                        mapCursorSprites[2].Sprite = 32u;
                         break;
                     case CursorType.RemovableFlag:
-                        mapCursorSprites[0].Sprite = 51;
-                        mapCursorSprites[2].Sprite = 33;
+                        mapCursorSprites[0].Sprite = 50u;
+                        mapCursorSprites[2].Sprite = 32u;
                         break;
                     case CursorType.Building:
-                        mapCursorSprites[0].Sprite = 32;
-                        mapCursorSprites[2].Sprite = 33;
+                        mapCursorSprites[0].Sprite = 31u;
+                        mapCursorSprites[2].Sprite = 32u;
                         break;
                     case CursorType.Path:
-                        mapCursorSprites[0].Sprite = 52;
-                        mapCursorSprites[2].Sprite = 33;
+                        mapCursorSprites[0].Sprite = 51u;
+                        mapCursorSprites[2].Sprite = 32u;
                         if (buildPossibility != BuildPossibility.None)
                         {
-                            mapCursorSprites[0].Sprite = 47;
+                            mapCursorSprites[0].Sprite = 46u;
                         }
                         break;
                     case CursorType.ClearByFlag:
                         if (buildPossibility < BuildPossibility.Mine)
                         {
-                            mapCursorSprites[0].Sprite = 32;
-                            mapCursorSprites[2].Sprite = 33;
+                            mapCursorSprites[0].Sprite = 31u;
+                            mapCursorSprites[2].Sprite = 32u;
                         }
                         else
                         {
-                            mapCursorSprites[0].Sprite = 46 + (int)buildPossibility;
-                            mapCursorSprites[2].Sprite = 33;
+                            mapCursorSprites[0].Sprite = 45u + (uint)buildPossibility;
+                            mapCursorSprites[2].Sprite = 32u;
                         }
                         break;
                     case CursorType.ClearByPath:
                         if (buildPossibility != BuildPossibility.None)
                         {
-                            mapCursorSprites[0].Sprite = 46 + (int)buildPossibility;
+                            mapCursorSprites[0].Sprite = 45u + (uint)buildPossibility;
 
                             if (buildPossibility == BuildPossibility.Flag)
                             {
-                                mapCursorSprites[2].Sprite = 33;
+                                mapCursorSprites[2].Sprite = 32u;
                             }
                             else
                             {
-                                mapCursorSprites[2].Sprite = 47;
+                                mapCursorSprites[2].Sprite = 46u;
                             }
                         }
                         else
                         {
-                            mapCursorSprites[0].Sprite = 32;
-                            mapCursorSprites[2].Sprite = 33;
+                            mapCursorSprites[0].Sprite = 31u;
+                            mapCursorSprites[2].Sprite = 32u;
                         }
                         break;
                     case CursorType.Clear:
@@ -1022,25 +1086,25 @@ namespace Freeserf
                         {
                             if (buildPossibility == BuildPossibility.Castle)
                             {
-                                mapCursorSprites[0].Sprite = 50;
+                                mapCursorSprites[0].Sprite = 49u;
                             }
                             else
                             {
-                                mapCursorSprites[0].Sprite = 46 + (int)buildPossibility;
+                                mapCursorSprites[0].Sprite = 45u + (uint)buildPossibility;
                             }
                             if (buildPossibility == BuildPossibility.Flag)
                             {
-                                mapCursorSprites[2].Sprite = 33;
+                                mapCursorSprites[2].Sprite = 32u;
                             }
                             else
                             {
-                                mapCursorSprites[2].Sprite = 47;
+                                mapCursorSprites[2].Sprite = 46u;
                             }
                         }
                         else
                         {
-                            mapCursorSprites[0].Sprite = 32;
-                            mapCursorSprites[2].Sprite = 33;
+                            mapCursorSprites[0].Sprite = 31u;
+                            mapCursorSprites[2].Sprite = 32u;
                         }
                         break;
                     default:

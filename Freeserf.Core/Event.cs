@@ -58,8 +58,9 @@ namespace Freeserf.Event
                     done = true;
             }
         }
+        public EventArgs UntransformedArgs { get; private set; }
 
-        public EventArgs(Type type, int x, int y, int dx, int dy, Button button = Button.None)
+        public EventArgs(Type type, int x, int y, int dx, int dy, Button button = Button.None, EventArgs untransformed = null)
         {
             Type = type;
             X = x;
@@ -67,6 +68,12 @@ namespace Freeserf.Event
             Dx = dx;
             Dy = dy;
             Button = button;
+            UntransformedArgs = untransformed;
+        }
+
+        public static EventArgs Transform(EventArgs args, int transformedX, int transformedY, int transformedDx, int transformedDy)
+        {
+            return new EventArgs(args.Type, transformedX, transformedY, transformedDx, transformedDy, args.Button, args);
         }
     }
 

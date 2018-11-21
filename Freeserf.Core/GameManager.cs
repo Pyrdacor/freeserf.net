@@ -111,12 +111,14 @@ namespace Freeserf
         {
             if (currentGame != null)
             {
-                currentGame.Close();
-
                 foreach (IHandler handler in handlers)
                 {
                     handler.OnEndGame(currentGame);
                 }
+
+                // Note: Call this after the handlers are notified so the game and render
+                //       data is valid while destroying things like the viewport.
+                currentGame.Close();
             }
 
             currentGame = newGame;

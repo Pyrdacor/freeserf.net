@@ -118,26 +118,24 @@ namespace Freeserf.Render
         };
 
         readonly Dictionary<uint, Position> maskOffsets = new Dictionary<MapPos, Position>(81 + 81);
-        
-        uint x = 0; // in columns
-        uint y = 0; // in rows
-        Rect renderArea = new Rect();
-        uint numColumns = 0;
-        uint numRows = 0;
+        readonly uint numColumns = 0;
+        readonly uint numRows = 0;
         Map map = null;
         ITextureAtlas textureAtlas = null;
         readonly List<ITriangle> triangles = null;
 
-        public uint ScrollX => x;
-        public uint ScrollY => y;
-        public Rect RenderArea => renderArea;
+        public uint ScrollX { get; private set; } = 0;
+        public uint ScrollY { get; private set; } = 0;
+        public Rect RenderArea { get; private set; } = new Rect();
+        public uint NumVisibleColumns => numColumns + ADDITIOANL_X_TILES;
+        public uint NumVisibleRows => numRows + ADDITIONAL_Y_TILES;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
             ITriangleFactory triangleFactory, ITextureAtlas textureAtlas,
             DataSource dataSource)
         {
-            x = 0;
-            y = 0;
+            ScrollX = 0;
+            ScrollY = 0;
             this.numColumns = numColumns;
             this.numRows = numRows;
             this.map = map;
@@ -200,8 +198,8 @@ namespace Freeserf.Render
 
         public void Scroll(int x, int y)
         {
-            int column = (int)this.x + x;
-            int row = (int)this.y + y;
+            int column = (int)this.ScrollX + x;
+            int row = (int)this.ScrollY + y;
 
             if (column < 0)
                 column += (int)map.Columns;
@@ -214,11 +212,11 @@ namespace Freeserf.Render
 
         public void ScrollTo(uint x, uint y)
         {
-            if (this.x == x && this.y == y)
+            if (this.ScrollX == x && this.ScrollY == y)
                 return;
 
-            this.x = x;
-            this.y = y;
+            this.ScrollX = x;
+            this.ScrollY = y;
 
             UpdatePosition();
         }
@@ -357,24 +355,24 @@ namespace Freeserf.Render
 
             int y = (int)row;
 
-            if (y < (this.y & map.RowMask))
+            if (y < (this.ScrollY & map.RowMask))
                 y += (int)map.Rows;
 
             int calcY = y;
 
-            if (this.y >= map.Rows)
+            if (this.ScrollY >= map.Rows)
                 calcY += (int)map.Rows;
 
             int x = (int)column - calcY / 2;
 
-            if (x < this.x)
+            if (x < this.ScrollX)
                 x += (int)map.Columns;
 
             x *= TILE_WIDTH;
             y *= TILE_HEIGHT;
 
-            x -= renderArea.Position.X;
-            y -= renderArea.Position.Y;
+            x -= RenderArea.Position.X;
+            y -= RenderArea.Position.Y;
 
             if (row % 2 == 1)
                 x -= TILE_WIDTH / 2;
@@ -385,27 +383,63 @@ namespace Freeserf.Render
             return new Position(x, y);
         }
 
+        public MapPos GetMapPos(uint renderColumn, uint renderRow)
+        {
+            // axis-aligned map column and row
+            var column = ScrollX + renderColumn;
+            var row = ScrollY + renderRow;
+
+            column &= map.ColumnMask;
+
+            // cap at double rows as half rows have influence on the column
+            if (row >= 2 * map.Rows)
+                row &= map.RowMask;
+
+            // map column and row
+            uint realColumn = (column + row / 2) & map.ColumnMask;
+            uint realRow = row & map.RowMask;
+
+            return map.Pos(realColumn, realRow);
+        }
+
         public MapPos GetMapPosFromMousePosition(Position position)
         {
-            // TODO
-            return 0;
+            // position inside the map
+            int x = position.X + RenderArea.Position.X;
+            int y = position.Y + RenderArea.Position.Y;
+
+            // axis-aligned map column and row
+            uint column = (uint)(x / TILE_WIDTH);
+            uint row = (uint)(y / TILE_HEIGHT);
+
+            column &= map.ColumnMask;
+
+            // cap at double rows as half rows have influence on the column
+            if (row >= 2 * map.Rows)
+                row &= map.RowMask;
+
+            // map column and row
+            uint realColumn = (column + row / 2) & map.ColumnMask;
+            uint realRow = row & map.RowMask;
+
+            return map.Pos(realColumn, realRow);
         }
 
         void UpdatePosition()
         {
-            x &= map.ColumnMask;
+            ScrollX &= map.ColumnMask;
 
             // cap at double rows as half rows have influence on the column
-            if (y >= 2 * map.Rows)
-                y &= map.RowMask;
+            if (ScrollY >= 2 * map.Rows)
+                ScrollY &= map.RowMask;
 
-            renderArea = new Rect((int)x * TILE_WIDTH - TILE_WIDTH / 2, (int)(y & map.RowMask) * TILE_HEIGHT,
+            RenderArea = new Rect((int)ScrollX * TILE_WIDTH - TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
                 ((int)numColumns + ADDITIOANL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
-            bool odd = y % 2 == 1;
+            bool odd = ScrollY % 2 == 1;
             int index = 0;
-            uint realColumn = (x + y / 2) & map.ColumnMask;
-            uint realRow = y & map.RowMask;
+            uint realColumn = (ScrollX + ScrollY / 2) & map.ColumnMask;
+            uint realRow = ScrollY & map.RowMask;
 
             MapPos pos = map.Pos(realColumn, realRow);
 
