@@ -25,8 +25,6 @@ using System.Collections.Generic;
 
 namespace Freeserf
 {
-    // TODO: gui should not be zoomed!
-
     internal abstract class GuiObject
     {
         public static Position GetTextureAtlasOffset(Data.Resource resourceType, uint spriteIndex)
@@ -520,6 +518,12 @@ namespace Freeserf
         public void SetSpriteIndex(uint spriteIndex)
         {
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, spriteIndex);
+        }
+
+        public void Resize(int width, int height)
+        {
+            sprite.Resize(width, height);
+            SetSize(width, height);
         }
     }
 

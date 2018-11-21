@@ -100,7 +100,7 @@ namespace Freeserf.Renderer.OpenTK
                     var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture,
                         layer == Layer.Gui); // the gui supports colored rects
 
-                    if (layer == Layer.Gui)
+                    if (layer == Layer.Gui || layer == Layer.GuiBuildings)
                     {
                         // the gui needs scaling
                         renderLayer.PositionTransformation = (Position position) =>

@@ -127,7 +127,7 @@ namespace Freeserf
             { Message.Type.OneHourSinceSave, new NotificationView(Message.Type.OneHourSinceSave,
                 Decoration.Icon,
                 0x5d,
-                "One hour passed\nsince the last\nsaving") },
+                "1 hour passed\nsince the last\nsaving") },
             { Message.Type.CallToStock, new NotificationView(Message.Type.CallToStock,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
@@ -196,29 +196,26 @@ namespace Freeserf
             playerFaceBackground.Layer = Layer;
         }
 
-        void UpdateBuildingSprite(Decoration decoration, uint data, uint spriteIndex)
+        bool UpdateBuildingSprite(Decoration decoration, uint data, uint spriteIndex)
         {
             switch (decoration)
             {
-                case Decoration.MapObject: // stock or castle
-                    building.MoveTo(16 * 8, 8);
-                    break;
-                case Decoration.Building: // military buildings
-                    if (data == 2u) // fortress
-                        building.MoveTo(16 * 8, 8);
-                    else // hut or tower
-                        building.MoveTo(18 * 8, 8);
-                    break;
-                case Decoration.Mine:
-                    building.MoveTo(18 * 8, 8);
+                case Decoration.MapObject:  // cross, stock or castle
+                case Decoration.Building:   // military buildings
+                case Decoration.Mine:       // mine
                     break;
                 default:
-                    building.Displayed = false;
-                    return;
+                    return false;
             }
 
+            var sprite = interf.RenderView.DataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
+
+            building.Resize((int)sprite.Width, (int)sprite.Height);
+            building.MoveTo((Width - (int)sprite.Width) / 2, 64);
+
             building.SetSpriteIndex(spriteIndex);
-            building.Displayed = true;
+
+            return true;
         }
 
         public void Show(Message message)
@@ -248,7 +245,9 @@ namespace Freeserf
         {
             checkBox?.UpdateParent();
             icon?.UpdateParent();
+            menuIcon?.UpdateParent();
             building?.UpdateParent();
+            playerFace?.UpdateParent();
         }
 
         protected override bool HandleClickLeft(int x, int y)
@@ -326,7 +325,8 @@ namespace Freeserf
                     break;
             }
 
-            UpdateBuildingSprite(view.Decoration, message.Data, spriteIndex);
+            if (!UpdateBuildingSprite(view.Decoration, message.Data, spriteIndex))
+                showBuilding = false;
 
             building.Displayed = showBuilding;
             menuIcon.Displayed = showMenuIcon;
