@@ -129,7 +129,7 @@ namespace Freeserf
         {
             SetCharacter(character);
 
-            Intelligence = intelligence; ;
+            Intelligence = intelligence;
             Supplies = supplies;
             Reproduction = reproduction;
             CastlePos = Pos.None;
@@ -390,6 +390,7 @@ namespace Freeserf
                                                   playerInfo.Intelligence, playerInfo.Supplies,
                                                   playerInfo.Reproduction);
                 player.CastlePos = playerInfo.Castle;
+                player.Color = PlayerInfo.PlayerColors[i];
                 AddPlayer(player);
             }
         }
