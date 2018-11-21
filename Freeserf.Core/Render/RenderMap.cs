@@ -409,20 +409,43 @@ namespace Freeserf.Render
             int y = position.Y + RenderArea.Position.Y;
 
             // axis-aligned map column and row
-            uint column = (uint)((x + TILE_WIDTH / 2) / TILE_WIDTH);
-            uint row = (uint)((y + TILE_HEIGHT / 2) / TILE_HEIGHT);
+            uint column = (uint)((x + 8) / TILE_WIDTH);
+            uint row = 0; // we start at row 0 and go down till we reach the y position
+
+            int yBase = -4;
+
+            if ((x + 8) % TILE_WIDTH < 16) // TODO: this is not perfect yet
+            {
+                ++row;
+                yBase = 16;
+            }
 
             column &= map.ColumnMask;
 
-            // cap at double rows as half rows have influence on the column
-            if (row >= 2 * map.Rows)
-                row &= map.RowMask;
+            // now consider tile height values
+            int ly;
+            int lastY = -100;
 
-            // map column and row
-            uint realColumn = (column + row / 2) & map.ColumnMask;
-            uint realRow = row & map.RowMask;
+            while (true)
+            {
+                ly = yBase - 4 * (int)map.GetHeight(map.Pos(column, row));
 
-            return map.Pos(realColumn, realRow);
+                if (y < ly)
+                    break;
+
+                lastY = ly;
+                column = (column + 1) & map.ColumnMask;
+                row = (row + 2) & map.RowMask;
+                yBase += 2 * TILE_HEIGHT;
+            }
+
+            if (y < (ly + lastY) / 2)
+            {
+                column = (column - 1) & map.ColumnMask;
+                row = (row - 2) & map.RowMask;
+            }
+
+            return map.Pos(column, row);
         }
 
         void UpdatePosition()
