@@ -680,6 +680,15 @@ namespace Freeserf
             RenderMap.AttachToRenderLayer(renderLayer);
         }
 
+        public void Close()
+        {
+            if (RenderMap != null)
+            {
+                RenderMap.DetachFromRenderLayer();
+                RenderMap = null;
+            }
+        }
+
         public uint Size => Geometry.Size;
         public uint Columns => Geometry.Columns;
         public uint Rows => Geometry.Rows;

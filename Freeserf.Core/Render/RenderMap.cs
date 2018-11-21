@@ -192,6 +192,12 @@ namespace Freeserf.Render
                 triangle.Layer = renderLayer;
         }
 
+        public void DetachFromRenderLayer()
+        {
+            foreach (var triangle in triangles)
+                triangle.Layer = null;
+        }
+
         public void Scroll(int x, int y)
         {
             int column = (int)this.x + x;

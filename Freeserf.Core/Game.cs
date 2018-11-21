@@ -148,6 +148,39 @@ namespace Freeserf
             goldTotal = 0;
         }
 
+        public void Close()
+        {
+            // delete all render objects
+
+            foreach (var building in renderBuildings)
+                building.Value.Delete();
+
+            foreach (var building in renderBuildingsInProgress)
+                building.Delete();
+
+            foreach (var serf in renderSerfs)
+                serf.Value.Delete();
+
+            foreach (var flag in renderFlags)
+                flag.Value.Delete();
+
+            foreach (var mapObject in renderObjects)
+                mapObject.Value.Delete();
+
+            foreach (var roadSegment in renderRoadSegments)
+                roadSegment.Value.Delete();
+
+            renderBuildings.Clear();
+            renderBuildingsInProgress.Clear();
+            renderSerfs.Clear();
+            renderFlags.Clear();
+            renderObjects.Clear();
+            renderRoadSegments.Clear();
+
+            // close map (and delete render map)
+            map.Close();
+        }
+
         public void AddGoldTotal(int delta)
         {
             if (delta < 0)

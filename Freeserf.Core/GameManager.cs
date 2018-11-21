@@ -111,6 +111,8 @@ namespace Freeserf
         {
             if (currentGame != null)
             {
+                currentGame.Close();
+
                 foreach (IHandler handler in handlers)
                 {
                     handler.OnEndGame(currentGame);
