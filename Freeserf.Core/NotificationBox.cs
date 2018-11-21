@@ -184,7 +184,7 @@ namespace Freeserf
             AddChild(menuIcon, 18 * 8, 8, false); // initially not visible
 
             playerFace = new Icon(interf, 32, 64, type, 281u, iconLayer); // initialize with empty face
-            AddChild(playerFace, 19 * 8, 12, false); // initially not visible
+            AddChild(playerFace, 56, 48, false); // initially not visible
 
             building = new BuildingIcon(interf, 64, 97, 178u, iconLayer); // initialize with castle
             AddChild(building, 20 * 8, 14, false); // initially not visible
@@ -283,6 +283,9 @@ namespace Freeserf
                             A = 255
                         };
                         playerFace.SetSpriteIndex(GetPlayerFaceSprite(player.GetFace()));
+                        playerFaceBackground.X = TotalX + 48;
+                        playerFaceBackground.Y = TotalY + 44;
+                        playerFaceBackground.DisplayLayer = (byte)(BaseDisplayLayer + 1);
                         showPlayerFace = Displayed;
                     }
                     break;
