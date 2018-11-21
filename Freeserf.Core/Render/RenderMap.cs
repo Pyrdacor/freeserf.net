@@ -377,7 +377,7 @@ namespace Freeserf.Render
             if (row % 2 == 1)
                 x -= TILE_WIDTH / 2;
 
-            x -= TILE_WIDTH;
+            x += TILE_WIDTH / 2;
             y -= 4 * (int)map.GetHeight(pos);
 
             return new Position(x, y);
@@ -409,8 +409,8 @@ namespace Freeserf.Render
             int y = position.Y + RenderArea.Position.Y;
 
             // axis-aligned map column and row
-            uint column = (uint)(x / TILE_WIDTH);
-            uint row = (uint)(y / TILE_HEIGHT);
+            uint column = (uint)((x + TILE_WIDTH / 2) / TILE_WIDTH);
+            uint row = (uint)((y + TILE_HEIGHT / 2) / TILE_HEIGHT);
 
             column &= map.ColumnMask;
 
@@ -433,7 +433,7 @@ namespace Freeserf.Render
             if (ScrollY >= 2 * map.Rows)
                 ScrollY &= map.RowMask;
 
-            RenderArea = new Rect((int)ScrollX * TILE_WIDTH - TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
+            RenderArea = new Rect((int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
                 ((int)numColumns + ADDITIOANL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             bool odd = ScrollY % 2 == 1;
