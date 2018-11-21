@@ -98,7 +98,7 @@ namespace Freeserf.Renderer.OpenTK
                 try
                 {
                     var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture,
-                        layer == Layer.Gui); // the gui supports colored rects
+                        layer == Layer.Gui); // only the gui supports colored rects
 
                     if (layer == Layer.Gui || layer == Layer.GuiBuildings)
                     {
@@ -108,7 +108,7 @@ namespace Freeserf.Renderer.OpenTK
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
-                            return new Position(Misc.Floor(position.X * factorX - 0.49f), Misc.Floor(position.Y * factorY - 0.49f));
+                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
@@ -117,8 +117,8 @@ namespace Freeserf.Renderer.OpenTK
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
 
                             // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX + 0.75f);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY + 0.75f);
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY);
 
                             return new Size(width, height);
                         };
@@ -126,6 +126,7 @@ namespace Freeserf.Renderer.OpenTK
 
                     // initial we only show the gui + cursor
                     // TODO: set back to below comment
+                    // TODO: If we really show a map in the background, we will show all layers in the beginning!
                     renderLayer.Visible = true;// layer == Layer.Gui || layer == Layer.Cursor;
 
                     AddLayer(renderLayer);
