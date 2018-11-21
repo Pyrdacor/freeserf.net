@@ -288,24 +288,6 @@ namespace Freeserf
         /* Open box for starting a new game */
         public void OpenGameInit()
         {
-            // TODO: REMOVE TEST CODE
-            if (NotificationBox == null)
-            {
-                NotificationBox = new NotificationBox(this);
-                AddChild(NotificationBox, 0, 0);
-            }
-
-            var message = new Message();
-            message.MessageType = Message.Type.FoundCoal;
-            message.Data = 0;
-            message.Pos = 0;
-
-            NotificationBox.Show(message);
-            base.Layout();
-            return;
-
-
-
             RenderView.ResetZoom();
 
             if (initBox == null)

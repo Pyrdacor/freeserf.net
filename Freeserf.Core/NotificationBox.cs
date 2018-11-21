@@ -127,7 +127,7 @@ namespace Freeserf
             { Message.Type.OneHourSinceSave, new NotificationView(Message.Type.OneHourSinceSave,
                 Decoration.Icon,
                 0x5d,
-                "1 hour passed\nsince the last\nsaving") },
+                "One hour passed\nsince the last\nsaving") },
             { Message.Type.CallToStock, new NotificationView(Message.Type.CallToStock,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
@@ -178,10 +178,10 @@ namespace Freeserf
             AddChild(checkBox, 14 * 8, 128);
 
             icon = new Icon(interf, 16, 16, type, 93u, iconLayer); // initialize with save icon
-            AddChild(icon, 64, 64, false); // initially not visible
+            AddChild(icon, 64, 72, false); // initially not visible
 
-            menuIcon = new Icon(interf, 16, 16, type, 230u, iconLayer);
-            AddChild(menuIcon, 18 * 8, 8, false); // initially not visible
+            menuIcon = new Icon(interf, 32, 32, type, 230u, iconLayer);
+            AddChild(menuIcon, 56, 72, false); // initially not visible
 
             playerFace = new Icon(interf, 32, 64, type, 281u, iconLayer); // initialize with empty face
             AddChild(playerFace, 56, 48, false); // initially not visible
@@ -210,8 +210,10 @@ namespace Freeserf
 
             var sprite = interf.RenderView.DataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
 
+            int yOffset = (spriteIndex == 0x90) ? 24 : 0; // adjust position for location indicator (cross)
+
             building.Resize((int)sprite.Width, (int)sprite.Height);
-            building.MoveTo((Width - (int)sprite.Width) / 2, 64);
+            building.MoveTo((Width - (int)sprite.Width) / 2, Math.Min(yOffset + 64, Height - 16 - (int)sprite.Height));
 
             building.SetSpriteIndex(spriteIndex);
 
@@ -220,6 +222,12 @@ namespace Freeserf
 
         public void Show(Message message)
         {
+            if (message.MessageType == Message.Type.None)
+            {
+                Displayed = false;
+                return;
+            }
+
             this.message = message;
             Displayed = true;
         }

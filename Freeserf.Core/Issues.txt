@@ -1,9 +1,18 @@
 ﻿Map Rendering:
 
-- Black lines / artifacts
-- Scrolling map is shaky
+- Black lines / artifacts (fixed by virtual screen resolution change)
 - Some tiles appear/disappear/change location while scrolling
 - Some terrain types seem dislocated
 - Scrolling along the map origin (y-axis) leads to jumps
-- Building and flag locations not completely right
-- Map objects appear at multiple locations
+
+
+Notification Box:
+
+- Test too long for:
+	FoundStone
+    MineEmpty
+    OneHourSinceSave
+    UnderAttack
+- Chaos for:
+    LostBuildings
+    LostLand
