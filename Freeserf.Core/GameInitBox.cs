@@ -442,12 +442,12 @@ namespace Freeserf
 
         private void ButtonUp_Clicked(object sender, Button.ClickEventArgs e)
         {
-            HandleAction(Action.Decrement);
+            HandleAction(Action.Increment);
         }
 
         private void ButtonDown_Clicked(object sender, Button.ClickEventArgs e)
         {
-            HandleAction(Action.Increment);
+            HandleAction(Action.Decrement);
         }
 
         protected internal override void UpdateParent()
