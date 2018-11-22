@@ -49,7 +49,7 @@ namespace Freeserf.Renderer.OpenTK
 
     public class TextureAtlasBuilder : ITextureAtlasBuilder
     {
-        readonly Dictionary<uint, global::Freeserf.Sprite> sprites = new Dictionary<uint, global::Freeserf.Sprite>();
+        readonly Dictionary<uint, Freeserf.Sprite> sprites = new Dictionary<uint, Freeserf.Sprite>();
 
         // key = max height of category
         class SpriteCategorySorter : IComparer<KeyValuePair<uint, List<uint>>>
@@ -60,7 +60,7 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
-        public void AddSprite(uint spriteIndex, global::Freeserf.Sprite sprite)
+        public void AddSprite(uint spriteIndex, Freeserf.Sprite sprite)
         {
             sprites.Add(spriteIndex, sprite);
         }

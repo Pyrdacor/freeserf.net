@@ -57,8 +57,8 @@ namespace Freeserf
             this.interf = interf;
             this.map = map;
 
-            cursorLayer = interf.RenderView.GetLayer(global::Freeserf.Layer.Cursor);
-            buildsLayer = interf.RenderView.GetLayer(global::Freeserf.Layer.Builds);
+            cursorLayer = interf.RenderView.GetLayer(Freeserf.Layer.Cursor);
+            buildsLayer = interf.RenderView.GetLayer(Freeserf.Layer.Builds);
 
             builds = new ILayerSprite[map.RenderMap.NumVisibleColumns, map.RenderMap.NumVisibleRows];
 
@@ -85,7 +85,7 @@ namespace Freeserf
             }
 
             // create map cursor sprites
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
             var offset = textureAtlas.GetOffset(31u);
             mapCursorSprites[0] = interf.RenderView.SpriteFactory.Create(16, 9, offset.X, offset.Y, false, true) as ILayerSprite;
             mapCursorSprites[0].Layer = buildsLayer;
@@ -176,7 +176,7 @@ namespace Freeserf
         {
             var renderPos = map.RenderMap.GetObjectRenderPosition(pos);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
-            var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
+            var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
 
             mapCursorSprites[index].Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
             mapCursorSprites[index].X = TotalX + renderPos.X + spriteInfo.OffsetX;
@@ -188,7 +188,7 @@ namespace Freeserf
         {
             if (spriteIndex >= 0)
             {
-                var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
+                var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
                 var offset = textureAtlas.GetOffset((uint)spriteIndex);
                 var spriteInfo = buildSpriteInfos[spriteIndex - 31];
 

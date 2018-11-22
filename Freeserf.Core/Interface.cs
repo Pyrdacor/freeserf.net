@@ -223,7 +223,7 @@ namespace Freeserf
 
             if (Game != null)
             {
-                game.Map.AttachToRenderLayer(RenderView.GetLayer(global::Freeserf.Layer.Landscape), RenderView.DataSource);
+                game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.DataSource);
 
                 // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
                 Viewport = new Viewport(this, Game.Map);
@@ -1267,14 +1267,14 @@ namespace Freeserf
                 /* Debug */
                 case 'g':
                     {
-                        Viewport.SwitchLayer(global::Freeserf.Layer.Grid);
+                        Viewport.SwitchLayer(Freeserf.Layer.Grid);
                         break;
                     }
 
                 /* Game control */
                 case 'b':
                     {
-                        Viewport.SwitchLayer(global::Freeserf.Layer.Builds);
+                        Viewport.SwitchLayer(Freeserf.Layer.Builds);
                         break;
                     }
                 case 'j':

@@ -202,7 +202,7 @@ namespace Freeserf
 
                     /* Check if neighbour is valid. */
                     if (!map.IsRoadSegmentValid(node.Pos, d) ||
-                        (map.GetObject(newPos) == global::Freeserf.Map.Object.Flag && newPos != start))
+                        (map.GetObject(newPos) == Freeserf.Map.Object.Flag && newPos != start))
                     {
                         continue;
                     }

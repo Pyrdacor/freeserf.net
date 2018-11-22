@@ -169,7 +169,7 @@ namespace Freeserf
                 var spriteFactory = interf.RenderView.SpriteFactory;
                 var coloredRectFactory = interf.RenderView.ColoredRectFactory;
                 var type = Data.Resource.Icon;
-                var layer = interf.RenderView.GetLayer(global::Freeserf.Layer.Gui);
+                var layer = interf.RenderView.GetLayer(Freeserf.Layer.Gui);
                 var displayLayer = (byte)(baseDisplayLayer + 1);
 
                 borders[0] = CreateSprite(spriteFactory, 80, 8, type, 251u, displayLayer);

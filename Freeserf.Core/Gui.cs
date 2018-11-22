@@ -30,7 +30,7 @@ namespace Freeserf
         public static Position GetTextureAtlasOffset(Data.Resource resourceType, uint spriteIndex)
         {
             var layer = (resourceType == Data.Resource.MapObject) ?
-                global::Freeserf.Layer.GuiBuildings : global::Freeserf.Layer.Gui;
+                Freeserf.Layer.GuiBuildings : Freeserf.Layer.Gui;
 
             var textureAtlasManager = Render.TextureAtlasManager.Instance;
             var textureAtlas = textureAtlasManager.GetOrCreate(layer);
@@ -133,7 +133,7 @@ namespace Freeserf
 
         protected GuiObject(Render.IRenderView renderView)
         {
-            Layer = renderView.GetLayer(global::Freeserf.Layer.Gui);
+            Layer = renderView.GetLayer(Freeserf.Layer.Gui);
         }
 
         protected GuiObject(Render.IRenderLayer renderLayer)
@@ -480,7 +480,7 @@ namespace Freeserf
             sprite = CreateSprite(interf.RenderView.SpriteFactory, width, height, Data.Resource.MapObject, spriteIndex, (byte)(BaseDisplayLayer + displayLayerOffset));
             this.displayLayerOffset = displayLayerOffset;
             resourceType = Data.Resource.MapObject;
-            sprite.Layer = interf.RenderView.GetLayer(global::Freeserf.Layer.GuiBuildings);
+            sprite.Layer = interf.RenderView.GetLayer(Freeserf.Layer.GuiBuildings);
 
             SetSize(width, height);
         }
