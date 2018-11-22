@@ -58,7 +58,10 @@ namespace Freeserf
         public void Draw(GuiObject parent)
         {
             if (parent == null)
+            {
+                background.Visible = false;
                 return;
+            }
 
             Resize(parent.Width, parent.Height);
 

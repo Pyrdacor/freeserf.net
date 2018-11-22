@@ -54,10 +54,5 @@ namespace Freeserf
         {
             // TODO
         }
-
-        protected internal override void UpdateParent()
-        {
-            // TODO
-        }
     }
 }

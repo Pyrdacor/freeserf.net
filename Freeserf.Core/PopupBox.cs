@@ -1158,9 +1158,7 @@ namespace Freeserf
             borderRight.DisplayLayer = BaseDisplayLayer;
             borderDown.DisplayLayer = BaseDisplayLayer;
 
-            fileList.UpdateParent();
-            fileField.UpdateParent();
-            MiniMap.UpdateParent();
+            base.UpdateParent();
         }
     }
 }

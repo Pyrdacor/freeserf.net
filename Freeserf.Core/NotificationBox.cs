@@ -249,15 +249,6 @@ namespace Freeserf
             DrawNotification(notificationViews[message.MessageType]);
         }
 
-        protected internal override void UpdateParent()
-        {
-            checkBox?.UpdateParent();
-            icon?.UpdateParent();
-            menuIcon?.UpdateParent();
-            building?.UpdateParent();
-            playerFace?.UpdateParent();
-        }
-
         protected override bool HandleClickLeft(int x, int y)
         {
             Displayed = false;

@@ -450,21 +450,6 @@ namespace Freeserf
             HandleAction(Action.Decrement);
         }
 
-        protected internal override void UpdateParent()
-        {
-            randomInput?.UpdateParent();
-            minimap?.UpdateParent();
-            fileList?.UpdateParent();
-
-            buttonStart?.UpdateParent();
-            buttonOptions?.UpdateParent();
-            buttonGameType?.UpdateParent();
-            buttonUp?.UpdateParent();
-            buttonDown?.UpdateParent();
-            buttonMapSize?.UpdateParent();
-            buttonExit?.UpdateParent();
-        }
-
         void HideBoxString(TextField textField)
         {
             textField.Visible = false;
@@ -576,6 +561,8 @@ namespace Freeserf
             {
                 case Action.StartGame:
                 {
+                    interf.CloseGameInit();
+
                     if (gameType == GameType.Load)
                     {
                         string path = fileList.GetSelected();
@@ -592,8 +579,6 @@ namespace Freeserf
                             return;
                         }
                     }
-
-                    interf.CloseGameInit();
                     break;
                 }
                 case Action.ToggleGameType:

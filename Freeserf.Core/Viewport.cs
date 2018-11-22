@@ -152,11 +152,6 @@ namespace Freeserf
             DrawMapCursor();
         }
 
-        protected internal override void UpdateParent()
-        {
-            // TODO
-        }
-
 
         #region Cursor and Builds
 

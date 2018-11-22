@@ -141,7 +141,12 @@ namespace Freeserf
             Layer = renderLayer;
         }
 
-        protected internal abstract void UpdateParent();
+        protected internal virtual void UpdateParent()
+        {
+            foreach (var child in children)
+                child.UpdateParent();
+        }
+
         protected abstract void InternalDraw();
         protected virtual void InternalHide()
         {

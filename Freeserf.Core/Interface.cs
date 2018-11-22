@@ -503,10 +503,12 @@ namespace Freeserf
 
             if (this.player != null)
             {
-                PanelBar = new PanelBar(this);
-                PanelBar.Displayed = true;
-                AddChild(PanelBar, 0, 0);
-                Layout();
+                if (PanelBar == null && Ingame)
+                {
+                    PanelBar = new PanelBar(this);
+                    AddChild(PanelBar, 0, 0, true);
+                    Layout();
+                }                
 
                 foreach (Building building in Game.GetPlayerBuildings(this.player))
                 {
@@ -1318,14 +1320,6 @@ namespace Freeserf
         public void OnEndGame(Game game)
         {
             SetGame(null);
-        }
-
-        protected internal override void UpdateParent()
-        {
-            Viewport?.UpdateParent();
-            PanelBar?.UpdateParent();
-            PopupBox?.UpdateParent();
-            NotificationBox?.UpdateParent();
         }
     }
 }
