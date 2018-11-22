@@ -22,16 +22,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf
 {
     using ResourceMap = Dictionary<Resource.Type, uint>;
 
-    internal class PopupBox : GuiObject
+    internal class PopupBox : Box
     {
         public enum Type
         {
-            Map = 1,
+            None = 0,
+            Map,
             MapOverlay, /* UNUSED */
             MineBuilding,
             BasicBld,
@@ -383,17 +385,11 @@ namespace Freeserf
             NewNamE
         }
 
-        // rendering
-        Render.ILayerSprite borderUp = null;
-        Render.ILayerSprite borderLeft = null;
-        Render.ILayerSprite borderRight = null;
-        Render.ILayerSprite borderDown = null;
-
         Interface interf;
         ListSavedFiles fileList;
         TextInput fileField;
 
-        public Type Box { get; }
+        public Type Box { get; private set; }
         public MinimapGame MiniMap { get; }
 
         int currentSett5Item;
@@ -401,9 +397,31 @@ namespace Freeserf
         int currentStat7Item;
         int currentStat8Mode;
 
-        public PopupBox(Interface interf)
-            : base(interf)
+        static Freeserf.BackgroundPattern[] backgrounds = null;
+
+        static void InitBackgrounds(Render.ISpriteFactory spriteFactory)
         {
+            if (backgrounds != null)
+                return;
+
+            var patterns = Enum.GetValues(typeof(BackgroundPattern));
+
+            backgrounds = new Freeserf.BackgroundPattern[patterns.Length];
+
+            for (uint i = 0; i < patterns.Length; ++i)
+                backgrounds[i] = Freeserf.BackgroundPattern.CreatePopupBoxBackground(spriteFactory, 320u + i);
+        }
+
+        public PopupBox(Interface interf)
+            : base
+            (
+                  interf, 
+                  Freeserf.BackgroundPattern.CreatePopupBoxBackground(interf.RenderView.SpriteFactory, 320u),
+                  Border.CreatePopupBoxBorder(interf.RenderView.SpriteFactory)
+            )
+        {
+            InitBackgrounds(interf.RenderView.SpriteFactory);
+
             this.interf = interf;
             MiniMap = new MinimapGame(interf, interf.Game);
             fileList = new ListSavedFiles(interf);
@@ -414,75 +432,145 @@ namespace Freeserf
             currentStat7Item = 7;
             currentStat8Mode = 0;
 
-            // TODO: the locations should be relative to the virtual screen!
-
             /* Initialize minimap */
-            MiniMap.Displayed = false;
-            MiniMap.Parent = this;
             MiniMap.SetSize(128, 128);
-            AddChild(MiniMap, 8, 9);
+            AddChild(MiniMap, 8, 9, false);
 
             fileList.SetSize(120, 100);
-            fileList.Displayed = false;
             fileList.SetSelectionHandler((string item) =>
             {
                 int pos = item.LastIndexOfAny(new char[] { '/', '\\' });
                 string fileName = item.Substring(pos + 1);
                 fileField.Text = fileName;
             });
-            AddChild(fileList, 12, 22);
+            AddChild(fileList, 12, 22, false);
 
             fileField.SetSize(120, 10);
-            fileField.Displayed = false;
-            AddChild(fileField, 12, 124);
+            AddChild(fileField, 12, 124, false);
 
             InitRenderComponents();
         }
 
         void InitRenderComponents()
         {
-            // Top: 144x9
-            // Bottom: 144x7
-            // Left: 8x144
-            // Right: 8x144
-
-            var renderView = interf.RenderView;
-            var spriteFactory = renderView.SpriteFactory;
-            var type = Data.Resource.FramePopup;
-
-            // Top
-            borderUp = CreateSprite(renderView.SpriteFactory, 144, 9, type, 0u, BaseDisplayLayer);
-            borderUp.X = X;
-            borderUp.Y = Y;
-            borderUp.Layer = Layer;
-
-            // Bottom
-            borderDown = CreateSprite(renderView.SpriteFactory, 144, 7, type, 1u, BaseDisplayLayer);
-            borderDown.X = X;
-            borderDown.Y = Y + 153;
-            borderDown.Layer = Layer;
-
-            // Left
-            borderLeft = CreateSprite(renderView.SpriteFactory, 8, 144, type, 2u, BaseDisplayLayer);
-            borderLeft.X = X;
-            borderLeft.Y = Y + 9;
-            borderLeft.Layer = Layer;
-
-            // Right
-            borderRight = CreateSprite(renderView.SpriteFactory, 8, 144, type, 3u, BaseDisplayLayer);
-            borderRight.X = X + 136;
-            borderRight.Y = Y + 9;
-            borderRight.Layer = Layer;
+            // TODO
         }
 
         public void Show(Type box)
         {
-
+            SetBox(box);
+            Displayed = true;
         }
 
         public void Hide()
         {
+            SetBox(Type.None);
+            Displayed = false;
+        }
 
+        void SetBox(Type box)
+        {
+            Box = box;
+
+            MiniMap.Displayed = box == Type.Map;
+
+            SetBackground(BackgroundFromType());
+
+            SetRedraw();
+        }
+
+        Freeserf.BackgroundPattern BackgroundFromType()
+        {
+            BackgroundPattern pattern = BackgroundPattern.StripedGreen;
+
+            switch (Box)
+            {
+                default:
+                case Type.Map:
+                case Type.MapOverlay: /* UNUSED */
+                    break; // no background, but just use default from above
+                case Type.MineBuilding:
+                case Type.BasicBld:
+                case Type.BasicBldFlip:
+                case Type.Adv1Bld:
+                case Type.Adv2Bld:
+                    pattern = BackgroundPattern.Construction;
+                    break;
+                case Type.StartAttack:
+                case Type.StartAttackRedraw:
+                    // TODO
+                    break;
+                case Type.GroundAnalysis:
+                case Type.StatSelect:
+                case Type.Stat4:
+                case Type.StatBld1:
+                case Type.StatBld2:
+                case Type.StatBld3:
+                case Type.StatBld4:
+                case Type.Stat8:
+                case Type.Stat7:
+                case Type.Stat1:
+                case Type.Stat2:
+                case Type.Stat6:
+                case Type.Stat3:
+                case Type.PlayerFaces:
+                    // TODO: maybe some of those have different background pattern
+                    pattern = BackgroundPattern.StripedGreen;
+                    break;
+                case Type.SettSelect:
+                case Type.Sett1:
+                case Type.Sett2:
+                case Type.Sett3:
+                case Type.KnightLevel:
+                case Type.Sett4:
+                case Type.Sett5:
+                case Type.Sett6:
+                case Type.Sett8:
+                    pattern = BackgroundPattern.CheckerdDiagonalBrown;
+                    break;                
+                case Type.QuitConfirm:
+                case Type.Options:
+                case Type.LoadSave:
+                    pattern = BackgroundPattern.DiagonalGreen;
+                    break;
+                case Type.Bld1:
+                case Type.Bld2:
+                case Type.Bld3:
+                case Type.Bld4:
+                    pattern = BackgroundPattern.StaresGreen;
+                    break;
+                case Type.Message:
+                case Type.NoSaveQuitConfirm:
+                case Type.SettSelectFile: /* UNUSED */
+                case Type.LoadArchive:
+                case Type.Type25:
+                case Type.DiskMsg:
+                case Type.GameEnd:
+                case Type.JsCalib:
+                case Type.JsCalibUpLeft:
+                case Type.JsCalibDownRight:
+                case Type.JsCalibCenter:
+                case Type.CtrlsInfo:
+                    // TODO: these are unknown? check later and add the right pattern!
+                    break;
+                case Type.Demolish:
+                    pattern = BackgroundPattern.SquaresGreen;
+                    break;
+                case Type.CastleRes:
+                case Type.MineOutput:
+                case Type.OrderedBld:
+                case Type.Defenders:
+                case Type.TransportInfo:
+                case Type.CastleSerf:
+                case Type.ResDir:
+                case Type.BldStock:
+                    pattern = BackgroundPattern.PlaidAlongGreen;
+                    break;
+            }
+
+            int index = Array.IndexOf(Enum.GetValues(typeof(BackgroundPattern)), pattern);
+
+            return backgrounds[index];
         }
 
         /* Draw the frame around the popup box. */
@@ -1126,39 +1214,23 @@ namespace Freeserf
 			
 		}
 
-        void set_box(Type box)
-		{
-			
-		}
-
         protected override void InternalHide()
         {
             base.InternalHide();
 
-            borderUp.Visible = false ;
-            borderLeft.Visible = false;
-            borderRight.Visible = false;
-            borderDown.Visible = false;
+            // TODO
         }
 
         protected override void InternalDraw()
         {
+            base.InternalDraw();
 
+            // TODO
         }
 
         protected override bool HandleClickLeft(int x, int y)
         {
             return base.HandleClickLeft(x, y);
-        }
-
-        protected internal override void UpdateParent()
-        {
-            borderUp.DisplayLayer = BaseDisplayLayer;
-            borderLeft.DisplayLayer = BaseDisplayLayer;
-            borderRight.DisplayLayer = BaseDisplayLayer;
-            borderDown.DisplayLayer = BaseDisplayLayer;
-
-            base.UpdateParent();
         }
     }
 }

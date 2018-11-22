@@ -306,6 +306,7 @@ namespace Freeserf.Render
             //AddGuiElements(Data.Resource.Symbol, 16, ref index, data); // TODO: skip them for now. maybe re-add later
             AddGuiElements(Data.Resource.Icon, 318, ref index, data, color);
 
+            // game init box background
             // we add a compound background of sprites 290-293 with a bigger size
             var bgSprites = new Sprite[5];
             bgSprites[0] = data.GetSprite(Data.Resource.Icon, 290u, color);
@@ -326,6 +327,7 @@ namespace Freeserf.Render
             // index is now 318 inside the icons
             AddSprite(Layer.Gui, index++, bgCompoundSprite);
 
+            // notification box background
             // we add a compound background of sprites 314 with a bigger size
             bgCompoundSprite = new Sprite(128u, 144u);
             sprite = data.GetSprite(Data.Resource.Icon, 314u, color);
@@ -341,6 +343,27 @@ namespace Freeserf.Render
 
             // index is now 319 inside the icons
             AddSprite(Layer.Gui, index++, bgCompoundSprite);
+
+            // popup backgrounds
+            var popupBackgrounds = Enum.GetValues(typeof(PopupBox.BackgroundPattern));
+
+            foreach (PopupBox.BackgroundPattern popupBackground in popupBackgrounds)
+            {
+                bgCompoundSprite = new Sprite(128u, 144u);
+                sprite = data.GetSprite(Data.Resource.Icon, (uint)popupBackground, color);
+
+                // 9 rows, 8 columns with 16x16 pixels = 128x144
+                for (int r = 0; r < 9; ++r)
+                {
+                    for (int c = 0; c < 8; ++c)
+                    {
+                        bgCompoundSprite.Add(c * 16, r * 16, sprite);
+                    }
+                }
+
+                // index is now (320 + popup box background pattern index) inside the icons
+                AddSprite(Layer.Gui, index++, bgCompoundSprite);
+            }
 
             #endregion
 

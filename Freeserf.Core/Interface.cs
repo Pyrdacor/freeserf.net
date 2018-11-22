@@ -318,12 +318,11 @@ namespace Freeserf
         public void OpenPopup(PopupBox.Type box)
         {
             if (PopupBox == null)
-            {
                 PopupBox = new PopupBox(this);
-                AddChild(PopupBox, 0, 0);
-            }
 
-            base.Layout();
+            AddChild(PopupBox, 0, 0);
+
+            Layout();
             PopupBox.Show(box);
 
             if (PanelBar != null)
@@ -342,7 +341,6 @@ namespace Freeserf
 
             PopupBox.Hide();
             DeleteChild(PopupBox);
-            PopupBox = null;
             UpdateMapCursorPos(mapCursorPos);
             PanelBar.Update();
         }
@@ -1130,16 +1128,11 @@ namespace Freeserf
 
         protected override void Layout()
         {
-            int panelX = 0;
-            int panelY = (int)Height;
-
             if (PanelBar != null)
             {
                 int panelWidth = 352;
                 int panelHeight = 40;
-                panelX = (Width - panelWidth) / 2;
-                panelY = Height - panelHeight;
-                PanelBar.MoveTo(panelX, panelY);
+                PanelBar.MoveTo((Width - panelWidth) / 2, Height - panelHeight);
                 PanelBar.SetSize(panelWidth, panelHeight);
             }
 

@@ -43,6 +43,15 @@ namespace Freeserf
             background = spriteFactory.Create(definition.SpriteWidth, definition.SpriteHeight, offset.X, offset.Y, false, true) as Render.ILayerSprite;
         }
 
+        BackgroundPattern(Render.ISpriteFactory spriteFactory, int type, uint spriteIndex)
+        {
+            definition = definitions[type];
+
+            var offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, spriteIndex);
+
+            background = spriteFactory.Create(definition.SpriteWidth, definition.SpriteHeight, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+        }
+
         public static BackgroundPattern CreateGameInitBoxBackground(Render.ISpriteFactory spriteFactory)
         {
             return new BackgroundPattern(spriteFactory, 0);
@@ -51,6 +60,11 @@ namespace Freeserf
         public static BackgroundPattern CreateNotificationBoxBackground(Render.ISpriteFactory spriteFactory)
         {
             return new BackgroundPattern(spriteFactory, 1);
+        }
+
+        public static BackgroundPattern CreatePopupBoxBackground(Render.ISpriteFactory spriteFactory, uint index)
+        {
+            return new BackgroundPattern(spriteFactory, 1, index);
         }
 
         // TODO ...
@@ -133,6 +147,11 @@ namespace Freeserf
             return new Border(spriteFactory, Data.Resource.FramePopup, 1, false);
         }
 
+        public static Border CreatePopupBoxBorder(Render.ISpriteFactory spriteFactory)
+        {
+            return new Border(spriteFactory, Data.Resource.FramePopup, 1, false);
+        }
+
         // TODO ...
 
         public void Draw(GuiObject parent)
@@ -199,6 +218,23 @@ namespace Freeserf
             this.interf = interf;
             this.background = background;
             this.border = border;
+        }
+
+        public void SetBackground(BackgroundPattern background)
+        {
+            if (this.background == background)
+                return;
+
+            bool visible = false;
+
+            if (this.background != null)
+            {
+                visible = this.background.Visible;
+                this.background.Visible = false;
+            }
+
+            this.background = background;
+            this.background.Visible = visible;
         }
 
         protected override void InternalDraw()
