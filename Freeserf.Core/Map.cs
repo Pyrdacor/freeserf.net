@@ -78,8 +78,8 @@ namespace Freeserf
 
     public class Road
     {
-        MapPos begin;
-        Dirs dirs;
+        MapPos begin = 0u;
+        Dirs dirs = new Dirs();
 
         const uint MaxLength = 256;
 
@@ -1174,7 +1174,8 @@ namespace Freeserf
                 }
             }
 
-            if (oldObject == Object.None && obj != Object.None)
+            if ((oldObject == Object.None && obj != Object.None) ||
+                (obj < Object.Tree0 && obj != Object.None)) // e.g. placing flags/buildings on some removable map objects
             {
                 foreach (Handler handler in changeHandlers)
                 {

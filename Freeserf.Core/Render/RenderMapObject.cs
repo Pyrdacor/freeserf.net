@@ -126,7 +126,7 @@ namespace Freeserf.Render
                 return;
             }
 
-            if (objectType == Map.Object.None) // from something valid to None
+            if (objectType < Map.Object.Tree0) // from something valid to None (or something we don't need to draw here)
             {
                 // this is handled by Game so this should not happen at all
                 Debug.NotReached();

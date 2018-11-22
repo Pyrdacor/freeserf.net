@@ -473,6 +473,9 @@ namespace Freeserf
         readonly byte displayLayerOffset = 0;
         readonly Data.Resource resourceType = Data.Resource.None;
 
+        public uint SpriteIndex { get; private set; } = 0u;
+        public object Tag { get; set; }
+
         // only used by BuildingIcon
         protected Icon(Interface interf, int width, int height, uint spriteIndex, byte displayLayerOffset)
             : base(interf)
@@ -481,6 +484,7 @@ namespace Freeserf
             this.displayLayerOffset = displayLayerOffset;
             resourceType = Data.Resource.MapObject;
             sprite.Layer = interf.RenderView.GetLayer(Freeserf.Layer.GuiBuildings);
+            SpriteIndex = spriteIndex;
 
             SetSize(width, height);
         }
@@ -492,6 +496,7 @@ namespace Freeserf
             this.displayLayerOffset = displayLayerOffset;
             this.resourceType = resourceType;
             sprite.Layer = Layer;
+            SpriteIndex = spriteIndex;
 
             SetSize(width, height);
         }
@@ -519,6 +524,7 @@ namespace Freeserf
         public void SetSpriteIndex(uint spriteIndex)
         {
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, spriteIndex);
+            SpriteIndex = spriteIndex;
         }
 
         public void Resize(int width, int height)
@@ -566,6 +572,26 @@ namespace Freeserf
             : base(interf, width, height, spriteIndex, displayLayerOffset)
         {
 
+        }
+    }
+
+    internal class BuildingButton : BuildingIcon
+    {
+        public delegate void ClickEventHandler(object sender, Button.ClickEventArgs args);
+
+        public event ClickEventHandler Clicked;
+
+        public BuildingButton(Interface interf, int width, int height, uint spriteIndex, byte displayLayerOffset)
+            : base(interf, width, height, spriteIndex, displayLayerOffset)
+        {
+
+        }
+
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            Clicked?.Invoke(this, new Button.ClickEventArgs(x - TotalX, y - TotalY));
+
+            return true;
         }
     }
 

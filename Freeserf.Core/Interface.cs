@@ -559,6 +559,9 @@ namespace Freeserf
                 return;
             }
 
+            if (buildingRoad == null)
+                buildingRoad = new Road();
+
             buildingRoad.Invalidate();
             buildingRoad.Start(mapCursorPos);
             UpdateMapCursorPos(mapCursorPos);

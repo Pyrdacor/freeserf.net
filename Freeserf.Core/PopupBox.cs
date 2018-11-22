@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Freeserf
 {
@@ -143,29 +142,8 @@ namespace Freeserf
             MinimapRoads,
             MinimapBuildings,
             MinimapGrid,
-            BuildStonemine,
-            BuildCoalmine,
-            BuildIronmine,
-            BuildGoldmine,
             BuildFlag,
-            BuildStonecutter,
-            BuildHut,
-            BuildLumberjack,
-            BuildForester,
-            BuildFisher,
-            BuildMill,
-            BuildBoatbuilder,
-            BuildButcher,
-            BuildWeaponsmith,
-            BuildSteelsmelter,
-            BuildSawmill,
-            BuildBaker,
-            BuildGoldsmelter,
-            BuildFortress,
-            BuildTower,
-            BuildToolmaker,
-            BuildFarm,
-            BuildPigfarm,
+            BuildBuilding,
             BldFlipPage,
             ShowStat1,
             ShowStat2,
@@ -382,7 +360,7 @@ namespace Freeserf
             Demolish,
             OptionsSfx,
             Save,
-            NewNamE
+            NewName
         }
 
         Interface interf;
@@ -392,7 +370,7 @@ namespace Freeserf
         public Type Box { get; private set; }
         public MinimapGame MiniMap { get; }
 
-        BuildingIcon[] buildings = new BuildingIcon[8]; // max 8 buildings per popup
+        BuildingButton[] buildings = new BuildingButton[8]; // max 8 buildings per popup
 
         int currentSett5Item;
         int currentSett6Item;
@@ -584,7 +562,21 @@ namespace Freeserf
         {
             for (int i = 0; i < buildings.Length; ++i)
             {
-                buildings[i] = new BuildingIcon(interf, 0, 0, 128u, 1);
+                buildings[i] = new BuildingButton(interf, 0, 0, 128u, 1);
+                buildings[i].Clicked += PopupBox_BuildingClicked;
+                AddChild(buildings[i], 0, 0, false);
+            }
+        }
+
+        private void PopupBox_BuildingClicked(object sender, Button.ClickEventArgs args)
+        {
+            switch (Box)
+            {
+                case Type.BasicBld:
+                case Type.BasicBldFlip:
+                    HandleBuildingClick((sender as BuildingButton).Tag, args.X, args.Y);
+                    break;
+                // TODO ...
             }
         }
 
@@ -601,6 +593,8 @@ namespace Freeserf
             var data = interf.RenderView.DataSource;
             var playerIndex = interf.GetPlayer().Index;
 
+            buildings[index].Tag = Map.Object.Flag;
+
             SetBuilding(index, x, y, 128 + playerIndex, data.GetSpriteInfo(Data.Resource.MapObject, 128u));
         }
 
@@ -610,14 +604,16 @@ namespace Freeserf
             var data = interf.RenderView.DataSource;
             var spriteInfo = data.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
 
+            buildings[index].Tag = type;
+
             SetBuilding(index, x, y, spriteIndex, spriteInfo);
         }
 
         void SetBuilding(int index, int x, int y, uint spriteIndex, SpriteInfo spriteInfo)
         {
             buildings[index].SetSpriteIndex(spriteIndex);
-            buildings[index].MoveTo(TotalX + x + spriteInfo.OffsetX, TotalY + y + spriteInfo.OffsetY);
-            buildings[index].SetSize(spriteInfo.Width, spriteInfo.Height);
+            buildings[index].MoveTo(x, y);
+            buildings[index].Resize(spriteInfo.Width, spriteInfo.Height);
         }
 
         #endregion
@@ -771,10 +767,37 @@ namespace Freeserf
 			
 		}
 
+        // flip means the user can change the page
         void draw_basic_building_box(int flip)
 		{
-			
-		}
+            int num = 6;
+            int index = 0;
+
+            // add hut if military buildings are possible
+            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPos()))
+            {
+                SetBuilding(index++, 88, 22, Building.Type.Hut);
+                ++num;
+            }
+
+            SetBuilding(index++, 24, 22, Building.Type.Stonecutter);
+            SetBuilding(index++, 8, 67, Building.Type.Lumberjack);
+            SetBuilding(index++, 56, 65, Building.Type.Forester);
+            SetBuilding(index++, 104, 64, Building.Type.Fisher);
+            SetBuilding(index++, 24, 94, Building.Type.Mill);
+            SetBuilding(index++, 88, 96, Building.Type.Boatbuilder);
+
+            if (interf.Game.CanBuildFlag(interf.GetMapCursorPos(), interf.GetPlayer()))
+            {
+                SetFlag(index, 72, 117);
+                ++num;
+            }
+
+            ShowBuildings(num);
+
+            // TODO
+            //if (flip) draw_popup_icon(8, 137, 0x3d); // icon 61
+    }
 
         void draw_adv_1_building_box()
 		{
@@ -1072,9 +1095,28 @@ namespace Freeserf
 		}
 
 
-        void handle_action(int action, int x, int y)
+        void HandleAction(Action action, int x, int y, object tag = null)
 		{
-			
+            SetRedraw();
+
+            var player = interf.GetPlayer();
+
+            // TODO
+            switch (action)
+            {
+                case Action.BuildFlag:
+                    interf.BuildFlag();
+                    interf.ClosePopup();
+                    break;
+                case Action.BuildBuilding:
+                    interf.BuildBuilding((Building.Type)tag);
+                    interf.ClosePopup();
+                    break;
+                // TODO ...
+                default:
+                    Log.Warn.Write("popup", "unhandled action " + action.ToString());
+                    break;
+            }
 		}
 
         int handle_clickmap(int x, int y, int[] clkmap)
@@ -1097,9 +1139,17 @@ namespace Freeserf
 			
 		}
 
-        void handle_basic_building_clk(int x, int y, int flip)
+        // TODO: can also be used for mines, large buildings, etc
+        void HandleBuildingClick(object tag, int x, int y)
 		{
-			
+            if (tag is Building.Type)
+            {
+                HandleAction(Action.BuildBuilding, x, y, tag);
+            }
+            else if (tag is Map.Object && (Map.Object)tag == Map.Object.Flag)
+            {
+                HandleAction(Action.BuildFlag, x, y);
+            }
 		}
 
         void handle_adv_1_building_clk(int x, int y)
@@ -1271,9 +1321,164 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            base.InternalDraw();
+            // first hide all building sprites
+            ShowBuildings(0);
 
             // TODO
+
+            /* Dispatch to one of the popup box functions above. */
+            switch (Box)
+            {
+                case Type.Map:
+                    draw_map_box();
+                    break;
+                case Type.MineBuilding:
+                    draw_mine_building_box();
+                    break;
+                case Type.BasicBld:
+                    draw_basic_building_box(0);
+                    break;
+                case Type.BasicBldFlip:
+                    draw_basic_building_box(1);
+                    break;
+                case Type.Adv1Bld:
+                    draw_adv_1_building_box();
+                    break;
+                case Type.Adv2Bld:
+                    draw_adv_2_building_box();
+                    break;
+                case Type.StatSelect:
+                    draw_stat_select_box();
+                    break;
+                case Type.Stat4:
+                    draw_stat_4_box();
+                    break;
+                case Type.StatBld1:
+                    draw_stat_bld_1_box();
+                    break;
+                case Type.StatBld2:
+                    draw_stat_bld_2_box();
+                    break;
+                case Type.StatBld3:
+                    draw_stat_bld_3_box();
+                    break;
+                case Type.StatBld4:
+                    draw_stat_bld_4_box();
+                    break;
+                case Type.Stat8:
+                    draw_stat_8_box();
+                    break;
+                case Type.Stat7:
+                    draw_stat_7_box();
+                    break;
+                case Type.Stat1:
+                    draw_stat_1_box();
+                    break;
+                case Type.Stat2:
+                    draw_stat_2_box();
+                    break;
+                case Type.Stat6:
+                    draw_stat_6_box();
+                    break;
+                case Type.Stat3:
+                    draw_stat_3_box();
+                    break;
+                case Type.StartAttack:
+                    draw_start_attack_box();
+                    break;
+                case Type.StartAttackRedraw:
+                    draw_start_attack_redraw_box();
+                    break;
+                case Type.GroundAnalysis:
+                    draw_ground_analysis_box();
+                    break;
+                /* TODO */
+                case Type.SettSelect:
+                    draw_sett_select_box();
+                    break;
+                case Type.Sett1:
+                    draw_sett_1_box();
+                    break;
+                case Type.Sett2:
+                    draw_sett_2_box();
+                    break;
+                case Type.Sett3:
+                    draw_sett_3_box();
+                    break;
+                case Type.KnightLevel:
+                    draw_knight_level_box();
+                    break;
+                case Type.Sett4:
+                    draw_sett_4_box();
+                    break;
+                case Type.Sett5:
+                    draw_sett_5_box();
+                    break;
+                case Type.QuitConfirm:
+                    draw_quit_confirm_box();
+                    break;
+                case Type.NoSaveQuitConfirm:
+                    draw_no_save_quit_confirm_box();
+                    break;
+                case Type.Options:
+                    draw_options_box();
+                    break;
+                case Type.CastleRes:
+                    draw_castle_res_box();
+                    break;
+                case Type.MineOutput:
+                    draw_mine_output_box();
+                    break;
+                case Type.OrderedBld:
+                    draw_ordered_building_box();
+                    break;
+                case Type.Defenders:
+                    draw_defenders_box();
+                    break;
+                case Type.TransportInfo:
+                    draw_transport_info_box();
+                    break;
+                case Type.CastleSerf:
+                    draw_castle_serf_box();
+                    break;
+                case Type.ResDir:
+                    draw_resdir_box();
+                    break;
+                case Type.Sett8:
+                    draw_sett_8_box();
+                    break;
+                case Type.Sett6:
+                    draw_sett_6_box();
+                    break;
+                case Type.Bld1:
+                    draw_bld_1_box();
+                    break;
+                case Type.Bld2:
+                    draw_bld_2_box();
+                    break;
+                case Type.Bld3:
+                    draw_bld_3_box();
+                    break;
+                case Type.Bld4:
+                    draw_bld_4_box();
+                    break;
+                case Type.BldStock:
+                    draw_building_stock_box();
+                    break;
+                case Type.PlayerFaces:
+                    draw_player_faces_box();
+                    break;
+                case Type.Demolish:
+                    draw_demolish_box();
+                    break;
+                case Type.LoadSave:
+                    draw_save_box();
+                    break;
+                default:
+                    break;
+            }
+
+            base.InternalDraw();
         }
 
         protected override bool HandleClickLeft(int x, int y)

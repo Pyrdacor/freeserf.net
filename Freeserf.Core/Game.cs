@@ -3327,8 +3327,9 @@ namespace Freeserf
 
         public override void OnObjectExchanged(uint pos, Map.Object oldObject, Map.Object newObject)
         {
-            if (oldObject != Map.Object.None && newObject == Map.Object.None)
+            if (oldObject != Map.Object.None && newObject < Map.Object.Tree0)
             {
+                // we don't draw buildings etc with renderObjects
                 renderObjects[pos].Delete();
                 renderObjects.Remove(pos);
             }
