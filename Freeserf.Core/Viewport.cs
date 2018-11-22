@@ -317,7 +317,8 @@ namespace Freeserf
                     {
                         dir = Direction.Left;
                     }
-                    else if (dy == 0) {
+                    else if (dy == 0)
+                    {
                         dir = Direction.UpLeft;
                     }
                     else
@@ -369,7 +370,7 @@ namespace Freeserf
                         /* Delete existing path */
                         int r = interf.RemoveRoadSegment();
 
-                        if (r< 0)
+                        if (r < 0)
                         {
                             PlaySound(Audio.TypeSfx.NotAccepted);
                         }

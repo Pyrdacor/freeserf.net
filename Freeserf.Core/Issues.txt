@@ -1,9 +1,14 @@
 ﻿Map Rendering:
 
-- Black lines / artifacts (fixed by virtual screen resolution change)
-- Some tiles appear/disappear/change location while scrolling
+- Black lines / artifacts (fixed by virtual screen resolution change but some small remain)
+- Some tiles appear/disappear/change location while scrolling (at certain offsets)
 - Some terrain types seem dislocated
-- Scrolling along the map origin (y-axis) leads to jumps
+
+
+Viewport:
+
+- Possible builds symbols do not match 100% the map cursor sprite symbol
+- Building possibilities are wrong in some locations (e.g. building on mountain, flag on tree, etc)
 
 
 Notification Box:

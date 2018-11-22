@@ -93,7 +93,6 @@ namespace Freeserf
 
         public bool LoadGame(string path, Render.IRenderView renderView)
         {
-            // TODO
             Game newGame = new Game(renderView);
 
             if (!GameStore.Instance.Load(path, newGame))
