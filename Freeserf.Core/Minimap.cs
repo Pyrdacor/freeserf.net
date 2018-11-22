@@ -24,6 +24,8 @@ using System;
 
 namespace Freeserf
 {
+    using MapPos = UInt32;
+
     internal class Minimap : GuiObject
     {
         public Minimap(Interface interf)
@@ -52,6 +54,11 @@ namespace Freeserf
         protected internal override void UpdateParent()
         {
             // TODO
+        }
+
+        public void MoveToMapPos(MapPos pos)
+        {
+
         }
     }
 

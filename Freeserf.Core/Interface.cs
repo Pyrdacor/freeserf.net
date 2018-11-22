@@ -42,7 +42,7 @@ namespace Freeserf
     internal class Interface : GuiObject, GameManager.IHandler
     {
         // Interval between automatic save games
-        const int AUTOSAVE_INTERVAL = 10 * 60 * Freeserf.TICKS_PER_SEC;
+        const int AUTOSAVE_INTERVAL = 10 * 60 * Global.TICKS_PER_SEC;
 
         static readonly uint[] MapBuildingSprite = new uint[]
         {
@@ -436,7 +436,7 @@ namespace Freeserf
             }
 
             msgFlags |= Misc.Bit(1);
-            returnTimeout = 60 * Freeserf.TICKS_PER_SEC;
+            returnTimeout = 60 * Global.TICKS_PER_SEC;
             PlaySound(Audio.TypeSfx.Click);
         }
 

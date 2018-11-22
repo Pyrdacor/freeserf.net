@@ -24,7 +24,7 @@ using System;
 
 namespace Freeserf
 {
-    public static class Freeserf
+    public static partial class Global
     {
         public static readonly string VERSION = "freeserf.net v0.1"; // TODO: VERSION_VCS;
 

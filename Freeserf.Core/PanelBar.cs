@@ -24,6 +24,8 @@ using System;
 
 namespace Freeserf
 {
+    using MapPos = UInt32;
+
     internal class PanelBar : GuiObject
     {
         enum ButtonId
@@ -122,6 +124,12 @@ namespace Freeserf
             panelButtons[3] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Stats, layer);
             panelButtons[4] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Sett, layer);
 
+            panelButtons[0].Clicked += PanelBarButton_Clicked;
+            panelButtons[1].Clicked += PanelBarButton_Clicked;
+            panelButtons[2].Clicked += PanelBarButton_Clicked;
+            panelButtons[3].Clicked += PanelBarButton_Clicked;
+            panelButtons[4].Clicked += PanelBarButton_Clicked;
+
             panelButtonIds[0] = ButtonId.BuildInactive;
             panelButtonIds[1] = ButtonId.DestroyInactive;
             panelButtonIds[2] = ButtonId.Map;
@@ -147,6 +155,18 @@ namespace Freeserf
             blinkTimer.Start();
         }
 
+        private void PanelBarButton_Clicked(object sender, Button.ClickEventArgs args)
+        {
+            for (int i = 0; i < 5; ++i)
+            {
+                if (sender == panelButtons[i])
+                {
+                    ButtonClick(i);
+                    break;
+                }
+            }
+        }
+
         private void BlinkTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             blinkTrigger = !blinkTrigger;
@@ -159,11 +179,6 @@ namespace Freeserf
                 panelButtonIds[index] = buttonId;
 
             panelButtons[index].SetSpriteIndex((uint)buttonId);
-        }
-
-        public void Update()
-        {
-
         }
 
         protected override void InternalDraw()
@@ -240,6 +255,426 @@ namespace Freeserf
                 bg.Y = TotalY + BackgroundLayout[i * 3 + 2];
                 bg.Visible = Displayed;
             }
+        }
+
+        public void Update()
+        {
+            if (interf.PopupBox != null && interf.PopupBox.Displayed)
+            {
+                switch (interf.PopupBox.Box)
+                {
+                    case PopupBox.Type.TransportInfo:
+                    case PopupBox.Type.OrderedBld:
+                    case PopupBox.Type.CastleRes:
+                    case PopupBox.Type.Defenders:
+                    case PopupBox.Type.MineOutput:
+                    case PopupBox.Type.BldStock:
+                    case PopupBox.Type.StartAttack:
+                    case PopupBox.Type.QuitConfirm:
+                    case PopupBox.Type.Options:
+                        {
+                            SetButton(0, ButtonId.BuildInactive);
+                            SetButton(1, ButtonId.DestroyInactive);
+                            SetButton(2, ButtonId.MapInactive);
+                            SetButton(3, ButtonId.StatsInactive);
+                            SetButton(4, ButtonId.SettInactive);
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+            else if (interf.IsBuildingRoad())
+            {
+                SetButton(0, ButtonId.BuildRoadStarred);
+                SetButton(1, ButtonId.BuildInactive);
+                SetButton(2, ButtonId.MapInactive);
+                SetButton(3, ButtonId.StatsInactive);
+                SetButton(4, ButtonId.SettInactive);
+            }
+            else
+            {
+                SetButton(2, ButtonId.Map);
+                SetButton(3, ButtonId.Stats);
+                SetButton(4, ButtonId.Sett);
+
+                Interface.BuildPossibility buildPossibility = interf.GetBuildPossibility();
+
+                switch (interf.GetMapCursorType())
+                {
+                    case Interface.CursorType.None:
+                        SetButton(0, ButtonId.BuildInactive);
+
+                        if (interf.GetPlayer().HasCastle())
+                        {
+                            SetButton(1, ButtonId.DestroyInactive);
+                        }
+                        else
+                        {
+                            SetButton(1, ButtonId.GroundAnalysis);
+                        }
+                        break;
+                    case Interface.CursorType.Flag:
+                        SetButton(0, ButtonId.BuildRoad);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        break;
+                    case Interface.CursorType.RemovableFlag:
+                        SetButton(0, ButtonId.BuildRoad);
+                        SetButton(1, ButtonId.Destroy);
+                        break;
+                    case Interface.CursorType.Building:
+                        SetButton(0, ButtonTypeFromBuildPossibility(buildPossibility));
+                        SetButton(1, ButtonId.Destroy);
+                        break;
+                    case Interface.CursorType.Path:
+                        SetButton(0, ButtonId.BuildInactive);
+                        SetButton(1, ButtonId.DestroyRoad);
+
+                        if (buildPossibility != Interface.BuildPossibility.None)
+                        {
+                            SetButton(0, ButtonId.BuildFlag);
+                        }
+                        break;
+                    case Interface.CursorType.ClearByFlag:
+                        if (buildPossibility == Interface.BuildPossibility.None ||
+                            buildPossibility == Interface.BuildPossibility.Flag)
+                        {
+                            SetButton(0, ButtonId.BuildInactive);
+
+                            if (interf.GetPlayer().HasCastle())
+                            {
+                                SetButton(1, ButtonId.DestroyInactive);
+                            }
+                            else
+                            {
+                                SetButton(1, ButtonId.GroundAnalysis);
+                            }
+                        }
+                        else
+                        {
+                            SetButton(0, ButtonTypeFromBuildPossibility(buildPossibility));
+                            SetButton(1, ButtonId.DestroyInactive);
+                        }
+                        break;
+                    case Interface.CursorType.ClearByPath:
+                        SetButton(0, ButtonTypeFromBuildPossibility(buildPossibility));
+                        SetButton(1, ButtonId.DestroyInactive);
+                        break;
+                    case Interface.CursorType.Clear:
+                        SetButton(0, ButtonTypeFromBuildPossibility(buildPossibility));
+
+                        if (interf.GetPlayer() != null && interf.GetPlayer().HasCastle())
+                        {
+                            SetButton(1, ButtonId.DestroyInactive);
+                        }
+                        else
+                        {
+                            SetButton(1, ButtonId.GroundAnalysis);
+                        }
+                        break;
+                    default:
+                        Debug.NotReached();
+                        break;
+                }
+            }
+
+            SetRedraw();
+        }
+
+        ButtonId ButtonTypeFromBuildPossibility(Interface.BuildPossibility buildPossibility)
+        {
+            ButtonId result;
+
+            switch (buildPossibility)
+            {
+                case Interface.BuildPossibility.Castle:
+                    result = ButtonId.BuildCastle;
+                    break;
+                case Interface.BuildPossibility.Mine:
+                    result = ButtonId.BuildMine;
+                    break;
+                case Interface.BuildPossibility.Large:
+                    result = ButtonId.BuildLarge;
+                    break;
+                case Interface.BuildPossibility.Small:
+                    result = ButtonId.BuildSmall;
+                    break;
+                case Interface.BuildPossibility.Flag:
+                    result = ButtonId.BuildFlag;
+                    break;
+                default:
+                    result = ButtonId.BuildInactive;
+                    break;
+            }
+
+            return result;
+        }
+
+        /* Handle a click on the panel buttons. */
+        void ButtonClick(int button)
+        {
+            PopupBox popup = interf.PopupBox;
+
+            switch (panelButtonIds[button])
+            {
+                case ButtonId.Map:
+                case ButtonId.MapStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildInactive);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapStarred);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettInactive);
+
+                        interf.OpenPopup(PopupBox.Type.Map);
+
+                        /* Synchronize minimap window with viewport. */
+                        if (popup != null)
+                        {
+                            Viewport viewport = interf.Viewport;
+                            Minimap minimap = popup.MiniMap;
+
+                            if (minimap != null)
+                            {
+                                MapPos pos = viewport.GetCurrentMapPos();
+
+                                minimap.MoveToMapPos(pos);
+                            }
+                        }
+                    }
+                    break;
+                case ButtonId.Sett:
+                case ButtonId.SettStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildInactive);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettStarred);
+                        interf.OpenPopup(PopupBox.Type.SettSelect);
+                    }
+                    break;
+                case ButtonId.Stats:
+                case ButtonId.StatsStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildInactive);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsStarred);
+                        SetButton(4, ButtonId.SettInactive);
+                        interf.OpenPopup(PopupBox.Type.StatSelect);
+                    }
+                    break;
+                case ButtonId.BuildRoad:
+                case ButtonId.BuildRoadStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (interf.IsBuildingRoad())
+                    {
+                        interf.BuildRoadEnd();
+                    }
+                    else
+                    {
+                        interf.BuildRoadBegin();
+                    }
+                    break;
+                case ButtonId.BuildFlag:
+                    PlaySound(Audio.TypeSfx.Click);
+                    interf.BuildFlag();
+                    break;
+                case ButtonId.BuildSmall:
+                case ButtonId.BuildSmallStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildSmallStarred);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettInactive);
+                        interf.OpenPopup(PopupBox.Type.BasicBld);
+                    }
+                    break;
+                case ButtonId.BuildLarge:
+                case ButtonId.BuildLargeStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildLargeStarred);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettInactive);
+                        interf.OpenPopup(PopupBox.Type.BasicBldFlip);
+                    }
+                    break;
+                case ButtonId.BuildMine:
+                case ButtonId.BuildMineStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildMineStarred);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettInactive);
+                        interf.OpenPopup(PopupBox.Type.MineBuilding);
+                    }
+                    break;
+                case ButtonId.Destroy:
+                    if (interf.GetMapCursorType() == Interface.CursorType.RemovableFlag)
+                    {
+                        interf.DemolishObject();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildInactive);
+                        SetButton(1, ButtonId.DestroyInactive);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettInactive);
+                        interf.OpenPopup(PopupBox.Type.Demolish);
+                    }
+                    break;
+                case ButtonId.BuildCastle:
+                    interf.BuildCastle();
+                    break;
+                case ButtonId.DestroyRoad:
+                    {
+                        bool r = interf.GetPlayer().Game.CanDemolishRoad(interf.GetMapCursorPos(), interf.GetPlayer());
+
+                        if (!r)
+                        {
+                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            interf.UpdateMapCursorPos(interf.GetMapCursorPos());
+                        }
+                        else
+                        {
+                            PlaySound(Audio.TypeSfx.Accepted);
+                        }
+                    }
+                    break;
+                case ButtonId.GroundAnalysis:
+                case ButtonId.GroundAnalysisStarred:
+                    PlaySound(Audio.TypeSfx.Click);
+
+                    if (popup != null && popup.Displayed)
+                    {
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        SetButton(0, ButtonId.BuildInactive);
+                        SetButton(1, ButtonId.GroundAnalysisStarred);
+                        SetButton(2, ButtonId.MapInactive);
+                        SetButton(3, ButtonId.StatsInactive);
+                        SetButton(4, ButtonId.SettInactive);
+                        interf.OpenPopup(PopupBox.Type.GroundAnalysis);
+                    }
+                    break;
+            }
+        }
+
+        protected override bool HandleKeyPressed(char key, int modifier)
+        {
+            if (key < '1' || key > '5')
+            {
+                return false;
+            }
+
+            ButtonClick(key - '1');
+
+            return true;
+        }
+
+        // TODO: test if the positions are correct later
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            SetRedraw();
+
+            if (x >= 41 && x < 53)
+            {
+                /* Message bar click */
+                if (y < 16)
+                {
+                    /* Message icon */
+                    interf.OpenMessage();
+                }
+                else if (y >= 28)
+                {
+                    /* Return arrow */
+                    interf.ReturnFromMessage();
+                }
+            }
+            else if (x >= 301 && x < 313)
+            {
+                /* Timer bar click */
+                /* Call to map position */
+                int timerLength = 0;
+
+                if (y < 7)
+                {
+                    timerLength = 5 * 60;
+                }
+                else if (y < 14)
+                {
+                    timerLength = 10 * 60;
+                }
+                else if (y < 21)
+                {
+                    timerLength = 20 * 60;
+                }
+                else if (y < 28)
+                {
+                    timerLength = 30 * 60;
+                }
+                else
+                {
+                    timerLength = 60 * 60;
+                }
+
+                interf.GetPlayer().AddTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPos());
+
+                PlaySound(Audio.TypeSfx.Accepted);
+            }
+
+            return true;
         }
     }
 }

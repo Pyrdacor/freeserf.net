@@ -552,7 +552,7 @@ namespace Freeserf
             }
 
             /* Display program name and version in caption */
-            DrawBoxString(2, 162, textFieldVersion, Freeserf.VERSION);
+            DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
         }
 
         public void HandleAction(Action action)
