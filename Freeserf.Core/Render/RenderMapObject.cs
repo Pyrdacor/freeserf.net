@@ -48,20 +48,19 @@ namespace Freeserf.Render
                 spriteOffsets = new Dictionary<uint, Position>(79);
                 shadowSpriteOffsets = new Dictionary<uint, Position>(79);
 
-                Sprite sprite;
-                var color = Sprite.Color.Transparent;
+                SpriteInfo spriteInfo;
 
                 for (uint i = 0; i <= 118; ++i)
                 {
-                    sprite = dataSource.GetSprite(Data.Resource.MapObject, i, color);
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, i);
 
-                    if (sprite != null)
-                        spriteOffsets.Add(i, new Position(sprite.OffsetX, sprite.OffsetY));
+                    if (spriteInfo != null)
+                        spriteOffsets.Add(i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
 
-                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, i, color);
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, i);
 
-                    if (sprite != null)
-                        shadowSpriteOffsets.Add(i, new Position(sprite.OffsetX, sprite.OffsetY));
+                    if (spriteInfo != null)
+                        shadowSpriteOffsets.Add(i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
                 }
             }
         }
@@ -70,11 +69,11 @@ namespace Freeserf.Render
         {
             uint spriteIndex = (uint)objectType - 8;
 
-            var spriteInfo = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
-            var shadowInfo = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, Sprite.Color.Transparent);
+            var spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
+            var shadowInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, spriteIndex);
 
-            sprite = spriteFactory.Create((int)spriteInfo.Width, (int)spriteInfo.Height, 0, 0, false, false);
-            shadowSprite = spriteFactory.Create((int)shadowInfo.Width, (int)shadowInfo.Height, 0, 0, false, false);
+            sprite = spriteFactory.Create(spriteInfo.Width, spriteInfo.Height, 0, 0, false, false);
+            shadowSprite = spriteFactory.Create(shadowInfo.Width, shadowInfo.Height, 0, 0, false, false);
         }
 
         public void Update(uint tick, RenderMap map, uint pos)
@@ -138,11 +137,11 @@ namespace Freeserf.Render
 
             uint spriteIndex = (uint)objectType - 8;
 
-            var spriteInfo = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
-            var shadowInfo = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, Sprite.Color.Transparent);
+            var spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
+            var shadowInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, spriteIndex);
 
-            sprite.Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
-            shadowSprite.Resize((int)shadowInfo.Width, (int)shadowInfo.Height);
+            sprite.Resize(spriteInfo.Width, spriteInfo.Height);
+            shadowSprite.Resize(shadowInfo.Width, shadowInfo.Height);
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 

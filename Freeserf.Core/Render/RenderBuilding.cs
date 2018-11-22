@@ -117,24 +117,23 @@ namespace Freeserf.Render
 
         void InitOffsets(DataSource dataSource)
         {
-            Sprite sprite;
-            var color = Sprite.Color.Transparent;
+            SpriteInfo spriteInfo;
 
             if (crossOrStoneSpriteOffset == null)
             {
-                sprite = dataSource.GetSprite(Data.Resource.MapObject, CrossSprite, color);
-                crossOrStoneSpriteOffset = new Position(sprite.OffsetX, sprite.OffsetY);
+                spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, CrossSprite);
+                crossOrStoneSpriteOffset = new Position(spriteInfo.OffsetX, spriteInfo.OffsetY);
             }
 
             uint spriteIndex = MapBuildingSprite[(int)building.BuildingType];
 
             if (!spriteOffsets.ContainsKey(spriteIndex))
             {
-                sprite = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, color);
-                spriteOffsets.Add(spriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
+                spriteOffsets.Add(spriteIndex, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
 
-                sprite = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, color);
-                shadowSpriteOffsets.Add(spriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, spriteIndex);
+                shadowSpriteOffsets.Add(spriteIndex, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
             }
 
             if (building.BuildingType != Building.Type.Castle)
@@ -143,11 +142,11 @@ namespace Freeserf.Render
 
                 if (!frameSpriteOffsets.ContainsKey(frameSpriteIndex))
                 {
-                    sprite = dataSource.GetSprite(Data.Resource.MapObject, frameSpriteIndex, color);
-                    frameSpriteOffsets.Add(frameSpriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, frameSpriteIndex);
+                    frameSpriteOffsets.Add(frameSpriteIndex, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
 
-                    sprite = dataSource.GetSprite(Data.Resource.MapShadow, frameSpriteIndex, color);
-                    frameShadowSpriteOffsets.Add(frameSpriteIndex, new Position(sprite.OffsetX, sprite.OffsetY));
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, frameSpriteIndex);
+                    frameShadowSpriteOffsets.Add(frameSpriteIndex, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
                 }
             }
         }
@@ -156,26 +155,26 @@ namespace Freeserf.Render
         {
             uint spriteIndex = MapBuildingSprite[(int)building.BuildingType];
 
-            var spriteData = dataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
-            var spriteShadowData = dataSource.GetSprite(Data.Resource.MapShadow, spriteIndex, Sprite.Color.Transparent);
+            var spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
+            var spriteShadowInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, spriteIndex);
 
-            sprite = spriteFactory.Create((int)spriteData.Width, (int)spriteData.Height, 0, 0, true, false);
-            shadowSprite = spriteFactory.Create((int)spriteShadowData.Width, (int)spriteShadowData.Height, 0, 0, true, false);
+            sprite = spriteFactory.Create(spriteInfo.Width, spriteInfo.Height, 0, 0, true, false);
+            shadowSprite = spriteFactory.Create(spriteShadowInfo.Width, spriteShadowInfo.Height, 0, 0, true, false);
 
             if (!building.IsDone() && building.BuildingType != Building.Type.Castle)
             {
                 uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
 
-                var frameSpriteData = dataSource.GetSprite(Data.Resource.MapObject, frameSpriteIndex, Sprite.Color.Transparent);
-                var frameSpriteShadowData = dataSource.GetSprite(Data.Resource.MapShadow, frameSpriteIndex, Sprite.Color.Transparent);
+                var frameSpriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, frameSpriteIndex);
+                var frameSpriteShadowInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, frameSpriteIndex);
 
-                frameSprite = spriteFactory.Create((int)frameSpriteData.Width, (int)frameSpriteData.Height, 0, 0, true, false);
-                frameShadowSprite = spriteFactory.Create((int)frameSpriteShadowData.Width, (int)frameSpriteShadowData.Height, 0, 0, true, false);
+                frameSprite = spriteFactory.Create(frameSpriteInfo.Width, frameSpriteInfo.Height, 0, 0, true, false);
+                frameShadowSprite = spriteFactory.Create(frameSpriteShadowInfo.Width, frameSpriteShadowInfo.Height, 0, 0, true, false);
 
                 // we expect the same sprite size for cross and corner stone!
-                var crossOrStoneSpriteData = dataSource.GetSprite(Data.Resource.MapObject, CrossSprite, Sprite.Color.Transparent);
+                var crossOrStoneSpriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, CrossSprite);
 
-                crossOrStoneSprite = spriteFactory.Create((int)crossOrStoneSpriteData.Width, (int)crossOrStoneSpriteData.Height, 0, 0, false, false);
+                crossOrStoneSprite = spriteFactory.Create(crossOrStoneSpriteInfo.Width, crossOrStoneSpriteInfo.Height, 0, 0, false, false);
             }
 
             if (building.IsBurning())

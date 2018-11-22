@@ -31,15 +31,7 @@ namespace Freeserf
     // It transforms and forwards mouse clicks to the game.
     internal class Viewport : GuiObject
     {
-        struct BuildSpriteInfo
-        {
-            public uint Width;
-            public uint Height;
-            public int OffsetX;
-            public int OffsetY;
-        }
-
-        static BuildSpriteInfo[] buildSpriteInfos = null;
+        static SpriteInfo[] buildSpriteInfos = null;
 
         readonly Interface interf = null;
         readonly Map map = null;
@@ -64,23 +56,12 @@ namespace Freeserf
 
             if (buildSpriteInfos == null)
             {
-                buildSpriteInfos = new BuildSpriteInfo[20];
+                buildSpriteInfos = new SpriteInfo[20];
                 var data = interf.RenderView.DataSource;
 
                 for (uint i = 0; i < 20u; ++i)
                 {
-                    var sprite = data.GetSprite(Data.Resource.GameObject, 31u + i, Sprite.Color.Transparent);
-
-                    if (sprite != null)
-                    {
-                        buildSpriteInfos[i] = new BuildSpriteInfo()
-                        {
-                            Width = sprite.Width,
-                            Height = sprite.Height,
-                            OffsetX = sprite.OffsetX,
-                            OffsetY = sprite.OffsetY
-                        };
-                    }
+                    buildSpriteInfos[i] = data.GetSpriteInfo(Data.Resource.GameObject, 31u + i);
                 }
             }
 

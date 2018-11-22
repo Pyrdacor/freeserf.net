@@ -156,6 +156,22 @@ namespace Freeserf.Render
             // we also add the build-in-progress mask
             AddSprite(atlasIndex, 0u, Sprite.CreateHalfMask(64u, 200u, true));
 
+            // as we use this texture atlas also for gui buildings we add the basic flag sprite as well (for each player color)
+            // they can be found at index 128-131
+            for (i = 0; i < 4; ++i)
+            {
+                var playerColor = PlayerInfo.PlayerColors[i];
+                var flagColor = new Sprite.Color()
+                {
+                    Red = playerColor.Red,
+                    Green = playerColor.Green,
+                    Blue = playerColor.Blue,
+                    Alpha = 255
+                };
+
+                AddSprite(atlasIndex, 128u + i, data.GetSprite(Data.Resource.MapObject, 128u, flagColor));
+            }
+
             // we also add the burning sprites
             // TODO
 

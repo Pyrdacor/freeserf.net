@@ -142,19 +142,17 @@ namespace Freeserf.Render
             this.textureAtlas = textureAtlas;
 
             // store map sprite offsets
-            var color = new Sprite.Color() { Red = 0, Green = 0, Blue = 0, Alpha = 0 };
-
             for (uint i = 0; i < 81; ++i)
             {
-                var sprite = dataSource.GetSprite(Data.Resource.MapMaskUp, i, color);
+                var spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapMaskUp, i);
 
-                if (sprite != null)
-                    maskOffsets.Add(i, new Position(sprite.OffsetX, sprite.OffsetY));
+                if (spriteInfo != null)
+                    maskOffsets.Add(i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
 
-                sprite = dataSource.GetSprite(Data.Resource.MapMaskDown, i, color);
+                spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapMaskDown, i);
 
-                if (sprite != null)
-                    maskOffsets.Add(81u + i, new Position(sprite.OffsetX, sprite.OffsetY));
+                if (spriteInfo != null)
+                    maskOffsets.Add(81u + i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
             }
 
             uint numTriangles = (numColumns + ADDITIOANL_X_TILES) * (numRows + ADDITIONAL_Y_TILES) * 2u;

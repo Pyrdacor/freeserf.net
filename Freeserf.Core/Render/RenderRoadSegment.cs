@@ -44,21 +44,20 @@ namespace Freeserf.Render
                 groundOffsets = new Position[10];
                 maskOffsets = new Position[27];
 
-                Sprite sprite;
-                var color = Sprite.Color.Transparent;
+                SpriteInfo spriteInfo;
 
                 // grounds
                 for (uint i = 0; i < 10; ++i)
                 {
-                    sprite = dataSource.GetSprite(Data.Resource.PathGround, i, color);
-                    groundOffsets[(int)i] = new Position((int)sprite.Width, (int)sprite.Height);
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.PathGround, i);
+                    groundOffsets[(int)i] = new Position(spriteInfo.Width, spriteInfo.Height);
                 }
 
                 // masks
                 for (uint i = 0; i < 27; ++i)
                 {
-                    sprite = dataSource.GetSprite(Data.Resource.PathMask, i, color);
-                    maskOffsets[(int)i] = new Position((int)sprite.Width, (int)sprite.Height);
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.PathMask, i);
+                    maskOffsets[(int)i] = new Position(spriteInfo.Width, spriteInfo.Height);
                 }
             }
         }

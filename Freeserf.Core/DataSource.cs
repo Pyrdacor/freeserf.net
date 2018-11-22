@@ -28,6 +28,16 @@ using System.Runtime.InteropServices;
 
 namespace Freeserf
 {
+    public class SpriteInfo
+    {
+        public int DeltaX;
+        public int DeltaY;
+        public int OffsetX;
+        public int OffsetY;
+        public int Width;
+        public int Height;
+    }
+
     // Sprite object.
     // Contains BGRA data.
     public class Sprite : IDisposable
@@ -578,6 +588,7 @@ namespace Freeserf
         protected string path;
         protected bool loaded;
         protected List<List<Animation>> animationTable = new List<List<Animation>>();
+        readonly Dictionary<Data.Resource, Dictionary<uint, SpriteInfo>> spriteInfoCache = new Dictionary<Data.Resource, Dictionary<uint, SpriteInfo>>();
 
         public DataSource(string path)
         {
@@ -593,6 +604,38 @@ namespace Freeserf
 
         public abstract bool Check();
         public abstract bool Load();
+
+        public SpriteInfo GetSpriteInfo(Data.Resource resource, uint index)
+        {
+            if (spriteInfoCache.ContainsKey(resource) && spriteInfoCache[resource] != null && spriteInfoCache[resource].ContainsKey(index))
+            {
+                return spriteInfoCache[resource][index];
+            }
+
+            var sprite = GetSprite(resource, index, Sprite.Color.Transparent);
+
+            SpriteInfo spriteInfo = null;
+
+            if (sprite != null)
+            {
+                spriteInfo = new SpriteInfo()
+                {
+                    Width = (int)sprite.Width,
+                    Height = (int)sprite.Height,
+                    OffsetX = sprite.OffsetX,
+                    OffsetY = sprite.OffsetY,
+                    DeltaX = sprite.DeltaX,
+                    DeltaY = sprite.DeltaY
+                };
+            }
+
+            if (!spriteInfoCache.ContainsKey(resource))
+                spriteInfoCache.Add(resource, new Dictionary<uint, SpriteInfo>() { { index, spriteInfo } });
+            else
+                spriteInfoCache[resource].Add(index, spriteInfo);
+
+            return spriteInfo;
+        }
 
         public virtual Sprite GetSprite(Data.Resource resource, uint index, Sprite.Color color)
         {

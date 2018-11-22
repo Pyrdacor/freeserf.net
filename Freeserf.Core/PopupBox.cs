@@ -392,6 +392,8 @@ namespace Freeserf
         public Type Box { get; private set; }
         public MinimapGame MiniMap { get; }
 
+        BuildingIcon[] buildings = new BuildingIcon[8]; // max 8 buildings per popup
+
         int currentSett5Item;
         int currentSett6Item;
         int currentStat7Item;
@@ -447,6 +449,8 @@ namespace Freeserf
 
             fileField.SetSize(120, 10);
             AddChild(fileField, 12, 124, false);
+
+            InitBuildings();
 
             InitRenderComponents();
         }
@@ -573,6 +577,52 @@ namespace Freeserf
             return backgrounds[index];
         }
 
+
+        #region Buildings
+
+        void InitBuildings()
+        {
+            for (int i = 0; i < buildings.Length; ++i)
+            {
+                buildings[i] = new BuildingIcon(interf, 0, 0, 128u, 1);
+            }
+        }
+
+        void ShowBuildings(int num)
+        {
+            for (int i = 0; i < buildings.Length; ++i)
+            {
+                buildings[i].Displayed = i < num;
+            }
+        }
+
+        void SetFlag(int index, int x, int y)
+        {
+            var data = interf.RenderView.DataSource;
+            var playerIndex = interf.GetPlayer().Index;
+
+            SetBuilding(index, x, y, 128 + playerIndex, data.GetSpriteInfo(Data.Resource.MapObject, 128u));
+        }
+
+        void SetBuilding(int index, int x, int y, Building.Type type)
+        {
+            uint spriteIndex = Render.RenderBuilding.MapBuildingSprite[(int)type];
+            var data = interf.RenderView.DataSource;
+            var spriteInfo = data.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
+
+            SetBuilding(index, x, y, spriteIndex, spriteInfo);
+        }
+
+        void SetBuilding(int index, int x, int y, uint spriteIndex, SpriteInfo spriteInfo)
+        {
+            buildings[index].SetSpriteIndex(spriteIndex);
+            buildings[index].MoveTo(TotalX + x + spriteInfo.OffsetX, TotalY + y + spriteInfo.OffsetY);
+            buildings[index].SetSize(spriteInfo.Width, spriteInfo.Height);
+        }
+
+        #endregion
+
+
         /* Draw the frame around the popup box. */
         void draw_popup_box_frame()
 		{
@@ -663,12 +713,10 @@ namespace Freeserf
         }
 
         /* Get the sprite number for a face. */
-        uint get_player_face_sprite(uint face)
+        static uint GetPlayerFaceSprite(uint face)
 		{
             if (face != 0)
-            {
                 return 0x10bu + face;
-            }
 
             return 0x119u; /* sprite_face_none */
         }
@@ -687,7 +735,7 @@ namespace Freeserf
             }
 
             //frame->fill_rect(8 * x, y + 5, 48, 72, color);
-            DrawPopupIcon(x, y, get_player_face_sprite(face));
+            DrawPopupIcon(x, y, GetPlayerFaceSprite(face));
         }
 
         /* Draw a layout of buildings in a popup box. */

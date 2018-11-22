@@ -144,9 +144,9 @@ namespace Freeserf
 
             for (int i = 0; i < 20; ++i)
             {
-                var sprite = data.GetSprite(Data.Resource.FrameBottom, (uint)BackgroundLayout[i * 3], Sprite.Color.Transparent);
+                var spriteInfo = data.GetSpriteInfo(Data.Resource.FrameBottom, (uint)BackgroundLayout[i * 3]);
 
-                background[i] = CreateSprite(interf.RenderView.SpriteFactory, (int)sprite.Width, (int)sprite.Height, Data.Resource.FrameBottom, (uint)BackgroundLayout[i * 3], BaseDisplayLayer);
+                background[i] = CreateSprite(interf.RenderView.SpriteFactory, spriteInfo.Width, spriteInfo.Height, Data.Resource.FrameBottom, (uint)BackgroundLayout[i * 3], BaseDisplayLayer);
             }
 
             // blink timer

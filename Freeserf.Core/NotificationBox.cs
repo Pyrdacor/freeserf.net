@@ -208,12 +208,11 @@ namespace Freeserf
                     return false;
             }
 
-            var sprite = interf.RenderView.DataSource.GetSprite(Data.Resource.MapObject, spriteIndex, Sprite.Color.Transparent);
-
+            var spriteInfo = interf.RenderView.DataSource.GetSpriteInfo(Data.Resource.MapObject, spriteIndex);
             int yOffset = (spriteIndex == 0x90) ? 24 : 0; // adjust position for location indicator (cross)
 
-            building.Resize((int)sprite.Width, (int)sprite.Height);
-            building.MoveTo((Width - (int)sprite.Width) / 2, Math.Min(yOffset + 64, Height - 16 - (int)sprite.Height));
+            building.Resize(spriteInfo.Width, spriteInfo.Height);
+            building.MoveTo((Width - spriteInfo.Width) / 2, Math.Min(yOffset + 64, Height - 16 - spriteInfo.Height));
 
             building.SetSpriteIndex(spriteIndex);
 
@@ -367,7 +366,7 @@ namespace Freeserf
             }
         }
 
-        uint GetPlayerFaceSprite(uint face)
+        static uint GetPlayerFaceSprite(uint face)
         {
             if (face != 0u)
                 return 0x10b + face;

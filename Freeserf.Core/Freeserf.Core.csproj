@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Render\SpritePattern.cs" />
     <Compile Remove="Texture.cs" />
     <Compile Remove="Video.cs" />
   </ItemGroup>
