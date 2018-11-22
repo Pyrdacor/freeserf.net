@@ -383,31 +383,8 @@ namespace Freeserf.Render
             return new Position(x, y);
         }
 
-        public MapPos GetMapPos(uint renderColumn, uint renderRow)
+        MapPos GetMapPosFromMapCoordinates(int x, int y)
         {
-            // axis-aligned map column and row
-            var column = ScrollX + renderColumn;
-            var row = ScrollY + renderRow;
-
-            column &= map.ColumnMask;
-
-            // cap at double rows as half rows have influence on the column
-            if (row >= 2 * map.Rows)
-                row &= map.RowMask;
-
-            // map column and row
-            uint realColumn = (column + row / 2) & map.ColumnMask;
-            uint realRow = row & map.RowMask;
-
-            return map.Pos(realColumn, realRow);
-        }
-
-        public MapPos GetMapPosFromMousePosition(Position position)
-        {
-            // position inside the map
-            int x = position.X + RenderArea.Position.X;
-            int y = position.Y + RenderArea.Position.Y;
-
             // axis-aligned map column and row
             uint column = (uint)((x + 8) / TILE_WIDTH);
             uint row = 0; // we start at row 0 and go down till we reach the y position
@@ -446,6 +423,32 @@ namespace Freeserf.Render
             }
 
             return map.Pos(column, row);
+        }
+
+        public MapPos GetMapPosFromRenderOffset(uint renderColumn, uint renderRow)
+        {
+            // axis-aligned map column and row
+            var column = ScrollX + renderColumn;
+            var row = ScrollY + renderRow;
+
+            column &= map.ColumnMask;
+            row &= map.RowMask;
+
+            return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
+        }
+
+        public MapPos GetMapOffset()
+        {
+            return GetMapPosFromMapCoordinates(RenderArea.Position.X, RenderArea.Position.Y);
+        }
+
+        public MapPos GetMapPosFromMousePosition(Position position)
+        {
+            // position inside the map
+            int x = position.X + RenderArea.Position.X;
+            int y = position.Y + RenderArea.Position.Y;
+
+            return GetMapPosFromMapCoordinates(x, y);
         }
 
         void UpdatePosition()

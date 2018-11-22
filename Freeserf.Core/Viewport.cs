@@ -192,11 +192,10 @@ namespace Freeserf
             {
                 var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
                 var offset = textureAtlas.GetOffset((uint)spriteIndex);
+                var spriteInfo = buildSpriteInfos[spriteIndex - 31];
 
                 if (builds[column, row] == null)
                 {
-                    var spriteInfo = buildSpriteInfos[spriteIndex - 31];
-
                     builds[column, row] = interf.RenderView.SpriteFactory.Create((int)spriteInfo.Width, (int)spriteInfo.Height, offset.X, offset.Y, false, true) as ILayerSprite;
                     builds[column, row].Layer = buildsLayer;
                     builds[column, row].X = TotalX + (int)column * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH / 2;
@@ -204,11 +203,11 @@ namespace Freeserf
                 }
                 else
                 {
+                    builds[column, row].Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
                     builds[column, row].TextureAtlasOffset = offset;
                 }
                 
                 builds[column, row].Visible = true;
-                
             }
             else
             {
@@ -225,7 +224,7 @@ namespace Freeserf
             {
                 for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
                 {
-                    var pos = map.RenderMap.GetMapPos(c, r);
+                    var pos = map.RenderMap.GetMapPosFromRenderOffset(c, r);
 
                     /* Draw possible building */
                     int sprite = -1;
