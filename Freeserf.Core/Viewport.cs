@@ -181,9 +181,12 @@ namespace Freeserf
         {
             var renderPos = map.RenderMap.GetObjectRenderPosition(pos);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
+            var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(global::Freeserf.Layer.Builds);
 
-            mapCursorSprites[index].X = renderPos.X + spriteInfo.OffsetX;
-            mapCursorSprites[index].Y = renderPos.Y + spriteInfo.OffsetY;
+            mapCursorSprites[index].Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
+            mapCursorSprites[index].X = TotalX + renderPos.X + spriteInfo.OffsetX;
+            mapCursorSprites[index].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;
+            mapCursorSprites[index].TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
         }
 
         void SetBuildSprite(uint column, uint row, int spriteIndex)
@@ -198,15 +201,17 @@ namespace Freeserf
                 {
                     builds[column, row] = interf.RenderView.SpriteFactory.Create((int)spriteInfo.Width, (int)spriteInfo.Height, offset.X, offset.Y, false, true) as ILayerSprite;
                     builds[column, row].Layer = buildsLayer;
-                    builds[column, row].X = TotalX + (int)column * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH / 2;
-                    builds[column, row].Y = TotalY + (int)row * RenderMap.TILE_HEIGHT;
                 }
                 else
                 {
                     builds[column, row].Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
                     builds[column, row].TextureAtlasOffset = offset;
                 }
-                
+
+                var renderPos = map.RenderMap.GetObjectRenderPosition(map.RenderMap.GetMapPosFromRenderOffset(column, row));
+
+                builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
+                builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;
                 builds[column, row].Visible = true;
             }
             else
