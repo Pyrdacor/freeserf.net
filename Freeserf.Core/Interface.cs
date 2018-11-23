@@ -342,7 +342,7 @@ namespace Freeserf
             PopupBox.Hide();
             DeleteChild(PopupBox);
             UpdateMapCursorPos(mapCursorPos);
-            PanelBar.Update();
+            PanelBar?.Update();
         }
 
         /* Open box for starting a new game */
