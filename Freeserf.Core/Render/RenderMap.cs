@@ -500,6 +500,27 @@ namespace Freeserf.Render
 
         MapPos GetMapPosFromMapCoordinates(int x, int y)
         {
+            int lwidth = (int)map.Columns * TILE_WIDTH;
+            int lheight = (int)map.Rows * TILE_HEIGHT;
+
+            while (y < 0)
+            {
+                x += (int)map.Rows * TILE_WIDTH / 2;
+                y += lheight;
+            }
+
+            while (y >= lheight)
+            {
+                x -= (int)map.Rows * TILE_WIDTH / 2;
+                y -= lheight;
+            }
+
+            while (x < 0)
+                x += lwidth;
+
+            while (x >= lwidth)
+                x -= lwidth;
+
             int mappedX = x + (y * TILE_WIDTH) / (2 * TILE_HEIGHT);
             int column = mappedX / TILE_WIDTH;
             int row = y / TILE_HEIGHT;
@@ -557,16 +578,21 @@ namespace Freeserf.Render
             var row = ScrollY + renderRow;
 
             column &= map.ColumnMask;
-            row &= map.RowMask;
+
+            if (row >= 2 * map.Rows)
+                row &= map.RowMask;
 
             return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
         }
 
         public MapPos GetMapPosFromScreenPosition(Position position)
         {
+            int renderX = (int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2;
+            int renderY = (int)ScrollY * TILE_HEIGHT;
+
             // position inside the map
-            int x = RenderArea.Position.X + position.X;
-            int y = RenderArea.Position.Y + position.Y;
+            int x = renderX + position.X;
+            int y = renderY + position.Y;
 
             return GetMapPosFromMapCoordinates(x, y);
         }
