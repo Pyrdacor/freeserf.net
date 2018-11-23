@@ -124,7 +124,8 @@ namespace Freeserf
 
         public IEnumerator<T> GetEnumerator()
         {
-            return ((IEnumerable<T>)heap).GetEnumerator();
+            for (int i = 0; i < Count; ++i)
+                yield return heap[i];
         }
 
         IEnumerator IEnumerable.GetEnumerator()
