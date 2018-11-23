@@ -82,6 +82,15 @@ namespace Freeserf.Render
             Map.Terrain t2 = Map.Terrain.Water0;
             int h3 = 0, h4 = 0, hDiff2 = 0;
 
+            if (map.PosRow(pos) % 2 == 0)
+            {
+                offsetX = 0;
+            }
+            else
+            {
+                offsetX = -RenderMap.TILE_WIDTH / 2;
+            }
+
             switch (dir)
             {
                 case Direction.Right:
@@ -119,7 +128,7 @@ namespace Freeserf.Render
             //       But this is already considered here I guess.
             //       So maybe uncomment the following line and
             //       leave a note about it later.
-            //offsetY += h1 * 4;
+            offsetY += h1 * 4;
             // TODO: rendering is still not at the right spot (seems to be wrong dependent of map pos)
 
             maskIndex = hDiff + 4 + (int)dir * 9;
@@ -160,7 +169,7 @@ namespace Freeserf.Render
 
         public void Update(RenderMap map)
         {
-            var renderPosition = map.GetObjectRenderPosition(pos);
+            var renderPosition = map.GetScreenPosition(pos);
 
             // the mask offset is the right offset for drawing
             sprite.X = renderPosition.X + offsetX + maskOffsets[maskIndex].X;
