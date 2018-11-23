@@ -393,18 +393,21 @@ namespace Freeserf.Render
             int lwidth = (int)map.Columns * TILE_WIDTH;
             int lheight = (int)map.Rows * TILE_HEIGHT;
 
-            int x = mapPosition.X - RenderArea.Position.X;
-            int y = mapPosition.Y - RenderArea.Position.Y;
+            int renderX = (int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2;
+            int renderY = (int)ScrollY * TILE_HEIGHT;
+
+            int x = mapPosition.X - renderX;
+            int y = mapPosition.Y - renderY;
 
             while (y < 0)
             {
-                x -= ((int)map.Rows * TILE_WIDTH) / 2;
+                x -= (int)map.Rows * TILE_WIDTH / 2;
                 y += lheight;
             }
 
             while (y >= lheight)
             {
-                x += ((int)map.Rows * TILE_WIDTH) / 2;
+                x += (int)map.Rows * TILE_WIDTH / 2;
                 y -= lheight;
             }
 
@@ -570,7 +573,7 @@ namespace Freeserf.Render
 
         public MapPos GetMapOffset()
         {
-            return GetMapPosFromMapCoordinates(RenderArea.Position.X, RenderArea.Position.Y);
+            return map.Pos(ScrollX & map.ColumnMask, ScrollY & map.RowMask);
         }
 
         public MapPos GetCenteredPosition()
