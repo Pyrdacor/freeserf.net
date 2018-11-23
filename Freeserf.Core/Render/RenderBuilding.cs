@@ -255,7 +255,7 @@ namespace Freeserf.Render
 
         public void Update(int tick, RenderMap map, uint pos)
         {
-            var renderPosition = map.GetObjectRenderPosition(pos);
+            var renderPosition = map.GetScreenPosition(pos);
 
             uint spriteIndex = MapBuildingSprite[(int)building.BuildingType];
 

@@ -86,7 +86,7 @@ namespace Freeserf.Render
 
             uint flagSpriteIndex = spriteIndex + flag.GetOwner() * 16u; // player colors
 
-            var renderPosition = map.GetObjectRenderPosition(pos);
+            var renderPosition = map.GetScreenPosition(pos);
 
             sprite.X = renderPosition.X + spriteOffsets[(int)offset].X;
             sprite.Y = renderPosition.Y + spriteOffsets[(int)offset].Y;

@@ -19,7 +19,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /*
  * The texture atlas for map tile graphics contains 155 sprites.
@@ -38,8 +40,10 @@ namespace Freeserf.Render
         internal const int TILE_WIDTH = 32;
         internal const int TILE_HEIGHT = 20;
         internal const int TILE_RENDER_MAX_HEIGHT = 41; // the heighest mask is 41 pixels height
-        const int MAX_OVERLAP_Y = 4 * 31; // the last tile may have a negative offset of this
-        const int ADDITIONAL_Y_TILES = (MAX_OVERLAP_Y + TILE_HEIGHT - 1) / TILE_HEIGHT;
+        const int MAX_HEIGHT_OFFSET = 4 * 31; // 31 is the max height of a tile (this value is in negative y-direction)
+        const int MAX_HEIGHT_OFFSET_ROWS = (MAX_HEIGHT_OFFSET + TILE_HEIGHT - 1) / TILE_HEIGHT;
+        const int MAX_OVERLAP_Y = MAX_HEIGHT_OFFSET; // the last tile may have a negative offset of this
+        const int ADDITIONAL_Y_TILES = MAX_HEIGHT_OFFSET_ROWS;
         const int ADDITIOANL_X_TILES = 2;
 
         static readonly int[] TileMaskUp = new int[81]
@@ -251,7 +255,7 @@ namespace Freeserf.Render
                 throw new ExceptionFreeserf("Failed to draw triangle up (3).");
             }
 
-            var terrain = map.TypeUp(pos);
+            var terrain = map.TypeUp(map.MoveUp(pos));
             int spriteIndex = (int)terrain * 8 + TileMaskUp[mask];
             uint sprite = TileSprites[spriteIndex];
 
@@ -278,7 +282,7 @@ namespace Freeserf.Render
                 throw new ExceptionFreeserf("Failed to draw triangle down (3).");
             }
 
-            var terrain = map.TypeDown(pos);
+            var terrain = map.TypeDown(map.MoveUpLeft(pos));
             int spriteIndex = (int)terrain * 8 + TileMaskDown[mask];
             uint sprite = TileSprites[spriteIndex];
 
@@ -346,44 +350,291 @@ namespace Freeserf.Render
             }
         }
 
-        public Position GetObjectRenderPosition(MapPos pos)
+        /* Space transformations. */
+        /* The game world space is a three dimensional space with the axes
+           named "column", "row" and "height". The (column, row) coordinate
+           can be encoded as a MapPos.
+
+           The landscape is composed of a mesh of vertices in the game world
+           space. There is one vertex for each integer position in the
+           (column, row)-space. The height value of such a vertex is stored
+           in the map data. Height values at non-integer (column, row)-points
+           can be obtained by interpolation from the nearest three vertices.
+
+           The game world can be projected onto a two-dimensional space called
+           map pixel space by the following transformation:
+
+            mx =  Tw*c  -(Tw/2)*r
+            my =  Th*r  -4*h
+
+           where (mx,my) is the coordinate in map pixel space; (c,r,h) is
+           the coordinate in game world space; and (Tw,Th) is the width and
+           height of a map tile in pixel units (these two values are defined
+           as MAP_TILE_WIDTH and MAP_TILE_HEIGHT in the code).
+
+           The map pixels space can be transformed into screen space by a
+           simple translation.
+
+           Note that the game world space wraps around when the edge is
+           reached, i.e. decrementing the column by one when standing at
+           (c,r,h) = (0,0,0) leads to the point (N-1,0,0) where N is the
+           width of the map in columns. This also happens when crossing
+           the row edge.
+
+           The map pixel space also wraps around but the vertical wrap-around
+           is a bit more tricky, so care must be taken when translating
+           map pixel coordinates. When an edge is traversed vertically,
+           the x-coordinate has to be offset by half the height of the map,
+           because of the skew in the translation from game world space to
+           map pixel space.
+        */
+        public Position GetScreenPositionFromMapPosition(Position mapPosition)
         {
-            uint column = map.PosColumn(pos);
-            uint row = map.PosRow(pos);
+            int lwidth = (int)map.Columns * TILE_WIDTH;
+            int lheight = (int)map.Rows * TILE_HEIGHT;
 
-            int y = (int)row;
+            int x = mapPosition.X - RenderArea.Position.X;
+            int y = mapPosition.Y - RenderArea.Position.Y;
 
-            if (y < (this.ScrollY & map.RowMask))
-                y += (int)map.Rows;
+            while (y < 0)
+            {
+                x -= ((int)map.Rows * TILE_WIDTH) / 2;
+                y += lheight;
+            }
 
-            int calcY = y;
+            while (y >= lheight)
+            {
+                x += ((int)map.Rows * TILE_WIDTH) / 2;
+                y -= lheight;
+            }
 
-            if (this.ScrollY >= map.Rows)
-                calcY += (int)map.Rows;
+            while (x < 0)
+                x += lwidth;
 
-            int x = (int)column - calcY / 2;
-
-            if (x < this.ScrollX)
-                x += (int)map.Columns;
-
-            x *= TILE_WIDTH;
-            y *= TILE_HEIGHT;
-
-            x -= RenderArea.Position.X;
-            y -= RenderArea.Position.Y;
-
-            if (row % 2 == 1)
-                x -= TILE_WIDTH / 2;
-
-            x += TILE_WIDTH / 2;
-            y -= 4 * (int)map.GetHeight(pos);
+            while (x >= lwidth)
+                x -= lwidth;
 
             return new Position(x, y);
         }
 
+        public Position GetMapPosition(MapPos pos)
+        {
+            int lwidth = (int)map.Columns * TILE_WIDTH;
+            int lheight = (int)map.Rows * TILE_HEIGHT;
+
+            int x = TILE_WIDTH * (int)map.PosColumn(pos) - (TILE_WIDTH / 2) * (int)map.PosRow(pos);
+            int y = TILE_HEIGHT * (int)map.PosRow(pos) - 4 * (int)map.GetHeight(pos);
+
+            if (y < 0)
+            {
+                x -= ((int)map.Rows * TILE_WIDTH) / 2;
+                y += lheight;
+            }
+
+            if (x < 0)
+                x += lwidth;
+            else if (x >= lwidth)
+                x -= lwidth;
+
+            return new Position(x, y);
+        }
+
+        public Position GetScreenPosition(MapPos pos)
+        {
+            var mapPosition = GetMapPosition(pos);
+
+            return GetScreenPositionFromMapPosition(mapPosition);
+        }
+
+        uint GetRow(uint column, uint startRow, int y, bool? down = null, int lastDiff = -1)
+        {
+            var pos = map.Pos(column, startRow);
+            int realY = (int)startRow * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
+
+            int lower = y - TILE_HEIGHT / 2;
+            int upper = y + TILE_HEIGHT / 2;
+
+            if (realY < lower)
+            {
+                if (down.HasValue && !down.Value) // previous was up
+                {
+                    if (lastDiff < lower - realY) // last row was closer
+                        return startRow + 1;
+
+                    return startRow;
+                }
+
+                pos = (startRow % 2 == 0) ? map.MoveDown(pos) : map.MoveDownRight(pos);
+                down = false;
+                lastDiff = lower - realY;
+            }
+            else if (realY > upper)
+            {
+                if (down.HasValue && down.Value) // previous was down
+                {
+                    if (lastDiff < realY - upper) // last row was closer
+                    {
+                        if (startRow == 0)
+                            return map.Rows - 1;
+                        else
+                            return startRow - 1;
+                    }
+
+                    return startRow;
+                }
+
+                pos = (startRow % 2 == 1) ? map.MoveUp(pos) : map.MoveUpLeft(pos);
+                down = true;
+                lastDiff = realY - upper;
+            }
+            else
+            {
+                return startRow;
+            }
+
+            return GetRow(map.PosColumn(pos), map.PosRow(pos), y, down, lastDiff);
+        }
+
         MapPos GetMapPosFromMapCoordinates(int x, int y)
         {
-            // axis-aligned map column and row
+            int mappedX = x + (y * TILE_WIDTH) / (2 * TILE_HEIGHT);
+            int column = mappedX / TILE_WIDTH;
+            int row = y / TILE_HEIGHT;
+            int lastDist = int.MaxValue;
+            var pos = map.Pos((uint)column, 0u);
+            MapPos lastPos = Global.BadMapPos;
+
+            pos = map.MoveDownN(pos, row);
+
+            while (true)
+            {
+                int rowY = row * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
+
+                if (row % 2 == 0)
+                    pos = map.MoveDown(pos);
+                else
+                    pos = map.MoveDownRight(pos);
+
+                int nextRowY = (row + 1) * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
+
+                int rowCenterY = rowY + (nextRowY - rowY) / 2;
+                int dist = Math.Abs(rowCenterY - y);
+
+                if (lastDist < dist)
+                {
+                    int xOff = mappedX % TILE_WIDTH;
+
+                    if (xOff >= TILE_WIDTH / 2)
+                        return map.MoveRight(lastPos);
+
+                    return lastPos;
+                }
+
+                lastPos = pos;
+                lastDist = dist;
+
+                ++row;
+            }
+
+            /*int mappedX = x + (y * TILE_WIDTH) / (2 * TILE_HEIGHT);
+            int column = mappedX / TILE_WIDTH;
+            int xOff = mappedX % TILE_WIDTH;
+            //int yOff = TILE_HEIGHT / 2;
+            
+            // transform to the nearest node
+            if (mappedX % TILE_WIDTH > TILE_WIDTH / 2)
+                ++column;
+
+            //if (y % TILE_HEIGHT > TILE_HEIGHT / 2)
+            //    yOff = -yOff;
+
+            uint row = (uint)(y / TILE_HEIGHT);
+            var pos = map.Pos((uint)column, row);
+
+            // the row may have a negative y-offset because of its height so check rows below
+            // key = row index, value = distance from y-position
+            Dictionary<uint, int> rows = new Dictionary<MapPos, int>();
+            
+            for (uint i = 0; i < MAX_HEIGHT_OFFSET_ROWS; ++i)
+            {
+                int rowY = (int)row * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
+
+                if (row % 2 == 0)
+                    pos = map.MoveDown(pos);
+                else
+                    pos = map.MoveDownRight(pos);
+
+                int nextRowY = (int)(row + 1) * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
+
+                int rowCenterY = rowY + (nextRowY - rowY) / 2;
+
+                rows.Add(row, Math.Abs(rowCenterY - y));
+
+                ++row;
+            }
+
+            row = rows.OrderBy(r => r.Value).First().Key;
+
+            //int startColumn = column - (y / TILE_HEIGHT) / 2;
+
+            //var pos = map.Pos((uint)startColumn, row);
+
+            mappedX = column * TILE_WIDTH + (int)row * TILE_WIDTH / 2;
+            column = mappedX / TILE_WIDTH;
+
+            return map.Pos((uint)column, row);//GetRow((uint)column, row, y));
+
+            /*while (true)
+            {
+                int realY = baseY - 4 + (int)map.GetHeight(pos);
+
+                if (realY + yOff > y)
+                {
+                    return pos;
+                }
+
+                if (row % 2 == 0)
+                    pos = map.MoveDown(pos);
+                else
+                    pos = map.MoveDownRight(pos);
+
+                baseY += TILE_HEIGHT;
+                ++row;
+            }*/
+
+            // result column und row should be 1 bigger
+
+            /*int mappedX = x + (y * TILE_WIDTH) / (2 * TILE_HEIGHT);
+            uint column = (uint)(mappedX / TILE_WIDTH);
+            uint row = (uint)(y / TILE_HEIGHT);
+            var pos = map.Pos(column, row);
+
+            int baseY = 0;
+
+            while (true)
+            {
+                int realY = baseY - 4 + (int)map.GetHeight(pos);
+
+                if (y < realY + TILE_HEIGHT / 2)
+                {
+                    if (row % 2 == 1 && (x % TILE_WIDTH) < TILE_WIDTH / 2)
+                        return map.MoveLeft(pos);
+
+                    return pos;
+                }
+
+                pos = map.MoveRight(pos);
+
+                if (row % 2 == 0)
+                    pos = map.MoveDown(pos);
+                else
+                    pos = map.MoveDownRight(pos);
+
+                baseY += TILE_HEIGHT;
+            }*/
+
+
+            /*// axis-aligned map column and row
             uint column = (uint)((x + 8) / TILE_WIDTH);
             uint row = 0; // we start at row 0 and go down till we reach the y position
 
@@ -420,10 +671,10 @@ namespace Freeserf.Render
                 row = (row - 2) & map.RowMask;
             }
 
-            return map.Pos(column, row);
+            return map.Pos(column, row);*/
         }
 
-        public MapPos GetMapPosFromRenderOffset(uint renderColumn, uint renderRow)
+        public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow)
         {
             // axis-aligned map column and row
             var column = ScrollX + renderColumn;
@@ -435,18 +686,23 @@ namespace Freeserf.Render
             return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
         }
 
+        public MapPos GetMapPosFromScreenPosition(Position position)
+        {
+            // position inside the map
+            int x = RenderArea.Position.X + position.X;
+            int y = RenderArea.Position.Y + position.Y;
+
+            return GetMapPosFromMapCoordinates(x, y);
+        }
+
         public MapPos GetMapOffset()
         {
             return GetMapPosFromMapCoordinates(RenderArea.Position.X, RenderArea.Position.Y);
         }
 
-        public MapPos GetMapPosFromMousePosition(Position position)
+        public MapPos GetCenteredPosition()
         {
-            // position inside the map
-            int x = position.X + RenderArea.Position.X;
-            int y = position.Y + RenderArea.Position.Y;
-
-            return GetMapPosFromMapCoordinates(x, y);
+            return GetMapPosFromScreenPosition(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));
         }
 
         void UpdatePosition()

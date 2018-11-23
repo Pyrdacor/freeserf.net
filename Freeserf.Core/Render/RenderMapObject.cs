@@ -101,7 +101,7 @@ namespace Freeserf.Render
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
-            var renderPosition = map.GetObjectRenderPosition(pos);
+            var renderPosition = map.GetScreenPosition(pos);
 
             sprite.X = renderPosition.X + spriteOffsets[spriteIndex].X;
             sprite.Y = renderPosition.Y + spriteOffsets[spriteIndex].Y;

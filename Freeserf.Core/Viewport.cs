@@ -92,6 +92,13 @@ namespace Freeserf
                         builds[c, r].Delete();
                 }
             }
+
+            // destroy map cursor sprites
+            for (int i = 0; i < 7; ++i)
+            {
+                if (mapCursorSprites[i] != null)
+                    mapCursorSprites[i].Delete();
+            }
         }
 
         /* Called periodically when the game progresses. */
@@ -155,7 +162,7 @@ namespace Freeserf
 
         void DrawMapCursorSprite(MapPos pos, int index, uint spriteIndex)
         {
-            var renderPos = map.RenderMap.GetObjectRenderPosition(pos);
+            var renderPos = map.RenderMap.GetScreenPosition(pos);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
             var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
 
@@ -184,7 +191,7 @@ namespace Freeserf
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
-                var renderPos = map.RenderMap.GetObjectRenderPosition(map.RenderMap.GetMapPosFromRenderOffset(column, row));
+                var renderPos = map.RenderMap.GetScreenPosition(map.RenderMap.GetMapPosFromScreenPosition(column, row));
 
                 builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
                 builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;
@@ -205,7 +212,7 @@ namespace Freeserf
             {
                 for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
                 {
-                    var pos = map.RenderMap.GetMapPosFromRenderOffset(c, r);
+                    var pos = map.RenderMap.GetMapPosFromScreenPosition(c, r);
 
                     /* Draw possible building */
                     int sprite = -1;
@@ -279,7 +286,7 @@ namespace Freeserf
 
             var position = new Position(x, y);
 
-            var mapPos = map.RenderMap.GetMapPosFromMousePosition(position);
+            var mapPos = map.RenderMap.GetMapPosFromScreenPosition(position);
 
             if (interf.IsBuildingRoad())
             {
@@ -394,7 +401,7 @@ namespace Freeserf
 
             var position = new Position(x, y);
 
-            var mapPos = map.RenderMap.GetMapPosFromMousePosition(position);
+            var mapPos = map.RenderMap.GetMapPosFromScreenPosition(position);
             Player player = interf.GetPlayer();
 
             if (interf.IsBuildingRoad())
