@@ -110,7 +110,7 @@ namespace Freeserf.Renderer.OpenTK
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
             $"uniform mat4 {DefaultModelViewMatrixName};",
-            $"{GetOutName()} vec4 pixelColor;",
+            $"flat {GetOutName()} vec4 pixelColor;",
             $"",
             $"void main()",
             $"{{",
