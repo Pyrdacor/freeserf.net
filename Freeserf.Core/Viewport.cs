@@ -104,6 +104,9 @@ namespace Freeserf
         /* Called periodically when the game progresses. */
         public void Update()
         {
+            // update map zoom factor
+            map.RenderMap.ZoomFactor = 1.0f + interf.RenderView.Zoom * 0.5f;
+
             // view redraw the viewport permanently
             SetRedraw();
         }
@@ -191,7 +194,7 @@ namespace Freeserf
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
-                var renderPos = map.RenderMap.GetScreenPosition(map.RenderMap.GetMapPosFromScreenPosition(column, row));
+                var renderPos = map.RenderMap.GetScreenPosition(map.RenderMap.GetMapPosFromScreenPosition(column, row, false));
 
                 builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
                 builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;

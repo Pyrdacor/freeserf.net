@@ -133,6 +133,7 @@ namespace Freeserf.Render
         public Rect RenderArea { get; private set; } = new Rect();
         public uint NumVisibleColumns => numColumns + ADDITIOANL_X_TILES;
         public uint NumVisibleRows => numRows + ADDITIONAL_Y_TILES;
+        public float ZoomFactor { get; set; } = 1.0f;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
             ITriangleFactory triangleFactory, ITextureAtlas textureAtlas,
@@ -200,8 +201,8 @@ namespace Freeserf.Render
 
         public void Scroll(int x, int y)
         {
-            int column = (int)this.ScrollX + x;
-            int row = (int)this.ScrollY + y;
+            int column = (int)ScrollX + x;
+            int row = (int)ScrollY + y;
 
             if (column < 0)
                 column += (int)map.Columns;
@@ -214,11 +215,11 @@ namespace Freeserf.Render
 
         public void ScrollTo(uint x, uint y)
         {
-            if (this.ScrollX == x && this.ScrollY == y)
+            if (ScrollX == x && ScrollY == y)
                 return;
 
-            this.ScrollX = x;
-            this.ScrollY = y;
+            ScrollX = x;
+            ScrollY = y;
 
             UpdatePosition();
         }
@@ -571,11 +572,13 @@ namespace Freeserf.Render
             }
         }
 
-        public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow)
+        public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow, bool zoomed = true)
         {
             // axis-aligned map column and row
             var column = ScrollX + renderColumn;
             var row = ScrollY + renderRow;
+
+            // TODO: ZoomFactor
 
             column &= map.ColumnMask;
 
@@ -585,8 +588,10 @@ namespace Freeserf.Render
             return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
         }
 
-        public MapPos GetMapPosFromScreenPosition(Position position)
+        public MapPos GetMapPosFromScreenPosition(Position position, bool zoomed = true)
         {
+            // TODO: ZoomFactor
+
             int renderX = (int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2;
             int renderY = (int)ScrollY * TILE_HEIGHT;
 
