@@ -29,6 +29,8 @@ namespace Freeserf.Renderer.OpenTK
         Triangle
     }
 
+    // Note: If we have different sprites per layer (e.g. those with masked tex coords and those without)
+    // the indices will not fit inside the different buffers. We can't use different sprite types per layer!
     public class RenderBuffer
     {
         public Shape Shape { get; } = Shape.Rect;

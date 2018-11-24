@@ -48,10 +48,10 @@ namespace Freeserf.Render
         const uint ShadowOffset = 1000u;
 
         Building building = null;
-        ISprite frameSprite = null;
-        ISprite frameShadowSprite = null;
-        ISprite crossOrStoneSprite = null;
-        ISprite burningSprite = null;
+        IMaskedSprite frameSprite = null;
+        IMaskedSprite frameShadowSprite = null;
+        IMaskedSprite crossOrStoneSprite = null;
+        IMaskedSprite burningSprite = null;
 
         static readonly Dictionary<uint, Position> spriteOffsets = new Dictionary<uint, Position>();
         static readonly Dictionary<uint, Position> shadowSpriteOffsets = new Dictionary<uint, Position>();
@@ -90,6 +90,14 @@ namespace Freeserf.Render
 
             if (frameShadowSprite != null)
                 frameShadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + MapBuildingFrameSprite[(int)building.BuildingType]);
+
+            if (crossOrStoneSprite != null)
+            {
+                var offset = textureAtlas.GetOffset(0u);
+                offset.Y += 100; // make it full visible
+
+                crossOrStoneSprite.MaskTextureAtlasOffset = offset;
+            }
 
             InitOffsets(dataSource);
         }
@@ -168,13 +176,14 @@ namespace Freeserf.Render
                 var frameSpriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, frameSpriteIndex);
                 var frameSpriteShadowInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, frameSpriteIndex);
 
-                frameSprite = spriteFactory.Create(frameSpriteInfo.Width, frameSpriteInfo.Height, 0, 0, true, false);
-                frameShadowSprite = spriteFactory.Create(frameSpriteShadowInfo.Width, frameSpriteShadowInfo.Height, 0, 0, true, false);
+                frameSprite = spriteFactory.Create(frameSpriteInfo.Width, frameSpriteInfo.Height, 0, 0, true, false) as IMaskedSprite;
+                frameShadowSprite = spriteFactory.Create(frameSpriteShadowInfo.Width, frameSpriteShadowInfo.Height, 0, 0, true, false) as IMaskedSprite;
 
                 // we expect the same sprite size for cross and corner stone!
                 var crossOrStoneSpriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, CrossSprite);
 
-                crossOrStoneSprite = spriteFactory.Create(crossOrStoneSpriteInfo.Width, crossOrStoneSpriteInfo.Height, 0, 0, false, false);
+                // Note: Even the sprite doesn't have to be masked it is important to use similar sprite types in the same layer.
+                crossOrStoneSprite = spriteFactory.Create(crossOrStoneSpriteInfo.Width, crossOrStoneSpriteInfo.Height, 0, 0, true, false) as IMaskedSprite;
             }
 
             if (building.IsBurning())
@@ -205,6 +214,12 @@ namespace Freeserf.Render
             {
                 frameShadowSprite.Delete();
                 frameShadowSprite = null;
+            }
+
+            if (crossOrStoneSprite != null)
+            {
+                crossOrStoneSprite.Delete();
+                crossOrStoneSprite = null;
             }
 
             if (burningSprite != null)
@@ -264,6 +279,26 @@ namespace Freeserf.Render
             shadowSprite.X = renderPosition.X + shadowSpriteOffsets[spriteIndex].X;
             shadowSprite.Y = renderPosition.Y + shadowSpriteOffsets[spriteIndex].Y;
 
+            if (frameSprite != null)
+            {
+                uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
+
+                frameSprite.X = renderPosition.X + frameSpriteOffsets[frameSpriteIndex].X;
+                frameSprite.Y = renderPosition.Y + frameSpriteOffsets[frameSpriteIndex].Y;
+
+                if (frameShadowSprite != null)
+                {
+                    frameShadowSprite.X = renderPosition.X + frameShadowSpriteOffsets[frameSpriteIndex].X;
+                    frameShadowSprite.Y = renderPosition.Y + frameShadowSpriteOffsets[frameSpriteIndex].Y;
+                }
+            }
+
+            if (crossOrStoneSprite != null)
+            {
+                crossOrStoneSprite.X = renderPosition.X + crossOrStoneSpriteOffset.X;
+                crossOrStoneSprite.Y = renderPosition.Y + crossOrStoneSpriteOffset.Y;
+            }
+
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
             (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
@@ -315,6 +350,12 @@ namespace Freeserf.Render
                     frameShadowSprite = null;
                 }
 
+                if (crossOrStoneSprite != null)
+                {
+                    crossOrStoneSprite.Delete();
+                    crossOrStoneSprite = null;
+                }
+
                 (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
 
                 if (!building.IsBurning()) // we need updates while burning
@@ -337,6 +378,11 @@ namespace Freeserf.Render
                     // Progress = 0xffff: Building finished                 [This means Progress >= 65536]
 
                     var progress = building.GetProgress();
+
+                    if (progress == 0)
+                        crossOrStoneSprite.TextureAtlasOffset = textureAtlas.GetOffset(CrossSprite);
+                    else
+                        crossOrStoneSprite.TextureAtlasOffset = textureAtlas.GetOffset(CornerStoneSprite);
 
                     uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
 
