@@ -194,7 +194,7 @@ namespace Freeserf
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
-                var renderPos = map.RenderMap.GetScreenPosition(map.RenderMap.GetMapPosFromScreenPosition(column, row, false));
+                var renderPos = map.RenderMap.GetScreenPosition(map.RenderMap.GetMapPosFromScreenPosition(column, row));
 
                 builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
                 builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;

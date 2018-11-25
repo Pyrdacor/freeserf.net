@@ -395,10 +395,12 @@ namespace Freeserf
         {
             float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
 
-            position.X = Misc.Round(zoomFactor * position.X);
-            position.Y = Misc.Round(zoomFactor * position.Y);
+            var size = DeltaToGame(renderView.VirtualScreen.Size, renderView);
 
-            return position;
+            var x = Misc.Round((renderView.VirtualScreen.Size.Width - size.Width) * 0.5f + position.X / zoomFactor);
+            var y = Misc.Round((renderView.VirtualScreen.Size.Height - size.Height) * 0.5f + position.Y / zoomFactor);
+
+            return new Position(x, y);
         }
 
         Size DeltaToGui(Size delta)
@@ -413,10 +415,10 @@ namespace Freeserf
         {
             float zoomFactor = 1.0f + renderView.Zoom * 0.5f;
 
-            delta.Width = Misc.Round(delta.Width / zoomFactor);
-            delta.Height = Misc.Round(delta.Height / zoomFactor);
+            var width = Misc.Round(delta.Width / zoomFactor);
+            var height = Misc.Round(delta.Height / zoomFactor);
 
-            return delta;
+            return new Size(width, height);
         }
 
         private bool RenderView_KeyPress(object sender, Event.EventArgs args)

@@ -572,13 +572,11 @@ namespace Freeserf.Render
             }
         }
 
-        public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow, bool zoomed = true)
+        public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow)
         {
             // axis-aligned map column and row
             var column = ScrollX + renderColumn;
             var row = ScrollY + renderRow;
-
-            // TODO: ZoomFactor
 
             column &= map.ColumnMask;
 
@@ -588,10 +586,8 @@ namespace Freeserf.Render
             return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
         }
 
-        public MapPos GetMapPosFromScreenPosition(Position position, bool zoomed = true)
+        public MapPos GetMapPosFromScreenPosition(Position position)
         {
-            // TODO: ZoomFactor
-
             int renderX = (int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2;
             int renderY = (int)ScrollY * TILE_HEIGHT;
 
