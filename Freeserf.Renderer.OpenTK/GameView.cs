@@ -477,8 +477,8 @@ namespace Freeserf.Renderer.OpenTK
             var position = ScreenToView(new Position(x, y));
             var delta = ScreenToView(new Size(dx, dy));
 
-            if (position == null || delta == null)
-                return false;
+            if (position == null)
+                position = new Position();
 
             return RunHandler(Drag, new EventArgs(EventType.Drag, position.X, position.Y, delta.Width, delta.Height, button));
         }
