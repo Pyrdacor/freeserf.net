@@ -178,6 +178,35 @@ namespace Freeserf.Render
             #endregion
 
 
+            #region Serfs
+
+            atlasIndex = Layer.Serfs;
+
+            // heads
+            for (uint serfHeadSprite = 0u; serfHeadSprite <= 629u; ++serfHeadSprite)
+            {
+                sprite = data.GetSprite(Data.Resource.SerfHead, serfHeadSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, serfHeadSprite, sprite);
+            }
+            
+            // torsos
+            for (uint serfTorsoSprite = 0u; serfTorsoSprite <= 540u; ++serfTorsoSprite)
+            {
+                sprite = data.GetSprite(Data.Resource.SerfTorso, serfTorsoSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 630u + serfTorsoSprite, sprite);
+            }
+
+            // shadow
+            AddSprite(atlasIndex, 1171u, data.GetSprite(Data.Resource.SerfShadow, 0u, color));
+
+
+            #endregion
+
+
             #region Map Objects
 
             atlasIndex = Layer.Objects;
