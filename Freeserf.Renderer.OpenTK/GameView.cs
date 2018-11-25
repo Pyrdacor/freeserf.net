@@ -443,6 +443,9 @@ namespace Freeserf.Renderer.OpenTK
             // transform from screen to view
             var position = ScreenToView(new Position(x, y));
 
+            if (position == null)
+                return false;
+
             return RunHandler(Click, new EventArgs(EventType.Click, position.X, position.Y, 0, 0, button));
         }
 
@@ -450,6 +453,9 @@ namespace Freeserf.Renderer.OpenTK
         {
             // transform from screen to view
             var position = ScreenToView(new Position(x, y));
+
+            if (position == null)
+                return false;
 
             return RunHandler(DoubleClick, new EventArgs(EventType.DoubleClick, position.X, position.Y, 0, 0, button));
         }
@@ -459,6 +465,9 @@ namespace Freeserf.Renderer.OpenTK
             // transform from screen to view
             var position = ScreenToView(new Position(x, y));
 
+            if (position == null)
+                return false;
+
             return RunHandler(SpecialClick, new EventArgs(EventType.SpecialClick, position.X, position.Y, 0, 0));
         }
 
@@ -467,6 +476,9 @@ namespace Freeserf.Renderer.OpenTK
             // transform from screen to view
             var position = ScreenToView(new Position(x, y));
             var delta = ScreenToView(new Size(dx, dy));
+
+            if (position == null || delta == null)
+                return false;
 
             return RunHandler(Drag, new EventArgs(EventType.Drag, position.X, position.Y, delta.Width, delta.Height, button));
         }
