@@ -1983,8 +1983,6 @@ namespace Freeserf
 
                     for (int i = 0; i < n; ++i)
                     {
-                        maxPrio[i] = 0;
-                        flags[i] = null;
                         Flag flag = this.flags[sourceInventories[i].GetFlagIndex()];
                         // Note: it seems that SearchDir was abused for indexing here but (Direction)i will not work with i >= 6.
                         // We added a general purpose tagged object for flags instead.

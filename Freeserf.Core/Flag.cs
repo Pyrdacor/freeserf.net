@@ -1678,6 +1678,7 @@ namespace Freeserf
                     {
                         otherFlag.SearchNum = id;
                         otherFlag.SearchDir = flag.SearchDir;
+                        otherFlag.Tag = flag.Tag;
                         queue.Enqueue(otherFlag);
                     }
                 }

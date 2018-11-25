@@ -36,6 +36,7 @@ namespace Freeserf.Render
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
             // TODO
+            sprite = spriteFactory.Create(0, 0, 0, 0, false, false); // TODO: THIS IS ONLY TO AVOID AN EXCEPTION!
             // sprite = spriteFactory.Create(...);
         }
     }
