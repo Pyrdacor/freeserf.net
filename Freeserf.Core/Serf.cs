@@ -1370,32 +1370,32 @@ namespace Freeserf
             return res;
         }
 
-        int GetFreeWalkingNegDist1()
+        internal int GetFreeWalkingNegDist1()
         {
             return s.FreeWalking.NegDist1;
         }
 
-        int GetFreeWalkingNegDist2()
+        internal int GetFreeWalkingNegDist2()
         {
             return s.FreeWalking.NegDist2;
         }
 
-        State GetLeavingBuildingNextState()
+        internal State GetLeavingBuildingNextState()
         {
             return s.LeavingBuilding.NextState;
         }
 
-        int GetLeavingBuildingFieldB()
+        internal int GetLeavingBuildingFieldB()
         {
             return s.LeavingBuilding.FieldB;
         }
 
-        uint GetMiningRes()
+        internal uint GetMiningRes()
         {
             return s.Mining.Res;
         }
 
-        int GetAttackingFieldD()
+        internal int GetAttackingFieldD()
         {
             return s.Attacking.FieldD;
         }
@@ -1425,7 +1425,7 @@ namespace Freeserf
             return s.IdleInStock.InvIndex;
         }
 
-        int GetMiningSubstate()
+        internal int GetMiningSubstate()
         {
             return (int)s.Mining.Substate;
         }
@@ -1732,7 +1732,7 @@ namespace Freeserf
             }
         }
 
-        static string GetStateName(State state)
+        public static string GetStateName(State state)
         {
             return SerfStateNames[(int)state];
         }

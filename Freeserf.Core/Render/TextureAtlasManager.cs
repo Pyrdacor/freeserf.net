@@ -182,6 +182,8 @@ namespace Freeserf.Render
 
             atlasIndex = Layer.Serfs;
 
+            // for all player colors
+
             // heads
             for (uint serfHeadSprite = 0u; serfHeadSprite <= 629u; ++serfHeadSprite)
             {
@@ -190,18 +192,31 @@ namespace Freeserf.Render
                 if (sprite != null)
                     AddSprite(atlasIndex, serfHeadSprite, sprite);
             }
-            
-            // torsos
-            for (uint serfTorsoSprite = 0u; serfTorsoSprite <= 540u; ++serfTorsoSprite)
-            {
-                sprite = data.GetSprite(Data.Resource.SerfTorso, serfTorsoSprite, color);
 
-                if (sprite != null)
-                    AddSprite(atlasIndex, 630u + serfTorsoSprite, sprite);
+            // torsos
+            // all 4 player colors
+            for (uint c = 0; c < 4; ++c)
+            {
+                var playerColor = PlayerInfo.PlayerColors[c];
+                var serfColor = new Sprite.Color()
+                {
+                    Red = playerColor.Red,
+                    Green = playerColor.Green,
+                    Blue = playerColor.Blue,
+                    Alpha = 255
+                };
+
+                for (uint serfTorsoSprite = 0u; serfTorsoSprite <= 540u; ++serfTorsoSprite)
+                {
+                    sprite = data.GetSprite(Data.Resource.SerfTorso, serfTorsoSprite, serfColor);
+
+                    if (sprite != null)
+                        AddSprite(atlasIndex, 1000u + c * 1000u + serfTorsoSprite, sprite);
+                }
             }
 
             // shadow
-            AddSprite(atlasIndex, 1171u, data.GetSprite(Data.Resource.SerfShadow, 0u, color));
+            AddSprite(atlasIndex, 5000u, data.GetSprite(Data.Resource.SerfShadow, 0u, color));
 
 
             #endregion

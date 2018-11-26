@@ -2223,9 +2223,21 @@ namespace Freeserf
 
         protected void UpdateSerfs()
         {
-            foreach (Serf serf in serfs)
+            // Note: Do not use foreach here as serf.Update()
+            // may delete the building and therefore change the
+            // collection while we iterate through it!
+
+            // Therefore we use a copied list here.
+            var serfList = serfs.ToList();
+
+            for (int i = 0; i < serfList.Count; ++i)
             {
-                serf.Update();
+                serfList[i].Update();
+
+                if (serfList[i].Index > 0u && renderSerfs.ContainsKey(serfList[i]))
+                {
+                    renderSerfs[serfList[i]].Update(tick, map, serfList[i].Position);
+                }
             }
         }
 
