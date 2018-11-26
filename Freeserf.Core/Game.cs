@@ -1059,12 +1059,6 @@ namespace Freeserf
             castle.LinkFlag(flag.Index);
             flag.LinkBuilding(castle);
 
-            map.SetObject(pos, Map.Object.Castle, (int)castle.Index);
-            map.AddPath(pos, Direction.DownRight);
-
-            map.SetObject(map.MoveDownRight(pos), Map.Object.Flag, (int)flag.Index);
-            map.AddPath(map.MoveDownRight(pos), Direction.UpLeft);
-
             /* Level land in hexagon below castle */
             uint h = (uint)GetLevelingHeight(pos);
             map.SetHeight(pos, h);
@@ -1075,6 +1069,12 @@ namespace Freeserf
             {
                 map.SetHeight(map.Move(pos, d), h);
             }
+
+            map.SetObject(pos, Map.Object.Castle, (int)castle.Index);
+            map.AddPath(pos, Direction.DownRight);
+
+            map.SetObject(map.MoveDownRight(pos), Map.Object.Flag, (int)flag.Index);
+            map.AddPath(map.MoveDownRight(pos), Direction.UpLeft);
 
             UpdateLandOwnership(pos);
 
