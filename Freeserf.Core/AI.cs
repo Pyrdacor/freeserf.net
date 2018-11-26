@@ -27,10 +27,13 @@ using System.Threading.Tasks;
 
 namespace Freeserf
 {
+    // TODO: delays
+
     abstract class AIState
     {
         public bool Killed { get; private set; } = false;
         public AIState NextState { get; protected set; } = null;
+        public int Delay { get; set; } = 0;
 
         public abstract void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick);
 
@@ -51,13 +54,18 @@ namespace Freeserf
     {
         public enum State
         {
-            ChooseCastleLocation
+            ChooseCastleLocation,
+            CastleBuilt,
+            BuildBuilding,
+            LinkBuilding
             // TODO ...
         }
 
-        Player player = null;
-        PlayerInfo playerInfo = null;
+        readonly Player player = null;
+        readonly PlayerInfo playerInfo = null;
         readonly Stack<AIState> states = new Stack<AIState>();
+        int lastTick = 0;
+        readonly Random random = new Random(Guid.NewGuid().ToString());
 
         /// <summary>
         /// How aggressive (2 = very aggressive)
@@ -149,12 +157,16 @@ namespace Freeserf
             // TODO
         }
 
-        internal AIState CreateState(State state)
+        internal AIState CreateState(State state, object param)
         {
             switch (state)
             {
                 case State.ChooseCastleLocation:
                     return new AIStates.AIStateChoosingCastleLocation();
+                case State.CastleBuilt:
+                    return new AIStates.AIStateCastleBuilt();
+                case State.BuildBuilding:
+                    return new AIStates.AIStateBuildBuilding((Building.Type)param);
                 // TODO ...
             }
 
@@ -164,6 +176,24 @@ namespace Freeserf
         internal void PushState(AIState state)
         {
             states.Push(state);
+        }
+
+        /// <summary>
+        /// The delay is in milliseconds
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="delay"></param>
+        internal void PushStateDelayed(AIState state, int delay)
+        {
+            state.Delay = delay * Global.TICKS_PER_SEC / 1000;
+            states.Push(state);
+        }
+
+        internal void PushStateRandomDelayed(AIState state, int minDelay, int maxDelay)
+        {
+            int delay = minDelay + random.Next() % (maxDelay + 1 - minDelay);
+
+            PushStateDelayed(state, delay);
         }
 
         internal AIState PopState()
@@ -181,8 +211,20 @@ namespace Freeserf
 
         public void Update(Game game)
         {
+            if (lastTick == 0)
+                lastTick = game.Tick;
+
             if (states.Count == 0)
-                return; // TODO: Create some state
+            {
+                if (!player.HasCastle())
+                {
+                    PushState(CreateState(State.ChooseCastleLocation));
+                }
+                else
+                {
+                    PushState(CreateState(State.CastleBuilt));
+                }
+            }
 
             var currentState = states.Peek();
 
@@ -194,7 +236,10 @@ namespace Freeserf
                 return;
             }
 
-            currentState.Update(this, game, player, playerInfo, game.Tick);
+            if (currentState.Delay > 0)
+                currentState.Delay -= (game.Tick - lastTick);
+            else
+                currentState.Update(this, game, player, playerInfo, game.Tick);
 
             if (currentState.Killed)
             {
@@ -203,6 +248,8 @@ namespace Freeserf
                 if (currentState.NextState != null)
                     states.Push(currentState.NextState);
             }
+
+            lastTick = game.Tick;
         }
     }
 }

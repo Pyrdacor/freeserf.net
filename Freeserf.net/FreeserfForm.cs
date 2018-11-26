@@ -52,6 +52,7 @@ namespace Freeserf
 
             RenderControl.MouseWheel += RenderControl_MouseWheel;
 
+            FrameTimer.Interval = Global.TICK_LENGTH;
             FrameTimer.Start();
         }
 
