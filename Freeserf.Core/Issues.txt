@@ -9,6 +9,20 @@ Viewport:
 
 - Possible builds symbols do not match 100% the map cursor sprite symbol
 - Building possibilities are wrong in some locations (e.g. building on mountain, flag on tree, etc)
+- In some zoom levels (I guess not factor 2^n), their are artefacts in map tiles and map object sprites
+
+
+Non-working code:
+
+- Fix special click (seems to not work)
+- Popup box closing only with ESC? Not with a click outside?
+
+
+Serf rendering:
+
+- Serfs sometimes disappear (see RenderSerf.cs comments for details)
+- Serfs appear in front of map objects when they should not (e.g. in front of a tree top)
+- In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
 
 
 Notification Box:
@@ -21,3 +35,8 @@ Notification Box:
 - Chaos for:
     LostBuildings
     LostLand
+
+
+Misc:
+
+- Materials at building constructions are hidden by the building shadow (this is realistic, but is this wanted? How was it done in original game?)
