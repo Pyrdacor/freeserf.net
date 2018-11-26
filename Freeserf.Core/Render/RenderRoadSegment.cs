@@ -17,9 +17,6 @@ namespace Freeserf.Render
         int spriteIndex = 0;
         int maskIndex = 0;
 
-        static Position[] groundOffsets = null;
-        static Position[] maskOffsets = null;
-
         public static long CreateIndex(MapPos pos, Direction dir)
         {
             return (((long)dir) << 32) | pos;
@@ -33,33 +30,6 @@ namespace Freeserf.Render
             this.dir = dir;
 
             Initialize();
-
-            InitOffsets(dataSource);
-        }
-
-        static void InitOffsets(DataSource dataSource)
-        {
-            if (groundOffsets == null)
-            {
-                groundOffsets = new Position[10];
-                maskOffsets = new Position[27];
-
-                SpriteInfo spriteInfo;
-
-                // grounds
-                for (uint i = 0; i < 10; ++i)
-                {
-                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.PathGround, i);
-                    groundOffsets[(int)i] = new Position(spriteInfo.Width, spriteInfo.Height);
-                }
-
-                // masks
-                for (uint i = 0; i < 27; ++i)
-                {
-                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.PathMask, i);
-                    maskOffsets[(int)i] = new Position(spriteInfo.Width, spriteInfo.Height);
-                }
-            }
         }
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
@@ -82,27 +52,21 @@ namespace Freeserf.Render
             Map.Terrain t2 = Map.Terrain.Water0;
             int h3 = 0, h4 = 0, hDiff2 = 0;
 
-            if (map.PosRow(pos) % 2 == 0)
-            {
-                offsetX = 0;
-            }
-            else
-            {
-                offsetX = -RenderMap.TILE_WIDTH / 2;
-            }
+            offsetX = 0;
+            offsetY = 4 * h1;
 
             switch (dir)
             {
                 case Direction.Right:
-                    offsetY = -(4 * Math.Max(h1, h2) + 2);
+                    offsetY -= 4 * Math.Max(h1, h2) + 2;
                     t1 = map.TypeDown(pos);
                     t2 = map.TypeUp(map.MoveUp(pos));
                     h3 = (int)map.GetHeight(map.MoveUp(pos));
                     h4 = (int)map.GetHeight(map.MoveDownRight(pos));
-                    hDiff2 = (h3 - h4) - 4 * hDiff;
+                    hDiff2 = h3 - h4 - 4 * hDiff;
                     break;
                 case Direction.DownRight:
-                    offsetY = -(4 * h1 + 2);
+                    offsetY -= 4 * h1 + 2;
                     t1 = map.TypeUp(pos);
                     t2 = map.TypeDown(pos);
                     h3 = (int)map.GetHeight(map.MoveRight(pos));
@@ -110,8 +74,8 @@ namespace Freeserf.Render
                     hDiff2 = 2 * (h3 - h4);
                     break;
                 case Direction.Down:
-                    offsetX = -RenderMap.TILE_WIDTH / 2;
-                    offsetY = -(4 * h1 + 2);
+                    offsetX -= RenderMap.TILE_WIDTH / 2;
+                    offsetY -= 4 * h1 + 2;
                     t1 = map.TypeUp(pos);
                     t2 = map.TypeDown(map.MoveLeft(pos));
                     h3 = (int)map.GetHeight(map.MoveLeft(pos));
@@ -122,14 +86,6 @@ namespace Freeserf.Render
                     Debug.NotReached();
                     break;
             }
-
-            // TODO: RenderMap.GetObjectRenderPosition will add an
-            //       offset to y that is based on tile height.
-            //       But this is already considered here I guess.
-            //       So maybe uncomment the following line and
-            //       leave a note about it later.
-            offsetY += h1 * 4;
-            // TODO: rendering is still not at the right spot (seems to be wrong dependent of map pos)
 
             maskIndex = hDiff + 4 + (int)dir * 9;
             spriteIndex = 0;
@@ -171,9 +127,8 @@ namespace Freeserf.Render
         {
             var renderPosition = map.GetScreenPosition(pos);
 
-            // the mask offset is the right offset for drawing
-            sprite.X = renderPosition.X + offsetX + maskOffsets[maskIndex].X;
-            sprite.Y = renderPosition.Y + offsetY + maskOffsets[maskIndex].Y;
+            sprite.X = renderPosition.X + offsetX;
+            sprite.Y = renderPosition.Y + offsetY;
         }
     }
 }
