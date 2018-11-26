@@ -7345,6 +7345,7 @@ namespace Freeserf
         void HandleSerfWakeAtFlagState()
         {
             Map map = Game.Map;
+
             if (!map.HasSerf(Position))
             {
                 map.ClearIdleSerf(Position);

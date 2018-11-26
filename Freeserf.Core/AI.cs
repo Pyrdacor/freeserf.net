@@ -27,6 +27,19 @@ using System.Threading.Tasks;
 
 namespace Freeserf
 {
+    abstract class AIState
+    {
+        public bool Killed { get; private set; } = false;
+        public AIState NextState { get; protected set; } = null;
+
+        public abstract void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick);
+
+        public virtual void Kill()
+        {
+            Killed = true;
+        }
+    }
+
     /// <summary>
     /// Note: The ai will not be the same as in the original game.
     /// But it will reflect some of the ai character descriptions.
@@ -36,8 +49,15 @@ namespace Freeserf
     /// </summary>
     public class AI
     {
+        public enum State
+        {
+            ChooseCastleLocation
+            // TODO ...
+        }
+
         Player player = null;
         PlayerInfo playerInfo = null;
+        readonly Stack<AIState> states = new Stack<AIState>();
 
         /// <summary>
         /// How aggressive (2 = very aggressive)
@@ -129,9 +149,60 @@ namespace Freeserf
             // TODO
         }
 
+        internal AIState CreateState(State state)
+        {
+            switch (state)
+            {
+                case State.ChooseCastleLocation:
+                    return new AIStates.AIStateChoosingCastleLocation();
+                // TODO ...
+            }
+
+            throw new ExceptionFreeserf("Unknown AI state");
+        }
+
+        internal void PushState(AIState state)
+        {
+            states.Push(state);
+        }
+
+        internal AIState PopState()
+        {
+            if (states.Count == 0)
+                return null;
+
+            return states.Pop();
+        }
+
+        internal void ClearStates()
+        {
+            states.Clear();
+        }
+
         public void Update(Game game)
         {
-            // TODO
+            if (states.Count == 0)
+                return; // TODO: Create some state
+
+            var currentState = states.Peek();
+
+            if (currentState == null)
+            {
+                // continue with next state
+                states.Pop();
+                Update(game);
+                return;
+            }
+
+            currentState.Update(this, game, player, playerInfo, game.Tick);
+
+            if (currentState.Killed)
+            {
+                states.Pop();
+
+                if (currentState.NextState != null)
+                    states.Push(currentState.NextState);
+            }
         }
     }
 }
