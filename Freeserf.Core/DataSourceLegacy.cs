@@ -27,13 +27,6 @@ namespace Freeserf
 {
     public abstract class DataSourceLegacy : DataSource
     {
-        protected struct AnimationPhase
-        {
-            public byte Sprite;
-            public sbyte X;
-            public sbyte Y;
-        }
-
         public DataSourceLegacy(string path)
             : base(path)
         {
@@ -90,16 +83,16 @@ namespace Freeserf
             {
                 uint offset = animationBlock[i];
 
-                AnimationPhase* anims = (AnimationPhase*)(byte*)animationBlock + offset;
+                byte* anims = (byte*)animationBlock + offset;
                 List<Animation> animations = new List<Animation>();
 
                 for (uint j = 0; j < sizes[i]; ++j)
                 {
                     Animation a = new Animation();
 
-                    a.Sprite = anims[j].Sprite;
-                    a.X = anims[j].X;
-                    a.Y = anims[j].Y;
+                    a.Sprite = anims[j * 3 + 0];
+                    a.X = (sbyte)anims[j * 3 + 1];
+                    a.Y = (sbyte)anims[j * 3 + 2];
 
                     animations.Add(a);
                 }
