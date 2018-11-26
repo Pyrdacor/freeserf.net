@@ -257,7 +257,7 @@ namespace Freeserf.Render
             {
                 if (lo >= index2.Length)
                 {
-                    Log.Debug.Write("rendering", "Invalid serf body sprite index");
+                    Log.Error.Write("rendering", "Invalid serf body sprite index");
                     return -1;
                 }
 
@@ -267,7 +267,7 @@ namespace Freeserf.Render
             {
                 if (lo >= index2.Length - 1)
                 {
-                    Log.Debug.Write("rendering", "Invalid serf body sprite index");
+                    Log.Error.Write("rendering", "Invalid serf body sprite index");
                     return -1;
                 }
 
@@ -313,6 +313,8 @@ namespace Freeserf.Render
                 Animation animation = dataSource.GetAnimation(serf.Animation, serf.Counter);
                 x = renderPosition.X + animation.X;
                 y = renderPosition.Y + animation.Y;
+
+                // TODO: Draw additional serf/stuff from commented code below
             }
 
             if (map.GetIdleSerf(pos)) // idle serf
@@ -321,7 +323,7 @@ namespace Freeserf.Render
                 body = GetIdleSerfBody(map, pos, out offset, tick);
 
                 x = renderPosition.X + offset.X;
-                y = renderPosition.X + offset.Y;
+                y = renderPosition.Y + offset.Y;
             }
 
             head = (body == -1) ? -1 : GetHeadSprite(ref body);
@@ -365,6 +367,70 @@ namespace Freeserf.Render
             {
                 headSprite.Visible = false;
             }
+
+            // TODO
+            /* Draw additional serf */
+            //if (serf.SerfState == Serf.State.KnightEngagingBuilding ||
+            //    serf.SerfState == Serf.State.KnightPrepareAttacking ||
+            //    serf.SerfState == Serf.State.KnightAttacking ||
+            //    serf.SerfState == Serf.State.KnightPrepareAttackingFree ||
+            //    serf.SerfState == Serf.State.KnightAttackingFree ||
+            //    serf.SerfState == Serf.State.KnightAttackingVictoryFree ||
+            //    serf.SerfState == Serf.State.KnightAttackingDefeatFree)
+            //{
+            //    int index = serf.GetAttackingDefIndex();
+
+            //    if (index != 0)
+            //    {
+            //        Serf defSerf = interf.Game.GetSerf(index);
+
+            //        Animation animation = dataSource.GetAnimation(defSerf.Animation, defSerf.Counter);
+
+            //        int lx = x_base + animation.x;
+            //        int ly = y_base + animation.y - 4 * map->get_height(pos);
+            //        int body = serf_get_body(defSerf);
+
+            //        if (body > -1)
+            //        {
+            //            Color color = interf.GetPlayerColor(defSerf.Player);
+            //            draw_row_serf(lx, ly, true, color, body);
+            //        }
+            //    }
+            //}
+
+            // TODO
+            /* Draw extra objects for fight */
+            //if ((serf.SerfState == Serf.State.KnightAttacking ||
+            //    serf.SerfState == Serf.State.KnightAttackingFree) &&
+            //    animation.sprite >= 0x80 && animation.Sprite < 0xc0)
+            //{
+            //    int index = serf.GetAttackingDefIndex();
+
+            //    if (index != 0)
+            //    {
+            //        Serf def_serf = interf.Game.GetSerf(index);
+
+            //        if (serf.Animation >= 146 && serf.Animation < 156)
+            //        {
+            //            if ((serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4) && serf.Counter < 32)
+            //            {
+            //                int anim = -1;
+
+            //                if (serf.GetAttackingFieldD() == 0)
+            //                {
+            //                    anim = serf.Animation - 147;
+            //                }
+            //                else
+            //                {
+            //                    anim = def_serf.Animation - 147;
+            //                }
+
+            //                int sprite = 198 + ((serf.Counter >> 3) ^ 3);
+            //                draw_game_sprite(lx + arr_4[2 * anim], ly - arr_4[2 * anim + 1], sprite);
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         int GetIdleSerfBody(Map map, uint pos, out Position offset, int tick)
@@ -414,7 +480,7 @@ namespace Freeserf.Render
                         return -1;
                     }
                     else if ((serf.SerfState == Serf.State.Transporting ||
-                              serf.SerfState == Serf.State.Delivering) &&
+                             serf.SerfState == Serf.State.Delivering) &&
                              serf.GetDelivery() != 0)
                     {
                         t += transporter_type[serf.GetDelivery()];

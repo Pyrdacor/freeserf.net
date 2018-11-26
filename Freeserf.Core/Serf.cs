@@ -1400,7 +1400,7 @@ namespace Freeserf
             return s.Attacking.FieldD;
         }
 
-        int GetAttackingDefIndex()
+        internal int GetAttackingDefIndex()
         {
             return s.Attacking.DefIndex;
         }
