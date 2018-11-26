@@ -31,6 +31,7 @@ namespace Freeserf.Renderer.OpenTK
     {
         protected int drawIndex = -1;
         Position textureAtlasOffset = null;
+        int baseLineOffset = 0;
 
         public Sprite(int width, int height, int textureAtlasX, int textureAtlasY, Rect virtualScreen)
             : base(Shape.Rect, width, height, virtualScreen)
@@ -49,6 +50,20 @@ namespace Freeserf.Renderer.OpenTK
                 textureAtlasOffset = new Position(value);
 
                 UpdateTextureAtlasOffset();
+            }
+        }
+
+        public int BaseLineOffset
+        {
+            get => baseLineOffset;
+            set
+            {
+                if (baseLineOffset == value)
+                    return;
+
+                baseLineOffset = value;
+
+                UpdatePosition();
             }
         }
 
@@ -94,6 +109,7 @@ namespace Freeserf.Renderer.OpenTK
     {
         protected int drawIndex = -1;
         Position textureAtlasOffset = null;
+        int baseLineOffset = 0;
         Position maskTextureAtlasOffset = null;
 
         public MaskedSprite(int width, int height, int textureAtlasX, int textureAtlasY, Rect virtualScreen)
@@ -114,6 +130,20 @@ namespace Freeserf.Renderer.OpenTK
                 textureAtlasOffset = new Position(value);
 
                 UpdateTextureAtlasOffset();
+            }
+        }
+
+        public int BaseLineOffset
+        {
+            get => baseLineOffset;
+            set
+            {
+                if (baseLineOffset == value)
+                    return;
+
+                baseLineOffset = value;
+
+                UpdatePosition();
             }
         }
 

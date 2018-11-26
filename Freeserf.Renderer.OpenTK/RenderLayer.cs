@@ -141,7 +141,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public void UpdatePosition(int index, ISprite sprite)
         {
-            renderBuffer.UpdatePosition(index, sprite, PositionTransformation, SizeTransformation);
+            renderBuffer.UpdatePosition(index, sprite, sprite.BaseLineOffset, PositionTransformation, SizeTransformation);
         }
 
         public void UpdateTextureAtlasOffset(int index, ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
@@ -166,7 +166,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public void UpdateColoredRectPosition(int index, ColoredRect coloredRect)
         {
-            renderBufferColorRects.UpdatePosition(index, coloredRect, PositionTransformation, SizeTransformation);
+            renderBufferColorRects.UpdatePosition(index, coloredRect, 0, PositionTransformation, SizeTransformation);
         }
 
         public void UpdateColoredRectColor(int index, Color color)

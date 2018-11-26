@@ -50,6 +50,15 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
+        public int BaseLineOffset
+        {
+            get => 0;
+            set
+            {
+                // do nothing
+            }
+        }
+
         public Position MaskTextureAtlasOffset
         {
             get => maskTextureAtlasOffset;

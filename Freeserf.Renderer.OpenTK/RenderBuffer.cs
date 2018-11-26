@@ -224,7 +224,7 @@ namespace Freeserf.Renderer.OpenTK
             return index;
         }
 
-        public void UpdatePosition(int index, Render.IRenderNode renderNode,
+        public void UpdatePosition(int index, Render.IRenderNode renderNode, int baseLineOffset,
             Render.PositionTransformation positionTransformation, Render.SizeTransformation sizeTransformation)
         {
             var position = new Position(renderNode.X, renderNode.Y);
@@ -243,7 +243,7 @@ namespace Freeserf.Renderer.OpenTK
 
             if (Shape != Shape.Triangle && baseLineBuffer != null)
             {
-                ushort baseLine = (ushort)(position.Y + size.Height);
+                ushort baseLine = (ushort)(position.Y + size.Height + baseLineOffset);
 
                 baseLineBuffer.Update(index, baseLine);
                 baseLineBuffer.Update(index + 1, baseLine);

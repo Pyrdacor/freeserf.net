@@ -28,6 +28,12 @@ namespace Freeserf.Render
             get;
             set;
         }
+
+        int BaseLineOffset
+        {
+            get;
+            set;
+        }
     }
 
     public interface IMaskedSprite : ISprite
