@@ -52,17 +52,25 @@ namespace Freeserf.Render
         IMaskedSprite frameShadowSprite = null;
         IMaskedSprite crossOrStoneSprite = null;
         IMaskedSprite burningSprite = null;
+        List<ISprite> stones = new List<ISprite>(5);
+        List<ISprite> planks = new List<ISprite>(5);
+        ISpriteFactory spriteFactory = null;
+        IRenderLayer materialLayer = null;
 
         static readonly Dictionary<uint, Position> spriteOffsets = new Dictionary<uint, Position>();
         static readonly Dictionary<uint, Position> shadowSpriteOffsets = new Dictionary<uint, Position>();
         static readonly Dictionary<uint, Position> frameSpriteOffsets = new Dictionary<uint, Position>();
         static readonly Dictionary<uint, Position> frameShadowSpriteOffsets = new Dictionary<uint, Position>();
         static Position crossOrStoneSpriteOffset = null;
+        static Rect[] materialSpriteInfos = null;
+        static Position[] materialTextureOffsets = null;
 
-        public RenderBuilding(Building building, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+        public RenderBuilding(Building building, IRenderLayer renderLayer, IRenderLayer materialLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.building = building;
+            this.spriteFactory = spriteFactory;
+            this.materialLayer = materialLayer;
 
             Initialize();
 
@@ -167,6 +175,26 @@ namespace Freeserf.Render
                     frameShadowSpriteOffsets.Add(frameSpriteIndex, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
                 }
             }
+
+            if (materialSpriteInfos == null)
+            {
+                materialSpriteInfos = new Rect[2];
+
+                spriteInfo = dataSource.GetSpriteInfo(Data.Resource.GameObject, (uint)Resource.Type.Stone);
+                materialSpriteInfos[0] = new Rect(spriteInfo.OffsetX, spriteInfo.OffsetY, spriteInfo.Width, spriteInfo.Height);
+
+                spriteInfo = dataSource.GetSpriteInfo(Data.Resource.GameObject, (uint)Resource.Type.Plank);
+                materialSpriteInfos[1] = new Rect(spriteInfo.OffsetX, spriteInfo.OffsetY, spriteInfo.Width, spriteInfo.Height);
+            }
+
+            if (materialTextureOffsets == null)
+            {
+                var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
+                materialTextureOffsets = new Position[2];
+
+                materialTextureOffsets[0] = textureAtlas.GetOffset(2000u + (uint)Resource.Type.Stone);
+                materialTextureOffsets[1] = textureAtlas.GetOffset(2000u + (uint)Resource.Type.Plank);
+            }
         }
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
@@ -236,6 +264,24 @@ namespace Freeserf.Render
             {
                 burningSprite.Delete();
                 burningSprite = null;
+            }
+
+            for (int i = 0; i < stones.Count; ++i)
+            {
+                if (stones[i] != null)
+                {
+                    stones[i].Delete();
+                    stones[i] = null;
+                }
+            }
+
+            for (int i = 0; i < planks.Count; ++i)
+            {
+                if (planks[i] != null)
+                {
+                    planks[i].Delete();
+                    planks[i] = null;
+                }
             }
 
             building = null;
@@ -312,6 +358,22 @@ namespace Freeserf.Render
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
             (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
+
+            // draw materials
+
+            // Stones waiting
+            for (int i = 0; i < stones.Count; ++i)
+            {
+                stones[i].X = renderPosition.X + materialSpriteInfos[0].Position.X + 10 - i * 3;
+                stones[i].Y = renderPosition.Y + materialSpriteInfos[0].Position.Y - 8 + i;
+            }
+
+            // Planks waiting
+            for (int i = 0; i < planks.Count; ++i)
+            {
+                planks[i].X = renderPosition.X + materialSpriteInfos[1].Position.X + 12 - i * 3;
+                planks[i].Y = renderPosition.Y + materialSpriteInfos[1].Position.Y - 6 + i;
+            }
         }
 
         /// <summary>
@@ -427,6 +489,40 @@ namespace Freeserf.Render
 
                         if (frameShadowSprite != null)
                             (frameShadowSprite as IMaskedSprite).MaskTextureAtlasOffset = offset;
+                    }
+
+                    // Update stone waiting
+                    uint stone = building.WaitingStone(); // max is 5
+
+                    for (int i = stones.Count - 1; i >= stone; --i) // remove stones that are not present anymore
+                    {
+                        stones[i].Delete();
+                        stones.RemoveAt(i);
+                    }
+
+                    for (int i = stones.Count; i < stone; ++i) // add missing stone sprites
+                    {
+                        var sprite = spriteFactory.Create(materialSpriteInfos[0].Size.Width, materialSpriteInfos[0].Size.Height, materialTextureOffsets[0].X, materialTextureOffsets[0].Y, false, false);
+                        sprite.Layer = materialLayer;
+                        sprite.Visible = true;
+                        stones.Add(sprite);
+                    }
+
+                    // Update planks waiting
+                    uint plank = building.WaitingPlanks(); // max is 5
+
+                    for (int i = planks.Count - 1; i >= plank; --i) // remove stones that are not present anymore
+                    {
+                        planks[i].Delete();
+                        planks.RemoveAt(i);
+                    }
+
+                    for (int i = planks.Count; i < plank; ++i) // add missing stone sprites
+                    {
+                        var sprite = spriteFactory.Create(materialSpriteInfos[1].Size.Width, materialSpriteInfos[1].Size.Height, materialTextureOffsets[1].X, materialTextureOffsets[1].Y, false, false);
+                        sprite.Layer = materialLayer;
+                        sprite.Visible = true;
+                        planks.Add(sprite);
                     }
                 }
             }

@@ -3370,7 +3370,7 @@ namespace Freeserf
                      obj == Map.Object.Castle)
             {
                 var building = GetBuildingAtPos(pos);
-                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), renderView.SpriteFactory, renderView.DataSource);
+                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
 
                 renderBuilding.Visible = true;
 
