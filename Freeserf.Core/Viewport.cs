@@ -56,10 +56,10 @@ namespace Freeserf
 
             if (buildSpriteInfos == null)
             {
-                buildSpriteInfos = new SpriteInfo[20];
+                buildSpriteInfos = new SpriteInfo[21];
                 var data = interf.RenderView.DataSource;
 
-                for (uint i = 0; i < 20u; ++i)
+                for (uint i = 0; i < 21u; ++i)
                 {
                     buildSpriteInfos[i] = data.GetSpriteInfo(Data.Resource.GameObject, 31u + i);
                 }
