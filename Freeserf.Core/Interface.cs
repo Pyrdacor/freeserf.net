@@ -30,9 +30,8 @@
  * inputs to the original gui locations.
  */
 
-// TODO: transform mouse coordinates to orignal gui coordiantes (see note above)
-
 using System;
+using System.Linq;
 using Freeserf.Render;
 
 namespace Freeserf
@@ -672,7 +671,7 @@ namespace Freeserf
         {
             Road oldRoad = buildingRoad;
 
-            foreach (Direction dir in road.Dirs)
+            foreach (Direction dir in road.Dirs.Reverse())
             {
                 int r = BuildRoadSegment(dir);
 

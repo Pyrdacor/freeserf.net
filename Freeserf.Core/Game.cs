@@ -775,7 +775,8 @@ namespace Freeserf
                 return 0;
             }
 
-            Dirs dirs = road.Dirs;
+            var dirs = road.Dirs.Reverse();
+            int dirCount = road.Dirs.Count;
             int i = 0;
 
             foreach (var dir in dirs)
@@ -800,7 +801,7 @@ namespace Freeserf
 
                 /* Check that owner is correct, and that only the destination has a flag. */
                 if (!map.HasOwner(pos) || map.GetOwner(pos) != player.Index ||
-                    (map.HasFlag(pos) && i != dirs.Count))
+                    (map.HasFlag(pos) && i != dirCount))
                 {
                     return 0;
                 }
@@ -994,8 +995,9 @@ namespace Freeserf
             if (map.GetObject(flagPos) != Map.Object.Flag)
             {
                 map.SetObject(flagPos, Map.Object.Flag, (int)flagIndex);
-                map.AddPath(flagPos, Direction.UpLeft);
             }
+
+            map.AddPath(flagPos, Direction.UpLeft);
 
             if (splitPath)
                 BuildFlagSplitPath(flagPos);

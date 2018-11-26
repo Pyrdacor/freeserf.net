@@ -119,7 +119,7 @@ namespace Freeserf
             MapPos pos = begin;
             bool valid = true;
 
-            foreach (var d in dirs)
+            foreach (var d in dirs.Reverse())
             {
                 pos = map.Move(pos, d);
 
@@ -171,7 +171,7 @@ namespace Freeserf
         {
             MapPos result = begin;
 
-            foreach (var dir in dirs)
+            foreach (var dir in dirs.Reverse())
             {
                 result = map.Move(result, dir);
             }
@@ -183,7 +183,7 @@ namespace Freeserf
         {
             MapPos result = begin;
 
-            foreach (var dir in dirs)
+            foreach (var dir in dirs.Reverse())
             {
                 if (result == pos)
                 {
@@ -1321,7 +1321,7 @@ namespace Freeserf
         public bool PlaceRoadSegments(Road road)
         {
             MapPos pos = road.Source;
-            var dirs = road.Dirs.ToList();
+            var dirs = road.Dirs.Reverse().ToList();
 
             for (int i = 0; i < dirs.Count; ++i)
             {
@@ -1355,6 +1355,8 @@ namespace Freeserf
 
                 foreach (var handler in changeHandlers)
                     handler.OnRoadSegmentPlaced(pos, dir);
+                foreach (var handler in changeHandlers)
+                    handler.OnRoadSegmentPlaced(Move(pos, dir), dir.Reverse());
 
                 pos = Move(pos, dir);
             }
