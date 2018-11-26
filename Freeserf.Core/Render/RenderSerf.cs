@@ -23,6 +23,10 @@ using System.Collections.Generic;
 
 namespace Freeserf.Render
 {
+    // TODO: The baseline offset is bad when a serf walks through resources at a flag.
+    //       The serf is always on top of the resources. Maybe fix later somehow.
+    // TODO: Implement additional knight while fighting and so on. See comments below.
+    // TODO: Rename static arrays to appropriate names.
     internal class RenderSerf : RenderObject
     {
         static readonly int[] index1 = new int[]

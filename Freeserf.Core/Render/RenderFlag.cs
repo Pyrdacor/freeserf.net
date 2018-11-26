@@ -28,6 +28,9 @@ namespace Freeserf.Render
         // sprite index 128-143 (16 sprites)
         static Position[] spriteOffsets = null;
         static Position[] shadowSpriteOffsets = null;
+        ISprite[] resources = new ISprite[8];
+        ISpriteFactory spriteFactory = null;
+        static Rect[] resourceSpriteInfos = null;
 
         static readonly int[] ResPos = new int[] 
         {
@@ -45,6 +48,7 @@ namespace Freeserf.Render
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.flag = flag;
+            this.spriteFactory = spriteFactory;
 
             Initialize();
 
@@ -67,6 +71,19 @@ namespace Freeserf.Render
                     spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, 128u + (uint)i);
 
                     shadowSpriteOffsets[i] = new Position(spriteInfo.OffsetX, spriteInfo.OffsetY);
+                }
+            }
+
+            if (resourceSpriteInfos == null)
+            {
+                resourceSpriteInfos = new Rect[26];
+
+                for (uint i = 0; i <= 25u; ++i)
+                {
+                    var spriteInfo = dataSource.GetSpriteInfo(Data.Resource.GameObject, i);
+
+                    if (spriteInfo != null)
+                        resourceSpriteInfos[i] = new Rect(spriteInfo.OffsetX, spriteInfo.OffsetY, spriteInfo.Width, spriteInfo.Height);
                 }
             }
         }
@@ -95,6 +112,50 @@ namespace Freeserf.Render
 
             sprite.TextureAtlasOffset = textureAtlas.GetOffset(flagSpriteIndex);
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
+
+            // resources
+            for (int i = 0; i < 8; ++i)
+            {
+                var resource = flag.GetResourceAtSlot(i);
+
+                if (resource != Resource.Type.None)
+                {
+                    int baselineOffset = (i < 3) ? -2 : 2;
+                    var info = resourceSpriteInfos[(int)resource];
+
+                    if (resources[i] == null)
+                    {
+                        var spriteOffset = textureAtlas.GetOffset(2000u + (uint)resource);
+                        resources[i] = spriteFactory.Create(info.Size.Width, info.Size.Height, spriteOffset.X, spriteOffset.Y, false, false);
+                    }
+
+                    // resource at slot 2 may be hidden by castle/stock so adjust baseline in this case
+                    if (i == 2 && flag.HasBuilding())
+                    {
+                        switch (flag.GetBuilding().BuildingType)
+                        {
+                            case Building.Type.Castle:
+                            case Building.Type.Stock:
+                                baselineOffset += 4;
+                                break;
+                        }
+                    }
+
+                    resources[i].X = renderPosition.X + info.Position.X + ResPos[i * 2];
+                    resources[i].Y = renderPosition.Y + info.Position.Y + ResPos[i * 2 + 1];
+                    resources[i].Layer = sprite.Layer;
+                    resources[i].BaseLineOffset = baselineOffset;
+                    resources[i].Visible = true;
+                }
+                else
+                {
+                    if (resources[i] != null)
+                    {
+                        resources[i].Delete();
+                        resources[i] = null;
+                    }
+                }
+            }
         }
     }
 }

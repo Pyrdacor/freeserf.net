@@ -275,6 +275,15 @@ namespace Freeserf.Render
                 }
             }
 
+            // also add resources/materials that can be found at flags or building constructions
+            for (uint resourceSprite = 0; resourceSprite <= 25; ++resourceSprite)
+            {
+                sprite = data.GetSprite(Data.Resource.GameObject, resourceSprite, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 2000u + resourceSprite, sprite.ClearTo(20)); // we use 2000 as the resource offset
+            }
+
             #endregion
 
 
