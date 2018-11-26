@@ -885,8 +885,8 @@ namespace Freeserf
                 return false;
 
             Dirs dirs = road.Dirs;
-            Direction outDir = dirs.Peek();
-            Direction inDir = dirs.Last().Reverse();
+            Direction outDir = dirs.Last();
+            Direction inDir = dirs.Peek().Reverse();
 
             /* Actually place road segments */
             if (!map.PlaceRoadSegments(road))
