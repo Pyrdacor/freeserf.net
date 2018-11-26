@@ -684,7 +684,7 @@ namespace Freeserf
             }
 
             /* Check that land is clear */
-            if (Map.MapSpaceFromObject[map.GetOwner(pos)] != Map.Space.Open)
+            if (Map.MapSpaceFromObject[(int)map.GetObject(pos)] != Map.Space.Open)
             {
                 return false;
             }
