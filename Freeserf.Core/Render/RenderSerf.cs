@@ -205,7 +205,20 @@ namespace Freeserf.Render
 
             Initialize();
 
+            headSprite.Layer = sprite.Layer;
+
             InitOffsets(dataSource);
+        }
+
+        public override void Delete()
+        {
+            base.Delete();
+
+            if (headSprite != null)
+            {
+                headSprite.Delete();
+                headSprite = null;
+            }
         }
 
         static void InitOffsets(DataSource dataSource)
@@ -278,6 +291,7 @@ namespace Freeserf.Render
             return head;
         }
 
+        // TODO: Sometimes the serf disappear while walking on a path. Seems to be if the serf approaches a spot where a serf already exists.
         public void Update(int tick, Map map, uint pos)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs);
@@ -286,6 +300,9 @@ namespace Freeserf.Render
             int y = 0;
             int body = -1;
             int head = -1;
+            // The baseline decides render order. The serfs should be in front of buildings and objects
+            // in most cases even if their baseline is lower. So we add a small offset to the serf baseline.
+            int baseLineOffset = 40;
 
             if (map.HasSerf(pos)) // active serf
             {
@@ -339,6 +356,7 @@ namespace Freeserf.Render
                 sprite.Y = y + torsoSpriteInfo.Position.Y;
                 sprite.Resize(torsoSpriteInfo.Size.Width, torsoSpriteInfo.Size.Height);
                 sprite.TextureAtlasOffset = textureAtlas.GetOffset(torsoSpriteIndex);
+                sprite.BaseLineOffset = baseLineOffset;
 
                 sprite.Visible = true;
                 shadowSprite.Visible = true; // TODO
@@ -358,8 +376,13 @@ namespace Freeserf.Render
 
                 headSprite.X = x + torsoDelta.X + headSpriteInfo.Position.X;
                 headSprite.Y = y + torsoDelta.Y + headSpriteInfo.Position.Y;
-                sprite.Resize(headSpriteInfo.Size.Width, headSpriteInfo.Size.Height);
+                headSprite.Resize(headSpriteInfo.Size.Width, headSpriteInfo.Size.Height);
                 headSprite.TextureAtlasOffset = textureAtlas.GetOffset(headSpriteIndex);
+
+                int bodyBaseLine = sprite.Y + sprite.Height;
+                int headBaseLine = headSprite.Y + headSprite.Height;
+
+                headSprite.BaseLineOffset = baseLineOffset + (bodyBaseLine - headBaseLine); // so we have the same baseline as the body
 
                 headSprite.Visible = true;
             }

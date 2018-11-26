@@ -199,7 +199,7 @@ namespace Freeserf.Renderer.OpenTK
 
             if (Shape != Shape.Triangle && baseLineBuffer != null)
             {
-                ushort baseLine = (ushort)(position.Y + size.Height);
+                ushort baseLine = (ushort)(position.Y + size.Height + sprite.BaseLineOffset);
 
                 if (baseLineBuffer.Add(baseLine) != index)
                     throw new System.Exception("Invalid index");

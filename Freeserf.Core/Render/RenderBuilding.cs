@@ -68,20 +68,20 @@ namespace Freeserf.Render
 
             if (frameSprite != null)
             {
-                frameSprite.BaseLineOffset = -2;
                 frameSprite.Layer = renderLayer;
+                frameSprite.BaseLineOffset = -4;
             }
 
             if (frameShadowSprite != null)
             {
-                frameShadowSprite.BaseLineOffset = -2;
                 frameShadowSprite.Layer = renderLayer;
+                frameShadowSprite.BaseLineOffset = -4;
             }
 
             if (crossOrStoneSprite != null)
             {
-                crossOrStoneSprite.BaseLineOffset = -4;
                 crossOrStoneSprite.Layer = renderLayer;
+                crossOrStoneSprite.BaseLineOffset = -8;
             }
 
             if (burningSprite != null)
@@ -111,6 +111,7 @@ namespace Freeserf.Render
             InitOffsets(dataSource);
         }
 
+        // TODO: Do we need this?
         public override bool Visible
         {
             get => sprite.Visible;

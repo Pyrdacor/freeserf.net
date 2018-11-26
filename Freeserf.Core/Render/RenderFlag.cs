@@ -21,7 +21,7 @@
 
 namespace Freeserf.Render
 {
-    // TODO: flag colors
+    // TODO: material at spot
     internal class RenderFlag : RenderObject
     {
         Flag flag = null;
