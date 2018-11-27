@@ -153,11 +153,7 @@ namespace Freeserf
            the size of this array in length. */
         public static Road Map(Map map, MapPos start, MapPos end, Road buildingRoad = null)
         {
-            // Unfortunately the STL priority_queue cannot be used since we
-            // would need access to the underlying sequence to determine if
-            // a node is already in the open list. We keep instead open as
-            // a vector and apply std::pop_heap and std::push_heap to keep
-            // it heapified.
+            DateTime startTime = DateTime.Now;
             PriorityQueue<SearchNode> open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
             List<SearchNode> closed = new List<SearchNode>();
 
@@ -173,6 +169,9 @@ namespace Freeserf
 
             while (open.Count != 0)
             {
+                if ((DateTime.Now - startTime).TotalMilliseconds > 2 * Global.TICK_LENGTH)
+                    return new Road(); // tried too long
+
                 node = open.Pop();
 
                 if (node.Pos == start)

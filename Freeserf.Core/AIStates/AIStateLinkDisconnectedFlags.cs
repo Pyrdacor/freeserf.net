@@ -47,7 +47,10 @@ namespace Freeserf.AIStates
             var flagPos = (uint)flagsInRange[game.RandomInt() % flagsInRange.Count];
             var road = Pathfinder.Map(game.Map, pos, flagPos);
 
-            return game.BuildRoad(road, player);
+            if (road != null && road.Valid)
+                return game.BuildRoad(road, player);
+
+            return false;
         }
     }
 }

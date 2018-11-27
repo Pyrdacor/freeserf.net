@@ -54,7 +54,8 @@ namespace Freeserf.AIStates
             {
                 var road = Pathfinder.Map(game.Map, flagPos, bestFlagPos);
 
-                if (road.Length > minDist * 2) // maybe the nearest flag is behind the border and the way is much longer as thought
+                if (road == null || !road.Valid ||
+                    road.Length > minDist * 2) // maybe the nearest flag is behind the border and the way is much longer as thought
                 {
                     flags.Remove(bestFlagPos);
 

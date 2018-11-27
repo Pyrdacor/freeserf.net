@@ -16,6 +16,16 @@ Non-working code:
 
 - Fix special click (seems to not work)
 - Popup box closing only with ESC? Not with a click outside?
+- Same enemy can occur more than once in random games
+- Player values are not visible in GameInitBox
+
+
+AI:
+
+- If linking diconnected flags, a flag may be used to connect to castle/stock that is very far away instead of a closer one
+- Linking flags may also allow for placing flags one pathes and merging pathes to a near flag
+- Spots for lumberjack, stonecutter and sawmill are not really good in most cases
+	- The spot should be dependent on the resources and not on the base flag
 
 
 Serf rendering:

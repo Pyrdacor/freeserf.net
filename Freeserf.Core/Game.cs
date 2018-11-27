@@ -3394,8 +3394,11 @@ namespace Freeserf
             if (oldObject != Map.Object.None && newObject < Map.Object.Tree0)
             {
                 // we don't draw buildings etc with renderObjects
-                renderObjects[pos].Delete();
-                renderObjects.Remove(pos);
+                if (renderObjects.ContainsKey(pos))
+                {
+                    renderObjects[pos].Delete();
+                    renderObjects.Remove(pos);
+                }
             }
             else if (renderObjects.ContainsKey(pos))
             {
