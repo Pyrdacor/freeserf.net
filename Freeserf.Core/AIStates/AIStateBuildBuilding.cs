@@ -47,7 +47,7 @@ namespace Freeserf.AIStates
                     pos = FindRandomSpot(game, player, true);
             }
 
-            if (game.CanBuildBuilding(pos, type, player))
+            if (pos != Global.BadMapPos && game.CanBuildBuilding(pos, type, player))
             {
                 built = game.BuildBuilding(pos, type, player);
 
