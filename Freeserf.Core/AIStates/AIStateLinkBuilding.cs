@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
+    // TODO: this should try to link to flags, that are connected to the castle or at least a stock
     class AIStateLinkBuilding : AIState
     {
         uint buildingPos = Global.BadMapPos;
@@ -56,12 +57,18 @@ namespace Freeserf.AIStates
                 if (road.Length > minDist * 2) // maybe the nearest flag is behind the border and the way is much longer as thought
                 {
                     flags.Remove(bestFlagPos);
+
+                    if (flags.Count == 0)
+                        break;
+
                     bestFlagPos = flags.OrderBy(f => f.Value).First().Key;
                     continue;
                 }
 
                 if (game.BuildRoad(road, player))
                     break;
+                else
+                    flags.Remove(bestFlagPos);
             }
 
             // could not link the flags

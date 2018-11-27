@@ -1025,6 +1025,9 @@ namespace Freeserf
             SerfPathInfo path1Data = new SerfPathInfo();
             SerfPathInfo path2Data = new SerfPathInfo();
 
+            path1Data.Serfs = new int[16];
+            path2Data.Serfs = new int[16];
+
             FillPathSerfInfo(Game, pos, path1Dir, path1Data);
             FillPathSerfInfo(Game, pos, path2Dir, path2Data);
 

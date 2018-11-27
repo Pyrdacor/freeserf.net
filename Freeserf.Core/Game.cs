@@ -269,7 +269,7 @@ namespace Freeserf
             /* Update tick counters based on game speed */
             lastTick = tick;
             tick += (ushort)gameSpeed;
-            tickDiff = (int)(tick - lastTick);
+            tickDiff = (int)(tick - lastTick); // TODO: What happens if we exceed ushort.MaxValue for tick?
 
             ClearSerfRequestFailure();
             map.Update(tick, initMapRandom);
@@ -1707,6 +1707,11 @@ namespace Freeserf
             return buildings.Where(b => b.Player == player.Index);
         }
 
+        public IEnumerable<Building> GetPlayerBuildings(Player player, Building.Type type)
+        {
+            return GetPlayerBuildings(player).Where(b => b.BuildingType == type);
+        }
+
         public IEnumerable<Flag> GetPlayerFlags(Player player)
         {
             return flags.Where(f => f.GetOwner() == player.Index);
@@ -1730,6 +1735,40 @@ namespace Freeserf
         public IEnumerable<Serf> GetSerfsAtPos(MapPos pos)
         {
             return serfs.Where(s => s.Position == pos);
+        }
+
+        public int FindInventoryWithValidSpecialist(Player player, Serf.Type serfType, Resource.Type res1, Resource.Type res2)
+        {
+            int inventoryWithResButNoGeneric = -1;
+
+            foreach (var inventory in GetPlayerInventories(player))
+            {
+                if (inventory.HaveSerf(serfType))
+                    return (int)inventory.Index;
+
+                if ((res1 == Resource.Type.None || inventory.GetCountOf(res1) > 0) &&
+                    (res2 == Resource.Type.None || inventory.GetCountOf(res2) > 0))
+                {
+                    inventoryWithResButNoGeneric = 0xffff + (int)inventory.Index;
+
+                    if (inventory.HaveSerf(Serf.Type.Generic))
+                        return (int)inventory.Index;
+                }
+            }
+
+            return inventoryWithResButNoGeneric;
+        }
+
+        public int GetResourceAmountInInventories(Player player, Resource.Type type)
+        {
+            int amount = 0;
+
+            foreach (var inventory in GetPlayerInventories(player))
+            {
+                amount += (int)inventory.GetCountOf(type);
+            }
+
+            return amount;
         }
 
         public Player GetNextPlayer(Player player)
@@ -2651,6 +2690,9 @@ namespace Freeserf
 
             SerfPathInfo path1Data = new SerfPathInfo();
             SerfPathInfo path2Data = new SerfPathInfo();
+
+            path1Data.Serfs = new int[16];
+            path2Data.Serfs = new int[16];
 
             Flag.FillPathSerfInfo(this, pos, path1Dir, path1Data);
             Flag.FillPathSerfInfo(this, pos, path2Dir, path2Data);

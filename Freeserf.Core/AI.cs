@@ -27,8 +27,6 @@ using System.Threading.Tasks;
 
 namespace Freeserf
 {
-    // TODO: delays
-
     abstract class AIState
     {
         public bool Killed { get; private set; } = false;
@@ -43,14 +41,11 @@ namespace Freeserf
             Killed = true;
         }
 
-        public void ReturnToIdle(AI ai)
+        public void GoToState(AI ai, AI.State state, object param = null)
         {
-            ReturnToState(ai, AI.State.Idle);
-        }
+            if (state != AI.State.Idle)
+                NextState = ai.CreateState(state, param);
 
-        public void ReturnToState(AI ai, AI.State state)
-        {
-            NextState = ai.CreateState(state);
             Kill(ai);
         }
     }
@@ -70,7 +65,11 @@ namespace Freeserf
             ChooseCastleLocation,
             CastleBuilt,
             BuildBuilding,
-            LinkBuilding
+            LinkBuilding,
+            LinkDisconnectedFlags,
+            BuildNeededBuilding,
+            CraftWeapons,
+            CraftTool
             // TODO ...
         }
 
@@ -78,6 +77,8 @@ namespace Freeserf
         readonly PlayerInfo playerInfo = null;
         readonly Stack<AIState> states = new Stack<AIState>();
         int lastTick = 0;
+        long lastUpdate = 0;
+        internal long GameTime { get; private set; } = 0;
         readonly Random random = new Random(Guid.NewGuid().ToString());
 
         /// <summary>
@@ -196,6 +197,14 @@ namespace Freeserf
                     return new AIStates.AIStateBuildBuilding((Building.Type)param);
                 case State.LinkBuilding:
                     return new AIStates.AIStateLinkBuilding((uint)param);
+                case State.LinkDisconnectedFlags:
+                    return new AIStates.AIStateLinkDisconnectedFlags();
+                case State.BuildNeededBuilding:
+                    return new AIStates.AIStateBuildNeededBuilding();
+                case State.CraftTool:
+                    return new AIStates.AIStateCraftTool((Resource.Type)param);
+                case State.CraftWeapons:
+                    return new AIStates.AIStateCraftWeapons();
                 // TODO ...
             }
 
@@ -271,7 +280,12 @@ namespace Freeserf
         public void Update(Game game)
         {
             if (lastTick == 0)
+            {
                 lastTick = game.Tick;
+                GameTime = game.Tick;
+            }
+            else
+                GameTime += game.Tick - lastTick;
 
             if (states.Count == 0)
             {
@@ -297,8 +311,11 @@ namespace Freeserf
 
             if (currentState.Delay > 0)
                 currentState.Delay -= (game.Tick - lastTick);
-            else
-                currentState.Update(this, game, player, playerInfo, game.Tick);
+            else if (GameTime - lastUpdate >= Global.TICKS_PER_SEC) // only update every second
+            {
+                currentState.Update(this, game, player, playerInfo, (int)(GameTime - lastUpdate));
+                lastUpdate = GameTime;
+            }
 
             if (currentState.Killed)
             {

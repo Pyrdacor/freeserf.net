@@ -944,6 +944,35 @@ namespace Freeserf
             return findings;
         }
 
+        public MapPos FindSpotNear(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Random random, int minDist = 0)
+        {
+            if (searchRange < 0)
+                return Global.BadMapPos;
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDist * minDist + minDist) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+
+            List<MapPos> spots = new List<MapPos>();
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePos, (uint)i);
+
+                if (searchFunc(this, pos))
+                    spots.Add(pos);
+            }
+
+            if (spots.Count == 0)
+                return Global.BadMapPos;
+
+            return spots[random.Next() % spots.Count];
+        }
+
         public Object GetObject(MapPos pos)
         {
             return landscapeTiles[(int)pos].Object;

@@ -1967,7 +1967,7 @@ namespace Freeserf
             }
         }
 
-        struct Request
+        internal struct Request
         {
             public Request(Serf.Type serfType, Resource.Type resType1, Resource.Type resType2)
             {
@@ -1981,7 +1981,7 @@ namespace Freeserf
             public Resource.Type ResType2;
         }
 
-        static readonly Request[] Requests = new Request[] 
+        internal static readonly Request[] Requests = new Request[] 
         {
             new Request(Serf.Type.None       , Resource.Type.None   , Resource.Type.None  ),
             new Request(Serf.Type.Fisher     , Resource.Type.Rod    , Resource.Type.None  ),

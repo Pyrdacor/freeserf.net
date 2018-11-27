@@ -306,7 +306,7 @@ namespace Freeserf.Render
             int head = -1;
             // The baseline decides render order. The serfs should be in front of buildings and objects
             // in most cases even if their baseline is lower. So we add a small offset to the serf baseline.
-            int baseLineOffset = 40;
+            int baseLineOffset = 12;
 
             if (map.HasSerf(pos)) // active serf
             {

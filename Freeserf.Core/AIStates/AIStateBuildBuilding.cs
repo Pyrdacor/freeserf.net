@@ -4,6 +4,8 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
+    // TODO: If we don't have enough materials, we should switch to a state where we increase our material production
+    //       or increase the plank amount for constructions.
     class AIStateBuildBuilding : AIState
     {
         bool built = false;
@@ -195,7 +197,7 @@ namespace Freeserf.AIStates
                 var randomBuilding = buildings[game.RandomInt() % buildings.Count];
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 6, buildingType, maxInArea))
-                    return FindSpotNear(game, player, randomBuilding.Position, 6);
+                    return FindSpotNear(game, player, randomBuilding.Position, 4);
 
                 buildings.Remove(randomBuilding);
             }
@@ -224,7 +226,16 @@ namespace Freeserf.AIStates
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, Building.Type.Stonecutter, maxInArea))
                 {
                     if (MineralsInArea(game.Map, randomBuilding.Position, 9, mineral, FindMineral, 1) > 0)
-                        return FindSpotNear(game, player, randomBuilding.Position, 9);
+                    {
+                        // 5 tries per spot
+                        for (int i = 0; i < 5; ++i)
+                        {
+                            var spot = FindSpotNear(game, player, randomBuilding.Position, 9);
+
+                            if (game.Map.GetResourceType(spot) == mineral)
+                                return spot;
+                        }
+                    }
                 }
 
                 buildings.Remove(randomBuilding);
@@ -257,7 +268,7 @@ namespace Freeserf.AIStates
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Stonecutter, maxInArea))
                 {
                     if (AmountInArea(game.Map, randomBuilding.Position, 8, CountFish, FindFish) > 0)
-                        return FindSpotNear(game, player, randomBuilding.Position, 7);
+                        return FindSpotNear(game, player, randomBuilding.Position, 3);
                 }
 
                 buildings.Remove(randomBuilding);
@@ -285,7 +296,16 @@ namespace Freeserf.AIStates
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Lumberjack, maxInArea))
                 {
                     if (AmountInArea(game.Map, randomBuilding.Position, 8, CountMapObjects, FindTree) > 6)
-                        return FindSpotNear(game, player, randomBuilding.Position, 7);
+                    {
+                        Func<Map, uint, bool> findTree = (Map map, uint pos) =>
+                        {
+                            return FindTree(map, pos).Success;
+                        };
+
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findTree, game.GetRandom(), 1);
+
+                        return FindSpotNear(game, player, spot, 3);
+                    }
                 }
 
                 buildings.Remove(randomBuilding);
@@ -312,7 +332,16 @@ namespace Freeserf.AIStates
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Stonecutter, maxInArea))
                 {
                     if (AmountInArea(game.Map, randomBuilding.Position, 8, CountMapObjects, FindStone) > 0)
-                        return FindSpotNear(game, player, randomBuilding.Position, 7);
+                    {
+                        Func<Map, uint, bool> findStone = (Map map, uint pos) =>
+                        {
+                            return FindStone(map, pos).Success;
+                        };
+
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findStone, game.GetRandom(), 1);
+
+                        return FindSpotNear(game, player, spot, 3);
+                    }
                 }
 
                 buildings.Remove(randomBuilding);

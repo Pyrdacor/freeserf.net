@@ -494,7 +494,7 @@ namespace Freeserf
             return serf;
         }
 
-        static readonly Resource.Type[] ResourcesNeededForSpecializing = new Resource.Type[]
+        internal static readonly Resource.Type[] ResourcesNeededForSpecializing = new Resource.Type[]
         {
             Resource.Type.None,    Resource.Type.None,    // SERF_TRANSPORTER = 0,
             Resource.Type.Boat,    Resource.Type.None,    // SERF_SAILOR,

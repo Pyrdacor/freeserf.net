@@ -24,7 +24,7 @@ namespace Freeserf.AIStates
             if (!game.BuildCastle(mapPos, player))
                 return; // failed -> try again
 
-            ReturnToState(ai, AI.State.CastleBuilt);
+            GoToState(ai, AI.State.CastleBuilt);
         }
     }
 }
