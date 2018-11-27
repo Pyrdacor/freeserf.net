@@ -769,8 +769,8 @@ namespace Freeserf
 
         public void GetRandomCoord(ref uint column, ref uint row, Random random)
         {
-            uint c = (uint)random.Next() & Geometry.ColumnMask;
-            uint r = (uint)random.Next() & Geometry.RowMask;
+            uint c = random.Next() & Geometry.ColumnMask;
+            uint r = random.Next() & Geometry.RowMask;
 
             column = c;
             row = r;
@@ -898,6 +898,50 @@ namespace Freeserf
                     TypeDown(MoveUpLeft(pos)) <= high &&
                     TypeUp(MoveUp(pos)) >= low &&
                     TypeUp(MoveUp(pos)) <= high;
+        }
+
+        public class FindData
+        {
+            public bool Success;
+            public object Data;
+        }
+
+        /// <summary>
+        /// Searches the spiral around the base position.
+        /// 
+        /// The distances can range from 0 to 9.
+        /// </summary>
+        /// <param name="basePos">Base position</param>
+        /// <param name="searchRange">Search distance</param>
+        /// <param name="searchFunc">Search function</param>
+        /// <param name="minDist">Minimum distance required</param>
+        /// <returns></returns>
+        public List<object> FindInArea(MapPos basePos, int searchRange, Func<Map, MapPos, FindData> searchFunc, int minDist = 0)
+        {
+            if (searchRange < 0)
+                return new List<object>();
+
+            List<object> findings = new List<object>();
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDist * minDist + minDist) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePos, (uint)i);
+
+                var data = searchFunc(this, pos);
+
+                if (data != null & data.Success)
+                    findings.Add(data.Data);
+            }
+
+            return findings;
         }
 
         public Object GetObject(MapPos pos)

@@ -37,9 +37,21 @@ namespace Freeserf
 
         public abstract void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick);
 
-        public virtual void Kill()
+        public virtual void Kill(AI ai)
         {
+            ai.PopState();
             Killed = true;
+        }
+
+        public void ReturnToIdle(AI ai)
+        {
+            ReturnToState(ai, AI.State.Idle);
+        }
+
+        public void ReturnToState(AI ai, AI.State state)
+        {
+            NextState = ai.CreateState(state);
+            Kill(ai);
         }
     }
 
@@ -54,6 +66,7 @@ namespace Freeserf
     {
         public enum State
         {
+            Idle,
             ChooseCastleLocation,
             CastleBuilt,
             BuildBuilding,
@@ -70,27 +83,39 @@ namespace Freeserf
         /// <summary>
         /// How aggressive (2 = very aggressive)
         /// </summary>
-        int aggressivity = 0; // 0 - 2
+        public int Aggressivity { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// How skilled in fights (2 = skilled fighter)
         /// </summary>
-        int militarySkill = 0; // 0 - 2
+        public int MilitarySkill { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// How much focus on military (2 = high focus)
         /// </summary>
-        int militaryFocus = 0; // 0 - 2
+        public int MilitaryFocus { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// How much focus on expanding (2 = aggressive expansion)
         /// </summary>
-        int expandFocus = 0; // 0 - 2
+        public int ExpandFocus { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// How much focus at having much buildings
         /// </summary>
-        int buildingFocus = 0; // 0 - 2
+        public int BuildingFocus { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// How much focus at having much gold
         /// </summary>
-        int goldFocus = 0; // 0 - 2
+        public int GoldFocus { get; private set; } = 0; // 0 - 2
+        /// <summary>
+        /// How much focus at having much coal and iron
+        /// </summary>
+        public int SteelFocus { get; private set; } = 0; // 0 - 2
+        /// <summary>
+        /// How much focus at having much food
+        /// </summary>
+        public int FoodFocus { get; private set; } = 0; // 0 - 2
+        /// <summary>
+        /// How much focus at having much construction materials
+        /// </summary>
+        public int ConstructionMaterialFocus { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// The ai will try to gather prioritized food if possible
         /// </summary>
@@ -157,20 +182,55 @@ namespace Freeserf
             // TODO
         }
 
-        internal AIState CreateState(State state, object param)
+        internal AIState CreateState(State state, object param = null)
         {
             switch (state)
             {
+                case State.Idle:
+                    return new AIStates.AIStateIdle();
                 case State.ChooseCastleLocation:
                     return new AIStates.AIStateChoosingCastleLocation();
                 case State.CastleBuilt:
                     return new AIStates.AIStateCastleBuilt();
                 case State.BuildBuilding:
                     return new AIStates.AIStateBuildBuilding((Building.Type)param);
+                case State.LinkBuilding:
+                    return new AIStates.AIStateLinkBuilding((uint)param);
                 // TODO ...
             }
 
             throw new ExceptionFreeserf("Unknown AI state");
+        }
+
+        /// <summary>
+        /// Create an AI state that is active after the given delay.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="delay">Delay in milliseconds</param>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        internal AIState CreateDelayedState(State state, int delay, object param = null)
+        {
+            var aiState = CreateState(state, param);
+
+            aiState.Delay = delay * Global.TICKS_PER_SEC / 1000;
+
+            return aiState;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="minDelay">Minimum delay in milliseconds</param>
+        /// <param name="maxDelay">Maximum delay in milliseconds</param>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        internal AIState CreateRandomDelayedState(State state, int minDelay, int maxDelay, object param = null)
+        {
+            int delay = minDelay + random.Next() % (maxDelay + 1 - minDelay);
+
+            return CreateDelayedState(state, delay, param);
         }
 
         internal void PushState(AIState state)
@@ -179,21 +239,15 @@ namespace Freeserf
         }
 
         /// <summary>
-        /// The delay is in milliseconds
+        /// Note the first pushed will be on top.
+        /// So the order of the parameters will also
+        /// be the execution order of the states.
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="delay"></param>
-        internal void PushStateDelayed(AIState state, int delay)
+        /// <param name="states"></param>
+        internal void PushStates(params AIState[] states)
         {
-            state.Delay = delay * Global.TICKS_PER_SEC / 1000;
-            states.Push(state);
-        }
-
-        internal void PushStateRandomDelayed(AIState state, int minDelay, int maxDelay)
-        {
-            int delay = minDelay + random.Next() % (maxDelay + 1 - minDelay);
-
-            PushStateDelayed(state, delay);
+            for (int i = states.Length - 1; i >= 0; --i)
+                PushState(states[i]);
         }
 
         internal AIState PopState()
@@ -207,6 +261,11 @@ namespace Freeserf
         internal void ClearStates()
         {
             states.Clear();
+        }
+
+        internal bool StupidDecision()
+        {
+            return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
         }
 
         public void Update(Game game)
@@ -243,8 +302,6 @@ namespace Freeserf
 
             if (currentState.Killed)
             {
-                states.Pop();
-
                 if (currentState.NextState != null)
                     states.Push(currentState.NextState);
             }

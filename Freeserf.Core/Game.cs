@@ -1469,6 +1469,11 @@ namespace Freeserf
             return random.Next();
         }
 
+        internal Random GetRandom()
+        {
+            return random;
+        }
+
         /* Dispatch serf from (nearest?) inventory to flag. */
         internal bool SendSerfToFlag(Flag dest, Serf.Type type, Resource.Type resource1, Resource.Type resource2)
         {
@@ -1700,6 +1705,11 @@ namespace Freeserf
         public IEnumerable<Building> GetPlayerBuildings(Player player)
         {
             return buildings.Where(b => b.Player == player.Index);
+        }
+
+        public IEnumerable<Flag> GetPlayerFlags(Player player)
+        {
+            return flags.Where(f => f.GetOwner() == player.Index);
         }
 
         public IEnumerable<Serf> GetSerfsInInventory(Inventory inventory)
