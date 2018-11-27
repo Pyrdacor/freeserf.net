@@ -3,6 +3,8 @@
 - Black lines / artifacts (fixed by virtual screen resolution change but some small remain)
 - Some tiles appear/disappear/change location while scrolling (at certain offsets)
 - Some terrain types seem dislocated
+- Roads must be updated after leveling a nearby building
+- Add water waves
 
 
 Viewport:
@@ -26,6 +28,7 @@ AI:
 - Linking flags may also allow for placing flags one pathes and merging pathes to a near flag
 - Spots for lumberjack, stonecutter and sawmill are not really good in most cases
 	- The spot should be dependent on the resources and not on the base flag
+- Only build new buildings if there are enough resources and the essential buildings are in progress or finished
 
 
 Serf rendering:
