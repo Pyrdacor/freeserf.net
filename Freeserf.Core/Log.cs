@@ -189,7 +189,7 @@ namespace Freeserf
 #if DEBUG
         protected static Level level = Level.Debug;
 #else
-        protected static Level level = Level.LevelInfo;
+        protected static Level level = Level.Info;
 #endif
 
     }
