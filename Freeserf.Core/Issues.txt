@@ -37,6 +37,14 @@ Serf rendering:
 - Serfs sometimes disappear (see RenderSerf.cs comments for details), maybe Serf.SwitchWaiting and following code is the problem
 - Serfs appear in front of map objects when they should not (e.g. in front of a tree top)
 - In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
+- I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
+	- As other serfs can walk there too it must be an error with the animation index
+
+
+Logic:
+
+- Saw a builder to don't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
+- Logs are brought to castle instead of sawmill
 
 
 Notification Box:
