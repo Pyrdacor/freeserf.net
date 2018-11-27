@@ -280,9 +280,6 @@ namespace Freeserf
 
             public void SetPlayerFace(int face)
             {
-                if (playerFace == face)
-                    return;
-
                 playerFace = face;
 
                 if (playerFace == -1)
@@ -540,7 +537,7 @@ namespace Freeserf
 
                     playerBoxes[i].SetPosition(TotalX, TotalY, 10 * bx, 40 + by * 80);
                     playerBoxes[i].Visible = true;
-                    playerBoxes[i].SetBaseDisplayLayer(BaseDisplayLayer);
+                    playerBoxes[i].SetBaseDisplayLayer((byte)(BaseDisplayLayer + 1));
 
                     ++bx;
                 }

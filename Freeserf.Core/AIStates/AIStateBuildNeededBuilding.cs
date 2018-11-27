@@ -130,7 +130,7 @@ namespace Freeserf.AIStates
                     // TODO ...
                     break;
                 case Building.Type.Hut:
-                    if (count < player.GetLandArea() / 10 + ai.MilitaryFocus && ai.GameTime > (90 - intelligence - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
+                    if (count < player.GetLandArea() / 100 + ai.MilitaryFocus && ai.GameTime > (90 - intelligence - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(game, player, type);
                     }

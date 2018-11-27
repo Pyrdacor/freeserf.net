@@ -696,6 +696,7 @@ namespace Freeserf
         public uint RowMask => Geometry.RowMask;
         public int RowShift => Geometry.RowShift;
         public uint RegionCount => regions;
+        public uint TileCount => Geometry.TileCount;
 
         public void Scroll(int x, int y)
         {
