@@ -5,6 +5,7 @@
 - Some terrain types seem dislocated
 - Roads must be updated after leveling a nearby building
 - Add water waves
+- Draw occupation flag at military buildings when knights have entered
 
 
 Viewport:
@@ -33,7 +34,7 @@ AI:
 
 Serf rendering:
 
-- Serfs sometimes disappear (see RenderSerf.cs comments for details)
+- Serfs sometimes disappear (see RenderSerf.cs comments for details), maybe Serf.SwitchWaiting and following code is the problem
 - Serfs appear in front of map objects when they should not (e.g. in front of a tree top)
 - In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
 

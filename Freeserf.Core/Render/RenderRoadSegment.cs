@@ -42,7 +42,7 @@ namespace Freeserf.Render
         // TODO: call this after leveling the ground near the road etc
         // e.g. when map height changes
         // also used on initialization
-        void UpdateAppearance()
+        internal void UpdateAppearance()
         {
             int h1 = (int)map.GetHeight(pos);
             int h2 = (int)map.GetHeight(map.Move(pos, dir));

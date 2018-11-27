@@ -3727,8 +3727,6 @@ namespace Freeserf
 
         void HandleSerfDiggingState()
         {
-            
-
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
             Counter -= delta;

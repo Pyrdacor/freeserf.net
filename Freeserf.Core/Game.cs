@@ -3381,7 +3381,23 @@ namespace Freeserf
 
         public override void OnHeightChanged(MapPos pos)
         {
-            // TODO
+            // Update road segments
+            for (int i = 0; i < 7; ++i)
+            {
+                var checkPos = map.PosAddSpirally(pos, (uint)i);
+                var cycle = new DirectionCycleCW(Direction.Right, 3u);
+
+                foreach (var dir in cycle)
+                {
+                    if (map.HasPath(checkPos, dir))
+                    {
+                        long index = Render.RenderRoadSegment.CreateIndex(checkPos, dir);
+
+                        if (renderRoadSegments.ContainsKey(index))
+                            renderRoadSegments[index].UpdateAppearance();
+                    }
+                }
+            }
         }
 
         public override void OnObjectChanged(MapPos pos)
