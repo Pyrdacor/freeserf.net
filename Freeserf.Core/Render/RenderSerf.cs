@@ -171,7 +171,7 @@ namespace Freeserf.Render
              0, 0
         };
 
-        static readonly int[] transporter_type = new int[]
+        static readonly int[] TransporterType = new int[]
         {
             0, 0x3000, 0x3500, 0x3b00, 0x4100, 0x4600, 0x4b00, 0x1400,
             0x700, 0x5100, 0x800, 0x1c00, 0x1d00, 0x1e00, 0x1a00, 0x1b00,
@@ -179,7 +179,7 @@ namespace Freeserf.Render
             0x6c00, 0x5700, 0x5600, 0, 0, 0, 0, 0
         };
 
-        static readonly int[] sailor_type = new int[]
+        static readonly int[] SailorType = new int[]
         {
             0, 0x3100, 0x3600, 0x3c00, 0x4200, 0x4700, 0x4c00, 0x1500,
             0x900, 0x7700, 0xa00, 0x2100, 0x2200, 0x2300, 0x1f00, 0x2000,
@@ -212,6 +212,18 @@ namespace Freeserf.Render
             headSprite.Layer = sprite.Layer;
 
             InitOffsets(dataSource);
+        }
+
+        public override bool Visible
+        {
+            get => sprite.Visible;
+            set
+            {
+                base.Visible = value;
+
+                if (headSprite != null)
+                    headSprite.Visible = value;
+            }
         }
 
         public override void Delete()
@@ -488,7 +500,13 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.TypeSfx type)
         {
-            // TODO
+            Audio audio = Audio.Instance;
+            Audio.Player player = audio?.GetSoundPlayer();
+
+            if (player != null)
+            {
+                player.PlayTrack((int)type);
+            }
         }
 
         /* Extracted from obsolete update_map_serf_rows(). */
@@ -510,7 +528,7 @@ namespace Freeserf.Render
                              serf.SerfState == Serf.State.Delivering) &&
                              serf.GetDelivery() != 0)
                     {
-                        t += transporter_type[serf.GetDelivery()];
+                        t += TransporterType[serf.GetDelivery()];
                     }
                     break;
                 case Serf.Type.Sailor:
@@ -549,7 +567,7 @@ namespace Freeserf.Render
                     }
                     else if (serf.SerfState == Serf.State.Transporting)
                     {
-                        t += sailor_type[serf.GetDelivery()];
+                        t += SailorType[serf.GetDelivery()];
                     }
                     else
                     {
@@ -606,7 +624,7 @@ namespace Freeserf.Render
                     else
                     {
                         int res = serf.GetDelivery();
-                        t += transporter_type[res];
+                        t += TransporterType[res];
                     }
                     break;
                 case Serf.Type.Lumberjack:

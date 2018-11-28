@@ -24,7 +24,6 @@ using System.Collections.Generic;
 namespace Freeserf.Render
 {
     // TODO: burning
-    // TODO: build material at spot
     internal class RenderBuilding : RenderObject
     {
         static readonly uint[] MapBuildingFrameSprite = new uint[]
@@ -56,6 +55,7 @@ namespace Freeserf.Render
         List<ISprite> planks = new List<ISprite>(5);
         ISpriteFactory spriteFactory = null;
         IRenderLayer materialLayer = null;
+        readonly List<ISprite> additionalSprites = new List<ISprite>();
 
         static readonly Dictionary<uint, Position> spriteOffsets = new Dictionary<uint, Position>();
         static readonly Dictionary<uint, Position> shadowSpriteOffsets = new Dictionary<uint, Position>();
@@ -117,9 +117,10 @@ namespace Freeserf.Render
             }
 
             InitOffsets(dataSource);
+
+            CreateSpecialBuildingSprites();
         }
 
-        // TODO: Do we need this?
         public override bool Visible
         {
             get => sprite.Visible;
@@ -160,6 +161,19 @@ namespace Freeserf.Render
 
                 spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, spriteIndex);
                 shadowSpriteOffsets.Add(spriteIndex, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
+
+                // the mill has 3 additional sprites
+                if (building.BuildingType == Building.Type.Mill)
+                {
+                    for (uint i = 1; i <= 3; ++i)
+                    {
+                        spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapObject, spriteIndex + i);
+                        spriteOffsets.Add(spriteIndex + i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
+
+                        spriteInfo = dataSource.GetSpriteInfo(Data.Resource.MapShadow, spriteIndex + i);
+                        shadowSpriteOffsets.Add(spriteIndex + i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
+                    }
+                }
             }
 
             if (building.BuildingType != Building.Type.Castle)
@@ -284,6 +298,11 @@ namespace Freeserf.Render
                 }
             }
 
+            foreach (var sprite in additionalSprites)
+                sprite.Delete();
+
+            additionalSprites.Clear();
+
             building = null;
         }
 
@@ -374,6 +393,8 @@ namespace Freeserf.Render
                 planks[i].X = renderPosition.X + materialSpriteInfos[1].Position.X + 12 - i * 3;
                 planks[i].Y = renderPosition.Y + materialSpriteInfos[1].Position.Y - 6 + i;
             }
+
+            UpdateSpecialBuilding(renderPosition, tick);
         }
 
         /// <summary>
@@ -534,6 +555,135 @@ namespace Freeserf.Render
             }
 
             return true;
+        }
+
+        void AddDummySprites(int n)
+        {
+            for (int i = 0; i < n; ++i)
+                additionalSprites.Add(spriteFactory.Create(0, 0, 0, 0, false, false));
+        }
+
+        void CreateSpecialBuildingSprites()
+        {
+            switch (building.BuildingType)
+            {
+                case Building.Type.Baker:
+                case Building.Type.Boatbuilder:                
+                case Building.Type.GoldSmelter:
+                case Building.Type.Hut:
+                case Building.Type.StoneMine:
+                case Building.Type.CoalMine:
+                case Building.Type.IronMine:
+                case Building.Type.GoldMine:
+                case Building.Type.SteelSmelter:
+                case Building.Type.Tower:
+                case Building.Type.WeaponSmith:
+                    AddDummySprites(1);
+                    break;
+                case Building.Type.Fortress:
+                    // two flags
+                    AddDummySprites(2);
+                    break;
+                case Building.Type.Mill:
+                    // no additional sprites needed
+                    break;
+                case Building.Type.PigFarm:
+                    // max 8 pigs
+                    AddDummySprites(8);
+                    break;                
+            }
+        }
+
+        void PlaySound(Audio.TypeSfx type)
+        {
+            Audio audio = Audio.Instance;
+            Audio.Player player = audio?.GetSoundPlayer();
+
+            if (player != null)
+            {
+                player.PlayTrack((int)type);
+            }
+        }
+
+        void UpdateSpecialBuilding(Position renderPosition, int tick)
+        {
+            if (!building.IsDone())
+                return;
+
+            if (!sprite.Visible)
+            {
+                foreach (var additionalSprite in additionalSprites)
+                    additionalSprite.Visible = false;
+
+                return;
+            }
+
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
+
+            switch (building.BuildingType)
+            {
+                case Building.Type.Baker:
+                    // draw smoke
+                    break;
+                case Building.Type.Boatbuilder:
+                    // draw the boat that is built
+                    break;
+                case Building.Type.Fortress:
+                    // draw flag
+                    break;
+                case Building.Type.GoldSmelter:
+                    // draw smoke
+                    break;
+                case Building.Type.Hut:
+                    // draw the flag
+                    break;
+                case Building.Type.Mill:
+                    {
+                        uint spriteIndex = MapBuildingSprite[(int)Building.Type.Mill];
+
+                        // draw the mill rotation
+                        if (building.IsActive())
+                        {
+                            if (((tick >> 4) & 3) != 0)
+                            {
+                                building.StopPlayingSfx();
+                            }
+                            else if (!building.IsPlayingSfx())
+                            {
+                                building.StartPlayingSfx();
+                                PlaySound(Audio.TypeSfx.MillGrinding);
+                            }
+
+                            spriteIndex += ((uint)tick >> 4) & 3u;
+                        }
+
+                        sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
+                        shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + spriteIndex);
+                        sprite.X = renderPosition.X + spriteOffsets[spriteIndex].X;
+                        sprite.Y = renderPosition.Y + spriteOffsets[spriteIndex].Y;
+                        shadowSprite.X = renderPosition.X + shadowSpriteOffsets[spriteIndex].X;
+                        shadowSprite.Y = renderPosition.Y + shadowSpriteOffsets[spriteIndex].Y;
+                    }
+                    break;
+                case Building.Type.PigFarm:
+                    // draw the pigs
+                    break;
+                case Building.Type.StoneMine:
+                case Building.Type.CoalMine:
+                case Building.Type.IronMine:
+                case Building.Type.GoldMine:
+                    // draw the elevator
+                    break;
+                case Building.Type.SteelSmelter:
+                    // draw smoke
+                    break;
+                case Building.Type.Tower:
+                    // draw flag
+                    break;
+                case Building.Type.WeaponSmith:
+                    // draw smoke
+                    break;
+            }
         }
     }
 }
