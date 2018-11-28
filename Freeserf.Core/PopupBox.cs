@@ -59,13 +59,13 @@ namespace Freeserf
             LoadSave,
             Type25,
             DiskMsg,
-            SettSelect,
-            Sett1,
+            SettlerMenu,
+            FoodDistribution,
             PlanksAndSteelDistribution,
-            Sett3,
+            CoalAndWheatDistribution,
             KnightLevel,
-            Sett4,
-            Sett5,
+            ToolmakerPriorities,
+            TransportPriorities,
             QuitConfirm,
             NoSaveQuitConfirm,
             SettSelectFile, /* UNUSED */
@@ -78,7 +78,7 @@ namespace Freeserf
             CastleSerf,
             ResDir,
             Sett8,
-            Sett6,
+            InventoryPriorities,
             Bld1,
             Bld2,
             Bld3,
@@ -374,6 +374,7 @@ namespace Freeserf
         readonly BuildingButton[] buildings = new BuildingButton[8]; // max 8 buildings per popup
         readonly Button flipButton = null;
         readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
+        readonly Dictionary<Button, bool> buttons = new Dictionary<Button, bool>(); // value: in use
         readonly SlideBar[] slideBars = new SlideBar[5]; // TODO: is 5 enough?
         const int SlideBarFactor = 1310;
 
@@ -510,6 +511,19 @@ namespace Freeserf
             }
         }
 
+        void HandleButtonClick(object buttonTag)
+        {
+            // TODO
+
+            switch (Box)
+            {
+                case Type.SettlerMenu:
+                    SetBox((Type)buttonTag);
+                    break;
+                // TODO ...
+            }
+        }
+
         void InitRenderComponents()
         {
             // TODO
@@ -576,14 +590,14 @@ namespace Freeserf
                     // TODO: maybe some of those have different background pattern
                     pattern = BackgroundPattern.StripedGreen;
                     break;
-                case Type.SettSelect:
-                case Type.Sett1:
+                case Type.SettlerMenu:
+                case Type.FoodDistribution:
                 case Type.PlanksAndSteelDistribution:
-                case Type.Sett3:
+                case Type.CoalAndWheatDistribution:
                 case Type.KnightLevel:
-                case Type.Sett4:
-                case Type.Sett5:
-                case Type.Sett6:
+                case Type.ToolmakerPriorities:
+                case Type.TransportPriorities:
+                case Type.InventoryPriorities:
                 case Type.Sett8:
                     pattern = BackgroundPattern.CheckerdDiagonalBrown;
                     break;                
@@ -700,9 +714,9 @@ namespace Freeserf
 
         #region Slidebars
 
-        void ClearSlideBars(int keep)
+        void ClearSlideBars()
         {
-            for (int i = keep; i < slideBars.Length; ++i)
+            for (int i = 0; i < slideBars.Length; ++i)
                 slideBars[i].Displayed = false;
         }
 
@@ -711,7 +725,7 @@ namespace Freeserf
 
         #region Icons
 
-        void SetIcon(int x, int y, uint spriteIndex, DataSource dataSource, Data.Resource resourceType = Data.Resource.Icon)
+        void SetIcon(int x, int y, uint spriteIndex, Data.Resource resourceType = Data.Resource.Icon)
         {
             // check if we already have the icon
             var icon = icons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex);
@@ -724,7 +738,7 @@ namespace Freeserf
                 return;
             }
 
-            var info = dataSource.GetSpriteInfo(resourceType, spriteIndex);
+            var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
 
             // otherwise check if there is a free icon
             foreach (var i in icons)
@@ -757,14 +771,65 @@ namespace Freeserf
         #endregion
 
 
+        #region Buttons
+
+        void SetButton(int x, int y, uint spriteIndex, object tag, Data.Resource resourceType = Data.Resource.Icon)
+        {
+            // check if we already have the button
+            var button = buttons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex);
+
+            if (button.Key != null)
+            {
+                button.Key.Tag = tag;
+                button.Key.MoveTo(x, y);
+                button.Key.Displayed = Displayed;
+                buttons[button.Key] = true;
+                return;
+            }
+
+            var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
+
+            // otherwise check if there is a free icon
+            foreach (var b in buttons)
+            {
+                if (b.Value == false)
+                {
+                    b.Key.Tag = tag;
+                    b.Key.SetSpriteIndex(resourceType, spriteIndex);
+                    b.Key.Resize(info.Width, info.Height);
+                    b.Key.MoveTo(x, y);
+                    b.Key.Displayed = Displayed;
+                    buttons[button.Key] = true;
+                    return;
+                }
+            }
+
+            var newButton = new Button(interf, info.Width, info.Height, resourceType, spriteIndex, 1);
+
+            newButton.Tag = tag;
+            newButton.Displayed = Displayed;
+            newButton.Clicked += PopupBox_ButtonClicked;
+            AddChild(newButton, x, y, true);
+
+            buttons.Add(newButton, true);
+        }
+
+        private void PopupBox_ButtonClicked(object sender, Button.ClickEventArgs args)
+        {
+            HandleButtonClick((sender as Button).Tag);
+        }
+
+        void ClearButtons()
+        {
+            foreach (var button in buttons)
+                button.Key.Displayed = false;
+        }
+
+        #endregion
+
+
         /* Draw the frame around the popup box. */
         void draw_popup_box_frame()
-		{
-			
-		}
-
-        /* Draw icon in a popup frame. */
-        void DrawPopupIcon(int x, int y, uint sprite)
 		{
 			
 		}
@@ -792,6 +857,11 @@ namespace Freeserf
 		{
 			
 		}
+
+        void DrawPopupIcon(int x, int y, uint spriteIndex)
+        {
+
+        }
 
         /* Draw a green number in a popup frame.
            n must be non-negative. If > 999 simply draw ">999" (three characters). */
@@ -1090,10 +1160,26 @@ namespace Freeserf
 			
 		}
 
-        void draw_sett_select_box()
+        void DrawSettlerMenuBox()
 		{
-			
-		}
+            SetButton(16, 17, 230u, Type.FoodDistribution);
+            SetButton(56, 17, 231u, Type.PlanksAndSteelDistribution);
+            SetButton(96, 17, 232u, Type.CoalAndWheatDistribution);
+
+            SetButton(16, 57, 234u, Type.ToolmakerPriorities);
+            SetButton(56, 57, 235u, Type.TransportPriorities);
+            SetButton(96, 57, 299u, Type.InventoryPriorities);
+
+            SetButton(16, 97, 233u, Type.Sett8); // TODO: Knights, Check Type
+            SetButton(56, 97, 298u, Type.KnightLevel); // TODO: Check Type
+
+            SetButton(104, 113, 61u, null); // TODO: Flip
+            SetButton(120, 137, 60u, null); // TODO: Exit
+
+            SetButton(40, 137, 285u, Type.Options);
+            SetButton(8, 137, 286u, Type.QuitConfirm);
+            SetButton(72, 137, 224u, Type.LoadSave); // TODO: Is Save. Is this type right?
+        }
 
         void draw_slide_bar(int x, int y, int value)
 		{
@@ -1107,8 +1193,6 @@ namespace Freeserf
 
         void DrawPlanksAndSteelDistributionBox()
 		{
-            ClearSlideBars(5);
-
             // TODO: buttons and icons
 
             Player player = interf.GetPlayer();
@@ -1519,10 +1603,12 @@ namespace Freeserf
             // first hide all building sprites
             ShowBuildings(0);
 
-            // TODO
+            // hide all icons, buttons and slidebars
+            ClearIcons();
+            ClearButtons();
+            ClearSlideBars();
 
-            // TODO: REMOVE TEST CODE
-            //SetBox(Type.PlanksAndSteelDistribution);
+            // TODO
 
             /* Dispatch to one of the popup box functions above. */
             switch (Box)
@@ -1591,25 +1677,25 @@ namespace Freeserf
                     draw_ground_analysis_box();
                     break;
                 /* TODO */
-                case Type.SettSelect:
-                    draw_sett_select_box();
+                case Type.SettlerMenu:
+                    DrawSettlerMenuBox();
                     break;
-                case Type.Sett1:
+                case Type.FoodDistribution:
                     DrawFoodDistributionBox();
                     break;
                 case Type.PlanksAndSteelDistribution:
                     DrawPlanksAndSteelDistributionBox();
                     break;
-                case Type.Sett3:
+                case Type.CoalAndWheatDistribution:
                     draw_sett_3_box();
                     break;
                 case Type.KnightLevel:
                     draw_knight_level_box();
                     break;
-                case Type.Sett4:
+                case Type.ToolmakerPriorities:
                     draw_sett_4_box();
                     break;
-                case Type.Sett5:
+                case Type.TransportPriorities:
                     draw_sett_5_box();
                     break;
                 case Type.QuitConfirm:
@@ -1645,7 +1731,7 @@ namespace Freeserf
                 case Type.Sett8:
                     draw_sett_8_box();
                     break;
-                case Type.Sett6:
+                case Type.InventoryPriorities:
                     draw_sett_6_box();
                     break;
                 case Type.Bld1:

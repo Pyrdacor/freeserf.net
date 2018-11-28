@@ -465,7 +465,7 @@ namespace Freeserf
                         SetButton(2, ButtonId.MapInactive);
                         SetButton(3, ButtonId.StatsInactive);
                         SetButton(4, ButtonId.SettStarred);
-                        interf.OpenPopup(PopupBox.Type.SettSelect);
+                        interf.OpenPopup(PopupBox.Type.SettlerMenu);
                     }
                     break;
                 case ButtonId.Stats:
