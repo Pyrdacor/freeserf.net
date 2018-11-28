@@ -319,6 +319,17 @@ namespace Freeserf.Render
                     AddSprite(atlasIndex, 2000u + resourceSprite, sprite.ClearTo(20)); // we use 2000 as the resource offset
             }
 
+            // add special building stuff (offset is 10000)
+
+            // add pigs
+            for (i = 0; i < 12; ++i)
+            {
+                sprite = data.GetSprite(Data.Resource.GameObject, 161u + i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 10000u + 161u + i, sprite);
+            }
+
             #endregion
 
 

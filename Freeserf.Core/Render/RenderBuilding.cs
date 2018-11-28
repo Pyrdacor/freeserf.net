@@ -53,8 +53,9 @@ namespace Freeserf.Render
         IMaskedSprite burningSprite = null;
         List<ISprite> stones = new List<ISprite>(5);
         List<ISprite> planks = new List<ISprite>(5);
-        ISpriteFactory spriteFactory = null;
-        IRenderLayer materialLayer = null;
+        readonly ISpriteFactory spriteFactory = null;
+        readonly DataSource dataSource = null;
+        readonly IRenderLayer materialLayer = null;
         readonly List<ISprite> additionalSprites = new List<ISprite>();
 
         static readonly Dictionary<uint, Position> spriteOffsets = new Dictionary<uint, Position>();
@@ -70,6 +71,7 @@ namespace Freeserf.Render
         {
             this.building = building;
             this.spriteFactory = spriteFactory;
+            this.dataSource = dataSource;
             this.materialLayer = materialLayer;
 
             Initialize();
@@ -605,6 +607,44 @@ namespace Freeserf.Render
             }
         }
 
+        static readonly int[] PigfarmAnimation = new int[]
+        {
+            0xa2, 0, 0xa2, 0, 0xa2, 0, 0xa2, 0, 0xa2, 0, 0xa3, 0,
+            0xa2, 1, 0xa3, 1, 0xa2, 2, 0xa3, 2, 0xa2, 3, 0xa3, 3,
+            0xa2, 4, 0xa3, 4, 0xa6, 4, 0xa6, 4, 0xa6, 4, 0xa6, 4,
+            0xa4, 4, 0xa5, 4, 0xa4, 3, 0xa5, 3, 0xa4, 2, 0xa5, 2,
+            0xa4, 1, 0xa5, 1, 0xa4, 0, 0xa5, 0, 0xa2, 0, 0xa2, 0,
+            0xa6, 0, 0xa6, 0, 0xa6, 0, 0xa2, 0, 0xa7, 0, 0xa8, 0,
+            0xa7, 0, 0xa8, 0, 0xa7, 0, 0xa8, 0, 0xa7, 0, 0xa8, 0,
+            0xa7, 0, 0xa8, 0, 0xa7, 0, 0xa8, 0, 0xa7, 0, 0xa8, 0,
+            0xa7, 0, 0xa8, 0, 0xa7, 0, 0xa2, 0, 0xa2, 0, 0xa2, 0,
+            0xa2, 0, 0xa6, 0, 0xa6, 0, 0xa6, 0, 0xa6, 0, 0xa6, 0,
+            0xa6, 0, 0xa2, 0, 0xa2, 0, 0xa7, 0, 0xa8, 0, 0xa9, 0,
+            0xaa, 0, 0xab, 0, 0xac, 0, 0xad, 0, 0xac, 0, 0xad, 0,
+            0xac, 0, 0xad, 0, 0xac, 0, 0xad, 0, 0xac, 0, 0xad, 0,
+            0xac, 0, 0xad, 0, 0xac, 0, 0xad, 0, 0xac, 0, 0xab, 0,
+            0xaa, 0, 0xa9, 0, 0xa8, 0, 0xa7, 0, 0xa2, 0, 0xa2, 0,
+            0xa2, 0, 0xa2, 0, 0xa3, 0, 0xa2, 1, 0xa3, 1, 0xa2, 1,
+            0xa3, 2, 0xa2, 2, 0xa3, 2, 0xa7, 2, 0xa8, 2, 0xa7, 2,
+            0xa8, 2, 0xa7, 2, 0xa8, 2, 0xa7, 2, 0xa8, 2, 0xa7, 2,
+            0xa8, 2, 0xa7, 2, 0xa8, 2, 0xa7, 2, 0xa8, 2, 0xa7, 2,
+            0xa2, 2, 0xa2, 2, 0xa6, 2, 0xa6, 2, 0xa6, 2, 0xa6, 2,
+            0xa4, 2, 0xa5, 2, 0xa4, 1, 0xa5, 1, 0xa4, 0, 0xa5, 0,
+            0xa2, 0, 0xa2, 0
+        };
+
+        static int[] PigsLayout = new int[]
+        {
+             40,   2, 11,
+            460,   0, 17,
+            420, -11,  8,
+             90, -11, 19,
+            280,   8,  8,
+            140,  -2,  6,
+            180,  -8, 13,
+            320,  13, 14,        
+        };
+
         void UpdateSpecialBuilding(Position renderPosition, int tick)
         {
             if (!building.IsDone())
@@ -618,7 +658,10 @@ namespace Freeserf.Render
                 return;
             }
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
+            const uint SpecialObjectOffset = 10000u;
+            var random = new Random();
+            var textureAtlasBuildings = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
+            var textureAtlasObjects = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
             switch (building.BuildingType)
             {
@@ -657,8 +700,8 @@ namespace Freeserf.Render
                             spriteIndex += ((uint)tick >> 4) & 3u;
                         }
 
-                        sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
-                        shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(ShadowOffset + spriteIndex);
+                        sprite.TextureAtlasOffset = textureAtlasBuildings.GetOffset(spriteIndex);
+                        shadowSprite.TextureAtlasOffset = textureAtlasBuildings.GetOffset(ShadowOffset + spriteIndex);
                         sprite.X = renderPosition.X + spriteOffsets[spriteIndex].X;
                         sprite.Y = renderPosition.Y + spriteOffsets[spriteIndex].Y;
                         shadowSprite.X = renderPosition.X + shadowSpriteOffsets[spriteIndex].X;
@@ -666,7 +709,38 @@ namespace Freeserf.Render
                     }
                     break;
                 case Building.Type.PigFarm:
-                    // draw the pigs
+                    {
+                        // draw the pigs
+                        int pigCount = (int)building.GetResourceCountInStock(1);
+
+                        if (pigCount > 0)
+                        {
+                            if ((random.Next() & 0x7f) < pigCount)
+                            {
+                                PlaySound(Audio.TypeSfx.PigOink);
+                            }
+
+                            for (int p = 0; p < pigCount; ++p)
+                            {
+                                int i = (PigsLayout[p * 3] + (tick >> 3)) & 0xfe;
+                                uint spriteIndex = (uint)PigfarmAnimation[i] - 1u;
+
+                                var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                                additionalSprites[p].X = renderPosition.X + PigfarmAnimation[i + 1] + PigsLayout[p * 3 + 1];
+                                additionalSprites[p].Y = renderPosition.Y + PigsLayout[p * 3 + 2];
+                                additionalSprites[p].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                                additionalSprites[p].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                                additionalSprites[p].BaseLineOffset = sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[p].Y; // otherwise we wouldn't see them
+                                additionalSprites[p].Resize(info.Width, info.Height);
+                                additionalSprites[p].Visible = true;
+                            }
+                        }
+
+                        // hide the rest
+                        for (int p = pigCount; p < 8; ++p)
+                            additionalSprites[p].Visible = false;
+                    }
                     break;
                 case Building.Type.StoneMine:
                 case Building.Type.CoalMine:
