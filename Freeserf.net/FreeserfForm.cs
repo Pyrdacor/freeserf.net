@@ -60,11 +60,21 @@ namespace Freeserf
         {
             RenderControl.MakeCurrent();
 
-            gameView.Render();
+            try
+            {
+                gameView.Render();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write("render", ex.Message);
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                FrameTimer.Stop();
+                Close();
+                return;
+            }
 
             RenderControl.SwapBuffers();
         }
-
 
         protected override void WndProc(ref System.Windows.Forms.Message m)
         {
