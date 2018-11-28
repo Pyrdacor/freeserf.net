@@ -371,6 +371,7 @@ namespace Freeserf
         public MinimapGame MiniMap { get; }
 
         BuildingButton[] buildings = new BuildingButton[8]; // max 8 buildings per popup
+        Button flipButton = null;
 
         int currentSett5Item;
         int currentSett6Item;
@@ -428,9 +429,32 @@ namespace Freeserf
             fileField.SetSize(120, 10);
             AddChild(fileField, 12, 124, false);
 
+            flipButton = new Button(interf, 16, 16, Data.Resource.Icon, 61u, 1);
+            flipButton.Clicked += FlipButton_Clicked;
+            AddChild(flipButton, 0, 0, false);
+
             InitBuildings();
 
             InitRenderComponents();
+        }
+
+        private void FlipButton_Clicked(object sender, Button.ClickEventArgs args)
+        {
+            // TODO
+
+            switch (Box)
+            {
+                case Type.BasicBldFlip:
+                    SetBox(Type.Adv1Bld);
+                    break;
+                case Type.Adv1Bld:
+                    SetBox(Type.Adv2Bld);
+                    break;
+                case Type.Adv2Bld:
+                    SetBox(Type.BasicBldFlip);
+                    break;
+                // TODO ...
+            }
         }
 
         void InitRenderComponents()
@@ -574,6 +598,8 @@ namespace Freeserf
             {
                 case Type.BasicBld:
                 case Type.BasicBldFlip:
+                case Type.Adv1Bld:
+                case Type.Adv2Bld:
                     HandleBuildingClick((sender as BuildingButton).Tag, args.X, args.Y);
                     break;
                 // TODO ...
@@ -768,7 +794,7 @@ namespace Freeserf
 		}
 
         // flip means the user can change the page
-        void draw_basic_building_box(int flip)
+        void DrawBasicBuildingBox(bool flip)
 		{
             int num = 6;
             int index = 0;
@@ -795,19 +821,52 @@ namespace Freeserf
 
             ShowBuildings(num);
 
-            // TODO
-            //if (flip) draw_popup_icon(8, 137, 0x3d); // icon 61
-    }
+            flipButton.MoveTo(8, 137);
+            flipButton.Displayed = flip && Displayed;
+        }
 
-        void draw_adv_1_building_box()
+        // 8 * x + 8, y + 9
+        void DrawAdv1BuildingBox()
 		{
-			
-		}
+            int index = 0;
 
-        void draw_adv_2_building_box()
+            SetBuilding(index++, 8, 24, Building.Type.Butcher);
+            SetBuilding(index++, 72, 24, Building.Type.WeaponSmith);
+            SetBuilding(index++, 8, 59, Building.Type.SteelSmelter);
+            SetBuilding(index++, 72, 59, Building.Type.Sawmill);
+            SetBuilding(index++, 24, 109, Building.Type.Baker);
+            SetBuilding(index++, 88, 105, Building.Type.GoldSmelter);
+
+            ShowBuildings(6);
+
+            flipButton.MoveTo(8, 137);
+            flipButton.Displayed = Displayed;
+        }
+
+        void DrawAdv2BuildingBox()
 		{
-			
-		}
+            int num = 4;
+            int index = 0;
+
+            // add hut if military buildings are possible
+            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPos()))
+            {
+                SetBuilding(index++, 24, 108, Building.Type.Tower);
+                SetBuilding(index++, 72, 93, Building.Type.Fortress);
+
+                num += 2;
+            }
+
+            SetBuilding(index++, 8, 10, Building.Type.ToolMaker);
+            SetBuilding(index++, 8, 55, Building.Type.Stock);
+            SetBuilding(index++, 72, 10, Building.Type.Farm);
+            SetBuilding(index++, 72, 54, Building.Type.PigFarm);
+
+            ShowBuildings(num);
+
+            flipButton.MoveTo(8, 137);
+            flipButton.Displayed = Displayed;
+        }
 
         void draw_resources_box(ResourceMap resources)
 		{
@@ -1336,16 +1395,16 @@ namespace Freeserf
                     draw_mine_building_box();
                     break;
                 case Type.BasicBld:
-                    draw_basic_building_box(0);
+                    DrawBasicBuildingBox(false);
                     break;
                 case Type.BasicBldFlip:
-                    draw_basic_building_box(1);
+                    DrawBasicBuildingBox(true);
                     break;
                 case Type.Adv1Bld:
-                    draw_adv_1_building_box();
+                    DrawAdv1BuildingBox();
                     break;
                 case Type.Adv2Bld:
-                    draw_adv_2_building_box();
+                    DrawAdv2BuildingBox();
                     break;
                 case Type.StatSelect:
                     draw_stat_select_box();
