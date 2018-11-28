@@ -473,7 +473,7 @@ namespace Freeserf
     {
         Render.ILayerSprite sprite = null;
         readonly byte displayLayerOffset = 0;
-        readonly Data.Resource resourceType = Data.Resource.None;
+        Data.Resource resourceType = Data.Resource.None;
 
         public uint SpriteIndex { get; private set; } = 0u;
         public object Tag { get; set; }
@@ -523,10 +523,22 @@ namespace Freeserf
             sprite.Visible = false;
         }
 
+        public void SetResourceType(Data.Resource type)
+        {
+            resourceType = type;
+            sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, SpriteIndex);
+        }
+
         public void SetSpriteIndex(uint spriteIndex)
         {
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, spriteIndex);
             SpriteIndex = spriteIndex;
+        }
+
+        public void SetSpriteIndex(Data.Resource type, uint spriteIndex)
+        {
+            resourceType = type;
+            SetSpriteIndex(spriteIndex);
         }
 
         public void Resize(int width, int height)

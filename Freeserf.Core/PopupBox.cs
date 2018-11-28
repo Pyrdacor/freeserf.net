@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf
 {
@@ -370,8 +371,9 @@ namespace Freeserf
         public Type Box { get; private set; }
         public MinimapGame MiniMap { get; }
 
-        BuildingButton[] buildings = new BuildingButton[8]; // max 8 buildings per popup
-        Button flipButton = null;
+        readonly BuildingButton[] buildings = new BuildingButton[8]; // max 8 buildings per popup
+        readonly Button flipButton = null;
+        readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
 
         int currentSett5Item;
         int currentSett6Item;
@@ -640,6 +642,54 @@ namespace Freeserf
             buildings[index].SetSpriteIndex(spriteIndex);
             buildings[index].MoveTo(x, y);
             buildings[index].Resize(spriteInfo.Width, spriteInfo.Height);
+        }
+
+        #endregion
+
+
+        #region Icons
+
+        void SetIcon(int x, int y, uint spriteIndex, DataSource dataSource, Data.Resource resourceType = Data.Resource.Icon)
+        {
+            // check if we already have the icon
+            var icon = icons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex);
+
+            if (icon.Key != null)
+            {
+                icon.Key.MoveTo(x, y);
+                icon.Key.Displayed = Displayed;
+                icons[icon.Key] = true;
+                return;
+            }
+
+            var info = dataSource.GetSpriteInfo(resourceType, spriteIndex);
+
+            // otherwise check if there is a free icon
+            foreach (var i in icons)
+            {
+                if (i.Value == false)
+                {
+                    i.Key.SetSpriteIndex(resourceType, spriteIndex);
+                    i.Key.Resize(info.Width, info.Height);
+                    i.Key.MoveTo(x, y);
+                    i.Key.Displayed = Displayed;
+                    icons[icon.Key] = true;
+                    return;
+                }
+            }
+
+            var newIcon = new Icon(interf, info.Width, info.Height, resourceType, spriteIndex, 1);
+
+            newIcon.Displayed = Displayed;
+            AddChild(newIcon, x, y, true);
+
+            icons.Add(newIcon, true);
+        }
+
+        void ClearIcons()
+        {
+            foreach (var icon in icons)
+                icon.Key.Displayed = false;
         }
 
         #endregion
@@ -988,15 +1038,15 @@ namespace Freeserf
 			
 		}
 
-        void draw_sett_1_box()
+        void DrawFoodDistributionBox()
 		{
 			
 		}
 
-        void draw_sett_2_box()
+        void DrawPlanksAndSteelDistributionBox()
 		{
-			
-		}
+            
+        }
 
         void draw_sett_3_box()
 		{
@@ -1456,10 +1506,10 @@ namespace Freeserf
                     draw_sett_select_box();
                     break;
                 case Type.Sett1:
-                    draw_sett_1_box();
+                    DrawFoodDistributionBox();
                     break;
                 case Type.Sett2:
-                    draw_sett_2_box();
+                    DrawPlanksAndSteelDistributionBox();
                     break;
                 case Type.Sett3:
                     draw_sett_3_box();
