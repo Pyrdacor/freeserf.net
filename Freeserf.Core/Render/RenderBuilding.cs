@@ -670,6 +670,23 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.Boatbuilder:
                     // draw the boat that is built
+                    if (building.GetResourceCountInStock(1) > 0)
+                    {
+                        uint spriteIndex = 173u + building.GetResourceCountInStock(1);
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + 3;
+                        additionalSprites[0].Y = renderPosition.Y + 13;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[0].Y; // otherwise we wouldn't see it
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+                    }
+                    else
+                    {
+                        additionalSprites[0].Visible = false;
+                    }
                     break;
                 case Building.Type.Fortress:
                     // draw two flags
