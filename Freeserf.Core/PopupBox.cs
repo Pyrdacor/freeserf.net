@@ -197,12 +197,12 @@ namespace Freeserf
             CloseAttackBox,
             /* ... 78 - 91 ... */
             CloseSettBox = 92,
-            ShowSett1,
-            ShowSett2,
-            ShowSett3,
+            ShowFoodDistribution,
+            ShowPlanksAndSteelDistribution,
+            ShowCoalAndWheatDistribution,
             ShowSett7,
-            ShowSett4,
-            ShowSett5,
+            ShowToolmakerPriorities,
+            ShowTransportPriorities,
             ShowSettSelect,
             Sett1AdjustStonemine,
             Sett1AdjustCoalmine,
@@ -306,7 +306,7 @@ namespace Freeserf
             SerfModeStop,
             SerfModeOut,
             ShowSett8,
-            ShowSett6,
+            ShowInventoryPriorities,
             Sett8AdjustRate,
             Sett8Train1,
             Sett8Train5,
@@ -511,17 +511,9 @@ namespace Freeserf
             }
         }
 
-        void HandleButtonClick(object buttonTag)
+        void HandleButtonClick(object buttonTag, int x, int y)
         {
-            // TODO
-
-            switch (Box)
-            {
-                case Type.SettlerMenu:
-                    SetBox((Type)buttonTag);
-                    break;
-                // TODO ...
-            }
+            HandleAction((Action)buttonTag, x, y);
         }
 
         void InitRenderComponents()
@@ -816,7 +808,7 @@ namespace Freeserf
 
         private void PopupBox_ButtonClicked(object sender, Button.ClickEventArgs args)
         {
-            HandleButtonClick((sender as Button).Tag);
+            HandleButtonClick((sender as Button).Tag, args.X, args.Y);
         }
 
         void ClearButtons()
@@ -1162,23 +1154,23 @@ namespace Freeserf
 
         void DrawSettlerMenuBox()
 		{
-            SetButton(16, 17, 230u, Type.FoodDistribution);
-            SetButton(56, 17, 231u, Type.PlanksAndSteelDistribution);
-            SetButton(96, 17, 232u, Type.CoalAndWheatDistribution);
+            SetButton(16, 17, 230u, Action.ShowFoodDistribution);
+            SetButton(56, 17, 231u, Action.ShowPlanksAndSteelDistribution);
+            SetButton(96, 17, 232u, Action.ShowCoalAndWheatDistribution);
 
-            SetButton(16, 57, 234u, Type.ToolmakerPriorities);
-            SetButton(56, 57, 235u, Type.TransportPriorities);
-            SetButton(96, 57, 299u, Type.InventoryPriorities);
+            SetButton(16, 57, 234u, Action.ShowToolmakerPriorities);
+            SetButton(56, 57, 235u, Action.ShowTransportPriorities);
+            SetButton(96, 57, 299u, Action.ShowInventoryPriorities);
 
-            SetButton(16, 97, 233u, Type.Sett8); // TODO: Knights, Check Type
-            SetButton(56, 97, 298u, Type.KnightLevel); // TODO: Check Type
+            SetButton(16, 97, 233u, Action.ShowSett7); // TODO: Check Type
+            SetButton(56, 97, 298u, Action.ShowSett8); // TODO: Check Type
 
-            SetButton(104, 113, 61u, null); // TODO: Flip
-            SetButton(120, 137, 60u, null); // TODO: Exit
+            SetButton(104, 113, 61u, Action.StatBldFlip); // TODO: Flip. Right action?
+            SetButton(120, 137, 60u, Action.CloseSettBox); // TODO: Exit. Right action?
 
-            SetButton(40, 137, 285u, Type.Options);
-            SetButton(8, 137, 286u, Type.QuitConfirm);
-            SetButton(72, 137, 224u, Type.LoadSave); // TODO: Is Save. Is this type right?
+            SetButton(40, 137, 285u, null); // TODO: What action?
+            SetButton(8, 137, 286u, Action.ShowQuit);
+            SetButton(72, 137, 224u, Action.ShowSave);
         }
 
         void draw_slide_bar(int x, int y, int value)
@@ -1390,6 +1382,9 @@ namespace Freeserf
                 case Action.BuildBuilding:
                     interf.BuildBuilding((Building.Type)tag);
                     interf.ClosePopup();
+                    break;
+                case Action.ShowPlanksAndSteelDistribution:
+                    SetBox(Type.PlanksAndSteelDistribution);
                     break;
                 // TODO ...
                 default:
