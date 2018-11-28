@@ -66,9 +66,9 @@ namespace Freeserf
             }
             catch (Exception ex)
             {
-                Log.Error.Write("render", ex.Message);
-                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 FrameTimer.Stop();
+                Log.Error.Write("render", ex.Message);
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                
                 Close();
                 return;
             }
