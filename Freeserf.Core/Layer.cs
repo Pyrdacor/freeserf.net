@@ -39,15 +39,16 @@ namespace Freeserf
     {
         None = 0,
         Landscape = 1 << 0,
-        Grid = 1 << 1,
-        Paths = 1 << 2, // paths and borders
-        Objects = 1 << 3,
-        Buildings = 1 << 4,
-        Serfs = 1 << 5,
-        Builds = 1 << 6,
-        Gui = 1 << 7,
-        GuiBuildings = 1 << 8, // we have to display buildings inside some windows (e.g. build menu)
-        Cursor = 1 << 9,        
+        Waves = 1 << 1,
+        Grid = 1 << 2,
+        Paths = 1 << 3, // paths and borders
+        Objects = 1 << 4,
+        Buildings = 1 << 5,
+        Serfs = 1 << 6,
+        Builds = 1 << 7,
+        Gui = 1 << 8,
+        GuiBuildings = 1 << 9, // we have to display buildings inside some windows (e.g. build menu)
+        Cursor = 1 << 10,        
         All = Landscape | Paths | Objects | Buildings | Serfs | Cursor
     }
 
@@ -58,8 +59,9 @@ namespace Freeserf
         public static readonly float[] LayerBaseZ = new float[]
         {
             0.01f,  // Landscape
-            0.02f,  // Grid
-            0.03f,  // Paths
+            0.02f,  // Waves
+            0.03f,  // Grid
+            0.04f,  // Paths
             0.05f,  // Objects
             0.05f,  // Buildings
             0.05f,  // Serfs

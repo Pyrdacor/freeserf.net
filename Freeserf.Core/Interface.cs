@@ -222,7 +222,7 @@ namespace Freeserf
 
             if (Game != null)
             {
-                game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.DataSource);
+                game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
 
                 // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
                 Viewport = new Viewport(this, Game.Map);

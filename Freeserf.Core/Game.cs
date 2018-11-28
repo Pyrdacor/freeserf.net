@@ -310,6 +310,9 @@ namespace Freeserf
                 }
             }
 
+            if (map?.RenderMap != null)
+                map.RenderMap.UpdateWaves(tick);
+
             UpdateRoads();
             UpdateMapObjects();
             UpdateFlags();

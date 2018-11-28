@@ -660,7 +660,8 @@ namespace Freeserf
             InitSpiralPosPattern();
         }
 
-        public void AttachToRenderLayer(Render.IRenderLayer renderLayer, DataSource dataSource)
+        public void AttachToRenderLayer(Render.IRenderLayer renderLayerTiles,
+            Render.IRenderLayer renderLayerWaves, DataSource dataSource)
         {
             if (RenderMap == null)
             {
@@ -672,12 +673,13 @@ namespace Freeserf
                 RenderMap = new Render.RenderMap(
                     (uint)(virtualScreenWidth / tileWidth),
                     (uint)(virtualScreenHeight / tileHeight),
-                    this, renderView.TriangleFactory,
+                    this, renderView.TriangleFactory, renderView.SpriteFactory,
                     Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Landscape),
+                    Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Waves),
                     dataSource);
             }
 
-            RenderMap.AttachToRenderLayer(renderLayer);
+            RenderMap.AttachToRenderLayer(renderLayerTiles, renderLayerWaves);
         }
 
         public void Close()

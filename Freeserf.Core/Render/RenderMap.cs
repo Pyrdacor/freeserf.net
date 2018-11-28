@@ -44,7 +44,10 @@ namespace Freeserf.Render
         const int MAX_HEIGHT_OFFSET_ROWS = (MAX_HEIGHT_OFFSET + TILE_HEIGHT - 1) / TILE_HEIGHT;
         const int MAX_OVERLAP_Y = MAX_HEIGHT_OFFSET; // the last tile may have a negative offset of this
         const int ADDITIONAL_Y_TILES = MAX_HEIGHT_OFFSET_ROWS;
-        const int ADDITIOANL_X_TILES = 2;
+        const int ADDITIONAL_X_TILES = 2;
+        const uint WaveMaskFull = 16u;
+        const uint WaveMaskUp = 17u;
+        const uint WaveMaskDown = 18u;
 
         static readonly int[] TileMaskUp = new int[81]
         {
@@ -125,18 +128,21 @@ namespace Freeserf.Render
         readonly uint numColumns = 0;
         readonly uint numRows = 0;
         Map map = null;
-        ITextureAtlas textureAtlas = null;
+        ITextureAtlas textureAtlasTiles = null;
+        ITextureAtlas textureAtlasWaves = null;
         readonly List<ITriangle> triangles = null;
+        readonly List<IMaskedSprite> waves = null;
 
         public uint ScrollX { get; private set; } = 0;
         public uint ScrollY { get; private set; } = 0;
         public Rect RenderArea { get; private set; } = new Rect();
-        public uint NumVisibleColumns => numColumns + ADDITIOANL_X_TILES;
+        public uint NumVisibleColumns => numColumns + ADDITIONAL_X_TILES;
         public uint NumVisibleRows => numRows + ADDITIONAL_Y_TILES;
         public float ZoomFactor { get; set; } = 1.0f;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
-            ITriangleFactory triangleFactory, ITextureAtlas textureAtlas,
+            ITriangleFactory triangleFactory, ISpriteFactory spriteFactory,
+            ITextureAtlas textureAtlasTiles, ITextureAtlas textureAtlasWaves,
             DataSource dataSource)
         {
             ScrollX = 0;
@@ -144,7 +150,8 @@ namespace Freeserf.Render
             this.numColumns = numColumns;
             this.numRows = numRows;
             this.map = map;
-            this.textureAtlas = textureAtlas;
+            this.textureAtlasTiles = textureAtlasTiles;
+            this.textureAtlasWaves = textureAtlasWaves;
 
             // store map sprite offsets
             for (uint i = 0; i < 81; ++i)
@@ -160,11 +167,12 @@ namespace Freeserf.Render
                     maskOffsets.Add(81u + i, new Position(spriteInfo.OffsetX, spriteInfo.OffsetY));
             }
 
-            uint numTriangles = (numColumns + ADDITIOANL_X_TILES) * (numRows + ADDITIONAL_Y_TILES) * 2u;
+            uint numTriangles = (numColumns + ADDITIONAL_X_TILES) * (numRows + ADDITIONAL_Y_TILES) * 2u;
 
             triangles = new List<ITriangle>((int)numTriangles);
+            waves = new List<IMaskedSprite>((int)numTriangles / 2);
 
-            for (uint c = 0; c < numColumns + ADDITIOANL_X_TILES; ++c)
+            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
             {
                 for (int i = 0; i < 2; ++i) // up and down row
                 {
@@ -184,19 +192,142 @@ namespace Freeserf.Render
                 }
             }
 
+            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
+            {
+                for (uint r = 0; r < numRows + ADDITIONAL_Y_TILES; ++r)
+                {
+                    var wave = spriteFactory.Create(48, 19, 0, 0, true, false) as IMaskedSprite;
+
+                    wave.X = (int)(c * TILE_WIDTH) - TILE_WIDTH / 2;
+                    wave.Y = (int)(r * TILE_HEIGHT);
+                    wave.Visible = false;
+
+                    waves.Add(wave);
+                }
+            }
+
             UpdatePosition();
         }
 
-        public void AttachToRenderLayer(IRenderLayer renderLayer)
+        void UpdateWave(MapPos pos, int index, int tick, int x, int y)
+        {
+            int sprite = ((int)(pos ^ 5) + (tick >> 3)) & 0xf;
+
+            if (map.TypeUp(pos) <= Map.Terrain.Water3 && map.TypeDown(pos) <= Map.Terrain.Water3)
+            {
+                waves[index].X = x;
+                waves[index].Y = y;
+                waves[index].TextureAtlasOffset = textureAtlasWaves.GetOffset((uint)sprite);
+                waves[index].MaskTextureAtlasOffset = textureAtlasWaves.GetOffset(WaveMaskFull);
+                waves[index].Visible = true;
+            }
+            else if (map.TypeDown(pos) <= Map.Terrain.Water3)
+            {
+                waves[index].X = x + maskOffsets[81 + 40].X + TILE_WIDTH / 2;
+                waves[index].Y = y + maskOffsets[81 + 40].Y + TILE_HEIGHT;
+                waves[index].TextureAtlasOffset = textureAtlasWaves.GetOffset((uint)sprite);
+                waves[index].MaskTextureAtlasOffset = textureAtlasWaves.GetOffset(WaveMaskDown);
+                waves[index].Visible = true;
+            }
+            else if (map.TypeUp(pos) <= Map.Terrain.Water3)
+            {
+                waves[index].X = x + maskOffsets[40].X;
+                waves[index].Y = y + maskOffsets[40].Y;
+                waves[index].TextureAtlasOffset = textureAtlasWaves.GetOffset((uint)sprite);
+                waves[index].MaskTextureAtlasOffset = textureAtlasWaves.GetOffset(WaveMaskUp);
+                waves[index].Visible = true;
+            }
+            else
+            {
+                waves[index].Visible = false;
+            }
+        }
+
+        void UpdateEvenWaveColumn(MapPos pos, ref int index, int tick, int x, int y)
+        {
+            pos = map.MoveDown(pos);
+
+            for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
+            {
+                UpdateWave(map.MoveUp(pos), index++, tick, x, y);
+
+                y += TILE_HEIGHT;
+
+                pos = map.MoveDownRight(pos);
+
+                UpdateWave(map.MoveUpLeft(pos), index++, tick, x - TILE_WIDTH / 2, y);
+
+                y += TILE_HEIGHT;
+
+                pos = map.MoveDown(pos);
+            }
+
+            if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
+            {
+                UpdateWave(map.MoveUp(pos), index++, tick, x, y);
+            }
+        }
+
+        void UpdateOddWaveColumn(MapPos pos, ref int index, int tick, int x, int y)
+        {
+            pos = map.MoveDownRight(pos);
+
+            for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
+            {
+                UpdateWave(map.MoveUpLeft(pos), index++, tick, x - TILE_WIDTH / 2, y);
+
+                y += TILE_HEIGHT;
+
+                pos = map.MoveDown(pos);
+
+                UpdateWave(map.MoveUp(pos), index++, tick, x, y);
+
+                y += TILE_HEIGHT;
+
+                pos = map.MoveDownRight(pos);
+            }
+
+            if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
+            {
+                UpdateWave(map.MoveUpLeft(pos), index++, tick, x - TILE_WIDTH / 2, y);
+            }
+        }
+
+        public void UpdateWaves(int tick)
+        {
+            bool odd = ScrollY % 2 == 1;
+            int index = 0;
+            MapPos pos = GetMapOffset();
+            int x = -TILE_WIDTH / 2;
+
+            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
+            {
+                if (odd)
+                    UpdateOddWaveColumn(pos, ref index, tick, x, 0);
+                else
+                    UpdateEvenWaveColumn(pos, ref index, tick, x, 0);
+
+                pos = map.MoveRight(pos);
+                x += TILE_WIDTH;
+            }
+        }
+
+        public void AttachToRenderLayer(IRenderLayer renderLayerTiles, IRenderLayer renderLayerWaves)
         {
             foreach (var triangle in triangles)
-                triangle.Layer = renderLayer;
+                triangle.Layer = renderLayerTiles;
+
+            foreach (var wave in waves)
+                wave.Layer = renderLayerWaves;
         }
 
         public void DetachFromRenderLayer()
         {
             foreach (var triangle in triangles)
                 triangle.Layer = null;
+
+            foreach (var wave in waves)
+                wave.Layer = null;
         }
 
         public void Scroll(int x, int y)
@@ -261,8 +392,8 @@ namespace Freeserf.Render
             uint sprite = TileSprites[spriteIndex];
 
             triangles[index].Y = yOffset + maskOffsets[(uint)mask].Y;
-            triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
-            triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)MaskUpSprites[mask]);
+            triangles[index].TextureAtlasOffset = textureAtlasTiles.GetOffset(sprite);
+            triangles[index].MaskTextureAtlasOffset = textureAtlasTiles.GetOffset((uint)MaskUpSprites[mask]);
         }
 
         void UpdateTriangleDown(int index, int yOffset, int m, int left, int right, MapPos pos)
@@ -288,8 +419,8 @@ namespace Freeserf.Render
             uint sprite = TileSprites[spriteIndex];
 
             triangles[index].Y = yOffset + TILE_HEIGHT + maskOffsets[81u + (uint)mask].Y;
-            triangles[index].TextureAtlasOffset = textureAtlas.GetOffset(sprite);
-            triangles[index].MaskTextureAtlasOffset = textureAtlas.GetOffset((uint)MaskDownSprites[mask]);
+            triangles[index].TextureAtlasOffset = textureAtlasTiles.GetOffset(sprite);
+            triangles[index].MaskTextureAtlasOffset = textureAtlasTiles.GetOffset((uint)MaskDownSprites[mask]);
         }
 
         void UpdateUpTileColumn(MapPos pos, ref int index, int yOffset)
@@ -318,6 +449,11 @@ namespace Freeserf.Render
 
                 left = (int)map.GetHeight(pos);
                 right = (int)map.GetHeight(map.MoveRight(pos));
+            }
+
+            if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
+            {
+                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
             }
         }
 
@@ -348,6 +484,11 @@ namespace Freeserf.Render
                 pos = map.MoveDownRight(pos);
 
                 m = (int)map.GetHeight(pos);
+            }
+
+            if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
+            {
+                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
             }
         }
 
@@ -600,7 +741,10 @@ namespace Freeserf.Render
 
         public MapPos GetMapOffset()
         {
-            return map.Pos(ScrollX & map.ColumnMask, ScrollY & map.RowMask);
+            uint realColumn = (ScrollX + ScrollY / 2) & map.ColumnMask;
+            uint realRow = ScrollY & map.RowMask;
+
+            return map.Pos(realColumn, realRow);
         }
 
         public MapPos GetCenteredPosition()
@@ -617,16 +761,14 @@ namespace Freeserf.Render
                 ScrollY &= map.RowMask;
 
             RenderArea = new Rect((int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
-                ((int)numColumns + ADDITIOANL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
+                ((int)numColumns + ADDITIONAL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             bool odd = ScrollY % 2 == 1;
             int index = 0;
-            uint realColumn = (ScrollX + ScrollY / 2) & map.ColumnMask;
-            uint realRow = ScrollY & map.RowMask;
 
-            MapPos pos = map.Pos(realColumn, realRow);
+            MapPos pos = GetMapOffset();
 
-            for (uint c = 0; c < numColumns + ADDITIOANL_X_TILES; ++c)
+            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
             {
                 if (c > 0 || !odd) // (1): this and (2) avoids x-change when scrolled to odd row numbers
                     UpdateUpTileColumn(pos, ref index, 0);
@@ -635,7 +777,7 @@ namespace Freeserf.Render
 
                 pos = map.MoveRight(pos);
 
-                if (c == numColumns && odd) // (2): see (1)
+                if (c == numColumns + ADDITIONAL_X_TILES - 1 && odd) // (2): see (1)
                     UpdateUpTileColumn(pos, ref index, 0);
             }
         }

@@ -62,9 +62,9 @@ namespace Freeserf.Renderer.OpenTK
 
         public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null)
         {
-            var shape = (layer == Layer.Landscape || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
-            bool masked = layer == Layer.Landscape || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
-            bool supportAnimations = layer != Layer.Gui; // gui is mostly static
+            var shape = (layer == Layer.Landscape || layer == Layer.Waves || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
+            bool masked = layer == Layer.Landscape || layer == Layer.Waves || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
+            bool supportAnimations = layer != Layer.Gui && layer != Layer.GuiBuildings; // gui is mostly static
 
             renderBuffer = new RenderBuffer(shape, masked, supportAnimations, layer == Layer.Gui);
 

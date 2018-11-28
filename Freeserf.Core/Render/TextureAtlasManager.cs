@@ -134,6 +134,41 @@ namespace Freeserf.Render
             #endregion
 
 
+            #region Waves
+
+            atlasIndex = Layer.Waves;
+
+            // add water waves
+            for (i = 0; i < 16; ++i)
+            {
+                sprite = data.GetSprite(Data.Resource.MapWaves, i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, i, sprite);
+            }
+
+            // we also need 3 masks
+            // the wave sprites have a size of 48x19
+            // the masks have a size of 32x25
+            // the masks will therefore be sized to 48x25
+            sprite = Sprite.CreateFullMask(48u, 25u);
+
+            if (sprite != null)
+                AddSprite(atlasIndex, 16u, sprite);
+
+            sprite = data.GetSprite(Data.Resource.MapMaskUp, 40u, color).ClearTo(48, 25);
+
+            if (sprite != null)
+                AddSprite(atlasIndex, 17u, sprite);
+
+            sprite = data.GetSprite(Data.Resource.MapMaskDown, 40u, color).ClearTo(48, 25);
+
+            if (sprite != null)
+                AddSprite(atlasIndex, 18u, sprite);
+
+            #endregion
+
+
             #region Buildings
 
             atlasIndex = Layer.Buildings;

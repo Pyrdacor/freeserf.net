@@ -191,6 +191,16 @@ namespace Freeserf
             return sprite;
         }
 
+        public static Sprite CreateFullMask(uint width, uint height)
+        {
+            var sprite = new Sprite(width, height);
+            int size = (int)width * (int)height * 4;
+
+            System.Buffer.BlockCopy(Enumerable.Repeat((byte)0xFF, size).ToArray(), 0, sprite.data, 0, size);
+
+            return sprite;
+        }
+
         // Apply mask to map tile sprite
         // The resulting sprite will be extended to the height of the mask
         // by repeating lines from the top of the sprite. The width of the
