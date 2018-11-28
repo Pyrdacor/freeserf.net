@@ -737,15 +737,17 @@ namespace Freeserf
                 fill = value;
 
                 fillRect.Resize(fill, 4);
+                FillChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
         protected override void InternalDraw()
         {
-            fillRect.X = X + 7;
-            fillRect.Y = Y + 2;
+            fillRect.X = TotalX + 7;
+            fillRect.Y = TotalY + 2;
 
             fillRect.Visible = fill > 0 && Displayed;
+            icon.Displayed = Displayed;
         }
 
         protected override void InternalHide()
@@ -762,10 +764,18 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
-            // TODO
-            return base.HandleClickLeft(x, y);
+            int relX = x - TotalX;
+
+            if (relX < 7)
+                Fill = 0;
+            else if (relX < 57)
+                Fill = relX - 7;
+            else
+                Fill = 50;
+
+            return true;
         }
 
-        public event Button.ClickEventHandler Clicked;
+        public event EventHandler FillChanged;
     }
 }

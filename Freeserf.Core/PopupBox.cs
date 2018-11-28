@@ -61,7 +61,7 @@ namespace Freeserf
             DiskMsg,
             SettSelect,
             Sett1,
-            Sett2,
+            PlanksAndSteelDistribution,
             Sett3,
             KnightLevel,
             Sett4,
@@ -375,7 +375,7 @@ namespace Freeserf
         readonly Button flipButton = null;
         readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
         readonly SlideBar[] slideBars = new SlideBar[5]; // TODO: is 5 enough?
-        const int SlideBarDivider = 1310;
+        const int SlideBarFactor = 1310;
 
         int currentSett5Item;
         int currentSett6Item;
@@ -440,7 +440,7 @@ namespace Freeserf
             for (int i = 0; i < slideBars.Length; ++i)
             {
                 slideBars[i] = new SlideBar(interf);
-                slideBars[i].Clicked += PopupBox_SlideBarClicked;
+                slideBars[i].FillChanged += PopupBox_SlideBarFillChanged;
                 AddChild(slideBars[i], 0, 0, false);
             }
 
@@ -468,7 +468,7 @@ namespace Freeserf
             }
         }
 
-        void PopupBox_SlideBarClicked(object sender, Button.ClickEventArgs args)
+        void PopupBox_SlideBarFillChanged(object sender, EventArgs args)
         {
             int index = -1;
 
@@ -489,7 +489,25 @@ namespace Freeserf
 
         void HandleSlideBarClick(int index)
         {
-            // TODO
+            var player = interf.GetPlayer();
+            uint realAmount = (uint)slideBars[index].Fill * SlideBarFactor;
+
+            switch (Box)
+            {
+                case Type.PlanksAndSteelDistribution:
+                    if (index == 0) // construction planks
+                        player.SetPlanksConstruction(realAmount);
+                    else if (index == 1) // boatbuilder planks
+                        player.SetPlanksBoatbuilder(realAmount);
+                    else if (index == 2) // toolmaker planks
+                        player.SetPlanksToolmaker(realAmount);
+                    else if (index == 3) // toolmaker steel
+                        player.SetSteelToolmaker(realAmount);
+                    else if (index == 4) // weaponsmith steel
+                        player.SetSteelWeaponsmith(realAmount);
+                    break;
+                // TODO ...
+            }
         }
 
         void InitRenderComponents()
@@ -560,7 +578,7 @@ namespace Freeserf
                     break;
                 case Type.SettSelect:
                 case Type.Sett1:
-                case Type.Sett2:
+                case Type.PlanksAndSteelDistribution:
                 case Type.Sett3:
                 case Type.KnightLevel:
                 case Type.Sett4:
@@ -879,8 +897,8 @@ namespace Freeserf
 
         void draw_map_box()
 		{
-			
-		}
+            
+        }
 
         void draw_mine_building_box()
 		{
@@ -1097,23 +1115,23 @@ namespace Freeserf
 
             slideBars[0].MoveTo(8, 35);
             slideBars[0].Displayed = Displayed;
-            slideBars[0].Fill = (int)player.GetPlanksConstruction() / SlideBarDivider;
+            slideBars[0].Fill = (int)player.GetPlanksConstruction() / SlideBarFactor;
 
             slideBars[1].MoveTo(8, 45);
             slideBars[1].Displayed = Displayed;
-            slideBars[1].Fill = (int)player.GetPlanksBoatbuilder() / SlideBarDivider;
+            slideBars[1].Fill = (int)player.GetPlanksBoatbuilder() / SlideBarFactor;
 
             slideBars[2].MoveTo(72, 53);
             slideBars[2].Displayed = Displayed;
-            slideBars[2].Fill = (int)player.GetPlanksToolmaker() / SlideBarDivider;
+            slideBars[2].Fill = (int)player.GetPlanksToolmaker() / SlideBarFactor;
 
             slideBars[3].MoveTo(72, 112);
             slideBars[3].Displayed = Displayed;
-            slideBars[3].Fill = (int)player.GetSteelToolmaker() / SlideBarDivider;
+            slideBars[3].Fill = (int)player.GetSteelToolmaker() / SlideBarFactor;
 
             slideBars[4].MoveTo(8, 139);
             slideBars[4].Displayed = Displayed;
-            slideBars[4].Fill = (int)player.GetSteelWeaponsmith() / SlideBarDivider;
+            slideBars[4].Fill = (int)player.GetSteelWeaponsmith() / SlideBarFactor;
         }
 
         void draw_sett_3_box()
@@ -1153,7 +1171,7 @@ namespace Freeserf
 
         void draw_options_box()
 		{
-			
+            
 		}
 
         void draw_castle_res_box()
@@ -1503,6 +1521,9 @@ namespace Freeserf
 
             // TODO
 
+            // TODO: REMOVE TEST CODE
+            //SetBox(Type.PlanksAndSteelDistribution);
+
             /* Dispatch to one of the popup box functions above. */
             switch (Box)
             {
@@ -1576,7 +1597,7 @@ namespace Freeserf
                 case Type.Sett1:
                     DrawFoodDistributionBox();
                     break;
-                case Type.Sett2:
+                case Type.PlanksAndSteelDistribution:
                     DrawPlanksAndSteelDistributionBox();
                     break;
                 case Type.Sett3:
@@ -1660,7 +1681,9 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
-            return base.HandleClickLeft(x, y);
+            base.HandleClickLeft(x, y);
+                
+            return true; // always return true to avoid passing click events through
         }
     }
 }

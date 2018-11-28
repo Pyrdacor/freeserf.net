@@ -95,6 +95,16 @@ namespace Freeserf.Renderer.OpenTK
             if (drawIndex != -1) // -1 means not attached to a layer
                 (Layer as RenderLayer).UpdateColoredRectColor(drawIndex, color);
         }
+
+        public override void Resize(int width, int height)
+        {
+            if (Width == width && Height == height)
+                return;
+
+            base.Resize(width, height);
+
+            UpdatePosition();
+        }
     }
 
     public class ColoredRectFactory : IColoredRectFactory
