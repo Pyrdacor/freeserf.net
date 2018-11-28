@@ -79,8 +79,8 @@ namespace Freeserf
 
             Resize(parent.Width, parent.Height);
 
-            background.X = parent.TotalX + (parent.Width - background.Width) / 2;
-            background.Y = parent.TotalY + (parent.Height - background.Height) / 2;
+            background.X = parent.TotalX + Offset.X + (parent.Width - background.Width) / 2;
+            background.Y = parent.TotalY + Offset.Y + (parent.Height - background.Height) / 2;
             background.DisplayLayer = parent.BaseDisplayLayer;
             background.Layer = parent.Layer;
             background.Visible = parent.Displayed;
@@ -93,6 +93,12 @@ namespace Freeserf
 
             background.Resize(width, height);
         }
+
+        public Position Offset
+        {
+            get;
+            set;
+        } = new Position();
 
         public bool Visible
         {
@@ -123,6 +129,11 @@ namespace Freeserf
             }
             // TODO ...
         };
+
+        public Position GetBackgroundOffset()
+        {
+            return new Position((borders[2].Width - borders[1].Width) / 2, (borders[0].Height - borders[3].Height) / 2);
+        }
 
         Border(Render.ISpriteFactory spriteFactory, Data.Resource resourceType, int type, bool horizontalBordersInside)
         {
@@ -216,8 +227,9 @@ namespace Freeserf
             : base(interf)
         {
             this.interf = interf;
-            this.background = background;
             this.border = border;
+
+            SetBackground(background);
         }
 
         public void SetBackground(BackgroundPattern background)
@@ -235,6 +247,7 @@ namespace Freeserf
 
             this.background = background;
             this.background.Visible = visible;
+            this.background.Offset = border.GetBackgroundOffset();
         }
 
         protected override void InternalDraw()
