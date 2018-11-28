@@ -39,6 +39,7 @@ Serf rendering:
 - In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
 	- As other serfs can walk there too it must be an error with the animation index
+- If a serf runs around a big building (like castle) his head and later the body will disappear even if there is nothing to see from the building there
 
 
 Logic:

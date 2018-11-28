@@ -6,6 +6,8 @@ namespace Freeserf.AIStates
 {
     // TODO: If we don't have enough materials, we should switch to a state where we increase our material production
     //       or increase the plank amount for constructions.
+    // TODO: The ai should prefer large buildings in large spots (especially at the beginning). Otherwise there might
+    //       be no room for large building when one is needed.
     class AIStateBuildBuilding : AIState
     {
         bool built = false;

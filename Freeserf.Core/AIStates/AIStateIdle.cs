@@ -37,7 +37,7 @@ namespace Freeserf.AIStates
             // check for needed buildings and build them
             buildNeededBuildingsTick += tick;
 
-            if (buildNeededBuildingsTick > (10 - (int)playerInfo.Intelligence / 7) * Global.TICKS_PER_SEC)
+            if (buildNeededBuildingsTick > (10 - (int)playerInfo.Intelligence / 9) * Global.TICKS_PER_SEC)
             {
                 buildNeededBuildingsTick = 0;
 

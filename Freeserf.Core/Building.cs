@@ -70,7 +70,7 @@ namespace Freeserf
             public uint Maximum;
         }
 
-        class ConstructionInfo
+        internal class ConstructionInfo
         {
             public ConstructionInfo(Map.Object obj, uint planks, uint stones, uint phase1, uint phase2)
             {
@@ -88,7 +88,7 @@ namespace Freeserf
             public uint Phase2;
         }
 
-        static readonly ConstructionInfo[] ConstructionInfos = new ConstructionInfo[]
+        internal static readonly ConstructionInfo[] ConstructionInfos = new ConstructionInfo[]
         {
             new ConstructionInfo(Map.Object.None,          0, 0,    0,    0),  // BUILDING_NONE
             new ConstructionInfo(Map.Object.SmallBuilding, 2, 0, 4096, 4096),  // BUILDING_FISHER

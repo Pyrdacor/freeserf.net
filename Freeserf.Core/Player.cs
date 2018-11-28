@@ -81,6 +81,7 @@ namespace Freeserf
             public byte Blue;
         }
 
+        bool emergencyProgramActive = false;
         int[] toolPriorities = new int[9];
         uint[] resourceCount = new uint[26];
         int[] flagPriorities = new int[26];
@@ -184,6 +185,27 @@ namespace Freeserf
         public MapPos CastlePos { get; internal set; } = Global.BadMapPos;
         public AI AI { get; set; } = null;
 
+        public bool EmergencyProgramActive
+        {
+            get => emergencyProgramActive;
+            private set
+            {
+                if (value == emergencyProgramActive)
+                    return;
+
+                if (value)
+                {
+                    AddNotification(Message.Type.EmergencyActive, CastlePos, CastlePos);
+                }
+                else
+                {
+                    AddNotification(Message.Type.EmergencyNeutral, CastlePos, CastlePos);
+                }
+
+                emergencyProgramActive = value;
+            }
+        }
+
         public Player(Game game, uint index)
             : base(game, index)
         {
@@ -283,7 +305,7 @@ namespace Freeserf
         /* Whether a message is queued for this player. */
         public bool HasMessage()
         {
-            return (flags& 8) != 0;
+            return (flags & 8) != 0;
         }
 
         public void DropMessage()
@@ -1222,6 +1244,9 @@ namespace Freeserf
 
                     reproductionCounter += (int)reproductionReset;
                 }
+
+                // update emergency program
+                UpdateEmergencyProgram();
             }
 
             /* Update timers */
@@ -1242,6 +1267,51 @@ namespace Freeserf
 
             for (int i = timersToErase.Count - 1; i >= 0; --i)
                 timers.RemoveAt(timersToErase[i]);
+        }
+
+        void UpdateEmergencyProgram()
+        {
+            int numLumberjacks = Game.GetPlayerBuildings(this, Building.Type.Lumberjack).Count();
+            int numStoneCutters = Game.GetPlayerBuildings(this, Building.Type.Stonecutter).Count();
+            int numSawMills = Game.GetPlayerBuildings(this, Building.Type.Sawmill).Count();
+
+            if (numLumberjacks != 0 && numStoneCutters != 0 && numSawMills != 0)
+            {
+                EmergencyProgramActive = false;
+                return;
+            }
+
+            int planks = Game.GetResourceAmountInInventories(this, Resource.Type.Plank);
+            int stones = Game.GetResourceAmountInInventories(this, Resource.Type.Stone);
+
+            int numPlanksNeeded = 0;
+            int numStonesNeeded = 0;
+
+            if (numLumberjacks == 0)
+            {
+                var info = Building.ConstructionInfos[(int)Building.Type.Lumberjack];
+                numPlanksNeeded += (int)info.Planks;
+                numStonesNeeded += (int)info.Stones;
+            }
+
+            if (numStoneCutters == 0)
+            {
+                var info = Building.ConstructionInfos[(int)Building.Type.Stonecutter];
+                numPlanksNeeded += (int)info.Planks;
+                numStonesNeeded += (int)info.Stones;
+            }
+
+            if (numSawMills == 0)
+            {
+                var info = Building.ConstructionInfos[(int)Building.Type.Sawmill];
+                numPlanksNeeded += (int)info.Planks;
+                numStonesNeeded += (int)info.Stones;
+            }
+
+            int remainingPlanks = planks - numPlanksNeeded;
+            int remainingStones = stones - numStonesNeeded;
+
+            EmergencyProgramActive = remainingPlanks <= 0 || remainingStones <= 0;
         }
 
         public void UpdateStats(int resource)

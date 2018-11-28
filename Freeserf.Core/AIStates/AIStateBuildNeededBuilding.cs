@@ -95,6 +95,7 @@ namespace Freeserf.AIStates
 
         CheckResult CheckBuilding(AI ai, Game game, Player player, int intelligence, Building.Type type)
         {
+            const int minutes = 60 * Global.TICKS_PER_SEC;
             int count = game.GetPlayerBuildings(player, type).Count();
 
             if (count < 1)
@@ -106,10 +107,12 @@ namespace Freeserf.AIStates
                     case Building.Type.Sawmill:
                     case Building.Type.Stonecutter:
                         return NeedBuilding(game, player, type);
+                    case Building.Type.Hut:
+                        if (!player.EmergencyProgramActive && ai.HasResourcesForBuilding(game, type) && ai.GameTime > (60 - intelligence / 2 - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
+                            return NeedBuilding(game, player, type);
+                        break;
                 }
             }
-
-            const int minutes = 60 * Global.TICKS_PER_SEC;
 
             switch (type)
             {

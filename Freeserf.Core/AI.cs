@@ -277,6 +277,29 @@ namespace Freeserf
             return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
         }
 
+
+        #region Game analysis helper functions
+
+        internal bool HasEssentialBuildings(Game game)
+        {
+            return
+                game.GetPlayerBuildings(player, Building.Type.Lumberjack).Count() > 0 &&
+                game.GetPlayerBuildings(player, Building.Type.Stonecutter).Count() > 0 &&
+                game.GetPlayerBuildings(player, Building.Type.Sawmill).Count() > 0;
+        }
+
+        internal bool HasResourcesForBuilding(Game game, Building.Type type)
+        {
+            var constructionInfo = Building.ConstructionInfos[(int)type];
+
+            return
+                game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= constructionInfo.Planks &&
+                game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= constructionInfo.Stones;
+        }
+
+        #endregion
+
+
         public void Update(Game game)
         {
             if (lastTick == 0)
