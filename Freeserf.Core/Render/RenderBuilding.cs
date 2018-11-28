@@ -672,13 +672,16 @@ namespace Freeserf.Render
                     // draw the boat that is built
                     break;
                 case Building.Type.Fortress:
-                    // draw flag
+                    // draw two flags
+                    DrawOccupationFlag(renderPosition.X - 12, renderPosition.Y - 21, 0.5f, textureAtlasObjects, SpecialObjectOffset, tick);
+                    DrawOccupationFlag(renderPosition.X + 22, renderPosition.Y - 34, 0.5f, textureAtlasObjects, SpecialObjectOffset, tick, true);
                     break;
                 case Building.Type.GoldSmelter:
                     // draw smoke
                     break;
                 case Building.Type.Hut:
                     // draw the flag
+                    DrawOccupationFlag(renderPosition.X - 14, renderPosition.Y + 2, 2.0f, textureAtlasObjects, SpecialObjectOffset, tick);
                     break;
                 case Building.Type.Mill:
                     {
@@ -753,10 +756,38 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.Tower:
                     // draw flag
+                    DrawOccupationFlag(renderPosition.X + 13, renderPosition.Y - 18, 1.0f, textureAtlasObjects, SpecialObjectOffset, tick);
                     break;
                 case Building.Type.WeaponSmith:
                     // draw smoke
                     break;
+            }
+        }
+
+        void DrawOccupationFlag(int x, int y, float mul, ITextureAtlas textureAtlas, uint spriteIndexOffset, int tick, bool second = false)
+        {
+            int index = (second) ? 1 : 0;
+
+            if (building.HasKnight())
+            {
+                uint tickBase = (second) ? ((((uint)tick >> 3) + 2) & 3) : (((uint)tick >> 3) & 3);
+                uint spriteIndex = 181u + tickBase + 4 * building.GetThreatLevel();
+                var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                additionalSprites[index].X = x;
+                if (second)
+                    additionalSprites[index].Y = y - ((int)building.GetKnightCount() + 1) / 2;
+                else
+                    additionalSprites[index].Y = y - Misc.Round(mul * building.GetKnightCount());
+                additionalSprites[index].TextureAtlasOffset = textureAtlas.GetOffset(spriteIndexOffset + spriteIndex);
+                additionalSprites[index].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                additionalSprites[index].BaseLineOffset = System.Math.Max(0, sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[index].Y); // otherwise we wouldn't see them
+                additionalSprites[index].Resize(info.Width, info.Height);
+                additionalSprites[index].Visible = true;
+            }
+            else
+            {
+                additionalSprites[index].Visible = false;
             }
         }
     }
