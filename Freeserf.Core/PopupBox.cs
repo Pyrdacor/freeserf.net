@@ -374,6 +374,8 @@ namespace Freeserf
         readonly BuildingButton[] buildings = new BuildingButton[8]; // max 8 buildings per popup
         readonly Button flipButton = null;
         readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
+        readonly SlideBar[] slideBars = new SlideBar[5]; // TODO: is 5 enough?
+        const int SlideBarDivider = 1310;
 
         int currentSett5Item;
         int currentSett6Item;
@@ -435,6 +437,13 @@ namespace Freeserf
             flipButton.Clicked += FlipButton_Clicked;
             AddChild(flipButton, 0, 0, false);
 
+            for (int i = 0; i < slideBars.Length; ++i)
+            {
+                slideBars[i] = new SlideBar(interf);
+                slideBars[i].Clicked += PopupBox_SlideBarClicked;
+                AddChild(slideBars[i], 0, 0, false);
+            }
+
             InitBuildings();
 
             InitRenderComponents();
@@ -457,6 +466,30 @@ namespace Freeserf
                     break;
                 // TODO ...
             }
+        }
+
+        void PopupBox_SlideBarClicked(object sender, Button.ClickEventArgs args)
+        {
+            int index = -1;
+
+            for (int i = 0; i < slideBars.Length; ++i)
+            {
+                if (slideBars[i] == sender)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1)
+                return;
+
+            HandleSlideBarClick(index);
+        }
+
+        void HandleSlideBarClick(int index)
+        {
+            // TODO
         }
 
         void InitRenderComponents()
@@ -642,6 +675,17 @@ namespace Freeserf
             buildings[index].SetSpriteIndex(spriteIndex);
             buildings[index].MoveTo(x, y);
             buildings[index].Resize(spriteInfo.Width, spriteInfo.Height);
+        }
+
+        #endregion
+
+
+        #region Slidebars
+
+        void ClearSlideBars(int keep)
+        {
+            for (int i = keep; i < slideBars.Length; ++i)
+                slideBars[i].Displayed = false;
         }
 
         #endregion
@@ -1045,7 +1089,31 @@ namespace Freeserf
 
         void DrawPlanksAndSteelDistributionBox()
 		{
-            
+            ClearSlideBars(5);
+
+            // TODO: buttons and icons
+
+            Player player = interf.GetPlayer();
+
+            slideBars[0].MoveTo(8, 35);
+            slideBars[0].Displayed = Displayed;
+            slideBars[0].Fill = (int)player.GetPlanksConstruction() / SlideBarDivider;
+
+            slideBars[1].MoveTo(8, 45);
+            slideBars[1].Displayed = Displayed;
+            slideBars[1].Fill = (int)player.GetPlanksBoatbuilder() / SlideBarDivider;
+
+            slideBars[2].MoveTo(72, 53);
+            slideBars[2].Displayed = Displayed;
+            slideBars[2].Fill = (int)player.GetPlanksToolmaker() / SlideBarDivider;
+
+            slideBars[3].MoveTo(72, 112);
+            slideBars[3].Displayed = Displayed;
+            slideBars[3].Fill = (int)player.GetSteelToolmaker() / SlideBarDivider;
+
+            slideBars[4].MoveTo(8, 139);
+            slideBars[4].Displayed = Displayed;
+            slideBars[4].Fill = (int)player.GetSteelWeaponsmith() / SlideBarDivider;
         }
 
         void draw_sett_3_box()

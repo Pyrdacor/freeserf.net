@@ -700,4 +700,72 @@ namespace Freeserf
             Y = y;
         }
     }
+
+    internal class SlideBar : GuiObject
+    {
+        readonly Icon icon = null;
+        readonly Render.IColoredRect fillRect = null;
+        int fill = 0;
+
+        public SlideBar(Interface interf)
+            : base(interf)
+        {
+            icon = new Icon(interf, 64, 8, Data.Resource.Icon, 236u, 1);
+
+            fillRect = interf.RenderView.ColoredRectFactory.Create(0, 4, new Render.Color(0x6b, 0xab, 0x3b), 2);
+            fillRect.Layer = Layer;
+
+            SetSize(64, 8);
+
+            AddChild(icon, 0, 0, true);
+        }
+
+        public int Fill
+        {
+            get => fill;
+            set
+            {
+                if (value < 0)
+                    value = 0;
+
+                if (value > 50)
+                    value = 50;
+
+                if (fill == value)
+                    return;
+
+                fill = value;
+
+                fillRect.Resize(fill, 4);
+            }
+        }
+
+        protected override void InternalDraw()
+        {
+            fillRect.X = X + 7;
+            fillRect.Y = Y + 2;
+
+            fillRect.Visible = fill > 0 && Displayed;
+        }
+
+        protected override void InternalHide()
+        {
+            base.InternalHide();
+
+            fillRect.Visible = false;
+        }
+
+        protected internal override void UpdateParent()
+        {
+            fillRect.DisplayLayer = (byte)(BaseDisplayLayer + 2);
+        }
+
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            // TODO
+            return base.HandleClickLeft(x, y);
+        }
+
+        public event Button.ClickEventHandler Clicked;
+    }
 }
