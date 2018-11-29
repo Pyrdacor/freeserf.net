@@ -75,7 +75,6 @@ namespace Freeserf.Render
             Layer atlasIndex;
             Sprite sprite;
 
-            // use transparent color (TODO: correct for all?)
             var color = Sprite.Color.Transparent;
 
             // Note: Don't add sprites to the layer GuiBuildings.

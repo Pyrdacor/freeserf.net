@@ -56,7 +56,6 @@ namespace Freeserf.Renderer.OpenTK
 
         readonly RenderBuffer renderBuffer = null;
         readonly RenderBuffer renderBufferColorRects = null;
-        readonly Dictionary<Size, List<IRenderNode>> nodes = new Dictionary<Size, List<IRenderNode>>();
         readonly Texture texture = null;
         readonly int layerIndex = 0;
 

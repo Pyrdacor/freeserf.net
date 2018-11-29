@@ -26,6 +26,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
+    // TODO: Click events for timers
     internal class PanelBar : GuiObject
     {
         enum ButtonId
@@ -97,8 +98,8 @@ namespace Freeserf
         };
 
         Interface interf = null;
-        Icon messageIcon = null;
-        Icon returnIcon = null;
+        Button messageIcon = null;
+        Button returnIcon = null;
         Button[] panelButtons = new Button[5];
         ButtonId[] panelButtonIds = new ButtonId[5];
         Render.ILayerSprite[] background = new Render.ILayerSprite[20];
@@ -112,10 +113,12 @@ namespace Freeserf
 
             var layer = (byte)(BaseDisplayLayer + 1);
 
-            messageIcon = new Icon(interf, 8, 12, Data.Resource.FrameBottom, 3u, layer);
+            messageIcon = new Button(interf, 8, 12, Data.Resource.FrameBottom, 3u, layer);
+            messageIcon.Clicked += MessageIcon_Clicked;
             AddChild(messageIcon, 40, 4, true);
 
-            returnIcon = new Icon(interf, 8, 10, Data.Resource.FrameBottom, 4u, layer);
+            returnIcon = new Button(interf, 8, 10, Data.Resource.FrameBottom, 4u, layer);
+            returnIcon.Clicked += ReturnIcon_Clicked;
             AddChild(returnIcon, 40, 28, true);
 
             panelButtons[0] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.BuildInactive, layer);
@@ -153,6 +156,16 @@ namespace Freeserf
             blinkTimer.Interval = 700;
             blinkTimer.Elapsed += BlinkTimer_Elapsed;
             blinkTimer.Start();
+        }
+
+        private void ReturnIcon_Clicked(object sender, Button.ClickEventArgs args)
+        {
+            interf.ReturnFromMessage();
+        }
+
+        private void MessageIcon_Clicked(object sender, Button.ClickEventArgs args)
+        {
+            interf.OpenMessage();
         }
 
         private void PanelBarButton_Clicked(object sender, Button.ClickEventArgs args)

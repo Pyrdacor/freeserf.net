@@ -355,10 +355,11 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
+        // TODO: seems to be wrong
         public void CenterMapPos(MapPos pos)
         {
-            int column = (int)map.PosColumn(pos) - (int)numColumns / 2;
             int row = (int)map.PosRow(pos) - (int)numRows / 2;
+            int column = (int)map.PosColumn(pos) - (int)numColumns / 2 - (int)map.PosRow(pos) / 2;            
 
             if (column < 0)
                 column += (int)map.Columns;

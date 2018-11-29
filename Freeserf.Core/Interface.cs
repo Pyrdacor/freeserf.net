@@ -366,7 +366,7 @@ namespace Freeserf
             if (Viewport != null)
                 Viewport.Enabled = false;
 
-            base.Layout();
+            Layout();
         }
 
         public void CloseGameInit()
@@ -385,7 +385,7 @@ namespace Freeserf
             }
 
             Viewport.Enabled = true;
-            base.Layout();
+            Layout();
 
             UpdateMapCursorPos(mapCursorPos);
         }
@@ -398,7 +398,6 @@ namespace Freeserf
                 PlaySound(Audio.TypeSfx.Click);
                 return;
             }
-
             else if (!Misc.BitTest(msgFlags, 3))
             {
                 msgFlags |= Misc.Bit(4);
@@ -423,7 +422,7 @@ namespace Freeserf
             }
 
             NotificationBox.Show(message);
-            base.Layout();
+            Layout();
 
             if (Misc.BitTest(0x8f3fe, (int)message.MessageType))
             {
@@ -467,7 +466,7 @@ namespace Freeserf
             NotificationBox.Displayed = false;
             DeleteChild(NotificationBox);
             NotificationBox = null;
-            base.Layout();
+            Layout();
         }
 
         public Player GetPlayer()

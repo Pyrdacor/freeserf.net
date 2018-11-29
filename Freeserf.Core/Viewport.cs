@@ -118,7 +118,7 @@ namespace Freeserf
 
         public void MoveToMapPos(MapPos pos)
         {
-
+            map.CenterMapPos(pos);
         }
 
         public void RedrawMapPos(MapPos pos)

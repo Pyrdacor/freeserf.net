@@ -162,6 +162,13 @@ namespace Freeserf
             public PlayerInfo.Preset[] Players;
         }
 
+        static readonly Mission IntroMission = new Mission
+        (
+            "INTRO",
+            new Random(),
+            new PlayerInfo.Preset(1, 0, 10, 5, PlayerInfo.Pos.None)
+        );
+
         static readonly Mission[] missions = new Mission[]
         {
             new Mission(
@@ -461,6 +468,11 @@ namespace Freeserf
         public void RemoveAllPlayers()
         {
             players.Clear();
+        }
+
+        public static GameInfo GetIntroMission()
+        {
+            return new GameInfo(IntroMission);
         }
 
         public static GameInfo GetMission(uint mission)

@@ -146,7 +146,7 @@ namespace Freeserf.Renderer.OpenTK
             var random = new Random();
             var gameInfo = new GameInfo(random);
 
-            GameManager.Instance.StartGame(GameInfo.GetMission(29), this);
+            GameManager.Instance.StartGame(GameInfo.GetIntroMission(), this);
         }
 
         public float Zoom

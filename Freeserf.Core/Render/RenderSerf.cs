@@ -26,10 +26,10 @@ namespace Freeserf.Render
     // TODO: The baseline offset is bad when a serf walks through resources at a flag.
     //       The serf is always on top of the resources. Maybe fix later somehow.
     // TODO: Implement additional knight while fighting and so on. See comments below.
-    // TODO: Rename static arrays to appropriate names.
+    // TODO: Shadow
     internal class RenderSerf : RenderObject
     {
-        static readonly int[] index1 = new int[]
+        static readonly int[] AppearanceIndex1 = new int[]
         {
             0, 0, 48, 6, 96, -1, 48, 24,
             240, -1, 48, 30, 248, -1, 48, 12,
@@ -68,7 +68,7 @@ namespace Freeserf.Render
             192, -1
         };
 
-        static readonly int[] index2 = new int[]
+        static readonly int[] AppearanceIndex2 = new int[]
         {
             0, 0, 1, 0, 2, 0, 3, 0,
             4, 0, 5, 0, 6, 0, 7, 0,
@@ -109,13 +109,13 @@ namespace Freeserf.Render
             64, 0
         };
 
-        static readonly int[] arr_1 = new int[]
+        static readonly int[] IdleAnimations1 = new int[]
         {
             0x240, 0x40, 0x380, 0x140, 0x300, 0x80, 0x180, 0x200,
             0, 0x340, 0x280, 0x100, 0x1c0, 0x2c0, 0x3c0, 0xc0
         };
 
-        static readonly int[] arr_2 = new int[]
+        static readonly int[] IdleAnimations2 = new int[]
         {
             0x8800, 0x8800, 0x8800, 0x8800, 0x8801, 0x8802, 0x8803, 0x8804,
             0x8804, 0x8804, 0x8804, 0x8804, 0x8803, 0x8802, 0x8801, 0x8800,
@@ -135,7 +135,7 @@ namespace Freeserf.Render
             0x8803, 0x8803, 0x8803, 0x8802, 0x8802, 0x8801, 0x8801, 0x8801
         };
 
-        static readonly int[] arr_3 = new int[]
+        static readonly int[] IdleAnimations3 = new int[]
         {
             0, 0, 0, 0, 0, 0, -2, 1, 0, 0, 2, 2, 0, 5, 0, 0,
             0, 0, 0, 3, -2, 2, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,
@@ -147,7 +147,8 @@ namespace Freeserf.Render
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
 
-        static readonly int[] arr_4 = new int[]
+        // TODO: This is needed for extra objects while fighting. See game object sprite index 198+.
+        /*static readonly int[] arr_4 = new int[]
         {
              9, 5,
             10, 7,
@@ -169,7 +170,7 @@ namespace Freeserf.Render
              0, 0,
              0, 0,
              0, 0
-        };
+        };*/
 
         static readonly int[] TransporterType = new int[]
         {
@@ -279,29 +280,29 @@ namespace Freeserf.Render
             int hi = ((body >> 8) & 0xff) * 2;
             int lo = (body & 0xff) * 2;
 
-            body = index1[hi];
-            int head = index1[hi + 1];
+            body = AppearanceIndex1[hi];
+            int head = AppearanceIndex1[hi + 1];
 
             if (head < 0)
             {
-                if (lo >= index2.Length)
+                if (lo >= AppearanceIndex2.Length)
                 {
                     Log.Error.Write("rendering", "Invalid serf body sprite index");
                     return -1;
                 }
 
-                body += index2[lo];
+                body += AppearanceIndex2[lo];
             }
             else
             {
-                if (lo >= index2.Length - 1)
+                if (lo >= AppearanceIndex2.Length - 1)
                 {
                     Log.Error.Write("rendering", "Invalid serf body sprite index");
                     return -1;
                 }
 
-                body += index2[lo];
-                head += index2[lo + 1];
+                body += AppearanceIndex2[lo];
+                head += AppearanceIndex2[lo + 1];
             }
 
             return head;
@@ -320,7 +321,7 @@ namespace Freeserf.Render
             // in most cases even if their baseline is lower. So we add a small offset to the serf baseline.
             int baseLineOffset = 8;
 
-            if (map.HasSerf(pos)) // active serf
+            if (map.HasSerf(pos) || serf.SerfState == Serf.State.Walking || serf.SerfState == Serf.State.FreeWalking) // active serf
             {
                 if (serf.SerfState == Serf.State.Mining &&
                     (serf.GetMiningSubstate() == 3 ||
@@ -488,9 +489,9 @@ namespace Freeserf.Render
             else
             {
                 /* Transporter */
-                x = arr_3[2 * map.Paths(pos)];
-                y = arr_3[2 * map.Paths(pos) + 1];
-                body = arr_2[((tick + arr_1[pos & 0xf]) >> 3) & 0x7f];
+                x = IdleAnimations3[2 * map.Paths(pos)];
+                y = IdleAnimations3[2 * map.Paths(pos) + 1];
+                body = IdleAnimations2[((tick + IdleAnimations1[pos & 0xf]) >> 3) & 0x7f];
             }
 
             offset = new Position(x, y);
