@@ -28,6 +28,8 @@ namespace Freeserf
 {
     using ResourceMap = Dictionary<Resource.Type, int>;
 
+    // TODO: If stats should reflect the current state we have
+    //       to redraw the stat popup from time to time.
     internal class PopupBox : Box
     {
         public enum Type
@@ -332,7 +334,7 @@ namespace Freeserf
             MinimapBldNext,
             MinimapBldExit,
             CloseMessage,
-            DefaultSett4,
+            DefaultToolmakerPriorities,
             ShowPlayerFaces,
             MinimapScale,
             OptionsRightSide,
@@ -362,7 +364,7 @@ namespace Freeserf
         readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
         readonly Dictionary<Button, bool> buttons = new Dictionary<Button, bool>(); // value: in use
         readonly Dictionary<TextField, bool> texts = new Dictionary<TextField, bool>(); // value: in use
-        readonly SlideBar[] slideBars = new SlideBar[5]; // TODO: is 5 enough?
+        readonly SlideBar[] slideBars = new SlideBar[9]; // TODO: is 9 enough?
         const int SlideBarFactor = 1310;
 
         int currentSett5Item;
@@ -516,7 +518,10 @@ namespace Freeserf
                     else if (index == 4) // mill wheat
                         player.SetWheatMill(realAmount);
                     break;
-                // TODO ...
+                case Type.ToolmakerPriorities:
+                    player.SetToolPriority(index, (int)realAmount);
+                    break;
+                    // TODO ...
             }
         }
 
@@ -1432,8 +1437,33 @@ namespace Freeserf
 
         void DrawToolmakerPrioritiesBox()
 		{
-			
-		}
+            SetIcon(8,   9, 49u); // shovel
+            SetIcon(8,  25, 50u); // hammer
+            SetIcon(8,  41, 54u); // axe
+            SetIcon(8,  57, 55u); // saw
+            SetIcon(8,  73, 53u); // scythe
+            SetIcon(8,  89, 56u); // pick
+            SetIcon(8, 105, 57u); // pincer
+            SetIcon(8, 121, 52u); // cleaver
+            SetIcon(8, 137, 51u); // rod
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(112, 17, 295u, Action.DefaultToolmakerPriorities); // reset values button
+
+            Player player = interf.GetPlayer();
+
+            int[] locations = new int[9]
+            {
+                13, 29, 141, 125, 77, 45, 61, 93, 109
+            };
+
+            for (int i = 0; i < 9; ++i)
+            {
+                slideBars[i].MoveTo(40, locations[i]);
+                slideBars[i].Displayed = Displayed;
+                slideBars[i].Fill = player.GetToolPriority(i) / SlideBarFactor;
+            }
+        }
 
         void draw_popup_resource_stairs(int[] order)
 		{
@@ -1614,6 +1644,9 @@ namespace Freeserf
                 case Action.ShowCoalAndWheatDistribution:
                     SetBox(Type.CoalAndWheatDistribution);
                     break;
+                case Action.ShowToolmakerPriorities:
+                    SetBox(Type.ToolmakerPriorities);
+                    break;
                 case Action.DefaultFoodDistribution:
                     player.ResetFoodPriority();
                     break;
@@ -1624,6 +1657,9 @@ namespace Freeserf
                 case Action.DefaultCoalAndWheatDistribution:
                     player.ResetCoalPriority();
                     player.ResetWheatPriority();
+                    break;
+                case Action.DefaultToolmakerPriorities:
+                    player.ResetToolPriority();
                     break;
                 // TODO ...
                 default:
