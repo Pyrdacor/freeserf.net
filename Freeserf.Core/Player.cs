@@ -32,8 +32,8 @@ namespace Freeserf
     using Messages = Queue<Message>;
     using PosTimers = List<PosTimer>;
     using ListInventories = List<Inventory>;
-    using ResourceMap = Dictionary<Resource.Type, uint>;
-    using SerfMap = Dictionary<Serf.Type, uint>;
+    using ResourceMap = Dictionary<Resource.Type, int>;
+    using SerfMap = Dictionary<Serf.Type, int>;
 
     public class Message
     {
@@ -1474,13 +1474,10 @@ namespace Freeserf
         {
             ResourceMap resources = new ResourceMap();
 
-            /* Sum up resources of all inventories. */
-            foreach (Inventory inventory in Game.GetPlayerInventories(this))
+            for (int j = 0; j < 26; ++j)
             {
-                for (int j = 0; j < 26; ++j)
-                {
-                    resources[(Resource.Type)j] += inventory.GetCountOf((Resource.Type)j);
-                }
+                /* Sum up resources of all inventories. */
+                resources[(Resource.Type)j] = Game.GetResourceAmountInInventories(this, (Resource.Type)j);
             }
 
             return resources;
@@ -1506,6 +1503,8 @@ namespace Freeserf
         {
             SerfMap serfs = new SerfMap();
 
+            // TODO: If there are no inventories yet, the map will be empty!
+
             /* Sum up potential serfs of all inventories. */
             foreach (Inventory inventory in Game.GetPlayerInventories(this))
             {
@@ -1513,7 +1512,7 @@ namespace Freeserf
                 {
                     for (int i = 0; i < 27; ++i)
                     {
-                        serfs[(Serf.Type)i] += inventory.SerfPotentialCount((Serf.Type)i);
+                        serfs[(Serf.Type)i] += (int)inventory.SerfPotentialCount((Serf.Type)i);
                     }
                 }
             }

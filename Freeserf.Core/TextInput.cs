@@ -38,7 +38,7 @@ namespace Freeserf
         bool drawFocus = true;
         Render.IColoredRect background = null;
         readonly List<TextField> textLines = new List<TextField>();
-        readonly Render.TextRenderer textRenderer = null;
+        readonly Interface interf = null;
         bool useSpecialDigits = false;
         
         public TextInput(Interface interf, bool useSpecialDigits = false)
@@ -46,7 +46,7 @@ namespace Freeserf
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             background.Layer = Layer;
-            textRenderer = interf.TextRenderer;
+            this.interf = interf;
             this.useSpecialDigits = useSpecialDigits;
         }
 
@@ -125,9 +125,6 @@ namespace Freeserf
         protected internal override void UpdateParent()
         {
             background.DisplayLayer = BaseDisplayLayer;
-
-            foreach (var textLine in textLines)
-                textLine.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 
         protected override void InternalHide()
@@ -135,9 +132,6 @@ namespace Freeserf
             base.InternalHide();
 
             background.Visible = false;
-
-            foreach (var textLine in textLines)
-                textLine.Visible = false;
         }
 
         protected override void InternalDraw()
@@ -167,24 +161,26 @@ namespace Freeserf
 
                 if (textLineIndex == textLines.Count)
                 {
-                    var newLine = new TextField(textRenderer, useSpecialDigits);
-
-                    newLine.SetPosition(TotalX + cx, TotalY + cy);
+                    var newLine = new TextField(interf, 1, useSpecialDigits);
 
                     textLines.Add(newLine);
+                    AddChild(newLine, cx, cy);
+                }
+                else
+                {
+                    AddChild(textLines[textLineIndex], cx, cy);
                 }
 
                 textLines[textLineIndex].Text = substr; // TODO: we need a possibility to set a color for textured sprites
-                textLines[textLineIndex].Visible = true;
+                textLines[textLineIndex].Displayed = true;
                 // TODO: set color to colorText
-                textLines[textLineIndex].DisplayLayer = (byte)(BaseDisplayLayer + 1);
 
                 ++textLineIndex;
 
                 cy += 9;
             }
 
-            // ensure that the other lines are not visible (they can be reused later by just setting Visible to true)
+            // ensure that the other lines are not visible (they can be reused later by just setting Displayed to true)
             for (int i = textLines.Count - 1; i >= textLineIndex; --i)
                 textLines[i].Destroy();
         }

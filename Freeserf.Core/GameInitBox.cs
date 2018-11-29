@@ -368,9 +368,12 @@ namespace Freeserf
             buttonOptions.Clicked += ButtonOptions_Clicked;
             AddChild(buttonOptions, 8 * 36 + 12, 16);
 
-            textFieldHeader = new TextField(interf.TextRenderer);
-            textFieldName = new TextField(interf.TextRenderer);
-            textFieldValue = new TextField(interf.TextRenderer);
+            textFieldHeader = new TextField(interf, 1);
+            textFieldName = new TextField(interf, 1);
+            textFieldValue = new TextField(interf, 1);
+            AddChild(textFieldHeader, 0, 0, false);
+            AddChild(textFieldName, 0, 0, false);
+            AddChild(textFieldValue, 0, 0, false);
 
             buttonGameType = new Button(interf, 32, 32, type, GameTypeSprites[(int)gameType], buttonLayer);
             buttonGameType.Clicked += ButtonGameType_Clicked;
@@ -391,7 +394,8 @@ namespace Freeserf
             for (int i = 0; i < 4; ++i)
                 playerBoxes[i] = new PlayerBox(interf, buttonLayer);
 
-            textFieldVersion = new TextField(interf.TextRenderer);
+            textFieldVersion = new TextField(interf, 1);
+            AddChild(textFieldVersion, 0, 0, false);
 
             buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
             buttonExit.Clicked += ButtonExit_Clicked;
@@ -449,16 +453,15 @@ namespace Freeserf
 
         void HideBoxString(TextField textField)
         {
-            textField.Visible = false;
+            textField.Displayed = false;
             textField.Destroy();
         }
 
         void DrawBoxString(int x, int y, TextField textField, string str)
         {
             textField.Text = str;
-            textField.DisplayLayer = (byte)(BaseDisplayLayer + 1);
-            textField.SetPosition(TotalX + 8 * x + 16, TotalY + y + 16);
-            textField.Visible = Displayed;
+            textField.MoveTo( 8 * x + 16, y + 16);
+            textField.Displayed = Displayed;
 
             // TODO: textField.ColorText = Color.Green;
             // TODO: textField.ColorBg = Color.Black;
@@ -468,14 +471,8 @@ namespace Freeserf
         {
             base.InternalHide();
 
-            textFieldHeader.Visible = false;
-            textFieldName.Visible = false;
-            textFieldValue.Visible = false;
-
             for (int i = 0; i < 4; ++i)
                 playerBoxes[i].Visible = false;
-
-            textFieldVersion.Visible = false;
         }
 
         protected override void InternalDraw()

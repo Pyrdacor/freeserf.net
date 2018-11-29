@@ -26,7 +26,7 @@ using System.Linq;
 
 namespace Freeserf
 {
-    using ResourceMap = Dictionary<Resource.Type, uint>;
+    using ResourceMap = Dictionary<Resource.Type, int>;
 
     internal class PopupBox : Box
     {
@@ -41,7 +41,7 @@ namespace Freeserf
             Adv1Bld,
             Adv2Bld,
             StatMenu,
-            Stat4,
+            ResourceStats,
             StatBld1,
             StatBld2,
             StatBld3,
@@ -152,7 +152,7 @@ namespace Freeserf
             ShowBuildingStats,
             ShowSettlerStats,
             ShowStat7,
-            ShowStat4,
+            ShowResourceStats,
             ShowStat3,
             ShowStatMenu,
             StatBldFlip,
@@ -361,6 +361,7 @@ namespace Freeserf
         readonly Button flipButton = null;
         readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
         readonly Dictionary<Button, bool> buttons = new Dictionary<Button, bool>(); // value: in use
+        readonly Dictionary<TextField, bool> texts = new Dictionary<TextField, bool>(); // value: in use
         readonly SlideBar[] slideBars = new SlideBar[5]; // TODO: is 5 enough?
         const int SlideBarFactor = 1310;
 
@@ -575,7 +576,7 @@ namespace Freeserf
                     break;
                 case Type.GroundAnalysis:
                 case Type.StatMenu:
-                case Type.Stat4:
+                case Type.ResourceStats:
                 case Type.StatBld1:
                 case Type.StatBld2:
                 case Type.StatBld3:
@@ -723,6 +724,44 @@ namespace Freeserf
         #endregion
 
 
+        #region Texts
+
+        void SetText(int x, int y, string text)
+        {
+            // check if there is a free text
+            foreach (var textField in texts.Keys.ToList())
+            {
+                if (texts[textField] == false)
+                {
+                    textField.Text = text;
+                    textField.MoveTo(x, y);
+                    textField.Displayed = Displayed;
+                    texts[textField] = true;
+                    return;
+                }
+            }
+
+            var newText = new TextField(interf, 1);
+
+            newText.Text = text;
+            newText.Displayed = Displayed;
+            AddChild(newText, x, y, true);
+
+            texts.Add(newText, true);
+        }
+
+        void ClearTexts()
+        {
+            foreach (var text in texts.Keys.ToList())
+            {
+                texts[text] = false;
+                text.Displayed = false;
+            }
+        }
+
+        #endregion
+
+
         #region Icons
 
         void SetBuildingIcon(int x, int y, Building.Type buildingType)
@@ -737,31 +776,20 @@ namespace Freeserf
 
         void SetIcon(int x, int y, uint spriteIndex, Data.Resource resourceType = Data.Resource.Icon, bool building = false)
         {
-            // check if we already have the icon
-            var icon = icons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex && i.Key.ResourceType == resourceType);
-
-            if (icon.Key != null)
-            {
-                icon.Key.MoveTo(x, y);
-                icon.Key.Displayed = Displayed;
-                icons[icon.Key] = true;
-                return;
-            }
-
             var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
 
-            // otherwise check if there is a free icon
-            foreach (var i in icons)
+            // check if there is a free icon
+            foreach (var icon in icons.Keys.ToList())
             {
-                if (i.Value == false)
+                if (icons[icon] == false)
                 {
-                    if (building == i.Key is BuildingIcon)
+                    if (building == icon is BuildingIcon)
                     {
-                        i.Key.SetSpriteIndex(resourceType, spriteIndex);
-                        i.Key.Resize(info.Width, info.Height);
-                        i.Key.MoveTo(x, y);
-                        i.Key.Displayed = Displayed;
-                        icons[icon.Key] = true;
+                        icon.SetSpriteIndex(resourceType, spriteIndex);
+                        icon.Resize(info.Width, info.Height);
+                        icon.MoveTo(x, y);
+                        icon.Displayed = Displayed;
+                        icons[icon] = true;
                         return;
                     }
                 }
@@ -778,8 +806,11 @@ namespace Freeserf
 
         void ClearIcons()
         {
-            foreach (var icon in icons)
-                icon.Key.Displayed = false;
+            foreach (var icon in icons.Keys.ToList())
+            {
+                icons[icon] = false;
+                icon.Displayed = false;
+            }
         }
 
         #endregion
@@ -789,31 +820,19 @@ namespace Freeserf
 
         void SetButton(int x, int y, uint spriteIndex, object tag, Data.Resource resourceType = Data.Resource.Icon)
         {
-            // check if we already have the button
-            var button = buttons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex);
-
-            if (button.Key != null)
-            {
-                button.Key.Tag = tag;
-                button.Key.MoveTo(x, y);
-                button.Key.Displayed = Displayed;
-                buttons[button.Key] = true;
-                return;
-            }
-
             var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
 
-            // otherwise check if there is a free icon
-            foreach (var b in buttons)
+            // check if there is a free button
+            foreach (var button in buttons.Keys.ToList())
             {
-                if (b.Value == false)
+                if (buttons[button] == false)
                 {
-                    b.Key.Tag = tag;
-                    b.Key.SetSpriteIndex(resourceType, spriteIndex);
-                    b.Key.Resize(info.Width, info.Height);
-                    b.Key.MoveTo(x, y);
-                    b.Key.Displayed = Displayed;
-                    buttons[button.Key] = true;
+                    button.Tag = tag;
+                    button.SetSpriteIndex(resourceType, spriteIndex);
+                    button.Resize(info.Width, info.Height);
+                    button.MoveTo(x, y);
+                    button.Displayed = Displayed;
+                    buttons[button] = true;
                     return;
                 }
             }
@@ -835,8 +854,11 @@ namespace Freeserf
 
         void ClearButtons()
         {
-            foreach (var button in buttons)
-                button.Key.Displayed = false;
+            foreach (var button in buttons.Keys.ToList())
+            {
+                buttons[button] = false;
+                button.Displayed = false;
+            }
         }
 
         #endregion
@@ -1064,10 +1086,92 @@ namespace Freeserf
             flipButton.Displayed = Displayed;
         }
 
-        void draw_resources_box(ResourceMap resources)
+        static readonly int[] ResourcesLayout = new int[]
+        {
+            0x28, 1, 0, /* resources */
+            0x29, 1, 16,
+            0x2a, 1, 32,
+            0x2b, 1, 48,
+            0x2e, 1, 64,
+            0x2c, 1, 80,
+            0x2d, 1, 96,
+            0x2f, 1, 112,
+            0x30, 1, 128,
+            0x31, 6, 0,
+            0x32, 6, 16,
+            0x36, 6, 32,
+            0x37, 6, 48,
+            0x35, 6, 64,
+            0x38, 6, 80,
+            0x39, 6, 96,
+            0x34, 6, 112,
+            0x33, 6, 128,
+            0x3a, 11, 0,
+            0x3b, 11, 16,
+            0x22, 11, 32,
+            0x23, 11, 48,
+            0x24, 11, 64,
+            0x25, 11, 80,
+            0x26, 11, 96,
+            0x27, 11, 112,
+        };
+
+        void DrawResourcesBox(ResourceMap resources)
 		{
-			
-		}
+            SetIcon(16,   9, 0x28);
+            SetIcon(16,  25, 0x29);
+            SetIcon(16,  41, 0x2a);
+            SetIcon(16,  57, 0x2b);
+            SetIcon(16,  73, 0x2e);
+            SetIcon(16,  89, 0x2c);
+            SetIcon(16, 105, 0x2d);
+            SetIcon(16, 121, 0x2f);
+            SetIcon(16, 137, 0x30);
+            SetIcon(56,   9, 0x31);
+            SetIcon(56,  25, 0x32);
+            SetIcon(56,  41, 0x36);
+            SetIcon(56,  57, 0x37);
+            SetIcon(56,  73, 0x35);
+            SetIcon(56,  89, 0x38);
+            SetIcon(56, 105, 0x39);
+            SetIcon(56, 121, 0x34);
+            SetIcon(56, 137, 0x33);
+            SetIcon(96,   9, 0x3a);
+            SetIcon(96,  25, 0x3b);
+            SetIcon(96,  41, 0x22);
+            SetIcon(96,  57, 0x23);
+            SetIcon(96,  73, 0x24);
+            SetIcon(96,  89, 0x25);
+            SetIcon(96, 105, 0x26);
+            SetIcon(96, 121, 0x27);
+
+            SetText(32,   13, resources[Resource.Type.Lumber].ToString());
+            SetText(32,   29, resources[Resource.Type.Plank].ToString());
+            SetText(32,   45, resources[Resource.Type.Boat].ToString());
+            SetText(32,   61, resources[Resource.Type.Stone].ToString());
+            SetText(32,   77, resources[Resource.Type.Coal].ToString());
+            SetText(32,   93, resources[Resource.Type.IronOre].ToString());
+            SetText(32,  109, resources[Resource.Type.Steel].ToString());
+            SetText(32,  125, resources[Resource.Type.GoldOre].ToString());
+            SetText(32,  141, resources[Resource.Type.GoldBar].ToString());
+            SetText(72,   13, resources[Resource.Type.Shovel].ToString());
+            SetText(72,   29, resources[Resource.Type.Hammer].ToString());
+            SetText(72,   45, resources[Resource.Type.Axe].ToString());
+            SetText(72,   61, resources[Resource.Type.Saw].ToString());
+            SetText(72,   77, resources[Resource.Type.Scythe].ToString());
+            SetText(72,   93, resources[Resource.Type.Pick].ToString());
+            SetText(72,  109, resources[Resource.Type.Pincer].ToString());
+            SetText(72,  125, resources[Resource.Type.Cleaver].ToString());
+            SetText(72,  141, resources[Resource.Type.Rod].ToString());
+            SetText(112,  13, resources[Resource.Type.Sword].ToString());
+            SetText(112,  29, resources[Resource.Type.Shield].ToString());
+            SetText(112,  45, resources[Resource.Type.Fish].ToString());
+            SetText(112,  61, resources[Resource.Type.Pig].ToString());
+            SetText(112,  77, resources[Resource.Type.Meat].ToString());
+            SetText(112,  93, resources[Resource.Type.Wheat].ToString());
+            SetText(112, 109, resources[Resource.Type.Flour].ToString());
+            SetText(112, 125, resources[Resource.Type.Bread].ToString());
+        }
 
         void draw_serfs_box(int[] serfs, int total)
 		{
@@ -1080,7 +1184,7 @@ namespace Freeserf
             SetButton(56, 21, 73u, Action.ShowStat2);
             SetButton(96, 21, 77u, Action.ShowStat3);
 
-            SetButton(16, 65, 74u, Action.ShowStat4);
+            SetButton(16, 65, 74u, Action.ShowResourceStats);
             SetButton(56, 65, 76u, Action.ShowBuildingStats);
             SetButton(96, 65, 75u, Action.ShowSettlerStats);
 
@@ -1092,10 +1196,12 @@ namespace Freeserf
 
         }
 
-        void draw_stat_4_box()
+        void DrawResourceStatsBox()
 		{
-			
-		}
+            DrawResourcesBox(interf.GetPlayer().GetStatsResources());
+
+            SetButton(120, 137, 60u, Action.CloseBox);
+        }
 
         void draw_building_count(int x, int y, int type)
 		{
@@ -1496,6 +1602,9 @@ namespace Freeserf
                     interf.BuildBuilding((Building.Type)tag);
                     interf.ClosePopup();
                     break;
+                case Action.ShowResourceStats:
+                    SetBox(Type.ResourceStats);
+                    break;
                 case Action.ShowFoodDistribution:
                     SetBox(Type.FoodDistribution);
                     break;
@@ -1759,8 +1868,8 @@ namespace Freeserf
                 case Type.StatMenu:
                     DrawStatMenuBox();
                     break;
-                case Type.Stat4:
-                    draw_stat_4_box();
+                case Type.ResourceStats:
+                    DrawResourceStatsBox();
                     break;
                 case Type.StatBld1:
                     draw_stat_bld_1_box();

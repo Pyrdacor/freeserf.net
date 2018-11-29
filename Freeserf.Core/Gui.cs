@@ -61,7 +61,7 @@ namespace Freeserf
         public int Width { get; private set; } = 0;
         public int Height { get; private set; } = 0;
         public bool Enabled { get; set; } = true;
-        public bool Displayed
+        public virtual bool Displayed
         {
             get => displayed;
             set
@@ -609,36 +609,20 @@ namespace Freeserf
         }
     }
 
-    internal class TextField
+    internal class TextField : GuiObject
     {
         readonly Render.TextRenderer textRenderer;
         int index = -1;
         string text = "";
-        byte displayLayer = 0;
+        byte displayLayerOffset = 0;
         bool useSpecialDigits = false;
 
-        public int X { get; private set; } = 0;
-        public int Y { get; private set; } = 0;
-
-        public byte DisplayLayer
+        public TextField(Interface interf, byte displayLayerOffset, bool useSpecialDigits = false)
+            : base(interf)
         {
-            get => displayLayer;
-            set
-            {
-                if (displayLayer == value)
-                    return;
-
-                displayLayer = value;
-
-                if (index != -1)
-                    textRenderer.ChangeDisplayLayer(index, displayLayer);
-            }
-        }
-
-        public TextField(Render.TextRenderer textRenderer, bool useSpecialDigits = false)
-        {
-            this.textRenderer = textRenderer;
+            textRenderer = interf.TextRenderer;
             this.useSpecialDigits = useSpecialDigits;
+            this.displayLayerOffset = displayLayerOffset;
         }
 
         public void Destroy()
@@ -648,6 +632,9 @@ namespace Freeserf
 
             text = "";
             index = -1;
+
+            if (Parent != null)
+                Parent.DeleteChild(this);
         }
 
         public string Text
@@ -661,16 +648,19 @@ namespace Freeserf
                 text = value;
 
                 if (index == -1)
-                    index = textRenderer.CreateText(text, DisplayLayer, useSpecialDigits, new Position(X, Y));
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY));
                 else
-                    textRenderer.ChangeText(index, text, DisplayLayer);
+                    textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1));
             }
         }
 
-        public bool Visible
+        public override bool Displayed
         {
             get
             {
+                if (Parent != null && !Parent.Displayed)
+                    return false;
+
                 if (index == -1)
                     return false;
 
@@ -678,26 +668,45 @@ namespace Freeserf
             }
             set
             {
-                if (Visible == value)
+
+                if (base.Displayed == value)
                     return;
 
                 if (index == -1 && !value)
+                {
+                    base.Displayed = false;
                     return;
+                }
 
                 if (index == -1 && value)
-                    index = textRenderer.CreateText(text, DisplayLayer, useSpecialDigits, new Position(X, Y));
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY));
 
                 textRenderer.ShowText(index, value);
+
+                base.Displayed = value;
             }
         }
 
-        public void SetPosition(int x, int y)
+        protected override void InternalDraw()
         {
             if (index != -1)
-                textRenderer.SetPosition(index, new Position(x, y));
+                textRenderer.SetPosition(index, new Position(TotalX, TotalY));
+        }
 
-            X = x;
-            Y = y;
+        protected override void InternalHide()
+        {
+            base.InternalHide();
+
+            if (index != -1)
+                textRenderer.ShowText(index, false);
+        }
+
+        protected internal override void UpdateParent()
+        {
+            base.UpdateParent();
+
+            if (index != -1)
+                textRenderer.ChangeDisplayLayer(index, (byte)(BaseDisplayLayer + displayLayerOffset));
         }
     }
 

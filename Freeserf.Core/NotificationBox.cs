@@ -190,7 +190,10 @@ namespace Freeserf
             AddChild(building, 20 * 8, 14, false); // initially not visible
 
             for (int i = 0; i < 5; ++i)
-                textFieldMessage[i] = new TextField(interf.TextRenderer);
+            {
+                textFieldMessage[i] = new TextField(interf, 3);
+                AddChild(textFieldMessage[i], 0, 0, false);
+            }
 
             playerFaceBackground = coloredRectFactory.Create(48, 72, Render.Color.Transparent, borderLayer);
             playerFaceBackground.Layer = Layer;
@@ -236,9 +239,6 @@ namespace Freeserf
             base.InternalHide();
 
             playerFaceBackground.Visible = false;
-
-            foreach (var line in textFieldMessage)
-                line.Visible = false;
         }
 
         protected override void InternalDraw()
@@ -339,9 +339,8 @@ namespace Freeserf
         void DrawString(int x, int y, TextField textField, string str)
         {
             textField.Text = str;
-            textField.DisplayLayer = (byte)(BaseDisplayLayer + 3);
-            textField.SetPosition(TotalX + x, TotalY + y);
-            textField.Visible = Displayed;
+            textField.MoveTo(x, y);
+            textField.Displayed = Displayed;
 
             // TODO: textField.ColorText = Color.Green;
             // TODO: textField.ColorBg = Color.Black;
@@ -355,7 +354,7 @@ namespace Freeserf
             {
                 if (i >= lines.Length)
                 {
-                    textFieldMessage[i].Visible = false;
+                    textFieldMessage[i].Displayed = false;
                     textFieldMessage[i].Destroy();                    
                 }
                 else
