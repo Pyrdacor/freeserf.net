@@ -67,8 +67,8 @@ namespace Freeserf
             0.05f,  // Serfs
             0.96f,  // Builds
             0.97f,  // Gui
-            0.98f,  // Gui Buildings
-            0.99f   // Cursor
+            0.97f,  // Gui Buildings
+            0.98f   // Cursor
         };
     }
 }
