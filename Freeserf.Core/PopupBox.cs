@@ -1467,32 +1467,32 @@ namespace Freeserf
 
         static readonly int[] ResourceStairLayout = new int[]
         {
-            5, 4,
-            7, 6,
-            9, 8,
+             5,  4,
+             7,  6,
+             9,  8,
             11, 10,
             13, 12,
             13, 28,
             11, 30,
-            9, 32,
-            7, 34,
-            5, 36,
-            3, 38,
-            1, 40,
-            1, 56,
-            3, 58,
-            5, 60,
-            7, 62,
-            9, 64,
+             9, 32,
+             7, 34,
+             5, 36,
+             3, 38,
+             1, 40,
+             1, 56,
+             3, 58,
+             5, 60,
+             7, 62,
+             9, 64,
             11, 66,
             13, 68,
             13, 84,
             11, 86,
-            9, 88,
-            7, 90,
-            5, 92,
-            3, 94,
-            1, 96
+             9, 88,
+             7, 90,
+             5, 92,
+             3, 94,
+             1, 96
         };
 
         void DrawPopupResourceStairs(int[] order)
@@ -1503,7 +1503,7 @@ namespace Freeserf
             {
                 int pos = count - order[i];
 
-                SetButton(8 * ResourceStairLayout[2 * pos] + 8, ResourceStairLayout[2 * pos + 1] + 9, 34u + (uint)i, Action.SetTransportItem1 + i);
+                SetButton(8 * ResourceStairLayout[2 * pos] + 8, ResourceStairLayout[2 * pos + 1] + 9, 34u + (uint)i, Action.SetTransportItem1 + pos);
             }
 		}
 
@@ -1673,7 +1673,7 @@ namespace Freeserf
                 current = (int)CurrentInventoryPriorityItem;
             }
 
-            int currentValue = priorities[current];
+            int currentValue = priorities[current - 1];
             int nextValue = -1;
 
             if (up)
@@ -1711,7 +1711,7 @@ namespace Freeserf
                         priorities[i] += delta;
                 }
 
-                priorities[current] = nextValue;
+                priorities[current - 1] = nextValue;
             }
         }
 
