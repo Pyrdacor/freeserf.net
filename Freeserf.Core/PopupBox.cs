@@ -291,7 +291,7 @@ namespace Freeserf
             OptionsMessageCount2,
             ShowSettSelectFile, /* Unused */
             ShowStatSelectFile, /* Unused */
-            DefaultSett1,
+            DefaultFoodDistribution,
             DefaultPlanksAndSteelDistribution,
             DefaultSett56,
             BuildStock,
@@ -1194,8 +1194,36 @@ namespace Freeserf
 
         void DrawFoodDistributionBox()
 		{
-			
-		}
+            SetBuildingIcon(104, 30, Building.Type.StoneMine);
+            SetBuildingIcon(72, 50, Building.Type.CoalMine);
+            SetBuildingIcon(40, 70, Building.Type.IronMine);
+            SetBuildingIcon(8, 90, Building.Type.GoldMine);
+
+            SetIcon(40, 10, 34u); // fish icon
+            SetIcon(64, 10, 36u); // meat icon
+            SetIcon(88, 10, 39u); // bread icon
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(16, 17, 295u, Action.DefaultFoodDistribution); // reset values button
+
+            Player player = interf.GetPlayer();
+
+            slideBars[0].MoveTo(40, 30);
+            slideBars[0].Displayed = Displayed;
+            slideBars[0].Fill = (int)player.GetFoodStonemine() / SlideBarFactor;
+
+            slideBars[1].MoveTo(8, 50);
+            slideBars[1].Displayed = Displayed;
+            slideBars[1].Fill = (int)player.GetFoodCoalmine() / SlideBarFactor;
+
+            slideBars[2].MoveTo(72, 123);
+            slideBars[2].Displayed = Displayed;
+            slideBars[2].Fill = (int)player.GetFoodIronmine() / SlideBarFactor;
+
+            slideBars[3].MoveTo(40, 142);
+            slideBars[3].Displayed = Displayed;
+            slideBars[3].Fill = (int)player.GetFoodGoldmine() / SlideBarFactor;
+        }
 
         void DrawPlanksAndSteelDistributionBox()
 		{
@@ -1411,6 +1439,12 @@ namespace Freeserf
                     break;
                 case Action.ShowPlanksAndSteelDistribution:
                     SetBox(Type.PlanksAndSteelDistribution);
+                    break;
+                case Action.ShowFoodDistribution:
+                    SetBox(Type.FoodDistribution);
+                    break;
+                case Action.DefaultFoodDistribution:
+                    player.ResetFoodPriority();
                     break;
                 case Action.DefaultPlanksAndSteelDistribution:
                     player.ResetPlanksPriority();
