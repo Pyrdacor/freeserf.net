@@ -1205,7 +1205,7 @@ namespace Freeserf
 		{
             DrawResourcesBox(interf.GetPlayer().GetStatsResources());
 
-            SetButton(120, 137, 60u, Action.CloseBox);
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
         }
 
         void draw_building_count(int x, int y, int type)
@@ -1335,7 +1335,7 @@ namespace Freeserf
             SetIcon(64, 10, 36u); // meat icon
             SetIcon(88, 10, 39u); // bread icon
 
-            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(16, 17, 295u, Action.DefaultFoodDistribution); // reset values button
 
             Player player = interf.GetPlayer();
@@ -1367,7 +1367,7 @@ namespace Freeserf
             SetIcon(80, 34, 41u); // plank icon
             SetIcon(80, 128, 45u); // steel icon
 
-            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(112, 17, 295u, Action.DefaultPlanksAndSteelDistribution); // reset values button
 
             Player player = interf.GetPlayer();
@@ -1404,7 +1404,7 @@ namespace Freeserf
             SetIcon(64, 28, 46u); // coal icon
             SetIcon(72, 110, 37u); // wheet icon
 
-            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(16, 69, 295u, Action.DefaultCoalAndWheatDistribution); // reset values button
 
             Player player = interf.GetPlayer();
@@ -1447,7 +1447,7 @@ namespace Freeserf
             SetIcon(8, 121, 52u); // cleaver
             SetIcon(8, 137, 51u); // rod
 
-            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(112, 17, 295u, Action.DefaultToolmakerPriorities); // reset values button
 
             Player player = interf.GetPlayer();
@@ -1873,10 +1873,11 @@ namespace Freeserf
             // first hide all building sprites
             ShowBuildings(0);
 
-            // hide all icons, buttons and slidebars
+            // hide all icons, buttons, slidebars and texts
             ClearIcons();
             ClearButtons();
             ClearSlideBars();
+            ClearTexts();
 
             // TODO
 
