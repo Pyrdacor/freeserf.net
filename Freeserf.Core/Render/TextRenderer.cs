@@ -79,7 +79,6 @@ namespace Freeserf.Render
         readonly IRenderLayer layer = null;
         readonly ISpriteFactory spriteFactory = null;
         readonly Size characterSize = null;
-        readonly int characterGapSize = 0;
         readonly List<RenderText> renderTexts = new List<RenderText>();
         readonly List<SpriteInfo> characterSprites = new List<SpriteInfo>(); // shared by all texts
         readonly ITextureAtlas textureAtlas = null;
@@ -92,12 +91,11 @@ namespace Freeserf.Render
 
             // original size is 8x8 pixels
             characterSize = new Size(8, 8);
-            characterGapSize = 9; // distance between starts of characters in x direction
 
             textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Gui);
         }
 
-        public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null)
+        public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null, int characterGapSize = 8)
         {
             // look if we have a unused render text
             int index = renderTexts.FindIndex(r => r == null);
@@ -164,7 +162,7 @@ namespace Freeserf.Render
             renderText.Visible = show;
         }
 
-        public void ChangeText(int index, string newText, byte displayLayer)
+        public void ChangeText(int index, string newText, byte displayLayer, int characterGapSize = 8)
         {
             var renderText = renderTexts[index];
 
@@ -241,7 +239,7 @@ namespace Freeserf.Render
                 character.Sprite.DisplayLayer = displayLayer;
         }
 
-        public void SetPosition(int index, Position position)
+        public void SetPosition(int index, Position position, int characterGapSize = 8)
         {
             var renderText = renderTexts[index];
 

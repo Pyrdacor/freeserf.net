@@ -368,9 +368,9 @@ namespace Freeserf
             buttonOptions.Clicked += ButtonOptions_Clicked;
             AddChild(buttonOptions, 8 * 36 + 12, 16);
 
-            textFieldHeader = new TextField(interf, 1);
-            textFieldName = new TextField(interf, 1);
-            textFieldValue = new TextField(interf, 1);
+            textFieldHeader = new TextField(interf, 1, 9);
+            textFieldName = new TextField(interf, 1, 9);
+            textFieldValue = new TextField(interf, 1, 9);
             AddChild(textFieldHeader, 0, 0, false);
             AddChild(textFieldName, 0, 0, false);
             AddChild(textFieldValue, 0, 0, false);

@@ -53,7 +53,7 @@ namespace Freeserf
             Stat1,
             Stat2,
             SettlerStats,
-            Stat3,
+            IdleAndPotentialSettlerStats,
             StartAttack,
             StartAttackRedraw,
             GroundAnalysis,
@@ -155,7 +155,7 @@ namespace Freeserf
             ShowSettlerStats,
             ShowStat7,
             ShowResourceStats,
-            ShowStat3,
+            ShowIdleAndPotentialSettlerStats,
             ShowStatMenu,
             StatBldFlip,
             CloseBox,
@@ -591,7 +591,7 @@ namespace Freeserf
                 case Type.Stat1:
                 case Type.Stat2:
                 case Type.SettlerStats:
-                case Type.Stat3:
+                case Type.IdleAndPotentialSettlerStats:
                 case Type.PlayerFaces:
                     // TODO: maybe some of those have different background pattern
                     pattern = BackgroundPattern.StripedGreen;
@@ -731,14 +731,9 @@ namespace Freeserf
 
         #region Texts
 
-        void SetNumberText(int x, int y, uint number, bool limit100 = true)
+        void SetNumberText(int x, int y, uint number)
         {
-            if (number >= 100 && limit100)
-            {
-                SetIcon(x, y, 213u);
-                SetIcon(x + 8, y, 215u);
-            }
-            else if (number >= 1000)
+            if (number >= 1000)
             {
                 SetIcon(x, y, 213u);
                 SetIcon(x + 8, y, 214u);
@@ -1197,6 +1192,7 @@ namespace Freeserf
             SetNumberText(112, 125, (uint)resources[Resource.Type.Bread]);
         }
 
+        // TODO: If a serf type counts more than 99 the space is too small
         void DrawSerfsBox(uint[] serfCounts, int total)
 		{
             SetIcon(16, 9, 0x09);
@@ -1253,17 +1249,15 @@ namespace Freeserf
             SetNumberText(112, 109, serfCounts[(int)Serf.Type.Geologist]);
             SetNumberText(112, 125, serfCounts[(int)Serf.Type.Generic]);
 
-            total = 999;
-
             if (total >= 0)
-                SetNumberText(96, 141, (uint)total);
+                SetNumberText(94, 141, (uint)total);
         }
 
         void DrawStatMenuBox()
 		{
             SetButton(16, 21, 72u, Action.ShowStat1);
             SetButton(56, 21, 73u, Action.ShowStat2);
-            SetButton(96, 21, 77u, Action.ShowStat3);
+            SetButton(96, 21, 77u, Action.ShowIdleAndPotentialSettlerStats);
 
             SetButton(16, 65, 74u, Action.ShowResourceStats);
             SetButton(56, 65, 76u, Action.ShowBuildingStats);
@@ -1362,15 +1356,118 @@ namespace Freeserf
             SetButton(120, 137, 60u, Action.ShowStatMenu);
 		}
 
-        void draw_stat_3_meter(int x, int y, int value)
+        void DrawSerfMeter(int x, int y, int value)
 		{
-			
-		}
+            uint sprite = 0xc6;
 
-        void draw_stat_3_box()
+            if (value < 1)
+            {
+                sprite = 0xbc;
+            }
+            else if (value < 2)
+            {
+                sprite = 0xbe;
+            }
+            else if (value < 3)
+            {
+                sprite = 0xc0;
+            }
+            else if (value < 4)
+            {
+                sprite = 0xc1;
+            }
+            else if (value < 5)
+            {
+                sprite = 0xc2;
+            }
+            else if (value < 7)
+            {
+                sprite = 0xc3;
+            }
+            else if (value < 10)
+            {
+                sprite = 0xc4;
+            }
+            else if (value < 20)
+            {
+                sprite = 0xc5;
+            }
+
+            SetIcon(8 * x + 8, y + 9, sprite);
+        }
+
+        void DrawIdleAndPotentialSerfsBox()
 		{
-			
-		}
+            var player = interf.GetPlayer();
+            var serfs = player.GetStatsSerfsIdle();
+            var serfsPotential = player.GetStatsSerfsPotential();
+
+            for (int i = 0; i < 27; ++i)
+            {
+                serfs[(Serf.Type)i] += serfsPotential[(Serf.Type)i];
+            }
+
+            SetIcon(16, 9, 0x09);
+            SetIcon(16, 25, 0x0a);
+            SetIcon(16, 41, 0x0b);
+            SetIcon(16, 57, 0x0c);
+            SetIcon(16, 73, 0x21);
+            SetIcon(16, 89, 0x20);
+            SetIcon(16, 105, 0x1f);
+            SetIcon(16, 121, 0x1e);
+            SetIcon(16, 137, 0x1d);
+            SetIcon(56, 9, 0x0d);
+            SetIcon(56, 25, 0x0e);
+            SetIcon(56, 41, 0x12);
+            SetIcon(56, 57, 0x0f);
+            SetIcon(56, 73, 0x10);
+            SetIcon(56, 89, 0x11);
+            SetIcon(56, 105, 0x19);
+            SetIcon(56, 121, 0x1a);
+            SetIcon(56, 137, 0x1b);
+            SetIcon(96, 9, 0x13);
+            SetIcon(96, 25, 0x14);
+            SetIcon(96, 41, 0x15);
+            SetIcon(96, 57, 0x16);
+            SetIcon(96, 73, 0x17);
+            SetIcon(96, 89, 0x18);
+            SetIcon(96, 105, 0x1c);
+            SetIcon(96, 121, 0x82);
+
+            /* First column */
+            DrawSerfMeter(3,   0, serfs[Serf.Type.Transporter]);
+            DrawSerfMeter(3,  16, serfs[Serf.Type.Sailor]);
+            DrawSerfMeter(3,  32, serfs[Serf.Type.Digger]);
+            DrawSerfMeter(3,  48, serfs[Serf.Type.Builder]);
+            DrawSerfMeter(3,  64, serfs[Serf.Type.Knight4]);
+            DrawSerfMeter(3,  80, serfs[Serf.Type.Knight3]);
+            DrawSerfMeter(3,  96, serfs[Serf.Type.Knight2]);
+            DrawSerfMeter(3, 112, serfs[Serf.Type.Knight1]);
+            DrawSerfMeter(3, 128, serfs[Serf.Type.Knight0]);
+
+            /* Second column */
+            DrawSerfMeter(8,   0, serfs[Serf.Type.Lumberjack]);
+            DrawSerfMeter(8,  16, serfs[Serf.Type.Sawmiller]);
+            DrawSerfMeter(8,  32, serfs[Serf.Type.Smelter]);
+            DrawSerfMeter(8,  48, serfs[Serf.Type.Stonecutter]);
+            DrawSerfMeter(8,  64, serfs[Serf.Type.Forester]);
+            DrawSerfMeter(8,  80, serfs[Serf.Type.Miner]);
+            DrawSerfMeter(8,  96, serfs[Serf.Type.BoatBuilder]);
+            DrawSerfMeter(8, 112, serfs[Serf.Type.Toolmaker]);
+            DrawSerfMeter(8, 128, serfs[Serf.Type.WeaponSmith]);
+
+            /* Third column */
+            DrawSerfMeter(13,  0, serfs[Serf.Type.Fisher]);
+            DrawSerfMeter(13,  16, serfs[Serf.Type.PigFarmer]);
+            DrawSerfMeter(13,  32, serfs[Serf.Type.Butcher]);
+            DrawSerfMeter(13,  48, serfs[Serf.Type.Farmer]);
+            DrawSerfMeter(13,  64, serfs[Serf.Type.Miller]);
+            DrawSerfMeter(13,  80, serfs[Serf.Type.Baker]);
+            DrawSerfMeter(13,  96, serfs[Serf.Type.Geologist]);
+            DrawSerfMeter(13, 112, serfs[Serf.Type.Generic]);
+
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
+        }
 
         void draw_start_attack_redraw_box()
 		{
@@ -1851,6 +1948,9 @@ namespace Freeserf
                     interf.BuildBuilding((Building.Type)tag);
                     interf.ClosePopup();
                     break;
+                case Action.ShowIdleAndPotentialSettlerStats:
+                    SetBox(Type.IdleAndPotentialSettlerStats);
+                    break;
                 case Action.ShowResourceStats:
                     SetBox(Type.ResourceStats);
                     break;
@@ -2212,8 +2312,8 @@ namespace Freeserf
                 case Type.SettlerStats:
                     DrawSerfCountBox();
                     break;
-                case Type.Stat3:
-                    draw_stat_3_box();
+                case Type.IdleAndPotentialSettlerStats:
+                    DrawIdleAndPotentialSerfsBox();
                     break;
                 case Type.StartAttack:
                     draw_start_attack_box();

@@ -1487,6 +1487,9 @@ namespace Freeserf
         {
             SerfMap serfs = new SerfMap();
 
+            foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
+                serfs.Add(type, 0);
+
             /* Sum up all existing serfs. */
             foreach (Serf serf in Game.GetPlayerSerfs(this))
             {
@@ -1503,7 +1506,8 @@ namespace Freeserf
         {
             SerfMap serfs = new SerfMap();
 
-            // TODO: If there are no inventories yet, the map will be empty!
+            foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
+                serfs.Add(type, 0);
 
             /* Sum up potential serfs of all inventories. */
             foreach (Inventory inventory in Game.GetPlayerInventories(this))

@@ -161,7 +161,7 @@ namespace Freeserf
 
                 if (textLineIndex == textLines.Count)
                 {
-                    var newLine = new TextField(interf, 1, useSpecialDigits);
+                    var newLine = new TextField(interf, 1, 9, useSpecialDigits);
 
                     textLines.Add(newLine);
                     AddChild(newLine, cx, cy);

@@ -616,13 +616,15 @@ namespace Freeserf
         string text = "";
         byte displayLayerOffset = 0;
         bool useSpecialDigits = false;
+        int characterGapSize = 8;
 
-        public TextField(Interface interf, byte displayLayerOffset, bool useSpecialDigits = false)
+        public TextField(Interface interf, byte displayLayerOffset, int characterGapSize = 8, bool useSpecialDigits = false)
             : base(interf)
         {
             textRenderer = interf.TextRenderer;
             this.useSpecialDigits = useSpecialDigits;
             this.displayLayerOffset = displayLayerOffset;
+            this.characterGapSize = characterGapSize;
         }
 
         public void Destroy()
@@ -648,9 +650,9 @@ namespace Freeserf
                 text = value;
 
                 if (index == -1)
-                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY));
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
                 else
-                    textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1));
+                    textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), characterGapSize);
             }
         }
 
@@ -679,7 +681,7 @@ namespace Freeserf
                 }
 
                 if (index == -1 && value)
-                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY));
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
 
                 textRenderer.ShowText(index, value);
 
@@ -690,7 +692,7 @@ namespace Freeserf
         protected override void InternalDraw()
         {
             if (index != -1)
-                textRenderer.SetPosition(index, new Position(TotalX, TotalY));
+                textRenderer.SetPosition(index, new Position(TotalX, TotalY), characterGapSize);
         }
 
         protected override void InternalHide()
