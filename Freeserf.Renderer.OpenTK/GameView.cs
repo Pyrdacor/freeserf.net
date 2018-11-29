@@ -468,7 +468,8 @@ namespace Freeserf.Renderer.OpenTK
             if (position == null)
                 return false;
 
-            return RunHandler(SpecialClick, new EventArgs(EventType.SpecialClick, position.X, position.Y, 0, 0));
+            // The special click is mapped to a double click with left mouse button
+            return RunHandler(SpecialClick, new EventArgs(EventType.SpecialClick, position.X, position.Y, 0, 0, Button.Left));
         }
 
         public bool NotifyDrag(int x, int y, int dx, int dy, Button button)
