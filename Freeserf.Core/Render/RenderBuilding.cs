@@ -26,7 +26,7 @@ namespace Freeserf.Render
     // TODO: burning
     internal class RenderBuilding : RenderObject
     {
-        static readonly uint[] MapBuildingFrameSprite = new uint[]
+        internal static readonly uint[] MapBuildingFrameSprite = new uint[]
         {
             0, 0xba, 0xba, 0xba, 0xba,
             0xb9, 0xb9, 0xb9, 0xb9,

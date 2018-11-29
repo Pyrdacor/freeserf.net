@@ -473,9 +473,9 @@ namespace Freeserf
     {
         Render.ILayerSprite sprite = null;
         readonly byte displayLayerOffset = 0;
-        Data.Resource resourceType = Data.Resource.None;
 
         public uint SpriteIndex { get; private set; } = 0u;
+        public Data.Resource ResourceType { get; private set; } = Data.Resource.None;
         public object Tag { get; set; }
 
         // only used by BuildingIcon
@@ -484,7 +484,7 @@ namespace Freeserf
         {
             sprite = CreateSprite(interf.RenderView.SpriteFactory, width, height, Data.Resource.MapObject, spriteIndex, (byte)(BaseDisplayLayer + displayLayerOffset));
             this.displayLayerOffset = displayLayerOffset;
-            resourceType = Data.Resource.MapObject;
+            ResourceType = Data.Resource.MapObject;
             sprite.Layer = interf.RenderView.GetLayer(Freeserf.Layer.GuiBuildings);
             SpriteIndex = spriteIndex;
 
@@ -496,7 +496,7 @@ namespace Freeserf
         {
             sprite = CreateSprite(interf.RenderView.SpriteFactory, width, height, resourceType, spriteIndex, (byte)(BaseDisplayLayer + displayLayerOffset));
             this.displayLayerOffset = displayLayerOffset;
-            this.resourceType = resourceType;
+            this.ResourceType = resourceType;
             sprite.Layer = Layer;
             SpriteIndex = spriteIndex;
 
@@ -525,19 +525,19 @@ namespace Freeserf
 
         public void SetResourceType(Data.Resource type)
         {
-            resourceType = type;
-            sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, SpriteIndex);
+            ResourceType = type;
+            sprite.TextureAtlasOffset = GetTextureAtlasOffset(ResourceType, SpriteIndex);
         }
 
         public void SetSpriteIndex(uint spriteIndex)
         {
-            sprite.TextureAtlasOffset = GetTextureAtlasOffset(resourceType, spriteIndex);
+            sprite.TextureAtlasOffset = GetTextureAtlasOffset(ResourceType, spriteIndex);
             SpriteIndex = spriteIndex;
         }
 
         public void SetSpriteIndex(Data.Resource type, uint spriteIndex)
         {
-            resourceType = type;
+            ResourceType = type;
             SetSpriteIndex(spriteIndex);
         }
 
@@ -706,13 +706,16 @@ namespace Freeserf
         readonly Icon icon = null;
         readonly Render.IColoredRect fillRect = null;
         int fill = 0;
+        readonly byte displayLayerOffset;
 
-        public SlideBar(Interface interf)
+        public SlideBar(Interface interf, byte displayLayerOffset)
             : base(interf)
         {
-            icon = new Icon(interf, 64, 8, Data.Resource.Icon, 236u, 1);
+            this.displayLayerOffset = displayLayerOffset;
 
-            fillRect = interf.RenderView.ColoredRectFactory.Create(0, 4, new Render.Color(0x6b, 0xab, 0x3b), 2);
+            icon = new Icon(interf, 64, 8, Data.Resource.Icon, 236u, (byte)(displayLayerOffset + 1));
+
+            fillRect = interf.RenderView.ColoredRectFactory.Create(0, 4, new Render.Color(0x6b, 0xab, 0x3b), (byte)(displayLayerOffset + 2));
             fillRect.Layer = Layer;
 
             SetSize(64, 8);
@@ -759,7 +762,7 @@ namespace Freeserf
 
         protected internal override void UpdateParent()
         {
-            fillRect.DisplayLayer = (byte)(BaseDisplayLayer + 2);
+            fillRect.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset + 2);
         }
 
         protected override bool HandleClickLeft(int x, int y)

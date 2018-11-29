@@ -292,7 +292,7 @@ namespace Freeserf
             ShowSettSelectFile, /* Unused */
             ShowStatSelectFile, /* Unused */
             DefaultSett1,
-            DefaultSett2,
+            DefaultPlanksAndSteelDistribution,
             DefaultSett56,
             BuildStock,
             ShowCastleSerf,
@@ -440,7 +440,7 @@ namespace Freeserf
 
             for (int i = 0; i < slideBars.Length; ++i)
             {
-                slideBars[i] = new SlideBar(interf);
+                slideBars[i] = new SlideBar(interf, 20); // should always be in front of other elements
                 slideBars[i].FillChanged += PopupBox_SlideBarFillChanged;
                 AddChild(slideBars[i], 0, 0, false);
             }
@@ -717,10 +717,20 @@ namespace Freeserf
 
         #region Icons
 
-        void SetIcon(int x, int y, uint spriteIndex, Data.Resource resourceType = Data.Resource.Icon)
+        void SetBuildingIcon(int x, int y, Building.Type buildingType)
+        {
+            SetBuildingIcon(x, y, Render.RenderBuilding.MapBuildingSprite[(int)buildingType]);
+        }
+
+        void SetBuildingIcon(int x, int y, uint spriteIndex)
+        {
+            SetIcon(x, y, spriteIndex, Data.Resource.MapObject, true);
+        }
+
+        void SetIcon(int x, int y, uint spriteIndex, Data.Resource resourceType = Data.Resource.Icon, bool building = false)
         {
             // check if we already have the icon
-            var icon = icons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex);
+            var icon = icons.FirstOrDefault(i => i.Key.SpriteIndex == spriteIndex && i.Key.ResourceType == resourceType);
 
             if (icon.Key != null)
             {
@@ -737,16 +747,20 @@ namespace Freeserf
             {
                 if (i.Value == false)
                 {
-                    i.Key.SetSpriteIndex(resourceType, spriteIndex);
-                    i.Key.Resize(info.Width, info.Height);
-                    i.Key.MoveTo(x, y);
-                    i.Key.Displayed = Displayed;
-                    icons[icon.Key] = true;
-                    return;
+                    if (building == i.Key is BuildingIcon)
+                    {
+                        i.Key.SetSpriteIndex(resourceType, spriteIndex);
+                        i.Key.Resize(info.Width, info.Height);
+                        i.Key.MoveTo(x, y);
+                        i.Key.Displayed = Displayed;
+                        icons[icon.Key] = true;
+                        return;
+                    }
                 }
             }
 
-            var newIcon = new Icon(interf, info.Width, info.Height, resourceType, spriteIndex, 1);
+            var newIcon = (building) ? new BuildingIcon(interf, info.Width, info.Height, spriteIndex, 1) :
+                new Icon(interf, info.Width, info.Height, resourceType, spriteIndex, 1);
 
             newIcon.Displayed = Displayed;
             AddChild(newIcon, x, y, true);
@@ -1185,7 +1199,16 @@ namespace Freeserf
 
         void DrawPlanksAndSteelDistributionBox()
 		{
-            // TODO: buttons and icons
+            SetBuildingIcon(24, 9, Render.RenderBuilding.MapBuildingFrameSprite[(int)Building.Type.Lumberjack]);
+            SetBuildingIcon(24, 50, Building.Type.Boatbuilder);
+            SetBuildingIcon(72, 63, Building.Type.ToolMaker);
+            SetBuildingIcon(8, 111, Building.Type.WeaponSmith);
+
+            SetIcon(80, 34, 41u); // plank icon
+            SetIcon(80, 128, 45u); // steel icon
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(112, 17, 295u, Action.DefaultPlanksAndSteelDistribution); // reset values button
 
             Player player = interf.GetPlayer();
 
@@ -1375,6 +1398,9 @@ namespace Freeserf
             // TODO
             switch (action)
             {
+                case Action.CloseBox:
+                    interf.ClosePopup();
+                    break;
                 case Action.BuildFlag:
                     interf.BuildFlag();
                     interf.ClosePopup();
@@ -1385,6 +1411,10 @@ namespace Freeserf
                     break;
                 case Action.ShowPlanksAndSteelDistribution:
                     SetBox(Type.PlanksAndSteelDistribution);
+                    break;
+                case Action.DefaultPlanksAndSteelDistribution:
+                    player.ResetPlanksPriority();
+                    player.ResetSteelPriority();
                     break;
                 // TODO ...
                 default:
