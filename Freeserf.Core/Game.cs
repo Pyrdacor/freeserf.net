@@ -2012,9 +2012,9 @@ namespace Freeserf
                                 for (int i = 0; i < 26; i++)
                                 {
                                     if (inventory.GetCountOf((Resource.Type)i) != 0 &&
-                                        player.GetInventoryPriority(i) >= prio)
+                                        player.GetInventoryPriority((Resource.Type)i) >= prio)
                                     {
-                                        prio = player.GetInventoryPriority(i);
+                                        prio = player.GetInventoryPriority((Resource.Type)i);
                                         type = (Resource.Type)i;
                                     }
                                 }

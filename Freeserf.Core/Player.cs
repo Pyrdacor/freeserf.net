@@ -1153,9 +1153,9 @@ namespace Freeserf
             return flagPriorities;
         }
 
-        public int GetInventoryPriority(int type)
+        public int GetInventoryPriority(Resource.Type type)
         {
-            return inventoryPriorities[type];
+            return inventoryPriorities[(int)type];
         }
 
         public int[] GetInventoryPriorities()

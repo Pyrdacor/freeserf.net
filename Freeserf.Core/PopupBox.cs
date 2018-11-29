@@ -231,36 +231,36 @@ namespace Freeserf
             Sett4AdjustPincer,
             Sett4AdjustCleaver,
             Sett4AdjustRod,
-            Sett56Item1,
-            Sett56Item2,
-            Sett56Item3,
-            Sett56Item4,
-            Sett56Item5,
-            Sett56Item6,
-            Sett56Item7,
-            Sett56Item8,
-            Sett56Item9,
-            Sett56Item10,
-            Sett56Item11,
-            Sett56Item12,
-            Sett56Item13,
-            Sett56Item14,
-            Sett56Item15,
-            Sett56Item16,
-            Sett56Item17,
-            Sett56Item18,
-            Sett56Item19,
-            Sett56Item20,
-            Sett56Item21,
-            Sett56Item22,
-            Sett56Item23,
-            Sett56Item24,
-            Sett56Item25,
-            Sett56Item26,
-            Sett56Top,
-            Sett56Up,
-            Sett56Down,
-            Sett56Bottom,
+            SetTransportItem1,
+            SetTransportItem2,
+            SetTransportItem3,
+            SetTransportItem4,
+            SetTransportItem5,
+            SetTransportItem6,
+            SetTransportItem7,
+            SetTransportItem8,
+            SetTransportItem9,
+            SetTransportItem10,
+            SetTransportItem11,
+            SetTransportItem12,
+            SetTransportItem13,
+            SetTransportItem14,
+            SetTransportItem15,
+            SetTransportItem16,
+            SetTransportItem17,
+            SetTransportItem18,
+            SetTransportItem19,
+            SetTransportItem20,
+            SetTransportItem21,
+            SetTransportItem22,
+            SetTransportItem23,
+            SetTransportItem24,
+            SetTransportItem25,
+            SetTransportItem26,
+            TransportPriorityToTop,
+            TransportPriorityUp,
+            TransportPriorityDown,
+            TransportPriorityToBottom,
             QuitConfirm,
             QuitCancel,
             NoSaveQuitConfirm,
@@ -281,7 +281,7 @@ namespace Freeserf
             ShowStatSelectFile, /* Unused */
             DefaultFoodDistribution,
             DefaultPlanksAndSteelDistribution,
-            DefaultSett56,
+            DefaultTransportPriorities,
             BuildStock,
             ShowCastleSerf,
             ShowResdir,
@@ -367,8 +367,8 @@ namespace Freeserf
         readonly SlideBar[] slideBars = new SlideBar[9]; // TODO: is 9 enough?
         const int SlideBarFactor = 1310;
 
-        int currentSett5Item;
-        int currentSett6Item;
+        uint CurrentTransportPriorityItem = 0u;
+        uint CurrentInventoryPriorityItem = 0u;
         int currentStat7Item;
         int currentStat8Mode;
 
@@ -402,8 +402,8 @@ namespace Freeserf
             fileList = new ListSavedFiles(interf);
             fileField = new TextInput(interf);
 
-            currentSett5Item = 8;
-            currentSett6Item = 15;
+            CurrentTransportPriorityItem = 8;
+            CurrentInventoryPriorityItem = 15;
             currentStat7Item = 7;
             currentStat8Mode = 0;
 
@@ -1465,15 +1465,69 @@ namespace Freeserf
             }
         }
 
-        void draw_popup_resource_stairs(int[] order)
+        static readonly int[] ResourceStairLayout = new int[]
+        {
+            5, 4,
+            7, 6,
+            9, 8,
+            11, 10,
+            13, 12,
+            13, 28,
+            11, 30,
+            9, 32,
+            7, 34,
+            5, 36,
+            3, 38,
+            1, 40,
+            1, 56,
+            3, 58,
+            5, 60,
+            7, 62,
+            9, 64,
+            11, 66,
+            13, 68,
+            13, 84,
+            11, 86,
+            9, 88,
+            7, 90,
+            5, 92,
+            3, 94,
+            1, 96
+        };
+
+        void DrawPopupResourceStairs(int[] order)
 		{
-			
+            int count = ResourceStairLayout.Length / 2;
+
+            for (int i = 0; i < count; ++i)
+            {
+                int pos = count - order[i];
+
+                SetButton(8 * ResourceStairLayout[2 * pos] + 8, ResourceStairLayout[2 * pos + 1] + 9, 34u + (uint)i, Action.SetTransportItem1 + i);
+            }
 		}
 
-        void draw_sett_5_box()
+        void DrawTransportPrioritiesBox()
 		{
-			
-		}
+            SetButton(16, 129, 237u, Action.TransportPriorityToTop);
+            SetButton(32, 129, 238u, Action.TransportPriorityUp);
+            SetButton(80, 129, 239u, Action.TransportPriorityDown);
+            SetButton(96, 129, 240u, Action.TransportPriorityToBottom);
+
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
+            SetButton(16, 13, 295u, Action.DefaultTransportPriorities); // reset values button
+
+            if (Box == Type.TransportPriorities)
+            {
+                SetIcon(56, 129, 33u + CurrentTransportPriorityItem);
+                DrawPopupResourceStairs(interf.GetPlayer().GetFlagPriorities());
+            }
+            else
+            {
+                SetIcon(56, 129, 33u + CurrentInventoryPriorityItem);
+                DrawPopupResourceStairs(interf.GetPlayer().GetInventoryPriorities());
+            }
+        }
 
         void draw_quit_confirm_box()
 		{
@@ -1575,15 +1629,91 @@ namespace Freeserf
 			
 		}
 
-        void activate_sett_5_6_item(int index)
+        void ActivateTransportItem(int index)
 		{
-			
+            var player = interf.GetPlayer();
+            int i;
+
+            if (Box == Type.TransportPriorities)
+            {
+                for (i = 0; i < 26; ++i)
+                {
+                    if (player.GetFlagPriority((Resource.Type)i) == index)
+                        break;
+                }
+
+                CurrentTransportPriorityItem = (uint)i + 1;
+            }
+            else // inventory priorities
+            {
+                for (i = 0; i < 26; ++i)
+                {
+                    if (player.GetInventoryPriority((Resource.Type)i) == index)
+                        break;
+                }
+
+                CurrentInventoryPriorityItem = (uint)i + 1;
+            }
 		}
 
-        void move_sett_5_6_item(int up, int to_end)
+        void MoveTransportItem(bool up, bool toEnd)
 		{
-			
-		}
+            var player = interf.GetPlayer();
+            int[] priorities;
+            int current = -1;
+
+            if (Box == Type.TransportPriorities)
+            {
+                priorities = player.GetFlagPriorities();
+                current = (int)CurrentTransportPriorityItem;
+            }
+            else // inventory priorities
+            {
+                priorities = player.GetInventoryPriorities();
+                current = (int)CurrentInventoryPriorityItem;
+            }
+
+            int currentValue = priorities[current];
+            int nextValue = -1;
+
+            if (up)
+            {
+                if (toEnd)
+                {
+                    nextValue = 26;
+                }
+                else
+                {
+                    nextValue = currentValue + 1;
+                }
+            }
+            else // down
+            {
+                if (toEnd)
+                {
+                    nextValue = 1;
+                }
+                else
+                {
+                    nextValue = currentValue - 1;
+                }
+            }
+
+            if (nextValue >= 1 && nextValue <= 26)
+            {
+                int delta = (nextValue > currentValue) ? -1 : 1;
+                int min = (nextValue > currentValue) ? currentValue + 1 : nextValue;
+                int max = (nextValue > currentValue) ? nextValue : currentValue - 1;
+
+                for (int i = 0; i < 26; ++i)
+                {
+                    if (priorities[i] >= min && priorities[i] <= max)
+                        priorities[i] += delta;
+                }
+
+                priorities[current] = nextValue;
+            }
+        }
 
         void handle_send_geologist()
 		{
@@ -1647,6 +1777,12 @@ namespace Freeserf
                 case Action.ShowToolmakerPriorities:
                     SetBox(Type.ToolmakerPriorities);
                     break;
+                case Action.ShowTransportPriorities:
+                    SetBox(Type.TransportPriorities);
+                    break;
+                case Action.ShowInventoryPriorities:
+                    SetBox(Type.InventoryPriorities);
+                    break;
                 case Action.DefaultFoodDistribution:
                     player.ResetFoodPriority();
                     break;
@@ -1660,6 +1796,55 @@ namespace Freeserf
                     break;
                 case Action.DefaultToolmakerPriorities:
                     player.ResetToolPriority();
+                    break;
+                case Action.DefaultTransportPriorities:
+                    if (Box == Type.TransportPriorities)
+                        player.ResetFlagPriority();
+                    else
+                        player.ResetInventoryPriority();
+                    break;
+                case Action.TransportPriorityToTop:
+                    MoveTransportItem(true, true);
+                    break;
+                case Action.TransportPriorityToBottom:
+                    MoveTransportItem(false, true);
+                    break;
+                case Action.TransportPriorityUp:
+                    MoveTransportItem(true, false);
+                    break;
+                case Action.TransportPriorityDown:
+                    MoveTransportItem(false, false);
+                    break;
+                case Action.SetTransportItem1:
+                case Action.SetTransportItem2:
+                case Action.SetTransportItem3:
+                case Action.SetTransportItem4:
+                case Action.SetTransportItem5:
+                case Action.SetTransportItem6:
+                case Action.SetTransportItem7:
+                case Action.SetTransportItem8:
+                case Action.SetTransportItem9:
+                case Action.SetTransportItem10:
+                case Action.SetTransportItem11:
+                case Action.SetTransportItem12:
+                case Action.SetTransportItem13:
+                case Action.SetTransportItem14:
+                case Action.SetTransportItem15:
+                case Action.SetTransportItem16:
+                case Action.SetTransportItem17:
+                case Action.SetTransportItem18:
+                case Action.SetTransportItem19:
+                case Action.SetTransportItem20:
+                case Action.SetTransportItem21:
+                case Action.SetTransportItem22:
+                case Action.SetTransportItem23:
+                case Action.SetTransportItem24:
+                case Action.SetTransportItem25:
+                case Action.SetTransportItem26:
+                    {
+                        int item = action - Action.SetTransportItem1;
+                        ActivateTransportItem(26 - item);
+                    }
                     break;
                 // TODO ...
                 default:
@@ -1967,7 +2152,8 @@ namespace Freeserf
                     DrawToolmakerPrioritiesBox();
                     break;
                 case Type.TransportPriorities:
-                    draw_sett_5_box();
+                case Type.InventoryPriorities:
+                    DrawTransportPrioritiesBox();
                     break;
                 case Type.QuitConfirm:
                     draw_quit_confirm_box();
@@ -2001,9 +2187,6 @@ namespace Freeserf
                     break;
                 case Type.Sett8:
                     draw_sett_8_box();
-                    break;
-                case Type.InventoryPriorities:
-                    draw_sett_6_box();
                     break;
                 case Type.Bld1:
                     draw_bld_1_box();
