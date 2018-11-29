@@ -312,7 +312,7 @@ namespace Freeserf
             Sett8Train5,
             Sett8Train20,
             Sett8Train100,
-            DefaultSett3,
+            DefaultCoalAndWheatDistribution,
             Sett8SetCombatModeWeak,
             Sett8SetCombatModeStrong,
             AttackingSelectAll1,
@@ -495,6 +495,16 @@ namespace Freeserf
 
             switch (Box)
             {
+                case Type.FoodDistribution:
+                    if (index == 0) // stonemine food
+                        player.SetFoodStonemine(realAmount);
+                    else if (index == 1) // coalmine food
+                        player.SetFoodCoalmine(realAmount);
+                    else if (index == 2) // ironmine food
+                        player.SetFoodIronmine(realAmount);
+                    else if (index == 3) // goldmine food
+                        player.SetFoodGoldmine(realAmount);
+                    break;
                 case Type.PlanksAndSteelDistribution:
                     if (index == 0) // construction planks
                         player.SetPlanksConstruction(realAmount);
@@ -506,6 +516,18 @@ namespace Freeserf
                         player.SetSteelToolmaker(realAmount);
                     else if (index == 4) // weaponsmith steel
                         player.SetSteelWeaponsmith(realAmount);
+                    break;
+                case Type.CoalAndWheatDistribution:
+                    if (index == 0) // steelsmelter coal
+                        player.SetCoalSteelsmelter(realAmount);
+                    else if (index == 1) // goldsmelter coal
+                        player.SetCoalGoldsmelter(realAmount);
+                    else if (index == 2) // weaponsmith coal
+                        player.SetCoalWeaponsmith(realAmount);
+                    else if (index == 3) // pigfarm wheat
+                        player.SetWheatPigfarm(realAmount);
+                    else if (index == 4) // mill wheat
+                        player.SetWheatMill(realAmount);
                     break;
                 // TODO ...
             }
@@ -1261,10 +1283,42 @@ namespace Freeserf
             slideBars[4].Fill = (int)player.GetSteelWeaponsmith() / SlideBarFactor;
         }
 
-        void draw_sett_3_box()
+        void DrawCoalAndWheatDistributionBox()
 		{
-			
-		}
+            SetBuildingIcon(8, 10, Building.Type.SteelSmelter);
+            SetBuildingIcon(88, 9, Building.Type.GoldSmelter);
+            SetBuildingIcon(40, 65, Building.Type.WeaponSmith);
+            SetBuildingIcon(104, 70, Building.Type.Mill);
+            SetBuildingIcon(8, 110, Building.Type.PigFarm);
+
+            SetIcon(64, 28, 46u); // coal icon
+            SetIcon(72, 110, 37u); // wheet icon
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(16, 69, 295u, Action.DefaultCoalAndWheatDistribution); // reset values button
+
+            Player player = interf.GetPlayer();
+
+            slideBars[0].MoveTo(8, 48);
+            slideBars[0].Displayed = Displayed;
+            slideBars[0].Fill = (int)player.GetCoalSteelsmelter() / SlideBarFactor;
+
+            slideBars[1].MoveTo(72, 48);
+            slideBars[1].Displayed = Displayed;
+            slideBars[1].Fill = (int)player.GetCoalGoldsmelter() / SlideBarFactor;
+
+            slideBars[2].MoveTo(40, 56);
+            slideBars[2].Displayed = Displayed;
+            slideBars[2].Fill = (int)player.GetCoalWeaponsmith() / SlideBarFactor;
+
+            slideBars[3].MoveTo(8, 99);
+            slideBars[3].Displayed = Displayed;
+            slideBars[3].Fill = (int)player.GetWheatPigfarm() / SlideBarFactor;
+
+            slideBars[4].MoveTo(72, 127);
+            slideBars[4].Displayed = Displayed;
+            slideBars[4].Fill = (int)player.GetWheatMill() / SlideBarFactor;
+        }
 
         void draw_knight_level_box()
 		{
@@ -1437,11 +1491,14 @@ namespace Freeserf
                     interf.BuildBuilding((Building.Type)tag);
                     interf.ClosePopup();
                     break;
-                case Action.ShowPlanksAndSteelDistribution:
-                    SetBox(Type.PlanksAndSteelDistribution);
-                    break;
                 case Action.ShowFoodDistribution:
                     SetBox(Type.FoodDistribution);
+                    break;
+                case Action.ShowPlanksAndSteelDistribution:
+                    SetBox(Type.PlanksAndSteelDistribution);
+                    break;                
+                case Action.ShowCoalAndWheatDistribution:
+                    SetBox(Type.CoalAndWheatDistribution);
                     break;
                 case Action.DefaultFoodDistribution:
                     player.ResetFoodPriority();
@@ -1449,6 +1506,10 @@ namespace Freeserf
                 case Action.DefaultPlanksAndSteelDistribution:
                     player.ResetPlanksPriority();
                     player.ResetSteelPriority();
+                    break;
+                case Action.DefaultCoalAndWheatDistribution:
+                    player.ResetCoalPriority();
+                    player.ResetWheatPriority();
                     break;
                 // TODO ...
                 default:
@@ -1746,7 +1807,7 @@ namespace Freeserf
                     DrawPlanksAndSteelDistributionBox();
                     break;
                 case Type.CoalAndWheatDistribution:
-                    draw_sett_3_box();
+                    DrawCoalAndWheatDistributionBox();
                     break;
                 case Type.KnightLevel:
                     draw_knight_level_box();
