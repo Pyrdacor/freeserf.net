@@ -52,7 +52,7 @@ namespace Freeserf
             Stat7,
             Stat1,
             Stat2,
-            Stat6,
+            SettlerStats,
             Stat3,
             StartAttack,
             StartAttackRedraw,
@@ -590,7 +590,7 @@ namespace Freeserf
                 case Type.Stat7:
                 case Type.Stat1:
                 case Type.Stat2:
-                case Type.Stat6:
+                case Type.SettlerStats:
                 case Type.Stat3:
                 case Type.PlayerFaces:
                     // TODO: maybe some of those have different background pattern
@@ -730,6 +730,25 @@ namespace Freeserf
 
 
         #region Texts
+
+        void SetNumberText(int x, int y, uint number, bool limit100 = true)
+        {
+            if (number >= 100 && limit100)
+            {
+                SetIcon(x, y, 213u);
+                SetIcon(x + 8, y, 215u);
+            }
+            else if (number >= 1000)
+            {
+                SetIcon(x, y, 213u);
+                SetIcon(x + 8, y, 214u);
+                SetIcon(x + 16, y, 215u);
+            }
+            else
+            {
+                SetText(x, y, number.ToString());
+            }
+        }
 
         void SetText(int x, int y, string text)
         {
@@ -1150,38 +1169,95 @@ namespace Freeserf
             SetIcon(96, 105, 0x26);
             SetIcon(96, 121, 0x27);
 
-            SetText(32,   13, resources[Resource.Type.Lumber].ToString());
-            SetText(32,   29, resources[Resource.Type.Plank].ToString());
-            SetText(32,   45, resources[Resource.Type.Boat].ToString());
-            SetText(32,   61, resources[Resource.Type.Stone].ToString());
-            SetText(32,   77, resources[Resource.Type.Coal].ToString());
-            SetText(32,   93, resources[Resource.Type.IronOre].ToString());
-            SetText(32,  109, resources[Resource.Type.Steel].ToString());
-            SetText(32,  125, resources[Resource.Type.GoldOre].ToString());
-            SetText(32,  141, resources[Resource.Type.GoldBar].ToString());
-            SetText(72,   13, resources[Resource.Type.Shovel].ToString());
-            SetText(72,   29, resources[Resource.Type.Hammer].ToString());
-            SetText(72,   45, resources[Resource.Type.Axe].ToString());
-            SetText(72,   61, resources[Resource.Type.Saw].ToString());
-            SetText(72,   77, resources[Resource.Type.Scythe].ToString());
-            SetText(72,   93, resources[Resource.Type.Pick].ToString());
-            SetText(72,  109, resources[Resource.Type.Pincer].ToString());
-            SetText(72,  125, resources[Resource.Type.Cleaver].ToString());
-            SetText(72,  141, resources[Resource.Type.Rod].ToString());
-            SetText(112,  13, resources[Resource.Type.Sword].ToString());
-            SetText(112,  29, resources[Resource.Type.Shield].ToString());
-            SetText(112,  45, resources[Resource.Type.Fish].ToString());
-            SetText(112,  61, resources[Resource.Type.Pig].ToString());
-            SetText(112,  77, resources[Resource.Type.Meat].ToString());
-            SetText(112,  93, resources[Resource.Type.Wheat].ToString());
-            SetText(112, 109, resources[Resource.Type.Flour].ToString());
-            SetText(112, 125, resources[Resource.Type.Bread].ToString());
+            SetNumberText(32,   13, (uint)resources[Resource.Type.Lumber]);
+            SetNumberText(32,   29, (uint)resources[Resource.Type.Plank]);
+            SetNumberText(32,   45, (uint)resources[Resource.Type.Boat]);
+            SetNumberText(32,   61, (uint)resources[Resource.Type.Stone]);
+            SetNumberText(32,   77, (uint)resources[Resource.Type.Coal]);
+            SetNumberText(32,   93, (uint)resources[Resource.Type.IronOre]);
+            SetNumberText(32,  109, (uint)resources[Resource.Type.Steel]);
+            SetNumberText(32,  125, (uint)resources[Resource.Type.GoldOre]);
+            SetNumberText(32,  141, (uint)resources[Resource.Type.GoldBar]);
+            SetNumberText(72,   13, (uint)resources[Resource.Type.Shovel]);
+            SetNumberText(72,   29, (uint)resources[Resource.Type.Hammer]);
+            SetNumberText(72,   45, (uint)resources[Resource.Type.Axe]);
+            SetNumberText(72,   61, (uint)resources[Resource.Type.Saw]);
+            SetNumberText(72,   77, (uint)resources[Resource.Type.Scythe]);
+            SetNumberText(72,   93, (uint)resources[Resource.Type.Pick]);
+            SetNumberText(72,  109, (uint)resources[Resource.Type.Pincer]);
+            SetNumberText(72,  125, (uint)resources[Resource.Type.Cleaver]);
+            SetNumberText(72,  141, (uint)resources[Resource.Type.Rod]);
+            SetNumberText(112,  13, (uint)resources[Resource.Type.Sword]);
+            SetNumberText(112,  29, (uint)resources[Resource.Type.Shield]);
+            SetNumberText(112,  45, (uint)resources[Resource.Type.Fish]);
+            SetNumberText(112,  61, (uint)resources[Resource.Type.Pig]);
+            SetNumberText(112,  77, (uint)resources[Resource.Type.Meat]);
+            SetNumberText(112,  93, (uint)resources[Resource.Type.Wheat]);
+            SetNumberText(112, 109, (uint)resources[Resource.Type.Flour]);
+            SetNumberText(112, 125, (uint)resources[Resource.Type.Bread]);
         }
 
-        void draw_serfs_box(int[] serfs, int total)
+        void DrawSerfsBox(uint[] serfCounts, int total)
 		{
-			
-		}
+            SetIcon(16, 9, 0x09);
+            SetIcon(16, 25, 0x0a);
+            SetIcon(16, 41, 0x0b);
+            SetIcon(16, 57, 0x0c);
+            SetIcon(16, 73, 0x21);
+            SetIcon(16, 89, 0x20);
+            SetIcon(16, 105, 0x1f);
+            SetIcon(16, 121, 0x1e);
+            SetIcon(16, 137, 0x1d);
+            SetIcon(56, 9, 0x0d);
+            SetIcon(56, 25, 0x0e);
+            SetIcon(56, 41, 0x12);
+            SetIcon(56, 57, 0x0f);
+            SetIcon(56, 73, 0x10);
+            SetIcon(56, 89, 0x11);
+            SetIcon(56, 105, 0x19);
+            SetIcon(56, 121, 0x1a);
+            SetIcon(56, 137, 0x1b);
+            SetIcon(96, 9, 0x13);
+            SetIcon(96, 25, 0x14);
+            SetIcon(96, 41, 0x15);
+            SetIcon(96, 57, 0x16);
+            SetIcon(96, 73, 0x17);
+            SetIcon(96, 89, 0x18);
+            SetIcon(96, 105, 0x1c);
+            SetIcon(96, 121, 0x82);
+
+            SetNumberText(32, 13, serfCounts[(int)Serf.Type.Transporter]);
+            SetNumberText(32, 29, serfCounts[(int)Serf.Type.Sailor]);
+            SetNumberText(32, 45, serfCounts[(int)Serf.Type.Digger]);
+            SetNumberText(32, 61, serfCounts[(int)Serf.Type.Builder]);
+            SetNumberText(32, 77, serfCounts[(int)Serf.Type.Knight4]);
+            SetNumberText(32, 93, serfCounts[(int)Serf.Type.Knight3]);
+            SetNumberText(32, 109, serfCounts[(int)Serf.Type.Knight2]);
+            SetNumberText(32, 125, serfCounts[(int)Serf.Type.Knight1]);
+            SetNumberText(32, 141, serfCounts[(int)Serf.Type.Knight0]);
+            SetNumberText(72, 13, serfCounts[(int)Serf.Type.Lumberjack]);
+            SetNumberText(72, 29, serfCounts[(int)Serf.Type.Sawmiller]);
+            SetNumberText(72, 45, serfCounts[(int)Serf.Type.Smelter]);
+            SetNumberText(72, 61, serfCounts[(int)Serf.Type.Stonecutter]);
+            SetNumberText(72, 77, serfCounts[(int)Serf.Type.Forester]);
+            SetNumberText(72, 93, serfCounts[(int)Serf.Type.Miner]);
+            SetNumberText(72, 109, serfCounts[(int)Serf.Type.BoatBuilder]);
+            SetNumberText(72, 125, serfCounts[(int)Serf.Type.Toolmaker]);
+            SetNumberText(72, 141, serfCounts[(int)Serf.Type.WeaponSmith]);
+            SetNumberText(112, 13, serfCounts[(int)Serf.Type.Fisher]);
+            SetNumberText(112, 29, serfCounts[(int)Serf.Type.PigFarmer]);
+            SetNumberText(112, 45, serfCounts[(int)Serf.Type.Butcher]);
+            SetNumberText(112, 61, serfCounts[(int)Serf.Type.Farmer]);
+            SetNumberText(112, 77, serfCounts[(int)Serf.Type.Miller]);
+            SetNumberText(112, 93, serfCounts[(int)Serf.Type.Baker]);
+            SetNumberText(112, 109, serfCounts[(int)Serf.Type.Geologist]);
+            SetNumberText(112, 125, serfCounts[(int)Serf.Type.Generic]);
+
+            total = 999;
+
+            if (total >= 0)
+                SetNumberText(96, 141, (uint)total);
+        }
 
         void DrawStatMenuBox()
 		{
@@ -1268,9 +1344,22 @@ namespace Freeserf
 			
 		}
 
-        void draw_stat_6_box()
+        void DrawSerfCountBox()
 		{
-			
+            var player = interf.GetPlayer();
+            int total = 0;
+
+            for (int i = 0; i < 27; i++)
+            {
+                if (i != (int)Serf.Type.TransporterInventory)
+                {
+                    total += (int)player.GetSerfCount(i);
+                }
+            }
+
+            DrawSerfsBox(player.GetSerfCounts(), total);
+
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
 		}
 
         void draw_stat_3_meter(int x, int y, int value)
@@ -1765,6 +1854,9 @@ namespace Freeserf
                 case Action.ShowResourceStats:
                     SetBox(Type.ResourceStats);
                     break;
+                case Action.ShowSettlerStats:
+                    SetBox(Type.SettlerStats);
+                    break;
                 case Action.ShowFoodDistribution:
                     SetBox(Type.FoodDistribution);
                     break;
@@ -2117,8 +2209,8 @@ namespace Freeserf
                 case Type.Stat2:
                     draw_stat_2_box();
                     break;
-                case Type.Stat6:
-                    draw_stat_6_box();
+                case Type.SettlerStats:
+                    DrawSerfCountBox();
                     break;
                 case Type.Stat3:
                     draw_stat_3_box();
