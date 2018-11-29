@@ -40,7 +40,7 @@ namespace Freeserf
             BasicBldFlip,
             Adv1Bld,
             Adv2Bld,
-            StatSelect,
+            StatMenu,
             Stat4,
             StatBld1,
             StatBld2,
@@ -149,12 +149,12 @@ namespace Freeserf
             ShowStat1,
             ShowStat2,
             ShowStat8,
-            ShowStatBld,
-            ShowStat6,
+            ShowBuildingStats,
+            ShowSettlerStats,
             ShowStat7,
             ShowStat4,
             ShowStat3,
-            ShowStatSelect,
+            ShowStatMenu,
             StatBldFlip,
             CloseBox,
             Sett8SetAspectAll,
@@ -203,21 +203,7 @@ namespace Freeserf
             ShowSett7,
             ShowToolmakerPriorities,
             ShowTransportPriorities,
-            ShowSettSelect,
-            Sett1AdjustStonemine,
-            Sett1AdjustCoalmine,
-            Sett1AdjustIronmine,
-            Sett1AdjustGoldmine,
-            Sett2AdjustConstruction,
-            Sett2AdjustBoatbuilder,
-            Sett2AdjustToolmakerPlanks,
-            Sett2AdjustToolmakerSteel,
-            Sett2AdjustWeaponsmith,
-            Sett3AdjustSteelsmelter,
-            Sett3AdjustGoldsmelter,
-            Sett3AdjustWeaponsmith,
-            Sett3AdjustPigfarm,
-            Sett3AdjustMill,
+            ShowSettlerMenu,
             KnightLevelClosestMinDec,
             KnightLevelClosestMinInc,
             KnightLevelClosestMaxDec,
@@ -588,7 +574,7 @@ namespace Freeserf
                     // TODO
                     break;
                 case Type.GroundAnalysis:
-                case Type.StatSelect:
+                case Type.StatMenu:
                 case Type.Stat4:
                 case Type.StatBld1:
                 case Type.StatBld2:
@@ -1088,10 +1074,23 @@ namespace Freeserf
 			
 		}
 
-        void draw_stat_select_box()
+        void DrawStatMenuBox()
 		{
-			
-		}
+            SetButton(16, 21, 72u, Action.ShowStat1);
+            SetButton(56, 21, 73u, Action.ShowStat2);
+            SetButton(96, 21, 77u, Action.ShowStat3);
+
+            SetButton(16, 65, 74u, Action.ShowStat4);
+            SetButton(56, 65, 76u, Action.ShowBuildingStats);
+            SetButton(96, 65, 75u, Action.ShowSettlerStats);
+
+            SetButton(16, 109, 71u, Action.ShowStat7);
+            SetButton(56, 109, 70u, Action.ShowStat8);
+
+            SetButton(104, 113, 61u, Action.ShowSettlerMenu);
+            SetButton(120, 137, 60u, Action.CloseBox);
+
+        }
 
         void draw_stat_4_box()
 		{
@@ -1201,8 +1200,8 @@ namespace Freeserf
             SetButton(16, 97, 233u, Action.ShowSett7); // TODO: Check Type
             SetButton(56, 97, 298u, Action.ShowSett8); // TODO: Check Type
 
-            SetButton(104, 113, 61u, Action.StatBldFlip); // TODO: Flip. Right action?
-            SetButton(120, 137, 60u, Action.CloseSettBox); // TODO: Exit. Right action?
+            SetButton(104, 113, 61u, Action.ShowStatMenu);
+            SetButton(120, 137, 60u, Action.CloseBox);
 
             SetButton(40, 137, 285u, null); // TODO: What action?
             SetButton(8, 137, 286u, Action.ShowQuit);
@@ -1325,7 +1324,7 @@ namespace Freeserf
 			
 		}
 
-        void draw_sett_4_box()
+        void DrawToolmakerPrioritiesBox()
 		{
 			
 		}
@@ -1482,6 +1481,12 @@ namespace Freeserf
             {
                 case Action.CloseBox:
                     interf.ClosePopup();
+                    break;
+                case Action.ShowSettlerMenu:
+                    SetBox(Type.SettlerMenu);
+                    break;
+                case Action.ShowStatMenu:
+                    SetBox(Type.StatMenu);
                     break;
                 case Action.BuildFlag:
                     interf.BuildFlag();
@@ -1751,8 +1756,8 @@ namespace Freeserf
                 case Type.Adv2Bld:
                     DrawAdv2BuildingBox();
                     break;
-                case Type.StatSelect:
-                    draw_stat_select_box();
+                case Type.StatMenu:
+                    DrawStatMenuBox();
                     break;
                 case Type.Stat4:
                     draw_stat_4_box();
@@ -1813,7 +1818,7 @@ namespace Freeserf
                     draw_knight_level_box();
                     break;
                 case Type.ToolmakerPriorities:
-                    draw_sett_4_box();
+                    DrawToolmakerPrioritiesBox();
                     break;
                 case Type.TransportPriorities:
                     draw_sett_5_box();

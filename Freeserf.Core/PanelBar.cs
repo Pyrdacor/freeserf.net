@@ -483,7 +483,7 @@ namespace Freeserf
                         SetButton(2, ButtonId.MapInactive);
                         SetButton(3, ButtonId.StatsStarred);
                         SetButton(4, ButtonId.SettInactive);
-                        interf.OpenPopup(PopupBox.Type.StatSelect);
+                        interf.OpenPopup(PopupBox.Type.StatMenu);
                     }
                     break;
                 case ButtonId.BuildRoad:
