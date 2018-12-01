@@ -233,10 +233,7 @@ namespace Freeserf
 
                 if (pos != Global.BadMapPos)
                 {
-                    uint column = game.Map.PosColumn(pos);
-                    uint row = game.Map.PosRow(pos);
-
-                    game.Map.ScrollTo(column, row);
+                    game.Map.CenterMapPos(pos);
                 }
             }
 
@@ -427,7 +424,7 @@ namespace Freeserf
             if (Misc.BitTest(0x8f3fe, (int)message.MessageType))
             {
                 /* Move screen to new position */
-                Viewport.MoveToMapPos(message.Pos);
+                Viewport.MoveToMapPos(message.Pos, true);
                 UpdateMapCursorPos(message.Pos);
             }
 
@@ -445,7 +442,7 @@ namespace Freeserf
                 msgFlags &= ~Misc.Bit(3);
 
                 returnTimeout = 0;
-                Viewport.MoveToMapPos((uint)returnPos);
+                Viewport.MoveToMapPos((uint)returnPos, false);
 
                 if (PopupBox != null && PopupBox.Box == PopupBox.Type.Message)
                 {
@@ -504,19 +501,14 @@ namespace Freeserf
                     PanelBar = new PanelBar(this);
                     AddChild(PanelBar, 0, 0, true);
                     Layout();
-                }                
-
-                foreach (Building building in Game.GetPlayerBuildings(this.player))
-                {
-                    if (building.BuildingType == Building.Type.Castle)
-                    {
-                        initPos = building.Position;
-                    }
                 }
+
+                if (this.player.CastlePos != Global.BadMapPos)
+                    initPos = this.player.CastlePos;
             }
 
             UpdateMapCursorPos(initPos);
-            Viewport.MoveToMapPos(mapCursorPos);
+            Viewport.MoveToMapPos(mapCursorPos, true);
         }
 
         public void UpdateMapCursorPos(MapPos pos)

@@ -113,12 +113,15 @@ namespace Freeserf
 
         public MapPos GetCurrentMapPos()
         {
-            return 0;
+            return map.RenderMap.GetMapOffset();
         }
 
-        public void MoveToMapPos(MapPos pos)
+        public void MoveToMapPos(MapPos pos, bool center)
         {
-            map.CenterMapPos(pos);
+            if (center)
+                map.RenderMap.CenterMapPos(pos);
+            else
+                map.RenderMap.ScrollToMapPos(pos);
         }
 
         public void RedrawMapPos(MapPos pos)

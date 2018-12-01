@@ -355,19 +355,38 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
-        // TODO: seems to be wrong
+        public void ScrollToMapPos(MapPos pos)
+        {
+            ScrollY = map.PosRow(pos);
+            ScrollX = map.PosColumn(pos) - ScrollY / 2;
+
+            UpdatePosition();
+        }
+
+        // TODO: could be a bit adjusted (1 tile?). Especially when zoomed.
         public void CenterMapPos(MapPos pos)
         {
+            int column = (int)map.PosColumn(pos) - (int)numColumns / 2;
             int row = (int)map.PosRow(pos) - (int)numRows / 2;
-            int column = (int)map.PosColumn(pos) - (int)numColumns / 2 - (int)map.PosRow(pos) / 2;            
+            int centerRow = (int)map.PosRow(pos);
+
+            if (centerRow > row)
+                column -= (centerRow - row) / 2;
+            else
+            {
+                column += centerRow / 2;
+                column -= row / 2;
+            }
 
             if (column < 0)
                 column += (int)map.Columns;
+            else if (column >= map.Columns)
+                column -= (int)map.Columns;
 
             if (row < 0)
-                row += (int)map.Rows;
+                row += 2 * (int)map.Rows;
 
-            ScrollTo((uint)column, (uint)row);
+            ScrollToMapPos(map.Pos((uint)column, (uint)row));
         }
 
         void UpdateTriangleUp(int index, int yOffset, int m, int left, int right, MapPos pos)

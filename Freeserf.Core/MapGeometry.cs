@@ -434,7 +434,7 @@ namespace Freeserf
         /* Addition of two map positions. */
         public MapPos PosAdd(MapPos pos, int x, int y)
         {
-            return Pos((uint)((int)PosColumn(pos) + x) & ColumnMask, (uint)((int)PosRow(pos) + y) & RowMask);
+            return Pos((uint)((int)Columns + (int)PosColumn(pos) + x) & ColumnMask, (uint)((int)Rows + (int)PosRow(pos) + y) & RowMask);
         }
 
         public MapPos PosAdd(MapPos pos, MapPos off)
