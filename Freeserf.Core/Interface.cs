@@ -228,13 +228,6 @@ namespace Freeserf
                 Viewport = new Viewport(this, Game.Map);
                 Viewport.Displayed = true;
                 AddChild(Viewport, 0, 0);
-
-                var pos = game.GetPlayer(0u).CastlePos;
-
-                if (pos != Global.BadMapPos)
-                {
-                    game.Map.CenterMapPos(pos);
-                }
             }
 
             Layout();
