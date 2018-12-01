@@ -327,10 +327,19 @@ namespace Freeserf.Render
                     AddSprite(atlasIndex, 10000u + i, sprite);
             }
 
+            // add borders (offset is 20000)
+            for (i = 0; i < 10; ++i)
+            {
+                sprite = data.GetSprite(Data.Resource.MapBorder, i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 20000u + i, sprite);
+            }
+
             #endregion
 
 
-            #region Paths (and borders)
+            #region Paths
 
             atlasIndex = Layer.Paths;
 
@@ -355,15 +364,6 @@ namespace Freeserf.Render
 
                 if (sprite != null)
                     AddSprite(atlasIndex, 10u + i, sprite.ClearTo(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT));
-            }
-
-            // 10 borders
-            for (i = 0; i < 10; ++i)
-            {
-                sprite = data.GetSprite(Data.Resource.MapBorder, i, color);
-
-                if (sprite != null)
-                    AddSprite(atlasIndex, 100u + i, sprite);
             }
 
             #endregion

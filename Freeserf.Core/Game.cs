@@ -62,6 +62,7 @@ namespace Freeserf
         readonly Dictionary<Flag, Render.RenderFlag> renderFlags = new Dictionary<Flag, Render.RenderFlag>();
         readonly Dictionary<MapPos, Render.RenderMapObject> renderObjects = new Dictionary<MapPos, Render.RenderMapObject>();
         readonly Dictionary<long, Render.RenderRoadSegment> renderRoadSegments = new Dictionary<long, Render.RenderRoadSegment>();
+        readonly Dictionary<long, Render.RenderBorderSegment> renderBorderSegments = new Dictionary<long, Render.RenderBorderSegment>();
         readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
 
         Random initMapRandom;
@@ -170,12 +171,16 @@ namespace Freeserf
             foreach (var roadSegment in renderRoadSegments)
                 roadSegment.Value.Delete();
 
+            foreach (var borderSegment in renderBorderSegments)
+                borderSegment.Value.Delete();
+
             renderBuildings.Clear();
             renderBuildingsInProgress.Clear();
             renderSerfs.Clear();
             renderFlags.Clear();
             renderObjects.Clear();
             renderRoadSegments.Clear();
+            renderBorderSegments.Clear();
 
             // close map (and delete render map)
             map.Close();
@@ -314,6 +319,7 @@ namespace Freeserf
                 map.RenderMap.UpdateWaves(tick);
 
             UpdateRoads();
+            UpdateBorders();
             UpdateMapObjects();
             UpdateFlags();
             UpdateBuildings();
@@ -1345,6 +1351,15 @@ namespace Freeserf
                 }
             }
 
+            /* Update borders of 18*18 square. */
+            for (int i = -calculateRadius - 1; i <= calculateRadius; ++i)
+            {
+                for (int j = -calculateRadius - 1; j <= calculateRadius; ++j)
+                {
+                    UpdateBorders(map.PosAdd(pos, j, i));
+                }
+            }
+
             /* Update military building flag state. */
             for (int i = -25; i <= 25; ++i)
             {
@@ -1367,6 +1382,32 @@ namespace Freeserf
             }
 
             UpdateBorders(pos, calculateRadius);
+        }
+
+        void UpdateBorders(MapPos pos)
+        {
+            for (int dir = (int)Direction.Right; dir <= (int)Direction.Down; ++dir)
+            {
+                long index = Render.RenderBorderSegment.CreateIndex(pos, (Direction)dir);
+
+                if (map.HasOwner(pos) != map.HasOwner(map.Move(pos, (Direction)dir)) ||
+                    map.GetOwner(pos) != map.GetOwner(map.Move(pos, (Direction)dir)))
+                {
+                    if (!renderBorderSegments.ContainsKey(index))
+                    {
+                        renderBorderSegments.Add(index, new Render.RenderBorderSegment(map, pos, (Direction)dir,
+                            renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource));
+                    }
+                }
+                else
+                {
+                    if (renderBorderSegments.ContainsKey(index))
+                    {
+                        renderBorderSegments[index].Delete();
+                        renderBorderSegments.Remove(index);
+                    }
+                }
+            }
         }
 
         /* The given building has been defeated and is being
@@ -2099,7 +2140,8 @@ namespace Freeserf
 
         void UpdateBorders()
         {
-            // TODO
+            foreach (var renderBorderSegment in renderBorderSegments)
+                renderBorderSegment.Value.Update(map.RenderMap);
         }
 
         void UpdateBorders(MapPos center, int radius)
@@ -2584,7 +2626,7 @@ namespace Freeserf
                         if (d < 0)
                             d += 6;
 
-                        if (d == (int)dir.Reverse())
+                        if (dir != Direction.None && d == (int)dir.Reverse())
                         {
                             serf.SetLostState();
                         }

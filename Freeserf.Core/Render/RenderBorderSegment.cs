@@ -4,10 +4,7 @@ namespace Freeserf.Render
 {
     using MapPos = UInt32;
 
-    // TODO: I guess in some cases the building will have a lower baseline than the
-    //       road to the building (e.g. castle). Therefore the road is not drawn due
-    //       to depth testing. We should have a look at this later.
-    internal class RenderRoadSegment : RenderObject
+    internal class RenderBorderSegment : RenderObject
     {
         Map map = null;
         MapPos pos = Global.BadMapPos;
@@ -15,39 +12,40 @@ namespace Freeserf.Render
         int offsetX = 0;
         int offsetY = 0;
         int spriteIndex = 0;
-        int maskIndex = 0;
+        DataSource dataSource = null;
 
         public static long CreateIndex(MapPos pos, Direction dir)
         {
             return (((long)dir) << 32) | pos;
         }
 
-        public RenderRoadSegment(Map map, MapPos pos, Direction dir, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+        public RenderBorderSegment(Map map, MapPos pos, Direction dir, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.map = map;
             this.pos = pos;
             this.dir = dir;
+            this.dataSource = dataSource;
 
             Initialize();
         }
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
         {
-            sprite = spriteFactory.Create(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT, 0, 0, true, false);
+            sprite = spriteFactory.Create(RenderMap.TILE_WIDTH, RenderMap.TILE_RENDER_MAX_HEIGHT, 0, 0, false, false);
             sprite.Visible = true;
 
             UpdateAppearance();
         }
 
-        // TODO: call this after leveling the ground near the road etc
+        // TODO: call this after leveling the ground near the border etc
         // e.g. when map height changes
         // also used on initialization
         internal void UpdateAppearance()
         {
             int h1 = (int)map.GetHeight(pos);
             int h2 = (int)map.GetHeight(map.Move(pos, dir));
-            int hDiff = h1 - h2;
+            int hDiff = h2 - h1;
 
             Map.Terrain t1 = Map.Terrain.Water0;
             Map.Terrain t2 = Map.Terrain.Water0;
@@ -59,7 +57,8 @@ namespace Freeserf.Render
             switch (dir)
             {
                 case Direction.Right:
-                    offsetY -= 4 * Math.Max(h1, h2) + 2;
+                    offsetX += RenderMap.TILE_WIDTH / 2;
+                    offsetY -= 2 * (h1 + h2) + 4;
                     t1 = map.TypeDown(pos);
                     t2 = map.TypeUp(map.MoveUp(pos));
                     h3 = (int)map.GetHeight(map.MoveUp(pos));
@@ -67,7 +66,8 @@ namespace Freeserf.Render
                     hDiff2 = h3 - h4 - 4 * hDiff;
                     break;
                 case Direction.DownRight:
-                    offsetY -= 4 * h1 + 2;
+                    offsetX += RenderMap.TILE_WIDTH / 4;
+                    offsetY -= 2 * (h1 + h2) - 6;
                     t1 = map.TypeUp(pos);
                     t2 = map.TypeDown(pos);
                     h3 = (int)map.GetHeight(map.MoveRight(pos));
@@ -75,8 +75,8 @@ namespace Freeserf.Render
                     hDiff2 = 2 * (h3 - h4);
                     break;
                 case Direction.Down:
-                    offsetX -= RenderMap.TILE_WIDTH / 2;
-                    offsetY -= 4 * h1 + 2;
+                    offsetX -= RenderMap.TILE_WIDTH / 4;
+                    offsetY -= 2 * (h1 + h2) - 6;
                     t1 = map.TypeUp(pos);
                     t2 = map.TypeDown(map.MoveLeft(pos));
                     h3 = (int)map.GetHeight(map.MoveLeft(pos));
@@ -88,15 +88,14 @@ namespace Freeserf.Render
                     break;
             }
 
-            maskIndex = hDiff + 4 + (int)dir * 9;
             spriteIndex = 0;
             Map.Terrain type = (Map.Terrain)Math.Max((int)t1, (int)t2);
 
-            if (hDiff2 > 4)
+            if (hDiff2 > 1)
             {
                 spriteIndex = 0;
             }
-            else if (hDiff2 > -6)
+            else if (hDiff2 > -9)
             {
                 spriteIndex = 1;
             }
@@ -107,7 +106,7 @@ namespace Freeserf.Render
 
             if (type <= Map.Terrain.Water3)
             {
-                spriteIndex = 9;
+                spriteIndex = 9; /* Bouy */
             }
             else if (type >= Map.Terrain.Snow0)
             {
@@ -118,10 +117,11 @@ namespace Freeserf.Render
                 spriteIndex += 3;
             }
 
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Paths);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
+            var info = dataSource.GetSpriteInfo(Data.Resource.MapBorder, (uint)spriteIndex);
 
-            sprite.TextureAtlasOffset = textureAtlas.GetOffset((uint)spriteIndex);
-            (sprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(10u + (uint)maskIndex);
+            sprite.Resize(info.Width, info.Height);
+            sprite.TextureAtlasOffset = textureAtlas.GetOffset(20000u + (uint)spriteIndex);
         }
 
         public void Update(RenderMap map)

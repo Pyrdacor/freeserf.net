@@ -24,6 +24,13 @@ Non-working code:
 - Sometimes a KeyNotFoundException is thrown
 - Notification icon not clickable
 - Sometimes no construction materials are moved out of the castle
+- Sometimes a road can not be build in a direction where it should be possible
+- Map clicks are not always considered or at the right spot/tile
+
+
+Missing stuff:
+
+- Draw the in-construction road
 
 
 AI:
