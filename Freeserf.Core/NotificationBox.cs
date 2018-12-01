@@ -232,6 +232,7 @@ namespace Freeserf
 
             this.message = message;
             Displayed = true;
+            checkBox.Displayed = true;
         }
 
         protected override void InternalHide()
