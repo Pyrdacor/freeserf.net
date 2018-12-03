@@ -1213,7 +1213,7 @@ namespace Freeserf
 
         protected override bool HandleKeyPressed(char key, int modifier)
         {
-            switch ((int)key)
+            switch (key)
             {
                 /* Interface control */
                 case '\t':
@@ -1228,7 +1228,7 @@ namespace Freeserf
                         }
                         break;
                     }
-                case 27:
+                case (char)27:
                     {
                         if (NotificationBox != null && NotificationBox.Displayed)
                         {
@@ -1262,14 +1262,14 @@ namespace Freeserf
                         Game.ResetSpeed();
                         break;
                     }
-                case 'p':
+                case 'P':
                     {
                         Game.Pause();
                         break;
                     }
 
                 /* Audio */
-                case 's':
+                case 'S':
                     {
                         Audio audio = Audio.Instance;
                         Audio.Player audioPlayer = audio.GetSoundPlayer();
@@ -1281,7 +1281,7 @@ namespace Freeserf
 
                         break;
                     }
-                case 'm':
+                case 'M':
                     {
                         Audio audio = Audio.Instance;
                         Audio.Player audioPlayer = audio.GetMusicPlayer();
@@ -1295,38 +1295,38 @@ namespace Freeserf
                     }
 
                 /* Debug */
-                case 'g':
+                case 'G':
                     {
-                        Viewport.SwitchLayer(Freeserf.Layer.Grid);
+                        Viewport.ShowGrid = !Viewport.ShowGrid;
                         break;
                     }
 
                 /* Game control */
-                case 'b':
+                case 'B':
                     {
-                        Viewport.SwitchLayer(Freeserf.Layer.Builds);
+                        Viewport.ShowPossibleBuilds = !Viewport.ShowPossibleBuilds;
                         break;
                     }
-                case 'j':
+                case 'J':
                     {
                         uint index = Game.GetNextPlayer(player).Index;
                         SetPlayer(index);
                         Log.Debug.Write("main", "Switched to player #" + index);
                         break;
                     }
-                case 'z':
+                case 'Z':
                     if ((modifier & 1) != 0)
                     {
                         GameStore.Instance.QuickSave("quicksave", Game);
                     }
                     break;
-                case 'n':
+                case 'N':
                     if ((modifier & 1) != 0)
                     {
                         OpenGameInit();
                     }
                     break;
-                case 'c':
+                case 'C':
                     if ((modifier & 1) != 0)
                     {
                         OpenPopup(PopupBox.Type.QuitConfirm);

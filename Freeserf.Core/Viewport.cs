@@ -41,7 +41,9 @@ namespace Freeserf
         readonly IRenderLayer buildsLayer = null;
         readonly ILayerSprite[,] builds = null;
         readonly ILayerSprite[] mapCursorSprites = new ILayerSprite[7];
-        bool showPossibleBuilds = false;
+
+        public bool ShowGrid { get; set; } = false;
+        public bool ShowPossibleBuilds { get; set; } = false;
 
         public Viewport(Interface interf, Map map)
             : base(interf)
@@ -129,11 +131,6 @@ namespace Freeserf
 
         }
 
-        public void SwitchLayer(Layer layer)
-        {
-
-        }
-
         protected override void InternalHide()
         {
             base.InternalHide();
@@ -144,6 +141,14 @@ namespace Freeserf
         protected override void InternalDraw()
         {
             DrawMapCursor();
+
+#if DEBUG
+            // TODO: draw grid
+            if (ShowGrid)
+            {
+
+            }
+#endif
         }
 
 
@@ -151,7 +156,7 @@ namespace Freeserf
 
         void DrawMapCursor()
         {
-            if (showPossibleBuilds)
+            if (ShowPossibleBuilds)
                 DrawMapCursorPossibleBuild();
 
             MapPos pos = interf.GetMapCursorPos();
@@ -182,7 +187,7 @@ namespace Freeserf
         {
             if (spriteIndex >= 0)
             {
-                var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
+                var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
                 var offset = textureAtlas.GetOffset((uint)spriteIndex);
                 var spriteInfo = buildSpriteInfos[spriteIndex - 31];
 
@@ -193,7 +198,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    builds[column, row].Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
+                    builds[column, row].Resize(spriteInfo.Width, spriteInfo.Height);
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
