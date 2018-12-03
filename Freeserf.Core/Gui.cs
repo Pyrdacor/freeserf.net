@@ -719,6 +719,17 @@ namespace Freeserf
             if (index != -1)
                 textRenderer.ChangeDisplayLayer(index, (byte)(BaseDisplayLayer + displayLayerOffset));
         }
+
+        public void UseSpecialDigits(bool use)
+        {
+            if (useSpecialDigits == use)
+                return;
+
+            useSpecialDigits = use;
+
+            if (index != -1)
+                textRenderer.UseSpecialDigits(index, use);
+        }
     }
 
     internal class SlideBar : GuiObject

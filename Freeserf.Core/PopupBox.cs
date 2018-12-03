@@ -79,7 +79,7 @@ namespace Freeserf
             TransportInfo,
             CastleSerf,
             ResDir,
-            Sett8,
+            KnightSettingsBox,
             InventoryPriorities,
             Bld1,
             Bld2,
@@ -267,7 +267,7 @@ namespace Freeserf
             ShowQuit,
             Actionshowoptions,
             ShowSave,
-            Sett8Cycle,
+            CycleKnights,
             CloseOptions,
             OptionsPathwayScrolling1,
             OptionsPathwayScrolling2,
@@ -293,16 +293,14 @@ namespace Freeserf
             SerfModeIn,
             SerfModeStop,
             SerfModeOut,
-            ShowSett8,
+            ShowKnightSettings,
             ShowInventoryPriorities,
             Sett8AdjustRate,
-            Sett8Train1,
-            Sett8Train5,
-            Sett8Train20,
-            Sett8Train100,
+            TrainKnights,
             DefaultCoalAndWheatDistribution,
-            Sett8SetCombatModeWeak,
-            Sett8SetCombatModeStrong,
+            SetCombatMode,
+            SetCombatModeWeak,
+            SetCombatModeStrong,
             AttackingSelectAll1,
             AttackingSelectAll2,
             AttackingSelectAll3,
@@ -340,8 +338,8 @@ namespace Freeserf
             OptionsRightSide,
             CloseGroundAnalysis,
             UnknownTpInfoFlag,
-            Sett8CastleDefDec,
-            Sett8CastleDefInc,
+            DecreaseCastleKnights,
+            IncreaseCastleKnights,
             OptionsMusic,
             OptionsFullscreen,
             OptionsVolumeMinus,
@@ -521,13 +519,32 @@ namespace Freeserf
                 case Type.ToolmakerPriorities:
                     player.SetToolPriority(index, (int)realAmount);
                     break;
+                case Type.KnightSettingsBox:
+                    if (index == 0) // serf to knight rate
+                        player.SetSerfToKnightRate((int)realAmount);
+                    break;
                     // TODO ...
             }
         }
 
         void HandleButtonClick(object buttonTag, int x, int y)
         {
-            HandleAction((Action)buttonTag, x, y);
+            var action = (Action)buttonTag;
+
+            if (action == Action.CycleKnights)
+                return; // needs double click
+
+            HandleAction(action, x, y);
+        }
+
+        void HandleButtonDoubleClick(object buttonTag, int x, int y)
+        {
+            var action = (Action)buttonTag;
+
+            if (action != Action.CycleKnights)
+                return; // needs single click
+
+            HandleAction(action, x, y);
         }
 
         void InitRenderComponents()
@@ -604,7 +621,7 @@ namespace Freeserf
                 case Type.ToolmakerPriorities:
                 case Type.TransportPriorities:
                 case Type.InventoryPriorities:
-                case Type.Sett8:
+                case Type.KnightSettingsBox:
                     pattern = BackgroundPattern.CheckerdDiagonalBrown;
                     break;                
                 case Type.QuitConfirm:
@@ -741,11 +758,11 @@ namespace Freeserf
             }
             else
             {
-                SetText(x, y, number.ToString());
+                SetText(x, y, number.ToString(), true);
             }
         }
 
-        void SetText(int x, int y, string text)
+        void SetText(int x, int y, string text, bool useSpecialDigits = false)
         {
             // check if there is a free text
             foreach (var textField in texts.Keys.ToList())
@@ -754,13 +771,14 @@ namespace Freeserf
                 {
                     textField.Text = text;
                     textField.MoveTo(x, y);
+                    textField.UseSpecialDigits(useSpecialDigits);
                     textField.Displayed = Displayed;
                     texts[textField] = true;
                     return;
                 }
             }
 
-            var newText = new TextField(interf, 1);
+            var newText = new TextField(interf, 1, 8, useSpecialDigits);
 
             newText.Text = text;
             newText.Displayed = Displayed;
@@ -861,9 +879,15 @@ namespace Freeserf
             newButton.Tag = tag;
             newButton.Displayed = Displayed;
             newButton.Clicked += PopupBox_ButtonClicked;
+            newButton.DoubleClicked += PopupBox_ButtonDoubleClicked;
             AddChild(newButton, x, y, true);
 
             buttons.Add(newButton, true);
+        }
+
+        private void PopupBox_ButtonDoubleClicked(object sender, Button.ClickEventArgs args)
+        {
+            HandleButtonDoubleClick((sender as Button).Tag, args.X, args.Y);
         }
 
         private void PopupBox_ButtonClicked(object sender, Button.ClickEventArgs args)
@@ -1569,7 +1593,7 @@ namespace Freeserf
             SetButton(96, 57, 299u, Action.ShowInventoryPriorities);
 
             SetButton(16, 97, 233u, Action.ShowSett7); // TODO: Check Type
-            SetButton(56, 97, 298u, Action.ShowSett8); // TODO: Check Type
+            SetButton(56, 97, 298u, Action.ShowKnightSettings); // TODO: Check Type
 
             SetButton(104, 113, 61u, Action.ShowStatMenu);
             SetButton(120, 137, 60u, Action.CloseBox);
@@ -1839,15 +1863,65 @@ namespace Freeserf
 			
 		}
 
-        void draw_sett_8_box()
+        void DrawKnightSettingsBox()
 		{
-			
-		}
+            var player = interf.GetPlayer();
 
-        void draw_sett_6_box()
-		{
-			
-		}
+            // serf to knight rate setting
+            SetIcon(24, 17, 9u); // settler
+            SetIcon(104, 17, 29u); // knight
+            slideBars[0].MoveTo(40, 21);
+            slideBars[0].Displayed = Displayed;
+            slideBars[0].Fill = (int)player.GetSerfToKnightRate() / SlideBarFactor;
+
+            // manual knight conversion
+            SetButton(24, 37, 300u, Action.TrainKnights);
+            SetIcon(64, 53, 59u); // shield
+            SetIcon(80, 53, 58u); // sword
+            SetIcon(72, 37, 130u); // free serfs
+
+            uint numConvertibleToKnights = 0;
+
+            foreach (var inventory in interf.Game.GetPlayerInventories(player))
+            {
+                uint count = Math.Min(inventory.GetCountOf(Resource.Type.Sword), inventory.GetCountOf(Resource.Type.Shield));
+                numConvertibleToKnights += Math.Min(count, inventory.FreeSerfCount());
+            }
+
+            SetNumberText(104, 49, numConvertibleToKnights);
+
+            // knight morale and gold deposit
+            SetText(56, 72, ((100 * player.GetKnightMorale()) / 0x1000).ToString() + "%");
+            SetText(56, 82, player.GetGoldDeposited().ToString());
+            SetIcon(32, 73, 304u); // scared knight
+            SetIcon(96, 73, 303u); // angry knight
+
+            // castle knights wanted
+            SetNumberText(56, 128, player.GetCastleKnightsWanted());
+            SetNumberText(56, 138, player.GetCastleKnights());
+            SetButton(32, 129, 220u, Action.DecreaseCastleKnights); // minus
+            SetButton(80, 129, 221u, Action.IncreaseCastleKnights); // plus
+
+            // send strongest
+            SetButton(24, 93, 302u, Action.SetCombatMode); // send strongest control
+            // checkbox for send strongest
+            if (player.SendStrongest())
+            {
+                SetButton(56, 93, 220u, Action.SetCombatModeWeak);
+                SetIcon(56, 109, 288u);
+            }
+            else
+            {
+                SetIcon(56, 93, 288u);
+                SetButton(56, 109, 220u, Action.SetCombatModeStrong);
+            }
+
+            // cycle knights
+            SetButton(88, 93, 301u, Action.CycleKnights);
+
+            // exit
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
+        }
 
         void draw_bld_1_box()
 		{
@@ -2052,6 +2126,9 @@ namespace Freeserf
                 case Action.ShowInventoryPriorities:
                     SetBox(Type.InventoryPriorities);
                     break;
+                case Action.ShowKnightSettings:
+                    SetBox(Type.KnightSettingsBox);
+                    break;
                 case Action.DefaultFoodDistribution:
                     player.ResetFoodPriority();
                     break;
@@ -2120,6 +2197,57 @@ namespace Freeserf
                         SetBox(Type.BuildingStats1);
                     else
                         SetBox(Box + 1);
+                    break;
+                case Action.TrainKnights:
+                    // the button/icon is 32x32
+                    if (x < 16)
+                    {
+                        if (y < 16)
+                            PromoteKnights(1);
+                        else
+                            PromoteKnights(20);
+                    }
+                    else
+                    {
+                        if (y < 16)
+                            PromoteKnights(5);
+                        else
+                            PromoteKnights(100);
+                    }
+                    break;
+                case Action.SetCombatMode:
+                    // the button/icon is 32x32 but we use only the right 16x32 half of it
+                    if (x >= 16)
+                    {
+                        if (y < 16)
+                            HandleAction(Action.SetCombatModeWeak, x, y);
+                        else
+                            HandleAction(Action.SetCombatModeStrong, x, y);
+                    }
+                    break;
+                case Action.SetCombatModeWeak:
+                    if (player.SendStrongest())
+                    {
+                        player.DropSendStrongest();
+                        PlaySound(Audio.TypeSfx.Accepted);
+                    }
+                    break;
+                case Action.SetCombatModeStrong:
+                    if (!player.SendStrongest())
+                    {
+                        player.SetSendStrongest();
+                        PlaySound(Audio.TypeSfx.Accepted);
+                    }
+                    break;
+                case Action.CycleKnights:
+                    player.CycleKnights();
+                    PlaySound(Audio.TypeSfx.Accepted);
+                    break;
+                case Action.DecreaseCastleKnights:
+                    player.DecreaseCastleKnightsWanted();
+                    break;
+                case Action.IncreaseCastleKnights:
+                    player.IncreaseCastleKnightsWanted();
                     break;
                 // TODO ...
                 default:
@@ -2460,8 +2588,8 @@ namespace Freeserf
                 case Type.ResDir:
                     draw_resdir_box();
                     break;
-                case Type.Sett8:
-                    draw_sett_8_box();
+                case Type.KnightSettingsBox:
+                    DrawKnightSettingsBox();
                     break;
                 case Type.Bld1:
                     draw_bld_1_box();
@@ -2499,6 +2627,16 @@ namespace Freeserf
             base.HandleClickLeft(x, y);
                 
             return true; // always return true to avoid passing click events through
+        }
+
+        void PromoteKnights(int number)
+        {
+            var player = interf.GetPlayer();
+
+            if (player.PromoteSerfsToKnights(number) == 0)
+                PlaySound(Audio.TypeSfx.NotAccepted);
+            else
+                PlaySound(Audio.TypeSfx.Accepted);
         }
     }
 }

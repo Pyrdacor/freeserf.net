@@ -13,6 +13,9 @@ Non-working code:
 - Sometimes a road can not be build in a direction where it should be possible
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
+- If emergency program is active, the resources are still given to other buildings
+- OtherEndDir not valid exception in Serf.cs line 2801. I guess the CallTransporter call in Flag.cs line 864 is the problem. Direction and/or IsWaterPath are not right.
+  Maybe this is also the cause for sailors instead of transporters sometimes.
 
 
 AI:

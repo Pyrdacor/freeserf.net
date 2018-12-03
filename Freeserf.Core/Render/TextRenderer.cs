@@ -252,6 +252,18 @@ namespace Freeserf.Render
             renderText.UpdatePositions(characterGapSize);
         }
 
+        public void UseSpecialDigits(int index, bool use)
+        {
+            var renderText = renderTexts[index];
+
+            if (use == renderText.UseSpecialDigits)
+                return;
+
+            renderText.UseSpecialDigits = use;
+
+            SetTextToSprites(renderText.Characters, renderText.Text, renderText.UseSpecialDigits);
+        }
+
         public bool IsVisible(int index)
         {
             if (renderTexts[index] == null)
