@@ -802,7 +802,6 @@ namespace Freeserf
             Game.Map.SetSerfIndex(serf.Position, (int)serf.Index);
 
             Building building = Game.GetBuilding((uint)this.building);
-            building.SetFirstKnight(serf.Index);
 
             /* Spawn generic serfs */
             for (int i = 0; i < 5; i++)
@@ -819,6 +818,9 @@ namespace Freeserf
                     return;
 
                 inventory.PromoteSerfToKnight(serf);
+
+                if (building.GetFirstKnight() == 0)
+                    building.SetFirstKnight(serf.Index);
             }
 
             /* Spawn toolmaker */
