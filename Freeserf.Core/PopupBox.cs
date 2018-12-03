@@ -823,6 +823,13 @@ namespace Freeserf
             SetIcon(x, y, spriteIndex, Data.Resource.MapObject, true);
         }
 
+        void SetFlagIcon(int x, int y)
+        {
+            var playerIndex = interf.GetPlayer().Index;
+
+            SetBuildingIcon(x, y, 128u + playerIndex);
+        }
+
         void SetIcon(int x, int y, uint spriteIndex, Data.Resource resourceType = Data.Resource.Icon, bool building = false)
         {
             var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
@@ -1855,10 +1862,64 @@ namespace Freeserf
 			
 		}
 
-        void draw_transport_info_box()
+        static readonly int[] FlagLayout = new int[]
+        {
+            9, 24,
+            5, 24,
+            3, 44,
+            5, 64,
+            9, 64,
+            11, 44
+        };
+
+        // flag menu
+        void DrawTransportInfoBox()
 		{
-			
-		}
+            if (interf.GetPlayer().tempIndex == 0)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            var flag = interf.Game.GetFlag(interf.GetPlayer().tempIndex);
+
+            SetFlagIcon(72, 49);
+
+            var cycle = DirectionCycleCW.CreateDefault();
+
+            foreach (var dir in cycle)
+            {
+                int index = 5 - (int)dir;
+                int x = 8 + 8 * FlagLayout[index * 2];
+                int y = 9 + FlagLayout[index * 2 + 1];
+
+                if (flag.HasPath(dir))
+                {
+                    uint sprite = 0xdcu; // minus box
+
+                    if (flag.HasTransporter(dir))
+                        sprite = 0x120u; // check box
+
+                    SetIcon(x, y, sprite);
+                }
+            }
+
+            /* TODO show path merge button. */
+            /* if (r == 0) draw_popup_icon(7, 51, 0x135); */
+
+            SetText(8, 13, "Transport Info:");
+            SetButton(24, 105, 0x1cu, Action.SendGeologist); // send geologist
+            SetButton(120, 137, 0x3c, Action.CloseBox); // exit
+
+            // draw resources
+            for (int i = 0; i < Flag.FLAG_MAX_RES_COUNT; ++i)
+            {
+                if (flag.GetResourceAtSlot(i) != Resource.Type.None)
+                {
+                    SetIcon(8 + 8 * (7 + 2 * (i & 3)), 97 + 16 * (i >> 2), 0x22u + (uint)flag.GetResourceAtSlot(i));
+                }
+            }
+        }
 
         Building TryToOpenBuildingPopup()
         {
@@ -2749,7 +2810,7 @@ namespace Freeserf
                     draw_defenders_box();
                     break;
                 case Type.TransportInfo:
-                    draw_transport_info_box();
+                    DrawTransportInfoBox();
                     break;
                 case Type.CastleSerfs:
                     DrawCastleSerfBox();
