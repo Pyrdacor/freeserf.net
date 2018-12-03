@@ -1128,14 +1128,14 @@ namespace Freeserf
             }
         }
 
-        public uint GetCompletedBuildingCount(int type)
+        public uint GetCompletedBuildingCount(Building.Type type)
         {
-            return completedBuildingCount[type];
+            return completedBuildingCount[(int)type];
         }
 
-        public uint GetIncompleteBuildingCount(int type)
+        public uint GetIncompleteBuildingCount(Building.Type type)
         {
-            return incompleteBuildingCount[type];
+            return incompleteBuildingCount[(int)type];
         }
 
         public int GetToolPriority(int type)

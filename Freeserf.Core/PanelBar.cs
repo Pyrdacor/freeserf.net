@@ -443,6 +443,11 @@ namespace Freeserf
         {
             PopupBox popup = interf.PopupBox;
 
+            if (button == 0 && panelButtonIds[button] != ButtonId.BuildInactive)
+            {
+                interf.ResetPossibleBuilds();
+            }
+
             switch (panelButtonIds[button])
             {
                 case ButtonId.Map:
