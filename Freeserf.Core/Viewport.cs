@@ -158,6 +158,8 @@ namespace Freeserf
         {
             if (ShowPossibleBuilds)
                 DrawMapCursorPossibleBuild();
+            else
+                ClearMapCursorPossibleBuild();
 
             MapPos pos = interf.GetMapCursorPos();
 
@@ -212,6 +214,19 @@ namespace Freeserf
             {
                 if (builds[column, row] != null)
                     builds[column, row].Visible = false;
+            }
+        }
+
+        void ClearMapCursorPossibleBuild()
+        {
+            Game game = interf.Game;
+
+            for (uint r = 0; r < map.RenderMap.NumVisibleRows; ++r)
+            {
+                for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
+                {
+                    SetBuildSprite(c, r, -1);
+                }
             }
         }
 
