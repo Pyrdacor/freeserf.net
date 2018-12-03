@@ -391,6 +391,9 @@ namespace Freeserf
                         {
                             PlaySound(Audio.TypeSfx.Click);
                         }
+
+                        if (!interf.GetBuildingRoad().Valid)
+                            interf.BuildRoadBegin();
                     }
                     else
                     {
@@ -455,7 +458,15 @@ namespace Freeserf
                         }
                         else
                         {
-                            PlaySound(Audio.TypeSfx.Click);
+                            if (interf.Game.BuildFlag(interf.GetMapCursorPos(), player))
+                            {
+                                interf.BuildRoad();
+                                PlaySound(Audio.TypeSfx.Accepted);
+                            }
+                            else
+                            {
+                                PlaySound(Audio.TypeSfx.Click);
+                            }
                         }
                     }
                     else

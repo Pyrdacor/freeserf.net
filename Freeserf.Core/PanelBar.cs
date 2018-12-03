@@ -133,6 +133,9 @@ namespace Freeserf
             panelButtons[3].Clicked += PanelBarButton_Clicked;
             panelButtons[4].Clicked += PanelBarButton_Clicked;
 
+            panelButtons[0].DoubleClicked += TogglePossibleBuilds;
+            panelButtons[2].DoubleClicked += GotoCastle;
+
             panelButtonIds[0] = ButtonId.BuildInactive;
             panelButtonIds[1] = ButtonId.DestroyInactive;
             panelButtonIds[2] = ButtonId.Map;
@@ -156,6 +159,18 @@ namespace Freeserf
             blinkTimer.Interval = 700;
             blinkTimer.Elapsed += BlinkTimer_Elapsed;
             blinkTimer.Start();
+        }
+
+        private void GotoCastle(object sender, Button.ClickEventArgs args)
+        {
+            interf.GotoCastle();
+            interf.ClosePopup();
+        }
+
+        private void TogglePossibleBuilds(object sender, Button.ClickEventArgs args)
+        {
+            interf.TogglePossibleBuilds();
+            interf.ClosePopup();
         }
 
         private void ReturnIcon_Clicked(object sender, Button.ClickEventArgs args)

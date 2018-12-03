@@ -461,6 +461,22 @@ namespace Freeserf
             Layout();
         }
 
+        public void GotoCastle()
+        {
+            if (Ingame && Viewport != null && player != null && player.HasCastle())
+            {
+                Viewport.MoveToMapPos(player.CastlePos, true);
+            }
+        }
+
+        public void TogglePossibleBuilds()
+        {
+            if (Ingame && Viewport != null)
+            {
+                Viewport.ShowPossibleBuilds = !Viewport.ShowPossibleBuilds;
+            }
+        }
+
         public Player GetPlayer()
         {
             return player;
@@ -638,6 +654,7 @@ namespace Freeserf
             int res = 0;
             bool water = false;
             buildingRoad.Undo();
+            RemoveLastBuildingRoadSegment();
 
             if (buildingRoad.Length == 0 ||
                 Game.CanBuildRoad(buildingRoad, player, ref dest, ref water) == 0)
@@ -645,10 +662,6 @@ namespace Freeserf
                 /* Road construction is no longer valid, abort. */
                 BuildRoadEnd();
                 res = -1;
-            }
-            else
-            {
-                RemoveLastBuildingRoadSegment();
             }
 
             UpdateMapCursorPos(dest);
