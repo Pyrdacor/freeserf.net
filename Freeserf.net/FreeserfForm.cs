@@ -14,6 +14,7 @@ namespace Freeserf
         MouseButtons pressedMouseButtons = MouseButtons.None;
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
+        static Timer clickWaitTimer = new Timer();
 
         public FreeserfForm()
         {
@@ -53,16 +54,19 @@ namespace Freeserf
 
             RenderControl.MouseWheel += RenderControl_MouseWheel;
 
+            clickWaitTimer.Tick += ClickWaitTimer_Tick;
+            clickWaitTimer.Interval = 150;
+
             FrameTimer.Interval = Global.TICK_LENGTH;
             FrameTimer.Start();
         }
 
-        private void GameView_Closed(object sender, EventArgs e)
+        void GameView_Closed(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void FrameTimer_Tick(object sender, EventArgs e)
+        void FrameTimer_Tick(object sender, EventArgs e)
         {
             RenderControl.MakeCurrent();
 
@@ -159,7 +163,7 @@ namespace Freeserf
             }
         }
 
-        private void RenderControl_MouseWheel(object sender, MouseEventArgs e)
+        void RenderControl_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta < 0)
                 ZoomOut();
@@ -167,7 +171,7 @@ namespace Freeserf
                 ZoomIn();
         }
 
-        private void RenderControl_MouseMove(object sender, MouseEventArgs e)
+        void RenderControl_MouseMove(object sender, MouseEventArgs e)
         {
             pressedMouseButtons = e.Button;
 
@@ -187,7 +191,7 @@ namespace Freeserf
             }
         }
 
-        private void RenderControl_MouseDown(object sender, MouseEventArgs e)
+        void RenderControl_MouseDown(object sender, MouseEventArgs e)
         {
             /*lastX = int.MinValue;
 
@@ -214,13 +218,13 @@ namespace Freeserf
             }
         }
 
-        private void RenderControl_MouseUp(object sender, MouseEventArgs e)
+        void RenderControl_MouseUp(object sender, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.None)
                 pressedMouseButtons &= ~e.Button;
         }
 
-        private void RenderControl_KeyDown(object sender, KeyEventArgs e)
+        void RenderControl_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
@@ -281,22 +285,34 @@ namespace Freeserf
             }
         }
 
-        private void FreeserfForm_KeyDown(object sender, KeyEventArgs e)
+        void FreeserfForm_KeyDown(object sender, KeyEventArgs e)
         {
             RenderControl_KeyDown(sender, e); // forward form key down to render control key down
         }
 
-        private void RenderControl_MouseClick(object sender, MouseEventArgs e)
+        void RenderControl_MouseClick(object sender, MouseEventArgs e)
         {
-            gameView?.NotifyClick(e.X, e.Y, ConvertMouseButton(e.Button));
+            clickWaitTimer.Tag = e;
+            clickWaitTimer.Start();
         }
 
-        private void RenderControl_MouseDoubleClick(object sender, MouseEventArgs e)
+        void RenderControl_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            clickWaitTimer.Stop();
+
             gameView?.NotifyDoubleClick(e.X, e.Y, ConvertMouseButton(e.Button));
         }
 
-        private void RenderControl_KeyPress(object sender, KeyPressEventArgs e)
+        void ClickWaitTimer_Tick(object sender, EventArgs e)
+        {
+            MouseEventArgs args = clickWaitTimer.Tag as MouseEventArgs;
+
+            clickWaitTimer.Stop();
+
+            gameView?.NotifyClick(args.X, args.Y, ConvertMouseButton(args.Button));
+        }
+
+        void RenderControl_KeyPress(object sender, KeyPressEventArgs e)
         {
             switch (e.KeyChar)
             {
@@ -323,13 +339,16 @@ namespace Freeserf
             }
         }
 
-        private void FreeserfForm_KeyPress(object sender, KeyPressEventArgs e)
+        void FreeserfForm_KeyPress(object sender, KeyPressEventArgs e)
         {
             RenderControl_KeyPress(sender, e); // forward form key press to render control key press
         }
 
-        private void FreeserfForm_FormClosed(object sender, FormClosedEventArgs e)
+        void FreeserfForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            if (clickWaitTimer.Enabled)
+                clickWaitTimer.Stop();
+
             if (FrameTimer.Enabled)
                 FrameTimer.Stop();
         }
