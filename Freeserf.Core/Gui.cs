@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using Freeserf.Event;
 
 namespace Freeserf
 {
@@ -550,7 +551,7 @@ namespace Freeserf
 
     internal class Button : Icon
     {
-        public class ClickEventArgs : EventArgs
+        public class ClickEventArgs : System.EventArgs
         {
             public int X { get; }
             public int Y { get; }
@@ -565,6 +566,7 @@ namespace Freeserf
         public delegate void ClickEventHandler(object sender, ClickEventArgs args);
 
         public event ClickEventHandler Clicked;
+        public event ClickEventHandler DoubleClicked;
 
         public Button(Interface interf, int width, int height, Data.Resource resourceType, uint spriteIndex, byte displayLayerOffset)
             : base(interf, width, height, resourceType, spriteIndex, displayLayerOffset)
@@ -575,6 +577,13 @@ namespace Freeserf
         protected override bool HandleClickLeft(int x, int y)
         {
             Clicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
+
+            return true;
+        }
+
+        protected override bool HandleDoubleClick(int x, int y, Event.Button button)
+        {
+            DoubleClicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
 
             return true;
         }
@@ -751,7 +760,7 @@ namespace Freeserf
                 fill = value;
 
                 fillRect.Resize(fill, 4);
-                FillChanged?.Invoke(this, EventArgs.Empty);
+                FillChanged?.Invoke(this, System.EventArgs.Empty);
             }
         }
 
@@ -790,6 +799,6 @@ namespace Freeserf
             return true;
         }
 
-        public event EventHandler FillChanged;
+        public event System.EventHandler FillChanged;
     }
 }
