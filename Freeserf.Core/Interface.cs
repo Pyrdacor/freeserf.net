@@ -1213,6 +1213,9 @@ namespace Freeserf
 
         protected override bool HandleKeyPressed(char key, int modifier)
         {
+            if (!Ingame)
+                return false;
+
             switch (key)
             {
                 /* Interface control */
