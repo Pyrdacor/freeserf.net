@@ -108,9 +108,8 @@ namespace Freeserf
         public Player.Color Color { get; set; }
         public Pos CastlePos { get; set; }
 
-        string name;
-        string characterization;
-
+        string name = "";
+        string characterization = "";
 
         public PlayerInfo(Random random)
         {
@@ -134,7 +133,6 @@ namespace Freeserf
             Reproduction = reproduction;
             CastlePos = Pos.None;
         }
-
 
         public void SetCharacter(uint character)
         {
@@ -166,7 +164,10 @@ namespace Freeserf
         (
             "INTRO",
             new Random(),
-            new PlayerInfo.Preset(1, 0, 10, 5, PlayerInfo.Pos.None)
+            new PlayerInfo.Preset(1, 0, 10, 5, PlayerInfo.Pos.None),
+            new PlayerInfo.Preset(2, 0, 10, 5, PlayerInfo.Pos.None),
+            new PlayerInfo.Preset(3, 0, 10, 5, PlayerInfo.Pos.None),
+            new PlayerInfo.Preset(4, 0, 10, 5, PlayerInfo.Pos.None)
         );
 
         static readonly Mission[] missions = new Mission[]
@@ -382,12 +383,14 @@ namespace Freeserf
 
         readonly List<PlayerInfo> players = new List<PlayerInfo>(4);
         readonly string name = "";
+        readonly bool intro = false;
 
         GameInfo(Mission missionPreset)
         {
             MapSize = 3;
             name = missionPreset.Name;
             RandomBase = missionPreset.Random;
+            intro = missionPreset.Name == "INTRO";
 
             for (int i = 0; i < missionPreset.Players.Length; ++i)
             {
@@ -523,7 +526,12 @@ namespace Freeserf
                 Player player = game.GetPlayer(index);
 
                 if (playerInfo.Face < 12) // not you or your partner
-                    player.AI = new AI(player, playerInfo);
+                {
+                    if (intro)
+                        player.AI = new IntroAI(player, playerInfo);
+                    else
+                        player.AI = new AI(player, playerInfo);
+                }
 
                 player.InitView(playerInfo.Color, playerInfo.Face);
 

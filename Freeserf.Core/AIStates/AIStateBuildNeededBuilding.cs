@@ -93,6 +93,19 @@ namespace Freeserf.AIStates
             return CheckResult.NeededButNoSpecialistOrRes;
         }
 
+        bool CanBuildMilitary(AI ai, Game game, Player player)
+        {
+            if (ai.MaxMilitaryBuildings == -1)
+                return true;
+
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(b =>
+                b.BuildingType == Building.Type.Hut ||
+                b.BuildingType == Building.Type.Tower ||
+                b.BuildingType == Building.Type.Fortress);
+
+            return militaryBuildings.Count() < ai.MaxMilitaryBuildings;
+        }
+
         CheckResult CheckBuilding(AI ai, Game game, Player player, int intelligence, Building.Type type)
         {
             const int minutes = 60 * Global.TICKS_PER_SEC;
@@ -108,8 +121,11 @@ namespace Freeserf.AIStates
                     case Building.Type.Stonecutter:
                         return NeedBuilding(game, player, type);
                     case Building.Type.Hut:
-                        if (!player.EmergencyProgramActive && ai.HasResourcesForBuilding(game, type) && ai.GameTime > (60 - intelligence / 2 - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
+                        if (CanBuildMilitary(ai, game, player) && !player.EmergencyProgramActive && ai.HasResourcesForBuilding(game, type) &&
+                            ai.GameTime > (60 - intelligence / 2 - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
+                        {
                             return NeedBuilding(game, player, type);
+                        }
                         break;
                 }
             }
@@ -133,7 +149,8 @@ namespace Freeserf.AIStates
                     // TODO ...
                     break;
                 case Building.Type.Hut:
-                    if (count < player.GetLandArea() / 120 + ai.MilitaryFocus + ai.GameTime / (30 * minutes) - 1 && ai.GameTime > (90 - intelligence - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
+                    if (CanBuildMilitary(ai, game, player) && count < player.GetLandArea() / 120 + ai.MilitaryFocus + ai.GameTime / (30 * minutes) - 1 &&
+                        ai.GameTime > (90 - intelligence - ai.MilitaryFocus * 15) * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(game, player, type);
                     }

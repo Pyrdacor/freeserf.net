@@ -81,6 +81,12 @@ namespace Freeserf
         internal long GameTime { get; private set; } = 0;
         readonly Random random = new Random(Guid.NewGuid().ToString());
 
+        // Special AI values
+        public bool CanAttack { get; protected set; } = true;
+        public bool CanExpand { get; protected set; } = true;
+        public int MaxMilitaryBuildings { get; protected set; } = -1;
+
+
         /// <summary>
         /// How aggressive (2 = very aggressive)
         /// </summary>
@@ -347,6 +353,17 @@ namespace Freeserf
             }
 
             lastTick = game.Tick;
+        }
+    }
+
+    public class IntroAI : AI
+    {
+        public IntroAI(Player player, PlayerInfo playerInfo)
+            : base(player, playerInfo)
+        {
+            CanAttack = false;
+            CanExpand = true;
+            MaxMilitaryBuildings = 2;
         }
     }
 }
