@@ -640,8 +640,8 @@ namespace Freeserf
                     GenerateMapPreview();
                     break;
                 case Action.Close:
-                    // TODO: what happens then? close whole app?
                     interf.CloseGameInit();
+                    interf.RenderView.Close();
                     break;
                 case Action.GenRandom:
                     {

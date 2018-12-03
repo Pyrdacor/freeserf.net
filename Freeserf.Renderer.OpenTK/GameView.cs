@@ -53,6 +53,7 @@ namespace Freeserf.Renderer.OpenTK
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
 
+        public event System.EventHandler Closed;
         public event EventHandler Click;
         public event EventHandler DoubleClick;
         public event EventHandler SpecialClick;
@@ -147,6 +148,16 @@ namespace Freeserf.Renderer.OpenTK
             var gameInfo = new GameInfo(random);
 
             GameManager.Instance.StartGame(GameInfo.GetIntroMission(), this);
+        }
+
+        public void Close()
+        {
+            var game = GameManager.Instance.GetCurrentGame();
+
+            if (game != null)
+                game.Close();
+
+            Closed?.Invoke(this, System.EventArgs.Empty);
         }
 
         public float Zoom

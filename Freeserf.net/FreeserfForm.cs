@@ -49,11 +49,17 @@ namespace Freeserf
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
             gameView.Initialize();
+            gameView.Closed += GameView_Closed;
 
             RenderControl.MouseWheel += RenderControl_MouseWheel;
 
             FrameTimer.Interval = Global.TICK_LENGTH;
             FrameTimer.Start();
+        }
+
+        private void GameView_Closed(object sender, EventArgs e)
+        {
+            Close();
         }
 
         private void FrameTimer_Tick(object sender, EventArgs e)
@@ -320,6 +326,12 @@ namespace Freeserf
         private void FreeserfForm_KeyPress(object sender, KeyPressEventArgs e)
         {
             RenderControl_KeyPress(sender, e); // forward form key press to render control key press
+        }
+
+        private void FreeserfForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (FrameTimer.Enabled)
+                FrameTimer.Stop();
         }
     }
 }
