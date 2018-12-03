@@ -290,6 +290,10 @@ namespace Freeserf
             if (!interf.Ingame)
                 return false;
 
+            // if clicked into the viewport, close notifications and other popups
+            interf.CloseMessage();
+            interf.ClosePopup();
+
             var position = new Position(x, y);
 
             var mapPos = map.RenderMap.GetMapPosFromScreenPosition(position);

@@ -17,18 +17,12 @@ Viewport:
 
 Non-working code:
 
-- Popup box closing only with ESC? Not with a click outside?
 - Same enemy can occur more than once in random games
 - Player values are not visible in GameInitBox
 - Sometimes a KeyNotFoundException is thrown
 - Sometimes no construction materials are moved out of the castle
 - Sometimes a road can not be build in a direction where it should be possible
 - Map clicks are not always considered or at the right spot/tile
-
-
-Missing stuff:
-
-- Draw the in-construction road
 
 
 AI:
@@ -58,7 +52,7 @@ Logic:
 
 Notification Box:
 
-- Test too long for:
+- Text too long for:
 	FoundStone
     MineEmpty
     OneHourSinceSave
