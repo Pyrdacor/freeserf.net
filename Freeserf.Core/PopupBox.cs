@@ -86,7 +86,7 @@ namespace Freeserf
             Bld3,
             Bld4,
             Message,
-            BldStock,
+            BuildingStock,
             PlayerFaces,
             GameEnd,
             Demolish,
@@ -671,7 +671,7 @@ namespace Freeserf
                 case Type.TransportInfo:
                 case Type.CastleSerfs:
                 case Type.ResourceDirections:
-                case Type.BldStock:
+                case Type.BuildingStock:
                     pattern = BackgroundPattern.PlaidAlongGreen;
                     break;
             }
@@ -1940,6 +1940,64 @@ namespace Freeserf
             return building;
         }
 
+        static readonly uint[] MapBuildingSerfSprite = new uint[]
+        {
+            0xdc, 0x13, 0x0d, 0x19,
+            0x0f, 0xdc, 0xdc, 0xdc,
+            0xdc, 0x10, 0xdc, 0xdc,
+            0x16, 0x15, 0x14, 0x17,
+            0x18, 0x0e, 0x12, 0x1a,
+            0x1b, 0xdc, 0xdc, 0x12,
+            0xdc
+        };
+
+        void DrawBuildingStockBox()
+        {
+            var building = TryToOpenBuildingPopup();
+
+            if (building == null)
+                return;
+
+            // draw list of resources
+            for (uint j = 0; j < Building.MaxStock; ++j)
+            {
+                if (building.IsStockActive(j))
+                {
+                    uint stock = building.GetResourceCountInStock(j);
+
+                    if (stock > 0)
+                    {
+                        uint sprite = 34u + (uint)building.GetResourceTypeInStock(j);
+
+                        for (int i = 0; i < stock; ++i)
+                            SetIcon(8 + 8 * (8 - (int)stock + 2 * i), 119 - (int)j * 20, sprite);
+                    }
+                    else
+                    {
+                        SetIcon(64, 119 - (int)j * 20, 0xdcu); // minus box
+                    }
+                }
+            }
+
+            // draw picture of serf present
+            uint serfSprite = 0xdcu; // minus box
+
+            if (building.HasSerf())
+                serfSprite = MapBuildingSerfSprite[(int)building.BuildingType];
+
+            SetIcon(16, 45, serfSprite);
+
+            // draw building
+            int x = (building.BuildingType == Building.Type.Stock || building.BuildingType == Building.Type.Fortress) ? 40 : 56;
+            SetBuildingIcon(x, 39, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
+
+            // draw texts
+            SetText(16, 13, "Stock of");
+            SetText(16, 23, "this building:");
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit
+        }
+
         void DrawCastleResourcesBox()
         {
             var building = TryToOpenBuildingPopup();
@@ -2152,11 +2210,6 @@ namespace Freeserf
 		}
 
         void draw_bld_4_box()
-		{
-			
-		}
-
-        void draw_building_stock_box()
 		{
 			
 		}
@@ -2833,8 +2886,8 @@ namespace Freeserf
                 case Type.Bld4:
                     draw_bld_4_box();
                     break;
-                case Type.BldStock:
-                    draw_building_stock_box();
+                case Type.BuildingStock:
+                    DrawBuildingStockBox();
                     break;
                 case Type.PlayerFaces:
                     draw_player_faces_box();

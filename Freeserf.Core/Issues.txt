@@ -2,6 +2,7 @@
 
 - Black lines / artifacts (fixed by virtual screen resolution change but some small remain)
 - In some zoom levels (I guess not factor 2^n), there are artefacts in map tiles and map object sprites
+- Map objects may appear above a construction site. Should those objects not be removed?
 
 
 Non-working code:

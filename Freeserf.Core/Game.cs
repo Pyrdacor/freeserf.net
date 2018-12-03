@@ -2304,7 +2304,8 @@ namespace Freeserf
                         }
                     }
 
-                    renderBuildings[buildingList[i]].Update(tick, map.RenderMap, buildingList[i].Position);
+                    if (renderBuildings.ContainsKey(buildingList[i]))
+                        renderBuildings[buildingList[i]].Update(tick, map.RenderMap, buildingList[i].Position);
                 }
             }
 

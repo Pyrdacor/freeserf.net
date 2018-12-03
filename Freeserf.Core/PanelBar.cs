@@ -296,7 +296,7 @@ namespace Freeserf
                     case PopupBox.Type.CastleResources:
                     case PopupBox.Type.Defenders:
                     case PopupBox.Type.MineOutput:
-                    case PopupBox.Type.BldStock:
+                    case PopupBox.Type.BuildingStock:
                     case PopupBox.Type.StartAttack:
                     case PopupBox.Type.QuitConfirm:
                     case PopupBox.Type.Options:

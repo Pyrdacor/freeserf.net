@@ -59,7 +59,7 @@ namespace Freeserf
         }
 
         // Max number of different types of resources accepted by buildings.
-        const uint MaxStock = 3;
+        public const uint MaxStock = 3;
 
         class Stock
         {
@@ -778,17 +778,17 @@ namespace Freeserf
             return false;
         }
 
-        public bool IsStockActive(int stockNumber)
+        public bool IsStockActive(uint stockNumber)
         {
             return stock[stockNumber].Type > 0;
         }
 
-        public uint GetResourceCountInStock(int stockNumber)
+        public uint GetResourceCountInStock(uint stockNumber)
         {
             return stock[stockNumber].Available;
         }
 
-        public Resource.Type GetResourceTypeInStock(int stockNumber)
+        public Resource.Type GetResourceTypeInStock(uint stockNumber)
         {
             return stock[stockNumber].Type;
         }

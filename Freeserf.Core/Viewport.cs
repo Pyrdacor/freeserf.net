@@ -542,7 +542,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            interf.OpenPopup(PopupBox.Type.BldStock);
+                            interf.OpenPopup(PopupBox.Type.BuildingStock);
                         }
 
                         player.tempIndex = map.GetObjectIndex(mapPos);
