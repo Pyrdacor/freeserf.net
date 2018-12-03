@@ -31,6 +31,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Freeserf.Render;
 
@@ -90,6 +91,7 @@ namespace Freeserf
 
         Road buildingRoad;
         int buildingRoadValidDir;
+        readonly Stack<RenderRoadSegment> buildingRoadSegments = new Stack<RenderRoadSegment>();
 
         int[] sfxQueue = new int[4];
 
@@ -562,6 +564,7 @@ namespace Freeserf
             mapCursorSprites[5].Sprite = 32;
             mapCursorSprites[6].Sprite = 32;
 
+            ClearBuildingRoadSegments();
             buildingRoad.Invalidate();
             UpdateMapCursorPos(mapCursorPos);
 
@@ -584,6 +587,7 @@ namespace Freeserf
                 return -1;
             }
 
+            AddBuildingRoadSegment(buildingRoad.GetEnd(Game.Map), dir);
             buildingRoad.Extend(dir);
 
             MapPos dest = 0;
@@ -641,6 +645,10 @@ namespace Freeserf
                 /* Road construction is no longer valid, abort. */
                 BuildRoadEnd();
                 res = -1;
+            }
+            else
+            {
+                RemoveLastBuildingRoadSegment();
             }
 
             UpdateMapCursorPos(dest);
@@ -782,6 +790,8 @@ namespace Freeserf
 
             Game.Update();
 
+            UpdateBuildingRoadSegments();
+
             int tickDiff = (int)Game.ConstTick - (int)lastConstTick;
             lastConstTick = Game.ConstTick;
 
@@ -840,6 +850,47 @@ namespace Freeserf
 
             Viewport.Update();
             SetRedraw();
+        }
+
+        void AddBuildingRoadSegment(MapPos pos, Direction dir)
+        {
+            // We only support road segments in direcitons Right, DownRight and Down.
+            // So if it is another direction, we use the reverse direction with the opposite position.
+            if (dir > Direction.Down)
+            {
+                pos = Game.Map.Move(pos, dir);
+                dir = dir.Reverse();
+            }
+
+            var segment = new RenderRoadSegment(Game.Map, pos, dir, RenderView.GetLayer(Freeserf.Layer.Paths), RenderView.SpriteFactory, RenderView.DataSource);
+
+            segment.Visible = true;
+
+            buildingRoadSegments.Push(segment);
+        }
+
+        void RemoveLastBuildingRoadSegment()
+        {
+            if (buildingRoadSegments.Count > 0)
+            {
+                buildingRoadSegments.Pop().Delete();
+            }
+        }
+
+        void UpdateBuildingRoadSegments()
+        {
+            foreach (var segment in buildingRoadSegments)
+            {
+                segment.Update(Game.Map.RenderMap);
+            }
+        }
+
+        void ClearBuildingRoadSegments()
+        {
+            while (buildingRoadSegments.Count > 0)
+            {
+                buildingRoadSegments.Pop().Delete();
+            }
         }
 
         void GetMapCursorType(Player player, MapPos pos,

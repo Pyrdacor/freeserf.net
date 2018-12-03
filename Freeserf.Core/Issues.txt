@@ -17,12 +17,10 @@ Viewport:
 
 Non-working code:
 
-- Fix special click (seems to not work)
 - Popup box closing only with ESC? Not with a click outside?
 - Same enemy can occur more than once in random games
 - Player values are not visible in GameInitBox
 - Sometimes a KeyNotFoundException is thrown
-- Notification icon not clickable
 - Sometimes no construction materials are moved out of the castle
 - Sometimes a road can not be build in a direction where it should be possible
 - Map clicks are not always considered or at the right spot/tile

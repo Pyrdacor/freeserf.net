@@ -105,7 +105,6 @@ namespace Freeserf
         {
             begin = start;
         }
-
         
         public bool IsValidExtension(Map map, Direction dir)
         {
