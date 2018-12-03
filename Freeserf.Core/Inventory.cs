@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 namespace Freeserf
 {
     using SerfMap = Dictionary<Serf.Type, uint>;
-    using ResourceMap = Dictionary<Resource.Type, uint>;
+    using ResourceMap = Dictionary<Resource.Type, int>;
 
     public class Inventory : GameObject, IDisposable
     {
@@ -218,7 +218,7 @@ namespace Freeserf
 
         public uint GetCountOf(Resource.Type resource)
         {
-            return resources[resource];
+            return (uint)resources[resource];
         }
 
         public ResourceMap GetAllResources()
@@ -233,7 +233,7 @@ namespace Freeserf
 
         public void PushResource(Resource.Type resource)
         {
-            resources[resource] += (resources[resource] < 50000u) ? 1u : 0u;
+            resources[resource] += (resources[resource] < 50000) ? 1 : 0;
         }
 
         public bool HasResourceInQueue()
@@ -390,7 +390,7 @@ namespace Freeserf
                 if (n >= 0x8000)
                     ++t1;
 
-                resources[(Resource.Type)i] = t1 + (n >> 16);
+                resources[(Resource.Type)i] = (int)(t1 + (n >> 16));
             }
         }
 
@@ -597,12 +597,12 @@ namespace Freeserf
 
             if (ResourcesNeededForSpecializing[(int)type * 2] != Resource.Type.None)
             {
-                count = Math.Min(count, resources[ResourcesNeededForSpecializing[(int)type * 2]]);
+                count = Math.Min(count, (uint)resources[ResourcesNeededForSpecializing[(int)type * 2]]);
             }
 
             if (ResourcesNeededForSpecializing[(int)type * 2 + 1] != Resource.Type.None)
             {
-                count = Math.Min(count, resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]]);
+                count = Math.Min(count, (uint)resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]]);
             }
 
             return count;
@@ -671,7 +671,7 @@ namespace Freeserf
 
             for (int i = 0; i < 26; ++i)
             {
-                resources[(Resource.Type)i] = reader.Value("resources")[i].ReadUInt();
+                resources[(Resource.Type)i] = reader.Value("resources")[i].ReadInt();
                 serfs[(Serf.Type)i] = reader.Value("serfs")[i].ReadUInt();
             }
 

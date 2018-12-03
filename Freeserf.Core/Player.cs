@@ -817,9 +817,7 @@ namespace Freeserf
                 if (serf == null)
                     return;
 
-                inventory.PromoteSerfToKnight(serf);
-
-                if (building.GetFirstKnight() == 0)
+                if (inventory.PromoteSerfToKnight(serf) && building.GetFirstKnight() == 0)
                     building.SetFirstKnight(serf.Index);
             }
 

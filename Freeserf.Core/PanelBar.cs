@@ -293,7 +293,7 @@ namespace Freeserf
                 {
                     case PopupBox.Type.TransportInfo:
                     case PopupBox.Type.OrderedBld:
-                    case PopupBox.Type.CastleRes:
+                    case PopupBox.Type.CastleResources:
                     case PopupBox.Type.Defenders:
                     case PopupBox.Type.MineOutput:
                     case PopupBox.Type.BldStock:

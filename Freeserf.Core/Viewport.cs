@@ -512,20 +512,20 @@ namespace Freeserf
                     {
                         Building building = interf.Game.GetBuildingAtPos(mapPos);
 
-                        if (!building.IsDone())
+                        if (building.BuildingType == Building.Type.Castle)
+                        {
+                            interf.OpenPopup(PopupBox.Type.CastleResources);
+                        }
+                        else if (!building.IsDone())
                         {
                             interf.OpenPopup(PopupBox.Type.OrderedBld);
-                        }
-                        else if (building.BuildingType == Building.Type.Castle)
-                        {
-                            interf.OpenPopup(PopupBox.Type.CastleRes);
                         }
                         else if (building.BuildingType == Building.Type.Stock)
                         {
                             if (!building.IsActive())
                                 return false;
 
-                            interf.OpenPopup(PopupBox.Type.CastleRes);
+                            interf.OpenPopup(PopupBox.Type.CastleResources);
                         }
                         else if (building.BuildingType == Building.Type.Hut ||
                                  building.BuildingType == Building.Type.Tower ||

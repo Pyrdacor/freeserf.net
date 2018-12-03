@@ -72,13 +72,13 @@ namespace Freeserf
             NoSaveQuitConfirm,
             SettSelectFile, /* UNUSED */
             Options,
-            CastleRes,
+            CastleResources,
             MineOutput,
             OrderedBld,
             Defenders,
             TransportInfo,
-            CastleSerf,
-            ResDir,
+            CastleSerfs,
+            ResourceDirections,
             KnightSettingsBox,
             InventoryPriorities,
             Bld1,
@@ -283,13 +283,13 @@ namespace Freeserf
             DefaultPlanksAndSteelDistribution,
             DefaultTransportPriorities,
             BuildStock,
-            ShowCastleSerf,
-            ShowResdir,
-            ShowCastleRes,
+            ShowCastleSerfs,
+            ShowResourceDirections,
+            ShowCastleResources,
             SendGeologist,
-            ResModeIn,
-            ResModeStop,
-            ResModeOut,
+            ResourceModeIn,
+            ResourceModeStop,
+            ResourceModeOut,
             SerfModeIn,
             SerfModeStop,
             SerfModeOut,
@@ -531,7 +531,13 @@ namespace Freeserf
         {
             var action = (Action)buttonTag;
 
-            if (action == Action.CycleKnights)
+            if (action == Action.CycleKnights ||
+                action == Action.ResourceModeIn ||
+                action == Action.ResourceModeStop ||
+                action == Action.ResourceModeOut ||
+                action == Action.SerfModeIn ||
+                action == Action.SerfModeStop ||
+                action == Action.SerfModeOut)
                 return; // needs double click
 
             HandleAction(action, x, y);
@@ -541,7 +547,13 @@ namespace Freeserf
         {
             var action = (Action)buttonTag;
 
-            if (action != Action.CycleKnights)
+            if (action != Action.CycleKnights &&
+                action != Action.ResourceModeIn &&
+                action != Action.ResourceModeStop &&
+                action != Action.ResourceModeOut &&
+                action != Action.SerfModeIn &&
+                action != Action.SerfModeStop &&
+                action != Action.SerfModeOut)
                 return; // needs single click
 
             HandleAction(action, x, y);
@@ -652,13 +664,13 @@ namespace Freeserf
                 case Type.Demolish:
                     pattern = BackgroundPattern.SquaresGreen;
                     break;
-                case Type.CastleRes:
+                case Type.CastleResources:
                 case Type.MineOutput:
                 case Type.OrderedBld:
                 case Type.Defenders:
                 case Type.TransportInfo:
-                case Type.CastleSerf:
-                case Type.ResDir:
+                case Type.CastleSerfs:
+                case Type.ResourceDirections:
                 case Type.BldStock:
                     pattern = BackgroundPattern.PlaidAlongGreen;
                     break;
@@ -1828,11 +1840,6 @@ namespace Freeserf
             
 		}
 
-        void draw_castle_res_box()
-		{
-			
-		}
-
         void draw_mine_output_box()
 		{
 			
@@ -1853,15 +1860,160 @@ namespace Freeserf
 			
 		}
 
-        void draw_castle_serf_box()
-		{
-			
-		}
+        Building TryToOpenBuildingPopup()
+        {
+            if (interf.GetPlayer().tempIndex == 0)
+            {
+                interf.ClosePopup();
+                return null;
+            }
 
-        void draw_resdir_box()
+            var building = interf.Game.GetBuilding(interf.GetPlayer().tempIndex);
+
+            if (building.IsBurning())
+            {
+                interf.ClosePopup();
+                return null;
+            }
+
+            return building;
+        }
+
+        void DrawCastleResourcesBox()
+        {
+            var building = TryToOpenBuildingPopup();
+
+            if (building == null)
+                return;
+
+            var inventory = building.GetInventory();
+            var resources = inventory.GetAllResources();
+
+            DrawResourcesBox(resources);
+
+            SetButton(104, 137, 61u, Action.ShowCastleSerfs); // flip
+            SetButton(120, 137, 60u, Action.CloseBox); // exit
+        }
+
+        void DrawCastleSerfBox()
 		{
-			
-		}
+            var building = TryToOpenBuildingPopup();
+
+            if (building == null)
+                return;
+
+            var type = building.BuildingType;
+
+            if (type != Building.Type.Stock && type != Building.Type.Castle)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            uint[] serfCounts = new uint[27];
+            var inventory = building.GetInventory();
+
+            foreach (var serf in interf.Game.GetSerfsInInventory(inventory))
+            {
+                ++serfCounts[(int)serf.GetSerfType()];
+            }
+
+            DrawSerfsBox(serfCounts, -1);
+
+            SetButton(104, 137, 61u, Action.ShowResourceDirections); // flip
+            SetButton(120, 137, 60u, Action.CloseBox); // exit
+        }
+
+        void DrawResourceDirectionBox()
+		{
+            var building = TryToOpenBuildingPopup();
+
+            if (building == null)
+                return;
+
+            var type = building.BuildingType;
+
+            if (type == Building.Type.Castle)
+            {
+                uint[] knights = new uint[5];
+
+                // follow linked list of knights on duty
+                uint serfIndex = building.GetFirstKnight();
+
+                while (serfIndex != 0)
+                {
+                    var serf = interf.Game.GetSerf(serfIndex);
+                    var serfType = serf.GetSerfType();
+
+                    if (serfType < Serf.Type.Knight0 || serfType > Serf.Type.Knight4)
+                        throw new ExceptionFreeserf("Not a knight among the castle defenders.");
+
+                    ++knights[(int)(serfType - Serf.Type.Knight0)];
+
+                    serfIndex = serf.GetNextKnight();
+                }
+
+                // 5 knight types
+                for (int i = 0; i < 5; ++i)
+                {
+                    SetIcon(104, 25 + i * 20, (uint)(33 - i));
+                    SetNumberText(120, 29 + i * 20, knights[4 - i]);
+                }
+            }
+            else if (type != Building.Type.Stock)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            SetIcon(40, 25, 0x128); // resource direction box
+            SetIcon(40, 89, 0x129); // serf direction box
+
+            var inventory = building.GetInventory();
+            var resourceMode = inventory.GetResourceMode();
+            var serfMode = inventory.GetSerfMode();
+
+            switch (resourceMode)
+            {
+                case Inventory.Mode.In:
+                    SetIcon(80, 25, 288);
+                    SetButton(80, 41, 220, Action.ResourceModeStop);
+                    SetButton(80, 57, 220, Action.ResourceModeOut);
+                    break;
+                case Inventory.Mode.Stop:
+                    SetButton(80, 25, 220, Action.ResourceModeIn);
+                    SetIcon(80, 41, 288);                    
+                    SetButton(80, 57, 220, Action.ResourceModeOut);
+                    break;
+                case Inventory.Mode.Out:
+                    SetButton(80, 25, 220, Action.ResourceModeIn);
+                    SetButton(80, 41, 220, Action.ResourceModeStop);
+                    SetIcon(80, 57, 288);
+                    break;
+            }
+
+            switch (serfMode)
+            {
+                case Inventory.Mode.In:
+                    SetIcon(80, 89, 288);
+                    SetButton(80, 105, 220, Action.SerfModeStop);
+                    SetButton(80, 121, 220, Action.SerfModeOut);
+                    break;
+                case Inventory.Mode.Stop:
+                    SetButton(80, 89, 220, Action.SerfModeIn);
+                    SetIcon(80, 105, 288);
+                    SetButton(80, 121, 220, Action.SerfModeOut);
+                    break;
+                case Inventory.Mode.Out:
+                    SetButton(80, 89, 220, Action.SerfModeIn);
+                    SetButton(80, 105, 220, Action.SerfModeStop);
+                    SetIcon(80, 121, 288);
+                    break;
+            }
+
+            SetButton(104, 137, 61u, Action.ShowCastleResources); // flip
+            SetButton(120, 137, 60u, Action.CloseBox); // exit
+        }
 
         void DrawKnightSettingsBox()
 		{
@@ -2249,6 +2401,23 @@ namespace Freeserf
                 case Action.IncreaseCastleKnights:
                     player.IncreaseCastleKnightsWanted();
                     break;
+                case Action.ShowCastleResources:
+                    SetBox(Type.CastleResources);
+                    break;
+                case Action.ShowCastleSerfs:
+                    SetBox(Type.CastleSerfs);
+                    break;
+                case Action.ShowResourceDirections:
+                    SetBox(Type.ResourceDirections);
+                    break;
+                case Action.ResourceModeIn:
+                case Action.ResourceModeStop:
+                case Action.ResourceModeOut:
+                case Action.SerfModeIn:
+                case Action.SerfModeStop:
+                case Action.SerfModeOut:
+                    SetInventoryMode(action);
+                    break;
                 // TODO ...
                 default:
                     Log.Warn.Write("popup", "unhandled action " + action.ToString());
@@ -2567,8 +2736,8 @@ namespace Freeserf
                 case Type.Options:
                     draw_options_box();
                     break;
-                case Type.CastleRes:
-                    draw_castle_res_box();
+                case Type.CastleResources:
+                    DrawCastleResourcesBox();
                     break;
                 case Type.MineOutput:
                     draw_mine_output_box();
@@ -2582,11 +2751,11 @@ namespace Freeserf
                 case Type.TransportInfo:
                     draw_transport_info_box();
                     break;
-                case Type.CastleSerf:
-                    draw_castle_serf_box();
+                case Type.CastleSerfs:
+                    DrawCastleSerfBox();
                     break;
-                case Type.ResDir:
-                    draw_resdir_box();
+                case Type.ResourceDirections:
+                    DrawResourceDirectionBox();
                     break;
                 case Type.KnightSettingsBox:
                     DrawKnightSettingsBox();
@@ -2637,6 +2806,38 @@ namespace Freeserf
                 PlaySound(Audio.TypeSfx.NotAccepted);
             else
                 PlaySound(Audio.TypeSfx.Accepted);
+        }
+
+        void SetInventoryMode(Action action)
+        {
+            var building = interf.Game.GetBuilding(interf.GetPlayer().tempIndex);
+            var inventory = building.GetInventory();
+
+            switch (action)
+            {
+                case Action.ResourceModeIn:
+                    inventory.SetResourceMode(Inventory.Mode.In);
+                    break;
+                case Action.ResourceModeStop:
+                    inventory.SetResourceMode(Inventory.Mode.Stop);
+                    break;
+                case Action.ResourceModeOut:
+                    inventory.SetResourceMode(Inventory.Mode.Out);
+                    break;
+                case Action.SerfModeIn:
+                    inventory.SetSerfMode(Inventory.Mode.In);
+                    break;
+                case Action.SerfModeStop:
+                    inventory.SetSerfMode(Inventory.Mode.Stop);
+                    break;
+                case Action.SerfModeOut:
+                    inventory.SetSerfMode(Inventory.Mode.Out);
+                    break;
+                default:
+                    return;
+            }
+
+            PlaySound(Audio.TypeSfx.Accepted);
         }
     }
 }

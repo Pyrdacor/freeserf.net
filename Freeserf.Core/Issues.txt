@@ -35,6 +35,7 @@ Serf rendering:
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
 	- As other serfs can walk there too it must be an error with the animation index
 - If a serf runs around a big building (like castle) his head and later the body will disappear even if there is nothing to see from the building there
+- When a stonecutter takes a piece of a bigger rock the remaining rock will shortly "jump" like the y coordinate is wrong for a short period of time
 
 
 Logic:
