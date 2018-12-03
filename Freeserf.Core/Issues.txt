@@ -1,13 +1,7 @@
 ﻿Map Rendering:
 
 - Black lines / artifacts (fixed by virtual screen resolution change but some small remain)
-
-
-Viewport:
-
-- Possible builds symbols do not match 100% the map cursor sprite symbol
-- Building possibilities are wrong in some locations (e.g. building on mountain, flag on tree, etc)
-- In some zoom levels (I guess not factor 2^n), their are artefacts in map tiles and map object sprites
+- In some zoom levels (I guess not factor 2^n), there are artefacts in map tiles and map object sprites
 
 
 Non-working code:
