@@ -589,6 +589,9 @@ namespace Freeserf
         /* Turn a number of serfs into knight for the given player. */
         public int PromoteSerfsToKnights(int number)
 		{
+            if (number <= 0)
+                return 0;
+
             int promoted = 0;
 
             foreach (Serf serf in Game.GetPlayerSerfs(this))
@@ -601,7 +604,9 @@ namespace Freeserf
                     if (inv.PromoteSerfToKnight(serf))
                     {
                         ++promoted;
-                        --number;
+
+                        if (--number == 0)
+                            break;
                     }
                 }
             }
