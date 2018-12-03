@@ -5,6 +5,7 @@ using System.Linq;
 namespace Freeserf.AIStates
 {
     // TODO: this should try to link to flags, that are connected to the castle or at least a stock
+    // TODO: this should not fail if there is a possibility (right now it does quiet often)
     class AIStateLinkBuilding : AIState
     {
         uint buildingPos = Global.BadMapPos;

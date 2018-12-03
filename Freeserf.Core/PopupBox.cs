@@ -44,10 +44,10 @@ namespace Freeserf
             Adv2Bld,
             StatMenu,
             ResourceStats,
-            StatBld1,
-            StatBld2,
-            StatBld3,
-            StatBld4,
+            BuildingStats1,
+            BuildingStats2,
+            BuildingStats3,
+            BuildingStats4,
             Stat8,
             Stat7,
             Stat1,
@@ -157,7 +157,7 @@ namespace Freeserf
             ShowResourceStats,
             ShowIdleAndPotentialSettlerStats,
             ShowStatMenu,
-            StatBldFlip,
+            BuildingStatsFlip,
             CloseBox,
             Sett8SetAspectAll,
             Sett8SetAspectLand,
@@ -582,10 +582,10 @@ namespace Freeserf
                 case Type.GroundAnalysis:
                 case Type.StatMenu:
                 case Type.ResourceStats:
-                case Type.StatBld1:
-                case Type.StatBld2:
-                case Type.StatBld3:
-                case Type.StatBld4:
+                case Type.BuildingStats1:
+                case Type.BuildingStats2:
+                case Type.BuildingStats3:
+                case Type.BuildingStats4:
                 case Type.Stat8:
                 case Type.Stat7:
                 case Type.Stat1:
@@ -1278,30 +1278,104 @@ namespace Freeserf
             SetButton(120, 137, 60u, Action.ShowStatMenu);
         }
 
-        void draw_building_count(int x, int y, int type)
+        void DrawBuildingCount(int x, int y, Building.Type type)
 		{
-			
+            var player = interf.GetPlayer();
+
+            uint numComplete = player.GetCompletedBuildingCount(type);
+
+            SetNumberText(x, y, numComplete);
+
+            int xOffset = 8;
+
+            if (numComplete > 99)
+                xOffset = 24;
+            else if (numComplete > 9)
+                xOffset = 16;
+
+            uint numIncomplete = player.GetIncompleteBuildingCount(type);
+
+            if (numIncomplete > 0)
+                SetIcon(x + xOffset, y, 240u + Math.Min(numIncomplete, 10u));
 		}
 
-        void draw_stat_bld_1_box()
+        void DrawBuildingStats1Box()
 		{
-			
-		}
+            SetBuildingIcon(8, 14, Building.Type.Stock);
+            SetBuildingIcon(24, 86, Building.Type.Hut);
+            SetBuildingIcon(72, 16, Building.Type.Tower);
+            SetBuildingIcon(56, 78, Building.Type.Fortress);
 
-        void draw_stat_bld_2_box()
-		{
-			
-		}
+            DrawBuildingCount(40, 70, Building.Type.Stock);
+            DrawBuildingCount(24, 114, Building.Type.Hut);
+            DrawBuildingCount(88, 62, Building.Type.Tower);
+            DrawBuildingCount(80, 139, Building.Type.Fortress);
 
-        void draw_stat_bld_3_box()
-		{
-			
-		}
+            SetButton(8, 137, 61u, Action.BuildingStatsFlip);
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
+        }
 
-        void draw_stat_bld_4_box()
+        void DrawBuildingStats2Box()
 		{
-			
-		}
+            SetBuildingIcon(8, 13, Building.Type.ToolMaker);
+            SetBuildingIcon(72, 15, Building.Type.Sawmill);
+            SetBuildingIcon(8, 77, Building.Type.WeaponSmith);
+            SetBuildingIcon(72, 74, Building.Type.Stonecutter);
+            SetBuildingIcon(104, 66, Building.Type.Boatbuilder);
+            SetBuildingIcon(40, 114, Building.Type.Forester);
+            SetBuildingIcon(72, 116, Building.Type.Lumberjack);
+
+            DrawBuildingCount(32, 63, Building.Type.ToolMaker);
+            DrawBuildingCount(88, 57, Building.Type.Sawmill);
+            DrawBuildingCount(32, 104, Building.Type.WeaponSmith);
+            DrawBuildingCount(72, 104, Building.Type.Stonecutter);
+            DrawBuildingCount(104, 104, Building.Type.Boatbuilder);
+            DrawBuildingCount(48, 141, Building.Type.Forester);
+            DrawBuildingCount(80, 141, Building.Type.Lumberjack);
+
+            SetButton(8, 137, 61u, Action.BuildingStatsFlip);
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
+        }
+
+        void DrawBuildingStats3Box()
+		{
+            SetBuildingIcon(8, 11, Building.Type.PigFarm);
+            SetBuildingIcon(72, 12, Building.Type.Farm);
+            SetBuildingIcon(8, 70, Building.Type.Fisher);
+            SetBuildingIcon(72, 69, Building.Type.Butcher);
+            SetBuildingIcon(40, 84, Building.Type.Mill);
+            SetBuildingIcon(72, 109, Building.Type.Baker);
+
+            DrawBuildingCount(32, 57, Building.Type.PigFarm);
+            DrawBuildingCount(96, 57, Building.Type.Farm);
+            DrawBuildingCount(8, 101, Building.Type.Fisher);
+            DrawBuildingCount(96, 96, Building.Type.Butcher);
+            DrawBuildingCount(48, 143, Building.Type.Mill);
+            DrawBuildingCount(88, 143, Building.Type.Baker);
+
+            SetButton(8, 137, 61u, Action.BuildingStatsFlip);
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
+        }
+
+        void DrawBuildingStats4Box()
+		{
+            SetBuildingIcon(8, 13, Building.Type.StoneMine);
+            SetBuildingIcon(40, 13, Building.Type.CoalMine);
+            SetBuildingIcon(72, 13, Building.Type.IronMine);
+            SetBuildingIcon(104, 13, Building.Type.GoldMine);
+            SetBuildingIcon(24, 99, Building.Type.SteelSmelter);
+            SetBuildingIcon(72, 99, Building.Type.GoldSmelter);
+
+            DrawBuildingCount(8, 80, Building.Type.StoneMine);
+            DrawBuildingCount(40, 80, Building.Type.CoalMine);
+            DrawBuildingCount(72, 80, Building.Type.IronMine);
+            DrawBuildingCount(104, 80, Building.Type.GoldMine);
+            DrawBuildingCount(40, 139, Building.Type.SteelSmelter);
+            DrawBuildingCount(80, 139, Building.Type.GoldSmelter);
+
+            SetButton(8, 137, 61u, Action.BuildingStatsFlip);
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
+        }
 
         void draw_player_stat_chart(int[] data, int index, Player.Color color)
 		{
@@ -1954,6 +2028,9 @@ namespace Freeserf
                 case Action.ShowResourceStats:
                     SetBox(Type.ResourceStats);
                     break;
+                case Action.ShowBuildingStats:
+                    SetBox(Type.BuildingStats1);
+                    break;
                 case Action.ShowSettlerStats:
                     SetBox(Type.SettlerStats);
                     break;
@@ -2037,6 +2114,12 @@ namespace Freeserf
                         int item = action - Action.SetTransportItem1;
                         ActivateTransportItem(26 - item);
                     }
+                    break;
+                case Action.BuildingStatsFlip:
+                    if (Box == Type.BuildingStats4)
+                        SetBox(Type.BuildingStats1);
+                    else
+                        SetBox(Box + 1);
                     break;
                 // TODO ...
                 default:
@@ -2285,17 +2368,17 @@ namespace Freeserf
                 case Type.ResourceStats:
                     DrawResourceStatsBox();
                     break;
-                case Type.StatBld1:
-                    draw_stat_bld_1_box();
+                case Type.BuildingStats1:
+                    DrawBuildingStats1Box();
                     break;
-                case Type.StatBld2:
-                    draw_stat_bld_2_box();
+                case Type.BuildingStats2:
+                    DrawBuildingStats2Box();
                     break;
-                case Type.StatBld3:
-                    draw_stat_bld_3_box();
+                case Type.BuildingStats3:
+                    DrawBuildingStats3Box();
                     break;
-                case Type.StatBld4:
-                    draw_stat_bld_4_box();
+                case Type.BuildingStats4:
+                    DrawBuildingStats4Box();
                     break;
                 case Type.Stat8:
                     draw_stat_8_box();

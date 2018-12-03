@@ -477,6 +477,14 @@ namespace Freeserf
             }
         }
 
+        public void ResetPossibleBuilds()
+        {
+            if (Ingame && Viewport != null)
+            {
+                Viewport.ShowPossibleBuilds = false;
+            }
+        }
+
         public Player GetPlayer()
         {
             return player;
