@@ -40,6 +40,7 @@ namespace Freeserf.Render
         ISpriteFactory SpriteFactory { get; }
         ITriangleFactory TriangleFactory { get; }
         IColoredRectFactory ColoredRectFactory { get; }
+        IMinimapTextureFactory MinimapTextureFactory { get; }
 
         DataSource DataSource { get; }
     }

@@ -48,6 +48,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly SpriteFactory spriteFactory = null;
         readonly TriangleFactory triangleFactory = null;
         readonly ColoredRectFactory coloredRectFactory = null;
+        readonly MinimapTextureFactory minimapTextureFactory = null;
         readonly Gui gui = null;
 
         float sizeFactorX = 1.0f;
@@ -82,6 +83,7 @@ namespace Freeserf.Renderer.OpenTK
             spriteFactory = new SpriteFactory(VirtualScreen);
             triangleFactory = new TriangleFactory(VirtualScreen);
             coloredRectFactory = new ColoredRectFactory(VirtualScreen);
+            minimapTextureFactory = new MinimapTextureFactory();
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
 
@@ -98,10 +100,13 @@ namespace Freeserf.Renderer.OpenTK
 
                 try
                 {
-                    var renderLayer = Create(layer, textureAtlas.GetOrCreate(layer).Texture as Texture,
+                    var texture = (layer == Layer.Minimap) ? minimapTextureFactory.GetMinimapTexture() :
+                        textureAtlas.GetOrCreate(layer).Texture as Texture;
+
+                    var renderLayer = Create(layer, texture,
                         layer == Layer.Gui); // only the gui supports colored rects
 
-                    if (layer == Layer.Gui || layer == Layer.GuiBuildings)
+                    if (layer == Layer.Gui || layer == Layer.GuiBuildings || layer == Layer.Minimap)
                     {
                         // the gui needs scaling
                         renderLayer.PositionTransformation = (Position position) =>
@@ -186,6 +191,8 @@ namespace Freeserf.Renderer.OpenTK
         public ITriangleFactory TriangleFactory => triangleFactory;
 
         public IColoredRectFactory ColoredRectFactory => coloredRectFactory;
+
+        public IMinimapTextureFactory MinimapTextureFactory => minimapTextureFactory;
 
         void SetRotation(Orientation orientation)
         {

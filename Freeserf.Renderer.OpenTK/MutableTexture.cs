@@ -23,13 +23,20 @@ namespace Freeserf.Renderer.OpenTK
 {
     internal class MutableTexture : Texture
     {
+        int width = 0;
+        int height = 0;
         byte[] data = null;
 
         public MutableTexture(int width, int height)
             : base(width, height)
         {
+            this.width = width;
+            this.height = height;
             data = new byte[width * height * 4]; // initialized with zeros so non-occupied areas will be transparent
         }
+
+        public override int Width => width;
+        public override int Height => height;
 
         public void AddSprite(Position position, byte[] data, int width, int height)
         {
@@ -39,11 +46,69 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
+        public void SetPixel(int x, int y, byte r, byte g, byte b, byte a = 255)
+        {
+            int index = y * Width + x;
+
+            data[index * 4 + 0] = r;
+            data[index * 4 + 1] = g;
+            data[index * 4 + 2] = b;
+            data[index * 4 + 3] = a;
+        }
+
+        public void SetPixels(byte[] pixelData)
+        {
+            if (pixelData == null)
+                throw new ExceptionFreeserf("Pixel data was null.");
+
+            if (pixelData.Length != data.Length)
+                throw new ExceptionFreeserf("Pixel data size does not match texture data size.");
+
+            System.Buffer.BlockCopy(pixelData, 0, data, 0, pixelData.Length);
+        }
+
         public void Finish(int numMipMapLevels)
         {
             Create(PixelFormat.BGRA8, data, numMipMapLevels);
 
             data = null;
+        }
+
+        public void Resize(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
+            data = new byte[width * height * 4]; // initialized with zeros so non-occupied areas will be transparent
+        }
+    }
+
+    public class MinimapTextureFactory : Render.IMinimapTextureFactory
+    {
+        static MutableTexture minimap = null;
+
+        public Render.Texture GetMinimapTexture()
+        {
+            if (minimap == null)
+                minimap = new MutableTexture(320, 320); // TODO
+
+            return minimap;
+        }
+
+        public void FillMinimapTexture(byte[] colorData)
+        {
+            if (!(minimap is MutableTexture))
+                throw new ExceptionFreeserf("The given minimap texture is no mutable texture known by this renderer.");
+
+            (minimap as MutableTexture).SetPixels(colorData);
+            (minimap as MutableTexture).Finish(0);
+        }
+
+        public void ResizeMinimapTexture(int width, int height)
+        {
+            if (!(minimap is MutableTexture))
+                throw new ExceptionFreeserf("The given minimap texture is no mutable texture known by this renderer.");
+
+            (minimap as MutableTexture).Resize(width, height);
         }
     }
 }

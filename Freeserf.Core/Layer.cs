@@ -24,15 +24,17 @@ namespace Freeserf
 {
     // Drawing order
     // -------------
-    // Landscape(including WaterWaves)
+    // Landscape
+    // Water waves
     // Grid
     // Paths
-    // Objects(MapObjects, Flags), Resources on Flags, Shadows of the object
+    // Objects (MapObjects, Flags), Resources on Flags, Shadows of the object
     // Buildings (like Objects but masked for build progress)
     // Serfs
     // Builds
     // Gui
     // Gui Buildings
+    // Minimap
     // Cursor
 
     public enum Layer
@@ -41,14 +43,15 @@ namespace Freeserf
         Landscape = 1 << 0,
         Waves = 1 << 1,
         Grid = 1 << 2,
-        Paths = 1 << 3, // paths and borders
+        Paths = 1 << 3,
         Objects = 1 << 4,
         Buildings = 1 << 5,
         Serfs = 1 << 6,
         Builds = 1 << 7,
         Gui = 1 << 8,
         GuiBuildings = 1 << 9, // we have to display buildings inside some windows (e.g. build menu)
-        Cursor = 1 << 10,        
+        Minimap = 1 << 10,
+        Cursor = 1 << 11,        
         All = Landscape | Paths | Objects | Buildings | Serfs | Cursor
     }
 
@@ -68,6 +71,7 @@ namespace Freeserf
             0.96f,  // Builds
             0.97f,  // Gui
             0.97f,  // Gui Buildings
+            0.97f,  // Minimap
             0.98f   // Cursor
         };
     }

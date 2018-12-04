@@ -122,4 +122,11 @@ namespace Freeserf.Render
             }
         }
     }
+
+    public interface IMinimapTextureFactory
+    {
+        Texture GetMinimapTexture();
+        void ResizeMinimapTexture(int width, int height);
+        void FillMinimapTexture(byte[] colorData);
+    }
 }
