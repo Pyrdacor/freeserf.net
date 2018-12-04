@@ -89,6 +89,14 @@ namespace Freeserf
         }
     }
 
+    // Note: Map size is limited to 3..9 which is (64x64 to 512x512)
+    // 3: 64x64
+    // 4: 128x64
+    // 5: 128x128
+    // 6: 256x128
+    // 7: 256x256
+    // 8: 512x256
+    // 9: 512x512
     internal class GameInitBox : Box
     {
         public enum Action
@@ -619,7 +627,7 @@ namespace Freeserf
                             mission = GameInfo.GetMission((uint)gameMission);
                             break;
                         case GameType.Custom:
-                            if (customMission.MapSize == 8u)
+                            if (customMission.MapSize == 9u)
                                 return;
                             customMission.MapSize = customMission.MapSize + 1u;
                         break;

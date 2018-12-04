@@ -28,6 +28,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
+    // Note: The minimap in GameInitBox is drawn as 128x128.
     internal class Minimap : GuiObject
     {
         const int MaxScale = 8;
@@ -36,7 +37,7 @@ namespace Freeserf
         Map map = null;
         int offsetX = 0;
         int offsetY = 0;
-        int scale = 1;
+        int scale = 1; // 1-8
         bool drawGrid = false;
         readonly List<Render.Color> minimap = new List<Render.Color>();
 
@@ -91,7 +92,7 @@ namespace Freeserf
             if (map == null)
                 return;
 
-            minimap.Clear();
+            byte[] minimapData = new byte[128 * 128 * 4];
 
             foreach (MapPos pos in map.Geometry)
             {

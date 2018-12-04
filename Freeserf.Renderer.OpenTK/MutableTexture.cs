@@ -76,6 +76,9 @@ namespace Freeserf.Renderer.OpenTK
 
         public void Resize(int width, int height)
         {
+            if (this.width == width && this.height == height)
+                return;
+
             this.width = width;
             this.height = height;
             data = new byte[width * height * 4]; // initialized with zeros so non-occupied areas will be transparent
@@ -89,7 +92,7 @@ namespace Freeserf.Renderer.OpenTK
         public Render.Texture GetMinimapTexture()
         {
             if (minimap == null)
-                minimap = new MutableTexture(320, 320); // TODO
+                minimap = new MutableTexture(128, 128);
 
             return minimap;
         }
