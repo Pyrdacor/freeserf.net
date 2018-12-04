@@ -55,7 +55,7 @@ namespace Freeserf
             RenderControl.MouseWheel += RenderControl_MouseWheel;
 
             clickWaitTimer.Tick += ClickWaitTimer_Tick;
-            clickWaitTimer.Interval = 150;
+            clickWaitTimer.Interval = 130;
 
             FrameTimer.Interval = Global.TICK_LENGTH;
             FrameTimer.Start();
