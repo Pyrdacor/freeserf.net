@@ -619,10 +619,11 @@ namespace Freeserf
                             mission = GameInfo.GetMission((uint)gameMission);
                             break;
                         case GameType.Custom:
-                            customMission.MapSize = Math.Min(8u, customMission.MapSize + 1u);
+                            if (customMission.MapSize == 8u)
+                                return;
+                            customMission.MapSize = customMission.MapSize + 1u;
                         break;
                     }
-
                     GenerateMapPreview();
                     break;
                 case Action.Decrement:
@@ -633,10 +634,11 @@ namespace Freeserf
                             mission = GameInfo.GetMission((uint)gameMission);
                             break;
                         case GameType.Custom:
-                            customMission.MapSize = Math.Max(3u, customMission.MapSize - 1u);
+                            if (customMission.MapSize == 3u)
+                                return;
+                            customMission.MapSize = customMission.MapSize - 1u;
                             break;
                     }
-
                     GenerateMapPreview();
                     break;
                 case Action.Close:
