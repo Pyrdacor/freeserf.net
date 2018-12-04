@@ -437,14 +437,28 @@ namespace Freeserf
             if ((val & 7) != 0)
             {
                 // Player 2
-                players.Add(new PlayerInfo(random));
+                PlayerInfo playerInfo = null;
+
+                do
+                {
+                    playerInfo = new PlayerInfo(random);
+                } while (playerInfo.Face == players[1].Face);
+
+                players.Add(playerInfo);
 
                 val = random.Next();
 
                 if ((val & 3) == 0)
                 {
                     // Player 3
-                    players.Add(new PlayerInfo(random));
+
+                    do
+                    {
+                        playerInfo = new PlayerInfo(random);
+                    }
+                    while (playerInfo.Face == players[1].Face || playerInfo.Face == players[2].Face);
+
+                    players.Add(playerInfo);
                 }
             }
 
