@@ -71,7 +71,7 @@ namespace Freeserf.Renderer.OpenTK
             $"void main()",
             $"{{",
             $"    vec2 atlasFactor = vec2(1.0f / {DefaultAtlasSizeName}.x, 1.0f / {DefaultAtlasSizeName}.y);",
-            $"    vec2 pos = vec2({DefaultPositionName}.x, {DefaultPositionName}.y);",
+            $"    vec2 pos = vec2(float({DefaultPositionName}.x) + 0.49f, float({DefaultPositionName}.y) + 0.49f);",
             $"    varTexCoord = vec2({DefaultTexCoordName}.x, {DefaultTexCoordName}.y);",
             $"    varMaskTexCoord = vec2({DefaultMaskTexCoordName}.x, {DefaultMaskTexCoordName}.y);",
             $"    ",
