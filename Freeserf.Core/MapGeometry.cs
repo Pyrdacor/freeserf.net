@@ -520,7 +520,7 @@ namespace Freeserf
             ColumnSize = 5 + Size / 2;
             RowSize = 5 + (Size - 1) / 2;
             Columns = 1u << (int)ColumnSize;
-            Rows = 1u << (int)ColumnSize;
+            Rows = 1u << (int)RowSize;
 
             ColumnMask = Columns - 1;
             RowMask = Rows - 1;
