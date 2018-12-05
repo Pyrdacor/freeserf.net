@@ -463,9 +463,9 @@ namespace Freeserf
 
         public void GotoCastle()
         {
-            if (Ingame && Viewport != null && player != null && player.HasCastle())
+            if (player != null && player.HasCastle())
             {
-                Viewport.MoveToMapPos(player.CastlePos, true);
+                GotoMapPos(player.CastlePos);
             }
         }
 
@@ -474,6 +474,7 @@ namespace Freeserf
             if (Ingame && Viewport != null)
             {
                 Viewport.MoveToMapPos(pos, true);
+                UpdateMapCursorPos(pos);
             }
         }
 
