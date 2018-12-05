@@ -97,6 +97,7 @@ namespace Freeserf
     // 7: 256x256
     // 8: 512x256
     // 9: 512x512
+    // A map size smaller than 3 like in original game would require to draw map objects more than once at the same time.
     internal class GameInitBox : Box
     {
         public enum Action
@@ -141,7 +142,6 @@ namespace Freeserf
 
         RandomInput randomInput = null;
         Map map = null;
-        Minimap minimap = null;
         ListSavedFiles fileList = null;
 
         // rendering
@@ -336,12 +336,6 @@ namespace Freeserf
             customMission = new GameInfo(new Random());
             mission = customMission;
 
-            minimap = new Minimap(interf);
-            minimap.SetSize(150, 160);
-            AddChild(minimap, 182, 55, true);
-
-            GenerateMapPreview();
-
             randomInput.SetRandom(customMission.RandomBase);
             AddChild(randomInput, 8 + 31 * 8, 12, true);
 
@@ -354,7 +348,6 @@ namespace Freeserf
                 if (GameStore.Instance.Load(item, game))
                 {
                     map = game.Map;
-                    minimap.SetMap(map);
                 }
             });
             AddChild(fileList, 20, 55, false);
@@ -596,7 +589,7 @@ namespace Freeserf
                                 mission = GameInfo.GetMission((uint)gameMission);
                                 randomInput.Displayed = false;
                                 fileList.Displayed = false;
-                                GenerateMapPreview();
+                                SetRedraw();
                                 break;
                             }
                         case GameType.Custom:
@@ -605,13 +598,14 @@ namespace Freeserf
                                 randomInput.Displayed = true;
                                 randomInput.SetRandom(customMission.RandomBase);
                                 fileList.Displayed = false;
-                                GenerateMapPreview();
+                                SetRedraw();
                                 break;
                             }
                         case GameType.Load:
                             {
                                 randomInput.Displayed = false;
                                 fileList.Displayed = true;
+                                SetRedraw();
                                 break;
                             }
                     }
@@ -625,14 +619,15 @@ namespace Freeserf
                         case GameType.Mission:
                             gameMission = Math.Min(gameMission + 1, (int)GameInfo.GetMissionCount() - 1);
                             mission = GameInfo.GetMission((uint)gameMission);
+                            SetRedraw();
                             break;
                         case GameType.Custom:
                             if (customMission.MapSize == 9u)
                                 return;
                             customMission.MapSize = customMission.MapSize + 1u;
-                        break;
+                            SetRedraw();
+                            break;
                     }
-                    GenerateMapPreview();
                     break;
                 case Action.Decrement:
                     switch (gameType)
@@ -640,14 +635,15 @@ namespace Freeserf
                         case GameType.Mission:
                             gameMission = Math.Max(0, gameMission - 1);
                             mission = GameInfo.GetMission((uint)gameMission);
+                            SetRedraw();
                             break;
                         case GameType.Custom:
                             if (customMission.MapSize == 3u)
                                 return;
                             customMission.MapSize = customMission.MapSize - 1u;
+                            SetRedraw();
                             break;
                     }
-                    GenerateMapPreview();
                     break;
                 case Action.Close:
                     interf.CloseGameInit();
@@ -667,7 +663,7 @@ namespace Freeserf
                         {
                             customMission.SetRandomBase(randomInput.GetRandom());
                             mission = customMission;
-                            GenerateMapPreview();
+                            SetRedraw();
                         }
                         break;
                     }
@@ -797,30 +793,6 @@ namespace Freeserf
             SetRedraw();
 
             return true;
-        }
-
-        void GenerateMapPreview()
-        {
-            map = new Map(new MapGeometry(mission.MapSize), interf.RenderView);
-
-            if (gameType == GameType.Mission)
-            {
-                ClassicMissionMapGenerator generator = new ClassicMissionMapGenerator(map, mission.RandomBase);
-                generator.Init();
-                generator.Generate();
-                map.InitTiles(generator);
-            }
-            else
-            {
-                ClassicMapGenerator generator = new ClassicMapGenerator(map, mission.RandomBase);
-                generator.Init(MapGenerator.HeightGenerator.Midpoints, true);
-                generator.Generate();
-                map.InitTiles(generator);
-            }
-
-            minimap.SetMap(map);
-
-            SetRedraw();
         }
     }
 }

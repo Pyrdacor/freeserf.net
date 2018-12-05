@@ -28,7 +28,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
-    // Note: The minimap in GameInitBox is drawn as 128x128.
+    // Note: The minimap is drawn as 128x128.
     internal class Minimap : GuiObject
     {
         const int MaxScale = 8;
