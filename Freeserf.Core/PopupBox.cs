@@ -1065,8 +1065,13 @@ namespace Freeserf
 
         void DrawMapBox()
 		{
-            // TODO: scale, ui
+            SetButton(8, 137, (uint)MiniMap.GetOwnershipMode(), Action.MinimapMode);
+            SetButton(40, 137, MiniMap.DrawRoads ? 3u : 4u, Action.MinimapRoads);
+            SetButton(72, 137, MiniMap.DrawBuildings ? 5u : 6u, Action.MinimapBuildings);
+            SetButton(104, 137, MiniMap.DrawGrid ? 7u : 8u, Action.MinimapGrid);
+            SetButton(120, 137, MiniMap.GetScale() == 1 ? 91u : 92u, Action.MinimapScale);
 
+            MiniMap.UpdateMinimap(true);
         }
 
         void draw_mine_building_box()
@@ -2532,6 +2537,24 @@ namespace Freeserf
                 case Action.SerfModeStop:
                 case Action.SerfModeOut:
                     SetInventoryMode(action);
+                    break;
+                case Action.MinimapMode:
+                    if (MiniMap.GetOwnershipMode() == MinimapGame.OwnershipMode.Last)
+                        MiniMap.SetOwnershipMode(MinimapGame.OwnershipMode.None);
+                    else
+                        MiniMap.SetOwnershipMode(MiniMap.GetOwnershipMode() + 1);
+                    break;
+                case Action.MinimapRoads:
+                    MiniMap.SetDrawRoads(!MiniMap.DrawRoads);
+                    break;
+                case Action.MinimapBuildings:
+                    MiniMap.SetDrawBuildings(!MiniMap.DrawBuildings);
+                    break;
+                case Action.MinimapGrid:
+                    MiniMap.SetDrawGrid(!MiniMap.DrawGrid);
+                    break;
+                case Action.MinimapScale:
+                    MiniMap.SetScale(MiniMap.GetScale() == 1 ? 2 : 1);
                     break;
                 // TODO ...
                 default:

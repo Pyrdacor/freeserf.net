@@ -27,25 +27,27 @@ using System.Linq;
 namespace Freeserf
 {
     using Freeserf.Event;
+    using Freeserf.Render;
     using MapPos = UInt32;
 
     // Note: The minimap is drawn as 128x128.
+    // TODO: Handle drag and zoom
     internal class Minimap : GuiObject
     {
         const int MaxScale = 8;
 
-        Interface interf = null;
-        Render.ILayerSprite sprite = null;
-        Map map = null;
+        protected readonly Interface interf = null;
+        readonly ILayerSprite sprite = null;
+        protected Map map = null;
         MapPos mapOffset = Global.BadMapPos;
         int scale = 1; // 1-8
-        bool drawGrid = false;
+        protected static readonly Color GridColor = new Color(0x01, 0x01, 0x01);
 
         public Minimap(Interface interf, Map map = null)
             : base(interf)
         {
             this.interf = interf;
-            sprite = interf.RenderView.SpriteFactory.Create(128, 128, 0, 0, false, true) as Render.ILayerSprite;
+            sprite = interf.RenderView.SpriteFactory.Create(128, 128, 0, 0, false, true) as ILayerSprite;
             sprite.Layer = interf.RenderView.GetLayer(Freeserf.Layer.Minimap);
             sprite.Visible = false;
             sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
@@ -67,6 +69,25 @@ namespace Freeserf
             sprite.Visible = Displayed;
         }
 
+        public void SetScale(int scale)
+        {
+            if (scale < 1)
+                scale = 1;
+            else if (scale > 8)
+                scale = 8;
+
+            if (this.scale == scale)
+                return;
+
+            this.scale = scale;
+            UpdateMinimap(true);
+        }
+
+        public int GetScale()
+        {
+            return scale;
+        }
+
         public void SetMap(Map map)
         {
             if (this.map == map)
@@ -74,17 +95,7 @@ namespace Freeserf
 
             this.map = map;
 
-            UpdateMinimap();
-        }
-
-        public void SetDrawGrid(bool draw)
-        {
-            if (drawGrid == draw)
-                return;
-
-            drawGrid = draw;
-
-            SetRedraw();
+            UpdateMinimap(true);
         }
 
         protected internal override void UpdateParent()
@@ -111,15 +122,16 @@ namespace Freeserf
             mapOffset = offset;
 
             var mapCoordinates = map.RenderMap.GetMapPosition(offset);
-            mapCoordinates.X -= (64 / scale) * Render.RenderMap.TILE_WIDTH - Render.RenderMap.TILE_WIDTH;
-            mapCoordinates.Y -= (64 / scale) * Render.RenderMap.TILE_HEIGHT - Render.RenderMap.TILE_HEIGHT / 2;
+            mapCoordinates.X -= (64 / scale) * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH;
+            mapCoordinates.Y -= (64 / scale) * RenderMap.TILE_HEIGHT - RenderMap.TILE_HEIGHT / 2;
             offset = map.RenderMap.GetMapPosFromMapCoordinates(mapCoordinates.X, mapCoordinates.Y);
 
             byte[] minimapData = new byte[128 * 128 * 4];
-            int visibleWidth = Math.Min(128, (int)map.Columns / scale);
-            int visibleHeight = Math.Min(128, (int)map.Rows / scale);
+            int visibleWidth = Math.Min(128, (int)map.Columns) / scale;
+            int visibleHeight = Math.Min(128, (int)map.Rows) / scale;
             var pos = offset;
-            Render.Color tileColor = null;
+            Color tileColor = null;
+            int index = 0;
 
             if (visibleWidth * scale < 128)
                 visibleWidth = 128 / scale;
@@ -133,9 +145,12 @@ namespace Freeserf
 
                 for (int r = 0; r < visibleHeight; ++r)
                 {
-                    tileColor = GetTileColor(pos);
+                    tileColor = GetTileColor(pos, index++);
 
-                    SetColor(minimapData, c, r, scale, tileColor);
+                    if (tileColor == GridColor)
+                        SetGridColor(minimapData, c, r, scale);
+                    else
+                        SetColor(minimapData, c, r, scale, tileColor);
 
                     if (map.PosRow(pos) % 2 == 0)
                         pos = map.MoveDownRight(pos);
@@ -151,7 +166,7 @@ namespace Freeserf
             interf.RenderView.MinimapTextureFactory.FillMinimapTexture(minimapData);
         }
 
-        void SetColor(byte[] data, int x, int y, int scale, Render.Color color)
+        void SetColor(byte[] data, int x, int y, int scale, Color color)
         {
             int xOffset = x * scale;
             int yOffset = y * scale;
@@ -173,7 +188,35 @@ namespace Freeserf
             }
         }
 
-        Render.Color GetTileColor(MapPos pos)
+        void SetGridColor(byte[] data, int x, int y, int scale)
+        {
+            int xOffset = x * scale;
+            int yOffset = y * scale;
+            int index = (yOffset * 128 + xOffset) * 4;
+            int rowIndex = index;
+            Color color = GridColor;
+
+            for (int r = 0; r < scale; ++r)
+            {
+                for (int c = 0; c < scale; ++c)
+                {
+                    if ((y + x) % 2 == 0)
+                        color = Color.White;
+                    else
+                        color = GridColor;
+
+                    data[index++] = color.B;
+                    data[index++] = color.G;
+                    data[index++] = color.R;
+                    data[index++] = color.A;
+                }
+
+                rowIndex += 128 * 4;
+                index = rowIndex;
+            }
+        }
+
+        protected virtual Color GetTileColor(MapPos pos, int index)
         {
             int typeOff = ColorOffset[(int)map.TypeUp(pos)];
 
@@ -197,8 +240,8 @@ namespace Freeserf
             int visibleHeight = Math.Min(128, (int)map.Rows / scale);
             var mapPosition = map.RenderMap.GetMapPosition(mapOffset);
 
-            mapPosition.X += Render.RenderMap.TILE_WIDTH / 2;
-            mapPosition.Y += Render.RenderMap.TILE_HEIGHT / 2;
+            mapPosition.X += RenderMap.TILE_WIDTH / 2;
+            mapPosition.Y += RenderMap.TILE_HEIGHT / 2;
 
             if (visibleWidth * scale < 128)
                 visibleWidth = 128 / scale;
@@ -209,8 +252,8 @@ namespace Freeserf
             int relX = x - visibleHeight / 2;
             int relY = y - visibleHeight / 2;
 
-            mapPosition.X += relX * Render.RenderMap.TILE_WIDTH;
-            mapPosition.Y += relY * Render.RenderMap.TILE_HEIGHT;
+            mapPosition.X += relX * RenderMap.TILE_WIDTH;
+            mapPosition.Y += relY * RenderMap.TILE_HEIGHT;
 
             var pos = map.RenderMap.GetMapPosFromMapCoordinates(mapPosition.X, mapPosition.Y);
 
@@ -226,54 +269,54 @@ namespace Freeserf
             34, 34, 34, 51, 51, 51, 68, 68
         };
 
-        static readonly Render.Color[] Colors = new Render.Color[]
+        static readonly Color[] Colors = new Color[]
         {
-            new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf),
-            new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf),
-            new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf),
-            new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf),
-            new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf),
-            new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x00, 0x00, 0xaf), new Render.Color(0x73, 0xb3, 0x43),
-            new Render.Color(0x73, 0xb3, 0x43), new Render.Color(0x6b, 0xab, 0x3b), new Render.Color(0x63, 0xa3, 0x33),
-            new Render.Color(0x5f, 0x9b, 0x2f), new Render.Color(0x57, 0x93, 0x27), new Render.Color(0x53, 0x8b, 0x23),
-            new Render.Color(0x4f, 0x83, 0x1b), new Render.Color(0x47, 0x7f, 0x17), new Render.Color(0x3f, 0x73, 0x13),
-            new Render.Color(0x3b, 0x6b, 0x13), new Render.Color(0x33, 0x63, 0x0f), new Render.Color(0x2f, 0x57, 0x0b),
-            new Render.Color(0x2b, 0x4f, 0x0b), new Render.Color(0x23, 0x43, 0x0b), new Render.Color(0x1f, 0x3b, 0x07),
-            new Render.Color(0x1b, 0x33, 0x07), new Render.Color(0xef, 0xcf, 0xaf), new Render.Color(0xef, 0xcf, 0xaf),
-            new Render.Color(0xe3, 0xbf, 0x9f), new Render.Color(0xd7, 0xb3, 0x8f), new Render.Color(0xd7, 0xb3, 0x8f),
-            new Render.Color(0xcb, 0xa3, 0x7f), new Render.Color(0xbf, 0x97, 0x73), new Render.Color(0xbf, 0x97, 0x73),
-            new Render.Color(0xb3, 0x87, 0x67), new Render.Color(0xab, 0x7b, 0x5b), new Render.Color(0xab, 0x7b, 0x5b),
-            new Render.Color(0x9f, 0x6f, 0x4f), new Render.Color(0x93, 0x63, 0x43), new Render.Color(0x93, 0x63, 0x43),
-            new Render.Color(0x87, 0x57, 0x3b), new Render.Color(0x7b, 0x4f, 0x33), new Render.Color(0x7b, 0x4f, 0x33),
-            new Render.Color(0xd7, 0xb3, 0x8f), new Render.Color(0xd7, 0xb3, 0x8f), new Render.Color(0xcb, 0xa3, 0x7f),
-            new Render.Color(0xcb, 0xa3, 0x7f), new Render.Color(0xbf, 0x97, 0x73), new Render.Color(0xbf, 0x97, 0x73),
-            new Render.Color(0xb3, 0x87, 0x67), new Render.Color(0xab, 0x7b, 0x5b), new Render.Color(0x9f, 0x6f, 0x4f),
-            new Render.Color(0x93, 0x63, 0x43), new Render.Color(0x87, 0x57, 0x3b), new Render.Color(0x7b, 0x4f, 0x33),
-            new Render.Color(0x73, 0x43, 0x2b), new Render.Color(0x67, 0x3b, 0x23), new Render.Color(0x5b, 0x33, 0x1b),
-            new Render.Color(0x4f, 0x2b, 0x17), new Render.Color(0x43, 0x23, 0x13), new Render.Color(0xff, 0xff, 0xff),
-            new Render.Color(0xff, 0xff, 0xff), new Render.Color(0xef, 0xef, 0xef), new Render.Color(0xef, 0xef, 0xef),
-            new Render.Color(0xdf, 0xdf, 0xdf), new Render.Color(0xd3, 0xd3, 0xd3), new Render.Color(0xc3, 0xc3, 0xc3),
-            new Render.Color(0xb3, 0xb3, 0xb3), new Render.Color(0xa7, 0xa7, 0xa7), new Render.Color(0x97, 0x97, 0x97),
-            new Render.Color(0x87, 0x87, 0x87), new Render.Color(0x7b, 0x7b, 0x7b), new Render.Color(0x6b, 0x6b, 0x6b),
-            new Render.Color(0x5b, 0x5b, 0x5b), new Render.Color(0x4f, 0x4f, 0x4f), new Render.Color(0x3f, 0x3f, 0x3f),
-            new Render.Color(0x2f, 0x2f, 0x2f), new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3),
-            new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3),
-            new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3),
-            new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3),
-            new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3),
-            new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3), new Render.Color(0x07, 0x07, 0xb3),
-            new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7),
-            new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7),
-            new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7),
-            new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7),
-            new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7),
-            new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x0b, 0x0b, 0xb7), new Render.Color(0x13, 0x13, 0xbb),
-            new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb),
-            new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb),
-            new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb),
-            new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb),
-            new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb), new Render.Color(0x13, 0x13, 0xbb),
-            new Render.Color(0x13, 0x13, 0xbb)
+            new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf),
+            new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf),
+            new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf),
+            new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf),
+            new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf),
+            new Color(0x00, 0x00, 0xaf), new Color(0x00, 0x00, 0xaf), new Color(0x73, 0xb3, 0x43),
+            new Color(0x73, 0xb3, 0x43), new Color(0x6b, 0xab, 0x3b), new Color(0x63, 0xa3, 0x33),
+            new Color(0x5f, 0x9b, 0x2f), new Color(0x57, 0x93, 0x27), new Color(0x53, 0x8b, 0x23),
+            new Color(0x4f, 0x83, 0x1b), new Color(0x47, 0x7f, 0x17), new Color(0x3f, 0x73, 0x13),
+            new Color(0x3b, 0x6b, 0x13), new Color(0x33, 0x63, 0x0f), new Color(0x2f, 0x57, 0x0b),
+            new Color(0x2b, 0x4f, 0x0b), new Color(0x23, 0x43, 0x0b), new Color(0x1f, 0x3b, 0x07),
+            new Color(0x1b, 0x33, 0x07), new Color(0xef, 0xcf, 0xaf), new Color(0xef, 0xcf, 0xaf),
+            new Color(0xe3, 0xbf, 0x9f), new Color(0xd7, 0xb3, 0x8f), new Color(0xd7, 0xb3, 0x8f),
+            new Color(0xcb, 0xa3, 0x7f), new Color(0xbf, 0x97, 0x73), new Color(0xbf, 0x97, 0x73),
+            new Color(0xb3, 0x87, 0x67), new Color(0xab, 0x7b, 0x5b), new Color(0xab, 0x7b, 0x5b),
+            new Color(0x9f, 0x6f, 0x4f), new Color(0x93, 0x63, 0x43), new Color(0x93, 0x63, 0x43),
+            new Color(0x87, 0x57, 0x3b), new Color(0x7b, 0x4f, 0x33), new Color(0x7b, 0x4f, 0x33),
+            new Color(0xd7, 0xb3, 0x8f), new Color(0xd7, 0xb3, 0x8f), new Color(0xcb, 0xa3, 0x7f),
+            new Color(0xcb, 0xa3, 0x7f), new Color(0xbf, 0x97, 0x73), new Color(0xbf, 0x97, 0x73),
+            new Color(0xb3, 0x87, 0x67), new Color(0xab, 0x7b, 0x5b), new Color(0x9f, 0x6f, 0x4f),
+            new Color(0x93, 0x63, 0x43), new Color(0x87, 0x57, 0x3b), new Color(0x7b, 0x4f, 0x33),
+            new Color(0x73, 0x43, 0x2b), new Color(0x67, 0x3b, 0x23), new Color(0x5b, 0x33, 0x1b),
+            new Color(0x4f, 0x2b, 0x17), new Color(0x43, 0x23, 0x13), new Color(0xff, 0xff, 0xff),
+            new Color(0xff, 0xff, 0xff), new Color(0xef, 0xef, 0xef), new Color(0xef, 0xef, 0xef),
+            new Color(0xdf, 0xdf, 0xdf), new Color(0xd3, 0xd3, 0xd3), new Color(0xc3, 0xc3, 0xc3),
+            new Color(0xb3, 0xb3, 0xb3), new Color(0xa7, 0xa7, 0xa7), new Color(0x97, 0x97, 0x97),
+            new Color(0x87, 0x87, 0x87), new Color(0x7b, 0x7b, 0x7b), new Color(0x6b, 0x6b, 0x6b),
+            new Color(0x5b, 0x5b, 0x5b), new Color(0x4f, 0x4f, 0x4f), new Color(0x3f, 0x3f, 0x3f),
+            new Color(0x2f, 0x2f, 0x2f), new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3),
+            new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3),
+            new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3),
+            new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3),
+            new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3),
+            new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3), new Color(0x07, 0x07, 0xb3),
+            new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7),
+            new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7),
+            new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7),
+            new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7),
+            new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7),
+            new Color(0x0b, 0x0b, 0xb7), new Color(0x0b, 0x0b, 0xb7), new Color(0x13, 0x13, 0xbb),
+            new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb),
+            new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb),
+            new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb),
+            new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb),
+            new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb), new Color(0x13, 0x13, 0xbb),
+            new Color(0x13, 0x13, 0xbb)
         };
     }
 
@@ -287,12 +330,12 @@ namespace Freeserf
             Last = Solid
         }
 
-        Interface interf = null;
+        OwnershipMode ownershipMode = OwnershipMode.None;
 
         public MinimapGame(Interface interf, Game game)
             : base(interf, game.Map)
         {
-            this.interf = interf;
+
         }
 
         protected override bool HandleDoubleClick(int x, int y, Event.Button button)
@@ -307,6 +350,107 @@ namespace Freeserf
             }
 
             return true;
+        }
+
+        public void SetOwnershipMode(OwnershipMode mode)
+        {
+            if (ownershipMode == mode)
+                return;
+
+            ownershipMode = mode;
+
+            UpdateMinimap(true);
+        }
+
+        public OwnershipMode GetOwnershipMode()
+        {
+            return ownershipMode;
+        }
+
+        public void SetDrawRoads(bool draw)
+        {
+            if (DrawRoads == draw)
+                return;
+
+            DrawRoads = draw;
+
+            UpdateMinimap(true);
+        }
+
+        public void SetDrawBuildings(bool draw)
+        {
+            if (DrawBuildings == draw)
+                return;
+
+            DrawBuildings = draw;
+
+            UpdateMinimap(true);
+        }
+
+        public void SetDrawGrid(bool draw)
+        {
+            if (DrawGrid == draw)
+                return;
+
+            DrawGrid = draw;
+
+            UpdateMinimap(true);
+        }
+
+        public bool DrawRoads { get; private set; } = false;
+        public bool DrawBuildings { get; private set; } = true;
+        public bool DrawGrid { get; private set; } = false;
+
+        protected override Color GetTileColor(MapPos pos, int index)
+        {
+            var column = map.PosColumn(pos);
+            var row = map.PosRow(pos);
+
+            if (DrawGrid && (column == 0 || row == 0))
+                return GridColor;
+
+            if (DrawBuildings)
+            {
+                if (map.GetObject(pos) > Map.Object.Flag && map.GetObject(pos) <= Map.Object.Castle)
+                {
+                    if (ownershipMode == OwnershipMode.None)
+                    {
+                        var playerColor = interf.GetPlayerColor(map.GetOwner(pos));
+
+                        return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+                    }
+                    else
+                    {
+                        return Color.White;
+                    }
+                }
+            }
+
+            if (DrawRoads)
+            {
+                if (map.Paths(pos) > 0)
+                {
+                    return Color.Black;
+                }
+            }
+
+            if (ownershipMode == OwnershipMode.Solid ||
+                (ownershipMode == OwnershipMode.Mixed && (index % 2 == 0) == ((index / 128) % 2 == 0)))
+            {
+                if (!map.HasOwner(pos))
+                {
+                    if (ownershipMode == OwnershipMode.Solid)
+                        return Color.Black;
+                }
+                else
+                {
+                    var playerColor = interf.GetPlayerColor(map.GetOwner(pos));
+
+                    return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+                }
+            }
+            
+            return base.GetTileColor(pos, index);
         }
     }
 }

@@ -64,6 +64,7 @@ namespace Freeserf.Render
         public static readonly Color Transparent = new Color(0x00, 0x00, 0x00, 0x00);
         public static readonly Color Black = new Color(0x00, 0x00, 0x00);
         public static readonly Color Green = new Color(0x73, 0xb3, 0x43);
+        public static readonly Color White = new Color(0xff, 0xff, 0xff);
 
         public static bool operator ==(Color color1, Color color2)
         {
