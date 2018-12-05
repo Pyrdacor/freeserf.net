@@ -76,7 +76,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public void Resize(int width, int height)
         {
-            if (this.width == width && this.height == height)
+            if (data != null && this.width == width && this.height == height)
                 return;
 
             this.width = width;

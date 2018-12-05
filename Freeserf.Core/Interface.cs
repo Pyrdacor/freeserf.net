@@ -469,6 +469,14 @@ namespace Freeserf
             }
         }
 
+        public void GotoMapPos(MapPos pos)
+        {
+            if (Ingame && Viewport != null)
+            {
+                Viewport.MoveToMapPos(pos, true);
+            }
+        }
+
         public void TogglePossibleBuilds()
         {
             if (Ingame && Viewport != null)

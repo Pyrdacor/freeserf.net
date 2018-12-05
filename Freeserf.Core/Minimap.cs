@@ -26,6 +26,7 @@ using System.Linq;
 
 namespace Freeserf
 {
+    using Freeserf.Event;
     using MapPos = UInt32;
 
     // Note: The minimap is drawn as 128x128.
@@ -34,17 +35,20 @@ namespace Freeserf
         const int MaxScale = 8;
 
         Interface interf = null;
+        Render.ILayerSprite sprite = null;
         Map map = null;
-        int offsetX = 0;
-        int offsetY = 0;
+        MapPos mapOffset = Global.BadMapPos;
         int scale = 1; // 1-8
         bool drawGrid = false;
-        readonly List<Render.Color> minimap = new List<Render.Color>();
 
         public Minimap(Interface interf, Map map = null)
             : base(interf)
         {
             this.interf = interf;
+            sprite = interf.RenderView.SpriteFactory.Create(128, 128, 0, 0, false, true) as Render.ILayerSprite;
+            sprite.Layer = interf.RenderView.GetLayer(Freeserf.Layer.Minimap);
+            sprite.Visible = false;
+            sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
 
             SetMap(map);
         }
@@ -53,17 +57,24 @@ namespace Freeserf
         {
             base.InternalHide();
 
-            // TODO
+            sprite.Visible = false;
         }
 
         protected override void InternalDraw()
         {
-            // TODO
+            sprite.X = TotalX;
+            sprite.Y = TotalY;
+            sprite.Visible = Displayed;
         }
 
         public void SetMap(Map map)
         {
+            if (this.map == map)
+                return;
+
             this.map = map;
+
+            UpdateMinimap();
         }
 
         public void SetDrawGrid(bool draw)
@@ -78,40 +89,135 @@ namespace Freeserf
 
         protected internal override void UpdateParent()
         {
-            // TODO
+            sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 
         public void MoveToMapPos(MapPos pos)
         {
-
+            // TODO: I guess we don't need this anymore as we take the offset directly from RenderMap
         }
 
         /* Initialize minimap data. */
-        void InitMinimap()
+        public void UpdateMinimap(bool force = false)
         {
             if (map == null)
                 return;
 
+            var offset = map.RenderMap.GetCenteredPosition();
+
+            if (offset == mapOffset && !force)
+                return;
+
+            mapOffset = offset;
+
+            var mapCoordinates = map.RenderMap.GetMapPosition(offset);
+            mapCoordinates.X -= (64 / scale) * Render.RenderMap.TILE_WIDTH - Render.RenderMap.TILE_WIDTH;
+            mapCoordinates.Y -= (64 / scale) * Render.RenderMap.TILE_HEIGHT - Render.RenderMap.TILE_HEIGHT / 2;
+            offset = map.RenderMap.GetMapPosFromMapCoordinates(mapCoordinates.X, mapCoordinates.Y);
+
             byte[] minimapData = new byte[128 * 128 * 4];
+            int visibleWidth = Math.Min(128, (int)map.Columns / scale);
+            int visibleHeight = Math.Min(128, (int)map.Rows / scale);
+            var pos = offset;
+            Render.Color tileColor = null;
 
-            foreach (MapPos pos in map.Geometry)
+            if (visibleWidth * scale < 128)
+                visibleWidth = 128 / scale;
+
+            if (visibleHeight * scale < 128)
+                visibleHeight = 128 / scale;
+
+            for (int c = 0; c < visibleWidth; ++c)
             {
-                int typeOff = ColorOffset[(int)map.TypeUp(pos)];
+                var start = pos;
 
-                int h1 = (int)map.GetHeight(map.MoveRight(pos));
-                int h2 = (int)map.GetHeight(map.MoveLeft(map.MoveDown(pos)));
+                for (int r = 0; r < visibleHeight; ++r)
+                {
+                    tileColor = GetTileColor(pos);
 
-                int hOff = h2 - h1 + 8;
+                    SetColor(minimapData, c, r, scale, tileColor);
 
-                minimap.Add(Colors[typeOff + hOff]);
+                    if (map.PosRow(pos) % 2 == 0)
+                        pos = map.MoveDownRight(pos);
+                    else
+                        pos = map.MoveDown(pos);
+                }
+
+                start = map.MoveRight(start);
+                pos = start;
             }
 
-            UpdateTexture();
+            interf.RenderView.MinimapTextureFactory.ResizeMinimapTexture(128, 128);
+            interf.RenderView.MinimapTextureFactory.FillMinimapTexture(minimapData);
         }
 
-        void UpdateTexture()
+        void SetColor(byte[] data, int x, int y, int scale, Render.Color color)
         {
-            //interf.RenderView.MinimapTextureFactory.FillMinimapTexture()
+            int xOffset = x * scale;
+            int yOffset = y * scale;
+            int index = (yOffset * 128 + xOffset) * 4;
+            int rowIndex = index;
+
+            for (int r = 0; r < scale; ++r)
+            {
+                for (int c = 0; c < scale; ++c)
+                {
+                    data[index++] = color.B;
+                    data[index++] = color.G;
+                    data[index++] = color.R;
+                    data[index++] = color.A;
+                }
+
+                rowIndex += 128 * 4;
+                index = rowIndex;
+            }
+        }
+
+        Render.Color GetTileColor(MapPos pos)
+        {
+            int typeOff = ColorOffset[(int)map.TypeUp(pos)];
+
+            int h1 = (int)map.GetHeight(map.MoveRight(pos));
+            int h2 = (int)map.GetHeight(map.MoveDown(pos));
+
+            int hOff = h2 - h1 + 8;
+
+            return Colors[typeOff + hOff];
+        }
+
+        protected override bool HandleClickLeft(int x, int y)
+        {
+            x -= TotalX;
+            y -= TotalY;
+
+            x /= scale;
+            y /= scale;
+
+            int visibleWidth = Math.Min(128, (int)map.Columns / scale);
+            int visibleHeight = Math.Min(128, (int)map.Rows / scale);
+            var mapPosition = map.RenderMap.GetMapPosition(mapOffset);
+
+            mapPosition.X += Render.RenderMap.TILE_WIDTH / 2;
+            mapPosition.Y += Render.RenderMap.TILE_HEIGHT / 2;
+
+            if (visibleWidth * scale < 128)
+                visibleWidth = 128 / scale;
+
+            if (visibleHeight * scale < 128)
+                visibleHeight = 128 / scale;
+
+            int relX = x - visibleHeight / 2;
+            int relY = y - visibleHeight / 2;
+
+            mapPosition.X += relX * Render.RenderMap.TILE_WIDTH;
+            mapPosition.Y += relY * Render.RenderMap.TILE_HEIGHT;
+
+            var pos = map.RenderMap.GetMapPosFromMapCoordinates(mapPosition.X, mapPosition.Y);
+
+            interf.GotoMapPos(pos);
+            UpdateMinimap();
+
+            return true;
         }
 
         static readonly int[] ColorOffset = new int[]
@@ -181,10 +287,26 @@ namespace Freeserf
             Last = Solid
         }
 
-        public MinimapGame(Interface interf, Game game)
-            : base(interf)
-        {
+        Interface interf = null;
 
+        public MinimapGame(Interface interf, Game game)
+            : base(interf, game.Map)
+        {
+            this.interf = interf;
+        }
+
+        protected override bool HandleDoubleClick(int x, int y, Event.Button button)
+        {
+            if (button == Event.Button.Left)
+            {
+                // jump to map pos
+                HandleClickLeft(x, y);
+
+                // close the minimap
+                interf.ClosePopup();
+            }
+
+            return true;
         }
     }
 }

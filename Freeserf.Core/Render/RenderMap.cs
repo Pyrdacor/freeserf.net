@@ -660,7 +660,7 @@ namespace Freeserf.Render
             return GetRow(map.PosColumn(pos), map.PosRow(pos), y, down, lastDiff);
         }
 
-        MapPos GetMapPosFromMapCoordinates(int x, int y)
+        public MapPos GetMapPosFromMapCoordinates(int x, int y)
         {
             int lwidth = (int)map.Columns * TILE_WIDTH;
             int lheight = (int)map.Rows * TILE_HEIGHT;

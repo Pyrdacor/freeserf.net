@@ -1063,9 +1063,10 @@ namespace Freeserf
             return "";
         }
 
-        void draw_map_box()
+        void DrawMapBox()
 		{
-            
+            // TODO: scale, ui
+
         }
 
         void draw_mine_building_box()
@@ -2756,7 +2757,7 @@ namespace Freeserf
             switch (Box)
             {
                 case Type.Map:
-                    draw_map_box();
+                    DrawMapBox();
                     break;
                 case Type.MineBuilding:
                     draw_mine_building_box();

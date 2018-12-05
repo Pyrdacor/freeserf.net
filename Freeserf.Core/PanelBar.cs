@@ -471,14 +471,11 @@ namespace Freeserf
                         /* Synchronize minimap window with viewport. */
                         if (popup != null)
                         {
-                            Viewport viewport = interf.Viewport;
                             Minimap minimap = popup.MiniMap;
 
                             if (minimap != null)
                             {
-                                MapPos pos = viewport.GetCurrentMapPos();
-
-                                minimap.MoveToMapPos(pos);
+                                minimap.UpdateMinimap();
                             }
                         }
                     }
