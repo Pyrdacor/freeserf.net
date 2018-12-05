@@ -455,13 +455,12 @@ namespace Freeserf
         void HideBoxString(TextField textField)
         {
             textField.Displayed = false;
-            textField.Destroy();
         }
 
         void DrawBoxString(int x, int y, TextField textField, string str)
         {
             textField.Text = str;
-            textField.MoveTo( 8 * x + 16, y + 16);
+            textField.MoveTo(8 * x + 16, y + 16);
             textField.Displayed = Displayed;
 
             // TODO: textField.ColorText = Color.Green;
