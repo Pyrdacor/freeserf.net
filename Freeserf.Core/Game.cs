@@ -2340,7 +2340,7 @@ namespace Freeserf
 
                 if (serfList[i].Index > 0u && renderSerfs.ContainsKey(serfList[i]))
                 {
-                    renderSerfs[serfList[i]].Update(tick, map, serfList[i].Position);
+                    renderSerfs[serfList[i]].Update(this, renderView.DataSource, tick, map, serfList[i].Position);
                 }
             }
         }
