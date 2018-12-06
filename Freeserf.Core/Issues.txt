@@ -3,6 +3,8 @@
 - Black lines / artifacts (fixed by virtual screen resolution change but some small remain)
 - Map objects may appear above a construction site. Should those objects not be removed?
 - Improve grid drawing in minimap
+- Roads are not at the right location. Sometimes even a bit inside water. Maybe the tiles below are not at the right pos?
+	- The relation between road segments is ok though
 
 
 Non-working code:

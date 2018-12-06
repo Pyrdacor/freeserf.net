@@ -3253,7 +3253,7 @@ namespace Freeserf
                                 uint flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
                                 Flag flag = Game.GetFlag(flagIndex);
                                 flag.ClearFlags();
-                                building.StockInit(1, Resource.Type.Lumber, 8);
+                                building.StockInit(0, Resource.Type.Lumber, 8);
                             }
 
                             SetState(State.Sawing);
@@ -5320,7 +5320,7 @@ namespace Freeserf
             {
                 Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
-                if (building.UseResourceInStock(1))
+                if (building.UseResourceInStock(0))
                 {
                     s.Sawing.Mode = 1;
                     Animation = 124;
@@ -5335,7 +5335,8 @@ namespace Freeserf
                 tick = Game.Tick;
                 Counter -= delta;
 
-                if (Counter >= 0) return;
+                if (Counter >= 0)
+                    return;
 
                 Game.Map.SetSerfIndex(Position, 0);
                 SetState(State.MoveResourceOut);

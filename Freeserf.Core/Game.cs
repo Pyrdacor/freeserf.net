@@ -273,8 +273,17 @@ namespace Freeserf
 
             /* Update tick counters based on game speed */
             lastTick = tick;
+
             tick += (ushort)gameSpeed;
-            tickDiff = (int)(tick - lastTick); // TODO: What happens if we exceed ushort.MaxValue for tick?
+
+            if (lastTick > tick) // ushort overflow
+            {
+                tickDiff = (int)tick + (int)ushort.MaxValue - (int)lastTick;
+            }
+            else
+            {
+                tickDiff = (int)(tick - lastTick);
+            }
 
             ClearSerfRequestFailure();
             map.Update(tick, initMapRandom);
