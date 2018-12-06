@@ -1858,10 +1858,48 @@ namespace Freeserf
 			
 		}
 
-        void draw_ordered_building_box()
+        void DrawOrderedBuildingBox()
 		{
-			
-		}
+            var building = TryToOpenBuildingPopup();
+
+            if (building == null)
+                return;
+
+            var type = building.BuildingType;
+            int x = (type == Building.Type.Stock || type == Building.Type.Fortress) ? 40 : 56;
+
+            SetBuildingIcon(x, 49, type);
+
+            SetText(24, 13, "Ordered");
+            SetText(24, 23, "Building");
+
+            if (building.HasSerf())
+            {
+                if (building.GetProgress() == 0)
+                {
+                    /* Digger */
+                    SetIcon(24, 109, 0xbu);
+                }
+                else
+                {
+                    /* Builder */
+                    SetIcon(24, 109, 0xcu);
+                }
+            }
+            else
+            {
+                /* Minus box */
+                SetIcon(24, 109, 0xdcu);
+            }
+
+            // draw construction materials
+            SetIcon(64, 109, 41u); // plank icon
+            SetText(66, 129, $"{building.GetResourceCountInStock(0)}");
+            SetIcon(104, 109, 43u); // stone icon
+            SetText(106, 129, $"{building.GetResourceCountInStock(1)}");
+
+            SetButton(120, 137, 0x3c, Action.CloseBox); // exit
+        }
 
         void draw_defenders_box()
 		{
@@ -2881,7 +2919,7 @@ namespace Freeserf
                     draw_mine_output_box();
                     break;
                 case Type.OrderedBld:
-                    draw_ordered_building_box();
+                    DrawOrderedBuildingBox();
                     break;
                 case Type.Defenders:
                     draw_defenders_box();
