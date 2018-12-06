@@ -82,6 +82,7 @@ namespace Freeserf
         }
 
         bool emergencyProgramActive = false;
+        bool emergencyProgramWasDeactivatedOnce = false;
         int[] toolPriorities = new int[9];
         uint[] resourceCount = new uint[26];
         int[] flagPriorities = new int[26];
@@ -193,6 +194,9 @@ namespace Freeserf
                 if (value == emergencyProgramActive)
                     return;
 
+                if (value && emergencyProgramWasDeactivatedOnce)
+                    return; // can't be reactivated
+
                 if (value)
                 {
                     AddNotification(Message.Type.EmergencyActive, CastlePos, CastlePos);
@@ -203,6 +207,9 @@ namespace Freeserf
                 }
 
                 emergencyProgramActive = value;
+
+                if (!value)
+                    emergencyProgramWasDeactivatedOnce = true;
             }
         }
 
@@ -1276,14 +1283,24 @@ namespace Freeserf
 
         void UpdateEmergencyProgram()
         {
-            int numLumberjacks = Game.GetPlayerBuildings(this, Building.Type.Lumberjack).Count();
-            int numStoneCutters = Game.GetPlayerBuildings(this, Building.Type.Stonecutter).Count();
-            int numSawMills = Game.GetPlayerBuildings(this, Building.Type.Sawmill).Count();
+            var lumberjacks = Game.GetPlayerBuildings(this, Building.Type.Lumberjack);
+            var stonecutters = Game.GetPlayerBuildings(this, Building.Type.Stonecutter);
+            var sawmills = Game.GetPlayerBuildings(this, Building.Type.Sawmill);
+
+            int numLumberjacks = lumberjacks.Count();
+            int numStoneCutters = stonecutters.Count();
+            int numSawMills = sawmills.Count();
 
             if (numLumberjacks != 0 && numStoneCutters != 0 && numSawMills != 0)
             {
-                EmergencyProgramActive = false;
-                return;
+                // check if all resources are delivered to the construction sites
+                if (lumberjacks.Any(l => l.IsDone() || l.HasAllConstructionMaterials()) &&
+                    stonecutters.Any(s => s.IsDone() || s.HasAllConstructionMaterials()) &&
+                    sawmills.Any(s => s.IsDone() || s.HasAllConstructionMaterials()))
+                {
+                    EmergencyProgramActive = false;
+                    return;
+                }
             }
 
             int planks = Game.GetResourceAmountInInventories(this, Resource.Type.Plank);
@@ -1316,7 +1333,8 @@ namespace Freeserf
             int remainingPlanks = planks - numPlanksNeeded;
             int remainingStones = stones - numStonesNeeded;
 
-            EmergencyProgramActive = remainingPlanks <= 0 || remainingStones <= 0;
+            if (remainingPlanks <= 0 || remainingStones <= 0)
+                EmergencyProgramActive = true;
         }
 
         public void UpdateStats(int resource)

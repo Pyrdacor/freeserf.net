@@ -649,6 +649,17 @@ namespace Freeserf
             return stock[0].Available; // Planks always in stock #0
         }
 
+        public bool HasAllConstructionMaterials()
+        {
+            if (IsDone())
+                return true;
+
+            uint numPlanks = stock[0].Available + stock[0].Requested;
+            uint numStones = stock[1].Available + stock[1].Requested;
+
+            return numPlanks == stock[0].Maximum && numStones == stock[1].Maximum;
+        }
+
         public uint MilitaryGoldCount()
         {
             uint count = 0;
@@ -811,6 +822,16 @@ namespace Freeserf
         public int GetMaxPriorityForResource(Resource.Type resource, int minimum = 0)
         {
             int maxPrio = -1;
+
+            // If the emergency program is active and this is no essential building
+            // we give no priority to this building.
+            var player = Game.GetPlayer(Player);
+
+            if (player.EmergencyProgramActive && (resource == Resource.Type.Plank || resource == Resource.Type.Stone) &&
+                BuildingType != Type.Lumberjack && BuildingType != Type.Sawmill && BuildingType != Type.Stonecutter)
+            {
+                return maxPrio; // = -1
+            }
 
             for (int i = 0; i < MaxStock; ++i)
             {
@@ -1611,6 +1632,12 @@ namespace Freeserf
         void UpdateUnfinished()
         {
             Player player = Game.GetPlayer(Player);
+
+            // don't send a builder during active emergency program
+            // if this is not an essential building
+            if (player.EmergencyProgramActive && BuildingType != Type.Lumberjack &&
+                BuildingType != Type.Sawmill && BuildingType != Type.Stonecutter)
+                return;
 
             /* Request builder serf */
             if (!serfRequestFailed && !holder && !serfRequested)
