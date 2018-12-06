@@ -22,8 +22,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -49,6 +47,20 @@ namespace Freeserf
             Kill(ai);
         }
     }
+
+    /*
+     * AIs with higher intelligence should be more clever when dealing
+     * with low starting resources:
+     * 
+     * Instead of building a toolmaker without having materials for
+     * crafting tools the AI should focus on finding coal and iron
+     * and expand their territory to get them. Then build mines and
+     * a steel smelter and distribute food in a clever way to the
+     * mines. An early fisher is prefered too.
+     * 
+     * The castle spot picking should consider mountains and a lake
+     * for this purpose.
+     */
 
     /// <summary>
     /// Note: The ai will not be the same as in the original game.
