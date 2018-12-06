@@ -9,14 +9,9 @@
 
 Non-working code:
 
-- Same enemy can occur more than once in random games
-- Player values are not visible in GameInitBox
-- Sometimes a KeyNotFoundException is thrown
-- Sometimes no construction materials are moved out of the castle
 - Sometimes a road can not be build in a direction where it should be possible
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
-- If emergency program is active, the resources are still given to other buildings
 - OtherEndDir not valid exception in Serf.cs line 2801. I guess the CallTransporter call in Flag.cs line 864 is the problem. Direction and/or IsWaterPath are not right.
   Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
@@ -32,6 +27,7 @@ AI:
 Serf rendering:
 
 - Serfs sometimes disappear (see RenderSerf.cs comments for details), maybe Serf.SwitchWaiting and following code is the problem
+	- Now it seems that if two serfs are on the same map pos but serf switching on a road seems to work
 - Serfs appear in front of map objects when they should not (e.g. in front of a tree top)
 - In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
@@ -42,11 +38,12 @@ Serf rendering:
 
 Logic:
 
-- Saw a builder to don't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
-- Logs are brought to castle instead of sawmill
+- Saw a builder that doesn't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
 
 
 Notification Box:
+
+Test again because font char gaps should be smaller now!
 
 - Text too long for:
 	FoundStone
@@ -61,3 +58,4 @@ Notification Box:
 Misc:
 
 - Materials at building constructions are hidden by the building shadow (this is realistic, but is this wanted? How was it done in original game?)
+- The castle shadow looks weird and hides serfs that move along the right castle side
