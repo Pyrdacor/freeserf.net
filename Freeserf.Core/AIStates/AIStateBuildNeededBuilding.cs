@@ -130,6 +130,11 @@ namespace Freeserf.AIStates
                 }
             }
 
+            // Don't build new building while the emergency program is active.
+            // The essential buildings are handled above.
+            if (player.EmergencyProgramActive)
+                return CheckResult.NotNeeded;
+
             switch (type)
             {
                 case Building.Type.Lumberjack:
