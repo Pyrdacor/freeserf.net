@@ -1074,10 +1074,17 @@ namespace Freeserf
             MiniMap.UpdateMinimap(true);
         }
 
-        void draw_mine_building_box()
+        void DrawMineBuildingBox()
 		{
-			
-		}
+            int index = 0;
+
+            SetBuilding(index++, 24, 17, Building.Type.StoneMine);
+            SetBuilding(index++, 72, 17, Building.Type.CoalMine);
+            SetBuilding(index++, 40, 86, Building.Type.IronMine);
+            SetBuilding(index++, 88, 86, Building.Type.GoldMine);
+
+            ShowBuildings(4);
+        }
 
         // flip means the user can change the page
         void DrawBasicBuildingBox(bool flip)
@@ -1111,7 +1118,6 @@ namespace Freeserf
             flipButton.Displayed = flip && Displayed;
         }
 
-        // 8 * x + 8, y + 9
         void DrawAdv1BuildingBox()
 		{
             int index = 0;
@@ -2821,7 +2827,7 @@ namespace Freeserf
                     DrawMapBox();
                     break;
                 case Type.MineBuilding:
-                    draw_mine_building_box();
+                    DrawMineBuildingBox();
                     break;
                 case Type.BasicBld:
                     DrawBasicBuildingBox(false);
