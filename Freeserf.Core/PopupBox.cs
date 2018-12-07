@@ -696,16 +696,7 @@ namespace Freeserf
 
         private void PopupBox_BuildingClicked(object sender, Button.ClickEventArgs args)
         {
-            switch (Box)
-            {
-                case Type.BasicBld:
-                case Type.BasicBldFlip:
-                case Type.Adv1Bld:
-                case Type.Adv2Bld:
-                    HandleBuildingClick((sender as BuildingButton).Tag, args.X, args.Y);
-                    break;
-                // TODO ...
-            }
+            HandleBuildingClick((sender as BuildingButton).Tag, args.X, args.Y);
         }
 
         void ShowBuildings(int num)
@@ -1872,37 +1863,39 @@ namespace Freeserf
                 return;
 
             var type = building.BuildingType;
-            int x = (type == Building.Type.Stock || type == Building.Type.Fortress) ? 40 : 56;
+            var info = interf.RenderView.DataSource.GetSpriteInfo(Data.Resource.MapObject, Render.RenderBuilding.MapBuildingSprite[(int)type]);
+
+            int x = (Width - info.Width) / 2;
 
             SetBuildingIcon(x, 49, type);
 
-            SetText(24, 13, "Ordered");
-            SetText(24, 23, "Building");
+            SetText(16, 13, "Ordered");
+            SetText(16, 23, "Building");
 
             if (building.HasSerf())
             {
                 if (building.GetProgress() == 0)
                 {
                     /* Digger */
-                    SetIcon(24, 109, 0xbu);
+                    SetIcon(18, 121, 0xbu);
                 }
                 else
                 {
                     /* Builder */
-                    SetIcon(24, 109, 0xcu);
+                    SetIcon(18, 121, 0xcu);
                 }
             }
             else
             {
                 /* Minus box */
-                SetIcon(24, 109, 0xdcu);
+                SetIcon(18, 121, 0xdcu);
             }
 
             // draw construction materials
-            SetIcon(64, 109, 41u); // plank icon
-            SetText(66, 129, $"{building.GetResourceCountInStock(0)}");
-            SetIcon(104, 109, 43u); // stone icon
-            SetText(106, 129, $"{building.GetResourceCountInStock(1)}");
+            SetIcon(48, 121, 41u); // plank icon
+            SetText(50, 137, $"{building.GetResourceCountInStock(0)}");
+            SetIcon(78, 121, 43u); // stone icon
+            SetText(80, 137, $"{building.GetResourceCountInStock(1)}");
 
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
         }
@@ -2038,7 +2031,9 @@ namespace Freeserf
             SetIcon(16, 45, serfSprite);
 
             // draw building
-            int x = (building.BuildingType == Building.Type.Stock || building.BuildingType == Building.Type.Fortress) ? 40 : 56;
+            var info = interf.RenderView.DataSource.GetSpriteInfo(Data.Resource.MapObject, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
+
+            int x = (Width - info.Width) / 2;
             SetBuildingIcon(x, 39, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
 
             // draw texts
@@ -2365,27 +2360,6 @@ namespace Freeserf
             }
         }
 
-        void handle_send_geologist()
-		{
-			
-		}
-
-        void sett_8_train(int number)
-		{
-			
-		}
-
-        void set_inventory_resource_mode(int mode)
-		{
-			
-		}
-
-        void set_inventory_serf_mode(int mode)
-		{
-			
-		}
-
-
         void HandleAction(Action action, int x, int y, object tag = null)
 		{
             SetRedraw();
@@ -2607,27 +2581,6 @@ namespace Freeserf
             }
 		}
 
-        int handle_clickmap(int x, int y, int[] clkmap)
-		{
-            return 0;
-		}
-
-        void handle_box_close_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_box_options_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_mine_building_clk(int x, int y)
-		{
-			
-		}
-
-        // TODO: can also be used for mines, large buildings, etc
         void HandleBuildingClick(object tag, int x, int y)
 		{
             if (tag is Building.Type)
@@ -2638,166 +2591,6 @@ namespace Freeserf
             {
                 HandleAction(Action.BuildFlag, x, y);
             }
-		}
-
-        void handle_adv_1_building_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_adv_2_building_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_stat_select_click(int x, int y)
-		{
-			
-		}
-
-        void handle_stat_bld_click(int x, int y)
-		{
-			
-		}
-
-        void handle_stat_8_click(int x, int y)
-		{
-			
-		}
-
-        void handle_stat_7_click(int x, int y)
-		{
-			
-		}
-
-        void handle_stat_1_2_3_4_6_click(int x, int y)
-		{
-			
-		}
-
-        void handle_start_attack_click(int x, int y)
-		{
-			
-		}
-
-        void handle_ground_analysis_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_select_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_1_click(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_2_click(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_3_click(int x, int y)
-		{
-			
-		}
-
-        void handle_knight_level_click(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_4_click(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_5_6_click(int x, int y)
-		{
-			
-		}
-
-        void handle_quit_confirm_click(int x, int y)
-		{
-			
-		}
-
-        void handle_no_save_quit_confirm_click(int x, int y)
-		{
-			
-		}
-
-        void handle_castle_res_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_transport_info_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_castle_serf_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_resdir_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_sett_8_click(int x, int y)
-		{
-			
-		}
-
-        void handle_message_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_player_faces_click(int x, int y)
-		{
-			
-		}
-
-        void handle_box_demolish_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_minimap_clk(int x, int y)
-		{
-			
-		}
-
-        void handle_box_bld_1(int x, int y)
-		{
-			
-		}
-
-        void handle_box_bld_2(int x, int y)
-		{
-			
-		}
-
-        void handle_box_bld_3(int x, int y)
-		{
-			
-		}
-
-        void handle_box_bld_4(int x, int y)
-		{
-			
-		}
-
-        void handle_save_clk(int x, int y)
-		{
-			
 		}
 
         protected override void InternalHide()
