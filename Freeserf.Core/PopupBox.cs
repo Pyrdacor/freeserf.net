@@ -1857,10 +1857,68 @@ namespace Freeserf
             
 		}
 
-        void draw_mine_output_box()
+        void DrawMineOutputBox()
 		{
-			
-		}
+            var building = TryToOpenBuildingPopup();
+
+            if (building == null)
+                return;
+
+            if (building.BuildingType < Building.Type.StoneMine ||
+                building.BuildingType > Building.Type.GoldMine)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            // Draw food present at mine
+            uint stock = building.GetResourceCountInStock(0);
+            uint stockLeftColumn = (stock + 1u) >> 1;
+            uint stockRightColumn = stock >> 1;
+
+            // Left column
+            for (uint i = 0; i < stockLeftColumn; ++i)
+            {
+                SetIcon(16, 99 - 8 * (int)stockLeftColumn + (int)i * 16, 0x24); // meat (food) sprite
+            }
+
+            // Right column
+            for (uint i = 0; i < stockRightColumn; ++i)
+            {
+                SetIcon(112, 99 - 8 * (int)stockLeftColumn + (int)i * 16, 0x24); // meat (food) sprite
+            }
+
+            // Calculate output percentage (simple WMA)
+            int[] outputWeight = { 10, 10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 3, 2, 1 };
+            int output = 0;
+
+            for (int i = 0; i < 15; ++i)
+            {
+                output += Misc.BitTest(building.GetProgress(), i) ? outputWeight[i] : 0;
+            }
+
+            // Print output precentage
+            SetText(56, 47, output.ToString() + "%");
+
+            // draw picture of serf present
+            uint serfSprite = 0xdcu; // minus box
+
+            if (building.HasSerf())
+                serfSprite = 0x11; // miner
+
+            SetIcon(88, 84, serfSprite);
+
+            // draw building
+            var info = interf.RenderView.DataSource.GetSpriteInfo(Data.Resource.MapObject, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
+
+            int x = (Width - info.Width) / 2;
+            SetBuildingIcon(x, 69, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
+
+            // draw texts
+            SetText(16, 13, "Mining output:");
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit
+        }
 
         void DrawOrderedBuildingBox()
 		{
@@ -1900,9 +1958,9 @@ namespace Freeserf
 
             // draw construction materials
             SetIcon(48, 121, 41u); // plank icon
-            SetText(50, 137, $"{building.GetResourceCountInStock(0)}");
+            SetText(50, 139, $"{building.GetResourceCountInStock(0)}");
             SetIcon(78, 121, 43u); // stone icon
-            SetText(80, 137, $"{building.GetResourceCountInStock(1)}");
+            SetText(80, 139, $"{building.GetResourceCountInStock(1)}");
 
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
         }
@@ -2738,7 +2796,7 @@ namespace Freeserf
                     DrawCastleResourcesBox();
                     break;
                 case Type.MineOutput:
-                    draw_mine_output_box();
+                    DrawMineOutputBox();
                     break;
                 case Type.OrderedBld:
                     DrawOrderedBuildingBox();
