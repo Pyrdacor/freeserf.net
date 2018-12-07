@@ -36,6 +36,7 @@ namespace Freeserf.Render
         Rect VirtualScreen { get; }
         float Zoom { get; }
         void ResetZoom();
+        bool Fullscreen { get; set; }
 
         ISpriteFactory SpriteFactory { get; }
         ITriangleFactory TriangleFactory { get; }

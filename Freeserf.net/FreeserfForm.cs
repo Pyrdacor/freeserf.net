@@ -46,6 +46,7 @@ namespace Freeserf
             SetClientSize(1280, 960);
 
             gameView = new GameView(dosData, new Size(1280, 960), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+            gameView.FullscreenRequestHandler = FullscreenRequestHandler;
 
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
@@ -88,19 +89,41 @@ namespace Freeserf
 
         protected override void WndProc(ref System.Windows.Forms.Message m)
         {
-            FormWindowState previousWindowState = this.WindowState;
+            FormWindowState previousWindowState = WindowState;
 
             base.WndProc(ref m);
 
-            FormWindowState currentWindowState = this.WindowState;
+            FormWindowState currentWindowState = WindowState;
 
             if (previousWindowState != currentWindowState)
             {
                 if (currentWindowState == FormWindowState.Maximized)
-                    SetFullscreen(true);
+                {
+                    if (!SetFullscreen(true) && !fullscreen)
+                    {
+                        WindowState = previousWindowState;
+                    }
+                }
                 else if (currentWindowState == FormWindowState.Normal)
-                    SetFullscreen(false);
+                {
+                    if (!SetFullscreen(false) && fullscreen)
+                    {
+                        WindowState = previousWindowState;
+                    }
+                }
             }
+        }
+
+        bool FullscreenRequestHandler(bool fullscreen)
+        {
+            if (this.fullscreen != fullscreen)
+            {
+                this.fullscreen = fullscreen;
+
+                HandleFullscreenChange();
+            }
+
+            return true;
         }
 
         void HandleFullscreenChange()
@@ -123,16 +146,19 @@ namespace Freeserf
             }
         }
 
-        void SetFullscreen(bool fullscreen)
+        bool SetFullscreen(bool fullscreen)
         {
-            this.fullscreen = fullscreen;
-            HandleFullscreenChange();
+            if (this.fullscreen == fullscreen)
+                return false;
+
+            gameView.Fullscreen = fullscreen;
+
+            return gameView.Fullscreen == fullscreen; // dit it work?
         }
 
-        void ToggleFullscreen()
+        bool ToggleFullscreen()
         {
-            fullscreen = !fullscreen;
-            HandleFullscreenChange();
+            return SetFullscreen(!fullscreen);
         }
 
         void ZoomIn()

@@ -265,18 +265,16 @@ namespace Freeserf
             QuitCancel,
             NoSaveQuitConfirm,
             ShowQuit,
-            Actionshowoptions,
+            ShowOptions,
             ShowSave,
             CycleKnights,
-            CloseOptions,
             OptionsPathwayScrolling1,
             OptionsPathwayScrolling2,
             OptionsFastMapClick1,
             OptionsFastMapClick2,
             OptionsFastBuilding1,
             OptionsFastBuilding2,
-            OptionsMessageCount1,
-            OptionsMessageCount2,
+            OptionsMessageCount,
             ShowSettSelectFile, /* Unused */
             ShowStatSelectFile, /* Unused */
             DefaultFoodDistribution,
@@ -364,6 +362,7 @@ namespace Freeserf
         readonly Dictionary<TextField, bool> texts = new Dictionary<TextField, bool>(); // value: in use
         readonly SlideBar[] slideBars = new SlideBar[9]; // TODO: is 9 enough?
         const int SlideBarFactor = 1310;
+        TextField optionsMessagesTextField = null;
 
         uint CurrentTransportPriorityItem = 0u;
         uint CurrentInventoryPriorityItem = 0u;
@@ -765,7 +764,7 @@ namespace Freeserf
             }
         }
 
-        void SetText(int x, int y, string text, bool useSpecialDigits = false)
+        TextField SetText(int x, int y, string text, bool useSpecialDigits = false)
         {
             // check if there is a free text
             foreach (var textField in texts.Keys.ToList())
@@ -777,7 +776,7 @@ namespace Freeserf
                     textField.UseSpecialDigits(useSpecialDigits);
                     textField.Displayed = Displayed;
                     texts[textField] = true;
-                    return;
+                    return textField;
                 }
             }
 
@@ -788,6 +787,8 @@ namespace Freeserf
             AddChild(newText, x, y, true);
 
             texts.Add(newText, true);
+
+            return newText;
         }
 
         void ClearTexts()
@@ -917,93 +918,11 @@ namespace Freeserf
         #endregion
 
 
-        /* Draw the frame around the popup box. */
-        void draw_popup_box_frame()
-		{
-			
-		}
-
-        /* Draw building in a popup frame. */
-        void draw_popup_building(int x, int y, uint sprite)
-		{
-			
-		}
-
-        /* Fill the background of a popup frame. */
-        void draw_box_background(BackgroundPattern sprite)
-		{
-			
-		}
-
         /* Fill one row of a popup frame. */
         void draw_box_row(uint sprite, int y)
 		{
 			
 		}
-
-        /* Draw a green string in a popup frame. */
-        void draw_green_string(int x, int y, string str)
-		{
-			
-		}
-
-        void DrawPopupIcon(int x, int y, uint spriteIndex)
-        {
-
-        }
-
-        /* Draw a green number in a popup frame.
-           n must be non-negative. If > 999 simply draw ">999" (three characters). */
-        void draw_green_number(int x, int y, uint n)
-		{
-            if (n >= 1000)
-            {
-                DrawPopupIcon(x, y, 0xd5u); /* Draw >999 */
-                DrawPopupIcon(x + 1, y, 0xd6u);
-                DrawPopupIcon(x + 2, y, 0xd7u);
-            }
-            else
-            {
-                /* Not the same sprites as are used to draw numbers
-                   in gfx_draw_number(). */
-                bool drawZero = false;
-
-                if (n >= 100)
-                {
-                    uint n100 = (uint)((n / 100.0f) + 0.5f);
-                    n -= n100 * 100;
-                    DrawPopupIcon(x, y, 0x4e + n100);
-                    ++x;
-                    drawZero = true;
-                }
-
-                if (n >= 10 || drawZero)
-                {
-                    uint n10 = (uint)((n / 10.0f) + 0.5f);
-                    n -= n10 * 10;
-                    DrawPopupIcon(x, y, 0x4e + n10);
-                    ++x;
-                }
-
-                DrawPopupIcon(x, y, 0x4e + n);
-            }
-        }
-
-        /* Draw a green number in a popup frame.
-           No limits on n. */
-        void draw_green_large_number(int x, int y, uint n)
-		{
-			
-		}
-
-        /* Draw small green number. */
-        void draw_additional_number(int x, int y, uint n)
-		{
-            if (n > 0)
-            {
-                DrawPopupIcon(x, y, 240u + Math.Min(n, 10u));
-            }
-        }
 
         /* Get the sprite number for a face. */
         static uint GetPlayerFaceSprite(uint face)
@@ -1012,46 +931,6 @@ namespace Freeserf
                 return 0x10bu + face;
 
             return 0x119u; /* sprite_face_none */
-        }
-
-        /* Draw player face in popup frame. */
-        void draw_player_face(int x, int y, uint playerIndex)
-		{
-            Player.Color color;
-            uint face = 0;
-            Player player = interf.Game.GetPlayer(playerIndex);
-
-            if (player != null)
-            {
-                color = interf.GetPlayerColor(playerIndex);
-                face = player.GetFace();
-            }
-
-            //frame->fill_rect(8 * x, y + 5, 48, 72, color);
-            DrawPopupIcon(x, y, GetPlayerFaceSprite(face));
-        }
-
-        /* Draw a layout of buildings in a popup box. */
-        void draw_custom_bld_box(int[] sprites)
-		{
-			
-		}
-
-        /* Draw a layout of icons in a popup box. */
-        void draw_custom_icon_box(int[] sprites)
-		{
-            int index = 0;
-
-            while (sprites[index] > 0)
-            {
-                DrawPopupIcon(sprites[index + 1], sprites[index + 2], (uint)sprites[index + 0]);
-                index += 3;
-            }
-        }
-
-        string prepare_res_amount_text(int amount)
-		{
-            return "";
         }
 
         void DrawMapBox()
@@ -1622,12 +1501,12 @@ namespace Freeserf
             SetButton(96, 57, 299u, Action.ShowInventoryPriorities);
 
             SetButton(16, 97, 233u, Action.ShowSett7); // TODO: Check Type
-            SetButton(56, 97, 298u, Action.ShowKnightSettings); // TODO: Check Type
+            SetButton(56, 97, 298u, Action.ShowKnightSettings);
 
             SetButton(104, 113, 61u, Action.ShowStatMenu);
             SetButton(120, 137, 60u, Action.CloseBox);
 
-            SetButton(40, 137, 285u, null); // TODO: What action?
+            SetButton(40, 137, 285u, Action.ShowOptions);
             SetButton(8, 137, 286u, Action.ShowQuit);
             SetButton(72, 137, 224u, Action.ShowSave);
         }
@@ -1852,9 +1731,64 @@ namespace Freeserf
 			
 		}
 
-        void draw_options_box()
+        void DrawOptionsBox()
 		{
-            
+            SetText(16, 23, "Music");
+            SetText(16, 39, "Sound");
+            SetText(16, 48, "effects");
+            SetText(16, 63, "Volume");
+
+            Audio audio = Audio.Instance;
+
+            // Music
+            Audio.Player player = audio?.GetMusicPlayer();
+            SetButton(112, 19, (player != null && player.IsEnabled) ? 288u : 220u, Action.OptionsMusic);
+
+            // Sfx
+            player = audio?.GetSoundPlayer();
+            SetButton(112, 39, (player != null && player.IsEnabled) ? 288u : 220u, Action.OptionsSfx);
+
+            // Volume
+            SetButton(96, 59, 220u, Action.OptionsVolumeMinus); /* Volume minus */
+            SetButton(112, 59, 221u, Action.OptionsVolumePlus); /* Volume plus */
+
+            float volume = 0.0f;
+            Audio.VolumeController volumeController = audio?.GetVolumeController();
+
+            if (volumeController != null)
+            {
+                volume = 99.0f * volumeController.GetVolume();
+            }
+
+            SetNumberText(72, 63, (uint)Misc.Round(volume));
+
+            // Video
+            SetText(16, 79, "Fullscreen");
+            SetText(16, 88, "video");
+
+            SetButton(112, 79, interf.RenderView.Fullscreen ? 288u : 220u, Action.OptionsFullscreen);
+
+            string value = "All";
+
+            if (!interf.GetConfig(3))
+            {
+                value = "Most";
+
+                if (!interf.GetConfig(4))
+                {
+                    value = "Few";
+
+                    if (!interf.GetConfig(5))
+                    {
+                        value = "None";
+                    }
+                }
+            }
+
+            SetText(16, 103, "Messages");
+            optionsMessagesTextField = SetText(96, 103, value);
+
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit
 		}
 
         void DrawMineOutputBox()
@@ -2484,6 +2418,9 @@ namespace Freeserf
                 case Action.ShowKnightSettings:
                     SetBox(Type.KnightSettingsBox);
                     break;
+                case Action.ShowOptions:
+                    SetBox(Type.Options);
+                    break;
                 case Action.DefaultFoodDistribution:
                     player.ResetFoodPriority();
                     break;
@@ -2655,6 +2592,81 @@ namespace Freeserf
                         }
                     }
                     break;
+                case Action.OptionsFullscreen:
+                    interf.RenderView.Fullscreen = !interf.RenderView.Fullscreen;
+                    SetRedraw();
+                    break;
+                case Action.OptionsMusic:
+                    {
+                        var audio = Audio.Instance;
+                        var music = audio?.GetMusicPlayer();
+
+                        if (music != null)
+                        {
+                            music.Enable(!music.IsEnabled);
+                            SetRedraw();
+                        }
+                    }
+                    break;
+                case Action.OptionsSfx:
+                    {
+                        var audio = Audio.Instance;
+                        var sfx = audio?.GetSoundPlayer();
+
+                        if (sfx != null)
+                        {
+                            sfx.Enable(!sfx.IsEnabled);
+                            SetRedraw();
+                        }
+                    }
+                    break;
+                case Action.OptionsVolumeMinus:
+                    {
+                        var audio = Audio.Instance;
+                        var volumeControl = audio?.GetVolumeController();
+
+                        if (volumeControl != null)
+                        {
+                            volumeControl.VolumeDown();
+                            SetRedraw();
+                        }
+                    }
+                    break;
+                case Action.OptionsVolumePlus:
+                    {
+                        var audio = Audio.Instance;
+                        var volumeControl = audio?.GetVolumeController();
+
+                        if (volumeControl != null)
+                        {
+                            volumeControl.VolumeUp();
+                            SetRedraw();
+                        }
+                    }
+                    break;
+                case Action.OptionsMessageCount:
+                    if (interf.GetConfig(3))
+                    {
+                        interf.SwitchConfig(3);
+                        interf.SetConfig(4);
+                    }
+                    else if (interf.GetConfig(4))
+                    {
+                        interf.SwitchConfig(4);
+                        interf.SetConfig(5);
+                    }
+                    else if (interf.GetConfig(5))
+                    {
+                        interf.SwitchConfig(5);
+                    }
+                    else
+                    {
+                        interf.SetConfig(3);
+                        interf.SetConfig(4);
+                        interf.SetConfig(5);
+                    }
+                    SetRedraw();
+                    break;
                 // TODO ...
                 default:
                     Log.Warn.Write("popup", "unhandled action " + action.ToString());
@@ -2790,7 +2802,7 @@ namespace Freeserf
                     draw_no_save_quit_confirm_box();
                     break;
                 case Type.Options:
-                    draw_options_box();
+                    DrawOptionsBox();
                     break;
                 case Type.CastleResources:
                     DrawCastleResourcesBox();
@@ -2849,6 +2861,17 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
+            if (Box == Type.Options && optionsMessagesTextField != null)
+            {
+                if (x >= optionsMessagesTextField.TotalX && x < optionsMessagesTextField.TotalX + optionsMessagesTextField.Width &&
+                    y >= optionsMessagesTextField.TotalY && y < optionsMessagesTextField.TotalY + optionsMessagesTextField.Height)
+                {
+                    HandleAction(Action.OptionsMessageCount, x, y);
+                }
+
+                return true;
+            }
+
             base.HandleClickLeft(x, y);
                 
             return true; // always return true to avoid passing click events through

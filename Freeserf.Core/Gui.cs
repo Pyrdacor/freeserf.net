@@ -662,6 +662,13 @@ namespace Freeserf
                     index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
                 else
                     textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), characterGapSize);
+
+                if (text.Length == 0)
+                    SetSize(0, 0);
+                else if (text.Length == 1)
+                    SetSize(8, 8);
+                else
+                    SetSize(8 + (text.Length - 1) * characterGapSize, 8);
             }
         }
 

@@ -252,7 +252,7 @@ namespace Freeserf
 
         public void SwitchConfig(int i)
         {
-            Misc.BitInvert(config, i);
+            config = Misc.BitInvert(config, i);
         }
 
         public MapPos GetMapCursorPos()

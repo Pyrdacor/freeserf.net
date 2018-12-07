@@ -31,6 +31,8 @@ namespace Freeserf.Renderer.OpenTK
     using EventHandler = Event.EventHandler;
     using EventType = Event.Type;
 
+    public delegate bool FullscreenRequestHandler(bool fullscreen);
+
     public class GameView : RenderLayerFactory, IRenderView
     {
         // these two lines are fore the background map at start
@@ -50,6 +52,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly ColoredRectFactory coloredRectFactory = null;
         readonly MinimapTextureFactory minimapTextureFactory = null;
         readonly Gui gui = null;
+        bool fullscreen = false;
 
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
@@ -60,6 +63,7 @@ namespace Freeserf.Renderer.OpenTK
         public event EventHandler SpecialClick;
         public event EventHandler Drag;
         public event EventHandler KeyPress;
+        public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
             DeviceType deviceType = DeviceType.Desktop, 
@@ -180,6 +184,19 @@ namespace Freeserf.Renderer.OpenTK
         public void ResetZoom()
         {
             context.Zoom = 0.0f;
+        }
+
+        public bool Fullscreen
+        {
+            get => fullscreen;
+            set
+            {
+                if (fullscreen == value || FullscreenRequestHandler == null)
+                    return;
+
+                if (FullscreenRequestHandler(value))
+                    fullscreen = value;
+            }
         }
 
         public DataSource DataSource { get; }
