@@ -1068,13 +1068,20 @@ namespace Freeserf
         void DrawMineBuildingBox()
 		{
             int index = 0;
+            int num = 4;
 
             SetBuilding(index++, 24, 17, Building.Type.StoneMine);
             SetBuilding(index++, 72, 17, Building.Type.CoalMine);
             SetBuilding(index++, 40, 86, Building.Type.IronMine);
             SetBuilding(index++, 88, 86, Building.Type.GoldMine);
 
-            ShowBuildings(4);
+            if (interf.Game.CanBuildFlag(interf.GetMapCursorPos(), interf.GetPlayer()))
+            {
+                SetFlag(index, 24, 123);
+                ++num;
+            }
+
+            ShowBuildings(num);
         }
 
         // flip means the user can change the page
