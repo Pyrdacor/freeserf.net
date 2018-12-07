@@ -2574,6 +2574,22 @@ namespace Freeserf
                 case Action.MinimapScale:
                     MiniMap.SetScale(MiniMap.GetScale() == 1 ? 2 : 1);
                     break;
+                case Action.SendGeologist:
+                    {
+                        var pos = interf.GetMapCursorPos();
+                        Flag flag = interf.Game.GetFlagAtPos(pos);
+
+                        if (!interf.Game.SendGeologist(flag))
+                        {
+                            PlaySound(Audio.TypeSfx.NotAccepted);
+                        }
+                        else
+                        {
+                            PlaySound(Audio.TypeSfx.Accepted);
+                            interf.ClosePopup();
+                        }
+                    }
+                    break;
                 // TODO ...
                 default:
                     Log.Warn.Write("popup", "unhandled action " + action.ToString());
