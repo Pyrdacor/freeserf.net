@@ -66,13 +66,16 @@ namespace Freeserf.Render
         static Rect[] materialSpriteInfos = null;
         static Position[] materialTextureOffsets = null;
 
-        public RenderBuilding(Building building, IRenderLayer renderLayer, IRenderLayer materialLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+        Audio audio = null;
+
+        public RenderBuilding(Building building, IRenderLayer renderLayer, IRenderLayer materialLayer, ISpriteFactory spriteFactory, DataSource dataSource, Audio audio)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.building = building;
             this.spriteFactory = spriteFactory;
             this.dataSource = dataSource;
             this.materialLayer = materialLayer;
+            this.audio = audio;
 
             Initialize();
 
@@ -598,7 +601,6 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.TypeSfx type)
         {
-            Audio audio = Audio.Instance;
             Audio.Player player = audio?.GetSoundPlayer();
 
             if (player != null)

@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using Freeserf.Render;
 using Freeserf.Event;
+using Freeserf.Renderer.OpenTK.Audio;
 
 namespace Freeserf.Renderer.OpenTK
 {
@@ -51,6 +52,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly TriangleFactory triangleFactory = null;
         readonly ColoredRectFactory coloredRectFactory = null;
         readonly MinimapTextureFactory minimapTextureFactory = null;
+        readonly AudioFactory audioFactory = null;
         readonly Gui gui = null;
         bool fullscreen = false;
 
@@ -84,10 +86,12 @@ namespace Freeserf.Renderer.OpenTK
 
             DataSource = dataSource;
 
+            // factories
             spriteFactory = new SpriteFactory(VirtualScreen);
             triangleFactory = new TriangleFactory(VirtualScreen);
             coloredRectFactory = new ColoredRectFactory(VirtualScreen);
             minimapTextureFactory = new MinimapTextureFactory();
+            audioFactory = new AudioFactory();
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
 
@@ -210,6 +214,8 @@ namespace Freeserf.Renderer.OpenTK
         public IColoredRectFactory ColoredRectFactory => coloredRectFactory;
 
         public IMinimapTextureFactory MinimapTextureFactory => minimapTextureFactory;
+
+        public IAudioFactory AudioFactory => audioFactory;
 
         void SetRotation(Orientation orientation)
         {

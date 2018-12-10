@@ -386,6 +386,11 @@ namespace Freeserf
             return (read - Data) != Size;
         }
 
+        public byte PeekByte()
+        {
+            return *read;
+        }
+
         public Buffer Pop(uint size)
         {
             uint offset = (uint)(read - Data);

@@ -1304,8 +1304,7 @@ namespace Freeserf
                 /* Audio */
                 case 'S':
                     {
-                        Audio audio = Audio.Instance;
-                        Audio.Player audioPlayer = audio.GetSoundPlayer();
+                        Audio.Player audioPlayer = Audio?.GetSoundPlayer();
 
                         if (audioPlayer != null)
                         {
@@ -1316,8 +1315,7 @@ namespace Freeserf
                     }
                 case 'M':
                     {
-                        Audio audio = Audio.Instance;
-                        Audio.Player audioPlayer = audio.GetMusicPlayer();
+                        Audio.Player audioPlayer = Audio?.GetMusicPlayer();
 
                         if (audioPlayer != null)
                         {

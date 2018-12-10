@@ -199,14 +199,16 @@ namespace Freeserf.Render
         static Rect shadowSpriteInfo = null;
         ISprite headSprite = null;
         DataSource dataSource = null;
+        Audio audio = null;
 
         // Note: The base sprite used in RenderObject will be the torso sprite.
 
-        public RenderSerf(Serf serf, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+        public RenderSerf(Serf serf, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource, Audio audio)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.serf = serf;
             this.dataSource = dataSource;
+            this.audio = audio;
 
             Initialize();
 
@@ -534,7 +536,6 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.TypeSfx type)
         {
-            Audio audio = Audio.Instance;
             Audio.Player player = audio?.GetSoundPlayer();
 
             if (player != null)

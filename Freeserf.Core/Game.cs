@@ -3496,7 +3496,8 @@ namespace Freeserf
                      obj == Map.Object.Castle)
             {
                 var building = GetBuildingAtPos(pos);
-                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), 
+                    renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource, renderView.AudioFactory.GetAudio());
 
                 renderBuilding.Visible = true;
 
@@ -3523,7 +3524,8 @@ namespace Freeserf
             if (renderSerfs.ContainsKey(serf))
                 return;
 
-            var renderSerf = new Render.RenderSerf(serf, renderView.GetLayer(Layer.Serfs), renderView.SpriteFactory, renderView.DataSource);
+            var renderSerf = new Render.RenderSerf(serf, renderView.GetLayer(Layer.Serfs), renderView.SpriteFactory,
+                renderView.DataSource, renderView.AudioFactory.GetAudio());
 
             renderSerf.Visible = true;
 

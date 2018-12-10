@@ -1738,14 +1738,12 @@ namespace Freeserf
             SetText(16, 48, "effects");
             SetText(16, 63, "Volume");
 
-            Audio audio = Audio.Instance;
-
             // Music
-            Audio.Player player = audio?.GetMusicPlayer();
+            Audio.Player player = Audio?.GetMusicPlayer();
             SetButton(112, 19, (player != null && player.IsEnabled) ? 288u : 220u, Action.OptionsMusic);
 
             // Sfx
-            player = audio?.GetSoundPlayer();
+            player = Audio?.GetSoundPlayer();
             SetButton(112, 39, (player != null && player.IsEnabled) ? 288u : 220u, Action.OptionsSfx);
 
             // Volume
@@ -1753,7 +1751,7 @@ namespace Freeserf
             SetButton(112, 59, 221u, Action.OptionsVolumePlus); /* Volume plus */
 
             float volume = 0.0f;
-            Audio.VolumeController volumeController = audio?.GetVolumeController();
+            Audio.VolumeController volumeController = Audio?.GetVolumeController();
 
             if (volumeController != null)
             {
@@ -2598,8 +2596,7 @@ namespace Freeserf
                     break;
                 case Action.OptionsMusic:
                     {
-                        var audio = Audio.Instance;
-                        var music = audio?.GetMusicPlayer();
+                        var music = Audio?.GetMusicPlayer();
 
                         if (music != null)
                         {
@@ -2610,8 +2607,7 @@ namespace Freeserf
                     break;
                 case Action.OptionsSfx:
                     {
-                        var audio = Audio.Instance;
-                        var sfx = audio?.GetSoundPlayer();
+                        var sfx = Audio?.GetSoundPlayer();
 
                         if (sfx != null)
                         {
@@ -2622,8 +2618,7 @@ namespace Freeserf
                     break;
                 case Action.OptionsVolumeMinus:
                     {
-                        var audio = Audio.Instance;
-                        var volumeControl = audio?.GetVolumeController();
+                        var volumeControl = Audio?.GetVolumeController();
 
                         if (volumeControl != null)
                         {
@@ -2634,8 +2629,7 @@ namespace Freeserf
                     break;
                 case Action.OptionsVolumePlus:
                     {
-                        var audio = Audio.Instance;
-                        var volumeControl = audio?.GetVolumeController();
+                        var volumeControl = Audio?.GetVolumeController();
 
                         if (volumeControl != null)
                         {

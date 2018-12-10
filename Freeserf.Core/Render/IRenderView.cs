@@ -42,6 +42,7 @@ namespace Freeserf.Render
         ITriangleFactory TriangleFactory { get; }
         IColoredRectFactory ColoredRectFactory { get; }
         IMinimapTextureFactory MinimapTextureFactory { get; }
+        IAudioFactory AudioFactory { get; }
 
         DataSource DataSource { get; }
     }

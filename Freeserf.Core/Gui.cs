@@ -56,6 +56,7 @@ namespace Freeserf
         protected bool focused = false;
         protected bool displayed = false;
         GuiObject parent = null;
+        protected Audio Audio { get; } = null;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
@@ -135,11 +136,7 @@ namespace Freeserf
         protected GuiObject(Render.IRenderView renderView)
         {
             Layer = renderView.GetLayer(Freeserf.Layer.Gui);
-        }
-
-        protected GuiObject(Render.IRenderLayer renderLayer)
-        {
-            Layer = renderLayer;
+            Audio = renderView.AudioFactory.GetAudio();
         }
 
         protected internal virtual void UpdateParent()
@@ -278,11 +275,7 @@ namespace Freeserf
 
         public void PlaySound(Audio.TypeSfx sound)
         {
-            // TODO
-            return;
-
-            Audio audio = Audio.Instance;
-            Audio.Player player = audio.GetSoundPlayer();
+            Audio.Player player = Audio?.GetSoundPlayer();
 
             if (player != null)
             {

@@ -154,16 +154,17 @@ namespace Freeserf
             protected abstract void Stop();
         }
 
-        protected static Audio instance = null;
-
         protected float volume = 0.75f;
 
         /* Common audio. */
 
-        public static Audio Instance => instance;
-
         public abstract VolumeController GetVolumeController();
         public abstract Player GetSoundPlayer();
         public abstract Player GetMusicPlayer();
+    }
+
+    public interface IAudioFactory
+    {
+        Audio GetAudio();
     }
 }
