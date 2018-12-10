@@ -91,7 +91,7 @@ namespace Freeserf.Renderer.OpenTK
             triangleFactory = new TriangleFactory(VirtualScreen);
             coloredRectFactory = new ColoredRectFactory(VirtualScreen);
             minimapTextureFactory = new MinimapTextureFactory();
-            audioFactory = new AudioFactory();
+            audioFactory = new AudioFactory(dataSource);
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
 

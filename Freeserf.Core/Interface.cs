@@ -1374,6 +1374,11 @@ namespace Freeserf
         // TODO: override
         public void OnNewGame(Game game)
         {
+            var music = Audio?.GetMusicPlayer();
+
+            if (music != null && music.IsEnabled)
+                music.PlayTrack((int)Audio.TypeMidi.Track0);
+
             SetGame(game);
             SetPlayer(0);
         }

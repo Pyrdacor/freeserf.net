@@ -543,6 +543,8 @@ namespace Freeserf
 
             try
             {
+                // TODO
+
                 /*ConvertorSFX2WAV convertor = new ConvertorSFX2WAV(data, -32);
 
                 return convertor.Convert();*/
@@ -565,18 +567,7 @@ namespace Freeserf
                 return null;
             }
 
-            try
-            {
-                /*ConvertorXMI2MID convertor = new ConvertorXMI2MID(data, -32);
-
-                return convertor.Convert();*/
-                return null;
-            }
-            catch
-            {
-                Log.Error.Write("data", "Could not convert XMI clip to MID: #" + index);
-                return null;
-            }
+            return data;
         }
 
         // Return buffer with object at index

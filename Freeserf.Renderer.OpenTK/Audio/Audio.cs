@@ -119,7 +119,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 else
                 {
                     // TODO
-                    pcmData = null; // dataSource.GetSound((uint)trackID);
+                    return null; // dataSource.GetSound((uint)trackID);
                 }
 
                 return new Track(this, trackID, pcmData);
@@ -140,25 +140,46 @@ namespace Freeserf.Renderer.OpenTK.Audio
         Player musicPlayer = null;
         Player soundPlayer = null;
         VolumeController volumeController = null;
+        uint source = 0;
 
-        internal Audio()
+        internal Audio(DataSource dataSource)
         {
-            device = ALC10.alcOpenDevice(null);
-
-            if (device == null || device == IntPtr.Zero)
+            try
             {
-                DisableSound();
-                return;
+                device = ALC10.alcOpenDevice(null);
+
+                if (device == null || device == IntPtr.Zero)
+                {
+                    DisableSound();
+                    return;
+                }
+
+                context = ALC10.alcCreateContext(device, null);
+
+                ALC10.alcMakeContextCurrent(context);
+
+                if (context == null || context == IntPtr.Zero)
+                {
+                    DisableSound();
+                    return;
+                }
+
+                AL10.alGenSources(1, out source);
+
+                if (source == 0 || AL10.alGetError() != AL10.AL_NO_ERROR)
+                {
+                    DisableSound();
+                    return;
+                }
+
+                VolumeController volumeController = null; // TODO
+
+                musicPlayer = new Player(source, volumeController, dataSource, true);
+                soundPlayer = new Player(source, volumeController, dataSource, false);
             }
-
-            context = ALC10.alcCreateContext(device, null);
-
-            ALC10.alcMakeContextCurrent(context);
-
-            if (context == null || context == IntPtr.Zero)
+            catch
             {
                 DisableSound();
-                return;
             }
         }
 
@@ -190,11 +211,17 @@ namespace Freeserf.Renderer.OpenTK.Audio
     public class AudioFactory : IAudioFactory
     {
         static Audio audio = null;
+        DataSource dataSource = null;
+
+        internal AudioFactory(DataSource dataSource)
+        {
+            this.dataSource = dataSource;
+        }
 
         public Freeserf.Audio GetAudio()
         {
             if (audio == null)
-                audio = new Audio();
+                audio = new Audio(dataSource);
 
             return audio;
         }

@@ -29,6 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="soft_oal.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
   </ItemGroup>
 

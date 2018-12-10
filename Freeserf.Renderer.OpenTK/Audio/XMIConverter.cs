@@ -22,7 +22,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
         int timePerQuarterNote = 0;
 
-        // we convert directly to 44.1kHz mono PCM data
+        // we convert directly to 44.1kHz stereo PCM data
         public short[] ConvertToPCM(Buffer data)
         {
             // Note: Chunk length and so on are encoded as big endian.
@@ -37,12 +37,11 @@ namespace Freeserf.Renderer.OpenTK.Audio
             data.Pop(4); // FORM
             data.Pop<uint>(); // FORM chunk length
 
-            // XDIR chunk
+            // format XDIR
             if (data.ToString(4) != "XDIR")
                 return null;
 
             data.Pop(4); // XDIR
-            data.Pop<uint>(); // XDIR chunk length
 
             if (data.ToString(4) != "INFO")
                 return null;
@@ -61,6 +60,12 @@ namespace Freeserf.Renderer.OpenTK.Audio
             data.Pop(4); // CAT_
             data.Pop<uint>(); // CAT chunk length
 
+            // format XMID
+            if (data.ToString(4) != "XMID")
+                return null;
+
+            data.Pop(4); // XMID
+
             // load the one track
 
             // Form chunk
@@ -70,12 +75,11 @@ namespace Freeserf.Renderer.OpenTK.Audio
             data.Pop(4); // FORM
             data.Pop<uint>(); // FORM chunk length
 
-            // XMID chunk
+            // format XMID
             if (data.ToString(4) != "XMID")
                 return null;
 
             data.Pop(4); // XMID
-            data.Pop<uint>(); // XMID chunk length
 
             // TIMB chunk
             if (data.ToString(4) != "TIMB")
@@ -92,18 +96,18 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 data.Pop(2);
             }
 
+            // EVNT chunk
+            if (data.ToString(4) != "EVNT")
+                return null;
+
+            data.Pop(4); // EVNT
+            data.Pop<uint>(); // EVNT chunk length
+
             // read xmi/midi events
             List<short> soundData = new List<short>();
 
             while (data.Readable())
             {
-                // EVNT chunk
-                if (data.ToString(4) != "EVNT")
-                    return null;
-
-                data.Pop(4); // EVNT
-                data.Pop<uint>(); // EVNT chunk length
-
                 ParseEvent(data, soundData);
             }
 
@@ -174,9 +178,6 @@ namespace Freeserf.Renderer.OpenTK.Audio
             if (eventType < 0x8 || eventType > 0xE)
                 throw new ExceptionAudio("Invalid MIDI event.");
 
-            if (channel != 0)
-                throw new ExceptionAudio("MIDI event must use channel 1.");
-
             if (timePerQuarterNote == 0) // default is 120bpm = 2 beats per second = each quarter note (beat) has 500ms time
                 timePerQuarterNote = 500;
 
@@ -189,7 +190,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
                         byte velocity = data.Pop<byte>();
                         uint length = ParseDeltaTime(data);
 
-                        ProcessNote(soundData, note, length);
+                        ProcessNote(soundData, channel, note, length);
                     }
                     break;
                 case 0x8:
@@ -207,7 +208,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             }
         }
 
-        void ProcessNote(List<short> soundData, byte note, uint duration)
+        void ProcessNote(List<short> soundData, int channel, byte note, uint duration)
         {
             // ticks_per_quarter_note / quarternote_time_in_seconds = freq
             const int freq = 120; // ticks per second
@@ -215,17 +216,18 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
             // PCM frequency (1/s)
             const double pcmFreq = 44100.0;
-            const double dt = 1000.0 / 44100.0; // time span of each pcm value
+            const double dt = 1000.0 / pcmFreq; // time span in milliseconds of each pcm value
 
             double noteDuration = (double)duration / (double)ticksPerQuarternote; // in number of quarter notes / beats
             noteDuration *= timePerQuarterNote; // now we have the time in milliseconds
 
             const double pi2 = 2.0 * Math.PI;
             double time = 0.0;
+            double toneFreq = Tones[note];
 
             while (time < noteDuration)
             {
-                short value = (short)(Math.Sin(pi2 * pcmFreq * time) * short.MaxValue);
+                short value = (short)(Math.Sin(pi2 * toneFreq * time / 1000.0) * short.MaxValue);
 
                 soundData.Add(value);
 
