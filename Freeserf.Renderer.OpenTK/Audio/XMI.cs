@@ -1,111 +1,24 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 
 namespace Freeserf.Renderer.OpenTK.Audio
 {
-    internal class XMIConverter
+    internal class XMI : IEnumerable<XMI.Event>
     {
-        static readonly float[] Tones = null;
-
-        static XMIConverter()
-        {
-            Tones = new float[128];
-
-            int a = 440; // a is 440 hz...
-
-            for (int x = 0; x < 128; ++x)
-            {
-                Tones[x] = a / 32.0f * (float)Math.Pow((x - 9) / 12, 2);
-            }
-        }
-
-        class MIDIEvent
-        {
-            public double Start;
-            public double Duration;
-            public byte Note;
-        }
-
-        class Wave
-        {
-            public double Start;
-            public double Duration;
-            public List<short> Data = new List<short>();
-        }
-
-        class MIDIChannel
-        {
-            public List<MIDIEvent> Events = new List<MIDIEvent>();
-            public int Program = 0;
-
-            public short[] Transform()
-            {
-                List<Wave> waves = new List<Wave>();
-
-                // PCM frequency (1/s)
-                const double pcmFreq = 44100.0;
-                const double dt = 1000.0 / pcmFreq; // time span in milliseconds of each pcm value
-                const double pi2 = 2.0 * Math.PI;
-
-                // create waves from events
-                foreach (var ev in Events)
-                {
-                    double toneFreq = Tones[ev.Note] / 1000.0;
-
-                    Wave wave = new Wave()
-                    {
-                        Start = ev.Start,
-                        Duration = ev.Duration
-                    };
-
-                    double eventTime = 0.0;
-
-                    while (eventTime < ev.Duration)
-                    {
-                        wave.Data.Add((short)(Math.Sin(pi2 * toneFreq * eventTime) * short.MaxValue));
-                        eventTime += dt;
-                    }
-
-                    waves.Add(wave);
-                }
-
-                waves.Sort((a, b) => a.Start.CompareTo(b.Start));
-
-                double endTime = 0.0;
-
-                foreach (var wave in waves)
-                {
-                    if (wave.Start + wave.Duration > endTime)
-                        endTime = wave.Start + wave.Duration;
-                }
-
-                short[] data = new short[Misc.Ceiling(endTime / dt)];
-
-                // merge waves
-                foreach (var wave in waves)
-                {
-                    int offset = Misc.Floor(wave.Start / dt);
-                    int waveOffset = 0;
-
-                    while (wave.Duration > 0.0)
-                    {
-                        data[offset] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, data[offset++] + wave.Data[waveOffset++]));
-                        wave.Duration -= dt;
-                    }
-                }
-
-                return data;
-            }
-        }
-
-        // default is 120bpm = 2 beats per second = each quarter note (beat) has 500ms time
-        int timePerQuarterNote = 500;
+        uint tempo = 500000;
+        readonly List<Event> events = new List<Event>();
         double currentTime = 0.0;
 
-        // we convert directly to 44.1kHz stereo PCM data
-        // there may be up to 16 midi channels
-        public List<short[]> ConvertToPCM(Buffer data)
+        public int NumEvents => events.Count;
+
+        public Event GetEvent(int index)
+        {
+            return events[index];
+        }
+
+        public XMI(Buffer data)
         {
             // Note: Chunk length and so on are encoded as big endian.
             // But as we don't use them we use little endian because
@@ -114,19 +27,19 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
             // Form chunk
             if (data.ToString(4) != "FORM")
-                return null;
+                return;
 
             data.Pop(4); // FORM
             data.Pop<uint>(); // FORM chunk length
 
             // format XDIR
             if (data.ToString(4) != "XDIR")
-                return null;
+                return;
 
             data.Pop(4); // XDIR
 
             if (data.ToString(4) != "INFO")
-                return null;
+                return;
 
             data.Pop(4); // INFO
             data.Pop<uint>(); // INFO chunk length
@@ -134,17 +47,17 @@ namespace Freeserf.Renderer.OpenTK.Audio
             int numTracks = data.Pop<ushort>();
 
             if (numTracks != 1)
-                return null; // we only support one track per file
+                return; // we only support one track per file
 
             if (data.ToString(4) != "CAT ")
-                return null;
+                return;
 
             data.Pop(4); // CAT_
             data.Pop<uint>(); // CAT chunk length
 
             // format XMID
             if (data.ToString(4) != "XMID")
-                return null;
+                return;
 
             data.Pop(4); // XMID
 
@@ -152,20 +65,20 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
             // Form chunk
             if (data.ToString(4) != "FORM")
-                return null;
+                return;
 
             data.Pop(4); // FORM
             data.Pop<uint>(); // FORM chunk length
 
             // format XMID
             if (data.ToString(4) != "XMID")
-                return null;
+                return;
 
             data.Pop(4); // XMID
 
             // TIMB chunk
             if (data.ToString(4) != "TIMB")
-                return null;
+                return;
 
             data.Pop(4); // TIMB
             data.Pop<uint>(); // TIMB chunk length
@@ -180,20 +93,18 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
             // EVNT chunk
             if (data.ToString(4) != "EVNT")
-                return null;
+                return;
 
             data.Pop(4); // EVNT
             data.Pop<uint>(); // EVNT chunk length
 
             // read xmi/midi events
-            Dictionary<int, MIDIChannel> soundData = new Dictionary<int, MIDIChannel>();
-
             while (data.Readable())
             {
-                ParseEvent(data, soundData);
+                ParseEvent(data);
             }
 
-            return soundData.Select(d => d.Value.Transform()).ToList();
+            events.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
         }
 
         uint ParseDeltaTime(Buffer data)
@@ -230,9 +141,9 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 byte mid = data.Pop<byte>();
                 byte low = data.Pop<byte>();
 
-                uint time = (uint)high << 16 | (uint)mid << 8 | low;
+                tempo = (uint)high << 16 | (uint)mid << 8 | low;
 
-                timePerQuarterNote = (int)time / 1000; // in milliseconds
+                Log.Verbose.Write("audio", $"XMI Tempo Changed: {tempo} microseconds per quarter note.");
             }
             else if (type == 0x58)
             {
@@ -253,7 +164,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             }
         }
 
-        void ParseEvent(Buffer data, Dictionary<int, MIDIChannel> soundData)
+        void ParseEvent(Buffer data)
         {
             byte status = data.PeekByte();
 
@@ -280,14 +191,21 @@ namespace Freeserf.Renderer.OpenTK.Audio
             switch (eventType)
             {
                 case 0x9: // Note on
-                    // Note: In XMI it has 3 parameters
+                    // Note: In XMI it has 3 parameters (last for duration).
+                    // But we create two events (note on and off).
                     {
                         byte note = data.Pop<byte>();
                         byte velocity = data.Pop<byte>();
                         uint length = ParseDeltaTime(data);
 
                         if (velocity != 0)
-                            ProcessNote(soundData, channel, note, length);
+                        {
+                            var onEvent = new PlayNoteEvent((byte)channel, note, currentTime);
+                            var offEvent = new StopNoteEvent((byte)channel, note, currentTime + ConvertTicksToTime(length));
+
+                            events.Add(onEvent);
+                            events.Add(offEvent);
+                        }
                     }
                     break;
                 case 0x8:
@@ -297,9 +215,11 @@ namespace Freeserf.Renderer.OpenTK.Audio
                     data.Pop(2);
                     break;
                 case 0xC:
-                    if (!soundData.ContainsKey(channel))
-                        soundData.Add(channel, new MIDIChannel());
-                    soundData[channel].Program = data.Pop<byte>();
+                    {
+                        var patchEvent = new SetInstrumentEvent((byte)channel, data.Pop<byte>(), currentTime);
+
+                        events.Add(patchEvent);
+                    }
                     break;
                 case 0xD:
                     data.Pop(1);
@@ -310,34 +230,100 @@ namespace Freeserf.Renderer.OpenTK.Audio
         }
 
         // in milliseconds
-        double ConvertTicksToTime(uint ticks)
+        public double ConvertTicksToTime(uint ticks)
         {
             // ticks_per_quarter_note / quarternote_time_in_seconds = freq
             const int freq = 120; // ticks per second
-            int ticksPerQuarternote = freq * timePerQuarterNote / 1000;
+            double ticksPerQuarternote = Math.Floor(freq * tempo / 1000000.0);
 
             double time = (double)ticks / (double)ticksPerQuarternote;
 
-            return time * timePerQuarterNote;
+            return time * tempo / 1000.0;
         }
 
-        void ProcessNote(Dictionary<int, MIDIChannel> soundData, int channel, byte note, uint duration)
+        public IEnumerator<Event> GetEnumerator()
         {
-            double noteDuration = ConvertTicksToTime(duration);
+            return events.GetEnumerator();
+        }
 
-            if (!soundData.ContainsKey(channel))
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public abstract class Event
+        {
+            public double StartTime
             {
-                soundData.Add(channel, new MIDIChannel());
+                get;
             }
 
-            var ev = new MIDIEvent()
+            protected Event(double startTime)
             {
-                Start = currentTime,
-                Duration = noteDuration,
-                Note = note
-            };
+                StartTime = startTime;
+            }
 
-            soundData[channel].Events.Add(ev);
+            public abstract uint ToMidiMessage();
+        }
+
+        public class PlayNoteEvent : Event
+        {
+            byte channel = 0;
+            byte note = 0;
+
+            public PlayNoteEvent(byte channel, byte note, double startTime)
+                : base(startTime)
+            {
+                this.channel = channel;
+                this.note = note;
+            }
+
+            public override uint ToMidiMessage()
+            {
+                byte code = (byte)(0x90 | channel);
+
+                return BitConverter.ToUInt32(new byte[4] { code, note, 0x40, 0x00 }, 0);
+            }
+        }
+
+        public class StopNoteEvent : Event
+        {
+            byte channel = 0;
+            byte note = 0;
+
+            public StopNoteEvent(byte channel, byte note, double startTime)
+                : base(startTime)
+            {
+                this.channel = channel;
+                this.note = note;
+            }
+
+            public override uint ToMidiMessage()
+            {
+                byte code = (byte)(0x90 | channel);
+
+                return BitConverter.ToUInt32(new byte[4] { code, note, 0x00, 0x00 }, 0);
+            }
+        }
+
+        public class SetInstrumentEvent : Event
+        {
+            byte channel = 0;
+            byte instrument = 0;
+
+            public SetInstrumentEvent(byte channel, byte instrument, double startTime)
+                : base(startTime)
+            {
+                this.channel = channel;
+                this.instrument = instrument;
+            }
+
+            public override uint ToMidiMessage()
+            {
+                byte code = (byte)(0xC0 | channel);
+
+                return BitConverter.ToUInt32(new byte[4] { code, instrument, 0x00, 0x00 }, 0);
+            }
         }
     }
 }

@@ -7,23 +7,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="BufferObject - Kopie.cs" />
-    <Compile Remove="IndexBuffer.cs" />
-    <Compile Remove="Layer - Kopie.cs" />
-    <Compile Remove="LinkedList.cs" />
-    <Compile Remove="NodeTransformContext.cs" />
-    <Compile Remove="Renderer.cs" />
-    <Compile Remove="Sprite - Kopie.cs" />
-    <Compile Remove="TextureShader - Kopie.cs" />
-    <Compile Remove="VertexArrayObject - Kopie.cs" />
-    <Compile Remove="VertexBufferObject.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Doreb.png" />
     <None Remove="Konzept.txt" />
     <None Remove="Readme.txt" />
   </ItemGroup>
