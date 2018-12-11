@@ -35,9 +35,19 @@ namespace Freeserf.Renderer.OpenTK
             return (int)Math.Floor(f);
         }
 
+        public static int Floor(double d)
+        {
+            return (int)Math.Floor(d);
+        }
+
         public static int Ceiling(float f)
         {
             return (int)Math.Ceiling(f);
+        }
+
+        public static int Ceiling(double d)
+        {
+            return (int)Math.Ceiling(d);
         }
 
         public static int Round(float f)

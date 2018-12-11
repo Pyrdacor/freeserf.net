@@ -7,15 +7,76 @@ namespace Freeserf.Renderer.OpenTK.Audio
 {
     public class Audio : Freeserf.Audio
     {
-        private new class Track : Freeserf.Audio.Track, IDisposable
+        private class MusicTrack : Track, IDisposable
+        {
+            Player player = null;
+            uint[] bufferIndices = null;
+            int index = -1;
+            bool disposed = false;
+
+            public MusicTrack(Player player, int index, List<short[]> data)
+            {
+                this.player = player;
+                this.index = index;
+
+                bufferIndices = new uint[data.Count];
+
+                AL10.alGenBuffers(data.Count, bufferIndices);
+
+                for (int i = 0; i < data.Count; ++i)
+                    AL10.alBufferData(bufferIndices[i], AL10.AL_FORMAT_MONO16, data[i], data[i].Length * 2, 44100);
+            }
+
+            public override void Play()
+            {
+                for (int i = 0; i < bufferIndices.Length; ++i)
+                {
+                    AL10.alSourcei(player.Sources[i], AL10.AL_BUFFER, (int)bufferIndices[i]);
+                    AL10.alSourcePlay(player.Sources[i]);
+                }
+            }
+
+
+            #region IDisposable Support
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposed)
+                {
+                    if (bufferIndices != null && bufferIndices.Length != 0)
+                    {
+                        AL10.alDeleteBuffers(bufferIndices.Length, bufferIndices);
+                        bufferIndices = null;
+                    }
+
+                    disposed = true;
+                }
+            }
+
+            ~MusicTrack()
+            {
+
+                Dispose(false);
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            #endregion
+
+        }
+
+        private class SoundTrack : Track, IDisposable
         {
             Player player = null;
             uint bufferIndex = 0;
             int index = -1;
-            Buffer data = null;
             bool disposed = false;
 
-            public Track(Player player, int index, short[] data)
+            public SoundTrack(Player player, int index, short[] data)
             {
                 this.player = player;
                 this.index = index;
@@ -26,8 +87,8 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
             public override void Play()
             {
-                AL10.alSourceQueueBuffers(player.Source, 1, ref bufferIndex);
-                AL10.alSourcePlay(player.Source);
+                AL10.alSourceQueueBuffers(player.Sources[0], 1, ref bufferIndex);
+                AL10.alSourcePlay(player.Sources[0]);
             }
 
 
@@ -47,7 +108,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 }
             }
 
-            ~Track()
+            ~SoundTrack()
             {
 
                Dispose(false);
@@ -67,23 +128,15 @@ namespace Freeserf.Renderer.OpenTK.Audio
         {
             readonly VolumeController volumeController = null;
             readonly DataSource dataSource = null;
-            uint index = uint.MaxValue;
             int format = -1;
             bool playing = false;
             bool music = false;
 
-            public uint Source { get; } = uint.MaxValue;
+            public uint[] Sources { get; } = null;
 
-            public Player(uint source, VolumeController volumeController, DataSource dataSource, bool music)
+            public Player(VolumeController volumeController, DataSource dataSource, bool music, params uint[] sources)
             {
-                Source = source;
-
-                AL10.alGenBuffers(1, out index);
-
-                if (AL10.alGetError() != AL10.AL_NO_ERROR)
-                {
-                    throw new ExceptionAudio("Unable to create sound buffer.");
-                }
+                Sources = sources;
 
                 this.volumeController = volumeController;
                 this.dataSource = dataSource;
@@ -106,32 +159,36 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 return volumeController;
             }
 
-            protected override Freeserf.Audio.Track CreateTrack(int trackID)
+            protected override Track CreateTrack(int trackID)
             {
-                short[] pcmData;
+                List<short[]> pcmData;
 
                 if (music)
                 {
                     XMIConverter converter = new XMIConverter();
 
                     pcmData = converter.ConvertToPCM(dataSource.GetMusic((uint)trackID));
+
+                    return new MusicTrack(this, trackID, pcmData);
                 }
                 else
                 {
                     // TODO
                     return null; // dataSource.GetSound((uint)trackID);
+                    //return new SoundTrack(this, trackID, pcmData[0]);
                 }
-
-                return new Track(this, trackID, pcmData);
             }
 
             protected override void Stop()
             {
-                AL10.alSourceStop(Source);
-                AL10.alGetSourcei(Source, AL10.AL_BUFFERS_PROCESSED, out int numActiveBuffers);
+                foreach (var source in Sources)
+                {
+                    AL10.alSourceStop(source);
+                    AL10.alGetSourcei(source, AL10.AL_BUFFERS_PROCESSED, out int numActiveBuffers);
 
-                if (numActiveBuffers > 0)
-                    AL10.alSourceUnqueueBuffers(Source, numActiveBuffers, null);
+                    if (numActiveBuffers > 0)
+                        AL10.alSourceUnqueueBuffers(source, numActiveBuffers, null);
+                }
             }
         }
 
@@ -140,7 +197,8 @@ namespace Freeserf.Renderer.OpenTK.Audio
         Player musicPlayer = null;
         Player soundPlayer = null;
         VolumeController volumeController = null;
-        uint source = 0;
+        uint soundSource = 0;
+        uint[] musicSources = new uint[16];
 
         internal Audio(DataSource dataSource)
         {
@@ -164,9 +222,17 @@ namespace Freeserf.Renderer.OpenTK.Audio
                     return;
                 }
 
-                AL10.alGenSources(1, out source);
+                AL10.alGenSources(1, out soundSource);
 
-                if (source == 0 || AL10.alGetError() != AL10.AL_NO_ERROR)
+                if (soundSource == 0 || AL10.alGetError() != AL10.AL_NO_ERROR)
+                {
+                    DisableSound();
+                    return;
+                }
+
+                AL10.alGenSources(16, musicSources);
+
+                if (musicSources[0] == 0 || AL10.alGetError() != AL10.AL_NO_ERROR)
                 {
                     DisableSound();
                     return;
@@ -174,8 +240,8 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
                 VolumeController volumeController = null; // TODO
 
-                musicPlayer = new Player(source, volumeController, dataSource, true);
-                soundPlayer = new Player(source, volumeController, dataSource, false);
+                musicPlayer = new Player(volumeController, dataSource, true, musicSources);
+                soundPlayer = new Player(volumeController, dataSource, false, soundSource);
             }
             catch
             {
