@@ -109,7 +109,22 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 ParseEvent(data);
             }
 
-            events.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+            events.Sort((a, b) =>
+            {
+                int result = a.StartTime.CompareTo(b.StartTime);
+
+                if (result == 0)
+                {
+                    if (a is SetInstrumentEvent && !(b is SetInstrumentEvent))
+                        return -1;
+                    else if (b is SetInstrumentEvent && !(a is SetInstrumentEvent))
+                        return 1;
+                    else
+                        return 0;
+                }
+
+                return result;
+            });
         }
 
         public void Play(Audio.Player player)
