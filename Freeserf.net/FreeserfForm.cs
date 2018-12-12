@@ -31,8 +31,6 @@ namespace Freeserf
 
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
-            this.Location = new System.Drawing.Point(Screen.PrimaryScreen.Bounds.Right - 60, Screen.PrimaryScreen.Bounds.Bottom - 60);
-
             Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
             Log.SetLevel(Log.Level.Verbose);
 
