@@ -362,7 +362,7 @@ namespace Freeserf
         readonly Dictionary<TextField, bool> texts = new Dictionary<TextField, bool>(); // value: in use
         readonly SlideBar[] slideBars = new SlideBar[9]; // TODO: is 9 enough?
         const int SlideBarFactor = 1310;
-        TextField optionsMessagesTextField = null;
+        TextField clickableTextField = null;
 
         uint CurrentTransportPriorityItem = 0u;
         uint CurrentInventoryPriorityItem = 0u;
@@ -636,6 +636,7 @@ namespace Freeserf
                     pattern = BackgroundPattern.CheckerdDiagonalBrown;
                     break;                
                 case Type.QuitConfirm:
+                case Type.NoSaveQuitConfirm:
                 case Type.Options:
                 case Type.LoadSave:
                     pattern = BackgroundPattern.DiagonalGreen;
@@ -647,7 +648,6 @@ namespace Freeserf
                     pattern = BackgroundPattern.StaresGreen;
                     break;
                 case Type.Message:
-                case Type.NoSaveQuitConfirm:
                 case Type.SettSelectFile: /* UNUSED */
                 case Type.LoadArchive:
                 case Type.Type25:
@@ -1721,15 +1721,23 @@ namespace Freeserf
             }
         }
 
-        void draw_quit_confirm_box()
+        void DrawQuitConfirmBox()
 		{
-			
-		}
+            SetText(8, 19, "   Do you want");
+            SetText(8, 29, "     to quit");
+            SetText(8, 39, "   this game?");
+            clickableTextField = SetText(8, 54, "  Yes       No");
+        }
 
-        void draw_no_save_quit_confirm_box()
+        void DrawNoSaveQuitConfirmBox()
 		{
-			
-		}
+            SetText(8, 79, "The game has not");
+            SetText(8, 89, "   been saved");
+            SetText(8, 99, "   recently.");
+            SetText(8, 109, "    Are you");
+            SetText(8, 119, "     sure?");
+            clickableTextField = SetText(8, 134, "  Yes       No");
+        }
 
         void DrawOptionsBox()
 		{
@@ -1784,7 +1792,7 @@ namespace Freeserf
             }
 
             SetText(16, 103, "Messages");
-            optionsMessagesTextField = SetText(96, 103, value);
+            clickableTextField = SetText(96, 103, value);
 
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit
 		}
@@ -2419,6 +2427,9 @@ namespace Freeserf
                 case Action.ShowOptions:
                     SetBox(Type.Options);
                     break;
+                case Action.ShowQuit:
+                    SetBox(Type.QuitConfirm);
+                    break;
                 case Action.DefaultFoodDistribution:
                     player.ResetFoodPriority();
                     break;
@@ -2661,6 +2672,22 @@ namespace Freeserf
                     }
                     SetRedraw();
                     break;
+                case Action.QuitCancel:
+                    if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)
+                        SetBox(Type.SettlerMenu);
+                    // TODO
+                    break;
+                case Action.QuitConfirm:
+                    // no saving
+                    interf.ClosePopup();
+                    interf.OpenGameInit();
+                    break;
+                case Action.NoSaveQuitConfirm:
+                    // TODO: save
+                    //GameManager.Instance.SaveCurrentGame();
+                    interf.ClosePopup();
+                    interf.OpenGameInit();
+                    break;
                 // TODO ...
                 default:
                     Log.Warn.Write("popup", "unhandled action " + action.ToString());
@@ -2790,10 +2817,11 @@ namespace Freeserf
                     DrawTransportPrioritiesBox();
                     break;
                 case Type.QuitConfirm:
-                    draw_quit_confirm_box();
+                    DrawQuitConfirmBox();
                     break;
                 case Type.NoSaveQuitConfirm:
-                    draw_no_save_quit_confirm_box();
+                    DrawQuitConfirmBox();
+                    DrawNoSaveQuitConfirmBox();
                     break;
                 case Type.Options:
                     DrawOptionsBox();
@@ -2855,15 +2883,56 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
-            if (Box == Type.Options && optionsMessagesTextField != null)
+            if (Box == Type.Options && clickableTextField != null)
             {
-                if (x >= optionsMessagesTextField.TotalX && x < optionsMessagesTextField.TotalX + optionsMessagesTextField.Width &&
-                    y >= optionsMessagesTextField.TotalY && y < optionsMessagesTextField.TotalY + optionsMessagesTextField.Height)
+                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
+                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
                 {
                     HandleAction(Action.OptionsMessageCount, x, y);
                 }
 
                 return true;
+            }
+            else if (Box == Type.QuitConfirm && clickableTextField != null)
+            {
+                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
+                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
+                {
+                    int relativeX = x - clickableTextField.TotalX;
+
+                    if (relativeX >= 16 && relativeX < 16 + 24) // Yes
+                    {
+                        if (GameManager.Instance.NeedSave())
+                            SetBox(Type.NoSaveQuitConfirm);
+                        else
+                            HandleAction(Action.QuitConfirm, x, y);
+                    }
+                    else if (relativeX >= 16 + 24 + 56 && relativeX < 16 + 24 + 56 + 16) // No
+                    {
+                        HandleAction(Action.QuitCancel, x, y);
+                    }
+
+                    return true;
+                }
+            }
+            else if (Box == Type.NoSaveQuitConfirm && clickableTextField != null)
+            {
+                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
+                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
+                {
+                    int relativeX = x - clickableTextField.TotalX;
+
+                    if (relativeX >= 16 && relativeX < 16 + 24) // Yes
+                    {
+                        HandleAction(Action.NoSaveQuitConfirm, x, y);
+                    }
+                    else if (relativeX >= 16 + 24 + 56 && relativeX < 16 + 24 + 56 + 16) // No
+                    {
+                        HandleAction(Action.QuitCancel, x, y);
+                    }
+
+                    return true;
+                }
             }
 
             base.HandleClickLeft(x, y);

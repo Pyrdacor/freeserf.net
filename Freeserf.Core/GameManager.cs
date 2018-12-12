@@ -22,9 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
@@ -36,7 +33,9 @@ namespace Freeserf
             void OnEndGame(Game game);
         }
 
+        const int MinTimeForSaveConcern = 10000;
         Game currentGame = null;
+        DateTime lastSaveTime = DateTime.MinValue;
         readonly List<IHandler> handlers = new List<IHandler>();
 
         static GameManager instance = null;
@@ -86,6 +85,7 @@ namespace Freeserf
                 return false;
             }
 
+            lastSaveTime = DateTime.MinValue;
             SetCurrentGame(newGame);
 
             return true;
@@ -100,10 +100,29 @@ namespace Freeserf
                 return false;
             }
 
+            lastSaveTime = DateTime.Now;
             SetCurrentGame(newGame);
             newGame.Pause();
 
             return true;
+        }
+
+        public bool SaveCurrentGame(SaveWriterText writer)
+        {
+            if (currentGame == null)
+                return false;
+
+            try
+            {
+                currentGame.WriteTo(writer);
+                lastSaveTime = DateTime.Now;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write("save", "Failed to save game: " + ex.Message);
+                return false;
+            }
         }
 
         void SetCurrentGame(Game newGame)
@@ -131,6 +150,14 @@ namespace Freeserf
             {
                 handler.OnNewGame(currentGame);
             }
+        }
+
+        public bool NeedSave()
+        {
+            if (currentGame == null)
+                return false;
+
+            return (DateTime.Now - lastSaveTime).TotalMilliseconds >= MinTimeForSaveConcern;
         }
     }
 }

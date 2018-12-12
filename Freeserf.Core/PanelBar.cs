@@ -299,6 +299,7 @@ namespace Freeserf
                     case PopupBox.Type.BuildingStock:
                     case PopupBox.Type.StartAttack:
                     case PopupBox.Type.QuitConfirm:
+                    case PopupBox.Type.NoSaveQuitConfirm:
                     case PopupBox.Type.Options:
                         {
                             SetButton(0, ButtonId.BuildInactive);
