@@ -273,7 +273,6 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                     }
                     else // finished
                     {
-                        timer.Stop();
                         Close();
                     }
                 }
@@ -291,6 +290,8 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
                 public void Close()
                 {
+                    timer.Stop();
+
                     waveOutUnprepareHeader(handle, dataPointer, Marshal.SizeOf(data));
                     waveOutReset(handle);
 
