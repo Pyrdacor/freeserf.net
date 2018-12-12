@@ -35,6 +35,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         DateTime pauseStartTime = DateTime.MinValue;
         bool looped = false;
         bool paused = false;
+        bool enabled = true;
         DataSource dataSource = null;
 
         public WindowsMidiPlayer(DataSource dataSource)
@@ -73,9 +74,32 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         public override bool Enabled
         {
-            get;
-            set;
-        } = true;
+            get => enabled && Available;
+            set
+            {
+                if (!Available)
+                    value = false;
+
+                if (enabled == value)
+                    return;
+
+                if (value) // just enabled
+                {
+                    enabled = true;
+
+                    // restart the music
+                    if (CurrentXMI != null)
+                    {
+                        Running = true;
+                        PlayNextEvent();
+                    }
+                }
+                else
+                {
+                    enabled = false;
+                }
+            }
+        }
 
         public bool Paused
         {
@@ -132,10 +156,10 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         public void Play(XMI xmi, bool looped)
         {
+            CurrentXMI = xmi;
+
             if (!Enabled)
                 return;
-
-            CurrentXMI = xmi;
 
             if (CurrentXMI == null)
             {
