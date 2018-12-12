@@ -68,6 +68,7 @@ namespace Freeserf
             public static Stream operator +(Stream stream, string val)
             {
                 stream.streamWriter.Write(val);
+                stream.streamWriter.Flush();
 
                 return stream;
             }
@@ -75,6 +76,7 @@ namespace Freeserf
             public static Stream operator +(Stream stream, int val)
             {
                 stream.streamWriter.Write(val);
+                stream.streamWriter.Flush();
 
                 return stream;
             }
@@ -132,6 +134,9 @@ namespace Freeserf
                     return;
 
                 stream += text;
+                stream += Environment.NewLine;
+
+                this.stream.Flush();
             }
 
             public virtual Stream this[string subsystem]
