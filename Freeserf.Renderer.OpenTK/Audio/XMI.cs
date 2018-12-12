@@ -18,6 +18,11 @@ namespace Freeserf.Renderer.OpenTK.Audio
             return events[index];
         }
 
+        public XMI(MOD mod)
+        {
+            mod.FillXMIEvents(events);
+        }
+
         public XMI(Buffer data)
         {
             // Note: Chunk length and so on are encoded as big endian.
@@ -111,7 +116,6 @@ namespace Freeserf.Renderer.OpenTK.Audio
         {
             if (player is IMidiPlayer)
                 (player as IMidiPlayer).Play(this, true);
-            // TODO: sfx
         }
 
         uint ParseDeltaTime(Buffer data)

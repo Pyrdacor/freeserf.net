@@ -541,20 +541,7 @@ namespace Freeserf
                 return null;
             }
 
-            try
-            {
-                // TODO
-
-                /*ConvertorSFX2WAV convertor = new ConvertorSFX2WAV(data, -32);
-
-                return convertor.Convert();*/
-                return null;
-            }
-            catch
-            {
-                Log.Error.Write("data", "Could not convert SFX clip to WAV: #" + index);
-                return null;
-            }
+            return data;
         }
 
         public override Buffer GetMusic(uint index)

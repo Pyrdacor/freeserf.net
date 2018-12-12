@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Freeserf.Renderer.OpenTK.Audio
+﻿namespace Freeserf.Renderer.OpenTK.Audio
 {
     internal interface IMidiPlayer
     {

@@ -13,8 +13,8 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             this.dataSource = dataSource;
         }
 
-        static IMidiPlayer player = null;
         DataSource dataSource = null;
+        static IMidiPlayer player = null;
 
         public IMidiPlayer GetMidiPlayer()
         {
@@ -36,6 +36,23 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         bool looped = false;
         bool paused = false;
         DataSource dataSource = null;
+
+        public WindowsMidiPlayer(DataSource dataSource)
+        {
+            this.dataSource = dataSource;
+
+#if WINDOWS
+            var device = FindBestDevice();
+
+            if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device))
+                throw new ExceptionAudio("Unable to create midi output.");
+
+            Available = true;
+
+            Init();
+#endif // WINDOWS
+
+        }
 
         double CurrentTrackTime
         {
@@ -176,12 +193,21 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         protected override Audio.ITrack CreateTrack(int trackID)
         {
-            return new XMI(dataSource.GetMusic((uint)trackID));
+            if (dataSource is DataSourceAmiga)
+                return new XMI(new MOD(dataSource.GetSound((uint)trackID))); // TODO: needs testing with amiga data
+            else
+                return new XMI(dataSource.GetMusic((uint)trackID));
         }
 
         public override void Stop()
         {
-            Running = false;
+#if WINDOWS
+            if (Running)
+            {
+                WinMMNatives.ResetPlaybackDevice(handle);
+                Running = false;
+            }
+#endif // WINDOWS
         }
 
         public override void Pause()
@@ -211,6 +237,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         public float GetVolume()
         {
+#if WINDOWS
             uint volume = WinMMNatives.GetVolume(handle);
             uint left = volume & 0xffff;
             uint right = volume >> 16;
@@ -224,14 +251,19 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             }
             else
             {
+                volume = left;
                 result = (float)volume / (float)0xffff;
             }
 
             return result;
+#else
+            return 0.0f;
+#endif // WINDOWS
         }
 
         public void SetVolume(float volume)
         {
+#if WINDOWS
             if (volume < 0.0f)
                 volume = 0.0f;
             if (volume > 1.0f)
@@ -242,6 +274,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             value |= (value << 16); // copy left volume to right volume
 
             WinMMNatives.SetVolume(handle, value);
+#endif // WINDOWS
         }
 
         public void VolumeDown()
@@ -254,34 +287,18 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             SetVolume(GetVolume() + 0.1f);
         }
 
-        public WindowsMidiPlayer(DataSource dataSource)
-        {
-
-            this.dataSource = dataSource;
-
-#if WINDOWS
-            var device = FindBestDevice();
-
-            if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device))
-                throw new ExceptionAudio("Unable to create midi output.");
-
-            Available = true;
-
-            Init();
-#endif
-
-        }
-
         void Init()
         {
             eventTimer.Elapsed += EventTimer_Elapsed;
-            eventTimer.AutoReset = true;
+            eventTimer.AutoReset = false;
         }
 
         void SendEvent(uint message)
         {
+#if WINDOWS
             WinMMNatives.SendPlaybackDeviceMessage(handle, message);
             PlayNextEvent();
+#endif // WINDOWS
         }
 
         void SendDelayedEvent(uint delay, uint message)
@@ -387,7 +404,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
             internal static bool OpenPlaybackDevice(out IntPtr handle, uint deviceId)
             {
-                return midiOutOpen(out handle, deviceId, null, IntPtr.Zero, 0x30000) == 0;
+                return midiOutOpen(out handle, deviceId, null, IntPtr.Zero, 0) == 0;
             }
 
             internal static bool ClosePlaybackDevice(IntPtr handle)
@@ -459,6 +476,8 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             }
         }
 
+#endif // WINDOWS
+
 
         #region IDisposable Support
 
@@ -468,12 +487,14 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         {
             if (!disposed)
             {
+#if WINDOWS
                 if (handle != null && handle != IntPtr.Zero)
                 {
                     WinMMNatives.ResetPlaybackDevice(handle);
                     WinMMNatives.ClosePlaybackDevice(handle);
                     handle = IntPtr.Zero;
                 }
+#endif // WINDOWS
 
                 disposed = true;
             }
@@ -491,9 +512,6 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         }
 
         #endregion
-
-
-#endif
 
     }
 

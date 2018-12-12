@@ -4,28 +4,28 @@ using System.Text;
 
 namespace Freeserf.Renderer.OpenTK.Audio
 {
-    public class Audio : Freeserf.Audio
+    public class Audio : Freeserf.Audio, Freeserf.Audio.IVolumeController
     {
         Player musicPlayer = null;
         Player soundPlayer = null;
-        IVolumeController volumeController = null;
 
         internal Audio(DataSource dataSource)
         {
             try
             {
                 IMidiPlayerFactory midiPlayerFactory;
+                IWavePlayerFactory wavePlayerFactory;
 
 #if WINDOWS
                 midiPlayerFactory = new Windows.WindowsMidiPlayerFactory(dataSource);
+                wavePlayerFactory = new Windows.WindowsWavePlayerFactory(dataSource);
 #else
                 throw new ExceptionAudio("Unsupported platform.");
                 // TODO: other platforms
 #endif
 
                 musicPlayer = midiPlayerFactory?.GetMidiPlayer() as Audio.Player;
-                
-                // TODO: sfx
+                soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
             }
             catch
             {
@@ -37,7 +37,6 @@ namespace Freeserf.Renderer.OpenTK.Audio
         {
             musicPlayer = null;
             soundPlayer = null;
-            volumeController = null;
 
             Log.Info.Write("audio", "No audio device available. Sound is deactivated.");
         }
@@ -54,7 +53,37 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
         public override IVolumeController GetVolumeController()
         {
-            return volumeController;
+            return this;
+        }
+
+        public float GetVolume()
+        {
+            if (musicPlayer?.GetVolumeController() != null)
+                return musicPlayer.GetVolumeController().GetVolume();
+
+            if (soundPlayer?.GetVolumeController() != null)
+                return soundPlayer.GetVolumeController().GetVolume();
+
+            return 0.0f;
+        }
+
+        public void SetVolume(float volume)
+        {
+            if (musicPlayer != null)
+                musicPlayer.GetVolumeController()?.SetVolume(volume);
+
+            if (soundPlayer != null)
+                soundPlayer.GetVolumeController()?.SetVolume(volume);
+        }
+
+        public void VolumeUp()
+        {
+            SetVolume(GetVolume() + 0.1f);
+        }
+
+        public void VolumeDown()
+        {
+            SetVolume(GetVolume() - 0.1f);
         }
     }
 
