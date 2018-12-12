@@ -94,32 +94,31 @@ namespace Freeserf
             TrackLast = Track3,
         }
 
-        public abstract class VolumeController
+        public interface IVolumeController
         {
-            public abstract float GetVolume();
-            public abstract void SetVolume(float volume);
-            public abstract void VolumeUp();
-            public abstract void VolumeDown();
+            float GetVolume();
+            void SetVolume(float volume);
+            void VolumeUp();
+            void VolumeDown();
         }
 
-        public abstract class Track
+        public interface ITrack
         {
-            public abstract void Play();
+            void Play(Player player);
         }
 
         public abstract class Player
         {
-            protected Dictionary<int, Track> trackCache = new Dictionary<int, Track>();
-            protected bool enabled = true;
+            protected Dictionary<int, ITrack> trackCache = new Dictionary<int, ITrack>();
 
-            public virtual Track PlayTrack(int trackID)
+            public virtual ITrack PlayTrack(int trackID)
             {
-                if (!IsEnabled)
+                if (!Enabled)
                 {
                     return null;
                 }
 
-                Track track;
+                ITrack track;
 
                 if (!trackCache.ContainsKey(trackID))
                 {
@@ -137,28 +136,32 @@ namespace Freeserf
 
                 if (track != null)
                 {
-                    track.Play();
+                    track.Play(this);
                 }
 
                 return track;
             }
 
-            public abstract void Enable(bool enable);
+            public abstract bool Enabled
+            {
+                get;
+                set;
+            }
 
-            public virtual bool IsEnabled => enabled;
+            public abstract IVolumeController GetVolumeController();
 
-            public abstract VolumeController GetVolumeController();
+            protected abstract ITrack CreateTrack(int trackID);
 
-            protected abstract Track CreateTrack(int trackID);
-
-            protected abstract void Stop();
+            public abstract void Stop();
+            public abstract void Pause();
+            public abstract void Resume();
         }
 
         protected float volume = 0.75f;
 
         /* Common audio. */
 
-        public abstract VolumeController GetVolumeController();
+        public abstract IVolumeController GetVolumeController();
         public abstract Player GetSoundPlayer();
         public abstract Player GetMusicPlayer();
     }

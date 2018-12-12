@@ -1308,7 +1308,7 @@ namespace Freeserf
 
                         if (audioPlayer != null)
                         {
-                            audioPlayer.Enable(!audioPlayer.IsEnabled);
+                            audioPlayer.Enabled = !audioPlayer.Enabled;
                         }
 
                         break;
@@ -1319,7 +1319,7 @@ namespace Freeserf
 
                         if (audioPlayer != null)
                         {
-                            audioPlayer.Enable(!audioPlayer.IsEnabled);
+                            audioPlayer.Enabled = !audioPlayer.Enabled;
                         }
 
                         break;
@@ -1376,7 +1376,7 @@ namespace Freeserf
         {
             var music = Audio?.GetMusicPlayer();
 
-            if (music != null && music.IsEnabled)
+            if (music != null && music.Enabled)
                 music.PlayTrack((int)Audio.TypeMidi.Track0);
 
             SetGame(game);

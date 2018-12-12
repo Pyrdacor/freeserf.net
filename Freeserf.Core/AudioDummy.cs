@@ -24,7 +24,7 @@ namespace Freeserf
 {
     public class AudioDummy : Audio
     {
-        public override VolumeController GetVolumeController()
+        public override IVolumeController GetVolumeController()
         {
             return null;
         }

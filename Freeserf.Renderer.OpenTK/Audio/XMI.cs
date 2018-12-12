@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Freeserf.Renderer.OpenTK.Audio
 {
-    internal class XMI : IEnumerable<XMI.Event>
+    internal class XMI : Audio.ITrack, IEnumerable<XMI.Event>
     {
         uint tempo = 500000;
         readonly List<Event> events = new List<Event>();
@@ -105,6 +105,13 @@ namespace Freeserf.Renderer.OpenTK.Audio
             }
 
             events.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+        }
+
+        public void Play(Audio.Player player)
+        {
+            if (player is IMidiPlayer)
+                (player as IMidiPlayer).Play(this, true);
+            // TODO: sfx
         }
 
         uint ParseDeltaTime(Buffer data)
@@ -230,7 +237,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
         }
 
         // in milliseconds
-        public double ConvertTicksToTime(uint ticks)
+        double ConvertTicksToTime(uint ticks)
         {
             // ticks_per_quarter_note / quarternote_time_in_seconds = freq
             const int freq = 120; // ticks per second

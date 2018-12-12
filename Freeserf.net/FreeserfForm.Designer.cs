@@ -63,7 +63,9 @@
             this.Controls.Add(this.RenderControl);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "FreeserfForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Freeserf.net";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FreeserfForm_FormClosed);
             this.Load += new System.EventHandler(this.FreeserfForm_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FreeserfForm_KeyDown);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FreeserfForm_KeyPress);

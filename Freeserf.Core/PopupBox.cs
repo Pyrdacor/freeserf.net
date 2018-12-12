@@ -1740,18 +1740,18 @@ namespace Freeserf
 
             // Music
             Audio.Player player = Audio?.GetMusicPlayer();
-            SetButton(112, 19, (player != null && player.IsEnabled) ? 288u : 220u, Action.OptionsMusic);
+            SetButton(112, 19, (player != null && player.Enabled) ? 288u : 220u, Action.OptionsMusic);
 
             // Sfx
             player = Audio?.GetSoundPlayer();
-            SetButton(112, 39, (player != null && player.IsEnabled) ? 288u : 220u, Action.OptionsSfx);
+            SetButton(112, 39, (player != null && player.Enabled) ? 288u : 220u, Action.OptionsSfx);
 
             // Volume
             SetButton(96, 59, 220u, Action.OptionsVolumeMinus); /* Volume minus */
             SetButton(112, 59, 221u, Action.OptionsVolumePlus); /* Volume plus */
 
             float volume = 0.0f;
-            Audio.VolumeController volumeController = Audio?.GetVolumeController();
+            Audio.IVolumeController volumeController = Audio?.GetVolumeController();
 
             if (volumeController != null)
             {
@@ -2600,7 +2600,7 @@ namespace Freeserf
 
                         if (music != null)
                         {
-                            music.Enable(!music.IsEnabled);
+                            music.Enabled = !music.Enabled;
                             SetRedraw();
                         }
                     }
@@ -2611,7 +2611,7 @@ namespace Freeserf
 
                         if (sfx != null)
                         {
-                            sfx.Enable(!sfx.IsEnabled);
+                            sfx.Enabled = !sfx.Enabled;
                             SetRedraw();
                         }
                     }

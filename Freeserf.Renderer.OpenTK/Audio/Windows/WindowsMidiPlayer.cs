@@ -8,20 +8,25 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 {
     internal class WindowsMidiPlayerFactory : IMidiPlayerFactory
     {
+        public WindowsMidiPlayerFactory(DataSource dataSource)
+        {
+            this.dataSource = dataSource;
+        }
+
         static IMidiPlayer player = null;
+        DataSource dataSource = null;
 
         public IMidiPlayer GetMidiPlayer()
         {
             if (player == null)
-                player = new WindowsMidiPlayer();
+                player = new WindowsMidiPlayer(dataSource);
 
             return player;
         }
     }
 
-    internal class WindowsMidiPlayer : IMidiPlayer, IDisposable
+    internal class WindowsMidiPlayer : Audio.Player, Audio.IVolumeController, IMidiPlayer, IDisposable
     {
-        readonly MidiOutCaps caps = new MidiOutCaps();
         IntPtr handle = IntPtr.Zero;
         readonly Timer eventTimer = new Timer();
         int currentEventIndex = 0;
@@ -30,6 +35,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         DateTime pauseStartTime = DateTime.MinValue;
         bool looped = false;
         bool paused = false;
+        DataSource dataSource = null;
 
         double CurrentTrackTime
         {
@@ -48,7 +54,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             private set;
         } = false;
 
-        public bool Enabled
+        public override bool Enabled
         {
             get;
             set;
@@ -162,19 +168,28 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             {
                 SendDelayedEvent((uint)(ev.StartTime - currentTrackTime), ev.ToMidiMessage());
             }
+            else
+            {
+                SendEvent(ev.ToMidiMessage());
+            }
         }
 
-        public void Stop()
+        protected override Audio.ITrack CreateTrack(int trackID)
+        {
+            return new XMI(dataSource.GetMusic((uint)trackID));
+        }
+
+        public override void Stop()
         {
             Running = false;
         }
 
-        public void Pause()
+        public override void Pause()
         {
             Paused = true;
         }
 
-        public void Resume()
+        public override void Resume()
         {
             if (!Paused)
                 return;
@@ -189,11 +204,65 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             }
         }
 
-        public WindowsMidiPlayer()
+        public override Audio.IVolumeController GetVolumeController()
+        {
+            return this;
+        }
+
+        public float GetVolume()
+        {
+            uint volume = WinMMNatives.GetVolume(handle);
+            uint left = volume & 0xffff;
+            uint right = volume >> 16;
+            float result = 0.0f;
+
+            if (left != right)
+            {
+                volume = Math.Max(left, right);
+                result = (float)volume / (float)0xffff;
+                SetVolume(result);
+            }
+            else
+            {
+                result = (float)volume / (float)0xffff;
+            }
+
+            return result;
+        }
+
+        public void SetVolume(float volume)
+        {
+            if (volume < 0.0f)
+                volume = 0.0f;
+            if (volume > 1.0f)
+                volume = 1.0f;
+
+            uint value = (uint)Misc.Round(volume * 0xffff);
+
+            value |= (value << 16); // copy left volume to right volume
+
+            WinMMNatives.SetVolume(handle, value);
+        }
+
+        public void VolumeDown()
+        {
+            SetVolume(GetVolume() - 0.1f);
+        }
+
+        public void VolumeUp()
+        {
+            SetVolume(GetVolume() + 0.1f);
+        }
+
+        public WindowsMidiPlayer(DataSource dataSource)
         {
 
+            this.dataSource = dataSource;
+
 #if WINDOWS
-            if (!WinMMNatives.OpenPlaybackDevice(out handle, 0u))
+            var device = FindBestDevice();
+
+            if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device))
                 throw new ExceptionAudio("Unable to create midi output.");
 
             Available = true;
@@ -237,66 +306,32 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             }
         }
 
-        /*[StructLayout(LayoutKind.Sequential)]
-        struct MidiShortMessage
-        {
-            const byte CHANNEL_MASK = 0x0F;
-            const byte STATUS_MASK = 0xF0;
-
-            byte[] data;
-
-            public MidiShortMessage(MessageCommandMask command, byte midiChannel, byte value1, byte value2)
-            {
-                data = new byte[4];
-
-                StatusCommand = command;
-                Channel = midiChannel;
-                Parameter1 = value1;
-                Parameter2 = value2;
-            }
-
-            public MessageCommandMask StatusCommand
-            {
-                get => (MessageCommandMask)(data[0] >> 4);
-                set => data[0] = (byte)((byte)value | (data[0] & CHANNEL_MASK));
-            }
-
-            public byte Channel
-            {
-                get => (byte)(data[0] & CHANNEL_MASK);
-                set => data[0] = (byte)((data[0] & STATUS_MASK) | (value & CHANNEL_MASK));
-            }
-
-            public byte Parameter1
-            {
-                get => data[1];
-                set => data[1] = value;
-            }
-
-            public byte Parameter2
-            {
-                get => data[2];
-                set => data[2] = value;
-            }
-
-            public static explicit operator int(MidiShortMessage target)
-            {
-                return BitConverter.ToInt32(target.data, 0);
-            }
-
-            public enum MessageCommandMask : byte
-            {
-                NoteOff = 0x80,
-                NoteOn = 0x90,
-                PolyKeyPressure = 0xA0,
-                ControllerChange = 0xB0,
-                ProgramChange = 0xC0,
-                ChannelPressure = 0xD0,
-                PitchBend = 0xE0
-            }
-        }*/
         
 #if WINDOWS
+
+        const uint MIDICAPS_VOLUME = 1;
+
+        int FindBestDevice()
+        {
+            int count = WinMMNatives.GetPlaybackDeviceCount();
+
+            if (count == 0)
+                return -1;
+
+            for (uint i = 0; i < count; ++i)
+            {
+                var caps = WinMMNatives.GetPlaybackDeviceCapabilities(i);
+
+                if (caps == null)
+                    continue;
+
+                // we need volume support
+                if ((caps.Value.Support & MIDICAPS_VOLUME) != 0)
+                     return (int)i;
+            }
+
+            return -1;
+        }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         internal struct MidiOutCaps
@@ -324,7 +359,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             static extern int midiOutGetNumDevs();
 
             [DllImport(LibraryName)]
-            static extern int midiOutGetDevCaps(IntPtr uDeviceID, out MidiOutCaps midiOutCaps, uint sizeOfMidiOutCaps);
+            static extern int midiOutGetDevCaps(UIntPtr uDeviceID, out MidiOutCaps midiOutCaps, uint sizeOfMidiOutCaps);
 
             [DllImport(LibraryName)]
             static extern int midiOutOpen(out IntPtr midiIn, uint deviceID, MidiOutProc callback, IntPtr callbackInstance, int flags);
@@ -337,6 +372,12 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
             [DllImport(LibraryName)]
             static extern int midiOutShortMsg(IntPtr handle, uint msg);
+
+            [DllImport(LibraryName)]
+            static extern int midiOutGetVolume(IntPtr handle, out uint volume);
+
+            [DllImport(LibraryName)]
+            static extern int midiOutSetVolume(IntPtr handle, uint volume);
 
             [DllImport(LibraryName)]
             static extern int midiOutGetErrorText(int mmrError, StringBuilder message, int sizeOfMessage);
@@ -364,11 +405,25 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 return midiOutShortMsg(handle, message) == 0;
             }
 
-            internal static MidiOutCaps? GetPlaybackDeviceCapabilities(IntPtr device)
+            internal static uint GetVolume(IntPtr handle)
+            {
+                if (midiOutGetVolume(handle, out uint volume) != 0)
+                    return 0;
+
+                return volume;
+            }
+
+            internal static bool SetVolume(IntPtr handle, uint volume)
+            {
+                return midiOutSetVolume(handle, volume) == 0;
+            }
+
+            internal static MidiOutCaps? GetPlaybackDeviceCapabilities(uint device)
             {
                 MidiOutCaps caps = new MidiOutCaps();
+                UIntPtr deviceID = new UIntPtr(device);
 
-                if (midiOutGetDevCaps(device, out caps, (uint)Marshal.SizeOf(caps)) == 0)
+                if (midiOutGetDevCaps(deviceID, out caps, (uint)Marshal.SizeOf(caps)) != 0)
                     return null;
 
                 return caps;
