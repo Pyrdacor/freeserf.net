@@ -10,6 +10,10 @@
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
   </ItemGroup>
