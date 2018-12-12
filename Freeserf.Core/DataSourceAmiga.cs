@@ -954,18 +954,7 @@ namespace Freeserf
                 return null;
             }
 
-            try
-            {
-                // TODO
-                return null;
-                //ConvertorSFX2WAV convertor(data);
-                //return convertor.convert();
-            }
-            catch
-            {
-                Log.Error.Write("data", $"Could not convert SFX clip to WAV: #{index}");
-                return null;
-            }
+            return data;
         }
 
         public override Buffer GetMusic(uint index)
@@ -991,35 +980,23 @@ namespace Freeserf
 
             // Amiga music file starts with music-player code, we must drop it
             string str;
+            int pos = 0;
 
             unsafe
             {
-                str = new string((char*)data.Data, 0, (int)data.Size);
+                // it starts at 1080 or later
+                str = new string((char*)data.Data, 1080, (int)data.Size - 1080);
             }
 
-            var pos = str.IndexOf("M!K!");
+            pos = str.IndexOf("M!K!");
 
             if (pos == -1)
-            {
                 return null;
-            }
-            pos -= 1080;
 
-            Buffer mod = data.GetTail((uint)pos);
+            // as we searched from 1080 and the offset to M!K! from the beginning is also 1080
+            // the correct data start offset is the position of M!K!
 
-            try
-            {
-                // TODO
-                //ConvertorMOD2WAV converter(mod);
-                //music = converter.convert();
-            }
-            catch (ExceptionFreeserf e)
-            {
-                Log.Error.Write("data", e.Description);
-                music = null;
-            }
-
-            return music;
+            return data.GetTail((uint)pos);
         }
 
         Buffer gfxFast;
