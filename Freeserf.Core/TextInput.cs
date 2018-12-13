@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf
 {
@@ -213,6 +214,12 @@ namespace Freeserf
             if (key == '\n')
             {
                 LooseFocus();
+                return true;
+            }
+
+            // invalid character
+            if (key != ' ' && !Render.TextRenderer.ValidCharacters.Any(c => c == key))
+            {
                 return true;
             }
 

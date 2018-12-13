@@ -7,6 +7,9 @@ namespace Freeserf.Render
 {
     internal class TextRenderer
     {
+        static readonly Encoding encoding = Encoding.GetEncoding("iso-8859-1");
+        public static readonly byte[] ValidCharacters = encoding.GetBytes("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-:?%äÄöÖüÜ");
+
         class SpriteInfo
         {
             public ILayerSprite Sprite;
@@ -82,7 +85,6 @@ namespace Freeserf.Render
         readonly List<RenderText> renderTexts = new List<RenderText>();
         readonly List<SpriteInfo> characterSprites = new List<SpriteInfo>(); // shared by all texts
         readonly ITextureAtlas textureAtlas = null;
-        static readonly Encoding encoding = Encoding.GetEncoding("iso-8859-1");
 
         public TextRenderer(IRenderView renderView)
         {
