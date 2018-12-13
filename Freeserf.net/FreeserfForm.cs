@@ -252,6 +252,13 @@ namespace Freeserf
 
         void RenderControl_KeyDown(object sender, KeyEventArgs e)
         {
+            if (e.Control && e.KeyCode == Keys.F)
+            {
+                ToggleFullscreen();
+                e.Handled = true;
+                return;
+            }
+
             switch (e.KeyCode)
             {
                 case Keys.Left:
@@ -269,13 +276,6 @@ namespace Freeserf
                 case Keys.Down:
                     gameView?.NotifyDrag(0, 0, 0, 32, Event.Button.Left);
                     e.Handled = true;
-                    break;
-                case Keys.F:
-                    if (e.Control)
-                    {
-                        ToggleFullscreen();
-                        e.Handled = true;
-                    }
                     break;
                 case Keys.F10:
                     gameView?.NotifyKeyPressed('n', 1);
