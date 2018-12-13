@@ -232,8 +232,8 @@ namespace Freeserf
             }
 
             public string Name = "";
-            public string path = "";
-            public Type type = Type.Legacy;
+            public string Path = "";
+            public Type SaveType = Type.Legacy;
         }
 
         protected GameStore()
@@ -417,8 +417,8 @@ namespace Freeserf
                         var info = new SaveInfo()
                         {
                             Name = name,
-                            path = Path.Combine(FolderPath, "/SAVE" + ('0' + (char)i) + ".DS"),
-                            type = SaveInfo.Type.Legacy
+                            Path = Path.Combine(FolderPath, "/SAVE" + ('0' + (char)i) + ".DS"),
+                            SaveType = SaveInfo.Type.Legacy
                         };
 
                         savedGames.Add(info);
@@ -434,8 +434,8 @@ namespace Freeserf
                 var info = new SaveInfo()
                 {
                     Name = Path.GetFileNameWithoutExtension(file),
-                    path = Path.GetDirectoryName(file),
-                    type = SaveInfo.Type.Regular
+                    Path = Path.GetDirectoryName(file),
+                    SaveType = SaveInfo.Type.Regular
                 };
 
                 savedGames.Add(info);
