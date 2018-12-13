@@ -183,7 +183,7 @@ namespace Freeserf
 
         protected override bool HandleKeyPressed(char key, int modifier)
         {
-            return true;
+            return focused;
         }
 
         protected override bool HandleFocusLoose()
