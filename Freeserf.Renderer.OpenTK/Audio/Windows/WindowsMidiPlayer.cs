@@ -366,6 +366,12 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         void SendDelayedEvent(uint delay, uint message)
         {
+            if (delay == 0)
+            {
+                SendEvent(message);
+                return;
+            }
+
             lock (messageQueue)
             {
                 messageQueue.Enqueue(message);
