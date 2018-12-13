@@ -36,6 +36,7 @@ namespace Freeserf
         const int MinTimeForSaveConcern = 10000;
         Game currentGame = null;
         DateTime lastSaveTime = DateTime.MinValue;
+        string currentGameSaveFile = null;
         readonly List<IHandler> handlers = new List<IHandler>();
 
         static GameManager instance = null;
@@ -86,6 +87,7 @@ namespace Freeserf
             }
 
             lastSaveTime = DateTime.MinValue;
+            currentGameSaveFile = null;
             SetCurrentGame(newGame);
 
             return true;
@@ -101,28 +103,37 @@ namespace Freeserf
             }
 
             lastSaveTime = DateTime.Now;
+            currentGameSaveFile = path;
             SetCurrentGame(newGame);
             newGame.Pause();
 
             return true;
         }
 
-        public bool SaveCurrentGame(SaveWriterText writer)
+        public bool SaveCurrentGame(string path = null)
         {
             if (currentGame == null)
                 return false;
 
-            try
+            if (!string.IsNullOrWhiteSpace(path))
             {
-                currentGame.WriteTo(writer);
-                lastSaveTime = DateTime.Now;
-                return true;
+                currentGameSaveFile = path;
             }
-            catch (Exception ex)
+
+            if (string.IsNullOrWhiteSpace(currentGameSaveFile))
             {
-                Log.Error.Write("save", "Failed to save game: " + ex.Message);
-                return false;
+                if (!GameStore.Instance.QuickSave("quicksave", currentGame))
+                    return false;
             }
+            else
+            {
+                if (!GameStore.Instance.Save(currentGameSaveFile, currentGame))
+                    return false;
+            }
+
+            lastSaveTime = DateTime.Now;
+
+            return true;
         }
 
         void SetCurrentGame(Game newGame)
@@ -158,6 +169,11 @@ namespace Freeserf
                 return false;
 
             return (DateTime.Now - lastSaveTime).TotalMilliseconds >= MinTimeForSaveConcern;
+        }
+
+        public string GetCurrentGameSaveFile()
+        {
+            return currentGameSaveFile;
         }
     }
 }

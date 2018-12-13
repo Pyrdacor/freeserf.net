@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Freeserf
@@ -371,6 +372,24 @@ namespace Freeserf
 
         static Freeserf.BackgroundPattern[] backgrounds = null;
 
+        void SaveCurrentGame()
+        {
+            string fileName = Path.GetFileName(fileField.Text);
+            var extension = Path.GetExtension(fileName).ToLower();
+
+            if (extension != ".save")
+                fileName = Path.GetFileNameWithoutExtension(fileName) + ".save";
+
+            fileName = Path.Combine(fileList.GetFolderPath(), fileName);
+
+            if (GameManager.Instance.SaveCurrentGame(fileName))
+            {
+                interf.ClosePopup();
+            }
+
+            // TODO: status messages, sounds?
+        }
+
         static void InitBackgrounds(Render.ISpriteFactory spriteFactory)
         {
             if (backgrounds != null)
@@ -411,9 +430,7 @@ namespace Freeserf
             fileList.SetSize(120, 100);
             fileList.SetSelectionHandler((string item) =>
             {
-                int pos = item.LastIndexOfAny(new char[] { '/', '\\' });
-                string fileName = item.Substring(pos + 1);
-                fileField.Text = fileName;
+                fileField.Text = Path.GetFileNameWithoutExtension(item);
             });
             AddChild(fileList, 12, 22, false);
 
@@ -580,6 +597,8 @@ namespace Freeserf
             Box = box;
 
             MiniMap.Displayed = box == Type.Map;
+            fileList.Displayed = box == Type.LoadSave;
+            fileField.Displayed = box == Type.LoadSave;
 
             SetBackground(BackgroundFromType());
 
@@ -2274,10 +2293,13 @@ namespace Freeserf
 			
 		}
 
-        void draw_save_box()
+        void DrawSaveBox()
 		{
-			
-		}
+            SetText(32, 11, "Save  Game");
+
+            SetButton(8, 137, 224u, Action.Save); // save button
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
+        }
 
         void ActivateTransportItem(int index)
 		{
@@ -2683,10 +2705,27 @@ namespace Freeserf
                     interf.OpenGameInit();
                     break;
                 case Action.NoSaveQuitConfirm:
-                    // TODO: save
-                    //GameManager.Instance.SaveCurrentGame();
-                    interf.ClosePopup();
-                    interf.OpenGameInit();
+                    {
+                        var saveFile = GameManager.Instance.GetCurrentGameSaveFile();
+
+                        if (saveFile != null)
+                        {
+                            GameManager.Instance.SaveCurrentGame();
+                        }
+                        else
+                        {
+                            GameStore.Instance.QuickSave("quicksave", interf.Game);
+                        }
+                        // TODO: info message about saving?
+                        interf.ClosePopup();
+                        interf.OpenGameInit();
+                    }
+                    break;
+                case Action.Save:
+                    SaveCurrentGame();
+                    break;
+                case Action.ShowSave:
+                    SetBox(Type.LoadSave);
                     break;
                 // TODO ...
                 default:
@@ -2872,7 +2911,7 @@ namespace Freeserf
                     draw_demolish_box();
                     break;
                 case Type.LoadSave:
-                    draw_save_box();
+                    DrawSaveBox();
                     break;
                 default:
                     break;

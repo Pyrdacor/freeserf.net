@@ -29,7 +29,14 @@ namespace Freeserf
     {
         public static string ReplaceInvalidPathChars(this string str, char replacement)
         {
-            string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            string invalid = "";
+            var invalidFileNameChars = new List<char>(Path.GetInvalidFileNameChars());
+
+            foreach (char c in Path.GetInvalidPathChars())
+            {
+                if (invalidFileNameChars.Contains(c))
+                    invalid += c;
+            }
 
             return ReplaceChars(str, invalid, replacement);
         }

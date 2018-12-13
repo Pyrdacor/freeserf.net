@@ -52,7 +52,7 @@ namespace Freeserf
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             background.Layer = Layer;
 
-            selectionBackground = interf.RenderView.ColoredRectFactory.Create(0, 0, Color.Green, BaseDisplayLayer);
+            selectionBackground = interf.RenderView.ColoredRectFactory.Create(0, 0, Color.Green, (byte)(BaseDisplayLayer + 1));
             selectionBackground.Layer = Layer;
 
             int y = 3;
@@ -93,6 +93,7 @@ namespace Freeserf
             base.InternalHide();
 
             background.Visible = false;
+            selectionBackground.Visible = false;
         }
 
         protected internal override void UpdateParent()
@@ -100,11 +101,11 @@ namespace Freeserf
             base.UpdateParent();
 
             background.DisplayLayer = BaseDisplayLayer;
+            selectionBackground.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 
         protected override void InternalDraw()
         {
-            background.Color = (focused) ? colorFocus : colorBackground;
             background.Resize(Width, Height);
             background.X = TotalX;
             background.Y = TotalY;
@@ -112,6 +113,7 @@ namespace Freeserf
 
             selectionBackground.Resize(Width - 4, 9);
             selectionBackground.X = TotalX + 2;
+            selectionBackground.Y = TotalY + 2 + (selectedItem - firstVisibleItem) * 9;
 
             for (int i = 0; i < saveGameNames.Count; ++i)
             {
@@ -126,15 +128,20 @@ namespace Freeserf
                     saveGameNames[i].Displayed = y < (Height - 6);
                 }
 
+                saveGameNames[i].Text = items[i].Name;
+
                 // TODO
                 //saveGameNames[i].Color = (i == selectedItem) ? Color.Black : colorText;
             }
+
+            selectionBackground.Visible = Displayed && selectedItem != -1 && saveGameNames[selectedItem].Displayed;
         }
 
         protected override bool HandleClickLeft(int x, int y)
         {
             SetFocused();
 
+            y -= TotalY;
             y -= 3;
 
             if (y >= 0)

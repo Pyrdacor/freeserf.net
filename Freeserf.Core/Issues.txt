@@ -15,6 +15,7 @@ Non-working code:
 - OtherEndDir not valid exception in Serf.cs line 2801. I guess the CallTransporter call in Flag.cs line 864 is the problem. Direction and/or IsWaterPath are not right.
   Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
+- Text color must be changeable (at least from green to black)
 
 
 AI:

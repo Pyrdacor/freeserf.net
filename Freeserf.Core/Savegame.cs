@@ -306,6 +306,7 @@ namespace Freeserf
          format on load and save to the best format on write. */
         public bool Save(string path, Game game)
         {
+            path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             path = path.ReplaceInvalidPathChars('_');
 
             var writer = new SaveWriterTextSection("game", 0);
@@ -358,10 +359,10 @@ namespace Freeserf
         public bool QuickSave(string prefix, Game game)
         {
             /* Build filename including time stamp. */
-            GameStore save_game = new GameStore();
+            GameStore saveGame = new GameStore();
             string name = DateTime.Now.ToString("dd-MM-yy_HH-mm-ss", CultureInfo.InvariantCulture);
 
-            string path = Path.Combine(save_game.FolderPath, prefix + "-" + name + ".save");
+            string path = Path.Combine(saveGame.FolderPath, prefix + "-" + name + ".save");
 
             return Save(path, game);
         }
@@ -434,7 +435,7 @@ namespace Freeserf
                 var info = new SaveInfo()
                 {
                     Name = Path.GetFileNameWithoutExtension(file),
-                    Path = Path.GetDirectoryName(file),
+                    Path = file,
                     SaveType = SaveInfo.Type.Regular
                 };
 
