@@ -2288,10 +2288,16 @@ namespace Freeserf
 			
 		}
 
-        void draw_demolish_box()
+        void DrawDemolishBox()
 		{
-			
-		}
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(64, 54, 288u, Action.Demolish); // checkbox
+
+            SetText(8, 19,"    Demolish:");
+            SetText(8, 39, "   Click here");
+            SetText(8, 77, "   if you are");
+            SetText(8, 95, "      sure");
+        }
 
         void DrawSaveBox()
 		{
@@ -2727,6 +2733,10 @@ namespace Freeserf
                 case Action.ShowSave:
                     SetBox(Type.LoadSave);
                     break;
+                case Action.Demolish:
+                    interf.DemolishObject();
+                    interf.ClosePopup();
+                    break;
                 // TODO ...
                 default:
                     Log.Warn.Write("popup", "unhandled action " + action.ToString());
@@ -2908,7 +2918,7 @@ namespace Freeserf
                     draw_player_faces_box();
                     break;
                 case Type.Demolish:
-                    draw_demolish_box();
+                    DrawDemolishBox();
                     break;
                 case Type.LoadSave:
                     DrawSaveBox();

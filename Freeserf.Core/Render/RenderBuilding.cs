@@ -42,6 +42,217 @@ namespace Freeserf.Render
             0xa2, 0xa0, 0xa1, 0x99, 0x9d, 0x9e, 0x98, 0x9f, 0xb2
         };
 
+        static readonly int[] BuildingAnimationOffsetFromType = new int[]
+        {
+            0, 10, 26, 39, 49, 62, 78, 97, 97, 116,
+            129, 157, 167, 198, 211, 236, 255, 277, 305, 324,
+            349, 362, 381, 418, 446
+        };
+
+        static readonly int[] BuildingBurnAnimation = new int[]
+        {
+            /* Unfinished */
+            0, -8, 2,
+            8, 0, 4,
+            0, 8, 2, -1,
+
+            /* Fisher */
+            0, -8, -10,
+            0, 4, -12,
+            8, -8, 4,
+            8, 7, 4,
+            0, -2, 8, -1,
+
+            /* Lumberjack */
+            0, 3, -13,
+            0, -8, -10,
+            8, 9, 3,
+            8, -6, 3, -1,
+
+            /* Boat builder */
+            0, -1, -12,
+            8, -8, 11,
+            8, 7, 5, -1,
+
+            /* Stone cutter */
+            0, 6, -14,
+            0, -9, -11,
+            8, -8, 5,
+            8, 6, 5, -1,
+
+            /* Stone mine */
+            8, -4, -40,
+            8, -8, -15,
+            8, 3, -14,
+            8, -9, 4,
+            8, 6, 5, -1,
+
+            /* Coal mine */
+            8, -4, -40,
+            8, -1, -18,
+            8, -8, -15,
+            8, 6, 2,
+            8, 0, 8,
+            8, -8, 9, -1,
+
+            /* Iron mine, gold mine */
+            8, -4, -40,
+            8, -2, -19,
+            8, -9, -14,
+            8, -8, 2,
+            8, 6, 2,
+            0, -4, 8, -1,
+
+            /* Forester */
+            0, 8, -11,
+            0, -6, -8,
+            8, -8, 4,
+            8, 6, 4, -1,
+
+            /* Stock */
+            0, -2, -25,
+            0, 6, -17,
+            0, -9, -16,
+            8, -21, 1,
+            8, 21, 2,
+            0, 15, 18,
+            0, -16, 10,
+            8, -8, 15,
+            8, 5, 15, -1,
+
+            /* Hut */
+            0, 0, -11,
+            8, -8, 5,
+            8, 8, 5, -1,
+
+            /* Farm */
+            8, 22, -2,
+            8, 7, -5,
+            8, -3, -1,
+            8, -23, 0,
+            8, -12, 4,
+            0, 25, 5,
+            0, 21, 13,
+            0, -17, 8,
+            0, -10, 15,
+            0, -2, 15, -1,
+
+            /* Butcher */
+            8, -15, 3,
+            8, 20, 3,
+            8, 7, 3,
+            8, -4, 3, -1,
+
+            /* Pig farm */
+            8, 0, -2,
+            8, 22, 1,
+            8, 15, 5,
+            8, -20, -1,
+            8, -11, 3,
+            0, 20, 12,
+            0, -16, 7,
+            0, -12, 14, -1,
+
+            /* Mill */
+            0, 7, -33,
+            0, 5, -20,
+            8, -2, -24,
+            8, -6, 1,
+            8, 4, 2,
+            0, -3, 6, -1,
+
+            /* Baker */
+            0, -15, -16,
+            0, -4, -19,
+            0, 3, -16,
+            8, -13, 2,
+            8, -9, 7,
+            8, 6, 7,
+            0, 17, 1, -1,
+
+            /* Saw mill */
+            0, 7, -19,
+            0, -1, -14,
+            0, 16, -13,
+            0, 5, -8,
+            8, 14, 4,
+            0, 10, 9,
+            0, -17, 8,
+            8, -11, 10,
+            8, -1, 12, -1,
+
+            /* Steel smelter */
+            0, 5, -19,
+            0, 16, -16,
+            8, -14, 2,
+            8, -10, 5,
+            8, 15, 5,
+            8, 2, 5, -1,
+
+            /* Tool maker */
+            8, 7, -19,
+            0, -11, -17,
+            0, -4, -11,
+            0, 12, -10,
+            8, -20, 0,
+            8, -15, 7,
+            8, 1, 7,
+            8, 15, 7, -1,
+
+            /* Weapon smith */
+            8, -15, 1,
+            8, -10, 3,
+            8, 20, 3,
+            8, 5, 3, -1,
+
+            /* Tower */
+            0, -6, -30,
+            0, 7, -14,
+            8, -11, -3,
+            0, -8, 4,
+            8, 9, 5,
+            8, -4, 5, -1,
+
+            /* Fortress */
+            0, -3, -30,
+            0, -15, -26,
+            0, 21, -29,
+            0, -13, -17,
+            8, 4, -11,
+            8, -2, -6,
+            8, -22, 0,
+            8, -17, 8,
+            8, 20, 1,
+            8, 10, 8,
+            8, 4, 13,
+            8, -11, 15, -1,
+
+            /* Gold smelter */
+            0, -15, -20,
+            0, 10, -22,
+            0, -3, -25,
+            0, -8, -10,
+            0, 7, -10,
+            0, -13, 2,
+            8, -8, 5,
+            8, 6, 5,
+            0, 16, 6, -1,
+
+            /* Castle */
+            0, 11, -46,
+            0, -19, -42,
+            8, 1, -27,
+            8, 10, -13,
+            0, -7, -24,
+            8, -16, -6,
+            0, -23, 4,
+            8, -2, 0,
+            8, 12, 12,
+            8, -14, 17,
+            8, -4, 19,
+            0, 13, 19, -1
+        };
+
         const uint CrossSprite = 0x90;
         const uint CornerStoneSprite = 0x91;
         const uint ShadowOffset = 1000u;
@@ -65,6 +276,7 @@ namespace Freeserf.Render
         static Position crossOrStoneSpriteOffset = null;
         static Rect[] materialSpriteInfos = null;
         static Position[] materialTextureOffsets = null;
+        static Rect[] burningSpriteInfos = null;
 
         Audio audio = null;
 
@@ -119,6 +331,14 @@ namespace Freeserf.Render
                 offset.Y += 100; // make it full visible
 
                 crossOrStoneSprite.MaskTextureAtlasOffset = offset;
+            }
+
+            if (burningSprite != null)
+            {
+                var offset = textureAtlas.GetOffset(0u);
+                offset.Y += 100; // make it full visible
+
+                burningSprite.MaskTextureAtlasOffset = offset;
             }
 
             InitOffsets(dataSource);
@@ -214,6 +434,17 @@ namespace Freeserf.Render
                 materialTextureOffsets[0] = textureAtlas.GetOffset(2000u + (uint)Resource.Type.Stone);
                 materialTextureOffsets[1] = textureAtlas.GetOffset(2000u + (uint)Resource.Type.Plank);
             }
+
+            if (burningSpriteInfos == null)
+            {
+                burningSpriteInfos = new Rect[16];
+
+                for (uint i = 0; i < 16; ++i)
+                {
+                    spriteInfo = dataSource.GetSpriteInfo(Data.Resource.GameObject, 135u + i);
+                    burningSpriteInfos[i] = new Rect(spriteInfo.OffsetX, spriteInfo.OffsetY, spriteInfo.Width, spriteInfo.Height);
+                }
+            }
         }
 
         protected override void Create(ISpriteFactory spriteFactory, DataSource dataSource)
@@ -243,11 +474,7 @@ namespace Freeserf.Render
                 crossOrStoneSprite = spriteFactory.Create(crossOrStoneSpriteInfo.Width, crossOrStoneSpriteInfo.Height, 0, 0, true, false) as IMaskedSprite;
             }
 
-            if (building.IsBurning())
-            {
-                // burning is in Data.Resource.GameObject beginning at 135
-                // TODO
-            }
+            burningSprite = spriteFactory.Create(0, 0, 0, 0, true, false) as IMaskedSprite;
 
             if (building.IsDone())
             {
@@ -399,7 +626,17 @@ namespace Freeserf.Render
                 planks[i].Y = renderPosition.Y + materialSpriteInfos[1].Position.Y - 6 + i;
             }
 
-            UpdateSpecialBuilding(renderPosition, tick);
+            if (building.IsBurning())
+            {
+                DrawBurningSprite(renderPosition, tick);
+            }
+            else
+            {
+                UpdateSpecialBuilding(renderPosition, tick);
+            }
+
+            if (!sprite.Visible)
+                building.StopPlayingSfx();
         }
 
         /// <summary>
@@ -553,13 +790,66 @@ namespace Freeserf.Render
                 }
             }
 
-            // TODO: overlay burning sprite?
-            if (building.IsBurning())
+            return true;
+        }
+
+        void DrawBurningSprite(Position renderPosition, int tick)
+        {
+            /* Play sound effect. */
+            if (sprite.Visible &&
+                ((building.GetBurningCounter() >> 3) & 3) == 3 &&
+                !building.IsPlayingSfx())
             {
-                // TODO
+                building.StartPlayingSfx();
+                PlaySound(Audio.TypeSfx.Burning);
+            }
+            else
+            {
+                building.StopPlayingSfx();
             }
 
-            return true;
+            ushort delta = (ushort)(tick - building.GetTick());
+            building.SetTick((uint)tick);
+
+            if (building.GetBurningCounter() >= delta)
+            {
+                building.DecreaseBurningCounter(delta);
+
+                int type = 0;
+
+                if (building.IsDone() ||
+                    building.GetProgress() >= 16000)
+                {
+                    type = (int)building.BuildingType;
+                }
+
+                int offset = ((building.GetBurningCounter() >> 3) & 7) ^ 7;
+                //int animationIndex = BuildingAnimationOffsetFromType[type];
+
+                int animationIndex = (building.Game.Map.GetObject(building.Position) == Map.Object.SmallBuilding) ? 0 : 8;
+
+                //if (BuildingBurnAnimation[animationIndex] >= 0)
+                {
+                    int x = renderPosition.X;
+                    int y = renderPosition.Y;
+                    var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
+                    int index = /*BuildingBurnAnimation[animationIndex]*/animationIndex + offset;
+                    var spriteInfo = burningSpriteInfos[index];
+
+                    burningSprite.X = x + spriteInfo.Position.X;// + BuildingBurnAnimation[animationIndex + 1];
+                    burningSprite.Y = y + spriteInfo.Position.Y;// + BuildingBurnAnimation[animationIndex + 2];
+                    burningSprite.Resize(spriteInfo.Size.Width, spriteInfo.Size.Height);
+                    burningSprite.TextureAtlasOffset = textureAtlas.GetOffset(2000u + (uint)index);
+                    burningSprite.BaseLineOffset = System.Math.Max(0, (sprite.Y + sprite.Height) - (burningSprite.Y + burningSprite.Height) + 1);
+
+                    //offset = (offset + 3) & 7;
+                    //animationIndex += 3;
+                }
+            }
+            else
+            {
+                building.SetBurningCounter(0);
+            }
         }
 
         void AddDummySprites(int n)

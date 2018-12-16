@@ -207,7 +207,10 @@ namespace Freeserf.Render
             }
 
             // we also add the burning sprites
-            // TODO
+            for (i = 0; i < 16; ++i)
+            {
+                AddSprite(atlasIndex, 2000u + i, data.GetSprite(Data.Resource.GameObject, 135u + i, color));
+            }
 
             #endregion
 
