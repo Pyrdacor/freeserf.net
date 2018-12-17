@@ -31,8 +31,12 @@ namespace Freeserf
         {
             new SpriteDefinition(318u, 320, 184), // used for GameInitBox
             new SpriteDefinition(319u, 128, 144)  // used for NotificationBox
-            // TODO ...
         };
+
+        protected BackgroundPattern()
+        {
+
+        }
 
         BackgroundPattern(Render.ISpriteFactory spriteFactory, int type)
         {
@@ -67,9 +71,17 @@ namespace Freeserf
             return new BackgroundPattern(spriteFactory, 1, index);
         }
 
-        // TODO ...
+        public static BackgroundPattern CreateResourceStatisticPopupBoxBackground(Render.ISpriteFactory spriteFactory, uint index)
+        {
+            return new ResourceStatisticBackgroundPattern(spriteFactory, index);
+        }
 
-        public void Draw(GuiObject parent)
+        public static BackgroundPattern CreatePlayerStatisticPopupBoxBackground(Render.ISpriteFactory spriteFactory, uint index)
+        {
+            return new PlayerStatisticBackgroundPattern(spriteFactory, index);
+        }
+
+        public virtual void Draw(GuiObject parent)
         {
             if (parent == null)
             {
@@ -100,10 +112,207 @@ namespace Freeserf
             set;
         } = new Position();
 
-        public bool Visible
+        public virtual bool Visible
         {
             get => background.Visible;
             set => background.Visible = value;
+        }
+
+        class ResourceStatisticBackgroundPattern : BackgroundPattern
+        {
+            readonly Render.ILayerSprite[] iconBackground = new Render.ILayerSprite[4 * 7]; // 4 rows, 7 columns
+            readonly Render.ILayerSprite[] background = new Render.ILayerSprite[3 * 8];
+            bool visible = false;
+
+            internal ResourceStatisticBackgroundPattern(Render.ISpriteFactory spriteFactory, uint spriteIndex)
+            {
+                Position offset;
+
+                for (int i = 0; i < 4 * 7; ++i)
+                {
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, spriteIndex);
+                    iconBackground[i] = spriteFactory.Create(16, 16, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+                }
+
+                for (int i = 0; i < 3 * 8; ++i)
+                {
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 129u);
+                    background[i] = spriteFactory.Create(16, 16, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+                }
+            }
+
+            public override void Draw(GuiObject parent)
+            {
+                if (parent == null)
+                {
+                    Action<Render.ILayerSprite, int, int> action = (Render.ILayerSprite sprite, int index, int param) => sprite.Visible = false;
+
+                    BackgroundAction(iconBackground, action);
+                    BackgroundAction(background, action);
+
+                    visible = false;
+
+                    return;
+                }
+
+                Action<Render.ILayerSprite, int, int> spriteAction = (Render.ILayerSprite sprite, int index, int param) =>
+                {
+                    int yOffset = param * 73;
+                    int columns = 7 + param;
+                    
+                    if (param == 0)
+                    {
+                        yOffset += (index / columns) * 16;
+                    }
+                    else
+                    {
+                        int row = (index / columns);
+
+                        if (row == 1)
+                            yOffset += 48;
+                        else if (row == 2)
+                            yOffset += 64;
+                    }
+
+                    sprite.X = parent.TotalX + Offset.X + (parent.Width - 128) / 2 + (index % columns) * 16;
+                    sprite.Y = parent.TotalY + Offset.Y + (parent.Height - 148) / 2 + yOffset;
+                    sprite.DisplayLayer = parent.BaseDisplayLayer;
+                    sprite.Layer = parent.Layer;
+                    sprite.Visible = parent.Displayed && sprite.X < parent.TotalX + parent.Width && sprite.Y < parent.TotalY + parent.Height;
+                };
+
+                BackgroundAction(iconBackground, spriteAction, 0);
+                BackgroundAction(background, spriteAction, 1);
+            }
+
+            void BackgroundAction(Render.ILayerSprite[] backgrounds, Action<Render.ILayerSprite, int, int> action, int param = 0)
+            {
+                int index = 0;
+
+                foreach (var background in backgrounds)
+                    action?.Invoke(background, index++, param);
+            }
+
+            public override bool Visible
+            {
+                get => visible;
+                set
+                {
+                    if (visible == value)
+                        return;
+
+                    visible = value;
+
+                    Action<Render.ILayerSprite, int, int> action = (Render.ILayerSprite sprite, int index, int param) => sprite.Visible = visible;
+
+                    BackgroundAction(iconBackground, action);
+                    BackgroundAction(background, action);
+                }
+            }
+        }
+
+        // this is used for player statistic popups
+        // icons are 16x16
+        // lower background parts are 16x8, 16x16 and 16x12
+        // as the width is 128 we have 8 icons per row
+        // the height will be 148 instead of 144 (we use 7 icon rows)
+        class PlayerStatisticBackgroundPattern : BackgroundPattern
+        {
+            readonly Render.ILayerSprite[] iconBackground = new Render.ILayerSprite[7 * 8]; // 7 rows, 8 columns
+            readonly Render.ILayerSprite[] background1 = new Render.ILayerSprite[8];
+            readonly Render.ILayerSprite[] background2 = new Render.ILayerSprite[8];
+            readonly Render.ILayerSprite[] background3 = new Render.ILayerSprite[8];
+            bool visible = false;
+
+            internal PlayerStatisticBackgroundPattern(Render.ISpriteFactory spriteFactory, uint spriteIndex)
+            {
+                Position offset;
+
+                for (int i = 0; i < 7 * 8; ++i)
+                {
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, spriteIndex);
+                    iconBackground[i] = spriteFactory.Create(16, 16, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+                }
+
+                for (int i = 0; i < 8; ++i)
+                {
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 136u);
+                    background1[i] = spriteFactory.Create(16, 8, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 129u);
+                    background2[i] = spriteFactory.Create(16, 16, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 137u);
+                    background3[i] = spriteFactory.Create(16, 12, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+                }
+            }
+
+            public override void Draw(GuiObject parent)
+            {
+                if (parent == null)
+                {
+                    Action<Render.ILayerSprite, int, int> action = (Render.ILayerSprite sprite, int index, int param) => sprite.Visible = false;
+
+                    BackgroundAction(iconBackground, action);
+                    BackgroundAction(background1, action);
+                    BackgroundAction(background2, action);
+                    BackgroundAction(background3, action);
+
+                    visible = false;
+
+                    return;
+                }
+
+                Action<Render.ILayerSprite, int, int> spriteAction = (Render.ILayerSprite sprite, int index, int param) =>
+                {
+                    int yOffset = 0;
+
+                    if (param == 1)
+                        yOffset = 112;
+                    else if (param == 2)
+                        yOffset = 120;
+                    else if (param == 3)
+                        yOffset = 136;
+
+                    sprite.X = parent.TotalX + Offset.X + (parent.Width - 128) / 2 + (index % 8) * 16;
+                    sprite.Y = parent.TotalY + Offset.Y + (parent.Height - 148) / 2 + yOffset + (index / 8) * 16;
+                    sprite.DisplayLayer = parent.BaseDisplayLayer;
+                    sprite.Layer = parent.Layer;
+                    sprite.Visible = parent.Displayed && sprite.X < parent.TotalX + parent.Width && sprite.Y < parent.TotalY + parent.Height;
+                };
+
+                BackgroundAction(iconBackground, spriteAction, 0);
+                BackgroundAction(background1, spriteAction, 1);
+                BackgroundAction(background2, spriteAction, 2);
+                BackgroundAction(background3, spriteAction, 3);
+            }
+
+            void BackgroundAction(Render.ILayerSprite[] backgrounds, Action<Render.ILayerSprite, int, int> action, int param = 0)
+            {
+                int index = 0;
+
+                foreach (var background in backgrounds)
+                    action?.Invoke(background, index++, param);
+            }
+
+            public override bool Visible
+            {
+                get => visible;
+                set
+                {
+                    if (visible == value)
+                        return;
+
+                    visible = value;
+
+                    Action<Render.ILayerSprite, int, int> action = (Render.ILayerSprite sprite, int index, int param) => sprite.Visible = visible;
+
+                    BackgroundAction(iconBackground, action);
+                    BackgroundAction(background1, action);
+                    BackgroundAction(background2, action);
+                    BackgroundAction(background3, action);
+                }
+            }
         }
     }
 

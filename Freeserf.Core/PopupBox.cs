@@ -50,7 +50,7 @@ namespace Freeserf
             BuildingStats3,
             BuildingStats4,
             Stat8,
-            Stat7,
+            ResourceStatistics,
             Stat1,
             Stat2,
             SettlerStats,
@@ -107,10 +107,10 @@ namespace Freeserf
             StaresGreen = 313,       // * *
             SquaresGreen = 314,
             Construction = 131,  // many dots
-            OverallComparison = 132,  // sward + building + land
+            OverallComparison = 132,  // sword + building + land
             RuralProperties = 133,  // land
             Buildings = 134,  // buildings
-            CombatPower = 135,  // sward
+            CombatPower = 135,  // sword
             Fish = 138,
             Pig = 139,
             Meat = 140,
@@ -154,7 +154,7 @@ namespace Freeserf
             ShowStat8,
             ShowBuildingStats,
             ShowSettlerStats,
-            ShowStat7,
+            ShowResourceStatistics,
             ShowResourceStats,
             ShowIdleAndPotentialSettlerStats,
             ShowStatMenu,
@@ -396,18 +396,26 @@ namespace Freeserf
                 return;
 
             var patterns = Enum.GetValues(typeof(BackgroundPattern));
+            int index = 0;
 
             backgrounds = new Freeserf.BackgroundPattern[patterns.Length];
 
-            for (uint i = 0; i < patterns.Length; ++i)
-                backgrounds[i] = Freeserf.BackgroundPattern.CreatePopupBoxBackground(spriteFactory, 320u + i);
+            foreach (BackgroundPattern pattern in patterns)
+            {
+                if (pattern >= BackgroundPattern.Construction && pattern <= BackgroundPattern.CombatPower)
+                    backgrounds[index++] = Freeserf.BackgroundPattern.CreatePlayerStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
+                else if (pattern >= BackgroundPattern.Fish && pattern <= BackgroundPattern.Shield)
+                    backgrounds[index++] = Freeserf.BackgroundPattern.CreateResourceStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
+                else
+                    backgrounds[index++] = Freeserf.BackgroundPattern.CreatePopupBoxBackground(spriteFactory, 320u + (uint)pattern);
+            }
         }
 
         public PopupBox(Interface interf)
             : base
             (
                   interf, 
-                  Freeserf.BackgroundPattern.CreatePopupBoxBackground(interf.RenderView.SpriteFactory, 320u),
+                  Freeserf.BackgroundPattern.CreatePopupBoxBackground(interf.RenderView.SpriteFactory, 320u + (uint)BackgroundPattern.StripedGreen),
                   Border.CreatePopupBoxBorder(interf.RenderView.SpriteFactory)
             )
         {
@@ -634,7 +642,6 @@ namespace Freeserf
                 case Type.BuildingStats3:
                 case Type.BuildingStats4:
                 case Type.Stat8:
-                case Type.Stat7:
                 case Type.Stat1:
                 case Type.Stat2:
                 case Type.SettlerStats:
@@ -691,6 +698,9 @@ namespace Freeserf
                 case Type.ResourceDirections:
                 case Type.BuildingStock:
                     pattern = BackgroundPattern.PlaidAlongGreen;
+                    break;
+                case Type.ResourceStatistics:
+                    pattern = BackgroundPattern.Fish + currentStat7Item - 1;
                     break;
             }
 
@@ -1214,7 +1224,7 @@ namespace Freeserf
             SetButton(56, 65, 76u, Action.ShowBuildingStats);
             SetButton(96, 65, 75u, Action.ShowSettlerStats);
 
-            SetButton(16, 109, 71u, Action.ShowStat7);
+            SetButton(16, 109, 71u, Action.ShowResourceStatistics);
             SetButton(56, 109, 70u, Action.ShowStat8);
 
             SetButton(104, 113, 61u, Action.ShowSettlerMenu);
@@ -1338,10 +1348,46 @@ namespace Freeserf
 			
 		}
 
-        void draw_stat_7_box()
+        void DrawResourceStatisticsBox()
 		{
-			
-		}
+            SetButton(8, 84, 0x28, Action.Stat7SelectLumber); // lumber
+            SetButton(24, 84, 0x29, Action.Stat7SelectPlank); // plank
+            SetButton(40, 84, 0x2b, Action.Stat7SelectStone); // stone
+
+            SetButton(8, 100, 0x2e, Action.Stat7SelectCoal); // coal
+            SetButton(24, 100, 0x2c, Action.Stat7SelectIronore); // iron ore
+            SetButton(40, 100, 0x2f, Action.Stat7SelectGoldore); // gold ore
+
+            SetButton(8, 116, 0x2a, Action.Stat7SelectBoat); // boat
+            SetButton(24, 116, 0x2d, Action.Stat7SelectSteel); // iron
+            SetButton(40, 116, 0x30, Action.Stat7SelectGoldbar); // gold bar
+
+            SetButton(64, 92, 0x3a, Action.Stat7SelectSword); // sword
+            SetButton(64, 108, 0x3b, Action.Stat7SelectShield); // shield
+
+            SetButton(88, 84, 0x31, Action.Stat7SelectShovel); // shovel
+            SetButton(104, 84, 0x32, Action.Stat7SelectHammer); // hammer
+            SetButton(120, 84, 0x36, Action.Stat7SelectAxe); // axe
+
+            SetButton(88, 100, 0x37, Action.Stat7SelectSaw); // saw
+            SetButton(104, 100, 0x38, Action.Stat7SelectPick); // pick
+            SetButton(120, 100, 0x35, Action.Stat7SelectScythe); // scythe
+
+            SetButton(88, 116, 0x34, Action.Stat7SelectCleaver); // cleaver
+            SetButton(104, 116, 0x39, Action.Stat7SelectPincer); // pincer
+            SetButton(120, 116, 0x33, Action.Stat7SelectRod); // rod
+
+            SetButton(16, 134, 0x22, Action.Stat7SelectFish); // fish
+            SetButton(32, 134, 0x23, Action.Stat7SelectPig); // pig
+            SetButton(48, 134, 0x24, Action.Stat7SelectMeat); // meat
+            SetButton(64, 134, 0x25, Action.Stat7SelectWheat); // wheat
+            SetButton(80, 134, 0x26, Action.Stat7SelectFlour); // flour
+            SetButton(96, 134, 0x27, Action.Stat7SelectBread); // bread
+
+            // value indicator icons
+            SetIcon(8, 73, 0x59);
+            SetIcon(120, 9, 0x5a);
+        }
 
         void draw_gauge_balance(int x, int y, uint value, uint count)
 		{
@@ -1529,11 +1575,6 @@ namespace Freeserf
             SetButton(8, 137, 286u, Action.ShowQuit);
             SetButton(72, 137, 224u, Action.ShowSave);
         }
-
-        void draw_slide_bar(int x, int y, int value)
-		{
-			
-		}
 
         void DrawFoodDistributionBox()
 		{
@@ -2527,6 +2568,9 @@ namespace Freeserf
                     else
                         SetBox(Box + 1);
                     break;
+                case Action.ShowResourceStatistics:
+                    SetBox(Type.ResourceStatistics);
+                    break;
                 case Action.TrainKnights:
                     // the button/icon is 32x32
                     if (x < 16)
@@ -2818,8 +2862,8 @@ namespace Freeserf
                 case Type.Stat8:
                     draw_stat_8_box();
                     break;
-                case Type.Stat7:
-                    draw_stat_7_box();
+                case Type.ResourceStatistics:
+                    DrawResourceStatisticsBox();
                     break;
                 case Type.Stat1:
                     draw_stat_1_box();

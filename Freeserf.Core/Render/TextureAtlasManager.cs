@@ -464,6 +464,9 @@ namespace Freeserf.Render
 
             foreach (PopupBox.BackgroundPattern popupBackground in popupBackgrounds)
             {
+                if (popupBackground >= PopupBox.BackgroundPattern.Construction && popupBackground <= PopupBox.BackgroundPattern.Shield)
+                    continue; // these are compound backgrounds that are handled in BackgroundPattern.CompoundBackgroundPattern
+
                 bgCompoundSprite = new Sprite(128u, 144u);
                 sprite = data.GetSprite(Data.Resource.Icon, (uint)popupBackground, color);
 
@@ -477,13 +480,13 @@ namespace Freeserf.Render
                 }
 
                 // index is now (320 + popup box background pattern index) inside the icons
-                AddSprite(Layer.Gui, index++, bgCompoundSprite);
+                AddSprite(Layer.Gui, index + (uint)popupBackground, bgCompoundSprite);
             }
 
             #endregion
 
 
-            // TODO
+            // TODO: grid
         }
 
         void AddGuiElements(Data.Resource resourceType, uint num, ref uint index, DataSource data, Sprite.Color color)
