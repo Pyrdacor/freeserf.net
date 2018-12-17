@@ -261,7 +261,7 @@ namespace Freeserf.Render
         IMaskedSprite frameSprite = null;
         IMaskedSprite frameShadowSprite = null;
         IMaskedSprite crossOrStoneSprite = null;
-        IMaskedSprite burningSprite = null;
+        IMaskedSprite[] burningSprites = null;
         List<ISprite> stones = new List<ISprite>(5);
         List<ISprite> planks = new List<ISprite>(5);
         readonly ISpriteFactory spriteFactory = null;
@@ -309,8 +309,11 @@ namespace Freeserf.Render
                 crossOrStoneSprite.BaseLineOffset = -8;
             }
 
-            if (burningSprite != null)
-                burningSprite.Layer = renderLayer;
+            if (burningSprites != null)
+            {
+                for (int i = 0; i < burningSprites.Length; ++i)
+                    burningSprites[i].Layer = renderLayer;
+            }
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
@@ -333,12 +336,13 @@ namespace Freeserf.Render
                 crossOrStoneSprite.MaskTextureAtlasOffset = offset;
             }
 
-            if (burningSprite != null)
+            if (burningSprites != null)
             {
                 var offset = textureAtlas.GetOffset(0u);
                 offset.Y += 100; // make it full visible
 
-                burningSprite.MaskTextureAtlasOffset = offset;
+                for (int i = 0; i < burningSprites.Length; ++i)
+                    burningSprites[i].MaskTextureAtlasOffset = offset;
             }
 
             InitOffsets(dataSource);
@@ -362,8 +366,11 @@ namespace Freeserf.Render
                 if (crossOrStoneSprite != null)
                     crossOrStoneSprite.Visible = value;
 
-                if (burningSprite != null)
-                    burningSprite.Visible = value;
+                if (burningSprites != null)
+                {
+                    for (int i = 0; i < burningSprites.Length; ++i)
+                        burningSprites[i].Visible = value;
+                }
             }
         }
 
@@ -474,7 +481,10 @@ namespace Freeserf.Render
                 crossOrStoneSprite = spriteFactory.Create(crossOrStoneSpriteInfo.Width, crossOrStoneSpriteInfo.Height, 0, 0, true, false) as IMaskedSprite;
             }
 
-            burningSprite = spriteFactory.Create(0, 0, 0, 0, true, false) as IMaskedSprite;
+            burningSprites = new IMaskedSprite[12];
+
+            for (int i = 0; i < 12; ++i)
+                burningSprites[i] = spriteFactory.Create(0, 0, 0, 0, true, false) as IMaskedSprite;
 
             if (building.IsDone())
             {
@@ -506,10 +516,12 @@ namespace Freeserf.Render
                 crossOrStoneSprite = null;
             }
 
-            if (burningSprite != null)
+            if (burningSprites != null)
             {
-                burningSprite.Delete();
-                burningSprite = null;
+                for (int i = 0; i < burningSprites.Length; ++i)
+                    burningSprites[i].Delete();
+
+                burningSprites = null;
             }
 
             for (int i = 0; i < stones.Count; ++i)
@@ -795,7 +807,7 @@ namespace Freeserf.Render
 
         void DrawBurningSprite(Position renderPosition, int tick)
         {
-            /* Play sound effect. */
+            // Play sound effect
             if (sprite.Visible &&
                 ((building.GetBurningCounter() >> 3) & 3) == 3 &&
                 !building.IsPlayingSfx())
@@ -803,9 +815,11 @@ namespace Freeserf.Render
                 building.StartPlayingSfx();
                 PlaySound(Audio.TypeSfx.Burning);
             }
-            else
+            // Stop playing sound effect if not on screen
+            else if (!sprite.Visible && building.IsPlayingSfx())
             {
                 building.StopPlayingSfx();
+                StopSound();
             }
 
             ushort delta = (ushort)(tick - building.GetTick());
@@ -824,26 +838,33 @@ namespace Freeserf.Render
                 }
 
                 int offset = ((building.GetBurningCounter() >> 3) & 7) ^ 7;
-                //int animationIndex = BuildingAnimationOffsetFromType[type];
+                int animationIndex = BuildingAnimationOffsetFromType[type];
+                int burningSpriteIndex = 0;
 
-                int animationIndex = (building.Game.Map.GetObject(building.Position) == Map.Object.SmallBuilding) ? 0 : 8;
-
-                //if (BuildingBurnAnimation[animationIndex] >= 0)
+                while (BuildingBurnAnimation[animationIndex] >= 0)
                 {
                     int x = renderPosition.X;
                     int y = renderPosition.Y;
                     var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
-                    int index = /*BuildingBurnAnimation[animationIndex]*/animationIndex + offset;
+                    int index = BuildingBurnAnimation[animationIndex] + offset;
                     var spriteInfo = burningSpriteInfos[index];
 
-                    burningSprite.X = x + spriteInfo.Position.X;// + BuildingBurnAnimation[animationIndex + 1];
-                    burningSprite.Y = y + spriteInfo.Position.Y;// + BuildingBurnAnimation[animationIndex + 2];
+                    var burningSprite = burningSprites[burningSpriteIndex++];
+
+                    burningSprite.X = x + spriteInfo.Position.X + BuildingBurnAnimation[animationIndex + 1];
+                    burningSprite.Y = y + spriteInfo.Position.Y + BuildingBurnAnimation[animationIndex + 2];
                     burningSprite.Resize(spriteInfo.Size.Width, spriteInfo.Size.Height);
                     burningSprite.TextureAtlasOffset = textureAtlas.GetOffset(2000u + (uint)index);
                     burningSprite.BaseLineOffset = System.Math.Max(0, (sprite.Y + sprite.Height) - (burningSprite.Y + burningSprite.Height) + 1);
+                    burningSprite.Visible = true;
 
-                    //offset = (offset + 3) & 7;
-                    //animationIndex += 3;
+                    offset = (offset + 3) & 7;
+                    animationIndex += 3;
+                }
+
+                while (burningSpriteIndex < 12)
+                {
+                    burningSprites[burningSpriteIndex++].Visible = false;
                 }
             }
             else
@@ -891,12 +912,12 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.TypeSfx type)
         {
-            Audio.Player player = audio?.GetSoundPlayer();
+            audio?.GetSoundPlayer()?.PlayTrack((int)type);
+        }
 
-            if (player != null)
-            {
-                player.PlayTrack((int)type);
-            }
+        void StopSound()
+        {
+            audio?.GetSoundPlayer()?.Stop();
         }
 
         static readonly int[] PigfarmAnimation = new int[]
