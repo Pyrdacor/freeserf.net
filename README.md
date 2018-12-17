@@ -3,9 +3,23 @@ freeserf.net is a C# port of [freeserf](https://github.com/freeserf/freeserf).
 
 At the moment there is still a lot of work to do.
 
+
+## Download the game
+
 [Latest build download](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.3.zip)
 
 Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It is not included in the zip file.
+
+
+## Current State
+
+Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
+
+Things that are missing are mostly AI logic, game loading, fights, some menus and some building parts (like smoke).
+
+There are still some bugs (mainly in serf logic and map position calculation).
+
+But the game is playable for most parts.
 
 
 ## Roadmap
@@ -39,6 +53,10 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 ## Implementation details
 
-The first version will be a Visual Studio 2017 WinForms project with .NET 4.6.1. But the plan is to move most of the code to a .NET Standard library and leave only the window/surface/context creation to the executable.
+The core is implemented as a .NET Standard 2.0 DLL. The renderer is also a .NET Standard 2.0 DLL and uses OpenTK for rendering. The sound engine is only implemented for Windows at the moment and uses the WinMM.dll with its WAVE and MIDI functionality.
 
-In theory later every .NET project which provides an OpenGL context should be able to run the game. But we will see in the future how this works out.
+The main executable is a .NET Framework 4.6.1 project that depends on OpenTK and OpenTK.GLControl. It is easy to create another executable project with a different .NET version as the project only contains a Form, a GLControl and forwards input events.
+
+You can even implement your own renderer if you want. There are a bunch of interfaces in the Freeserf.Render namespace inside the core project that you can use for that.
+
+At the moment the sound engine is part of the renderer. This will change in the future. But you can implement your own sound engine independent of the renderer already if you want.
