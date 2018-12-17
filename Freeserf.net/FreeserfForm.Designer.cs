@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FreeserfForm));
             this.RenderControl = new OpenTK.GLControl();
             this.FrameTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
@@ -64,6 +65,7 @@
             this.ClientSize = new System.Drawing.Size(184, 166);
             this.Controls.Add(this.RenderControl);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FreeserfForm";
             this.Text = "Freeserf.net";
             this.Load += new System.EventHandler(this.FreeserfForm_Load);
