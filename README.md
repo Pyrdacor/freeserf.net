@@ -5,6 +5,8 @@ At the moment there is still a lot of work to do.
 
 [Latest build download](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.3.zip)
 
+Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It is not included in the zip file.
+
 
 ## Roadmap
 
