@@ -47,6 +47,8 @@
             this.RenderControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseClick);
             this.RenderControl.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDoubleClick);
             this.RenderControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDown);
+            this.RenderControl.MouseEnter += new System.EventHandler(this.RenderControl_MouseEnter);
+            this.RenderControl.MouseLeave += new System.EventHandler(this.RenderControl_MouseLeave);
             this.RenderControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseMove);
             this.RenderControl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseUp);
             // 

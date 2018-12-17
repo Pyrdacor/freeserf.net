@@ -377,6 +377,11 @@ namespace Freeserf
 
         public bool Ingame => interf.Ingame;
 
+        public void DrawCursor(int x, int y)
+        {
+            interf.DrawCursor(x, y);
+        }
+
         Position PositionToGui(Position position)
         {
             float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;

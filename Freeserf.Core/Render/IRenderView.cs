@@ -29,6 +29,8 @@ namespace Freeserf.Render
         void Resize(int width, int height);
         void Close();
 
+        void SetCursorPosition(int x, int y);
+
         Position ScreenToView(Position position);
         Size ScreenToView(Size size);
         Rect ScreenToView(Rect rect);

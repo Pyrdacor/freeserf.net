@@ -110,6 +110,8 @@ namespace Freeserf
         int returnTimeout;
         int returnPos;
 
+        ISprite cursorSprite = null;
+
         public IRenderView RenderView { get; } = null;
         public Viewport Viewport { get; private set; } = null;
         public PanelBar PanelBar { get; private set; } = null;
@@ -137,6 +139,10 @@ namespace Freeserf
             mapCursorSprites[5] = new SpriteLocation { Sprite = 32 };
             mapCursorSprites[6] = new SpriteLocation { Sprite = 32 };
 
+            cursorSprite = renderView.SpriteFactory.Create(16, 16, 0, 0, false, false);
+            cursorSprite.Layer = renderView.GetLayer(Freeserf.Layer.Cursor);
+            cursorSprite.Visible = true;
+
             GameManager.Instance.AddHandler(this);
 
             SetSize(640, 480); // original size
@@ -144,6 +150,12 @@ namespace Freeserf
             Viewport = null;
 
             OpenGameInit();
+        }
+
+        internal void DrawCursor(int x, int y)
+        {
+            cursorSprite.X = x;
+            cursorSprite.Y = y;
         }
 
         public override bool HandleEvent(Event.EventArgs e)
@@ -207,7 +219,7 @@ namespace Freeserf
 
         protected override void InternalDraw()
         {
-            // empty
+            cursorSprite.Visible = Displayed;
         }
 
         public void SetGame(Game game)

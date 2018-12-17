@@ -58,6 +58,7 @@ namespace Freeserf.Renderer.OpenTK
 
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
+        Position cursorPosition = new Position();
 
         public event System.EventHandler Closed;
         public event EventHandler Click;
@@ -404,10 +405,21 @@ namespace Freeserf.Renderer.OpenTK
             }
 
             if (layers[Layer.Gui].Visible)
+            {
                 gui.Draw(); // this will prepare gui components for rendering
+                gui.DrawCursor(cursorPosition.X, cursorPosition.Y);
+            }
 
             foreach (var layer in layers)
                 layer.Value.Render();
+        }
+
+        public void SetCursorPosition(int x, int y)
+        {
+            cursorPosition.X = x;
+            cursorPosition.Y = y;
+
+            cursorPosition = ScreenToView(cursorPosition);
         }
 
         public Position ScreenToView(Position position)

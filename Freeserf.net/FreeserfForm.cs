@@ -199,6 +199,8 @@ namespace Freeserf
 
         void RenderControl_MouseMove(object sender, MouseEventArgs e)
         {
+            gameView.SetCursorPosition(e.X, e.Y);
+
             pressedMouseButtons = e.Button;
 
             if (e.Button == MouseButtons.Right)
@@ -377,6 +379,18 @@ namespace Freeserf
 
             if (FrameTimer.Enabled)
                 FrameTimer.Stop();
+
+            Cursor.Show();
+        }
+
+        void RenderControl_MouseEnter(object sender, EventArgs e)
+        {
+            Cursor.Hide();
+        }
+
+        void RenderControl_MouseLeave(object sender, EventArgs e)
+        {
+            Cursor.Show();
         }
     }
 }
