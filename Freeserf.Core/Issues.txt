@@ -54,3 +54,22 @@ Test again because font char gaps should be smaller now!
 - Chaos for:
     LostBuildings
     LostLand
+
+
+TODO:
+
+- Finish all popups in PopupBox.cs
+- Finish AIs
+- Finish rendering of fighting serfs (additional serf stuff)
+- Finish rendering of all additional stuff for all buildings
+- Finish game saving/loading
+- Check/improve map position selection (clicks, minimap clicks, centering)
+- Make game loading work
+- Add more game options (like tutorial, multiplayer games or AI vs AI)
+- Improve/fix sound
+- Look through all TODO code comments and resolve them
+- Bugfixing (important is the serf logic which seems to be very bugged in some situations)
+- Remove unused code and improve bad code
+- Adjust and limit all values properly (like max speed increase and so on)
+- Check if all shortcuts/keystrokes work as expected (if not implement them)
+- Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected)
