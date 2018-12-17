@@ -1,6 +1,5 @@
 ﻿Map Rendering:
 
-- Black lines / artifacts (fixed by virtual screen resolution change but some small remain)
 - Map objects may appear above a construction site. Should those objects not be removed?
 - Improve grid drawing in minimap
 - Roads are not at the right location. Sometimes even a bit inside water. Maybe the tiles below are not at the right pos?
@@ -16,8 +15,6 @@ Non-working code:
   Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
 - Text color must be changeable (at least from green to black)
-- Burning sprites look awkward
-- There is only the text "Emergency Program" instead of "Emergency Program Active"
 
 
 AI:
@@ -36,13 +33,13 @@ Serf rendering:
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
 	- As other serfs can walk there too it must be an error with the animation index
 	- Saw it again. Two with a boat and one normal transporter one a very small road (where only one transporter could be). They even block each other. It's a bug.
-- If a serf runs around a big building (like castle) his head and later the body will disappear even if there is nothing to see from the building there
 - When a stonecutter takes a piece of a bigger rock the remaining rock will shortly "jump" like the y coordinate is wrong for a short period of time
 
 
 Logic:
 
 - Saw a builder that doesn't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
+- This happens often. Some roads can not be used I guess. Something in the serf logic does not work correctly. Or the path finding is bugged.
 
 
 Notification Box:
@@ -57,9 +54,3 @@ Test again because font char gaps should be smaller now!
 - Chaos for:
     LostBuildings
     LostLand
-
-
-Misc:
-
-- Materials at building constructions are hidden by the building shadow (this is realistic, but is this wanted? How was it done in original game?)
-- The castle shadow looks weird and hides serfs that move along the right castle side
