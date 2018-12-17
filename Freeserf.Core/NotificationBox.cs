@@ -94,7 +94,7 @@ namespace Freeserf
                 "land and\nsome buildings") },
             { Message.Type.EmergencyActive, new NotificationView(Message.Type.EmergencyActive,
                 Decoration.MapObject,
-                Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock] + 1,
+                Render.RenderBuilding.MapBuildingFrameSprite[(int)Building.Type.Stock],
                 "Emergency\nprogram\nactivated") },
             { Message.Type.EmergencyNeutral, new NotificationView(Message.Type.EmergencyNeutral,
                 Decoration.MapObject,
