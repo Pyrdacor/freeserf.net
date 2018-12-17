@@ -271,7 +271,7 @@ namespace Freeserf
                         result.Push<byte>(color.B);  // Blue
                         result.Push<byte>(color.G);  // Green
                         result.Push<byte>(color.R);  // Red
-                        result.Push<byte>(value);     // Alpha
+                        result.Push<byte>(value);    // Alpha
                     }
                 }
 

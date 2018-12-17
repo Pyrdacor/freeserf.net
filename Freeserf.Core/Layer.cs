@@ -45,8 +45,8 @@ namespace Freeserf
         Grid = 1 << 2,
         Paths = 1 << 3,
         Objects = 1 << 4,
-        Buildings = 1 << 5,
-        Serfs = 1 << 6,
+        Serfs = 1 << 5,
+        Buildings = 1 << 6,        
         Builds = 1 << 7,
         Gui = 1 << 8,
         GuiBuildings = 1 << 9, // we have to display buildings inside some windows (e.g. build menu)
@@ -66,8 +66,8 @@ namespace Freeserf
             0.03f,  // Grid
             0.04f,  // Paths
             0.05f,  // Objects
-            0.05f,  // Buildings
             0.05f,  // Serfs
+            0.05f,  // Buildings
             0.96f,  // Builds
             0.97f,  // Gui
             0.97f,  // Gui Buildings
