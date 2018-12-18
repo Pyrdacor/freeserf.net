@@ -364,6 +364,7 @@ namespace Freeserf
         readonly SlideBar[] slideBars = new SlideBar[9]; // TODO: is 9 enough?
         const int SlideBarFactor = 1310;
         TextField clickableTextField = null;
+        readonly Render.IColoredRect[] playerFaceBackgrounds = new Render.IColoredRect[Game.GAME_MAX_PLAYER_COUNT];
 
         uint CurrentTransportPriorityItem = 0u;
         uint CurrentInventoryPriorityItem = 0u;
@@ -411,6 +412,24 @@ namespace Freeserf
             }
         }
 
+        void InitPlayerFaceBackgrounds(Render.IColoredRectFactory coloredRectFactory)
+        {
+            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            {
+                playerFaceBackgrounds[i] = coloredRectFactory.Create(48, 72, Render.Color.Transparent, 1);
+            }
+        }
+
+        protected internal override void UpdateParent()
+        {
+            base.UpdateParent();
+
+            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            {
+                playerFaceBackgrounds[i].DisplayLayer = (byte)(BaseDisplayLayer + 10);
+            }
+        }
+
         public PopupBox(Interface interf)
             : base
             (
@@ -420,6 +439,7 @@ namespace Freeserf
             )
         {
             InitBackgrounds(interf.RenderView.SpriteFactory);
+            InitPlayerFaceBackgrounds(interf.RenderView.ColoredRectFactory);
 
             this.interf = interf;
             MiniMap = new MinimapGame(interf, interf.Game);
@@ -609,6 +629,13 @@ namespace Freeserf
             fileField.Displayed = box == Type.LoadSave;
 
             SetBackground(BackgroundFromType());
+
+            bool showPlayerFaceBackgrounds = box == Type.PlayerFaces;
+
+            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            {
+                playerFaceBackgrounds[i].Visible = showPlayerFaceBackgrounds;
+            }
 
             SetRedraw();
         }
@@ -2575,10 +2602,35 @@ namespace Freeserf
 			
 		}
 
-        void draw_player_faces_box()
+        void DrawPlayerFacesBox()
 		{
-			
-		}
+            // TODO: what about the spaces between the face areas?
+            // TODO: maybe after a click on a face the map jumps to the castle of this player?
+
+            int numPlayers = interf.Game.GetPlayerCount();
+
+            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            {
+                playerFaceBackgrounds[i].X = TotalX + 16 + (i % 2) * 64;
+                playerFaceBackgrounds[i].Y = TotalY + 9 + (i / 2) * 72;
+                playerFaceBackgrounds[i].Layer = Layer;
+
+                if (i < numPlayers)
+                {
+                    var player = interf.Game.GetPlayer((uint)i);
+
+                    var playerColor = player.GetColor();
+
+                    playerFaceBackgrounds[i].Color = new Render.Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+
+                    SetIcon(24 + (i % 2) * 64, 13 + (i / 2) * 72, GetPlayerFaceSprite(player.GetFace()));
+                }
+                else
+                {
+                    playerFaceBackgrounds[i].Color = Render.Color.Black;
+                }
+            }
+        }
 
         void DrawDemolishBox()
 		{
@@ -2866,6 +2918,9 @@ namespace Freeserf
                 case Action.PlayerStatisticsSetAspectMilitary:
                     currentStat8Mode = (currentStat8Mode & 0x3) | ((action - Action.PlayerStatisticsSetAspectAll) << 2);
                     break;
+                case Action.ShowPlayerFaces:
+                    SetBox(Type.PlayerFaces);
+                    break;
                 case Action.TrainKnights:
                     // the button/icon is 32x32
                     if (x < 16)
@@ -3099,7 +3154,10 @@ namespace Freeserf
         {
             base.InternalHide();
 
-            // TODO
+            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            {
+                playerFaceBackgrounds[i].Visible = false;
+            }
         }
 
         protected override void InternalDraw()
@@ -3254,7 +3312,7 @@ namespace Freeserf
                     DrawBuildingStockBox();
                     break;
                 case Type.PlayerFaces:
-                    draw_player_faces_box();
+                    DrawPlayerFacesBox();
                     break;
                 case Type.Demolish:
                     DrawDemolishBox();
@@ -3271,7 +3329,13 @@ namespace Freeserf
 
         protected override bool HandleClickLeft(int x, int y)
         {
-            if (Box == Type.Options && clickableTextField != null)
+            if (Box == Type.PlayerFaces)
+            {
+                SetBox(Type.PlayerStatistics);
+
+                return true;
+            }
+            else if (Box == Type.Options && clickableTextField != null)
             {
                 if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
                     y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
