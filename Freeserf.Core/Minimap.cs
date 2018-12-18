@@ -103,11 +103,6 @@ namespace Freeserf
             sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 
-        public void MoveToMapPos(MapPos pos)
-        {
-            // TODO: I guess we don't need this anymore as we take the offset directly from RenderMap
-        }
-
         /* Initialize minimap data. */
         public void UpdateMinimap(bool force = false)
         {
@@ -166,7 +161,7 @@ namespace Freeserf
             interf.RenderView.MinimapTextureFactory.FillMinimapTexture(minimapData);
         }
 
-        void SetColor(byte[] data, int x, int y, int scale, Color color)
+        static void SetColor(byte[] data, int x, int y, int scale, Color color)
         {
             int xOffset = x * scale;
             int yOffset = y * scale;
@@ -261,6 +256,13 @@ namespace Freeserf
             UpdateMinimap();
 
             return true;
+        }
+
+        protected override void Layout()
+        {
+            base.Layout();
+
+            sprite.Resize(Width, Height);
         }
 
         static readonly int[] ColorOffset = new int[]

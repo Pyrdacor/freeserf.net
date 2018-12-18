@@ -49,7 +49,7 @@ namespace Freeserf
             BuildingStats2,
             BuildingStats3,
             BuildingStats4,
-            Stat8,
+            PlayerStatistics,
             ResourceStatistics,
             Stat1,
             Stat2,
@@ -151,7 +151,7 @@ namespace Freeserf
             BldFlipPage,
             ShowStat1,
             ShowStat2,
-            ShowStat8,
+            ShowPlayerStatistics,
             ShowBuildingStats,
             ShowSettlerStats,
             ShowResourceStatistics,
@@ -160,14 +160,14 @@ namespace Freeserf
             ShowStatMenu,
             BuildingStatsFlip,
             CloseBox,
-            Sett8SetAspectAll,
-            Sett8SetAspectLand,
-            Sett8SetAspectBuildings,
-            Sett8SetAspectMilitary,
-            Sett8SetScale30Min,
-            Sett8SetScale60Min,
-            Sett8SetScale600Min,
-            Sett8SetScale3000Min,
+            PlayerStatisticsSetAspectAll,
+            PlayerStatisticsSetAspectLand,
+            PlayerStatisticsSetAspectBuildings,
+            PlayerStatisticsSetAspectMilitary,
+            PlayerStatisticsSetScale30Min,
+            PlayerStatisticsSetScale120Min,
+            PlayerStatisticsSetScale600Min,
+            PlayerStatisticsSetScale3000Min,
             Stat7SelectFish,
             Stat7SelectPig,
             Stat7SelectMeat,
@@ -367,7 +367,7 @@ namespace Freeserf
 
         uint CurrentTransportPriorityItem = 0u;
         uint CurrentInventoryPriorityItem = 0u;
-        int currentStat7Item;
+        int currentResourceForStatistics;
         int currentStat8Mode;
 
         static Freeserf.BackgroundPattern[] backgrounds = null;
@@ -402,7 +402,7 @@ namespace Freeserf
 
             foreach (BackgroundPattern pattern in patterns)
             {
-                if (pattern >= BackgroundPattern.Construction && pattern <= BackgroundPattern.CombatPower)
+                if (pattern >= BackgroundPattern.OverallComparison && pattern <= BackgroundPattern.CombatPower)
                     backgrounds[index++] = Freeserf.BackgroundPattern.CreatePlayerStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
                 else if (pattern >= BackgroundPattern.Fish && pattern <= BackgroundPattern.Shield)
                     backgrounds[index++] = Freeserf.BackgroundPattern.CreateResourceStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
@@ -428,7 +428,7 @@ namespace Freeserf
 
             CurrentTransportPriorityItem = 8;
             CurrentInventoryPriorityItem = 15;
-            currentStat7Item = 7;
+            currentResourceForStatistics = 7;
             currentStat8Mode = 0;
 
             /* Initialize minimap */
@@ -604,7 +604,7 @@ namespace Freeserf
         {
             Box = box;
 
-            MiniMap.Displayed = box == Type.Map;
+            MiniMap.Displayed = box == Type.Map || box == Type.ResourceStatistics || box == Type.PlayerStatistics;
             fileList.Displayed = box == Type.LoadSave;
             fileField.Displayed = box == Type.LoadSave;
 
@@ -619,6 +619,8 @@ namespace Freeserf
 
             switch (Box)
             {
+                case Type.None:
+                    return null;
                 default:
                 case Type.Map:
                 case Type.MapOverlay: /* UNUSED */
@@ -641,7 +643,6 @@ namespace Freeserf
                 case Type.BuildingStats2:
                 case Type.BuildingStats3:
                 case Type.BuildingStats4:
-                case Type.Stat8:
                 case Type.Stat1:
                 case Type.Stat2:
                 case Type.SettlerStats:
@@ -700,7 +701,10 @@ namespace Freeserf
                     pattern = BackgroundPattern.PlaidAlongGreen;
                     break;
                 case Type.ResourceStatistics:
-                    pattern = BackgroundPattern.Fish + currentStat7Item - 1;
+                    pattern = BackgroundPattern.Fish + currentResourceForStatistics - 1;
+                    break;
+                case Type.PlayerStatistics:
+                    pattern = BackgroundPattern.OverallComparison + ((currentStat8Mode >> 2) & 3);
                     break;
             }
 
@@ -964,6 +968,8 @@ namespace Freeserf
 
         void DrawMapBox()
 		{
+            MiniMap.SetSize(128, 128);
+
             SetButton(8, 137, (uint)MiniMap.GetOwnershipMode(), Action.MinimapMode);
             SetButton(40, 137, MiniMap.DrawRoads ? 3u : 4u, Action.MinimapRoads);
             SetButton(72, 137, MiniMap.DrawBuildings ? 5u : 6u, Action.MinimapBuildings);
@@ -1225,7 +1231,7 @@ namespace Freeserf
             SetButton(96, 65, 75u, Action.ShowSettlerStats);
 
             SetButton(16, 109, 71u, Action.ShowResourceStatistics);
-            SetButton(56, 109, 70u, Action.ShowStat8);
+            SetButton(56, 109, 70u, Action.ShowPlayerStatistics);
 
             SetButton(104, 113, 61u, Action.ShowSettlerMenu);
             SetButton(120, 137, 60u, Action.CloseBox);
@@ -1338,16 +1344,6 @@ namespace Freeserf
             SetButton(120, 137, 60u, Action.ShowStatMenu);
         }
 
-        void draw_player_stat_chart(int[] data, int index, Player.Color color)
-		{
-			
-		}
-
-        void draw_stat_8_box()
-		{
-			
-		}
-
         void DrawResourceStatisticsBox()
 		{
             SetButton(8, 84, 0x28, Action.Stat7SelectLumber); // lumber
@@ -1384,9 +1380,264 @@ namespace Freeserf
             SetButton(80, 134, 0x26, Action.Stat7SelectFlour); // flour
             SetButton(96, 134, 0x27, Action.Stat7SelectBread); // bread
 
-            // value indicator icons
+            // axis icons
             SetIcon(8, 73, 0x59);
             SetIcon(120, 9, 0x5a);
+
+            // exit button
+            SetButton(120, 137, 60u, Action.ShowStatMenu);
+
+            int[] sampleWeights = { 4, 6, 8, 9, 10, 9, 8, 6, 4 };
+
+            // Create array of historical counts
+            int[] historicalData = new int[112];
+            int maxValue = 0;
+            int index = interf.Game.GetResourceHistoryIndex();
+            Resource.Type resource = (Resource.Type)(currentResourceForStatistics - 1);
+            var resourceCountHistory = interf.GetPlayer().GetResourceCountHistory(resource);
+
+            for (int i = 0; i < 112; ++i)
+            {
+                historicalData[i] = 0;
+                int j = index;
+
+                for (int k = 0; k < 9; ++k)
+                {
+                    historicalData[i] += sampleWeights[k] * (int)resourceCountHistory[j];
+                    j = j > 0 ? j - 1 : 119;
+                }
+
+                if (historicalData[i] > maxValue)
+                    maxValue = historicalData[i];
+
+                index = index > 0 ? index - 1 : 119;
+            }
+
+            uint[] axisIcons1 = { 110, 109, 108, 107 };
+            uint[] axisIcons2 = { 112, 111, 110, 108 };
+            uint[] axisIcons3 = { 114, 113, 112, 110 };
+            uint[] axisIcons4 = { 117, 116, 114, 112 };
+            uint[] axisIcons5 = { 120, 119, 118, 115 };
+            uint[] axisIcons6 = { 122, 121, 120, 118 };
+            uint[] axisIcons7 = { 125, 124, 122, 120 };
+            uint[] axisIcons8 = { 128, 127, 126, 123 };
+
+            uint[] axisIcons = null;
+            int multiplier = 0;
+
+            if (maxValue <= 64)
+            {
+                axisIcons = axisIcons1;
+                multiplier = 0x8000;
+            }
+            else if (maxValue <= 128)
+            {
+                axisIcons = axisIcons2;
+                multiplier = 0x4000;
+            }
+            else if (maxValue <= 256)
+            {
+                axisIcons = axisIcons3;
+                multiplier = 0x2000;
+            }
+            else if (maxValue <= 512)
+            {
+                axisIcons = axisIcons4;
+                multiplier = 0x1000;
+            }
+            else if (maxValue <= 1280)
+            {
+                axisIcons = axisIcons5;
+                multiplier = 0x666;
+            }
+            else if (maxValue <= 2560)
+            {
+                axisIcons = axisIcons6;
+                multiplier = 0x333;
+            }
+            else if (maxValue <= 5120)
+            {
+                axisIcons = axisIcons7;
+                multiplier = 0x199;
+            }
+            else
+            {
+                axisIcons = axisIcons8;
+                multiplier = 0xa3;
+            }
+
+            // draw axis caption icons
+            for (int i = 0; i < 4; ++i)
+            {
+                SetIcon(120, 9 + i * 16, axisIcons[i]);
+            }
+
+            // draw chart
+            byte[] chartData = new byte[112 * 64 * 4];
+
+            for (int i = 0; i < 112; ++i)
+            {
+                SetResourceChartValue(chartData, i, Math.Min((historicalData[i] * multiplier) >> 16, 64));
+            }
+
+            // we use the minimap for displaying the chart as we can set pixel colors inside the minimap sprite freely
+            MiniMap.SetSize(112, 64);
+            interf.RenderView.MinimapTextureFactory.ResizeMinimapTexture(112, 64);
+            interf.RenderView.MinimapTextureFactory.FillMinimapTexture(chartData);
+
+            MiniMap.SetRedraw();
+        }
+
+        static readonly Render.Color chartColor = new Render.Color(0xcf, 0x63, 0x63);
+
+        static void SetResourceChartValue(byte[] data, int x, int value)
+        {
+            if (value == 0)
+                return;
+
+            int index = ((64 - value) * 112 + x) * 4;
+            const int rowOffset = 112 * 4;
+
+            for (int i = 0; i < value; ++i)
+            {
+                data[index + 0] = chartColor.B;
+                data[index + 1] = chartColor.G;
+                data[index + 2] = chartColor.R;
+                data[index + 3] = chartColor.A;
+
+                index += rowOffset;
+            }
+        }
+
+        static void SetPlayerChartValue(byte[] data, int x, int y, int h, Render.Color color)
+        {
+            if (x < 0 || x >= 112)
+                return;
+
+            if (h <= 0 || y < 0 || y >= 100)
+                return;
+
+            if (y + h > 100)
+                h = 100 - y;
+
+            int index = (y * 112 + x) * 4;
+            const int rowOffset = 112 * 4;
+
+            for (int i = 0; i < h; ++i)
+            {
+                data[index + 0] = color.B;
+                data[index + 1] = color.G;
+                data[index + 2] = color.R;
+                data[index + 3] = color.A;
+
+                index += rowOffset;
+            }
+        }
+
+        void DrawPlayerStatisticChart(uint[] playerData, int index, Player.Color playerColor, byte[] chartData)
+        {
+            const int width = 112;
+            const int height = 100;
+
+            var color = new Render.Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+            uint prevValue = playerData[index];
+
+            for (int i = 0; i < width; ++i)
+            {
+                uint value = playerData[index];
+
+                index = index > 0 ? index - 1 : width - 1;
+
+                if (value > 0 || prevValue > 0)
+                {
+                    if (value == prevValue)
+                    {
+                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value, height), 1, color);
+                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - (int)value, height), 1, color);
+                    }
+                    else if (value > prevValue)
+                    {
+                        int diff = (int)value - (int)prevValue;
+                        int h = diff / 2;
+
+                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - h - (int)prevValue, height), h, color);
+
+                        diff -= h;
+
+                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value, height), diff, color);
+                    }
+                    else // value < prevValue
+                    {
+                        int diff = (int)prevValue - (int)value;
+                        int h = diff / 2;
+
+                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - (int)prevValue, height), h, color);
+
+                        diff -= h;
+
+                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value - diff, height), diff, color);
+                    }
+                }
+
+                prevValue = value;
+            }
+        }
+
+        void DrawPlayerStatisticsBox()
+        {
+            // axis icons
+            SetIcon(120, 9, 0x58);
+            SetIcon(8, 109, 0x59);
+
+            // time selection / scaling
+            SetButton(72, 121, 0x41, Action.PlayerStatisticsSetScale30Min); // 0.5 hrs
+            SetButton(88, 121, 0x42, Action.PlayerStatisticsSetScale120Min); // 2 hrs
+            SetButton(72, 137, 0x43, Action.PlayerStatisticsSetScale600Min); // 10 hrs
+            SetButton(88, 137, 0x44, Action.PlayerStatisticsSetScale3000Min); // 50 hrs
+
+            // value selection / aspect
+            SetButton(24, 121, 0x45, Action.PlayerStatisticsSetAspectAll); // all
+            SetButton(40, 121, 0x40, Action.PlayerStatisticsSetAspectLand); // land / territory
+            SetButton(24, 137, 0x3e, Action.PlayerStatisticsSetAspectBuildings); // buildings
+            SetButton(40, 137, 0x3f, Action.PlayerStatisticsSetAspectMilitary); // military
+
+            SetButton(120, 121, 0x133, Action.ShowPlayerFaces); // player faces
+            SetButton(120, 137, 0x3c, Action.ShowStatMenu); // exit
+
+            int aspect = (currentStat8Mode >> 2) & 3;
+            uint scale = (uint)currentStat8Mode & 3;
+
+            // selection checkmarks
+            SetIcon(Misc.BitTest(aspect, 0) ? 104 : 64, Misc.BitTest(aspect, 1) ? 141 : 125, 106);
+            SetIcon(Misc.BitTest(scale, 0) ? 56 : 16, Misc.BitTest(scale, 1) ? 141 : 125, 106);
+
+            // correct numbers on time scale
+            SetIcon(24, 112, 94 + 3 * scale + 0);
+            SetIcon(56, 112, 94 + 3 * scale + 1);
+            SetIcon(88, 112, 94 + 3 * scale + 2);
+
+            // draw player charts
+            var game = interf.Game;
+            int index = game.GetPlayerHistoryIndex(scale);
+            byte[] chartData = new byte[112 * 100 * 4];
+            uint numPlayers = (uint)game.GetPlayerCount();
+
+            for (uint i = 0; i < numPlayers; ++i)
+            {
+                var player = game.GetPlayer(numPlayers - i - 1);
+
+                if (player != null)
+                {
+                    DrawPlayerStatisticChart(player.GetPlayerStatHistory(currentStat8Mode), index, player.GetColor(), chartData);
+                }
+            }
+
+            // we use the minimap for displaying the chart as we can set pixel colors inside the minimap sprite freely
+            MiniMap.SetSize(112, 100);
+            interf.RenderView.MinimapTextureFactory.ResizeMinimapTexture(112, 100);
+            interf.RenderView.MinimapTextureFactory.FillMinimapTexture(chartData);
+
+            MiniMap.SetRedraw();
         }
 
         void draw_gauge_balance(int x, int y, uint value, uint count)
@@ -2571,6 +2822,38 @@ namespace Freeserf
                 case Action.ShowResourceStatistics:
                     SetBox(Type.ResourceStatistics);
                     break;
+                case Action.Stat7SelectLumber:
+                case Action.Stat7SelectPlank:
+                case Action.Stat7SelectStone:
+                case Action.Stat7SelectCoal:
+                case Action.Stat7SelectIronore:
+                case Action.Stat7SelectGoldore:
+                case Action.Stat7SelectBoat:
+                case Action.Stat7SelectSteel:
+                case Action.Stat7SelectGoldbar:
+                case Action.Stat7SelectSword:
+                case Action.Stat7SelectShield:
+                case Action.Stat7SelectShovel:
+                case Action.Stat7SelectHammer:
+                case Action.Stat7SelectAxe:
+                case Action.Stat7SelectSaw:
+                case Action.Stat7SelectPick:
+                case Action.Stat7SelectScythe:
+                case Action.Stat7SelectCleaver:
+                case Action.Stat7SelectPincer:
+                case Action.Stat7SelectRod:
+                case Action.Stat7SelectFish:
+                case Action.Stat7SelectPig:
+                case Action.Stat7SelectMeat:
+                case Action.Stat7SelectWheat:
+                case Action.Stat7SelectFlour:
+                case Action.Stat7SelectBread:
+                    currentResourceForStatistics = 1 + action - Action.Stat7SelectFish;
+                    SetBox(Type.ResourceStatistics); // this will update the background pattern
+                    break;
+                case Action.ShowPlayerStatistics:
+                    SetBox(Type.PlayerStatistics);
+                    break;
                 case Action.TrainKnights:
                     // the button/icon is 32x32
                     if (x < 16)
@@ -2859,8 +3142,8 @@ namespace Freeserf
                 case Type.BuildingStats4:
                     DrawBuildingStats4Box();
                     break;
-                case Type.Stat8:
-                    draw_stat_8_box();
+                case Type.PlayerStatistics:
+                    DrawPlayerStatisticsBox();
                     break;
                 case Type.ResourceStatistics:
                     DrawResourceStatisticsBox();

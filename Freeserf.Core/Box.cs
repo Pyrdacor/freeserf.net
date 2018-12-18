@@ -24,7 +24,7 @@ namespace Freeserf
 
     internal class BackgroundPattern
     {
-        SpriteDefinition definition;
+        readonly SpriteDefinition definition;
         readonly Render.ILayerSprite background = null;
 
         static readonly SpriteDefinition[] definitions = new SpriteDefinition[]
@@ -121,7 +121,8 @@ namespace Freeserf
         class ResourceStatisticBackgroundPattern : BackgroundPattern
         {
             readonly Render.ILayerSprite[] iconBackground = new Render.ILayerSprite[4 * 7]; // 4 rows, 7 columns
-            readonly Render.ILayerSprite[] background = new Render.ILayerSprite[3 * 8];
+            readonly new Render.ILayerSprite[] background = new Render.ILayerSprite[3 * 8];
+            readonly Render.ILayerSprite[] backgroundPieces = new Render.ILayerSprite[4];
             bool visible = false;
 
             internal ResourceStatisticBackgroundPattern(Render.ISpriteFactory spriteFactory, uint spriteIndex)
@@ -139,6 +140,12 @@ namespace Freeserf
                     offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 129u);
                     background[i] = spriteFactory.Create(16, 16, offset.X, offset.Y, false, true) as Render.ILayerSprite;
                 }
+
+                for (int i = 0; i < 4; ++i)
+                {
+                    offset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 129u);
+                    backgroundPieces[i] = spriteFactory.Create(16, 16, offset.X, offset.Y, false, true) as Render.ILayerSprite;
+                }
             }
 
             public override void Draw(GuiObject parent)
@@ -149,6 +156,7 @@ namespace Freeserf
 
                     BackgroundAction(iconBackground, action);
                     BackgroundAction(background, action);
+                    BackgroundAction(backgroundPieces, action);
 
                     visible = false;
 
@@ -157,32 +165,42 @@ namespace Freeserf
 
                 Action<Render.ILayerSprite, int, int> spriteAction = (Render.ILayerSprite sprite, int index, int param) =>
                 {
-                    int yOffset = param * 73;
-                    int columns = 7 + param;
-                    
-                    if (param == 0)
+                    if (param == 2)
                     {
-                        yOffset += (index / columns) * 16;
+                        sprite.X = parent.TotalX + Offset.X + 8 + (3 + index % 2) * 16;
+                        sprite.Y = parent.TotalY + Offset.Y + 8 + 80 + (index / 2) * 16;
                     }
                     else
                     {
-                        int row = (index / columns);
+                        int yOffset = 8 + param * 64;
+                        int columns = 7 + param;
 
-                        if (row == 1)
-                            yOffset += 48;
-                        else if (row == 2)
-                            yOffset += 64;
+                        if (param == 0)
+                        {
+                            yOffset += (index / columns) * 16;
+                        }
+                        else
+                        {
+                            int row = (index / columns);
+
+                            if (row == 1)
+                                yOffset += 48;
+                            else if (row == 2)
+                                yOffset += 64;
+                        }
+
+                        sprite.X = parent.TotalX + Offset.X + 8 + (index % columns) * 16;
+                        sprite.Y = parent.TotalY + Offset.Y + yOffset;
                     }
 
-                    sprite.X = parent.TotalX + Offset.X + (parent.Width - 128) / 2 + (index % columns) * 16;
-                    sprite.Y = parent.TotalY + Offset.Y + (parent.Height - 148) / 2 + yOffset;
                     sprite.DisplayLayer = parent.BaseDisplayLayer;
                     sprite.Layer = parent.Layer;
-                    sprite.Visible = parent.Displayed && sprite.X < parent.TotalX + parent.Width && sprite.Y < parent.TotalY + parent.Height;
+                    sprite.Visible = visible && parent.Displayed && sprite.X < parent.TotalX + parent.Width && sprite.Y < parent.TotalY + parent.Height;
                 };
 
                 BackgroundAction(iconBackground, spriteAction, 0);
                 BackgroundAction(background, spriteAction, 1);
+                BackgroundAction(backgroundPieces, spriteAction, 2);
             }
 
             void BackgroundAction(Render.ILayerSprite[] backgrounds, Action<Render.ILayerSprite, int, int> action, int param = 0)
@@ -207,6 +225,7 @@ namespace Freeserf
 
                     BackgroundAction(iconBackground, action);
                     BackgroundAction(background, action);
+                    BackgroundAction(backgroundPieces, action);
                 }
             }
         }
@@ -268,17 +287,17 @@ namespace Freeserf
                     int yOffset = 0;
 
                     if (param == 1)
-                        yOffset = 112;
+                        yOffset = 108;
                     else if (param == 2)
-                        yOffset = 120;
+                        yOffset = 116;
                     else if (param == 3)
-                        yOffset = 136;
+                        yOffset = 132;
 
                     sprite.X = parent.TotalX + Offset.X + (parent.Width - 128) / 2 + (index % 8) * 16;
-                    sprite.Y = parent.TotalY + Offset.Y + (parent.Height - 148) / 2 + yOffset + (index / 8) * 16;
+                    sprite.Y = parent.TotalY + Offset.Y + 8 + yOffset + (index / 8) * 16;
                     sprite.DisplayLayer = parent.BaseDisplayLayer;
                     sprite.Layer = parent.Layer;
-                    sprite.Visible = parent.Displayed && sprite.X < parent.TotalX + parent.Width && sprite.Y < parent.TotalY + parent.Height;
+                    sprite.Visible = visible && parent.Displayed && sprite.X < parent.TotalX + parent.Width && sprite.Y < parent.TotalY + parent.Height;
                 };
 
                 BackgroundAction(iconBackground, spriteAction, 0);
@@ -318,9 +337,9 @@ namespace Freeserf
 
     internal class Border
     {
-        SpriteDefinition[] definition = new SpriteDefinition[4];
-        Render.ILayerSprite[] borders = new Render.ILayerSprite[4];
-        bool horizontalBordersInside = false;
+        readonly SpriteDefinition[] definition = new SpriteDefinition[4];
+        readonly Render.ILayerSprite[] borders = new Render.ILayerSprite[4];
+        readonly bool horizontalBordersInside = false;
 
         static readonly SpriteDefinition[,] definitions = new SpriteDefinition[,]
         {
@@ -336,7 +355,6 @@ namespace Freeserf
                 new SpriteDefinition(3u,   8, 144),
                 new SpriteDefinition(1u, 144,   7),
             }
-            // TODO ...
         };
 
         public Position GetBackgroundOffset()
@@ -372,14 +390,12 @@ namespace Freeserf
             return new Border(spriteFactory, Data.Resource.FramePopup, 1, false);
         }
 
-        // TODO ...
-
         public void Draw(GuiObject parent)
         {
             if (parent == null)
                 return;
 
-            byte displayLayer = (byte)(parent.BaseDisplayLayer + 1);
+            byte displayLayer = (byte)(parent.BaseDisplayLayer + 9);
 
             int horizontalXOffset = (horizontalBordersInside) ? definition[1].SpriteWidth : 0;
             int verticalYOffset = (horizontalBordersInside) ? 0 : definition[0].SpriteHeight;
@@ -428,7 +444,7 @@ namespace Freeserf
 
     internal abstract class Box : GuiObject
     {
-        Interface interf = null;
+        readonly Interface interf = null;
         BackgroundPattern background = null;
         Border border = null;
 
@@ -446,17 +462,18 @@ namespace Freeserf
             if (this.background == background)
                 return;
 
-            bool visible = false;
-
             if (this.background != null)
             {
-                visible = this.background.Visible;
                 this.background.Visible = false;
             }
 
             this.background = background;
-            this.background.Visible = visible;
-            this.background.Offset = border.GetBackgroundOffset();
+
+            if (this.background != null)
+            {
+                this.background.Visible = true;
+                this.background.Offset = border.GetBackgroundOffset();
+            }
         }
 
         protected override void InternalDraw()

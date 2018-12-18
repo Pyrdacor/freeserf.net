@@ -15,6 +15,9 @@ Non-working code:
   Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
 - Text color must be changeable (at least from green to black)
+- Have a look at Objects.GetOrInsert!
+- PathFinder sometimes returns roads where parts already exist. Is this valid? The road placement afterwards leads to an exception when creating another render road segment on an existing one.
+	- So fix in pathfinder if this behavior is wrong or fix in render road segment creation logic if it is valid.
 
 
 AI:
@@ -34,6 +37,7 @@ Serf rendering:
 	- As other serfs can walk there too it must be an error with the animation index
 	- Saw it again. Two with a boat and one normal transporter one a very small road (where only one transporter could be). They even block each other. It's a bug.
 - When a stonecutter takes a piece of a bigger rock the remaining rock will shortly "jump" like the y coordinate is wrong for a short period of time
+- Serf is behind stones while digging etc (BaseLineOffset was changed from 8 to 2). This must be adjusted for some actions like digging.
 
 
 Logic:

@@ -1478,9 +1478,9 @@ namespace Freeserf
             return initialSupplies;
         }
   
-        public IEnumerable<uint> GetResourceCountHistory(Resource.Type type)
+        public uint[] GetResourceCountHistory(Resource.Type type)
         {
-            return resourceCountHistory.SliceRow((int)type);
+            return resourceCountHistory.SliceRow((int)type).ToArray();
         }
 
         public void SetPlayerStatHistory(int mode, int index, uint val)
@@ -1488,9 +1488,9 @@ namespace Freeserf
             playerStatHistory[mode, index] = val;
         }
 
-        public IEnumerable<uint> GetPlayerStatHistory(int mode)
+        public uint[] GetPlayerStatHistory(int mode)
         {
-            return playerStatHistory.SliceRow(mode);
+            return playerStatHistory.SliceRow(mode).ToArray();
         }
 
         public ResourceMap GetStatsResources()

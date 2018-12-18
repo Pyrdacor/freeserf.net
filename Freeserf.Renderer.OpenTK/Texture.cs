@@ -114,9 +114,7 @@ namespace Freeserf.Renderer.OpenTK
 
             GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
 
-            // TODO: use TexImage2D in older OpenGL versions!
-            GL.TexStorage2D(TextureTarget2d.Texture2D, 1 + numMipMapLevels, SizedInternalFormat.Rgba8, Width, Height);
-            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, Width, Height, ToOpenGLPixelFormat(format), PixelType.UnsignedByte, pixelData);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, Width, Height, 0, ToOpenGLPixelFormat(format), PixelType.UnsignedByte, pixelData);
 
             if (numMipMapLevels > 0)
                 GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);

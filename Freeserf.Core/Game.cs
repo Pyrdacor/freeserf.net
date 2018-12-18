@@ -1609,12 +1609,12 @@ namespace Freeserf
             return true;
         }
 
-        int GetPlayerHistoryIndex(uint scale)
+        internal int GetPlayerHistoryIndex(uint scale)
         {
             return playerHistoryIndex[scale];
         }
 
-        int GetResourceHistoryIndex()
+        internal int GetResourceHistoryIndex()
         {
             return resourceHistoryIndex;
         }
@@ -1748,6 +1748,11 @@ namespace Freeserf
         public Player GetPlayer(uint index)
         {
             return players[index];
+        }
+
+        public int GetPlayerCount()
+        {
+            return players.Count();
         }
 
         public IEnumerable<Serf> GetPlayerSerfs(Player player)
