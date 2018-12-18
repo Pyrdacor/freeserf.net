@@ -151,8 +151,8 @@ namespace Freeserf
 
         internal void DrawCursor(int x, int y)
         {
-            cursorSprite.X = x;
-            cursorSprite.Y = y;
+            cursorSprite.X = x - cursorSprite.Width / 2;
+            cursorSprite.Y = y - cursorSprite.Height / 2;
         }
 
         public override bool HandleEvent(Event.EventArgs e)
