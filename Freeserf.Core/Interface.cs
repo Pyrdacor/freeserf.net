@@ -101,9 +101,6 @@ namespace Freeserf
 
         SpriteLocation[] mapCursorSprites = new SpriteLocation[7];
 
-        int currentStat8Mode = 0;
-        int currentStat7Item = 7;
-
         int waterInView;
         int treesInView;
 
@@ -290,26 +287,6 @@ namespace Freeserf
         public void SetMsgFlag(int i)
         {
             msgFlags |= Misc.Bit(i);
-        }
-
-        public int GetCurrentStat8Mode()
-        {
-            return currentStat8Mode;
-        }
-
-        public void SetCurrentStat8Mode(int mode)
-        {
-            currentStat8Mode = mode;
-        }
-
-        public int GetCurrentStat7Item()
-        {
-            return currentStat7Item;
-        }
-
-        public void SetCurrentStat7Item(int item)
-        {
-            currentStat7Item = item;
         }
 
         public BuildPossibility GetBuildPossibility()

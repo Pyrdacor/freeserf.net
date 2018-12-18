@@ -168,32 +168,32 @@ namespace Freeserf
             PlayerStatisticsSetScale120Min,
             PlayerStatisticsSetScale600Min,
             PlayerStatisticsSetScale3000Min,
-            Stat7SelectFish,
-            Stat7SelectPig,
-            Stat7SelectMeat,
-            Stat7SelectWheat,
-            Stat7SelectFlour,
-            Stat7SelectBread,
-            Stat7SelectLumber,
-            Stat7SelectPlank,
-            Stat7SelectBoat,
-            Stat7SelectStone,
-            Stat7SelectIronore,
-            Stat7SelectSteel,
-            Stat7SelectCoal,
-            Stat7SelectGoldore,
-            Stat7SelectGoldbar,
-            Stat7SelectShovel,
-            Stat7SelectHammer,
-            Stat7SelectRod,
-            Stat7SelectCleaver,
-            Stat7SelectScythe,
-            Stat7SelectAxe,
-            Stat7SelectSaw,
-            Stat7SelectPick,
-            Stat7SelectPincer,
-            Stat7SelectSword,
-            Stat7SelectShield,
+            ResourceStatisticsSelectFish,
+            ResourceStatisticsSelectPig,
+            ResourceStatisticsSelectMeat,
+            ResourceStatisticsSelectWheat,
+            ResourceStatisticsSelectFlour,
+            ResourceStatisticsSelectBread,
+            ResourceStatisticsSelectLumber,
+            ResourceStatisticsSelectPlank,
+            ResourceStatisticsSelectBoat,
+            ResourceStatisticsSelectStone,
+            ResourceStatisticsSelectIronore,
+            ResourceStatisticsSelectSteel,
+            ResourceStatisticsSelectCoal,
+            ResourceStatisticsSelectGoldore,
+            ResourceStatisticsSelectGoldbar,
+            ResourceStatisticsSelectShovel,
+            ResourceStatisticsSelectHammer,
+            ResourceStatisticsSelectRod,
+            ResourceStatisticsSelectCleaver,
+            ResourceStatisticsSelectScythe,
+            ResourceStatisticsSelectAxe,
+            ResourceStatisticsSelectSaw,
+            ResourceStatisticsSelectPick,
+            ResourceStatisticsSelectPincer,
+            ResourceStatisticsSelectSword,
+            ResourceStatisticsSelectShield,
             AttackingKnightsDec,
             AttackingKnightsInc,
             StartAttack,
@@ -1346,39 +1346,39 @@ namespace Freeserf
 
         void DrawResourceStatisticsBox()
 		{
-            SetButton(8, 84, 0x28, Action.Stat7SelectLumber); // lumber
-            SetButton(24, 84, 0x29, Action.Stat7SelectPlank); // plank
-            SetButton(40, 84, 0x2b, Action.Stat7SelectStone); // stone
+            SetButton(8, 84, 0x28, Action.ResourceStatisticsSelectLumber); // lumber
+            SetButton(24, 84, 0x29, Action.ResourceStatisticsSelectPlank); // plank
+            SetButton(40, 84, 0x2b, Action.ResourceStatisticsSelectStone); // stone
 
-            SetButton(8, 100, 0x2e, Action.Stat7SelectCoal); // coal
-            SetButton(24, 100, 0x2c, Action.Stat7SelectIronore); // iron ore
-            SetButton(40, 100, 0x2f, Action.Stat7SelectGoldore); // gold ore
+            SetButton(8, 100, 0x2e, Action.ResourceStatisticsSelectCoal); // coal
+            SetButton(24, 100, 0x2c, Action.ResourceStatisticsSelectIronore); // iron ore
+            SetButton(40, 100, 0x2f, Action.ResourceStatisticsSelectGoldore); // gold ore
 
-            SetButton(8, 116, 0x2a, Action.Stat7SelectBoat); // boat
-            SetButton(24, 116, 0x2d, Action.Stat7SelectSteel); // iron
-            SetButton(40, 116, 0x30, Action.Stat7SelectGoldbar); // gold bar
+            SetButton(8, 116, 0x2a, Action.ResourceStatisticsSelectBoat); // boat
+            SetButton(24, 116, 0x2d, Action.ResourceStatisticsSelectSteel); // iron
+            SetButton(40, 116, 0x30, Action.ResourceStatisticsSelectGoldbar); // gold bar
 
-            SetButton(64, 92, 0x3a, Action.Stat7SelectSword); // sword
-            SetButton(64, 108, 0x3b, Action.Stat7SelectShield); // shield
+            SetButton(64, 92, 0x3a, Action.ResourceStatisticsSelectSword); // sword
+            SetButton(64, 108, 0x3b, Action.ResourceStatisticsSelectShield); // shield
 
-            SetButton(88, 84, 0x31, Action.Stat7SelectShovel); // shovel
-            SetButton(104, 84, 0x32, Action.Stat7SelectHammer); // hammer
-            SetButton(120, 84, 0x36, Action.Stat7SelectAxe); // axe
+            SetButton(88, 84, 0x31, Action.ResourceStatisticsSelectShovel); // shovel
+            SetButton(104, 84, 0x32, Action.ResourceStatisticsSelectHammer); // hammer
+            SetButton(120, 84, 0x36, Action.ResourceStatisticsSelectAxe); // axe
 
-            SetButton(88, 100, 0x37, Action.Stat7SelectSaw); // saw
-            SetButton(104, 100, 0x38, Action.Stat7SelectPick); // pick
-            SetButton(120, 100, 0x35, Action.Stat7SelectScythe); // scythe
+            SetButton(88, 100, 0x37, Action.ResourceStatisticsSelectSaw); // saw
+            SetButton(104, 100, 0x38, Action.ResourceStatisticsSelectPick); // pick
+            SetButton(120, 100, 0x35, Action.ResourceStatisticsSelectScythe); // scythe
 
-            SetButton(88, 116, 0x34, Action.Stat7SelectCleaver); // cleaver
-            SetButton(104, 116, 0x39, Action.Stat7SelectPincer); // pincer
-            SetButton(120, 116, 0x33, Action.Stat7SelectRod); // rod
+            SetButton(88, 116, 0x34, Action.ResourceStatisticsSelectCleaver); // cleaver
+            SetButton(104, 116, 0x39, Action.ResourceStatisticsSelectPincer); // pincer
+            SetButton(120, 116, 0x33, Action.ResourceStatisticsSelectRod); // rod
 
-            SetButton(16, 134, 0x22, Action.Stat7SelectFish); // fish
-            SetButton(32, 134, 0x23, Action.Stat7SelectPig); // pig
-            SetButton(48, 134, 0x24, Action.Stat7SelectMeat); // meat
-            SetButton(64, 134, 0x25, Action.Stat7SelectWheat); // wheat
-            SetButton(80, 134, 0x26, Action.Stat7SelectFlour); // flour
-            SetButton(96, 134, 0x27, Action.Stat7SelectBread); // bread
+            SetButton(16, 134, 0x22, Action.ResourceStatisticsSelectFish); // fish
+            SetButton(32, 134, 0x23, Action.ResourceStatisticsSelectPig); // pig
+            SetButton(48, 134, 0x24, Action.ResourceStatisticsSelectMeat); // meat
+            SetButton(64, 134, 0x25, Action.ResourceStatisticsSelectWheat); // wheat
+            SetButton(80, 134, 0x26, Action.ResourceStatisticsSelectFlour); // flour
+            SetButton(96, 134, 0x27, Action.ResourceStatisticsSelectBread); // bread
 
             // axis icons
             SetIcon(8, 73, 0x59);
@@ -1608,8 +1608,8 @@ namespace Freeserf
             uint scale = (uint)currentStat8Mode & 3;
 
             // selection checkmarks
-            SetIcon(Misc.BitTest(aspect, 0) ? 104 : 64, Misc.BitTest(aspect, 1) ? 141 : 125, 106);
-            SetIcon(Misc.BitTest(scale, 0) ? 56 : 16, Misc.BitTest(scale, 1) ? 141 : 125, 106);
+            SetIcon(Misc.BitTest(aspect, 0) ? 56 : 16, Misc.BitTest(aspect, 1) ? 141 : 125, 106);
+            SetIcon(Misc.BitTest(scale, 0) ? 104 : 64, Misc.BitTest(scale, 1) ? 141 : 125, 106);
 
             // correct numbers on time scale
             SetIcon(24, 112, 94 + 3 * scale + 0);
@@ -2822,37 +2822,49 @@ namespace Freeserf
                 case Action.ShowResourceStatistics:
                     SetBox(Type.ResourceStatistics);
                     break;
-                case Action.Stat7SelectLumber:
-                case Action.Stat7SelectPlank:
-                case Action.Stat7SelectStone:
-                case Action.Stat7SelectCoal:
-                case Action.Stat7SelectIronore:
-                case Action.Stat7SelectGoldore:
-                case Action.Stat7SelectBoat:
-                case Action.Stat7SelectSteel:
-                case Action.Stat7SelectGoldbar:
-                case Action.Stat7SelectSword:
-                case Action.Stat7SelectShield:
-                case Action.Stat7SelectShovel:
-                case Action.Stat7SelectHammer:
-                case Action.Stat7SelectAxe:
-                case Action.Stat7SelectSaw:
-                case Action.Stat7SelectPick:
-                case Action.Stat7SelectScythe:
-                case Action.Stat7SelectCleaver:
-                case Action.Stat7SelectPincer:
-                case Action.Stat7SelectRod:
-                case Action.Stat7SelectFish:
-                case Action.Stat7SelectPig:
-                case Action.Stat7SelectMeat:
-                case Action.Stat7SelectWheat:
-                case Action.Stat7SelectFlour:
-                case Action.Stat7SelectBread:
-                    currentResourceForStatistics = 1 + action - Action.Stat7SelectFish;
+                case Action.ResourceStatisticsSelectLumber:
+                case Action.ResourceStatisticsSelectPlank:
+                case Action.ResourceStatisticsSelectStone:
+                case Action.ResourceStatisticsSelectCoal:
+                case Action.ResourceStatisticsSelectIronore:
+                case Action.ResourceStatisticsSelectGoldore:
+                case Action.ResourceStatisticsSelectBoat:
+                case Action.ResourceStatisticsSelectSteel:
+                case Action.ResourceStatisticsSelectGoldbar:
+                case Action.ResourceStatisticsSelectSword:
+                case Action.ResourceStatisticsSelectShield:
+                case Action.ResourceStatisticsSelectShovel:
+                case Action.ResourceStatisticsSelectHammer:
+                case Action.ResourceStatisticsSelectAxe:
+                case Action.ResourceStatisticsSelectSaw:
+                case Action.ResourceStatisticsSelectPick:
+                case Action.ResourceStatisticsSelectScythe:
+                case Action.ResourceStatisticsSelectCleaver:
+                case Action.ResourceStatisticsSelectPincer:
+                case Action.ResourceStatisticsSelectRod:
+                case Action.ResourceStatisticsSelectFish:
+                case Action.ResourceStatisticsSelectPig:
+                case Action.ResourceStatisticsSelectMeat:
+                case Action.ResourceStatisticsSelectWheat:
+                case Action.ResourceStatisticsSelectFlour:
+                case Action.ResourceStatisticsSelectBread:
+                    currentResourceForStatistics = 1 + action - Action.ResourceStatisticsSelectFish;
                     SetBox(Type.ResourceStatistics); // this will update the background pattern
                     break;
                 case Action.ShowPlayerStatistics:
                     SetBox(Type.PlayerStatistics);
+                    break;
+                case Action.PlayerStatisticsSetScale30Min:
+                case Action.PlayerStatisticsSetScale120Min:
+                case Action.PlayerStatisticsSetScale600Min:
+                case Action.PlayerStatisticsSetScale3000Min:
+                    currentStat8Mode = (currentStat8Mode & 0xc) | (action - Action.PlayerStatisticsSetScale30Min);
+                    break;
+                case Action.PlayerStatisticsSetAspectAll:
+                case Action.PlayerStatisticsSetAspectLand:
+                case Action.PlayerStatisticsSetAspectBuildings:
+                case Action.PlayerStatisticsSetAspectMilitary:
+                    currentStat8Mode = (currentStat8Mode & 0x3) | ((action - Action.PlayerStatisticsSetAspectAll) << 2);
                     break;
                 case Action.TrainKnights:
                     // the button/icon is 32x32
