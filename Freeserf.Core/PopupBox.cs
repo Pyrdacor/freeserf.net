@@ -56,7 +56,6 @@ namespace Freeserf
             SettlerStats,
             IdleAndPotentialSettlerStats,
             StartAttack,
-            StartAttackRedraw,
             GroundAnalysis,
             LoadArchive,
             LoadSave,
@@ -641,11 +640,8 @@ namespace Freeserf
                 case Type.BasicBldFlip:
                 case Type.Adv1Bld:
                 case Type.Adv2Bld:
-                    pattern = BackgroundPattern.Construction;
-                    break;
                 case Type.StartAttack:
-                case Type.StartAttackRedraw:
-                    // TODO
+                    pattern = BackgroundPattern.Construction;
                     break;
                 case Type.GroundAnalysis:
                 case Type.StatMenu:
@@ -2072,11 +2068,6 @@ namespace Freeserf
 
             SetButton(120, 137, 60u, Action.ShowStatMenu);
         }
-
-        void draw_start_attack_redraw_box()
-		{
-			
-		}
 
         void SetTree(int x, int y, uint index)
         {
@@ -3784,13 +3775,9 @@ namespace Freeserf
                 case Type.StartAttack:
                     DrawStartAttackBox();
                     break;
-                case Type.StartAttackRedraw:
-                    draw_start_attack_redraw_box();
-                    break;
                 case Type.GroundAnalysis:
                     DrawGroundAnalysisBox();
                     break;
-                /* TODO */
                 case Type.SettlerMenu:
                     DrawSettlerMenuBox();
                     break;
