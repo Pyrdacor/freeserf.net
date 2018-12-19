@@ -981,6 +981,25 @@ namespace Freeserf.Render
             {
                 case Building.Type.Baker:
                     // draw smoke
+                    if (building.IsActive())
+                    {
+                        int i = (tick >> 3) & 7;
+
+                        uint spriteIndex = 153u + (uint)i;
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + info.OffsetX + 5;
+                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 21;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[0].Y; // otherwise we wouldn't see them
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+                    }
+                    else
+                    {
+                        additionalSprites[0].Visible = false;
+                    }
                     break;
                 case Building.Type.Boatbuilder:
                     // draw the boat that is built
@@ -1009,6 +1028,35 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.GoldSmelter:
                     // draw smoke
+                    if (building.IsActive())
+                    {
+                        int i = (tick >> 3) & 7;
+
+                        if (i == 0 || (i == 7 && !building.IsPlayingSfx()))
+                        {
+                            building.StartPlayingSfx();
+                            PlaySound(Audio.TypeSfx.GoldBoils);
+                        }
+                        else if (i != 7)
+                        {
+                            building.StopPlayingSfx();
+                        }
+
+                        uint spriteIndex = 127u + (uint)i;
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + info.OffsetX - 7;
+                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 33;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[0].Y; // otherwise we wouldn't see them
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+                    }
+                    else
+                    {
+                        additionalSprites[0].Visible = false;
+                    }
                     break;
                 case Building.Type.Hut:
                     // draw the flag
@@ -1084,6 +1132,35 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.SteelSmelter:
                     // draw smoke
+                    if (building.IsActive())
+                    {
+                        int i = (tick >> 3) & 7;
+
+                        if (i == 0 || (i == 7 && !building.IsPlayingSfx()))
+                        {
+                            building.StartPlayingSfx();
+                            PlaySound(Audio.TypeSfx.GoldBoils);
+                        }
+                        else if (i != 7)
+                        {
+                            building.StopPlayingSfx();
+                        }
+
+                        uint spriteIndex = 127u + (uint)i;
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + info.OffsetX + 6;
+                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 32;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[0].Y; // otherwise we wouldn't see them
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+                    }
+                    else
+                    {
+                        additionalSprites[0].Visible = false;
+                    }
                     break;
                 case Building.Type.Tower:
                     // draw flag
@@ -1091,6 +1168,25 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.WeaponSmith:
                     // draw smoke
+                    if (building.IsActive())
+                    {
+                        int i = (tick >> 3) & 7;
+
+                        uint spriteIndex = 127u + (uint)i;
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + info.OffsetX - 16;
+                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 21;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[0].Y; // otherwise we wouldn't see them
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+                    }
+                    else
+                    {
+                        additionalSprites[0].Visible = false;
+                    }
                     break;
             }
         }

@@ -67,7 +67,6 @@ Test again because font char gaps should be smaller now!
 
 TODO:
 
-- Finish all popups in PopupBox.cs
 - Finish AIs
 - Finish rendering of fighting serfs (additional serf stuff)
 - Finish rendering of all additional stuff for all buildings
