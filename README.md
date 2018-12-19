@@ -6,7 +6,7 @@ At the moment there is still a lot of work to do.
 
 ## Download the game
 
-[Latest build download](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.3.zip)
+[Latest build download](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.4.zip)
 
 Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It is not included in the zip file.
 
@@ -15,7 +15,7 @@ Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It i
 
 Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
 
-Things that are missing are mostly AI logic, game loading, fights, some menus and some building parts (like smoke).
+Things that are missing are mostly AI logic, game loading and fights.
 
 There are still some bugs (mainly in serf logic and map position calculation).
 
