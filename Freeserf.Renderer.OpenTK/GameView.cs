@@ -59,6 +59,7 @@ namespace Freeserf.Renderer.OpenTK
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
         Position cursorPosition = new Position();
+        Position lastCursorPosition = new Position();
 
         public event System.EventHandler Closed;
         public event EventHandler Click;
@@ -420,6 +421,11 @@ namespace Freeserf.Renderer.OpenTK
             cursorPosition.Y = y;
 
             cursorPosition = ScreenToView(cursorPosition);
+
+            if (cursorPosition == null)
+                cursorPosition = lastCursorPosition;
+            else
+                lastCursorPosition = cursorPosition;
         }
 
         public Position ScreenToView(Position position)
