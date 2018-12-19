@@ -226,6 +226,11 @@ namespace Freeserf
             ResetFlagPriority();
             ResetInventoryPriority();
 
+            knightOccupation[0] = 0x10;
+            knightOccupation[1] = 0x21;
+            knightOccupation[2] = 0x32;
+            knightOccupation[3] = 0x43;
+
             /* player.field_1b0 = 0; AI */
             /* player.field_1b2 = 0; AI */
 

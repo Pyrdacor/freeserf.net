@@ -77,3 +77,4 @@ TODO:
 - Adjust and limit all values properly (like max speed increase and so on)
 - Check if all shortcuts/keystrokes work as expected (if not implement them)
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected)
+- Localization (texts should be of the right language later)

@@ -80,7 +80,7 @@ namespace Freeserf
             TransportInfo,
             CastleSerfs,
             ResourceDirections,
-            KnightSettingsBox,
+            KnightSettings,
             InventoryPriorities,
             Bld1,
             Bld2,
@@ -203,7 +203,7 @@ namespace Freeserf
             ShowFoodDistribution,
             ShowPlanksAndSteelDistribution,
             ShowCoalAndWheatDistribution,
-            ShowSett7,
+            ShowKnightLevel,
             ShowToolmakerPriorities,
             ShowTransportPriorities,
             ShowSettlerMenu,
@@ -563,7 +563,7 @@ namespace Freeserf
                 case Type.ToolmakerPriorities:
                     player.SetToolPriority(index, (int)realAmount);
                     break;
-                case Type.KnightSettingsBox:
+                case Type.KnightSettings:
                     if (index == 0) // serf to knight rate
                         player.SetSerfToKnightRate((int)realAmount);
                     break;
@@ -686,7 +686,7 @@ namespace Freeserf
                 case Type.ToolmakerPriorities:
                 case Type.TransportPriorities:
                 case Type.InventoryPriorities:
-                case Type.KnightSettingsBox:
+                case Type.KnightSettings:
                     pattern = BackgroundPattern.CheckerdDiagonalBrown;
                     break;                
                 case Type.QuitConfirm:
@@ -2118,7 +2118,7 @@ namespace Freeserf
             SetButton(56, 57, 235u, Action.ShowTransportPriorities);
             SetButton(96, 57, 299u, Action.ShowInventoryPriorities);
 
-            SetButton(16, 97, 233u, Action.ShowSett7); // TODO: Check Type
+            SetButton(16, 97, 233u, Action.ShowKnightLevel);
             SetButton(56, 97, 298u, Action.ShowKnightSettings);
 
             SetButton(104, 113, 61u, Action.ShowStatMenu);
@@ -2235,10 +2235,51 @@ namespace Freeserf
             slideBars[4].Fill = (int)player.GetWheatMill() / SlideBarFactor;
         }
 
-        void draw_knight_level_box()
+        void DrawKnightLevelBox()
 		{
-			
-		}
+            string[] levelTexts = new string[]
+            {
+                "Minimum", "Weak", "Medium", "Good", "Full", "ERROR", "ERROR", "ERROR"
+            };
+
+            // distance illustrations
+            SetIcon(8, 9, 226);
+            SetIcon(8, 41, 227);
+            SetIcon(8, 73, 228);
+            SetIcon(8, 105, 229);
+
+            SetButton(40, 9, 220, Action.KnightLevelClosestMaxDec); // minus
+            SetButton(56, 9, 221, Action.KnightLevelClosestMaxInc); // plus
+            SetButton(40, 25, 220, Action.KnightLevelClosestMinDec); // minus
+            SetButton(56, 25, 221, Action.KnightLevelClosestMinInc); // plus
+
+            SetButton(40, 41, 220, Action.KnightLevelCloseMaxDec); // minus
+            SetButton(56, 41, 221, Action.KnightLevelCloseMaxInc); // plus
+            SetButton(40, 57, 220, Action.KnightLevelCloseMinDec); // minus
+            SetButton(56, 57, 221, Action.KnightLevelCloseMinInc); // plus
+
+            SetButton(40, 73, 220, Action.KnightLevelFarMaxDec); // minus
+            SetButton(56, 73, 221, Action.KnightLevelFarMaxInc); // plus
+            SetButton(40, 89, 220, Action.KnightLevelFarMinDec); // minus
+            SetButton(56, 89, 221, Action.KnightLevelFarMinInc); // plus
+
+            SetButton(40, 105, 220, Action.KnightLevelFarthestMaxDec); // minus
+            SetButton(56, 105, 221, Action.KnightLevelFarthestMaxInc); // plus
+            SetButton(40, 121, 220, Action.KnightLevelFarthestMinDec); // minus
+            SetButton(56, 121, 221, Action.KnightLevelFarthestMinInc); // plus
+
+            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
+
+            var player = interf.GetPlayer();
+
+            for (int i = 0; i < 4; ++i)
+            {
+                int y = 14 + 32 * i;
+
+                SetText(72, y, levelTexts[(player.GetKnightOccupation((uint)(3 - i)) >> 4) & 0x7]);
+                SetText(72, y + 14, levelTexts[player.GetKnightOccupation((uint)(3 - i)) & 0x7]);
+            }
+        }
 
         void DrawToolmakerPrioritiesBox()
 		{
@@ -3075,7 +3116,7 @@ namespace Freeserf
                     SetBox(Type.InventoryPriorities);
                     break;
                 case Action.ShowKnightSettings:
-                    SetBox(Type.KnightSettingsBox);
+                    SetBox(Type.KnightSettings);
                     break;
                 case Action.ShowOptions:
                     SetBox(Type.Options);
@@ -3202,6 +3243,9 @@ namespace Freeserf
                 case Action.ShowPlayerFaces:
                     SetBox(Type.PlayerFaces);
                     break;
+                case Action.ShowKnightLevel:
+                    SetBox(Type.KnightLevel);
+                    break;
                 case Action.TrainKnights:
                     // the button/icon is 32x32
                     if (x < 16)
@@ -3252,6 +3296,54 @@ namespace Freeserf
                     break;
                 case Action.IncreaseCastleKnights:
                     player.IncreaseCastleKnightsWanted();
+                    break;
+                case Action.KnightLevelClosestMinDec:
+                    player.ChangeKnightOccupation(3, false, -1);
+                    break;
+                case Action.KnightLevelClosestMinInc:
+                    player.ChangeKnightOccupation(3, false, 1);
+                    break;
+                case Action.KnightLevelClosestMaxDec:
+                    player.ChangeKnightOccupation(3, true, -1);
+                    break;
+                case Action.KnightLevelClosestMaxInc:
+                    player.ChangeKnightOccupation(3, true, 1);
+                    break;
+                case Action.KnightLevelCloseMinDec:
+                    player.ChangeKnightOccupation(2, false, -1);
+                    break;
+                case Action.KnightLevelCloseMinInc:
+                    player.ChangeKnightOccupation(2, false, 1);
+                    break;
+                case Action.KnightLevelCloseMaxDec:
+                    player.ChangeKnightOccupation(2, true, -1);
+                    break;
+                case Action.KnightLevelCloseMaxInc:
+                    player.ChangeKnightOccupation(2, true, 1);
+                    break;
+                case Action.KnightLevelFarMinDec:
+                    player.ChangeKnightOccupation(1, false, -1);
+                    break;
+                case Action.KnightLevelFarMinInc:
+                    player.ChangeKnightOccupation(1, false, 1);
+                    break;
+                case Action.KnightLevelFarMaxDec:
+                    player.ChangeKnightOccupation(1, true, -1);
+                    break;
+                case Action.KnightLevelFarMaxInc:
+                    player.ChangeKnightOccupation(1, true, 1);
+                    break;
+                case Action.KnightLevelFarthestMinDec:
+                    player.ChangeKnightOccupation(0, false, -1);
+                    break;
+                case Action.KnightLevelFarthestMinInc:
+                    player.ChangeKnightOccupation(0, false, 1);
+                    break;
+                case Action.KnightLevelFarthestMaxDec:
+                    player.ChangeKnightOccupation(0, true, -1);
+                    break;
+                case Action.KnightLevelFarthestMaxInc:
+                    player.ChangeKnightOccupation(0, true, 1);
                     break;
                 case Action.ShowCastleResources:
                     SetBox(Type.CastleResources);
@@ -3534,7 +3626,7 @@ namespace Freeserf
                     DrawCoalAndWheatDistributionBox();
                     break;
                 case Type.KnightLevel:
-                    draw_knight_level_box();
+                    DrawKnightLevelBox();
                     break;
                 case Type.ToolmakerPriorities:
                     DrawToolmakerPrioritiesBox();
@@ -3574,7 +3666,7 @@ namespace Freeserf
                 case Type.ResourceDirections:
                     DrawResourceDirectionBox();
                     break;
-                case Type.KnightSettingsBox:
+                case Type.KnightSettings:
                     DrawKnightSettingsBox();
                     break;
                 case Type.Bld1:
