@@ -2629,10 +2629,98 @@ namespace Freeserf
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
         }
 
-        void draw_defenders_box()
+        void DrawDefendersBox()
 		{
-			
-		}
+            var player = interf.GetPlayer();
+
+            if (player.tempIndex == 0)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            var building = player.Game.GetBuilding(player.tempIndex);
+
+            if (building.IsBurning() || building.Player != player.Index)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            var buildingType = building.BuildingType;
+
+            if (buildingType != Building.Type.Hut &&
+                buildingType != Building.Type.Tower &&
+                buildingType != Building.Type.Fortress)
+            {
+                interf.ClosePopup();
+                return;
+            }
+
+            // draw building sprite
+            int x = 0;
+            int y = 0;
+
+            switch (buildingType)
+            {
+                case Building.Type.Hut:
+                    x = 56;
+                    y = 29;
+                    break;
+                case Building.Type.Tower:
+                    x = 40;
+                    y = 15;
+                    break;
+                case Building.Type.Fortress:
+                    x = 40;
+                    y = 10;
+                    break;
+                default:
+                    Debug.NotReached();
+                    return;
+            }
+
+            SetBuildingIcon(x, y, buildingType);
+
+            // draw gold stock
+            uint goldStock = building.GetResourceCountInStock(1);
+
+            if (goldStock > 0)
+            {
+                uint left = (goldStock + 1) / 2;
+                uint right = goldStock / 2;
+
+                for (uint i = 0; i < left; ++i)
+                {
+                    SetIcon(16, (int)(41u - 8u * left + 16u * i), 0x30u);
+                }
+
+                for (uint i = 0; i < right; ++i)
+                {
+                    SetIcon(112, (int)(41u - 8u * left + 16u * i), 0x30u);
+                }
+            }
+
+            // draw heading string
+            SetText(32, 71, "Defenders:");
+
+            // draw knights
+            uint nextKnight = building.GetFirstKnight();
+
+            for (int i = 0; nextKnight != 0; ++i)
+            {
+                var knight = player.Game.GetSerf(nextKnight);
+
+                SetIcon(32 + 32 * (i % 3), 81 + 16 * (i / 3), 7u + (uint)knight.GetSerfType());
+
+                nextKnight = knight.GetNextKnight();
+            }
+
+            SetText(8, 137, "State:");
+            SetText(54, 137, building.GetThreatLevel().ToString());
+
+            SetButton(120, 137, 0x3c, Action.CloseBox); // exit
+        }
 
         static readonly int[] FlagLayout = new int[]
         {
@@ -3745,7 +3833,7 @@ namespace Freeserf
                     DrawOrderedBuildingBox();
                     break;
                 case Type.Defenders:
-                    draw_defenders_box();
+                    DrawDefendersBox();
                     break;
                 case Type.TransportInfo:
                     DrawTransportInfoBox();
