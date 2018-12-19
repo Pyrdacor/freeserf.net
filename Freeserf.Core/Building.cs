@@ -789,17 +789,17 @@ namespace Freeserf
             return false;
         }
 
-        public bool IsStockActive(uint stockNumber)
+        public bool IsStockActive(int stockNumber)
         {
             return stock[stockNumber].Type > 0;
         }
 
-        public uint GetResourceCountInStock(uint stockNumber)
+        public uint GetResourceCountInStock(int stockNumber)
         {
             return stock[stockNumber].Available;
         }
 
-        public Resource.Type GetResourceTypeInStock(uint stockNumber)
+        public Resource.Type GetResourceTypeInStock(int stockNumber)
         {
             return stock[stockNumber].Type;
         }

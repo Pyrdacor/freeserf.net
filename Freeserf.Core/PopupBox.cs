@@ -51,8 +51,8 @@ namespace Freeserf
             BuildingStats4,
             PlayerStatistics,
             ResourceStatistics,
-            Stat1,
-            Stat2,
+            FoodProductionCycle,
+            MaterialProductionCycle,
             SettlerStats,
             IdleAndPotentialSettlerStats,
             StartAttack,
@@ -149,8 +149,8 @@ namespace Freeserf
             BuildFlag,
             BuildBuilding,
             BldFlipPage,
-            ShowStat1,
-            ShowStat2,
+            ShowFoodProductionCycle,
+            ShowMaterialProductionCycle,
             ShowPlayerStatistics,
             ShowBuildingStats,
             ShowSettlerStats,
@@ -670,8 +670,8 @@ namespace Freeserf
                 case Type.BuildingStats2:
                 case Type.BuildingStats3:
                 case Type.BuildingStats4:
-                case Type.Stat1:
-                case Type.Stat2:
+                case Type.FoodProductionCycle:
+                case Type.MaterialProductionCycle:
                 case Type.SettlerStats:
                 case Type.IdleAndPotentialSettlerStats:
                 case Type.PlayerFaces:
@@ -1249,8 +1249,8 @@ namespace Freeserf
 
         void DrawStatMenuBox()
 		{
-            SetButton(16, 21, 72u, Action.ShowStat1);
-            SetButton(56, 21, 73u, Action.ShowStat2);
+            SetButton(16, 21, 72u, Action.ShowFoodProductionCycle);
+            SetButton(56, 21, 73u, Action.ShowMaterialProductionCycle);
             SetButton(96, 21, 77u, Action.ShowIdleAndPotentialSettlerStats);
 
             SetButton(16, 65, 74u, Action.ShowResourceStats);
@@ -1667,25 +1667,300 @@ namespace Freeserf
             MiniMap.SetRedraw();
         }
 
-        void draw_gauge_balance(int x, int y, uint value, uint count)
+        void DrawGaugeBalance(int x, int y, uint value, uint count)
 		{
-			
-		}
+            uint sprite = 0xd3;
 
-        void draw_gauge_full(int x, int y, uint value, uint count)
-		{
-			
-		}
+            if (count > 0)
+            {
+                uint v = (16 * value) / count;
 
-        void draw_stat_1_box()
-		{
-			
-		}
+                if (v >= 230)
+                {
+                    sprite = 0xd2;
+                }
+                else if (v >= 207)
+                {
+                    sprite = 0xd1;
+                }
+                else if (v >= 184)
+                {
+                    sprite = 0xd0;
+                }
+                else if (v >= 161)
+                {
+                    sprite = 0xcf;
+                }
+                else if (v >= 138)
+                {
+                    sprite = 0xce;
+                }
+                else if (v >= 115)
+                {
+                    sprite = 0xcd;
+                }
+                else if (v >= 92)
+                {
+                    sprite = 0xcc;
+                }
+                else if (v >= 69)
+                {
+                    sprite = 0xcb;
+                }
+                else if (v >= 46)
+                {
+                    sprite = 0xca;
+                }
+                else if (v >= 23)
+                {
+                    sprite = 0xc9;
+                }
+                else
+                {
+                    sprite = 0xc8;
+                }
+            }
 
-        void draw_stat_2_box()
+            SetIcon(x, y, sprite);
+        }
+
+        void DrawGaugeBalance(int x, int y, uint[,,] values, Building.Type building, int stockIndex)
+        {
+            DrawGaugeBalance(x, y, values[(int)building, stockIndex, 0], values[(int)building, stockIndex, 1]);
+        }
+
+        void DrawGaugeFull(int x, int y, uint value, uint count)
 		{
-			
-		}
+            uint sprite = 0xc7;
+
+            if (count > 0)
+            {
+                uint v = (16 * value) / count;
+
+                if (v >= 230)
+                {
+                    sprite = 0xc6;
+                }
+                else if (v >= 207)
+                {
+                    sprite = 0xc5;
+                }
+                else if (v >= 184)
+                {
+                    sprite = 0xc4;
+                }
+                else if (v >= 161)
+                {
+                    sprite = 0xc3;
+                }
+                else if (v >= 138)
+                {
+                    sprite = 0xc2;
+                }
+                else if (v >= 115)
+                {
+                    sprite = 0xc1;
+                }
+                else if (v >= 92)
+                {
+                    sprite = 0xc0;
+                }
+                else if (v >= 69)
+                {
+                    sprite = 0xbf;
+                }
+                else if (v >= 46)
+                {
+                    sprite = 0xbe;
+                }
+                else if (v >= 23)
+                {
+                    sprite = 0xbd;
+                }
+                else
+                {
+                    sprite = 0xbc;
+                }
+            }
+
+            SetIcon(x, y, sprite);
+        }
+
+        void DrawGaugeFull(int x, int y, uint[,,] values, Building.Type building, int stockIndex)
+        {
+            DrawGaugeFull(x, y, values[(int)building, stockIndex, 0], values[(int)building, stockIndex, 1]);
+        }
+
+        static void CalculateGaugeValues(Player player, uint[,,] values)
+        {
+            foreach (Building building in player.Game.GetPlayerBuildings(player))
+            {
+                if (building.IsBurning() || !building.HasSerf())
+                {
+                    continue;
+                }
+
+                int type = (int)building.BuildingType;
+
+                if (!building.IsDone())
+                    type = 0;
+
+                for (int i = 0; i < Building.MaxStock; ++i)
+                {
+                    if (building.GetMaximumInStock(i) > 0)
+                    {
+                        uint v = 2 * building.GetResourceCountInStock(i) + building.GetRequestedInStock(i);
+
+                        values[type, i, 0] += (16 * v) / (2 * building.GetMaximumInStock(i));
+                        values[type, i, 1] += 1;
+                    }
+                }
+            }
+        }
+
+        void DrawFoodProductionCycleBox()
+		{
+            SetIcon(8, 9, 0x18); /* baker */
+            SetIcon(8, 25, 0xb4);
+            SetIcon(8, 33, 0xb3);
+            SetIcon(8, 41, 0xb2);
+            SetIcon(8, 49, 0xb3);
+            SetIcon(8, 57, 0xb2);
+            SetIcon(8, 65, 0xb3);
+            SetIcon(8, 73, 0xb2);
+            SetIcon(8, 81, 0xb3);
+            SetIcon(8, 89, 0xb2);
+            SetIcon(8, 97, 0xb3);
+            SetIcon(8, 105, 0xd4);
+            SetIcon(8, 121, 0xb1);
+            SetIcon(8, 129, 0x13); /* fisher */
+            SetIcon(24, 57, 0x15); /* butcher */
+            SetIcon(24, 73, 0xb4);
+            SetIcon(24, 81, 0xb3);
+            SetIcon(24, 89, 0xd4);
+            SetIcon(24, 105, 0xa4);
+            SetIcon(24, 121, 0xa4);
+            SetIcon(40, 13, 0xae);
+            SetIcon(40, 45, 0xae);
+            SetIcon(40, 89, 0xa6);
+            SetIcon(40, 105, 0xa6);
+            SetIcon(40, 121, 0xa6);
+            SetIcon(56, 9, 0x26); /* flour */
+            SetIcon(56, 41, 0x23); /* pig */
+            SetIcon(56, 73, 0xb5);
+            SetIcon(56, 85, 0x24); /* meat */
+            SetIcon(56, 101, 0x27); /* bread */
+            SetIcon(56, 117, 0x22); /* fish */
+            SetIcon(56, 133, 0xb6);
+            SetIcon(72, 9, 0x17); /* miller */
+            SetIcon(72, 41, 0x14); /* pigfarmer */
+            SetIcon(72, 73, 0xa6);
+            SetIcon(72, 97, 0xab);
+            SetIcon(72, 111, 0xab);
+            SetIcon(72, 137, 0xa6);
+            SetIcon(104, 17, 0xba);
+            SetIcon(104, 65, 0x11); /* miner */
+            SetIcon(104, 89, 0x11); /* miner */
+            SetIcon(104, 113, 0x11); /* miner */
+            SetIcon(104, 137, 0x11); /* miner */
+            SetIcon(120, 9, 0x16); /* farmer */
+            SetIcon(120, 25, 0x25); /* wheat */
+            SetIcon(120, 65, 0x2f); /* goldore */
+            SetIcon(120, 89, 0x2e); /* coal */
+            SetIcon(120, 113, 0x2c); /* ironore */
+            SetIcon(120, 137, 0x2b); /* stone */
+
+            uint[,,] values = new uint[24, Building.MaxStock, 2];
+
+            CalculateGaugeValues(interf.GetPlayer(), values);
+
+            DrawGaugeBalance(88, 9, values, Building.Type.Mill, 0);
+            DrawGaugeBalance(24, 9, values, Building.Type.Baker, 0);
+            DrawGaugeFull(88, 41, values, Building.Type.PigFarm, 0);
+            DrawGaugeBalance(24, 41, values, Building.Type.Butcher, 0);
+            DrawGaugeFull(88, 65, values, Building.Type.GoldMine, 0);
+            DrawGaugeFull(88, 89, values, Building.Type.CoalMine, 0);
+            DrawGaugeFull(88, 113, values, Building.Type.IronMine, 0);
+            DrawGaugeFull(88, 137, values, Building.Type.StoneMine, 0);
+        }
+
+        void DrawMaterialProductionCycleBox()
+		{
+            SetIcon(8, 9, 0x11); /* miner */
+            SetIcon(8, 33, 0x11); /* miner */
+            SetIcon(8, 65, 0x11); /* miner */
+            SetIcon(8, 89, 0xd); /* lumberjack */
+            SetIcon(8, 113, 0x11); /* miner */
+            SetIcon(8, 137, 0xf); /* stonecutter */
+            SetIcon(24, 9, 0x2f); /* goldore */
+            SetIcon(24, 33, 0x2e); /* coal */
+            SetIcon(24, 49, 0xb0);
+            SetIcon(24, 65, 0x2c); /* ironore */
+            SetIcon(24, 89, 0x28); /* lumber */
+            SetIcon(24, 113, 0x2b); /* stone */
+            SetIcon(24, 137, 0x2b); /* stone */
+            SetIcon(40, 13, 0xaa);
+            SetIcon(40, 33, 0xab);
+            SetIcon(40, 41, 0xad);
+            SetIcon(40, 49, 0xa8);
+            SetIcon(40, 69, 0xac);
+            SetIcon(40, 73, 0xaa);
+            SetIcon(40, 117, 0xbb);
+            SetIcon(56, 41, 0xa4);
+            SetIcon(56, 105, 0xe); /* sawmiller */
+            SetIcon(56, 141, 0xa5);
+            SetIcon(72, 9, 0x30); /* gold */
+            SetIcon(72, 25, 0x12); /* smelter */
+            SetIcon(72, 41, 0xa4);
+            SetIcon(72, 49, 0x2d); /* steel */
+            SetIcon(72, 65, 0x12); /* smelter */
+            SetIcon(72, 89, 0xb8);
+            SetIcon(72, 105, 0x29); /* planks */
+            SetIcon(72, 121, 0xaf);
+            SetIcon(72, 141, 0xa5);
+            SetIcon(88, 13, 0xaa);
+            SetIcon(88, 33, 0xb9);
+            SetIcon(88, 49, 0xab);
+            SetIcon(88, 57, 0xb7);
+            SetIcon(88, 89, 0xa6);
+            SetIcon(88, 105, 0xa9);
+            SetIcon(88, 121, 0xa6);
+            SetIcon(88, 141, 0xa7);
+            SetIcon(120, 9, 0x21); /* knight 4 */
+            SetIcon(120, 37, 0x1b); /* weaponsmith */
+            SetIcon(120, 73, 0x1a); /* toolmaker */
+            SetIcon(120, 101, 0x19); /* boatbuilder */
+            SetIcon(120, 129, 0xc); /* builder */
+
+            uint[,,] values = new uint[24, Building.MaxStock, 2];
+
+            CalculateGaugeValues(interf.GetPlayer(), values);
+
+            DrawGaugeBalance(56, 9, values, Building.Type.GoldSmelter, 1);
+            DrawGaugeBalance(56, 25, values, Building.Type.GoldSmelter, 0);
+            DrawGaugeBalance(56, 49, values, Building.Type.SteelSmelter, 0);
+            DrawGaugeBalance(56, 65, values, Building.Type.SteelSmelter, 1);
+            DrawGaugeBalance(56, 89, values, Building.Type.Sawmill, 1);
+
+            uint goldValue =
+                values[(int)Building.Type.Hut, 1, 0] +
+                values[(int)Building.Type.Tower, 1, 0] +
+                values[(int)Building.Type.Fortress, 1, 0];
+            uint goldCount =
+                values[(int)Building.Type.Hut, 1, 1] +
+                values[(int)Building.Type.Tower, 1, 1] +
+                values[(int)Building.Type.Fortress, 1, 1];
+
+            DrawGaugeFull(104, 9, goldValue, goldCount);
+
+            DrawGaugeBalance(104, 29, values, Building.Type.WeaponSmith, 0);
+            DrawGaugeBalance(104, 45, values, Building.Type.WeaponSmith, 1);
+            DrawGaugeBalance(104, 65, values, Building.Type.ToolMaker, 1);
+            DrawGaugeBalance(104, 81, values, Building.Type.ToolMaker, 0);
+            DrawGaugeBalance(104, 101, values, Building.Type.Boatbuilder, 0);
+            DrawGaugeFull(104, 121, values[0, 0, 0], values[0, 0, 1]); // construction planks
+            DrawGaugeFull(104, 137, values[0, 1, 0], values[0, 1, 1]); // construction stones
+        }
 
         void DrawSerfCountBox()
 		{
@@ -2345,7 +2620,7 @@ namespace Freeserf
                 return;
 
             // draw list of resources
-            for (uint j = 0; j < Building.MaxStock; ++j)
+            for (int j = 0; j < Building.MaxStock; ++j)
             {
                 if (building.IsStockActive(j))
                 {
@@ -2356,11 +2631,11 @@ namespace Freeserf
                         uint sprite = 34u + (uint)building.GetResourceTypeInStock(j);
 
                         for (int i = 0; i < stock; ++i)
-                            SetIcon(8 + 8 * (8 - (int)stock + 2 * i), 119 - (int)j * 20, sprite);
+                            SetIcon(8 + 8 * (8 - (int)stock + 2 * i), 119 - j * 20, sprite);
                     }
                     else
                     {
-                        SetIcon(64, 119 - (int)j * 20, 0xdcu); // minus box
+                        SetIcon(64, 119 - j * 20, 0xdcu); // minus box
                     }
                 }
             }
@@ -2762,6 +3037,12 @@ namespace Freeserf
                 case Action.BuildBuilding:
                     interf.BuildBuilding((Building.Type)tag);
                     interf.ClosePopup();
+                    break;
+                case Action.ShowFoodProductionCycle:
+                    SetBox(Type.FoodProductionCycle);
+                    break;
+                case Action.ShowMaterialProductionCycle:
+                    SetBox(Type.MaterialProductionCycle);
                     break;
                 case Action.ShowIdleAndPotentialSettlerStats:
                     SetBox(Type.IdleAndPotentialSettlerStats);
@@ -3218,11 +3499,11 @@ namespace Freeserf
                 case Type.ResourceStatistics:
                     DrawResourceStatisticsBox();
                     break;
-                case Type.Stat1:
-                    draw_stat_1_box();
+                case Type.FoodProductionCycle:
+                    DrawFoodProductionCycleBox();
                     break;
-                case Type.Stat2:
-                    draw_stat_2_box();
+                case Type.MaterialProductionCycle:
+                    DrawMaterialProductionCycleBox();
                     break;
                 case Type.SettlerStats:
                     DrawSerfCountBox();
@@ -3332,6 +3613,12 @@ namespace Freeserf
             if (Box == Type.PlayerFaces)
             {
                 SetBox(Type.PlayerStatistics);
+
+                return true;
+            }
+            else if (Box == Type.FoodProductionCycle || Box == Type.MaterialProductionCycle)
+            {
+                SetBox(Type.StatMenu);
 
                 return true;
             }
