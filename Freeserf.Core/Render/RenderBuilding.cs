@@ -256,6 +256,7 @@ namespace Freeserf.Render
         const uint CrossSprite = 0x90;
         const uint CornerStoneSprite = 0x91;
         const uint ShadowOffset = 1000u;
+        const uint BuildProgressMaskIndex = 5000u;
 
         Building building = null;
         IMaskedSprite frameSprite = null;
@@ -330,7 +331,7 @@ namespace Freeserf.Render
 
             if (crossOrStoneSprite != null)
             {
-                var offset = textureAtlas.GetOffset(0u);
+                var offset = textureAtlas.GetOffset(BuildProgressMaskIndex);
                 offset.Y += 100; // make it full visible
 
                 crossOrStoneSprite.MaskTextureAtlasOffset = offset;
@@ -338,7 +339,7 @@ namespace Freeserf.Render
 
             if (burningSprites != null)
             {
-                var offset = textureAtlas.GetOffset(0u);
+                var offset = textureAtlas.GetOffset(BuildProgressMaskIndex);
                 offset.Y += 100; // make it full visible
 
                 for (int i = 0; i < burningSprites.Length; ++i)
@@ -552,8 +553,7 @@ namespace Freeserf.Render
 
         Position GetBuildingMaskOffset(ITextureAtlas textureAtlas, int spriteHeight)
         {
-            // sprite index 0 holds the mask
-            var offset = textureAtlas.GetOffset(0u);
+            var offset = textureAtlas.GetOffset(BuildProgressMaskIndex);
 
             if (building.IsDone())
             {
@@ -669,14 +669,14 @@ namespace Freeserf.Render
 
             // To display building progress we have to draw only parts of sprites.
             // Therefore we need to adjust positioning and texture coords beforehand.
-            // We use a mask to display only parts. The mask is added as sprite index 0
+            // We use a mask to display only parts. The mask is added as sprite index 5000
             // inside the texture atlas for buildings. It contains 200 pixels in height
-            // and 64 pixels in width. The upper 100 pixels are full transparent black and
+            // and 80 pixels in width. The upper 100 pixels are full transparent black and
             // the lower 100 pixels are full opaque white. The mask position is adjusted to
             // overlay the sprite in the correct way.
 
             // Note: The biggest building is the castle with 64x97 therefore we use 100 pixels
-            // for the height areas.
+            // for the height areas. The widest image is the castle shadow with 80 pixels.
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
@@ -740,10 +740,10 @@ namespace Freeserf.Render
 
                     if (!Misc.BitTest(progress, 15)) // building frame
                     {
-                        (sprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(0u); // the sprite is not visible
+                        (sprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(BuildProgressMaskIndex); // the sprite is not visible
 
                         if (shadowSprite != null)
-                            (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(0u); // the sprite is not visible
+                            (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = textureAtlas.GetOffset(BuildProgressMaskIndex); // the sprite is not visible
 
                         (frameSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, frameSprite.Height);
 
@@ -757,7 +757,7 @@ namespace Freeserf.Render
                         if (shadowSprite != null)
                             (shadowSprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height); // it is correct to use sprite.Height here
 
-                        var offset = textureAtlas.GetOffset(0u);
+                        var offset = textureAtlas.GetOffset(BuildProgressMaskIndex);
                         offset.Y += 100;
 
                         (frameSprite as IMaskedSprite).MaskTextureAtlasOffset = offset;

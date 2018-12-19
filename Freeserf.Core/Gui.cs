@@ -471,7 +471,7 @@ namespace Freeserf
     internal class Icon : GuiObject
     {
         Render.ILayerSprite sprite = null;
-        readonly byte displayLayerOffset = 0;
+        byte displayLayerOffset = 0;
 
         public uint SpriteIndex { get; private set; } = 0u;
         public Data.Resource ResourceType { get; private set; } = Data.Resource.None;
@@ -520,6 +520,16 @@ namespace Freeserf
             base.InternalHide();
 
             sprite.Visible = false;
+        }
+
+        public void SetDisplayLayerOffset(byte offset)
+        {
+            if (displayLayerOffset == offset)
+                return;
+
+            displayLayerOffset = offset;
+
+            sprite.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset);
         }
 
         public void SetResourceType(Data.Resource type)

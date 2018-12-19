@@ -188,7 +188,7 @@ namespace Freeserf.Render
             }
 
             // we also add the build-in-progress mask
-            AddSprite(atlasIndex, 0u, Sprite.CreateHalfMask(80u, 200u, true));
+            AddSprite(atlasIndex, 5000u, Sprite.CreateHalfMask(80u, 200u, true));
 
             // as we use this texture atlas also for gui buildings we add the basic flag sprite as well (for each player color)
             // they can be found at index 128-131
@@ -204,6 +204,13 @@ namespace Freeserf.Render
                 };
 
                 AddSprite(atlasIndex, 128u + i, data.GetSprite(Data.Resource.MapObject, 128u, flagColor));
+            }
+
+            // also we need some trees in gui (for the start attack popup)
+            // they start at index 0
+            for (i = 0; i < 16; ++i)
+            {
+                AddSprite(atlasIndex, i, data.GetSprite(Data.Resource.MapObject, i, color));
             }
 
             // we also add the burning sprites

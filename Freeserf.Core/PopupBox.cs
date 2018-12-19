@@ -193,9 +193,6 @@ namespace Freeserf
             AttackingKnightsDec,
             AttackingKnightsInc,
             StartAttack,
-            CloseAttackBox,
-            /* ... 78 - 91 ... */
-            CloseSettBox = 92,
             ShowFoodDistribution,
             ShowPlanksAndSteelDistribution,
             ShowCoalAndWheatDistribution,
@@ -219,15 +216,6 @@ namespace Freeserf
             KnightLevelFarthestMinInc,
             KnightLevelFarthestMaxDec,
             KnightLevelFarthestMaxInc,
-            Sett4AdjustShovel,
-            Sett4AdjustHammer,
-            Sett4AdjustAxe,
-            Sett4AdjustSaw,
-            Sett4AdjustScythe,
-            Sett4AdjustPick,
-            Sett4AdjustPincer,
-            Sett4AdjustCleaver,
-            Sett4AdjustRod,
             SetTransportItem1,
             SetTransportItem2,
             SetTransportItem3,
@@ -290,7 +278,6 @@ namespace Freeserf
             SerfModeOut,
             ShowKnightSettings,
             ShowInventoryPriorities,
-            Sett8AdjustRate,
             TrainKnights,
             DefaultCoalAndWheatDistribution,
             SetCombatMode,
@@ -366,6 +353,7 @@ namespace Freeserf
         uint CurrentInventoryPriorityItem = 0u;
         int currentResourceForStatistics = 0;
         int currentPlayerStatisticsMode = 0;
+        int iconLayer = 0;
 
         static Freeserf.BackgroundPattern[] backgrounds = null;
 
@@ -875,6 +863,7 @@ namespace Freeserf
         void SetIcon(int x, int y, uint spriteIndex, Data.Resource resourceType = Data.Resource.Icon, bool building = false)
         {
             var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
+            byte displayLayer = (byte)(Math.Min(255, iconLayer++));
 
             // check if there is a free icon
             foreach (var icon in icons.Keys.ToList())
@@ -887,14 +876,17 @@ namespace Freeserf
                         icon.Resize(info.Width, info.Height);
                         icon.MoveTo(x, y);
                         icon.Displayed = Displayed;
+                        icon.SetDisplayLayerOffset(displayLayer);
                         icons[icon] = true;
                         return;
                     }
                 }
             }
 
-            var newIcon = (building) ? new BuildingIcon(interf, info.Width, info.Height, spriteIndex, 1) :
-                new Icon(interf, info.Width, info.Height, resourceType, spriteIndex, 1);
+            var newIcon = (building) ? new BuildingIcon(interf, info.Width, info.Height, spriteIndex, displayLayer) :
+                new Icon(interf, info.Width, info.Height, resourceType, spriteIndex, displayLayer);
+
+            ++iconLayer;
 
             newIcon.Displayed = Displayed;
             AddChild(newIcon, x, y, true);
@@ -909,6 +901,8 @@ namespace Freeserf
                 icons[icon] = false;
                 icon.Displayed = false;
             }
+
+            iconLayer = 0;
         }
 
         #endregion
@@ -919,6 +913,7 @@ namespace Freeserf
         void SetButton(int x, int y, uint spriteIndex, object tag, Data.Resource resourceType = Data.Resource.Icon)
         {
             var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
+            byte displayLayer = (byte)(Math.Min(255, iconLayer++));
 
             // check if there is a free button
             foreach (var button in buttons.Keys.ToList())
@@ -930,12 +925,13 @@ namespace Freeserf
                     button.Resize(info.Width, info.Height);
                     button.MoveTo(x, y);
                     button.Displayed = Displayed;
+                    button.SetDisplayLayerOffset(displayLayer);
                     buttons[button] = true;
                     return;
                 }
             }
 
-            var newButton = new Button(interf, info.Width, info.Height, resourceType, spriteIndex, 1);
+            var newButton = new Button(interf, info.Width, info.Height, resourceType, spriteIndex, displayLayer);
 
             newButton.Tag = tag;
             newButton.Displayed = Displayed;
@@ -2082,10 +2078,60 @@ namespace Freeserf
 			
 		}
 
-        void draw_start_attack_box()
+        void SetTree(int x, int y, uint index)
+        {
+            SetBuildingIcon(x, y, index);
+        }
+
+        void DrawStartAttackBox()
 		{
-			
-		}
+            // draw some trees
+            SetTree(24, 42, 0x0);
+            SetTree(56, 39, 0xa);
+            SetTree(88, 42, 0x7);
+            SetTree(120, 39, 0xc);
+            SetTree(24, 45, 0xe);
+            SetTree(56, 48, 0x2);
+            SetTree(88, 45, 0xb);
+            SetTree(104, 48, 0x4);
+            SetTree(72, 51, 0x8);
+            SetTree(104, 51, 0xf);
+
+            var player = interf.GetPlayer();
+            var building = interf.Game.GetBuilding((uint)player.buildingAttacked);
+
+            int y = 0;
+
+            switch (building.BuildingType)
+            {
+                case Building.Type.Hut: y = 59; break;
+                case Building.Type.Tower: y = 41; break;
+                case Building.Type.Fortress: y = 26; break;
+                case Building.Type.Castle: y = 9; break;
+                default: Debug.NotReached(); return;
+            }
+
+            // TODO: maybe adjust the icon locations
+            // TODO: with the big castle it looks very bad
+            SetBuildingIcon(8, y, building.BuildingType);
+
+            // Note: Set buttons after building icon to display them infront of it
+            SetButton(16, 89, 216, Action.AttackingSelectAll1); // closest knights icon
+            SetButton(48, 89, 217, Action.AttackingSelectAll2); // close knights icon
+            SetButton(80, 89, 218, Action.AttackingSelectAll3); // far knights icon
+            SetButton(112, 89, 219, Action.AttackingSelectAll4); // farthest knights icon
+            SetButton(40, 121, 220, Action.AttackingKnightsDec); // minus icon
+            SetButton(88, 121, 221, Action.AttackingKnightsInc); // plus icon
+            SetButton(8, 137, 222, Action.StartAttack); // attack icon
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+
+            // draw number of knights at each distance
+            for (int i = 0; i < 4; ++i)
+            {
+                SetNumberText(16 + i * 32, 105, (uint)player.attackingKnights[i]);
+            }
+        }
 
         // Translate resource amount to text
         static string GetResourceAmountText(uint amount)
@@ -3400,6 +3446,46 @@ namespace Freeserf
                         }
                     }
                     break;
+                case Action.StartAttack:
+                    if (player.knightsAttacking > 0)
+                    {
+                        if (player.attackingBuildingCount > 0)
+                        {
+                            PlaySound(Audio.TypeSfx.Accepted);
+                            player.StartAttack();
+                        }
+
+                        interf.ClosePopup();
+                    }
+                    else
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    break;
+                case Action.AttackingSelectAll1:
+                    player.knightsAttacking = player.attackingKnights[0];
+                    break;
+                case Action.AttackingSelectAll2:
+                    player.knightsAttacking = player.attackingKnights[0] +
+                                              player.attackingKnights[1];
+                    break;
+                case Action.AttackingSelectAll3:
+                    player.knightsAttacking = player.attackingKnights[0] +
+                                              player.attackingKnights[1] +
+                                              player.attackingKnights[2];
+                    break;
+                case Action.AttackingSelectAll4:
+                    player.knightsAttacking = player.attackingKnights[0] +
+                                              player.attackingKnights[1] +
+                                              player.attackingKnights[2] +
+                                              player.attackingKnights[3];
+                    break;
+                case Action.AttackingKnightsDec:
+                    player.knightsAttacking = Math.Max(player.knightsAttacking - 1, 0);
+                    break;
+                case Action.AttackingKnightsInc:
+                    player.knightsAttacking = Math.Min(player.knightsAttacking + 1, Math.Min(player.totalAttackingKnights, 100));
+                    break;
                 case Action.OptionsFullscreen:
                     interf.RenderView.Fullscreen = !interf.RenderView.Fullscreen;
                     SetRedraw();
@@ -3551,7 +3637,7 @@ namespace Freeserf
             // TODO
 
             /* Dispatch to one of the popup box functions above. */
-            switch (Box)
+                    switch (Box)
             {
                 case Type.Map:
                     DrawMapBox();
@@ -3608,7 +3694,7 @@ namespace Freeserf
                     DrawIdleAndPotentialSerfsBox();
                     break;
                 case Type.StartAttack:
-                    draw_start_attack_box();
+                    DrawStartAttackBox();
                     break;
                 case Type.StartAttackRedraw:
                     draw_start_attack_redraw_box();

@@ -18,6 +18,10 @@ Non-working code:
 - Have a look at Objects.GetOrInsert!
 - PathFinder sometimes returns roads where parts already exist. Is this valid? The road placement afterwards leads to an exception when creating another render road segment on an existing one.
 	- So fix in pathfinder if this behavior is wrong or fix in render road segment creation logic if it is valid.
+	- Map.IsRoadSegmentValid should return false in these cases so maybe the error is there
+	- The bug occurs often when a path or building is destroyed (e.g. when the territory gets bigger)
+- Destroying pathes seem to leave some weird drawn road pieces (maybe only the render component of it)
+	- Maybe Game.DemolishRoad is the root cause of the two last points
 
 
 AI:
