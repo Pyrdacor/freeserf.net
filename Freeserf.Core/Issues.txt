@@ -4,6 +4,7 @@
 - Improve grid drawing in minimap
 - Roads are not at the right location. Sometimes even a bit inside water. Maybe the tiles below are not at the right pos?
 	- The relation between road segments is ok though
+- Materials may appear infront of a building if its natural base line is lower than that of the building (saw it at a mine)
 
 
 Non-working code:
@@ -43,6 +44,8 @@ Serf rendering:
 	- Saw it again. Two with a boat and one normal transporter one a very small road (where only one transporter could be). They even block each other. It's a bug.
 - When a stonecutter takes a piece of a bigger rock the remaining rock will shortly "jump" like the y coordinate is wrong for a short period of time
 - Serf is behind stones while digging etc (BaseLineOffset was changed from 8 to 2). This must be adjusted for some actions like digging.
+	- In general the base line offset should be checked for many situations
+		- Known bugs: Builder, Sawmiller?, Digger
 
 
 Logic:
@@ -62,7 +65,6 @@ Test again because font char gaps should be smaller now!
     UnderAttack
 - Chaos for:
     LostBuildings
-    LostLand
 
 
 TODO:

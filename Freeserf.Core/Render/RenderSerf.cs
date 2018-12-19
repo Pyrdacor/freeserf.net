@@ -467,7 +467,16 @@ namespace Freeserf.Render
                 }
             }
             // adjust baseline when leaving/entering a building
-            else if (serf.SerfState == Serf.State.LeavingBuilding || serf.SerfState == Serf.State.EnteringBuilding)
+            else if (serf.SerfState == Serf.State.LeavingBuilding ||
+                     serf.SerfState == Serf.State.EnteringBuilding || 
+                     serf.SerfState == Serf.State.MoveResourceOut ||
+                     serf.SerfState == Serf.State.DropResourceOut ||
+                     serf.SerfState == Serf.State.ReadyToLeave ||
+                     serf.SerfState == Serf.State.ReadyToLeaveInventory ||
+                     serf.SerfState == Serf.State.ReadyToEnter ||
+                     serf.SerfState == Serf.State.KnightOccupyEnemyBuilding ||
+                     serf.SerfState == Serf.State.KnightLeaveForWalkToFight ||
+                     serf.SerfState == Serf.State.KnightLeaveForFight)
             {
                 var building = game.GetBuildingAtPos(map.MoveUpLeft(pos));
 

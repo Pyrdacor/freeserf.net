@@ -887,10 +887,6 @@ namespace Freeserf.Render
                 case Building.Type.Boatbuilder:                
                 case Building.Type.GoldSmelter:
                 case Building.Type.Hut:
-                case Building.Type.StoneMine:
-                case Building.Type.CoalMine:
-                case Building.Type.IronMine:
-                case Building.Type.GoldMine:
                 case Building.Type.SteelSmelter:
                 case Building.Type.Tower:
                 case Building.Type.WeaponSmith:
@@ -906,7 +902,14 @@ namespace Freeserf.Render
                 case Building.Type.PigFarm:
                     // max 8 pigs
                     AddDummySprites(8);
-                    break;                
+                    break;
+                case Building.Type.StoneMine:
+                case Building.Type.CoalMine:
+                case Building.Type.IronMine:
+                case Building.Type.GoldMine:
+                    // elevator and the rope
+                    AddDummySprites(2);
+                    break;
             }
         }
 
@@ -1128,7 +1131,52 @@ namespace Freeserf.Render
                 case Building.Type.CoalMine:
                 case Building.Type.IronMine:
                 case Building.Type.GoldMine:
+                    // TODO: doesn't look perfect yet
                     // draw the elevator
+                    if (building.IsActive())
+                    {
+                        uint spriteIndex = 151u;
+
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + info.OffsetX - 6;
+                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 39;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = 0; // the elevator should be hidden by the mine
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+                    }
+                    else
+                    {
+                        additionalSprites[0].Visible = false;
+                    }
+                    // draw the rope
+                    if (building.IsPlayingSfx())
+                    {
+                        uint spriteIndex = 152u;
+
+                        var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
+
+                        additionalSprites[0].X = renderPosition.X + info.OffsetX - 6;
+                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 39;
+                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[0].BaseLineOffset = 0; // the elevator should be hidden by the mine
+                        additionalSprites[0].Resize(info.Width, info.Height);
+                        additionalSprites[0].Visible = true;
+
+                        var pos = building.Position;
+
+                        if ((((tick + (pos & 0xff)) >> 3) & 7) == 0 && random.Next() < 40000)
+                        {
+                            PlaySound(Audio.TypeSfx.Elevator);
+                        }
+                    }
+                    else
+                    {
+                        additionalSprites[1].Visible = false;
+                    }
                     break;
                 case Building.Type.SteelSmelter:
                     // draw smoke

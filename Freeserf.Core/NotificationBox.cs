@@ -284,7 +284,7 @@ namespace Freeserf
                         playerFace.SetSpriteIndex(GetPlayerFaceSprite(player.GetFace()));
                         playerFaceBackground.X = TotalX + 48;
                         playerFaceBackground.Y = TotalY + 44;
-                        playerFaceBackground.DisplayLayer = (byte)(BaseDisplayLayer + 1);
+                        playerFaceBackground.DisplayLayer = (byte)(BaseDisplayLayer + 2);
                         showPlayerFace = Displayed;
                     }
                     break;
