@@ -29,7 +29,9 @@ AI:
 
 - If linking diconnected flags, a flag may be used to connect to castle/stock that is very far away instead of a closer one
 - Linking flags may also allow for placing flags on pathes and merging pathes to a near flag
-- Only build new buildings if there are enough resources and the essential buildings are in progress or finished
+- The starting spots of the AI players are very close most of the time
+- Finding minerals and mine spots is not good yet. The search spots should change from time to time but
+  this doesn't mean putting hundreds of flags at the same mountain.
 
 
 Serf rendering:
