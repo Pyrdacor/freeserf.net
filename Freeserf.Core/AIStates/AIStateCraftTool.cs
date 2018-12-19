@@ -66,6 +66,7 @@ namespace Freeserf.AIStates
 
         public override void Kill(AI ai)
         {
+            triesBuildToolmaker = 0;
             player.ResetToolPriority();
 
             base.Kill(ai);

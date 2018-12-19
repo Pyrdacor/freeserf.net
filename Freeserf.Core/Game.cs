@@ -105,6 +105,8 @@ namespace Freeserf
 
         public Game(Render.IRenderView renderView)
         {
+            AI.ClearMemory();
+
             this.renderView = renderView;
 
             random = new Random();
@@ -1875,7 +1877,7 @@ namespace Freeserf
             /* Update land ownership */
             UpdateLandOwnership(building.Position);
 
-            /* Create notfications for lost land and buildings */
+            /* Create notifications for lost land and buildings */
             foreach (Player player in players)
             {
                 if (buildingsBefore[(int)player.Index] > player.GetBuildingScore())
@@ -3462,7 +3464,13 @@ namespace Freeserf
 
         public override void OnObjectChanged(MapPos pos)
         {
-            // TODO
+            // memorize mineral for AI
+            if (map.GetObject(pos) >= Map.Object.SignLargeGold && map.GetObject(pos) < Map.Object.SignEmpty)
+            {
+                int index = map.GetObject(pos) - Map.Object.SignLargeGold;
+
+                AI.MemorizeMineralSpot(pos, (Map.Minerals)(1 + index / 2), index % 2 == 0);
+            }
         }
 
         public override void OnObjectExchanged(uint pos, Map.Object oldObject, Map.Object newObject)

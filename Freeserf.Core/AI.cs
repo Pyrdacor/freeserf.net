@@ -81,7 +81,8 @@ namespace Freeserf
             LinkDisconnectedFlags,
             BuildNeededBuilding,
             CraftWeapons,
-            CraftTool
+            CraftTool,
+            FindOre
             // TODO ...
         }
 
@@ -98,6 +99,36 @@ namespace Freeserf
         public bool CanExpand { get; protected set; } = true;
         public int MaxMilitaryBuildings { get; protected set; } = -1;
 
+        // Memory (this is shared by all AIs)
+        struct MineralSpot
+        {
+            public uint Position;
+            public bool Large;
+        }
+
+        static readonly Dictionary<Map.Minerals, List<MineralSpot>> memorizedMineralSpots = new Dictionary<Map.Minerals, List<MineralSpot>>();
+
+        public static void ClearMemory()
+        {
+            memorizedMineralSpots.Clear();
+
+            for (int i = 1; i <= 4; ++i)
+                memorizedMineralSpots.Add((Map.Minerals)i, new List<MineralSpot>());
+        }
+
+        public static void MemorizeMineralSpot(uint pos, Map.Minerals mineral, bool large)
+        {
+            memorizedMineralSpots[mineral].Add(new MineralSpot()
+            {
+                Position = pos,
+                Large = large
+            });
+        }
+
+        internal static IEnumerable<uint> GetMemorizedMineralSpots(Map.Minerals mineral, bool large)
+        {
+            return memorizedMineralSpots[mineral].Where(s => !large || s.Large).Select(s => s.Position);
+        }
 
         /// <summary>
         /// How aggressive (2 = very aggressive)
@@ -223,6 +254,8 @@ namespace Freeserf
                     return new AIStates.AIStateCraftTool((Resource.Type)param);
                 case State.CraftWeapons:
                     return new AIStates.AIStateCraftWeapons();
+                case State.FindOre:
+                    return new AIStates.AIStateFindOre((Map.Minerals)param);
                 // TODO ...
             }
 
@@ -298,16 +331,19 @@ namespace Freeserf
 
         #region Game analysis helper functions
 
-        internal bool HasEssentialBuildings(Game game)
+        internal bool HasEssentialBuildings()
         {
+            var game = player.Game;
+
             return
                 game.GetPlayerBuildings(player, Building.Type.Lumberjack).Count() > 0 &&
                 game.GetPlayerBuildings(player, Building.Type.Stonecutter).Count() > 0 &&
                 game.GetPlayerBuildings(player, Building.Type.Sawmill).Count() > 0;
         }
 
-        internal bool HasResourcesForBuilding(Game game, Building.Type type)
+        internal bool HasResourcesForBuilding(Building.Type type)
         {
+            var game = player.Game;
             var constructionInfo = Building.ConstructionInfos[(int)type];
 
             return
@@ -325,8 +361,15 @@ namespace Freeserf
                 lastTick = game.Tick;
                 GameTime = game.Tick;
             }
+            else if (game.Tick < lastTick) // overflow
+            {
+                GameTime += ushort.MaxValue - lastTick;
+                GameTime += game.Tick;
+            }
             else
+            {
                 GameTime += game.Tick - lastTick;
+            }            
 
             if (states.Count == 0)
             {

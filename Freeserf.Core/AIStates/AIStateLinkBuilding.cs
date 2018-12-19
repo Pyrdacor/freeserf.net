@@ -18,6 +18,14 @@ namespace Freeserf.AIStates
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             var flagPos = game.Map.MoveDownRight(buildingPos);
+
+            // don't link if already linked
+            if (game.Map.Paths(flagPos) > 0 && game.GetFlagAtPos(flagPos).FindNearestInventoryForSerf() != -1)
+            {
+                Kill(ai);
+                return;
+            }
+
             uint bestFlagPos = Global.BadMapPos;
             int minDist = int.MaxValue;
             Dictionary<uint, int> flags = new Dictionary<uint, int>();
