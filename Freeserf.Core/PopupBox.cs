@@ -82,10 +82,6 @@ namespace Freeserf
             ResourceDirections,
             KnightSettings,
             InventoryPriorities,
-            Bld1,
-            Bld2,
-            Bld3,
-            Bld4,
             Message,
             BuildingStock,
             PlayerFaces,
@@ -361,15 +357,15 @@ namespace Freeserf
         readonly Dictionary<Icon, bool> icons = new Dictionary<Icon, bool>(); // value: in use
         readonly Dictionary<Button, bool> buttons = new Dictionary<Button, bool>(); // value: in use
         readonly Dictionary<TextField, bool> texts = new Dictionary<TextField, bool>(); // value: in use
-        readonly SlideBar[] slideBars = new SlideBar[9]; // TODO: is 9 enough?
+        readonly SlideBar[] slideBars = new SlideBar[9];
         const int SlideBarFactor = 1310;
         TextField clickableTextField = null;
         readonly Render.IColoredRect[] playerFaceBackgrounds = new Render.IColoredRect[Game.GAME_MAX_PLAYER_COUNT];
 
         uint CurrentTransportPriorityItem = 0u;
         uint CurrentInventoryPriorityItem = 0u;
-        int currentResourceForStatistics;
-        int currentStat8Mode;
+        int currentResourceForStatistics = 0;
+        int currentPlayerStatisticsMode = 0;
 
         static Freeserf.BackgroundPattern[] backgrounds = null;
 
@@ -449,7 +445,7 @@ namespace Freeserf
             CurrentTransportPriorityItem = 8;
             CurrentInventoryPriorityItem = 15;
             currentResourceForStatistics = 7;
-            currentStat8Mode = 0;
+            currentPlayerStatisticsMode = 0;
 
             /* Initialize minimap */
             MiniMap.SetSize(128, 128);
@@ -695,12 +691,6 @@ namespace Freeserf
                 case Type.LoadSave:
                     pattern = BackgroundPattern.DiagonalGreen;
                     break;
-                case Type.Bld1:
-                case Type.Bld2:
-                case Type.Bld3:
-                case Type.Bld4:
-                    pattern = BackgroundPattern.StaresGreen;
-                    break;
                 case Type.Message:
                 case Type.SettSelectFile: /* UNUSED */
                 case Type.LoadArchive:
@@ -731,7 +721,7 @@ namespace Freeserf
                     pattern = BackgroundPattern.Fish + currentResourceForStatistics - 1;
                     break;
                 case Type.PlayerStatistics:
-                    pattern = BackgroundPattern.OverallComparison + ((currentStat8Mode >> 2) & 3);
+                    pattern = BackgroundPattern.OverallComparison + ((currentPlayerStatisticsMode >> 2) & 3);
                     break;
             }
 
@@ -978,13 +968,7 @@ namespace Freeserf
         #endregion
 
 
-        /* Fill one row of a popup frame. */
-        void draw_box_row(uint sprite, int y)
-		{
-			
-		}
-
-        /* Get the sprite number for a face. */
+        // Get the sprite number for a face
         static uint GetPlayerFaceSprite(uint face)
 		{
             if (face != 0)
@@ -1631,8 +1615,8 @@ namespace Freeserf
             SetButton(120, 121, 0x133, Action.ShowPlayerFaces); // player faces
             SetButton(120, 137, 0x3c, Action.ShowStatMenu); // exit
 
-            int aspect = (currentStat8Mode >> 2) & 3;
-            uint scale = (uint)currentStat8Mode & 3;
+            int aspect = (currentPlayerStatisticsMode >> 2) & 3;
+            uint scale = (uint)currentPlayerStatisticsMode & 3;
 
             // selection checkmarks
             SetIcon(Misc.BitTest(aspect, 0) ? 56 : 16, Misc.BitTest(aspect, 1) ? 141 : 125, 106);
@@ -1655,7 +1639,7 @@ namespace Freeserf
 
                 if (player != null)
                 {
-                    DrawPlayerStatisticChart(player.GetPlayerStatHistory(currentStat8Mode), index, player.GetColor(), chartData);
+                    DrawPlayerStatisticChart(player.GetPlayerStatHistory(currentPlayerStatisticsMode), index, player.GetColor(), chartData);
                 }
             }
 
@@ -2103,10 +2087,50 @@ namespace Freeserf
 			
 		}
 
-        void draw_ground_analysis_box()
+        // Translate resource amount to text
+        static string GetResourceAmountText(uint amount)
+        {
+            if (amount == 0) return "Not Present";
+            else if (amount< 100) return "Minimum";
+            else if (amount< 180) return "Very Few";
+            else if (amount< 240) return "Few";
+            else if (amount< 300) return "Below Average";
+            else if (amount< 400) return "Average";
+            else if (amount< 500) return "Above Average";
+            else if (amount< 600) return "Much";
+            else if (amount< 800) return "Very Much";
+            return "Perfect";
+        }
+
+    void DrawGroundAnalysisBox()
 		{
-			
-		}
+            SetIcon(64, 19, 0x1c); // geologist
+            SetIcon(16, 59, 0x2f); // gold ore
+            SetIcon(16, 79, 0x2c); // iron ore
+            SetIcon(16, 99, 0x2e); // coal
+            SetIcon(16, 119, 0x2b); // stone
+
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+
+            var pos = interf.GetMapCursorPos();
+            uint[] estimates = new uint[5];
+
+            interf.Game.PrepareGroundAnalysis(pos, estimates);
+
+            SetText(8, 39, "GROUND-ANALYSIS:");
+
+            // gold
+            SetText(32, 63, GetResourceAmountText(2u * estimates[(int)Map.Minerals.Gold]));
+
+            // iron
+            SetText(32, 83, GetResourceAmountText(estimates[(int)Map.Minerals.Iron]));
+
+            // coal
+            SetText(32, 103, GetResourceAmountText(estimates[(int)Map.Minerals.Coal]));
+
+            // stone
+            SetText(32, 123, GetResourceAmountText(2u * estimates[(int)Map.Minerals.Stone]));
+        }
 
         void DrawSettlerMenuBox()
 		{
@@ -2898,26 +2922,6 @@ namespace Freeserf
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
         }
 
-        void draw_bld_1_box()
-		{
-			
-		}
-
-        void draw_bld_2_box()
-		{
-			
-		}
-
-        void draw_bld_3_box()
-		{
-			
-		}
-
-        void draw_bld_4_box()
-		{
-			
-		}
-
         void DrawPlayerFacesBox()
 		{
             // TODO: what about the spaces between the face areas?
@@ -3232,13 +3236,13 @@ namespace Freeserf
                 case Action.PlayerStatisticsSetScale120Min:
                 case Action.PlayerStatisticsSetScale600Min:
                 case Action.PlayerStatisticsSetScale3000Min:
-                    currentStat8Mode = (currentStat8Mode & 0xc) | (action - Action.PlayerStatisticsSetScale30Min);
+                    currentPlayerStatisticsMode = (currentPlayerStatisticsMode & 0xc) | (action - Action.PlayerStatisticsSetScale30Min);
                     break;
                 case Action.PlayerStatisticsSetAspectAll:
                 case Action.PlayerStatisticsSetAspectLand:
                 case Action.PlayerStatisticsSetAspectBuildings:
                 case Action.PlayerStatisticsSetAspectMilitary:
-                    currentStat8Mode = (currentStat8Mode & 0x3) | ((action - Action.PlayerStatisticsSetAspectAll) << 2);
+                    currentPlayerStatisticsMode = (currentPlayerStatisticsMode & 0x3) | ((action - Action.PlayerStatisticsSetAspectAll) << 2);
                     break;
                 case Action.ShowPlayerFaces:
                     SetBox(Type.PlayerFaces);
@@ -3610,7 +3614,7 @@ namespace Freeserf
                     draw_start_attack_redraw_box();
                     break;
                 case Type.GroundAnalysis:
-                    draw_ground_analysis_box();
+                    DrawGroundAnalysisBox();
                     break;
                 /* TODO */
                 case Type.SettlerMenu:
@@ -3668,18 +3672,6 @@ namespace Freeserf
                     break;
                 case Type.KnightSettings:
                     DrawKnightSettingsBox();
-                    break;
-                case Type.Bld1:
-                    draw_bld_1_box();
-                    break;
-                case Type.Bld2:
-                    draw_bld_2_box();
-                    break;
-                case Type.Bld3:
-                    draw_bld_3_box();
-                    break;
-                case Type.Bld4:
-                    draw_bld_4_box();
                     break;
                 case Type.BuildingStock:
                     DrawBuildingStockBox();
