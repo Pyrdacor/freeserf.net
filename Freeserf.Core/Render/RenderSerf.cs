@@ -602,6 +602,10 @@ namespace Freeserf.Render
 
                     SetBaseLine(rockBaseLine + 1);
                 }
+                else if (serf.SerfState == Serf.State.Logging)
+                {
+                    SetBaseLineOffset(12);
+                }
                 else
                 {
                     // adjust baseline when walking around a building
