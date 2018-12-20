@@ -301,6 +301,7 @@ namespace Freeserf
                     case PopupBox.Type.QuitConfirm:
                     case PopupBox.Type.NoSaveQuitConfirm:
                     case PopupBox.Type.Options:
+                    case PopupBox.Type.ExtendedOptions:
                         {
                             SetButton(0, ButtonId.BuildInactive);
                             SetButton(1, ButtonId.DestroyInactive);

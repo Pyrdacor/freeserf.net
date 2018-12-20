@@ -26,10 +26,10 @@ Non-working code:
 AI:
 
 - If linking diconnected flags, a flag may be used to connect to castle/stock that is very far away instead of a closer one
-- Linking flags may also allow for placing flags on pathes and merging pathes to a near flag
+- Linking flags should also allow for placing flags on paths and merging paths to a near flag
 - The starting spots of the AI players are very close most of the time
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but
-  this doesn't mean putting hundreds of flags at the same mountain.
+  changing doesn't mean putting hundreds of flags at the same mountain.
 
 
 Serf rendering:
@@ -48,7 +48,7 @@ Building rendering:
 Logic:
 
 - Saw a builder that doesn't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
-- This happens often. Some roads can not be used I guess. Something in the serf logic does not work correctly. Or the path finding is bugged.
+  This happens often. Some roads can not be used I guess. Something in the serf logic does not work correctly. Or the path finding is bugged.
 
 
 Notification Box:

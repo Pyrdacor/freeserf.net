@@ -207,8 +207,8 @@ namespace Freeserf
                         continue;
                     }
 
-                    if ((buildingRoad != null) && buildingRoad.HasPos(map, newPos) &&
-                        (newPos != end) && (newPos != start))
+                    if (buildingRoad != null && buildingRoad.HasPos(map, newPos) &&
+                        newPos != end && newPos != start)
                     {
                         continue;
                     }

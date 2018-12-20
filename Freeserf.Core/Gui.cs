@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Freeserf.Event;
 
 namespace Freeserf
@@ -49,7 +50,17 @@ namespace Freeserf
             return spriteFactory.Create(width, height, offset.X, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
         }
 
+        // sort so that the objects with heighest display layer come first
+        class ChildComparer : IComparer<GuiObject>
+        {
+            public int Compare(GuiObject x, GuiObject y)
+            {
+                return y.BaseDisplayLayer.CompareTo(x.BaseDisplayLayer);
+            }
+        }
+
         readonly List<GuiObject> children = new List<GuiObject>();
+        static readonly ChildComparer childComparer = new ChildComparer();
         bool redraw = true;
         protected internal Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
@@ -96,7 +107,7 @@ namespace Freeserf
         // This is the base display layer from the gui hierarchy.
         // The distance is 10 per parent-child relation.
         // Inside the 10 layers the controls can be freely assigned.
-        public byte BaseDisplayLayer
+        public virtual byte BaseDisplayLayer
         {
             get
             {
@@ -143,6 +154,8 @@ namespace Freeserf
         {
             foreach (var child in children)
                 child.UpdateParent();
+
+            children.Sort(childComparer);
         }
 
         protected abstract void InternalDraw();
@@ -235,6 +248,8 @@ namespace Freeserf
             children.Add(obj);
             obj.MoveTo(x, y); // will call SetRedraw
             obj.Displayed = displayed;
+
+            children.Sort(childComparer);
         }
 
         public void DeleteChild(GuiObject obj)
@@ -312,7 +327,7 @@ namespace Freeserf
                 }
             }
 
-            /* Find the corresponding child element if any */
+            // Find the corresponding child element if any
             foreach (var child in children)
             {
                 if (child.HandleEvent(e))
@@ -646,6 +661,8 @@ namespace Freeserf
 
         public void Destroy()
         {
+            base.Displayed = false;
+
             if (index != -1)
                 textRenderer.DestroyText(index);
 

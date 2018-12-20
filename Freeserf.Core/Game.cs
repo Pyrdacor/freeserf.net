@@ -830,7 +830,7 @@ namespace Freeserf
             dest = pos;
 
             /* Bit 0 indicates a ground path, bit 1 indicates
-               awater path. Abort if path went through both
+               a water path. Abort if path went through both
                ground and water. */
             bool w = false;
 

@@ -39,6 +39,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
+    // TODO: implement fast mapclick and fast building
     internal class Interface : GuiObject, GameManager.IHandler
     {
         // Interval between automatic save games
@@ -96,6 +97,14 @@ namespace Freeserf
         int[] sfxQueue = new int[4];
 
         Player player;
+        // Bit 0: Always 1, is used for messages that should always be notified
+        // Bit 1: Unused
+        // Bit 2: Fast building
+        // Bit 3: Non-important message. Is only set for message setting "all"
+        // Bit 4: Important messages. Is set for at least message setting "most"
+        // Bit 5: Very important messages. Is set for at least message setting "few"
+        // Bit 6: Pathway scrolling
+        // Bit 7: Fast map click
         int config = 0x39;
         int msgFlags;
 
@@ -300,7 +309,10 @@ namespace Freeserf
             if (PopupBox == null)
                 PopupBox = new PopupBox(this);
 
-            AddChild(PopupBox, 0, 0);
+            if (initBox != null)
+                initBox.AddChild(PopupBox, 0, 0);
+            else
+                AddChild(PopupBox, 0, 0);
 
             Layout();
             PopupBox.Show(box);
@@ -320,7 +332,12 @@ namespace Freeserf
             }
 
             PopupBox.Hide();
-            DeleteChild(PopupBox);
+
+            if (initBox != null)
+                initBox.DeleteChild(PopupBox);
+            else
+                DeleteChild(PopupBox);
+
             UpdateMapCursorPos(mapCursorPos);
             PanelBar?.Update();
         }
@@ -328,6 +345,8 @@ namespace Freeserf
         /* Open box for starting a new game */
         public void OpenGameInit()
         {
+            ClosePopup();
+
             RenderView.ResetZoom();
 
             if (initBox == null)
@@ -352,6 +371,9 @@ namespace Freeserf
 
         public void CloseGameInit()
         {
+            ClosePopup();
+            PopupBox = null;
+
             if (initBox != null)
             {
                 initBox.Displayed = false;
@@ -643,7 +665,8 @@ namespace Freeserf
                 /* No existing paths at destination, build segment. */
                 UpdateMapCursorPos(dest);
 
-                /* TODO Pathway scrolling */
+                if (GetConfig(6)) // pathway scrolling
+                    Viewport.MoveToMapPos(dest, true);
             }
             else
             {
@@ -672,7 +695,8 @@ namespace Freeserf
 
             UpdateMapCursorPos(dest);
 
-            /* TODO Pathway scrolling */
+            if (GetConfig(6)) // pathway scrolling
+                Viewport.MoveToMapPos(dest, true);
 
             return res;
         }
@@ -1192,16 +1216,6 @@ namespace Freeserf
                 PanelBar.SetSize(panelWidth, panelHeight);
             }
 
-            if (PopupBox != null)
-            {
-                int popupWidth = 144;
-                int popupHeight = 160;
-                int popupX = (Width - popupWidth) / 2;
-                int popupY = (Height - popupHeight) / 2;
-                PopupBox.MoveTo(popupX, popupY);
-                PopupBox.SetSize(popupWidth, popupHeight);
-            }
-
             if (initBox != null)
             {
                 int initBoxWidth = 16 + 320 + 16;
@@ -1210,6 +1224,16 @@ namespace Freeserf
                 int initBoxY = (Height - initBoxHeight) / 2;
                 initBox.MoveTo(initBoxX, initBoxY);
                 initBox.SetSize(initBoxWidth, initBoxHeight);
+            }
+
+            if (PopupBox != null && PopupBox.Parent != null)
+            {
+                int popupWidth = 144;
+                int popupHeight = 160;
+                int popupX = (PopupBox.Parent.Width - popupWidth) / 2;
+                int popupY = (PopupBox.Parent.Height - popupHeight) / 2;
+                PopupBox.MoveTo(popupX, popupY);
+                PopupBox.SetSize(popupWidth, popupHeight);
             }
 
             if (NotificationBox != null)

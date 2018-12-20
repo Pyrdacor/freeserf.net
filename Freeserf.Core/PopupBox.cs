@@ -72,6 +72,9 @@ namespace Freeserf
             NoSaveQuitConfirm,
             SettSelectFile, /* UNUSED */
             Options,
+            ExtendedOptions,
+            GameInitOptions,
+            ExtendedGameInitOptions,
             CastleResources,
             MineOutput,
             OrderedBld,
@@ -250,14 +253,9 @@ namespace Freeserf
             NoSaveQuitConfirm,
             ShowQuit,
             ShowOptions,
+            ShowExtendedOptions,
             ShowSave,
             CycleKnights,
-            OptionsPathwayScrolling1,
-            OptionsPathwayScrolling2,
-            OptionsFastMapClick1,
-            OptionsFastMapClick2,
-            OptionsFastBuilding1,
-            OptionsFastBuilding2,
             OptionsMessageCount,
             ShowSettSelectFile, /* Unused */
             ShowStatSelectFile, /* Unused */
@@ -316,7 +314,6 @@ namespace Freeserf
             DefaultToolmakerPriorities,
             ShowPlayerFaces,
             MinimapScale,
-            OptionsRightSide,
             CloseGroundAnalysis,
             UnknownTpInfoFlag,
             DecreaseCastleKnights,
@@ -325,6 +322,9 @@ namespace Freeserf
             OptionsFullscreen,
             OptionsVolumeMinus,
             OptionsVolumePlus,
+            OptionsPathwayScrolling,
+            OptionsFastMapclick,
+            OptionsFastBuilding,
             Demolish,
             OptionsSfx,
             Save,
@@ -672,6 +672,9 @@ namespace Freeserf
                 case Type.QuitConfirm:
                 case Type.NoSaveQuitConfirm:
                 case Type.Options:
+                case Type.ExtendedOptions:
+                case Type.GameInitOptions:
+                case Type.ExtendedGameInitOptions:
                 case Type.LoadSave:
                     pattern = BackgroundPattern.DiagonalGreen;
                     break;
@@ -2454,7 +2457,44 @@ namespace Freeserf
             clickableTextField = SetText(8, 134, "  Yes       No");
         }
 
-        void DrawOptionsBox()
+        void DrawExtendedOptionsBox(Action closeAction)
+        {
+            SetText(16, 23, "Pathway-");
+            SetText(16, 32, "Scrolling");
+            SetText(16, 48, "Fast");
+            SetText(16, 57, "Mapclick");
+            SetText(16, 73, "Fast");
+            SetText(16, 82, "Building");
+
+            SetButton(112, 23, interf.GetConfig(6) ? 288u : 220u, Action.OptionsPathwayScrolling);
+            SetButton(112, 48, interf.GetConfig(7) ? 288u : 220u, Action.OptionsFastMapclick);
+            SetButton(112, 73, interf.GetConfig(2) ? 288u : 220u, Action.OptionsFastBuilding);
+
+            string value = "All";
+
+            if (!interf.GetConfig(3))
+            {
+                value = "Most";
+
+                if (!interf.GetConfig(4))
+                {
+                    value = "Few";
+
+                    if (!interf.GetConfig(5))
+                    {
+                        value = "None";
+                    }
+                }
+            }
+
+            SetText(16, 103, "Messages");
+            clickableTextField = SetText(96, 103, value);
+
+            SetButton(104, 137, 61u, Action.ShowOptions); // flip
+            SetButton(120, 137, 60u, closeAction); // exit
+        }
+
+        void DrawOptionsBox(Action closeAction)
 		{
             SetText(16, 23, "Music");
             SetText(16, 39, "Sound");
@@ -2483,33 +2523,13 @@ namespace Freeserf
 
             SetNumberText(72, 63, (uint)Misc.Round(volume));
 
-            // Video
-            SetText(16, 79, "Fullscreen");
-            SetText(16, 88, "video");
+            // Fullscreen
+            SetText(16, 86, "Fullscreen");
 
-            SetButton(112, 79, interf.RenderView.Fullscreen ? 288u : 220u, Action.OptionsFullscreen);
+            SetButton(112, 82, interf.RenderView.Fullscreen ? 288u : 220u, Action.OptionsFullscreen);
 
-            string value = "All";
-
-            if (!interf.GetConfig(3))
-            {
-                value = "Most";
-
-                if (!interf.GetConfig(4))
-                {
-                    value = "Few";
-
-                    if (!interf.GetConfig(5))
-                    {
-                        value = "None";
-                    }
-                }
-            }
-
-            SetText(16, 103, "Messages");
-            clickableTextField = SetText(96, 103, value);
-
-            SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit
+            SetButton(104, 137, 61u, Action.ShowExtendedOptions); // flip
+            SetButton(120, 137, 60u, closeAction); // exit
 		}
 
         void DrawMineOutputBox()
@@ -3250,6 +3270,9 @@ namespace Freeserf
                 case Action.ShowOptions:
                     SetBox(Type.Options);
                     break;
+                case Action.ShowExtendedOptions:
+                    SetBox(Type.ExtendedOptions);
+                    break;
                 case Action.ShowQuit:
                     SetBox(Type.QuitConfirm);
                     break;
@@ -3636,6 +3659,15 @@ namespace Freeserf
                     }
                     SetRedraw();
                     break;
+                case Action.OptionsPathwayScrolling:
+                    interf.SwitchConfig(6);
+                    break;
+                case Action.OptionsFastMapclick:
+                    interf.SwitchConfig(7);
+                    break;
+                case Action.OptionsFastBuilding:
+                    interf.SwitchConfig(2);
+                    break;
                 case Action.QuitCancel:
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)
                         SetBox(Type.SettlerMenu);
@@ -3808,7 +3840,16 @@ namespace Freeserf
                     DrawNoSaveQuitConfirmBox();
                     break;
                 case Type.Options:
-                    DrawOptionsBox();
+                    DrawOptionsBox(Action.ShowSettlerMenu);
+                    break;
+                case Type.ExtendedOptions:
+                    DrawExtendedOptionsBox(Action.ShowSettlerMenu);
+                    break;
+                case Type.GameInitOptions:
+                    DrawOptionsBox(Action.CloseBox);
+                    break;
+                case Type.ExtendedGameInitOptions:
+                    DrawExtendedOptionsBox(Action.CloseBox);
                     break;
                 case Type.CastleResources:
                     DrawCastleResourcesBox();
@@ -3867,7 +3908,7 @@ namespace Freeserf
 
                 return true;
             }
-            else if (Box == Type.Options && clickableTextField != null)
+            else if (Box == Type.ExtendedOptions && clickableTextField != null)
             {
                 if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
                     y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)

@@ -101,7 +101,7 @@ namespace Freeserf
         //Bit 3: Message/Notification in queue/active
         //Bit 4: Knight level reduces due to knight cycling
         //Bit 5: Knight cycling in phase 2 (new knights from inventory to buildings)
-        //Bit 6: Unused
+        //Bit 6: Unused for now but reserved for remote player (multiplayer client)
         //Bit 7: AI
         uint flags = 0u;
         //Bit 0: Allow military building at current pos
@@ -164,12 +164,6 @@ namespace Freeserf
         uint goldDeposited = 0;
         uint castleKnightsWanted = 3;
         uint castleKnights = 0;
-        int aiValue0 = 0;
-        int aiValue1 = 0;
-        int aiValue2 = 0;
-        int aiValue3 = 0;
-        int aiValue4 = 0;
-        int aiValue5 = 0;
         uint aiIntelligence = 0;
 
         uint[,] playerStatHistory = new uint[16,112];
@@ -181,7 +175,7 @@ namespace Freeserf
         public int attackingBuildingCount = 0;
         public int[] attackingKnights = new int[4];
         public int totalAttackingKnights = 0;
-        public uint tempIndex = 0; // used by Game.BuildingRemovePlayerRefs
+        public uint tempIndex = 0; // used by Game.BuildingRemovePlayerRefs and so on
 
         public MapPos CastlePos { get; internal set; } = Global.BadMapPos;
         public AI AI { get; set; } = null;

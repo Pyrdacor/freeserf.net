@@ -21,7 +21,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 
 namespace Freeserf
 {
@@ -610,7 +609,7 @@ namespace Freeserf
                     }
                     break;
                 case Action.ShowOptions:
-                    // TODO
+                    interf.OpenPopup(PopupBox.Type.GameInitOptions);
                     break;
                 case Action.Increment:
                     switch (gameType)

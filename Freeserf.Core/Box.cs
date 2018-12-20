@@ -457,6 +457,18 @@ namespace Freeserf
             SetBackground(background);
         }
 
+        // each box has a higher offset so that a child box will overlay controls of parent
+        public override byte BaseDisplayLayer
+        {
+            get
+            {
+                if (Parent == null)
+                    return 0;
+
+                return (byte)Math.Min(255, Parent.BaseDisplayLayer + 20);
+            }
+        }
+
         public void SetBackground(BackgroundPattern background)
         {
             if (this.background == background)

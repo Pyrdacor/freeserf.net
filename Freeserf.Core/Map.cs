@@ -1588,7 +1588,7 @@ namespace Freeserf
             return water;
         }
 
-        /* Return non-zero if the road segment from pos in direction dir
+        /* Return true if the road segment from pos in direction dir
            can be successfully constructed at the current time. */
         public bool IsRoadSegmentValid(MapPos pos, Direction dir)
         {
