@@ -1252,6 +1252,15 @@ namespace Freeserf
             if ((oldObject == Object.None && obj != Object.None) ||
                 (obj < Object.Tree0 && obj != Object.None)) // e.g. placing flags/buildings on some removable map objects
             {
+                if (oldObject != Object.None && obj < Object.Tree0 && obj != Object.None)
+                {
+                    // this will remove an existing map object when a building or flag is placed
+                    foreach (Handler handler in changeHandlers)
+                    {
+                        handler.OnObjectExchanged(pos, oldObject, obj);
+                    }
+                }
+
                 foreach (Handler handler in changeHandlers)
                 {
                     handler.OnObjectPlaced(pos);
