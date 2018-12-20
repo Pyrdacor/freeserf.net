@@ -39,11 +39,6 @@ Serf rendering:
 	- Saw it again. Two with a boat and one normal transporter on a very small road (where only one transporter could be). They even blocked each other. It's a bug.
 
 
-Building rendering:
-
-- The corner stone is in front of the frame for small buildings
-
-
 Logic:
 
 - Saw a builder that doesn't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
