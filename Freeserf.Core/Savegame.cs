@@ -360,7 +360,7 @@ namespace Freeserf
         {
             /* Build filename including time stamp. */
             GameStore saveGame = new GameStore();
-            string name = DateTime.Now.ToString("dd-MM-yy_HH-mm-ss", CultureInfo.InvariantCulture);
+            string name = DateTime.Now.ToString("dd-MM-yy-HH-mm-ss", CultureInfo.InvariantCulture);
 
             string path = Path.Combine(saveGame.FolderPath, prefix + "-" + name + ".save");
 

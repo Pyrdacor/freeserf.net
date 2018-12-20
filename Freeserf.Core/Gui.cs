@@ -67,7 +67,7 @@ namespace Freeserf
         protected bool focused = false;
         protected bool displayed = false;
         GuiObject parent = null;
-        protected Audio Audio { get; } = null;
+        public Audio Audio { get; } = null;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
@@ -376,12 +376,15 @@ namespace Freeserf
     public class Gui
     {
         readonly Render.IRenderView renderView = null;
-        readonly Interface interf = null;
+        Viewer viewer = null;
 
         public Gui(Render.IRenderView renderView)
         {
             this.renderView = renderView;
-            interf = new Interface(renderView);
+
+            // At the beginning we start with a local player.
+            // Depending on the chosen game mode the viewer may be changed.
+            SetViewer(Viewer.CreateLocalPlayer(renderView, null, this));
 
             renderView.Click += RenderView_Click;
             renderView.DoubleClick += RenderView_DoubleClick;
@@ -390,11 +393,25 @@ namespace Freeserf
             renderView.KeyPress += RenderView_KeyPress;
         }
 
-        public bool Ingame => interf.Ingame;
+        internal void SetViewer(Viewer viewer)
+        {
+            if (this.viewer == viewer)
+                return;
+
+            if (this.viewer != null)
+                this.viewer.Destroy();
+
+            this.viewer = viewer;
+
+            if (this.viewer != null)
+                this.viewer.Init();
+        }
+
+        public bool Ingame => viewer.Ingame;
 
         public void DrawCursor(int x, int y)
         {
-            interf.DrawCursor(x, y);
+            viewer.DrawCursor(x, y);
         }
 
         Position PositionToGui(Position position)
@@ -437,7 +454,7 @@ namespace Freeserf
 
         private bool RenderView_KeyPress(object sender, Event.EventArgs args)
         {
-            return HandleEvent(args);
+            return viewer.SendEvent(args);
         }
 
         private bool RenderView_Drag(object sender, Event.EventArgs args)
@@ -447,7 +464,7 @@ namespace Freeserf
 
             args = Event.EventArgs.Transform(args, position.X, position.Y, delta.Width, delta.Height);
 
-            return HandleEvent(args);
+            return viewer.SendEvent(args);
         }
 
         private bool RenderView_DoubleClick(object sender, Event.EventArgs args)
@@ -456,7 +473,7 @@ namespace Freeserf
 
             args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
 
-            return HandleEvent(args);
+            return viewer.SendEvent(args);
         }
 
         private bool RenderView_Click(object sender, Event.EventArgs args)
@@ -465,21 +482,13 @@ namespace Freeserf
 
             args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
 
-            return HandleEvent(args);
+            return viewer.SendEvent(args);
         }
 
         public void Draw()
         {
-            interf.Update();
-            interf.Draw();
-        }
-
-        bool HandleEvent(Event.EventArgs args)
-        {
-            if (!args.Done)
-                args.Done = interf.HandleEvent(args);
-
-            return args.Done;
+            viewer.Update();
+            viewer.Draw();
         }
     }
 

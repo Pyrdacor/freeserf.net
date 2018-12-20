@@ -140,9 +140,9 @@ namespace Freeserf
         {
             if (currentGame != null)
             {
-                foreach (IHandler handler in handlers)
+                for (int i = handlers.Count - 1; i >= 0; --i)
                 {
-                    handler.OnEndGame(currentGame);
+                    handlers[i].OnEndGame(currentGame);
                 }
 
                 // Note: Call this after the handlers are notified so the game and render

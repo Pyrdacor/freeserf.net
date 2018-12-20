@@ -40,7 +40,7 @@ namespace Freeserf
     using MapPos = UInt32;
 
     // TODO: implement fast mapclick and fast building
-    internal class Interface : GuiObject, GameManager.IHandler
+    internal class Interface : GuiObject
     {
         // Interval between automatic save games
         const int AUTOSAVE_INTERVAL = 10 * 60 * Global.TICKS_PER_SEC;
@@ -127,11 +127,14 @@ namespace Freeserf
         public Random Random { get; private set; } = null;
         public TextRenderer TextRenderer { get; } = null;
         public bool Ingame => Game != null && (initBox == null || !initBox.Displayed);
+        public Viewer.Access AccessRights => Viewer.AccessRights;
+        internal Viewer Viewer { get; set; }
 
-        public Interface(IRenderView renderView)
+        public Interface(IRenderView renderView, Viewer viewer)
             : base(renderView)
         {
             RenderView = renderView;
+            Viewer = viewer; 
 
             TextRenderer = new TextRenderer(renderView);
 
@@ -148,8 +151,6 @@ namespace Freeserf
             cursorSprite = renderView.SpriteFactory.Create(16, 16, 0, 0, false, false);
             cursorSprite.Layer = renderView.GetLayer(Freeserf.Layer.Cursor);
             cursorSprite.Visible = true;
-
-            GameManager.Instance.AddHandler(this);
 
             SetSize(640, 480); // original size
 
@@ -1382,23 +1383,6 @@ namespace Freeserf
             }
 
             return true;
-        }
-
-        // TODO: override
-        public void OnNewGame(Game game)
-        {
-            var music = Audio?.GetMusicPlayer();
-
-            if (music != null && music.Enabled)
-                music.PlayTrack((int)Audio.TypeMidi.Track0);
-
-            SetGame(game);
-            SetPlayer(0);
-        }
-
-        public void OnEndGame(Game game)
-        {
-            SetGame(null);
-        }
+        }       
     }
 }

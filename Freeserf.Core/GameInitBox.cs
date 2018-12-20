@@ -483,6 +483,7 @@ namespace Freeserf
             switch (gameType)
             {
                 case GameType.Custom:
+                case GameType.AIvsAI:
                     DrawBoxString(10, 2, textFieldHeader, "New game");
                     DrawBoxString(10, 18, textFieldName, "Mapsize:");
                     DrawBoxString(20, 18, textFieldValue, mission.MapSize.ToString());
@@ -567,6 +568,21 @@ namespace Freeserf
                     }
                     else
                     {
+                        switch (gameType)
+                        {
+                            case GameType.Custom:
+                            case GameType.Mission:
+                            case GameType.Tutorial:
+                                // in GameInitBox the viewer is already a local player
+                                break;
+                            case GameType.AIvsAI:
+                                interf.Viewer.ChangeTo(Viewer.Type.LocalSpectator);
+                                break;
+                            case GameType.Multiplayer:
+                                // TODO: client, server or remote spectator depending on settings
+                                break;
+                        }
+
                         if (!GameManager.Instance.StartGame(mission, interf.RenderView))
                         {
                             return;
@@ -575,7 +591,7 @@ namespace Freeserf
                     break;
                 }
                 case Action.ToggleGameType:
-                    if (++gameType > GameType.Load)
+                    if (++gameType > GameType.AIvsAI)
                     {
                         gameType = GameType.Custom;
                     }
@@ -603,6 +619,29 @@ namespace Freeserf
                             {
                                 randomInput.Displayed = false;
                                 fileList.Displayed = true;
+                                SetRedraw();
+                                break;
+                            }
+                        case GameType.Multiplayer:
+                            {
+                                // TODO
+                                HandleAction(Action.ToggleGameType);
+                                return;
+                            }
+                        case GameType.Tutorial:
+                            {
+                                // TODO
+                                HandleAction(Action.ToggleGameType);
+                                return;
+                            }
+                        case GameType.AIvsAI:
+                            {
+                                // TODO: first player should be also an AI
+
+                                mission = customMission;
+                                randomInput.Displayed = true;
+                                randomInput.SetRandom(customMission.RandomBase);
+                                fileList.Displayed = false;
                                 SetRedraw();
                                 break;
                             }
