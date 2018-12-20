@@ -36,7 +36,13 @@ Serf rendering:
 
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
 	- As other serfs can walk there too it must be an error with the animation index
-	- Saw it again. Two with a boat and one normal transporter one a very small road (where only one transporter could be). They even block each other. It's a bug.
+	- Saw it again. Two with a boat and one normal transporter on a very small road (where only one transporter could be). They even blocked each other. It's a bug.
+- Lumberjack is behind the tree top of the felled tree
+
+
+Building rendering:
+
+- The corner stone is in front of the frame for small buildings
 
 
 Logic:
@@ -75,3 +81,10 @@ TODO:
 - Check if all shortcuts/keystrokes work as expected (if not implement them)
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected)
 - Localization (texts should be of the right language later)
+
+
+Exceptions:
+
+- When a knight wins a fight there is often a bad torso sprite index
+- OtherEndPoint of flag is null
+- Something with road placement of AI (pathfinder)
