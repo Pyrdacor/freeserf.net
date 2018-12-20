@@ -35,8 +35,8 @@ namespace Freeserf.AIStates
                 if (flagPos == flag.Position)
                     continue; // not link to self
 
-                int distX = game.Map.DistX(flagPos, flag.Position);
-                int distY = game.Map.DistY(flagPos, flag.Position);
+                int distX = game.Map.DistX(flag.Position, flagPos);
+                int distY = game.Map.DistY(flag.Position, flagPos);
                 int dist = Misc.Round(Math.Sqrt(distX * distX + distY * distY));
 
                 if (dist < minDist)

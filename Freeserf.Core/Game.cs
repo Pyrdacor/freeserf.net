@@ -1445,7 +1445,7 @@ namespace Freeserf
                     MapPos pos = map.PosAddSpirally(building.Position, 7u + i);
 
                     if (map.GetObject(pos) >= Map.Object.SmallBuilding &&
-                        map.GetObject(pos) <= Map.Object.Castle)
+                        map.GetObject(pos) < Map.Object.Castle)
                     {
                         DemolishBuilding(pos);
                     }
@@ -2643,7 +2643,7 @@ namespace Freeserf
                         if (d < 0)
                             d += 6;
 
-                        if (dir != Direction.None && d == (int)dir.Reverse())
+                        if (dir != Direction.None && d == (int)dir.Reverse()) // TODO: shouldn't this be d == (int)inDir.Reverse() ?
                         {
                             serf.SetLostState();
                         }
@@ -2657,7 +2657,7 @@ namespace Freeserf
                     break;
                 }
 
-                RemoveRoadSegment(pos, dir);                
+                RemoveRoadSegment(pos, dir);
 
                 inDir = dir;
                 dir = map.RemoveRoadSegment(ref pos, dir);
@@ -2942,10 +2942,7 @@ namespace Freeserf
                     }
                 }
 
-                if (map.GetObject(pos) == Map.Object.Flag)
-                {
-                    DemolishFlag(pos);
-                }
+                DemolishFlag(pos);
             }
             else if (map.Paths(pos) != 0)
             {
@@ -3581,8 +3578,14 @@ namespace Freeserf
 
         void RemoveRoadSegment(MapPos pos, Direction dir)
         {
-            if (dir < Direction.Right || dir > Direction.Down)
+            if (dir < Direction.Right)
                 return;
+
+            if (dir > Direction.Down)
+            {
+                RemoveRoadSegment(map.Move(pos, dir), dir.Reverse());
+                return;
+            }
 
             long index = Render.RenderRoadSegment.CreateIndex(pos, dir);
 
