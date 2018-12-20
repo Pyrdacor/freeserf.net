@@ -773,8 +773,8 @@ namespace Freeserf
                     target.SetUnderAttack();
 
                     /* Calculate distance to target. */
-                    int distColumn = map.DistX(target.Position, defSerf.Position);
-                    int distRow = map.DistY(target.Position, defSerf.Position);
+                    int distColumn = map.DistX(defSerf.Position, target.Position);
+                    int distRow = map.DistY(defSerf.Position, target.Position);
 
                     /* Send this serf off to fight. */
                     defSerf.SendOffToFight(distColumn, distRow);

@@ -744,13 +744,16 @@ namespace Freeserf
             return defSerf;
         }
 
-        public Serf CallAttackerOut(uint knightIndex) // TODO: is this workigng with knightIndex?
+        public Serf CallAttackerOut(uint knightIndex)
         {
             --stock[0].Available;
 
             /* Unlink knight from list. */
-            Serf firstSerf = Game.GetSerf((knightIndex != 0) ? knightIndex : firstKnight);
-            Serf defSerf = firstSerf.ExtractLastKnightFromList();
+            Serf firstSerf = Game.GetSerf(firstKnight);
+            Serf defSerf = firstSerf.ExtractKnightFromList(knightIndex);
+
+            if (defSerf == null)
+                defSerf = firstSerf;
 
             if (defSerf.Index == firstKnight)
             {

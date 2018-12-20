@@ -262,6 +262,15 @@ namespace Freeserf.Render
             // shadow
             AddSprite(atlasIndex, 5000u, data.GetSprite(Data.Resource.SerfShadow, 0u, color));
 
+            // add fighting stuff (offset is 5000)
+            for (i = 197u; i <= 200u; ++i)
+            {
+                sprite = data.GetSprite(Data.Resource.GameObject, i, color);
+
+                if (sprite != null)
+                    AddSprite(atlasIndex, 5000u + i, sprite);
+            }
+
 
             #endregion
 

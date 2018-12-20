@@ -1443,14 +1443,43 @@ namespace Freeserf
         {
             uint defIndex = Index;
             Serf defSerf = Game.GetSerf(defIndex);
+            Serf lastKnight = null;
 
             while (defSerf.s.Defending.NextKnight != 0)
             {
+                lastKnight = defSerf;
                 defIndex = defSerf.s.Defending.NextKnight;
                 defSerf = Game.GetSerf(defIndex);
             }
 
+            if (lastKnight != null)
+            {
+                lastKnight.s.Defending.NextKnight = defSerf.s.Defending.NextKnight;
+                defSerf.s.Defending.NextKnight = 0;
+            }
+
             return defSerf;
+        }
+
+        public Serf ExtractKnightFromList(uint index, Serf lastKnight = null)
+        {
+            if (Index == index)
+            {
+                if (lastKnight != null)
+                {
+                    lastKnight.s.Defending.NextKnight = s.Defending.NextKnight;
+                    s.Defending.NextKnight = 0;
+                }
+
+                return this;
+            }
+
+            if (s.Defending.NextKnight == 0)
+                return null;
+
+            var nextKnight = Game.GetSerf(s.Defending.NextKnight);
+
+            return nextKnight.ExtractKnightFromList(index, this);
         }
 
         internal void InsertKnightBefore(Serf knight)
