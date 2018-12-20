@@ -38,16 +38,12 @@ Serf rendering:
 
 - Serfs sometimes disappear (see RenderSerf.cs comments for details), maybe Serf.SwitchWaiting and following code is the problem
 	- Now it seems that if two serfs are on the same map pos but serf switching on a road seems to work
-- Serfs appear in front of map objects when they should not (e.g. in front of a tree top)
 - In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
 	- Also sometimes knights are shortly on top of a military building after entering
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
 	- As other serfs can walk there too it must be an error with the animation index
 	- Saw it again. Two with a boat and one normal transporter one a very small road (where only one transporter could be). They even block each other. It's a bug.
 - When a stonecutter takes a piece of a bigger rock the remaining rock will shortly "jump" like the y coordinate is wrong for a short period of time
-- Serf is behind stones while digging etc (BaseLineOffset was changed from 8 to 2). This must be adjusted for some actions like digging.
-	- In general the base line offset should be checked for many situations
-		- Known bugs: Builder, Sawmiller?, Digger
 
 
 Logic:

@@ -360,6 +360,24 @@ namespace Freeserf.Render
             return map.RenderMap.GetScreenPosition(building.Position).Y + info.OffsetY + info.Height;
         }
 
+        void SetBaseLineOffset(int baseLineOffset)
+        {
+            sprite.BaseLineOffset = System.Math.Max(sprite.BaseLineOffset, baseLineOffset);
+
+            if (headSprite != null)
+            {
+                int bodyBaseLine = sprite.Y + sprite.Height;
+                int headBaseLine = headSprite.Y + headSprite.Height;
+
+                headSprite.BaseLineOffset = sprite.BaseLineOffset + (bodyBaseLine - headBaseLine); // so we have the same baseline as the body
+            }
+        }
+
+        void SetBaseLine(int baseLine)
+        {
+            SetBaseLineOffset(System.Math.Max(0, 1 + baseLine - (sprite.Y + sprite.Height)));
+        }
+
         // TODO: Sometimes the serf disappear while walking on a path. Seems to be if the serf approaches a spot where a serf already exists.
         public void Update(Game game, DataSource dataSource, int tick, Map map, uint pos)
         {
@@ -459,73 +477,45 @@ namespace Freeserf.Render
                 headSprite.Visible = false;
             }
 
-            // adjust baseline when in or at a building
-            var building = serf.GetBuilding();
-
-            if (building != null)
+            // adjust baseline
+            if (sprite != null)
             {
-                int baseLine = GetBuildingBaseLine(building, dataSource, map);
+                var building = serf.GetBuilding();
 
-                if (baseLine != -1)
+                if (building != null)
                 {
-                    int bodyBaseLine = sprite.Y + sprite.Height;
+                    int baseLine = GetBuildingBaseLine(building, dataSource, map);
 
-                    // body baseline is now 1 greater than the building baseline
-                    sprite.BaseLineOffset = System.Math.Max(0, 1 + baseLine - bodyBaseLine);
-
-                    if (headSprite != null)
+                    if (baseLine != -1)
                     {
-                        int headBaseLine = headSprite.Y + headSprite.Height;
-
-                        headSprite.BaseLineOffset = sprite.BaseLineOffset + (bodyBaseLine - headBaseLine); // so we have the same baseline as the body
+                        SetBaseLine(baseLine);
                     }
                 }
-            }
-            else
-            {
-                // adjust baseline when walking around a building
-                if (map.GetObject(map.MoveLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveLeft(pos)) <= Map.Object.Castle)
+                else if (serf.SerfState == Serf.State.StoneCutting)
                 {
-                    sprite.BaseLineOffset = System.Math.Max(sprite.BaseLineOffset, 1 + BuildingBaseLineOffsetRight[(int)game.GetBuildingAtPos(map.MoveLeft(pos)).BuildingType]);
+                    var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, 65); // biggest rock
+                    int rockBaseLine = map.RenderMap.GetScreenPosition(serf.Position).Y + info.OffsetY + info.Height;
 
-                    if (headSprite != null)
-                    {
-                        int headBaseLine = headSprite.Y + headSprite.Height;
-
-                        headSprite.BaseLineOffset = sprite.BaseLineOffset + (sprite.Y + sprite.Height - headBaseLine); // so we have the same baseline as the body
-                    }
+                    SetBaseLine(rockBaseLine + 1);
                 }
-                if (map.GetObject(map.MoveUpLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveUpLeft(pos)) <= Map.Object.Castle)
+                else
                 {
-                    sprite.BaseLineOffset = System.Math.Max(sprite.BaseLineOffset, 1 + BuildingBaseLineOffsetRight[(int)game.GetBuildingAtPos(map.MoveUpLeft(pos)).BuildingType]);
-
-                    if (headSprite != null)
+                    // adjust baseline when walking around a building
+                    if (map.GetObject(map.MoveLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveLeft(pos)) <= Map.Object.Castle)
                     {
-                        int headBaseLine = headSprite.Y + headSprite.Height;
-
-                        headSprite.BaseLineOffset = sprite.BaseLineOffset + (sprite.Y + sprite.Height - headBaseLine); // so we have the same baseline as the body
+                        SetBaseLineOffset(1 + BuildingBaseLineOffsetRight[(int)game.GetBuildingAtPos(map.MoveLeft(pos)).BuildingType]);
                     }
-                }
-                if (map.GetObject(map.MoveRight(pos)) > Map.Object.Flag && map.GetObject(map.MoveRight(pos)) <= Map.Object.Castle)
-                {
-                    sprite.BaseLineOffset = System.Math.Max(sprite.BaseLineOffset, 1 + BuildingBaseLineOffsetLeft[(int)game.GetBuildingAtPos(map.MoveRight(pos)).BuildingType]);
-
-                    if (headSprite != null)
+                    if (map.GetObject(map.MoveUpLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveUpLeft(pos)) <= Map.Object.Castle)
                     {
-                        int headBaseLine = headSprite.Y + headSprite.Height;
-
-                        headSprite.BaseLineOffset = sprite.BaseLineOffset + (sprite.Y + sprite.Height - headBaseLine); // so we have the same baseline as the body
+                        SetBaseLineOffset(1 + BuildingBaseLineOffsetRight[(int)game.GetBuildingAtPos(map.MoveUpLeft(pos)).BuildingType]);
                     }
-                }
-                if (map.GetObject(map.MoveUp(pos)) > Map.Object.Flag && map.GetObject(map.MoveUp(pos)) <= Map.Object.Castle)
-                {
-                    sprite.BaseLineOffset = System.Math.Max(sprite.BaseLineOffset, 1 + BuildingBaseLineOffsetLeft[(int)game.GetBuildingAtPos(map.MoveUp(pos)).BuildingType]);
-
-                    if (headSprite != null)
+                    if (map.GetObject(map.MoveRight(pos)) > Map.Object.Flag && map.GetObject(map.MoveRight(pos)) <= Map.Object.Castle)
                     {
-                        int headBaseLine = headSprite.Y + headSprite.Height;
-
-                        headSprite.BaseLineOffset = sprite.BaseLineOffset + (sprite.Y + sprite.Height - headBaseLine); // so we have the same baseline as the body
+                        SetBaseLineOffset(1 + BuildingBaseLineOffsetLeft[(int)game.GetBuildingAtPos(map.MoveRight(pos)).BuildingType]);
+                    }
+                    if (map.GetObject(map.MoveUp(pos)) > Map.Object.Flag && map.GetObject(map.MoveUp(pos)) <= Map.Object.Castle)
+                    {
+                        SetBaseLineOffset(1 + BuildingBaseLineOffsetLeft[(int)game.GetBuildingAtPos(map.MoveUp(pos)).BuildingType]);
                     }
                 }
             }
