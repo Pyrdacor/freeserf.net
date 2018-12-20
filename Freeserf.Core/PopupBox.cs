@@ -2466,9 +2466,9 @@ namespace Freeserf
             SetText(16, 73, "Fast");
             SetText(16, 82, "Building");
 
-            SetButton(112, 23, interf.GetConfig(6) ? 288u : 220u, Action.OptionsPathwayScrolling);
-            SetButton(112, 48, interf.GetConfig(7) ? 288u : 220u, Action.OptionsFastMapclick);
-            SetButton(112, 73, interf.GetConfig(2) ? 288u : 220u, Action.OptionsFastBuilding);
+            SetButton(112, 24, interf.GetConfig(6) ? 288u : 220u, Action.OptionsPathwayScrolling);
+            SetButton(112, 50, interf.GetConfig(7) ? 288u : 220u, Action.OptionsFastMapclick);
+            SetButton(112, 76, interf.GetConfig(2) ? 288u : 220u, Action.OptionsFastBuilding);
 
             string value = "All";
 
