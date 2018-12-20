@@ -498,14 +498,14 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
             internal static bool ResetPlaybackDevice(IntPtr handle)
             {
-                Log.Debug.Write("audio", "MIDI Reset");
+                Log.Verbose.Write("audio", "MIDI Reset");
 
                 return midiOutReset(handle) == 0;
             }
 
             internal static bool SendPlaybackDeviceMessage(IntPtr handle, uint message)
             {
-                Log.Debug.Write("audio", string.Format("MIDI Message {0:x2} {1:x2} {2:x2}", message & 0xff, (message >> 8) & 0xff, (message >> 16) & 0xff));
+                Log.Verbose.Write("audio", string.Format("MIDI Message {0:x2} {1:x2} {2:x2}", message & 0xff, (message >> 8) & 0xff, (message >> 16) & 0xff));
 
                 return midiOutShortMsg(handle, message) == 0;
             }
