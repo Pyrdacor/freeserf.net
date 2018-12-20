@@ -360,6 +360,36 @@ namespace Freeserf.Render
             return map.RenderMap.GetScreenPosition(building.Position).Y + info.OffsetY + info.Height;
         }
 
+        static bool InFrontOfBuilding(int x, int width, Building building, DataSource dataSource, Map map)
+        {
+            if (building == null)
+                return false;
+
+            uint sprite = 0;
+
+            if (building.IsDone() || building.GetProgress() > 0xffff)
+            {
+                sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
+            }
+            else
+            {
+                sprite = RenderBuilding.MapBuildingFrameSprite[(int)building.BuildingType];
+            }
+
+            var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
+
+            int buildingLeft = map.RenderMap.GetScreenPosition(building.Position).X + info.OffsetX;
+            int buildingRight = buildingLeft + info.Width;
+
+            int serfLeft = x;
+            int serfRight = x + width;
+
+            if (serfRight <= buildingLeft || serfLeft >= buildingRight)
+                return false;
+
+            return true;
+        }
+
         void SetBaseLineOffset(int baseLineOffset)
         {
             sprite.BaseLineOffset = System.Math.Max(sprite.BaseLineOffset, baseLineOffset);
@@ -373,12 +403,36 @@ namespace Freeserf.Render
             }
         }
 
+        void SetBaseLineOffset(Building building, int relativeOffset, Map map)
+        {
+            if (building == null)
+                return;
+
+            uint sprite = 0;
+
+            if (building.IsDone() || building.GetProgress() > 0xffff)
+            {
+                sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
+            }
+            else
+            {
+                sprite = RenderBuilding.MapBuildingFrameSprite[(int)building.BuildingType];
+            }
+
+            var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
+            int buildingBaseLine = map.RenderMap.GetScreenPosition(building.Position).Y + info.OffsetY + info.Height;
+
+            int serfBaseLine = this.sprite.Y + this.sprite.Height;
+
+            if (serfBaseLine <= buildingBaseLine && serfBaseLine > buildingBaseLine - relativeOffset)
+                SetBaseLine(buildingBaseLine + 1);
+        }
+
         void SetBaseLine(int baseLine)
         {
             SetBaseLineOffset(System.Math.Max(0, 1 + baseLine - (sprite.Y + sprite.Height)));
         }
 
-        // TODO: Sometimes the serf disappear while walking on a path. Seems to be if the serf approaches a spot where a serf already exists.
         public void Update(Game game, DataSource dataSource, int tick, Map map, uint pos)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs);
@@ -391,7 +445,7 @@ namespace Freeserf.Render
             // in most cases even if their baseline is lower. So we add a small offset to the serf baseline.
             int baseLineOffset = 2;
 
-            if (map.HasSerf(pos) || serf.SerfState == Serf.State.Walking || serf.SerfState == Serf.State.FreeWalking) // active serf
+            if (map.HasSerf(pos) && serf.SerfState != Serf.State.IdleOnPath) // active serf
             {
                 if (serf.SerfState == Serf.State.Mining &&
                     (serf.GetMiningSubstate() == 3 ||
@@ -421,7 +475,7 @@ namespace Freeserf.Render
                 // TODO: Draw additional serf/stuff from commented code below
             }
 
-            if (map.GetIdleSerf(pos)) // idle serf
+            if (map.GetIdleSerf(pos) && serf.SerfState == Serf.State.IdleOnPath) // idle serf
             {
                 body = GetIdleSerfBody(map, pos, out Position offset, tick);
 
@@ -503,19 +557,31 @@ namespace Freeserf.Render
                     // adjust baseline when walking around a building
                     if (map.GetObject(map.MoveLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveLeft(pos)) <= Map.Object.Castle)
                     {
-                        SetBaseLineOffset(1 + BuildingBaseLineOffsetRight[(int)game.GetBuildingAtPos(map.MoveLeft(pos)).BuildingType]);
+                        building = game.GetBuildingAtPos(map.MoveLeft(pos));
+
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
                     if (map.GetObject(map.MoveUpLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveUpLeft(pos)) <= Map.Object.Castle)
                     {
-                        SetBaseLineOffset(1 + BuildingBaseLineOffsetRight[(int)game.GetBuildingAtPos(map.MoveUpLeft(pos)).BuildingType]);
+                        building = game.GetBuildingAtPos(map.MoveUpLeft(pos));
+
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
                     if (map.GetObject(map.MoveRight(pos)) > Map.Object.Flag && map.GetObject(map.MoveRight(pos)) <= Map.Object.Castle)
                     {
-                        SetBaseLineOffset(1 + BuildingBaseLineOffsetLeft[(int)game.GetBuildingAtPos(map.MoveRight(pos)).BuildingType]);
+                        building = game.GetBuildingAtPos(map.MoveRight(pos));
+
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
                     }
                     if (map.GetObject(map.MoveUp(pos)) > Map.Object.Flag && map.GetObject(map.MoveUp(pos)) <= Map.Object.Castle)
                     {
-                        SetBaseLineOffset(1 + BuildingBaseLineOffsetLeft[(int)game.GetBuildingAtPos(map.MoveUp(pos)).BuildingType]);
+                        building = game.GetBuildingAtPos(map.MoveUp(pos));
+
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
                     }
                 }
             }

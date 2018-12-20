@@ -36,8 +36,6 @@ AI:
 
 Serf rendering:
 
-- Serfs sometimes disappear (see RenderSerf.cs comments for details), maybe Serf.SwitchWaiting and following code is the problem
-	- Now it seems that if two serfs are on the same map pos but serf switching on a road seems to work
 - In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
 	- Also sometimes knights are shortly on top of a military building after entering
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D

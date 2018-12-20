@@ -982,7 +982,6 @@ namespace Freeserf.Render
             var textureAtlasBuildings = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
             var textureAtlasObjects = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
-            // TODO: where is the active lumber of the sawmill drawn?
             switch (building.BuildingType)
             {
                 case Building.Type.Baker:
