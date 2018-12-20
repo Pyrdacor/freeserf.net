@@ -142,11 +142,6 @@ namespace Freeserf.Render
 
             sprite.Resize(spriteInfo.Width, spriteInfo.Height);
             shadowSprite.Resize(shadowInfo.Width, shadowInfo.Height);
-
-            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
-
-            sprite.TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
-            shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
         }
     }
 }
