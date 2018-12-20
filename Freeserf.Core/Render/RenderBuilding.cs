@@ -616,6 +616,7 @@ namespace Freeserf.Render
             {
                 crossOrStoneSprite.X = renderPosition.X + crossOrStoneSpriteOffset.X;
                 crossOrStoneSprite.Y = renderPosition.Y + crossOrStoneSpriteOffset.Y;
+                crossOrStoneSprite.BaseLineOffset = System.Math.Min(0, (sprite.Y + sprite.Height - 1) - (crossOrStoneSprite.Y + crossOrStoneSprite.Height));
             }
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
@@ -629,6 +630,7 @@ namespace Freeserf.Render
             {
                 stones[i].X = renderPosition.X + materialSpriteInfos[0].Position.X + 10 - i * 3;
                 stones[i].Y = renderPosition.Y + materialSpriteInfos[0].Position.Y - 8 + i;
+                stones[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height - 1) - (stones[i].Y + stones[i].Height));
             }
 
             // Planks waiting
@@ -636,6 +638,7 @@ namespace Freeserf.Render
             {
                 planks[i].X = renderPosition.X + materialSpriteInfos[1].Position.X + 12 - i * 3;
                 planks[i].Y = renderPosition.Y + materialSpriteInfos[1].Position.Y - 6 + i;
+                planks[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height - 1) - (planks[i].Y + planks[i].Height));
             }
 
             if (building.IsBurning())

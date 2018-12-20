@@ -223,6 +223,12 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SDigging
             {
+                // Substate < 0 -> Wait for serf
+                // Substate = 0 -> Looking for a place to dig
+                // Substate = 1 -> Change height and go back to center (last step of digging)
+                // Substate > 1 -> Digging
+                // TargetH is the height after digging
+                // DigPos is the dig position (0 = center, 1-6 = directions)
                 public int HIndex; /* B */
                 public uint TargetH; /* C */
                 public int DigPos; /* D */
@@ -738,11 +744,14 @@ namespace Freeserf
                 switch (serfState)
                 {
                     case State.IdleInStock:
+                    case State.DefendingCastle:
+                    case State.DefendingFortress:
+                    case State.DefendingHut:
+                    case State.DefendingTower:
+                    case State.Invalid:
+                    case State.Null:
+                    case State.WaitForResourceOut:
                         Game.RemoveSerfFromDrawing(this);
-                        break;
-                    case State.Walking:
-                    case State.KnightFreeWalking:
-                        Game.AddSerfForDrawing(this, Position);
                         break;
                 }
             }
@@ -1457,6 +1466,69 @@ namespace Freeserf
         internal void SetNextKnight(uint next)
         {
             s.Defending.NextKnight = next;
+        }
+
+        internal Building GetBuilding()
+        {
+            switch (SerfState)
+            {
+                case State.Baking:
+                case State.BuildingBoat:
+                case State.BuildingCastle:
+                case State.Butchering:
+                case State.DefendingCastle:
+                case State.DefendingFortress:
+                case State.DefendingHut:
+                case State.DefendingTower:
+                case State.EnteringBuilding:
+                case State.FinishedBuilding:
+                case State.IdleInStock:
+                case State.KnightLeaveForFight:
+                case State.KnightLeaveForWalkToFight:
+                case State.LeavingBuilding:
+                case State.MakingTool:
+                case State.MakingWeapon:
+                case State.MoveResourceOut:
+                case State.Milling:
+                case State.PigFarming:
+                case State.Sawing:
+                case State.Smelting:
+                case State.PlanningFarming:
+                case State.PlanningFishing:
+                case State.PlanningLogging:
+                case State.PlanningPlanting:
+                case State.PlanningStoneCutting:
+                case State.ReadyToLeave:
+                case State.ReadyToLeaveInventory:
+                case State.WaitForResourceOut:
+                    return Game.GetBuildingAtPos(Position);
+                case State.Building:
+                    return Game.GetBuilding(s.Building.Index);
+                case State.Digging:
+                    if (s.Digging.Substate <= 0)
+                    {
+                        return Game.GetBuildingAtPos(Position);
+                    }
+                    else
+                    {
+                        if (s.Digging.DigPos == 0)
+                            return Game.GetBuildingAtPos(Position);
+                        else
+                        {
+                            var building = Game.GetBuildingAtPos(Game.Map.Move(Position, ((Direction)(6 - s.Digging.DigPos)).Reverse()));
+
+                            if (building != null)
+                                return building;
+
+                            return Game.GetBuildingAtPos(Position);
+                        }
+                    }
+                case State.DropResourceOut:
+                case State.ReadyToEnter:
+                    return Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
+                default:
+                    return null;
+            }
         }
 
         // Commands

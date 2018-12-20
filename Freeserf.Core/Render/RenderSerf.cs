@@ -336,15 +336,28 @@ namespace Freeserf.Render
 
         static int GetBuildingBaseLine(uint mapPos, Game game, DataSource dataSource, Map map)
         {
-            var building = game.GetBuildingAtPos(mapPos);
+            return GetBuildingBaseLine(game.GetBuildingAtPos(mapPos), dataSource, map);
+        }
 
-            if (building == null || !building.IsDone())
+        static int GetBuildingBaseLine(Building building, DataSource dataSource, Map map)
+        {
+            if (building == null)
                 return -1;
 
-            uint sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
+            uint sprite = 0;
+
+            if (building.IsDone() || building.GetProgress() > 0xffff)
+            {
+                sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
+            }
+            else
+            {
+                sprite = RenderBuilding.MapBuildingFrameSprite[(int)building.BuildingType];
+            }
+
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
 
-            return map.RenderMap.GetScreenPosition(mapPos).Y + info.OffsetY + info.Height;
+            return map.RenderMap.GetScreenPosition(building.Position).Y + info.OffsetY + info.Height;
         }
 
         // TODO: Sometimes the serf disappear while walking on a path. Seems to be if the serf approaches a spot where a serf already exists.
@@ -446,57 +459,25 @@ namespace Freeserf.Render
                 headSprite.Visible = false;
             }
 
-            // adjust baseline when in a building
-            if (map.GetObject(pos) > Map.Object.Flag && map.GetObject(pos) < Map.Object.Castle)
+            // adjust baseline when in or at a building
+            var building = serf.GetBuilding();
+
+            if (building != null)
             {
-                int baseLine = GetBuildingBaseLine(pos, game, dataSource, map);
+                int baseLine = GetBuildingBaseLine(building, dataSource, map);
 
                 if (baseLine != -1)
                 {
                     int bodyBaseLine = sprite.Y + sprite.Height;
 
                     // body baseline is now 1 greater than the building baseline
-                    sprite.BaseLineOffset = 1 + baseLine - bodyBaseLine;
+                    sprite.BaseLineOffset = System.Math.Max(0, 1 + baseLine - bodyBaseLine);
 
                     if (headSprite != null)
                     {
                         int headBaseLine = headSprite.Y + headSprite.Height;
 
                         headSprite.BaseLineOffset = sprite.BaseLineOffset + (bodyBaseLine - headBaseLine); // so we have the same baseline as the body
-                    }
-                }
-            }
-            // adjust baseline when leaving/entering a building
-            else if (serf.SerfState == Serf.State.LeavingBuilding ||
-                     serf.SerfState == Serf.State.EnteringBuilding || 
-                     serf.SerfState == Serf.State.MoveResourceOut ||
-                     serf.SerfState == Serf.State.DropResourceOut ||
-                     serf.SerfState == Serf.State.ReadyToLeave ||
-                     serf.SerfState == Serf.State.ReadyToLeaveInventory ||
-                     serf.SerfState == Serf.State.ReadyToEnter ||
-                     serf.SerfState == Serf.State.KnightOccupyEnemyBuilding ||
-                     serf.SerfState == Serf.State.KnightLeaveForWalkToFight ||
-                     serf.SerfState == Serf.State.KnightLeaveForFight)
-            {
-                var building = game.GetBuildingAtPos(map.MoveUpLeft(pos));
-
-                if (building != null)
-                {
-                    int baseLine = GetBuildingBaseLine(pos, game, dataSource, map);
-
-                    if (baseLine != -1)
-                    {
-                        int bodyBaseLine = sprite.Y + sprite.Height;
-
-                        // body baseline is now 1 greater than the building baseline
-                        sprite.BaseLineOffset = 1 + baseLine - bodyBaseLine;
-
-                        if (headSprite != null)
-                        {
-                            int headBaseLine = headSprite.Y + headSprite.Height;
-
-                            headSprite.BaseLineOffset = sprite.BaseLineOffset + (bodyBaseLine - headBaseLine); // so we have the same baseline as the body
-                        }
                     }
                 }
             }
