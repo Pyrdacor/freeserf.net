@@ -36,8 +36,6 @@ AI:
 
 Serf rendering:
 
-- In rare cases there is an idle serf on top of the castle. Is he not deleted properly?
-	- Also sometimes knights are shortly on top of a military building after entering
 - I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
 	- As other serfs can walk there too it must be an error with the animation index
 	- Saw it again. Two with a boat and one normal transporter one a very small road (where only one transporter could be). They even block each other. It's a bug.

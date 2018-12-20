@@ -21,7 +21,6 @@
 
 namespace Freeserf.Render
 {
-    // TODO: material at spot
     internal class RenderFlag : RenderObject
     {
         Flag flag = null;
@@ -93,6 +92,20 @@ namespace Freeserf.Render
             // max sprite size is 16x19 pixels but we use 16x20 for better base line matching
             sprite = spriteFactory.Create(16, 20, 0, 0, false, false);
             shadowSprite = spriteFactory.Create(16, 20, 0, 0, false, false);
+        }
+
+        public override void Delete()
+        {
+            base.Delete();
+
+            for (int i = 0; i < 8; ++i)
+            {
+                if (resources[i] != null)
+                {
+                    resources[i].Delete();
+                    resources[i] = null;
+                }
+            }
         }
 
         public void Update(uint tick, RenderMap map, uint pos)
