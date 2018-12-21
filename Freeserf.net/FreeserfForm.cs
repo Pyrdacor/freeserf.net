@@ -208,12 +208,12 @@ namespace Freeserf
 
             pressedMouseButtons = e.Button;
 
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
                 if (lastDragX == int.MinValue)
                     return;
 
-                gameView.NotifyDrag(0, 0, lastDragX - e.X, lastDragY - e.Y, Event.Button.Right);
+                gameView.NotifyDrag(e.X, e.Y, lastDragX - e.X, lastDragY - e.Y, ConvertMouseButton(e.Button));
                 lastDragX = e.X;
                 lastDragY = e.Y;
             }
@@ -236,7 +236,7 @@ namespace Freeserf
             lastX = pos.X;
             lastY = pos.Y;*/
 
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
                 lastDragX = e.X;
                 lastDragY = e.Y;

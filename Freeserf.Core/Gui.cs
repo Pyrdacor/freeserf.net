@@ -183,7 +183,7 @@ namespace Freeserf
             return false;
         }
 
-        protected virtual bool HandleDrag(int dx, int dy)
+        protected virtual bool HandleDrag(int x, int y, int dx, int dy, Event.Button button)
         {
             return false;
         }
@@ -345,7 +345,7 @@ namespace Freeserf
                         result = HandleClickLeft(eventX, eventY);
                     break;
                 case Event.Type.Drag:
-                    result = HandleDrag(e.Dx, e.Dy);
+                    result = HandleDrag(e.X, e.Y, e.Dx, e.Dy, e.Button);
                     break;
                 case Event.Type.DoubleClick:
                 case Event.Type.SpecialClick:

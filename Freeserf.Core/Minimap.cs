@@ -223,6 +223,24 @@ namespace Freeserf
             return Colors[typeOff + hOff];
         }
 
+        protected override bool HandleDrag(int x, int y, int dx, int dy, Event.Button button)
+        {
+            if (!interf.Ingame)
+                return false;
+
+            if (button != Event.Button.Left)
+                return true;
+
+            // Note: The viewport is disabled during this stage.
+            // But we can safely enable it here.
+
+            interf.Viewport.Enabled = true;
+            interf.Viewport.HandleEvent(new EventArgs(Type.Drag, x, y, dx * 20, dy * 20, Event.Button.Right));
+            interf.Viewport.Enabled = false;
+
+            return true;
+        }
+
         protected override bool HandleClickLeft(int x, int y)
         {
             x -= TotalX;
@@ -253,7 +271,6 @@ namespace Freeserf
             var pos = map.RenderMap.GetMapPosFromMapCoordinates(mapPosition.X, mapPosition.Y);
 
             interf.GotoMapPos(pos);
-            UpdateMinimap();
 
             return true;
         }

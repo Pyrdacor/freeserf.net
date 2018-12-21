@@ -487,6 +487,12 @@ namespace Freeserf
             }
         }
 
+        public void UpdateMinimap()
+        {
+            if (PopupBox != null && PopupBox.MiniMap != null && PopupBox.Displayed && PopupBox.MiniMap.Displayed)
+                PopupBox.MiniMap.UpdateMinimap();
+        }
+
         public void TogglePossibleBuilds()
         {
             if (Ingame && Viewport != null)

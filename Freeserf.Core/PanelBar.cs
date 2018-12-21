@@ -169,7 +169,11 @@ namespace Freeserf
 
         private void TogglePossibleBuilds(object sender, Button.ClickEventArgs args)
         {
-            interf.TogglePossibleBuilds();
+            if (interf.AccessRights == Viewer.Access.Player)
+                interf.TogglePossibleBuilds();
+            else
+                interf.ResetPossibleBuilds();
+
             interf.ClosePopup();
         }
 
@@ -483,7 +487,7 @@ namespace Freeserf
 
                             if (minimap != null)
                             {
-                                minimap.UpdateMinimap();
+                                minimap.UpdateMinimap(true);
                             }
                         }
                     }

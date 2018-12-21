@@ -5,6 +5,8 @@ using Freeserf.Event;
 
 namespace Freeserf
 {
+    // TODO: spectators should be able to select the player they are watching
+
     public abstract class Viewer : GameManager.IHandler
     {
         public static Viewer CreateLocalPlayer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)

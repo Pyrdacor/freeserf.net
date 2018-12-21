@@ -160,9 +160,9 @@ namespace Freeserf
             return true;
         }
 
-        protected override bool HandleDrag(int dx, int dy)
+        protected override bool HandleDrag(int x, int y, int dx, int dy, Event.Button button)
         {
-            if (!focused)
+            if (!focused || button != Event.Button.Right)
             {
                 return false;
             }

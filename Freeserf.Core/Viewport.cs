@@ -124,6 +124,8 @@ namespace Freeserf
                 map.RenderMap.CenterMapPos(pos);
             else
                 map.RenderMap.ScrollToMapPos(pos);
+
+            interf.UpdateMinimap();
         }
 
         public void RedrawMapPos(MapPos pos)
@@ -289,7 +291,7 @@ namespace Freeserf
                         result = HandleClickLeft(e.X, e.Y);
                     break;
                 case Event.Type.Drag:
-                    result = HandleDrag(e.Dx, e.Dy);
+                    result = HandleDrag(e.X, e.Y, e.Dx, e.Dy, e.Button);
                     break;
                 case Event.Type.DoubleClick:
                 case Event.Type.SpecialClick:
@@ -612,9 +614,12 @@ namespace Freeserf
             return false;
         }
 
-        protected override bool HandleDrag(int dx, int dy)
+        protected override bool HandleDrag(int x, int y, int dx, int dy, Event.Button button)
         {
             if (!interf.Ingame)
+                return false;
+
+            if (button != Event.Button.Right)
                 return false;
 
             totalDragX += dx;
@@ -624,6 +629,8 @@ namespace Freeserf
             int scrollY = totalDragY / Render.RenderMap.TILE_HEIGHT;
 
             map.Scroll(scrollX, scrollY);
+
+            interf.UpdateMinimap();
 
             totalDragX -= scrollX * Render.RenderMap.TILE_WIDTH;
             totalDragY -= scrollY * Render.RenderMap.TILE_HEIGHT;

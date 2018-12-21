@@ -27,6 +27,7 @@ using System.Linq;
 
 namespace Freeserf
 {
+    using Freeserf.Event;
     using ResourceMap = Dictionary<Resource.Type, int>;
 
     // TODO: If stats should reflect the current state we have
@@ -483,7 +484,7 @@ namespace Freeserf
             }
         }
 
-        void PopupBox_SlideBarFillChanged(object sender, EventArgs args)
+        void PopupBox_SlideBarFillChanged(object sender, System.EventArgs args)
         {
             int index = -1;
 
