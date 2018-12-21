@@ -332,7 +332,7 @@ namespace Freeserf
 
             SetSize(16 + 320 + 16, 200);
 
-            customMission = new GameInfo(new Random());
+            customMission = new GameInfo(new Random(), false);
             mission = customMission;
 
             randomInput.SetRandom(customMission.RandomBase);
@@ -576,6 +576,11 @@ namespace Freeserf
                                 // in GameInitBox the viewer is already a local player
                                 break;
                             case GameType.AIvsAI:
+                                // Note: Closing the current game first is important.
+                                // Otherwise the game change will close the current game later and
+                                // therefore change the spectator viewer back to player viewer
+                                // as this is the default viewer after game closing.
+                                GameManager.Instance.CloseGame();
                                 interf.Viewer.ChangeTo(Viewer.Type.LocalSpectator);
                                 break;
                             case GameType.Multiplayer:
@@ -608,6 +613,7 @@ namespace Freeserf
                             }
                         case GameType.Custom:
                             {
+                                customMission = new GameInfo(new Random(), false);
                                 mission = customMission;
                                 randomInput.Displayed = true;
                                 randomInput.SetRandom(customMission.RandomBase);
@@ -638,6 +644,7 @@ namespace Freeserf
                             {
                                 // TODO: first player should be also an AI
 
+                                customMission = new GameInfo(new Random(), true);
                                 mission = customMission;
                                 randomInput.Displayed = true;
                                 randomInput.SetRandom(customMission.RandomBase);
@@ -698,7 +705,7 @@ namespace Freeserf
 
                         if (str.Length == 16)
                         {
-                            customMission.SetRandomBase(randomInput.GetRandom());
+                            customMission.SetRandomBase(randomInput.GetRandom(), gameType == GameType.AIvsAI);
                             mission = customMission;
                             SetRedraw();
                         }

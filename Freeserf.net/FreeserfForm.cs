@@ -50,7 +50,6 @@ namespace Freeserf
 
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
-            gameView.Initialize();
             gameView.Closed += GameView_Closed;
 
             RenderControl.MouseWheel += RenderControl_MouseWheel;
@@ -151,6 +150,9 @@ namespace Freeserf
             if (this.fullscreen == fullscreen)
                 return false;
 
+            if (gameView == null)
+                return false;
+
             gameView.Fullscreen = fullscreen;
 
             return gameView.Fullscreen == fullscreen; // dit it work?
@@ -199,6 +201,9 @@ namespace Freeserf
 
         void RenderControl_MouseMove(object sender, MouseEventArgs e)
         {
+            if (gameView == null)
+                return;
+
             gameView.SetCursorPosition(e.X, e.Y);
 
             pressedMouseButtons = e.Button;

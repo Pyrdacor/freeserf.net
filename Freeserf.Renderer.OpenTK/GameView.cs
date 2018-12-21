@@ -156,15 +156,6 @@ namespace Freeserf.Renderer.OpenTK
             gui = new Gui(this);
         }
 
-        public void Initialize()
-        {
-            // the following code will generate the mission 30 map that is displayed in the background behind the game init box at startup
-            var random = new Random();
-            var gameInfo = new GameInfo(random);
-
-            GameManager.Instance.StartGame(GameInfo.GetIntroMission(), this);
-        }
-
         public void Close()
         {
             var game = GameManager.Instance.GetCurrentGame();

@@ -72,6 +72,8 @@ namespace Freeserf
             RestrictedRemoteSpectator
         }
 
+        protected bool initialized = false;
+
         public abstract Access AccessRights { get; }
         public abstract bool Ingame { get; }
         public Render.IRenderView RenderView { get; }
@@ -103,12 +105,22 @@ namespace Freeserf
 
         public virtual void Init()
         {
+            if (initialized)
+                return;
+
             GameManager.Instance.AddHandler(this);
+
+            initialized = true;
         }
 
         public virtual void Destroy()
         {
+            if (!initialized)
+                return;
+
             GameManager.Instance.DeleteHandler(this);
+
+            initialized = false;
         }
     }
 
@@ -133,7 +145,11 @@ namespace Freeserf
             : base(renderView, gui, type)
         {
             if (previousViewer == null)
+            {
+                Init();
                 MainInterface = new Interface(renderView, this);
+                MainInterface.OpenGameInit();
+            }
             else
             {
                 MainInterface = previousViewer.MainInterface;

@@ -405,11 +405,11 @@ namespace Freeserf
             }
         }
 
-        public GameInfo(Random randomBase)
+        public GameInfo(Random randomBase, bool aiPlayersOnly)
         {
             MapSize = 3;
             name = randomBase.ToString();
-            SetRandomBase(randomBase);
+            SetRandomBase(randomBase, aiPlayersOnly);
         }
 
         public PlayerInfo GetPlayer(uint player)
@@ -417,7 +417,7 @@ namespace Freeserf
             return players[(int)player];
         }
 
-        public void SetRandomBase(Random randomBase)
+        public void SetRandomBase(Random randomBase, bool aiPlayersOnly)
         {
             Random random = randomBase;
             RandomBase = randomBase;
@@ -426,8 +426,12 @@ namespace Freeserf
 
             // Player 0
             players.Add(new PlayerInfo(random));
-            players[0].SetCharacter(12);
-            players[0].Intelligence = 40;
+
+            if (!aiPlayersOnly)
+            {
+                players[0].SetCharacter(12);
+                players[0].Intelligence = 40;
+            }
 
             // Player 1
             players.Add(new PlayerInfo(random));

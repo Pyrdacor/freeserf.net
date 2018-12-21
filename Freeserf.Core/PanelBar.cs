@@ -408,6 +408,12 @@ namespace Freeserf
                 }
             }
 
+            if (interf.AccessRights != Viewer.Access.Player)
+            {
+                SetButton(0, ButtonId.BuildInactive);
+                SetButton(1, ButtonId.DestroyInactive);
+            }
+
             SetRedraw();
         }
 
@@ -609,7 +615,7 @@ namespace Freeserf
                     break;
                 case ButtonId.DestroyRoad:
                     {
-                        bool r = interf.GetPlayer().Game.CanDemolishRoad(interf.GetMapCursorPos(), interf.GetPlayer());
+                        bool r = interf.GetPlayer().Game.DemolishRoad(interf.GetMapCursorPos(), interf.GetPlayer());
 
                         if (!r)
                         {
@@ -640,6 +646,12 @@ namespace Freeserf
                         interf.OpenPopup(PopupBox.Type.GroundAnalysis);
                     }
                     break;
+            }
+
+            if (interf.AccessRights != Viewer.Access.Player)
+            {
+                SetButton(0, ButtonId.BuildInactive);
+                SetButton(1, ButtonId.DestroyInactive);
             }
         }
 

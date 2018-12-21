@@ -504,6 +504,13 @@ namespace Freeserf
 
         void HandleSlideBarClick(int index)
         {
+            if (interf.AccessRights != Viewer.Access.Player)
+            {
+                PlaySound(Audio.TypeSfx.NotAccepted);
+                SetRedraw(); // redraw the slidebar
+                return;
+            }
+
             var player = interf.GetPlayer();
             uint realAmount = (uint)slideBars[index].Fill * SlideBarFactor;
 
@@ -605,6 +612,65 @@ namespace Freeserf
 
         void SetBox(Type box)
         {
+            if (interf.AccessRights == Viewer.Access.RestrictedSpectator)
+            {
+                switch (box)
+                {
+                    case Type.CastleResources:
+                    case Type.CastleSerfs:
+                    case Type.Demolish:
+                    case Type.Adv1Bld:
+                    case Type.Adv2Bld:
+                    case Type.BasicBld:
+                    case Type.BasicBldFlip:
+                    case Type.MineBuilding:
+                    case Type.GroundAnalysis:
+                    case Type.ResourceDirections:
+                    case Type.StartAttack:
+                        interf.ClosePopup();
+                        return;
+                    case Type.CoalAndWheatDistribution:
+                    case Type.FoodDistribution:
+                    case Type.PlanksAndSteelDistribution:
+                    case Type.InventoryPriorities:
+                    case Type.IdleAndPotentialSettlerStats:
+                    case Type.KnightLevel:
+                    case Type.KnightSettings:
+                    case Type.ResourceStatistics:
+                    case Type.ResourceStats:
+                    case Type.SettlerStats:
+                    case Type.ToolmakerPriorities:
+                    case Type.TransportPriorities:
+                    case Type.BuildingStats1:
+                    case Type.BuildingStats2:
+                    case Type.BuildingStats3:
+                    case Type.BuildingStats4:
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        return;
+                    case Type.BuildingStock:
+                    case Type.MineOutput:
+                    case Type.Defenders:
+                        // TODO: not sure about these
+                        break;
+                }
+            }
+            else if (interf.AccessRights == Viewer.Access.Spectator)
+            {
+                switch (box)
+                {
+                    case Type.Demolish:
+                    case Type.Adv1Bld:
+                    case Type.Adv2Bld:
+                    case Type.BasicBld:
+                    case Type.BasicBldFlip:
+                    case Type.MineBuilding:
+                    case Type.GroundAnalysis:
+                    case Type.StartAttack:
+                        interf.ClosePopup();
+                        return;
+                }
+            }
+
             Box = box;
 
             MiniMap.Displayed = box == Type.Map || box == Type.ResourceStatistics || box == Type.PlayerStatistics;
@@ -2779,7 +2845,10 @@ namespace Freeserf
             /* if (r == 0) draw_popup_icon(7, 51, 0x135); */
 
             SetText(8, 13, "Transport Info:");
-            SetButton(24, 105, 0x1cu, Action.SendGeologist); // send geologist
+
+            if (interf.AccessRights == Viewer.Access.Player)
+                SetButton(24, 105, 0x1cu, Action.SendGeologist); // send geologist
+
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
 
             // draw resources
@@ -2940,7 +3009,7 @@ namespace Freeserf
                     if (serfType < Serf.Type.Knight0 || serfType > Serf.Type.Knight4)
                         throw new ExceptionFreeserf("Not a knight among the castle defenders.");
 
-                    ++knights[(int)(serfType - Serf.Type.Knight0)];
+                    ++knights[serfType - Serf.Type.Knight0];
 
                     serfIndex = serf.GetNextKnight();
                 }
@@ -3207,6 +3276,7 @@ namespace Freeserf
             SetRedraw();
 
             var player = interf.GetPlayer();
+            bool spectator = interf.AccessRights != Viewer.Access.Player;
 
             // TODO
             switch (action)
@@ -3221,12 +3291,26 @@ namespace Freeserf
                     SetBox(Type.StatMenu);
                     break;
                 case Action.BuildFlag:
-                    interf.BuildFlag();
-                    interf.ClosePopup();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        interf.BuildFlag();
+                        interf.ClosePopup();
+                    }
                     break;
                 case Action.BuildBuilding:
-                    interf.BuildBuilding((Building.Type)tag);
-                    interf.ClosePopup();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        interf.BuildBuilding((Building.Type)tag);
+                        interf.ClosePopup();
+                    }
                     break;
                 case Action.ShowFoodProductionCycle:
                     SetBox(Type.FoodProductionCycle);
@@ -3277,36 +3361,99 @@ namespace Freeserf
                     SetBox(Type.QuitConfirm);
                     break;
                 case Action.DefaultFoodDistribution:
-                    player.ResetFoodPriority();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ResetFoodPriority();
+                    }
                     break;
                 case Action.DefaultPlanksAndSteelDistribution:
-                    player.ResetPlanksPriority();
-                    player.ResetSteelPriority();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ResetPlanksPriority();
+                        player.ResetSteelPriority();
+                    }
                     break;
                 case Action.DefaultCoalAndWheatDistribution:
-                    player.ResetCoalPriority();
-                    player.ResetWheatPriority();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ResetCoalPriority();
+                        player.ResetWheatPriority();
+                    }
                     break;
                 case Action.DefaultToolmakerPriorities:
-                    player.ResetToolPriority();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ResetToolPriority();
+                    }
                     break;
                 case Action.DefaultTransportPriorities:
-                    if (Box == Type.TransportPriorities)
-                        player.ResetFlagPriority();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
                     else
-                        player.ResetInventoryPriority();
+                    {
+                        if (Box == Type.TransportPriorities)
+                            player.ResetFlagPriority();
+                        else
+                            player.ResetInventoryPriority();
+                    }
                     break;
                 case Action.TransportPriorityToTop:
-                    MoveTransportItem(true, true);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        MoveTransportItem(true, true);
+                    }
                     break;
                 case Action.TransportPriorityToBottom:
-                    MoveTransportItem(false, true);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        MoveTransportItem(false, true);
+                    }
                     break;
                 case Action.TransportPriorityUp:
-                    MoveTransportItem(true, false);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        MoveTransportItem(true, false);
+                    }
                     break;
                 case Action.TransportPriorityDown:
-                    MoveTransportItem(false, false);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        MoveTransportItem(false, false);
+                    }
                     break;
                 case Action.SetTransportItem1:
                 case Action.SetTransportItem2:
@@ -3335,8 +3482,15 @@ namespace Freeserf
                 case Action.SetTransportItem25:
                 case Action.SetTransportItem26:
                     {
-                        int item = action - Action.SetTransportItem1;
-                        ActivateTransportItem(26 - item);
+                        if (spectator)
+                        {
+                            PlaySound(Audio.TypeSfx.NotAccepted);
+                        }
+                        else
+                        {
+                            int item = action - Action.SetTransportItem1;
+                            ActivateTransportItem(26 - item);
+                        }
                     }
                     break;
                 case Action.BuildingStatsFlip:
@@ -3399,20 +3553,27 @@ namespace Freeserf
                     SetBox(Type.KnightLevel);
                     break;
                 case Action.TrainKnights:
-                    // the button/icon is 32x32
-                    if (x < 16)
+                    if (spectator)
                     {
-                        if (y < 16)
-                            PromoteKnights(1);
-                        else
-                            PromoteKnights(20);
+                        PlaySound(Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
-                        if (y < 16)
-                            PromoteKnights(5);
+                        // the button/icon is 32x32
+                        if (x < 16)
+                        {
+                            if (y < 16)
+                                PromoteKnights(1);
+                            else
+                                PromoteKnights(20);
+                        }
                         else
-                            PromoteKnights(100);
+                        {
+                            if (y < 16)
+                                PromoteKnights(5);
+                            else
+                                PromoteKnights(100);
+                        }
                     }
                     break;
                 case Action.SetCombatMode:
@@ -3426,76 +3587,223 @@ namespace Freeserf
                     }
                     break;
                 case Action.SetCombatModeWeak:
-                    if (player.SendStrongest())
+                    if (spectator)
                     {
-                        player.DropSendStrongest();
-                        PlaySound(Audio.TypeSfx.Accepted);
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        if (player.SendStrongest())
+                        {
+                            player.DropSendStrongest();
+                            PlaySound(Audio.TypeSfx.Accepted);
+                        }
                     }
                     break;
                 case Action.SetCombatModeStrong:
-                    if (!player.SendStrongest())
+                    if (spectator)
                     {
-                        player.SetSendStrongest();
-                        PlaySound(Audio.TypeSfx.Accepted);
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        if (!player.SendStrongest())
+                        {
+                            player.SetSendStrongest();
+                            PlaySound(Audio.TypeSfx.Accepted);
+                        }
                     }
                     break;
                 case Action.CycleKnights:
-                    player.CycleKnights();
-                    PlaySound(Audio.TypeSfx.Accepted);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.CycleKnights();
+                        PlaySound(Audio.TypeSfx.Accepted);
+                    }
                     break;
                 case Action.DecreaseCastleKnights:
-                    player.DecreaseCastleKnightsWanted();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.DecreaseCastleKnightsWanted();
+                    }
                     break;
                 case Action.IncreaseCastleKnights:
-                    player.IncreaseCastleKnightsWanted();
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.IncreaseCastleKnightsWanted();
+                    }
                     break;
                 case Action.KnightLevelClosestMinDec:
-                    player.ChangeKnightOccupation(3, false, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(3, false, -1);
+                    }
                     break;
                 case Action.KnightLevelClosestMinInc:
-                    player.ChangeKnightOccupation(3, false, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(3, false, 1);
+                    }
                     break;
                 case Action.KnightLevelClosestMaxDec:
-                    player.ChangeKnightOccupation(3, true, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(3, true, -1);
+                    }
                     break;
                 case Action.KnightLevelClosestMaxInc:
-                    player.ChangeKnightOccupation(3, true, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(3, true, 1);
+                    }
                     break;
                 case Action.KnightLevelCloseMinDec:
-                    player.ChangeKnightOccupation(2, false, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(2, false, -1);
+                    }
                     break;
                 case Action.KnightLevelCloseMinInc:
-                    player.ChangeKnightOccupation(2, false, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(2, false, 1);
+                    }
                     break;
                 case Action.KnightLevelCloseMaxDec:
-                    player.ChangeKnightOccupation(2, true, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(2, true, -1);
+                    }
                     break;
                 case Action.KnightLevelCloseMaxInc:
-                    player.ChangeKnightOccupation(2, true, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(2, true, 1);
+                    }
                     break;
                 case Action.KnightLevelFarMinDec:
-                    player.ChangeKnightOccupation(1, false, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(1, false, -1);
+                    }
                     break;
                 case Action.KnightLevelFarMinInc:
-                    player.ChangeKnightOccupation(1, false, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(1, false, 1);
+                    }
                     break;
                 case Action.KnightLevelFarMaxDec:
-                    player.ChangeKnightOccupation(1, true, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(1, true, -1);
+                    }
                     break;
                 case Action.KnightLevelFarMaxInc:
-                    player.ChangeKnightOccupation(1, true, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(1, true, 1);
+                    }
                     break;
                 case Action.KnightLevelFarthestMinDec:
-                    player.ChangeKnightOccupation(0, false, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(0, false, -1);
+                    }
                     break;
                 case Action.KnightLevelFarthestMinInc:
-                    player.ChangeKnightOccupation(0, false, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(0, false, 1);
+                    }
                     break;
                 case Action.KnightLevelFarthestMaxDec:
-                    player.ChangeKnightOccupation(0, true, -1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(0, true, -1);
+                    }
                     break;
                 case Action.KnightLevelFarthestMaxInc:
-                    player.ChangeKnightOccupation(0, true, 1);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        player.ChangeKnightOccupation(0, true, 1);
+                    }
                     break;
                 case Action.ShowCastleResources:
                     SetBox(Type.CastleResources);
@@ -3512,7 +3820,14 @@ namespace Freeserf
                 case Action.SerfModeIn:
                 case Action.SerfModeStop:
                 case Action.SerfModeOut:
-                    SetInventoryMode(action);
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        SetInventoryMode(action);
+                    }
                     break;
                 case Action.MinimapMode:
                     if (MiniMap.GetOwnershipMode() == MinimapGame.OwnershipMode.Last)
@@ -3533,6 +3848,11 @@ namespace Freeserf
                     MiniMap.SetScale(MiniMap.GetScale() == 1 ? 2 : 1);
                     break;
                 case Action.SendGeologist:
+                    if (spectator)
+                    {
+                        PlaySound(Audio.TypeSfx.NotAccepted);
+                    }
+                    else
                     {
                         var pos = interf.GetMapCursorPos();
                         Flag flag = interf.Game.GetFlagAtPos(pos);
@@ -3549,7 +3869,7 @@ namespace Freeserf
                     }
                     break;
                 case Action.StartAttack:
-                    if (player.knightsAttacking > 0)
+                    if (!spectator && player.knightsAttacking > 0)
                     {
                         if (player.attackingBuildingCount > 0)
                         {
@@ -3714,6 +4034,12 @@ namespace Freeserf
 
         void HandleBuildingClick(object tag, int x, int y)
 		{
+            if (interf.AccessRights != Viewer.Access.Player)
+            {
+                PlaySound(Audio.TypeSfx.NotAccepted);
+                return;
+            }
+
             if (tag is Building.Type)
             {
                 HandleAction(Action.BuildBuilding, x, y, tag);
@@ -3927,7 +4253,9 @@ namespace Freeserf
 
                     if (relativeX >= 16 && relativeX < 16 + 24) // Yes
                     {
-                        if (GameManager.Instance.NeedSave())
+                        // TODO: who saves in multiplayer games? The server?
+                        // TODO: What happens if the server leaves the game?
+                        if (GameManager.Instance.NeedSave() && interf.AccessRights == Viewer.Access.Player)
                             SetBox(Type.NoSaveQuitConfirm);
                         else
                             HandleAction(Action.QuitConfirm, x, y);

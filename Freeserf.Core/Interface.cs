@@ -155,8 +155,6 @@ namespace Freeserf
             SetSize(640, 480); // original size
 
             Viewport = null;
-
-            OpenGameInit();
         }
 
         internal void DrawCursor(int x, int y)
@@ -317,11 +315,7 @@ namespace Freeserf
 
             Layout();
             PopupBox.Show(box);
-
-            if (PanelBar != null)
-            {
-                PanelBar.Update();
-            }
+            PanelBar?.Update();
         }
 
         /* Close the current popup. */
@@ -346,6 +340,9 @@ namespace Freeserf
         /* Open box for starting a new game */
         public void OpenGameInit()
         {
+            // the following code will start the intro mission that is played in the background while the GameInitBox is active
+            GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView);
+
             ClosePopup();
 
             RenderView.ResetZoom();
@@ -596,7 +593,7 @@ namespace Freeserf
             buildingRoad.Start(mapCursorPos);
             UpdateMapCursorPos(mapCursorPos);
 
-            PanelBar.Update();
+            PanelBar?.Update();
         }
 
         /* End road construction mode for player interface. */
@@ -613,7 +610,7 @@ namespace Freeserf
             buildingRoad.Invalidate();
             UpdateMapCursorPos(mapCursorPos);
 
-            PanelBar.Update();
+            PanelBar?.Update();
         }
 
         public void BuildRoadReset()
@@ -739,6 +736,7 @@ namespace Freeserf
             {
                 PlaySound(Audio.TypeSfx.Click);
                 Game.DemolishFlag(mapCursorPos, player);
+                DetermineMapCursorType();
             }
             else if (mapCursorType == CursorType.Building)
             {
@@ -754,17 +752,22 @@ namespace Freeserf
 
                 PlaySound(Audio.TypeSfx.Ahhh);
                 Game.DemolishBuilding(mapCursorPos, player);
+                DetermineMapCursorType();
             }
             else
             {
                 PlaySound(Audio.TypeSfx.NotAccepted);
-                UpdateInterface();
             }
+
+            UpdateInterface();
         }
 
         /* Build new flag. */
         public void BuildFlag()
         {
+            if (AccessRights != Viewer.Access.Player)
+                return;
+
             if (!Game.BuildFlag(mapCursorPos, player))
             {
                 PlaySound(Audio.TypeSfx.NotAccepted);
@@ -777,6 +780,9 @@ namespace Freeserf
         /* Build a new building. */
         public void BuildBuilding(Building.Type type)
         {
+            if (AccessRights != Viewer.Access.Player)
+                return;
+
             if (!Game.BuildBuilding(mapCursorPos, type, player))
             {
                 PlaySound(Audio.TypeSfx.NotAccepted);
@@ -794,6 +800,9 @@ namespace Freeserf
         /* Build castle. */
         public void BuildCastle()
         {
+            if (AccessRights != Viewer.Access.Player)
+                return;
+
             if (!Game.BuildCastle(mapCursorPos, player))
             {
                 PlaySound(Audio.TypeSfx.NotAccepted);
@@ -806,6 +815,9 @@ namespace Freeserf
 
         public void BuildRoad()
         {
+            if (AccessRights != Viewer.Access.Player)
+                return;
+
             if (!Game.BuildRoad(buildingRoad, player))
             {
                 PlaySound(Audio.TypeSfx.NotAccepted);
@@ -943,7 +955,7 @@ namespace Freeserf
         {
             Map map = Game.Map;
 
-            if (player == null)
+            if (player == null || AccessRights != Viewer.Access.Player)
             {
                 buildPossibility = BuildPossibility.None;
                 cursorType = CursorType.Clear;
@@ -1194,10 +1206,7 @@ namespace Freeserf
                 }
             }
 
-            if (PanelBar != null)
-            {
-                PanelBar.Update();
-            }
+            PanelBar?.Update();
         }
 
         static void UpdateMapHeight(MapPos pos, object data)

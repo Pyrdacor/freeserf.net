@@ -72,9 +72,9 @@ namespace Freeserf
             return currentGame;
         }
 
-        public bool StartRandomGame(Render.IRenderView renderView)
+        public bool StartRandomGame(Render.IRenderView renderView, bool aiPlayersOnly)
         {
-            return StartGame(new GameInfo(new Random()), renderView);
+            return StartGame(new GameInfo(new Random(), aiPlayersOnly), renderView);
         }
 
         public bool StartGame(GameInfo gameInfo, Render.IRenderView renderView)
@@ -91,6 +91,16 @@ namespace Freeserf
             SetCurrentGame(newGame);
 
             return true;
+        }
+
+        public void CloseGame()
+        {
+            if (currentGame == null)
+                return;
+
+            lastSaveTime = DateTime.MinValue;
+            currentGameSaveFile = null;
+            SetCurrentGame(null);
         }
 
         public bool LoadGame(string path, Render.IRenderView renderView)

@@ -82,3 +82,4 @@ Exceptions:
 - When a knight wins a fight there is often a bad torso sprite index
 - OtherEndPoint of flag is null
 - Something with road placement of AI (pathfinder)
+- If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.")

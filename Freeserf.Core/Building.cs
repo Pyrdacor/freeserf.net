@@ -572,9 +572,10 @@ namespace Freeserf
         {
             holder = true;
 
-            if (serfRequested)
+            if (serfRequested && (serf.GetSerfType() >= Serf.Type.Knight0 || serf.GetSerfType() <= Serf.Type.Knight4))
             {
-                firstKnight = serf.Index;
+                if (firstKnight == 0)
+                    firstKnight = serf.Index;
             }
 
             serfRequested = false;

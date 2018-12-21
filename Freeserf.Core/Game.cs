@@ -3589,8 +3589,14 @@ namespace Freeserf
 
             long index = Render.RenderRoadSegment.CreateIndex(pos, dir);
 
-            renderRoadSegments[index].Delete();
-            renderRoadSegments.Remove(index);
+            // TODO: the following code crashed from time to time without the contains key check
+            // TODO: which case could lead to this? maybe look further into it as it should not happen
+            // TODO: even without the check.
+            if (renderRoadSegments.ContainsKey(index))
+            {
+                renderRoadSegments[index].Delete();
+                renderRoadSegments.Remove(index);
+            }
         }
     }
 }
