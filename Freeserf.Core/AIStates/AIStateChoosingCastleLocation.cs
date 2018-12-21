@@ -15,6 +15,7 @@ namespace Freeserf.AIStates
         int buildingFocus = -1;
         int foodFocus = -1;
         int constructionMaterialFocus = -1;
+        int aggressivity = -1;
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
@@ -26,6 +27,7 @@ namespace Freeserf.AIStates
                 buildingFocus = ai.BuildingFocus;
                 foodFocus = ai.FoodFocus;
                 constructionMaterialFocus = ai.ConstructionMaterialFocus;
+                aggressivity = ai.Aggressivity;
             }
 
             for (int i = 0; i < scansPerUpdate; ++i)
@@ -143,8 +145,9 @@ namespace Freeserf.AIStates
 
             int numLargeSpots = 3;
             int numSmallSpots = 3;
+            bool keepDistanceToEnemies = aggressivity < 2;
 
-            // if we tried too ofter we will only assure that there is a bit of trees and stones
+            // if we tried too often we will only assure that there is a bit of trees and stones
             if (tries >= 40)
             {
                 if (treeCount < 5 || stoneCount < 2)
@@ -159,7 +162,12 @@ namespace Freeserf.AIStates
                 if (waterCount > 8) // too much water
                     return -1;
 
-                numLargeSpots = 2; // the toolmaker can be build when we expanded the land
+                numLargeSpots = 2; // the toolmaker can be build when we have expanded the land
+
+                if (tries >= 80 && player.GetInitialSupplies() > 4)
+                    numLargeSpots = 1; // we need to expand the territory to build the sawmill
+
+                keepDistanceToEnemies = false;
             }
             else
             {
@@ -203,6 +211,22 @@ namespace Freeserf.AIStates
 
                 if (goldCount < minGoldCount)
                     return -1;
+            }
+
+            if (keepDistanceToEnemies)
+            {
+                for (uint i = 0; i < game.GetPlayerCount(); ++i)
+                {
+                    var enemy = game.GetPlayer(i);
+
+                    if (enemy == player || !enemy.HasCastle())
+                        continue;
+
+                    int dist = Math.Min(Math.Abs(game.Map.DistX(pos, enemy.CastlePos)), Math.Abs(game.Map.DistY(pos, enemy.CastlePos)));
+
+                    if (dist < 30)
+                        return -1;
+                }
             }
 
             // check if we can build at least: lumberjack, stonecutter, sawmill, toolmaker and one hut
