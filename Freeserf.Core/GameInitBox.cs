@@ -390,7 +390,7 @@ namespace Freeserf
             AddChild(randomInput, 8 + 31 * 8, 12, true);
 
             fileList = new ListSavedFiles(interf);
-            fileList.SetSize(160, 160);
+            fileList.SetSize(310, 104);
             fileList.SetSelectionHandler((string item) =>
             {
                 Game game = new Game(interf.RenderView);
