@@ -491,6 +491,24 @@ namespace Freeserf
             players.Clear();
         }
 
+        public void RemovePlayer(uint index)
+        {
+            if (index >= players.Count)
+                return;
+
+            if (index == players.Count - 1)
+                players.RemoveAt((int)index);
+            else
+            {
+                for (int i = (int)index; i < players.Count - 1; ++i)
+                {
+                    players[i] = players[i + 1];
+                }
+
+                players.RemoveAt(players.Count - 1);
+            }
+        }
+
         public static GameInfo GetIntroMission()
         {
             return new GameInfo(IntroMission);

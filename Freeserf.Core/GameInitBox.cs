@@ -162,6 +162,8 @@ namespace Freeserf
             readonly Render.ILayerSprite[] borders = new Render.ILayerSprite[5];
             readonly Render.ILayerSprite playerImage = null;
             readonly Render.ILayerSprite playerValueBox = null;
+            readonly Render.ILayerSprite activationButton = null;
+            readonly Render.ILayerSprite copyValuesButton = null;
             readonly Render.IColoredRect suppliesValue = null;
             readonly Render.IColoredRect intelligenceValue = null;
             readonly Render.IColoredRect reproductionValue = null;
@@ -170,6 +172,35 @@ namespace Freeserf
             int y = -1;
             int playerFace = -1;
             int valueBaseLineY = 0;
+            bool showActivationButton = false;
+            bool showCopyValueButton = false;
+
+            public bool ShowActivationButton
+            {
+                get => showActivationButton;
+                set
+                {
+                    if (showActivationButton == value)
+                        return;
+
+                    showActivationButton = value;
+                    activationButton.Visible = visible && showActivationButton;
+                }
+            }
+
+            public bool ShowCopyValueButton
+            {
+                get => showCopyValueButton;
+                set
+                {
+                    if (showCopyValueButton == value)
+                        return;
+
+                    showCopyValueButton = value;
+                    copyValuesButton.Visible = visible && showCopyValueButton && playerFace != -1;
+                }
+            }
+
 
             public PlayerBox(Interface interf, byte baseDisplayLayer)
             {
@@ -194,6 +225,12 @@ namespace Freeserf
                 playerValueBox = CreateSprite(spriteFactory, 24, 64, type, 282u, (byte)(baseDisplayLayer + 2));
                 playerValueBox.Layer = layer;
 
+                activationButton = CreateSprite(spriteFactory, 24, 16, type, 287u, (byte)(baseDisplayLayer + 3));
+                activationButton.Layer = layer;
+
+                copyValuesButton = CreateSprite(spriteFactory, 8, 16, type, 308u, (byte)(baseDisplayLayer + 4));
+                copyValuesButton.Layer = layer;
+
                 // max values for the values seem to be 40
                 suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87), (byte)(baseDisplayLayer + 3));
                 intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b), (byte)(baseDisplayLayer + 3));
@@ -217,6 +254,8 @@ namespace Freeserf
 
                     playerImage.Visible = visible;
                     playerValueBox.Visible = visible;
+                    activationButton.Visible = visible && showActivationButton;
+                    copyValuesButton.Visible = visible && showCopyValueButton && playerFace != -1;
 
                     for (int i = 0; i < 5; ++i)
                         borders[i].Visible = visible;
@@ -243,6 +282,8 @@ namespace Freeserf
 
                 playerImage.DisplayLayer = (byte)(displayLayer + 2);
                 playerValueBox.DisplayLayer = (byte)(displayLayer + 2);
+                activationButton.DisplayLayer = (byte)(displayLayer + 3);
+                copyValuesButton.DisplayLayer = (byte)(displayLayer + 4);
 
                 suppliesValue.DisplayLayer = (byte)(displayLayer + 3);
                 intelligenceValue.DisplayLayer = (byte)(displayLayer + 3);
@@ -259,6 +300,8 @@ namespace Freeserf
 
                 SetChildPosition(baseX, baseY, x + 1, y + 8, playerImage);
                 SetChildPosition(baseX, baseY, x + 6, y + 8, playerValueBox);
+                SetChildPosition(baseX, baseY, x + 6, y + 8, activationButton);
+                SetChildPosition(baseX, baseY, x + 5, y + 8, copyValuesButton);
 
                 SetChildPosition(baseX, baseY, x, y, borders[0]);
                 SetChildPosition(baseX, baseY, x, y + 72, borders[1]);
@@ -290,9 +333,17 @@ namespace Freeserf
                 playerFace = face;
 
                 if (playerFace == -1)
+                {
                     playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 281u);
+                    activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 259u);
+                    copyValuesButton.Visible = false;
+                }
                 else
+                {
                     playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 268u + (uint)playerFace - 1u);
+                    activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 287u);
+                    copyValuesButton.Visible = visible && showCopyValueButton;
+                }
 
                 bool showValues = playerFace != -1 && visible;
 
@@ -491,6 +542,14 @@ namespace Freeserf
                     buttonUp.Displayed = false;
                     buttonDown.Displayed = false;
                     buttonMapSize.Displayed = true;
+
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        if (i > 0)
+                            playerBoxes[i].ShowActivationButton = true;
+
+                        playerBoxes[i].ShowCopyValueButton = true;
+                    }
                     break;
                 case GameType.Mission:
                     DrawBoxString(10, 2, textFieldHeader, "Start mission");
@@ -500,6 +559,12 @@ namespace Freeserf
                     buttonUp.Displayed = true;
                     buttonDown.Displayed = true;
                     buttonMapSize.Displayed = false;
+
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        playerBoxes[i].ShowActivationButton = false;
+                        playerBoxes[i].ShowCopyValueButton = false;
+                    }
                     break;
                 case GameType.Load:
                     DrawBoxString(10, 2, textFieldHeader, "Load game");
@@ -509,6 +574,12 @@ namespace Freeserf
                     buttonUp.Displayed = false;
                     buttonDown.Displayed = false;
                     buttonMapSize.Displayed = false;
+
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        playerBoxes[i].ShowActivationButton = false;
+                        playerBoxes[i].ShowCopyValueButton = false;
+                    }
                     break;
             }
 
@@ -743,6 +814,29 @@ namespace Freeserf
                 return false;
             }
 
+            if (cx >= 8 + 32 + 8 && cx < 8 + 32 + 8 + 24 && cy >= 8 && cy < 24) // click on activation button
+            {
+                // players can only be removed or added in custom games and AI vs AI
+                if (gameType == GameType.Custom || gameType == GameType.AIvsAI)
+                {
+                    if (playerIndex > 0) // at least one player must be active
+                    {
+                        if (playerIndex >= mission.PlayerCount) // add player
+                        {
+                            mission.AddPlayer(new PlayerInfo(new Random()));
+                            SetRedraw();
+                        }
+                        else // remove
+                        {
+                            mission.RemovePlayer(playerIndex);
+                            SetRedraw();
+                        }
+                    }
+                }
+
+                return true;
+            }
+
             if (playerIndex >= mission.PlayerCount)
             {
                 return true;
@@ -785,6 +879,27 @@ namespace Freeserf
 
                     } while (inUse);
                 }
+            }
+            else if (cx >= 8 + 32 && cx < 8 + 32 + 8 && cy >= 8 && cy < 24) // click on copy values button
+            {
+                // values can only copied in custom games and AI vs AI
+                if (gameType == GameType.Custom || gameType == GameType.AIvsAI)
+                {
+                    for (uint i = 0; i < mission.PlayerCount; ++i)
+                    {
+                        if (i != playerIndex)
+                        {
+                            var otherPlayer = mission.GetPlayer(i);
+                            otherPlayer.Supplies = player.Supplies;
+                            otherPlayer.Intelligence = player.Intelligence;
+                            otherPlayer.Reproduction = player.Reproduction;
+                        }
+                    }
+
+                    SetRedraw();
+                }
+
+                return true;
             }
             else // click on values
             {
