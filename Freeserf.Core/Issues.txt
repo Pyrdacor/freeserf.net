@@ -58,6 +58,12 @@ Test again because font char gaps should be smaller now!
     LostBuildings
 
 
+Missing stuff:
+
+- bird sounds
+- spectators must be able to view all players (building stocks etc) or must be able to select a player
+
+
 TODO:
 
 - Finish AIs

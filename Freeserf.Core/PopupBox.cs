@@ -400,7 +400,16 @@ namespace Freeserf
         {
             for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
             {
-                playerFaceBackgrounds[i] = coloredRectFactory.Create(48, 72, Render.Color.Transparent, 1);
+                var playerColor = PlayerInfo.PlayerColors[i];
+                var color = new Render.Color()
+                {
+                    R = playerColor.Red,
+                    G = playerColor.Green,
+                    B = playerColor.Blue,
+                    A = 255
+                };
+
+                playerFaceBackgrounds[i] = coloredRectFactory.Create(64, 72, color, 1);
             }
         }
 
@@ -3139,30 +3148,28 @@ namespace Freeserf
 
         void DrawPlayerFacesBox()
 		{
-            // TODO: what about the spaces between the face areas?
             // TODO: maybe after a click on a face the map jumps to the castle of this player?
 
             int numPlayers = interf.Game.GetPlayerCount();
+            int width = (Width - 16) / 2;
+            int height = (Height - 16) / 2;
 
             for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
             {
-                playerFaceBackgrounds[i].X = TotalX + 16 + (i % 2) * 64;
-                playerFaceBackgrounds[i].Y = TotalY + 9 + (i / 2) * 72;
+                playerFaceBackgrounds[i].X = TotalX + 8 + (i % 2) * width;
+                playerFaceBackgrounds[i].Y = TotalY + 9 + (i / 2) * height;
+                playerFaceBackgrounds[i].Resize(width, height);
                 playerFaceBackgrounds[i].Layer = Layer;
 
                 if (i < numPlayers)
                 {
                     var player = interf.Game.GetPlayer((uint)i);
 
-                    var playerColor = player.GetColor();
-
-                    playerFaceBackgrounds[i].Color = new Render.Color(playerColor.Red, playerColor.Green, playerColor.Blue);
-
                     SetIcon(24 + (i % 2) * 64, 13 + (i / 2) * 72, GetPlayerFaceSprite(player.GetFace()));
                 }
                 else
                 {
-                    playerFaceBackgrounds[i].Color = Render.Color.Black;
+                    SetIcon(24 + (i % 2) * 64, 13 + (i / 2) * 72, 281u);
                 }
             }
         }
