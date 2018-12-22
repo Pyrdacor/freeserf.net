@@ -1,26 +1,24 @@
 ﻿Map Rendering:
 
-- Improve grid drawing in minimap
+- Improve grid drawing in minimap?
 - Roads are not at the right location. Sometimes even a bit inside water. Maybe the tiles below are not at the right pos?
 	- The relation between road segments is ok though
+- Is the leveling updated when the castle has been built?
 
 
 Non-working code:
 
-- Sometimes a road can not be build in a direction where it should be possible
+- Sometimes a road can not be build in a direction where it should be possible (maybe this is due to wrong map position calculation)
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - OtherEndDir not valid exception in Serf.cs line 2801. I guess the CallTransporter call in Flag.cs line 864 is the problem. Direction and/or IsWaterPath are not right.
   Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
-- Text color must be changeable (at least from green to black)
 - Have a look at Objects.GetOrInsert!
 - PathFinder sometimes returns roads where parts already exist. Is this valid? The road placement afterwards leads to an exception when creating another render road segment on an existing one.
 	- So fix in pathfinder if this behavior is wrong or fix in render road segment creation logic if it is valid.
 	- Map.IsRoadSegmentValid should return false in these cases so maybe the error is there
 	- The bug occurs often when a path or building is destroyed (e.g. when the territory gets bigger)
-- Destroying pathes seem to leave some weird drawn road pieces (maybe only the render component of it)
-	- Maybe Game.DemolishRoad is the root cause of the two last points
 
 
 AI:
@@ -62,16 +60,18 @@ Missing stuff:
 
 - bird sounds
 - spectators must be able to view all players (building stocks etc) or must be able to select a player
+	- building stocks works now but the statistics and settings are only for player 1
+- multiplayer
+	- multiplayer should support coop mode (one player is played by two or more clients)
 
 
 TODO:
 
-- Finish AIs
-- Finish rendering of fighting serfs (additional serf stuff)
-- Finish rendering of all additional stuff for all buildings
 - Finish game saving/loading
 - Check/improve map position selection (clicks, minimap clicks, centering)
-- Make game loading work
+- Finish AIs
+- Finish rendering of fighting serfs (additional serf stuff)
+- Finish rendering of all additional stuff for all buildings (only mine elevator drawing is not perfect yet)
 - Add more game options (like tutorial, multiplayer games or AI vs AI)
 - Improve/fix sound
 - Look through all TODO code comments and resolve them
