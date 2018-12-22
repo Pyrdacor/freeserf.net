@@ -125,7 +125,7 @@ namespace Freeserf
         {
             262u,
             260u,
-            316u,
+            500u,
             263u,
             261u,
             264u
@@ -225,7 +225,7 @@ namespace Freeserf
                 playerValueBox = CreateSprite(spriteFactory, 24, 64, type, 282u, (byte)(baseDisplayLayer + 2));
                 playerValueBox.Layer = layer;
 
-                activationButton = CreateSprite(spriteFactory, 24, 16, type, 287u, (byte)(baseDisplayLayer + 3));
+                activationButton = CreateSprite(spriteFactory, 24, 16, type, 259u, (byte)(baseDisplayLayer + 3));
                 activationButton.Layer = layer;
 
                 copyValuesButton = CreateSprite(spriteFactory, 8, 16, type, 308u, (byte)(baseDisplayLayer + 4));
@@ -335,13 +335,13 @@ namespace Freeserf
                 if (playerFace == -1)
                 {
                     playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 281u);
-                    activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 259u);
+                    activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 287u);
                     copyValuesButton.Visible = false;
                 }
                 else
                 {
                     playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 268u + (uint)playerFace - 1u);
-                    activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 287u);
+                    activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 259u);
                     copyValuesButton.Visible = visible && showCopyValueButton;
                 }
 
@@ -432,11 +432,11 @@ namespace Freeserf
 
             buttonUp = new Button(interf, 16, 16, type, 237u, buttonLayer);
             buttonUp.Clicked += ButtonUp_Clicked;
-            AddChild(buttonUp, 8 * 33 + 12, 16, false);
+            AddChild(buttonUp, 7 * 33 + 12, 16, false);
 
             buttonDown = new Button(interf, 16, 16, type, 240u, buttonLayer);
             buttonDown.Clicked += ButtonDown_Clicked;
-            AddChild(buttonDown, 8 * 33 + 12, 32, false);
+            AddChild(buttonDown, 7 * 33 + 12, 32, false);
 
             buttonMapSize = new Button(interf, 40, 32, type, 265u, buttonLayer);
             buttonMapSize.Clicked += ButtonMapSize_Clicked;
@@ -535,7 +535,7 @@ namespace Freeserf
             {
                 case GameType.Custom:
                 case GameType.AIvsAI:
-                    DrawBoxString(10, 2, textFieldHeader, "New game");
+                    DrawBoxString(10, 2, textFieldHeader, (gameType == GameType.Custom) ? "New game" : "Demo");
                     DrawBoxString(10, 18, textFieldName, "Mapsize:");
                     DrawBoxString(20, 18, textFieldValue, mission.MapSize.ToString());
 
@@ -554,7 +554,7 @@ namespace Freeserf
                 case GameType.Mission:
                     DrawBoxString(10, 2, textFieldHeader, "Start mission");
                     DrawBoxString(10, 18, textFieldName, "Mission:");
-                    DrawBoxString(18, 18, textFieldValue, (gameMission + 1).ToString());
+                    DrawBoxString(20, 18, textFieldValue, (gameMission + 1).ToString());
 
                     buttonUp.Displayed = true;
                     buttonDown.Displayed = true;
@@ -568,8 +568,8 @@ namespace Freeserf
                     break;
                 case GameType.Load:
                     DrawBoxString(10, 2, textFieldHeader, "Load game");
-                    HideBoxString(textFieldName);
-                    HideBoxString(textFieldValue);
+                    DrawBoxString(10, 18, textFieldName, "Savegame:");
+                    DrawBoxString(21, 18, textFieldValue, System.IO.Path.GetFileNameWithoutExtension(fileList.GetSelected()));
 
                     buttonUp.Displayed = false;
                     buttonDown.Displayed = false;

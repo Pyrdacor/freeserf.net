@@ -499,6 +499,13 @@ namespace Freeserf.Render
                 AddSprite(Layer.Gui, index + (uint)popupBackground, bgCompoundSprite);
             }
 
+            // we create a compound icon for game type load
+            var loadIcon = new Sprite(32u, 32u);
+            loadIcon.Add(data.GetSprite(Data.Resource.Icon, 262u, color));
+            loadIcon.Add(14, 5, data.GetSprite(Data.Resource.Icon, 93u, color));
+
+            AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 500u, loadIcon);
+
             #endregion
 
 
