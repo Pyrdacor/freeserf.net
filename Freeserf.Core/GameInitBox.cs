@@ -626,19 +626,28 @@ namespace Freeserf
             {
                 case Action.StartGame:
                 {
-                    interf.CloseGameInit();
-
                     if (gameType == GameType.Load)
                     {
                         string path = fileList.GetSelected();
 
-                        if (!GameManager.Instance.LoadGame(path, interf.RenderView))
+                        if (string.IsNullOrWhiteSpace(path))
                         {
+                            // TODO: message that no save game is selected/available?
                             return;
                         }
+
+                        if (!GameManager.Instance.LoadGame(path, interf.RenderView))
+                        {
+                            // TODO: show error?
+                            return;
+                        }
+
+                        interf.CloseGameInit();
                     }
                     else
                     {
+                        interf.CloseGameInit();
+
                         switch (gameType)
                         {
                             case GameType.Custom:
@@ -696,6 +705,7 @@ namespace Freeserf
                             {
                                 randomInput.Displayed = false;
                                 fileList.Displayed = true;
+                                fileList.Select(0);
                                 SetRedraw();
                                 break;
                             }

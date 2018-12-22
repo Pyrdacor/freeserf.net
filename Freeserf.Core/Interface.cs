@@ -241,6 +241,13 @@ namespace Freeserf
 
             if (Game != null)
             {
+                if (game.Map == null)
+                {
+                    SetGame(null);
+                    Log.Debug.Write("game", "Internal error. Map is null.");
+                    return;
+                }
+
                 game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
 
                 // Note: The render map must be created above with AttachToRenderLayer before viewport creation.

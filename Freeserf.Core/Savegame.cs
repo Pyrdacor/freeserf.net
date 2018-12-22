@@ -318,41 +318,49 @@ namespace Freeserf
 
         public bool Load(string path, Game game)
         {
-            if (!File.Exists(path))
+            try
             {
-                Log.Error.Write("savegame", $"Unable to open save game file: '{path}'");
-                return false;
-            }
-
-            using (var stream = File.OpenRead(path))
-            using (var readerText = new StreamReader(stream, Encoding.ASCII, false, 1024, true))
-            using (var readerBinary = new BinaryReader(stream))
-            {
-                try
+                if (!File.Exists(path))
                 {
-                    game.ReadFrom(new SaveReaderTextFile(readerText));
+                    Log.Error.Write("savegame", $"Unable to open save game file: '{path}'");
+                    return false;
                 }
-                catch (ExceptionFreeserf ex1)
+
+                using (var stream = File.OpenRead(path))
+                using (var readerText = new StreamReader(stream, Encoding.ASCII, false, 1024, true))
+                using (var readerBinary = new BinaryReader(stream))
                 {
-                    readerBinary.Close();
-
-                    Log.Warn.Write("savegame", "Unable to load save game: " + ex1.Message);
-                    Log.Warn.Write("savegame", "Trying compatability mode...");
-
-                    stream.Position = 0;
-
                     try
                     {
-                        game.ReadFrom(new SaveReaderBinary(readerBinary));
+                        game.ReadFrom(new SaveReaderTextFile(readerText));
                     }
-                    catch (ExceptionFreeserf ex2)
+                    catch (ExceptionFreeserf ex1)
                     {
-                        Log.Error.Write("savegame", "Failed to load save game: " + ex2.Message);
-                        return false;
-                    }
-                }
+                        readerBinary.Close();
 
-                return true;
+                        Log.Warn.Write("savegame", "Unable to load save game: " + ex1.Message);
+                        Log.Warn.Write("savegame", "Trying compatability mode...");
+
+                        stream.Position = 0;
+
+                        try
+                        {
+                            game.ReadFrom(new SaveReaderBinary(readerBinary));
+                        }
+                        catch (ExceptionFreeserf ex2)
+                        {
+                            Log.Error.Write("savegame", "Failed to load save game: " + ex2.Message);
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write("savegame", "Failed to load save game: " + ex.Message);
+                return false;
             }
         }
 

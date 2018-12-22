@@ -29,7 +29,7 @@ namespace Freeserf
 {
     internal class ListSavedFiles : GuiObject
     {
-        Color colorFocus = new Color(0x00, 0x8b, 0x47);
+        Color colorFocus = new Color(0x60, 0x70, 0x60);//new Color(0x00, 0x8b, 0x47);
         Color colorText = Color.Green;
         Color colorBackground = Color.Black;
 
@@ -52,7 +52,7 @@ namespace Freeserf
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             background.Layer = Layer;
 
-            selectionBackground = interf.RenderView.ColoredRectFactory.Create(0, 0, Color.Green, (byte)(BaseDisplayLayer + 1));
+            selectionBackground = interf.RenderView.ColoredRectFactory.Create(0, 0, colorFocus, (byte)(BaseDisplayLayer + 1));
             selectionBackground.Layer = Layer;
 
             int y = 3;
@@ -71,6 +71,17 @@ namespace Freeserf
         public void SetSelectionHandler(Action<string> selectionHandler)
         {
             this.selectionHandler = selectionHandler;
+        }
+
+        public void Select(int index)
+        {
+            if (index < 0 || index >= items.Count)
+                return;
+
+            selectedItem = index;
+            SetRedraw();
+
+            selectionHandler?.Invoke(items[selectedItem].Path);
         }
 
         public string GetSelected()
@@ -150,10 +161,7 @@ namespace Freeserf
 
                 if (selectedItem != y && y >= 0 && y < items.Count)
                 {
-                    selectedItem = y;
-                    SetRedraw();
-
-                    selectionHandler?.Invoke(items[selectedItem].Path);
+                    Select(y);
                 }
             }
 

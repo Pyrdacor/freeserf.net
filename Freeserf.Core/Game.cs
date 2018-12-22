@@ -2956,6 +2956,7 @@ namespace Freeserf
         public void ReadFrom(SaveReaderBinary reader)
         {
             // TODO
+            throw new ExceptionFreeserf("Game.ReadFrom is not implemented yet.");
 
             //         /* Load these first so map dimensions can be reconstructed.
             //            This is necessary to load map positions. */
@@ -3082,6 +3083,7 @@ namespace Freeserf
         public void ReadFrom(SaveReaderText reader)
         {
             // TODO
+            throw new ExceptionFreeserf("Game.ReadFrom is not implemented yet.");
 
             /* Load essential values for calculating map positions
                so that map positions can be loaded properly. */
@@ -3252,6 +3254,7 @@ namespace Freeserf
         public void WriteTo(SaveWriterText writer)
         {
             // TODO
+            throw new ExceptionFreeserf("Game.WriteTo is not implemented yet.");
 
             //writer.value("map.size") << game.map->get_size();
             //writer.value("game_type") << game.game_type;
