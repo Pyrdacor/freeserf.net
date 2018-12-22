@@ -98,7 +98,7 @@ namespace Freeserf
 
         Player player;
         // Bit 0: Always 1, is used for messages that should always be notified
-        // Bit 1: Unused
+        // Bit 1: Invert scrolling
         // Bit 2: Fast building
         // Bit 3: Non-important message. Is only set for message setting "all"
         // Bit 4: Important messages. Is set for at least message setting "most"

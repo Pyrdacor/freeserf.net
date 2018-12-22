@@ -326,6 +326,7 @@ namespace Freeserf
             OptionsPathwayScrolling,
             OptionsFastMapclick,
             OptionsFastBuilding,
+            OptionsInvertScrolling,
             Demolish,
             OptionsSfx,
             Save,
@@ -2535,16 +2536,19 @@ namespace Freeserf
 
         void DrawExtendedOptionsBox(Action closeAction)
         {
-            SetText(16, 23, "Pathway-");
-            SetText(16, 32, "Scrolling");
-            SetText(16, 48, "Fast");
-            SetText(16, 57, "Mapclick");
-            SetText(16, 73, "Fast");
-            SetText(16, 82, "Building");
+            SetText(16, 20, "Pathway-");
+            SetText(16, 29, "Scrolling");
+            SetText(16, 45, "Fast");
+            SetText(16, 54, "Mapclick");
+            SetText(16, 70, "Fast");
+            SetText(16, 79, "Building");
+            SetText(16, 95, "Invert");
+            SetText(16, 104, "Scrolling");
 
-            SetButton(112, 24, interf.GetConfig(6) ? 288u : 220u, Action.OptionsPathwayScrolling);
-            SetButton(112, 50, interf.GetConfig(7) ? 288u : 220u, Action.OptionsFastMapclick);
-            SetButton(112, 76, interf.GetConfig(2) ? 288u : 220u, Action.OptionsFastBuilding);
+            SetButton(112, 21, interf.GetConfig(6) ? 288u : 220u, Action.OptionsPathwayScrolling);
+            SetButton(112, 47, interf.GetConfig(7) ? 288u : 220u, Action.OptionsFastMapclick);
+            SetButton(112, 73, interf.GetConfig(2) ? 288u : 220u, Action.OptionsFastBuilding);
+            SetButton(112, 98, interf.GetConfig(1) ? 288u : 220u, Action.OptionsInvertScrolling);
 
             string value = "All";
 
@@ -2563,8 +2567,8 @@ namespace Freeserf
                 }
             }
 
-            SetText(16, 103, "Messages");
-            clickableTextField = SetText(96, 103, value);
+            SetText(16, 122, "Messages");
+            clickableTextField = SetText(96, 122, value);
 
             SetButton(104, 137, 61u, Action.ShowOptions); // flip
             SetButton(120, 137, 60u, closeAction); // exit
@@ -2600,9 +2604,9 @@ namespace Freeserf
             SetNumberText(72, 63, (uint)Misc.Round(volume));
 
             // Fullscreen
-            SetText(16, 86, "Fullscreen");
+            SetText(16, 90, "Fullscreen");
 
-            SetButton(112, 82, interf.RenderView.Fullscreen ? 288u : 220u, Action.OptionsFullscreen);
+            SetButton(112, 86, interf.RenderView.Fullscreen ? 288u : 220u, Action.OptionsFullscreen);
 
             SetButton(104, 137, 61u, Action.ShowExtendedOptions); // flip
             SetButton(120, 137, 60u, closeAction); // exit
@@ -3995,6 +3999,9 @@ namespace Freeserf
                     break;
                 case Action.OptionsFastBuilding:
                     interf.SwitchConfig(2);
+                    break;
+                case Action.OptionsInvertScrolling:
+                    interf.SwitchConfig(1);
                     break;
                 case Action.QuitCancel:
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)

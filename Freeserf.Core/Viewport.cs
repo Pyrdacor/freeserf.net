@@ -625,15 +625,18 @@ namespace Freeserf
             totalDragX += dx;
             totalDragY += dy;
 
-            int scrollX = totalDragX / Render.RenderMap.TILE_WIDTH;
-            int scrollY = totalDragY / Render.RenderMap.TILE_HEIGHT;
+            int scrollX = totalDragX / RenderMap.TILE_WIDTH;
+            int scrollY = totalDragY / RenderMap.TILE_HEIGHT;
 
-            map.Scroll(scrollX, scrollY);
+            if (interf.GetConfig(1)) // invert scrolling
+                map.Scroll(-scrollX, -scrollY);
+            else
+                map.Scroll(scrollX, scrollY);
 
             interf.UpdateMinimap();
 
-            totalDragX -= scrollX * Render.RenderMap.TILE_WIDTH;
-            totalDragY -= scrollY * Render.RenderMap.TILE_HEIGHT;
+            totalDragX -= scrollX * RenderMap.TILE_WIDTH;
+            totalDragY -= scrollY * RenderMap.TILE_HEIGHT;
 
             return true;
         }
