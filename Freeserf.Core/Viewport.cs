@@ -510,7 +510,7 @@ namespace Freeserf
                 else
                 { 
                     /* Building */
-                    if (map.GetOwner(mapPos) == player.Index)
+                    if (map.GetOwner(mapPos) == player.Index || interf.AccessRights != Viewer.Access.Player)
                     {
                         Building building = interf.Game.GetBuildingAtPos(mapPos);
 
