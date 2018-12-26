@@ -508,8 +508,6 @@ namespace Freeserf.Render
 
             #endregion
 
-
-            // TODO: grid
         }
 
         void AddGuiElements(Data.Resource resourceType, uint num, ref uint index, DataSource data, Sprite.Color color)

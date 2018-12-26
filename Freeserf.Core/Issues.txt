@@ -62,6 +62,7 @@ Missing stuff:
 	- building stocks works now but the statistics and settings are only for player 1
 - multiplayer
 	- multiplayer should support coop mode (one player is played by two or more clients)
+- button to merge roads to a flag
 
 
 TODO:

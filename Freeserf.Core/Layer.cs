@@ -26,7 +26,6 @@ namespace Freeserf
     // -------------
     // Landscape
     // Water waves
-    // Grid
     // Paths
     // Objects (MapObjects, Flags), Resources on Flags, Shadows of the object
     // Buildings (like Objects but masked for build progress)
@@ -42,17 +41,15 @@ namespace Freeserf
         None = 0,
         Landscape = 1 << 0,
         Waves = 1 << 1,
-        Grid = 1 << 2,
-        Paths = 1 << 3,
-        Objects = 1 << 4,
-        Serfs = 1 << 5,
-        Buildings = 1 << 6,        
-        Builds = 1 << 7,
-        Gui = 1 << 8,
-        GuiBuildings = 1 << 9, // we have to display buildings inside some windows (e.g. build menu)
-        Minimap = 1 << 10,
-        Cursor = 1 << 11,        
-        All = Landscape | Paths | Objects | Buildings | Serfs | Cursor
+        Paths = 1 << 2,
+        Objects = 1 << 3,
+        Serfs = 1 << 4,
+        Buildings = 1 << 5,        
+        Builds = 1 << 6,
+        Gui = 1 << 7,
+        GuiBuildings = 1 << 8, // we have to display buildings inside some windows (e.g. build menu)
+        Minimap = 1 << 9,
+        Cursor = 1 << 10
     }
 
     public partial class Global
@@ -63,7 +60,6 @@ namespace Freeserf
         {
             0.01f,  // Landscape
             0.02f,  // Waves
-            0.03f,  // Grid
             0.04f,  // Paths
             0.05f,  // Objects
             0.05f,  // Serfs
@@ -72,7 +68,7 @@ namespace Freeserf
             0.97f,  // Gui
             0.97f,  // Gui Buildings
             0.97f,  // Minimap
-            0.98f   // Cursor
+            0.99f   // Cursor
         };
     }
 }

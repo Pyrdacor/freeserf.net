@@ -103,7 +103,7 @@ namespace Freeserf.Renderer.OpenTK
 
             foreach (Layer layer in Enum.GetValues(typeof(Layer)))
             {
-                if (layer == Layer.None || layer == Layer.All)
+                if (layer == Layer.None)
                     continue;
 
                 // TODO: color keys?

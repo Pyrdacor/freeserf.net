@@ -61,7 +61,7 @@ namespace Freeserf.Renderer.OpenTK
 
         public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null)
         {
-            var shape = (layer == Layer.Landscape || layer == Layer.Waves || layer == Layer.Grid) ? Shape.Triangle : Shape.Rect;
+            var shape = (layer == Layer.Landscape || layer == Layer.Waves) ? Shape.Triangle : Shape.Rect;
             bool masked = layer == Layer.Landscape || layer == Layer.Waves || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
             bool supportAnimations = layer != Layer.Gui && layer != Layer.GuiBuildings; // gui is mostly static
 
@@ -200,7 +200,6 @@ namespace Freeserf.Renderer.OpenTK
 
             switch (layer)
             {
-                case Layer.All:
                 case Layer.None:
                     throw new InvalidOperationException($"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
                 default:
