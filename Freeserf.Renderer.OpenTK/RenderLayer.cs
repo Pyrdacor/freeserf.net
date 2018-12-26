@@ -79,6 +79,7 @@ namespace Freeserf.Renderer.OpenTK
         bool SupportZoom =>
             Layer != Layer.Gui &&
             Layer != Layer.GuiBuildings &&
+            Layer != Layer.Minimap &&
             Layer != Layer.Cursor;
 
         public void Render()
