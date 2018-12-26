@@ -14,7 +14,6 @@ Non-working code:
 - OtherEndDir not valid exception in Serf.cs line 2801. I guess the CallTransporter call in Flag.cs line 864 is the problem. Direction and/or IsWaterPath are not right.
   Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
-- Have a look at Objects.GetOrInsert!
 - PathFinder sometimes returns roads where parts already exist. Is this valid? The road placement afterwards leads to an exception when creating another render road segment on an existing one.
 	- So fix in pathfinder if this behavior is wrong or fix in render road segment creation logic if it is valid.
 	- Map.IsRoadSegmentValid should return false in these cases so maybe the error is there

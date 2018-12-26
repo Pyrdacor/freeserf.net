@@ -105,9 +105,8 @@ namespace Freeserf
 
         public T GetOrInsert(uint index)
         {
-            // TODO
-            //if (!objects.ContainsKey(index))
-            //   objects.Add(index, new GameObject(game, index)); // TODO: Factory?
+            if (!objects.ContainsKey(index))
+                objects.Add(index, ObjectFactory<T>.Create(game, index));
 
             return objects[index];
         }

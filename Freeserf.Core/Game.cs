@@ -1638,18 +1638,14 @@ namespace Freeserf
 
         internal Serf CreateSerf(int index = -1)
         {
-            Serf serf;
-
             if (index == -1)
             {
-                serf = serfs.Allocate();
+                return serfs.Allocate();
             }
             else
             {
-                serf = serfs.GetOrInsert((uint)index);
+                return serfs.GetOrInsert((uint)index);
             }
-
-            return serf;
         }
 
         internal void DeleteSerf(Serf serf)
@@ -1665,18 +1661,14 @@ namespace Freeserf
 
         internal Flag CreateFlag(int index = -1)
         {
-            Flag flag;
-
             if (index == -1)
             {
-                flag = flags.Allocate();
+                return flags.Allocate();
             }
             else
             {
-                flag = flags.GetOrInsert((uint)index);
+                return flags.GetOrInsert((uint)index);
             }
-
-            return flag;
         }
 
         internal Inventory CreateInventory(int index = -1)
@@ -1703,18 +1695,14 @@ namespace Freeserf
 
         internal Building CreateBuilding(int index = -1)
         {
-            Building building;
-
             if (index == -1)
             {
-                building = buildings.Allocate();
+                return buildings.Allocate();
             }
             else
             {
-                building = buildings.GetOrInsert((uint)index);
+                return buildings.GetOrInsert((uint)index);
             }
-
-            return building;
         }
 
         internal void DeleteBuilding(Building building)
