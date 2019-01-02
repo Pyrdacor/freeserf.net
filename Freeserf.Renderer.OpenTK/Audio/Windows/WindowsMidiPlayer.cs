@@ -29,7 +29,6 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
     {
         IntPtr handle = IntPtr.Zero;
         readonly Timer eventTimer = new Timer();
-        readonly Timer nextEventTimer = new Timer();
         int currentEventIndex = 0;
         readonly Queue<uint> messageQueue = new Queue<uint>();
         DateTime trackStartTime = DateTime.MinValue;
@@ -96,7 +95,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                         trackStartTime = DateTime.Now;
                         Running = true;
                         runningStateChanged = true;
-                        PlayNextEvent();
+                        Play(CurrentXMI, Looped);
                     }
                 }
                 else
@@ -146,14 +145,14 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 if (looped == value)
                     return;
 
-                bool start = Enabled && !looped && !Running;
+                bool start = Enabled && !looped && !Running && CurrentXMI != null;
 
                 looped = value;
 
                 if (start)
                 {
                     Running = true;
-                    PlayNextEvent();
+                    Play(CurrentXMI, looped);
                 }
             }
         }
@@ -183,11 +182,11 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 runningStateChanged = true;
                 Running = true;
 
-                PlayNextEvent();
+                eventTimer.Start();
             }
         }
 
-        void PlayNextEvent()
+        void PlayEvents()
         {
             if (CurrentXMI == null || !Running || !Enabled)
             {
@@ -196,7 +195,9 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             }
 
             if (Paused)
+            {
                 return;
+            }
 
             if (currentEventIndex == CurrentXMI.NumEvents)
             {
@@ -212,16 +213,21 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 }
             }
 
-            var ev = CurrentXMI.GetEvent(currentEventIndex++);
             var currentTrackTime = CurrentTrackTime;
 
-            if ((long)ev.StartTime > (long)currentTrackTime)
+            while (true)
             {
-                SendDelayedEvent((uint)(ev.StartTime - currentTrackTime), ev.ToMidiMessage());
-            }
-            else
-            {
-                SendEvent(ev.ToMidiMessage());
+                var ev = CurrentXMI.GetEvent(currentEventIndex);
+
+                if (ev.StartTime < currentTrackTime + 5.0)
+                {
+                    SendEvent(ev.ToMidiMessage());
+                    ++currentEventIndex;
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 
@@ -239,7 +245,6 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             if (Running)
             {
                 eventTimer.Stop();
-                nextEventTimer.Stop();
                 Running = false;
                 paused = false;
                 currentEventIndex = 0;
@@ -259,14 +264,12 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             if (!Paused)
                 return;
 
-            Paused = false;
-
             if (Running && Enabled && CurrentXMI != null)
             {
                 trackStartTime += DateTime.Now - pauseStartTime;
-
-                PlayNextEvent();
             }
+
+            Paused = false;
         }
 
         public override Audio.IVolumeController GetVolumeController()
@@ -329,19 +332,8 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         void Init()
         {
             eventTimer.Elapsed += EventTimer_Elapsed;
-            eventTimer.AutoReset = false;
-
-            nextEventTimer.Interval = 0.1;
-            nextEventTimer.Elapsed += NextEventTimer_Elapsed;
-            nextEventTimer.AutoReset = false;
-        }
-
-        private void NextEventTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (!Running)
-                return;
-
-            PlayNextEvent();
+            eventTimer.AutoReset = true;
+            eventTimer.Interval = 5;
         }
 
         void SendEvent(uint message)
@@ -354,9 +346,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 #if WINDOWS
             WinMMNatives.SendPlaybackDeviceMessage(handle, message);
 
-            if (!runningStateChanged)
-                nextEventTimer.Start();
-            else
+            if (runningStateChanged)
                 WinMMNatives.ResetPlaybackDevice(handle);
 
             runningStateChanged = false;
@@ -364,47 +354,12 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 #endif // WINDOWS
         }
 
-        void SendDelayedEvent(uint delay, uint message)
-        {
-            if (delay == 0)
-            {
-                SendEvent(message);
-                return;
-            }
-
-            lock (messageQueue)
-            {
-                messageQueue.Enqueue(message);
-            }
-
-            eventTimer.Interval = delay;
-            eventTimer.Start();
-        }
-
         private void EventTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (!Running)
                 return;
 
-            uint message = 0;
-
-            lock (messageQueue)
-            {
-                if (!Running)
-                    return;
-
-                if (messageQueue.Count > 0)
-                    message = messageQueue.Dequeue();
-            }
-
-            if (message != 0)
-            {
-                SendEvent(message);
-            }
-            else
-            {
-                PlayNextEvent();
-            }
+            PlayEvents();
         }
 
         

@@ -15,6 +15,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Audio\Windows\WindowsMidiPlayer.cs~RFd7539d14.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
   </ItemGroup>
 
