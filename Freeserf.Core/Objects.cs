@@ -106,7 +106,20 @@ namespace Freeserf
         public T GetOrInsert(uint index)
         {
             if (!objects.ContainsKey(index))
+            {
                 objects.Add(index, ObjectFactory<T>.Create(game, index));
+
+                if (freeIndices.Contains(index))
+                    freeIndices.Remove(index);
+
+                if (index >= firstFreeIndex)
+                {
+                    for (uint i = firstFreeIndex; i < index; ++i)
+                        freeIndices.Add(i);
+
+                    firstFreeIndex = index + 1;
+                }
+            }
 
             return objects[index];
         }

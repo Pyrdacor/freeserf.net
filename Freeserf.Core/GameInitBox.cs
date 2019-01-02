@@ -391,15 +391,6 @@ namespace Freeserf
 
             fileList = new ListSavedFiles(interf);
             fileList.SetSize(310, 104);
-            fileList.SetSelectionHandler((string item) =>
-            {
-                Game game = new Game(interf.RenderView);
-
-                if (GameStore.Instance.Load(item, game))
-                {
-                    map = game.Map;
-                }
-            });
             AddChild(fileList, 20, 55, false);
 
             InitRenderComponents();

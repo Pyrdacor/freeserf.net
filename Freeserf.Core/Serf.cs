@@ -743,6 +743,7 @@ namespace Freeserf
 
                 switch (serfState)
                 {
+                    case State.BuildingCastle:
                     case State.IdleInStock:
                     case State.DefendingCastle:
                     case State.DefendingFortress:

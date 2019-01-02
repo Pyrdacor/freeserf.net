@@ -70,12 +70,17 @@ namespace Freeserf
         {
             Values section = new Values();
             data["global"] = section;
-            uint line_number = 0;
+            uint lineNumber = 0;
 
-            while (reader.BaseStream.Position < reader.BaseStream.Length)
+            while (true)
             {
-                var line = reader.ReadLine().Trim();
-                ++line_number;
+                var line = reader.ReadLine();
+
+                if (line == null)
+                    break;
+
+                line = line.Trim();
+                ++lineNumber;
 
                 if (string.IsNullOrWhiteSpace(line))
                 {
@@ -88,7 +93,7 @@ namespace Freeserf
 
                     if (end == -1)
                     {
-                        Log.Error.Write("config", $"Failed to parse config file ({line_number})");
+                        Log.Error.Write("config", $"Failed to parse config file ({lineNumber})");
                         return false;
                     }
 
@@ -96,7 +101,7 @@ namespace Freeserf
 
                     if (string.IsNullOrWhiteSpace(name))
                     {
-                        Log.Error.Write("config", $"Failed to parse config file ({line_number})");
+                        Log.Error.Write("config", $"Failed to parse config file ({lineNumber})");
                         return false;
                     }
 

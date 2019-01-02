@@ -254,6 +254,20 @@ namespace Freeserf
             reproductionCounter = (int)reproductionReset;
         }
 
+        public PlayerInfo GetPlayerInfo()
+        {
+            uint supplies = initialSupplies;
+            uint reproduction = 60 - reproductionReset / 50;
+            uint intelligence = (aiIntelligence - 13535) / 1300;
+
+            var info = new PlayerInfo(GetFace(), GetColor(), intelligence, supplies, reproduction);
+
+            if (HasCastle())
+                info.CastlePos = new PlayerInfo.Pos((int)Game.Map.PosColumn(CastlePos), (int)Game.Map.PosRow(CastlePos));
+
+            return info;
+        }
+
         public void InitView(Color color, uint face)
         {
             this.face = face;
@@ -1942,65 +1956,65 @@ namespace Freeserf
 
             for (int i = 0; i < 9; ++i)
             {
-                toolPriorities[i] = reader.Value("toolPrio")[i].ReadInt();
+                toolPriorities[i] = reader.Value("tool_prio")[i].ReadInt();
             }
 
             for (int i = 0; i < 26; ++i)
             {
-                resourceCount[i] = reader.Value("resourceCount")[i].ReadUInt();
-                flagPriorities[i] = reader.Value("flagPrio")[i].ReadInt();
-                serfCount[i] = reader.Value("serfCount")[i].ReadUInt();
-                inventoryPriorities[i] = reader.Value("inventoryPrio")[i].ReadInt();
+                resourceCount[i] = reader.Value("resource_count")[i].ReadUInt();
+                flagPriorities[i] = reader.Value("flag_prio")[i].ReadInt();
+                serfCount[i] = reader.Value("serf_count")[i].ReadUInt();
+                inventoryPriorities[i] = reader.Value("inventory_prio")[i].ReadInt();
             }
-            serfCount[26] = reader.Value("serfCount")[26].ReadUInt();
+            serfCount[26] = reader.Value("serf_count")[26].ReadUInt();
 
             for (int i = 0; i < 4; ++i)
             {
-                knightOccupation[i] = reader.Value("knightOccupation")[i].ReadUInt();
-                attackingKnights[i] = reader.Value("attackingKnights")[i].ReadInt();
+                knightOccupation[i] = reader.Value("knight_occupation")[i].ReadUInt();
+                attackingKnights[i] = reader.Value("attacking_knights")[i].ReadInt();
             }
 
             for (int i = 0; i < 23; ++i)
             {
-                completedBuildingCount[i] = reader.Value("completedBuildingCount")[i].ReadUInt();
-                incompleteBuildingCount[i] = reader.Value("incompleteBuildingCount")[i].ReadUInt();
+                completedBuildingCount[i] = reader.Value("completed_building_count")[i].ReadUInt();
+                incompleteBuildingCount[i] = reader.Value("incomplete_building_count")[i].ReadUInt();
             }
 
             for (int i = 0; i < 64; ++i)
             {
-                attackingBuildings[i] = reader.Value("attackingBuildings")[i].ReadUInt();
+                attackingBuildings[i] = reader.Value("attacking_buildings")[i].ReadUInt();
             }
 
-            initialSupplies = reader.Value("initialSupplies").ReadUInt();
-            knightsToSpawn = reader.Value("knightsToSpawn").ReadInt();
-            totalBuildingScore = reader.Value("totalBuildingScore").ReadUInt();
-            totalMilitaryScore = reader.Value("totalMilitaryScore").ReadUInt();
-            lastTick = (ushort)reader.Value("lastTick").ReadUInt();
-            reproductionCounter = reader.Value("reproductionCounter").ReadInt();
-            reproductionReset = reader.Value("reproductionReset").ReadUInt();
-            serfToKnightRate = reader.Value("serfToKnightRate").ReadInt();
-            serfToKnightCounter = (ushort)reader.Value("serfToKnightCounter").ReadUInt();
-            attackingBuildingCount = reader.Value("attackingBuildingCount").ReadInt();
-            totalAttackingKnights = reader.Value("totalAttackingKnights").ReadInt();
-            buildingAttacked = reader.Value("buildingAttacked").ReadInt();
-            knightsAttacking = reader.Value("knightsAttacking").ReadInt();
-            foodStonemine = reader.Value("foodStonemine").ReadUInt();
-            foodCoalmine = reader.Value("foodCoalmine").ReadUInt();
-            foodIronmine = reader.Value("foodIronmine").ReadUInt();
-            foodGoldmine = reader.Value("foodGoldmine").ReadUInt();
-            planksConstruction = reader.Value("planksConstruction").ReadUInt();
-            planksBoatbuilder = reader.Value("planksBoatbuilder").ReadUInt();
-            planksToolmaker = reader.Value("planksToolmaker").ReadUInt();
-            steelToolmaker = reader.Value("steelToolmaker").ReadUInt();
-            steelWeaponsmith = reader.Value("steelWeaponsmith").ReadUInt();
-            coalSteelsmelter = reader.Value("coalSteelsmelter").ReadUInt();
-            coalGoldsmelter = reader.Value("coalGoldsmelter").ReadUInt();
-            coalWeaponsmith = reader.Value("coalWeaponsmith").ReadUInt();
-            wheatPigfarm = reader.Value("wheatPigfarm").ReadUInt();
-            wheatMill = reader.Value("wheatMill").ReadUInt();
-            castleScore = reader.Value("castleScore").ReadInt();
-            castleKnights = reader.Value("castleKnights").ReadUInt();
-            castleKnightsWanted = reader.Value("castleKnightsWanted").ReadUInt();
+            initialSupplies = reader.Value("initial_supplies").ReadUInt();
+            knightsToSpawn = reader.Value("knights_to_spawn").ReadInt();
+            totalBuildingScore = reader.Value("total_building_score").ReadUInt();
+            totalMilitaryScore = reader.Value("total_military_score").ReadUInt();
+            lastTick = (ushort)reader.Value("last_tick").ReadUInt();
+            reproductionCounter = reader.Value("reproduction_counter").ReadInt();
+            reproductionReset = reader.Value("reproduction_reset").ReadUInt();
+            serfToKnightRate = reader.Value("serf_to_knight_rate").ReadInt();
+            serfToKnightCounter = (ushort)reader.Value("serf_to_knight_counter").ReadUInt();
+            attackingBuildingCount = reader.Value("attacking_building_count").ReadInt();
+            totalAttackingKnights = reader.Value("total_attacking_knights").ReadInt();
+            buildingAttacked = reader.Value("building_attacked").ReadInt();
+            knightsAttacking = reader.Value("knights_attacking").ReadInt();
+            foodStonemine = reader.Value("food_stonemine").ReadUInt();
+            foodCoalmine = reader.Value("food_coalmine").ReadUInt();
+            foodIronmine = reader.Value("food_ironmine").ReadUInt();
+            foodGoldmine = reader.Value("food_goldmine").ReadUInt();
+            planksConstruction = reader.Value("planks_construction").ReadUInt();
+            planksBoatbuilder = reader.Value("planks_boatbuilder").ReadUInt();
+            planksToolmaker = reader.Value("planks_toolmaker").ReadUInt();
+            steelToolmaker = reader.Value("steel_toolmaker").ReadUInt();
+            steelWeaponsmith = reader.Value("steel_weaponsmith").ReadUInt();
+            coalSteelsmelter = reader.Value("coal_steelsmelter").ReadUInt();
+            coalGoldsmelter = reader.Value("coal_goldsmelter").ReadUInt();
+            coalWeaponsmith = reader.Value("coal_weaponsmith").ReadUInt();
+            wheatPigfarm = reader.Value("wheat_pigfarm").ReadUInt();
+            wheatMill = reader.Value("wheat_mill").ReadUInt();
+            castleScore = reader.Value("castle_score").ReadInt();
+            castleKnights = reader.Value("castle_knights").ReadUInt();
+            castleKnightsWanted = reader.Value("castle_knights_wanted").ReadUInt();
         }
 
         public void WriteTo(SaveWriterText writer)

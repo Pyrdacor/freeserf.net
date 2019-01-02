@@ -80,7 +80,6 @@ namespace Freeserf
         short updateMapCounter;
         MapPos updateMapInitialPos;
         int tickDiff;
-        ushort maxNextIndex;
         short updateMap16Loop;
         int[] playerHistoryIndex = new int[4];
         int[] playerHistoryCounter = new int[3];
@@ -2943,490 +2942,487 @@ namespace Freeserf
 
         public void ReadFrom(SaveReaderBinary reader)
         {
-            // TODO
-            throw new ExceptionFreeserf("Game.ReadFrom is not implemented yet.");
+            // Load these first so map dimensions can be reconstructed.
+            // This is necessary to load map positions.
 
-            //         /* Load these first so map dimensions can be reconstructed.
-            //            This is necessary to load map positions. */
+            reader.Skip(74);
+            gameType = reader.ReadWord(); // 74
+            reader.Skip(2);  // 76
+            tick = reader.ReadWord(); // 78
+            gameStatsCounter = 0;
+            historyCounter = 0;
 
-            //         reader.skip(74);
-            //         uint16_t v16;
-            //         reader >> v16;  // 74
-            //         game.game_type = v16;
-            //         reader >> v16;  // 76
-            //         reader >> v16;  // 78
-            //         game.tick = v16;
-            //         game.game_stats_counter = 0;
-            //         game.history_counter = 0;
+            reader.Skip(4);
 
-            //         reader.skip(4);
+            random = new Random(reader.ReadWord(), reader.ReadWord(), reader.ReadWord()); // 84, 86, 88
 
-            //         uint16_t r1, r2, r3;
-            //         reader >> r1;  // 84
-            //         reader >> r2;  // 86
-            //         reader >> r3;  // 88
-            //         game.rnd = Random(r1, r2, r3);
+            int maxFlagIndex = reader.ReadWord(); // 90
+            int maxBuildingIndex = reader.ReadWord(); // 92
+            int maxSerfIndex = reader.ReadWord(); // 94
 
-            //         reader >> v16;  // 90
-            //         int max_flag_index = v16;
-            //         reader >> v16;  // 92
-            //         int max_building_index = v16;
-            //         reader >> v16;  // 94
-            //         int max_serf_index = v16;
+            reader.Skip(2); // 96, was next_index
+            flagSearchCounter = reader.ReadWord(); // 98
 
-            //         reader >> v16;  // 96
-            //         game.next_index = v16;
-            //         reader >> v16;  // 98
-            //         game.flag_search_counter = v16;
+            reader.Skip(4);
 
-            //         reader.skip(4);
+            for (int i = 0; i < 4; ++i)
+            {
+                playerHistoryIndex[i] = reader.ReadWord(); // 104 + i*2
+            }
 
-            //         for (int i = 0; i < 4; i++)
-            //         {
-            //             reader >> v16;  // 104 + i*2
-            //             game.player_history_index[i] = v16;
-            //         }
+            for (int i = 0; i < 3; ++i)
+            {
+                playerHistoryCounter[i] = reader.ReadWord(); // 112 + i*2
+            }
 
-            //         for (int i = 0; i < 3; i++)
-            //         {
-            //             reader >> v16;  // 112 + i*2
-            //             game.player_history_counter[i] = v16;
-            //         }
+            resourceHistoryIndex = reader.ReadWord(); // 118
 
-            //         reader >> v16;  // 118
-            //         game.resource_history_index = v16;
+            //  if (0/*gameType == TUTORIAL*/) {
+            //    tutorial_level = *reinterpret_cast<uint16_t*>(&data[122]);
+            //  } else if (0/*gameType == MISSION*/) {
+            //    mission_level = *reinterpret_cast<uint16_t*>(&data[124]);
+            //  }
 
-            //         //  if (0/*game.Gameype == GameYPE_TUTORIAL*/) {
-            //         //    game.tutorial_level = *reinterpret_cast<uint16_t*>(&data[122]);
-            //         //  } else if (0/*game.Gameype == GameYPE_MISSION*/) {
-            //         //    game.mission_level = *reinterpret_cast<uint16_t*>(&data[124]);
-            //         //  }
+            reader.Skip(54);
 
-            //         reader.skip(54);
+            int maxInventoryIndex = reader.ReadWord(); // 174
 
-            //         reader >> v16;  // 174
-            //         int max_inventory_index = v16;
+            reader.Skip(14); // 180 was max_next_index
 
-            //         reader.skip(4);
-            //         reader >> v16;  // 180
-            //         game.max_next_index = v16;
+            int mapSize = reader.ReadWord(); // 190
 
-            //         reader.skip(8);
-            //         reader >> v16;  // 190
-            //         int map_size = v16;
+            // Avoid allocating a huge map if the input file is invalid
+            if (mapSize < 3 || mapSize > 10)
+            {
+                throw new ExceptionFreeserf("Invalid map size in file");
+            }
 
-            //         // Avoid allocating a huge map if the input file is invalid
-            //         if (map_size < 3 || map_size > 10)
-            //         {
-            //             throw ExceptionFreeserf("Invalid map size in file");
-            //         }
+            map = new Map(new MapGeometry((uint)mapSize), renderView);
 
-            //         game.map.reset(new Map(MapGeometry(map_size)));
+            reader.Skip(8);
+            mapGoldMoraleFactor= reader.ReadWord(); // 200
+            reader.Skip(2);
+            playerScoreLeader = reader.ReadByte(); // 204
 
-            //         reader.skip(8);
-            //         reader >> v16;  // 200
-            //         game.map_gold_morale_factor = v16;
-            //         reader.skip(2);
-            //         uint8_t v8;
-            //         reader >> v8;  // 204
-            //         game.player_score_leader = v8;
+            reader.Skip(45);
 
-            //         reader.skip(45);
+            /* Load players state from save game. */
+            for (uint i = 0; i < 4; ++i)
+            {
+                var playerReader = reader.Extract(8628);
+                playerReader.Skip(130);
 
-            //         /* Load players state from save game. */
-            //         for (int i = 0; i < 4; i++)
-            //         {
-            //             SaveReaderBinary player_reader = reader.extract(8628);
-            //             player_reader.skip(130);
-            //             player_reader >> v8;
-            //             if (BIT_TEST(v8, 6))
-            //             {
-            //                 player_reader.reset();
-            //                 Player* player = game.players.get_or_insert(i);
-            //                 player_reader >> *player;
-            //             }
-            //         }
+                if (Misc.BitTest(reader.ReadByte(), 6))
+                {
+                    playerReader.Reset();
 
-            //         /* Load map state from save game. */
-            //         unsigned int tile_count = game.map->get_cols() * game.map->get_rows();
-            //         SaveReaderBinary map_reader = reader.extract(8 * tile_count);
-            //         map_reader >> *(game.map);
+                    Player player = players.GetOrInsert(i);
 
-            //         game.load_serfs(&reader, max_serf_index);
-            //         game.load_flags(&reader, max_flag_index);
-            //         game.load_buildings(&reader, max_building_index);
-            //         game.load_inventories(&reader, max_inventory_index);
+                    player.ReadFrom(playerReader);
+                }
+            }
 
-            //         game.game_speed = 0;
-            //         game.game_speed_save = DEFAULT_GAME_SPEED;
+            /* Load map state from save game. */
+            uint tileCount = map.Columns * map.Rows;
+            var mapReader = reader.Extract(8 * tileCount);
+            map.ReadFrom(mapReader);
 
-            //         game.init_land_ownership();
-            //         game.PostLoadRoadUpdate();
+            LoadSerfs(reader, maxSerfIndex);
+            LoadFlags(reader, maxFlagIndex);
+            LoadBuildings(reader, maxBuildingIndex);
+            LoadInventories(reader, maxInventoryIndex);
 
-            //         game.gold_total = game.map->get_gold_deposit();
+            gameSpeed = 0;
+            gameSpeedSave = DEFAULT_GAME_SPEED;
 
-            //         return reader;
+            map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
+
+            InitLandOwnership();
+            PostLoadRoads();
+
+            goldTotal = map.GetGoldDeposit();
         }
 
         public void ReadFrom(SaveReaderText reader)
         {
-            // TODO
-            throw new ExceptionFreeserf("Game.ReadFrom is not implemented yet.");
+            // Load essential values for calculating map positions
+            // so that map positions can be loaded properly.
+            var sections = reader.GetSections("game");
 
-            /* Load essential values for calculating map positions
-               so that map positions can be loaded properly. */
-            //Readers sections = reader.get_sections("game");
-            //SaveReaderText* game_reader = sections.front();
-            //if (game_reader == nullptr)
-            //{
-            //    throw ExceptionFreeserf("Failed to find section \"game\"");
-            //}
+            if (sections == null || sections.Count == 0 || sections[0] == null)
+            {
+                throw new ExceptionFreeserf("Failed to find section \"game\"");
+            }
 
-            //unsigned int size = 0;
-            //try
-            //{
-            //    game_reader->value("map.size") >> size;
-            //}
-            //catch (...) {
-            //    unsigned int col_size = 0;
-            //    unsigned int row_size = 0;
-            //    game_reader->value("map.col_size") >> col_size;
-            //    game_reader->value("map.row_size") >> row_size;
-            //    size = (col_size + row_size) - 9;
-            //}
+            var gameReader = sections[0];
+            uint size = 0;
 
-            ///* Initialize remaining map dimensions. */
-            //game.map.reset(new Map(MapGeometry(size)));
-            //for (SaveReaderText* subreader : reader.get_sections("map"))
-            //{
-            //    *subreader >> *game.map;
-            //}
+            try
+            {
+                size = gameReader.Value("map.size").ReadUInt();
+            }
+            catch
+            {
+                uint columnSize = gameReader.Value("map.col_size").ReadUInt();
+                uint rowSize = gameReader.Value("map.row_size").ReadUInt();
+                size = columnSize + rowSize - 9;
+            }
 
-            ////  std::string version;
-            ////  reader.value("version") >> version;
-            ////  LOGV("savegame", "Loading save game from version %s.", version.c_str());
+            // Initialize remaining map dimensions.
+            map = new Map(new MapGeometry(size), renderView);
 
-            //game_reader->value("game_type") >> game.game_type;
-            //game_reader->value("tick") >> game.tick;
-            //game_reader->value("game_stats_counter") >> game.game_stats_counter;
-            //game_reader->value("history_counter") >> game.history_counter;
-            //std::string rnd_str;
-            //try
-            //{
-            //    game_reader->value("random") >> rnd_str;
-            //    game.rnd = Random(rnd_str);
-            //}
-            //catch (...) {
-            //    game_reader->value("rnd") >> rnd_str;
-            //    std::stringstream ss;
-            //    ss << rnd_str;
-            //    uint16_t r1, r2, r3;
-            //    char c;
-            //    ss >> r1 >> c >> r2 >> c >> r3;
-            //    game.rnd = Random(r1, r2, r3);
-            //}
-            //game_reader->value("next_index") >> game.next_index;
-            //game_reader->value("flag_search_counter") >> game.flag_search_counter;
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    game_reader->value("player_history_index")[i] >>
-            //                                                   game.player_history_index[i];
-            //}
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    game_reader->value("player_history_counter")[i] >>
-            //                                                 game.player_history_counter[i];
-            //}
-            //game_reader->value("resource_history_index") >> game.resource_history_index;
-            //game_reader->value("max_next_index") >> game.max_next_index;
-            //game_reader->value("map.gold_morale_factor") >> game.map_gold_morale_factor;
-            //game_reader->value("player_score_leader") >> game.player_score_leader;
+            foreach (var subreader in reader.GetSections("map"))
+            {
+                map.ReadFrom(subreader);
+            }
 
-            //game_reader->value("gold_deposit") >> game.gold_total;
+            gameType = gameReader.Value("game_type").ReadInt();
+            tick = (ushort)gameReader.Value("tick").ReadUInt();
+            gameStatsCounter = gameReader.Value("game_stats_counter").ReadUInt();
+            historyCounter = gameReader.Value("history_counter").ReadUInt();
 
-            //Map::UpdateState update_state;
-            //int x, y;
-            //game_reader->value("update_state.remove_signs_counter") >>
-            //  update_state.remove_signs_counter;
-            //game_reader->value("update_state.last_tick") >> update_state.last_tick;
-            //game_reader->value("update_state.counter") >> update_state.counter;
-            //game_reader->value("update_state.initial_pos")[0] >> x;
-            //game_reader->value("update_state.initial_pos")[1] >> y;
-            //update_state.initial_pos = game.map->pos(x, y);
-            //game.map->set_update_state(update_state);
+            random = new Random(gameReader.Value("random").ReadString());
+            flagSearchCounter = (ushort)gameReader.Value("flag_search_counter").ReadUInt();
 
-            //for (SaveReaderText* subreader : reader.get_sections("player"))
-            //{
-            //    Player* p = game.players.get_or_insert(subreader->get_number());
-            //    *subreader >> *p;
-            //}
+            for (int i = 0; i < 4; ++i)
+            {
+                playerHistoryIndex[i] = gameReader.Value("player_history_index")[i].ReadInt();
+            }
 
-            //for (SaveReaderText* subreader : reader.get_sections("flag"))
-            //{
-            //    Flag* p = game.flags.get_or_insert(subreader->get_number());
-            //    *subreader >> *p;
-            //}
+            for (int i = 0; i < 3; ++i)
+            {
+                playerHistoryCounter[i] = gameReader.Value("player_history_counter")[i].ReadInt();
+            }
 
-            //sections = reader.get_sections("building");
-            //for (SaveReaderText* subreader : reader.get_sections("building"))
-            //{
-            //    Building* p = game.buildings.get_or_insert(subreader->get_number());
-            //    *subreader >> *p;
-            //}
+            resourceHistoryIndex = gameReader.Value("resource_history_index").ReadInt();
+            mapGoldMoraleFactor = gameReader.Value("map.gold_morale_factor").ReadUInt();
+            playerScoreLeader = gameReader.Value("player_score_leader").ReadInt();
 
-            //for (SaveReaderText* subreader : reader.get_sections("inventory"))
-            //{
-            //    Inventory* p = game.inventories.get_or_insert(subreader->get_number());
-            //    *subreader >> *p;
-            //}
+            goldTotal = gameReader.Value("gold_deposit").ReadUInt();
 
-            //for (SaveReaderText* subreader : reader.get_sections("serf"))
-            //{
-            //    Serf* p = game.serfs.get_or_insert(subreader->get_number());
-            //    *subreader >> *p;
-            //}
+            Map.UpdateState updateState = new Map.UpdateState();
 
-            ///* Restore idle serf flag */
-            //for (Serf* serf : game.serfs)
-            //{
-            //    if (serf->get_index() == 0) continue;
+            updateState.RemoveSignsCounter = gameReader.Value("update_state.remove_signs_counter").ReadInt();
+            updateState.LastTick = (ushort)gameReader.Value("update_state.last_tick").ReadUInt();
+            updateState.Counter = gameReader.Value("update_state.counter").ReadInt();
+            uint x = gameReader.Value("update_state.initial_pos")[0].ReadUInt();
+            uint y = gameReader.Value("update_state.initial_pos")[1].ReadUInt();
+            updateState.InitialPos = map.Pos(x, y);
 
-            //    if (serf->get_state() == Serf::StateIdleOnPath ||
-            //        serf->get_state() == Serf::StateWaitIdleOnPath)
-            //    {
-            //        game.map->set_idle_serf(serf->get_pos());
-            //    }
-            //}
+            map.SetUpdateState(updateState);
 
-            ///* Restore building index */
-            //for (Building* building : game.buildings)
-            //{
-            //    if (building->get_index() == 0) continue;
+            foreach (var subreader in reader.GetSections("player"))
+            {
+                Player player = players.GetOrInsert((uint)subreader.Number);
+                player.ReadFrom(subreader);
+            }
 
-            //    if (game.map->get_obj(building->get_position()) <
-            //          Map::ObjectSmallBuilding ||
-            //        game.map->get_obj(building->get_position()) > Map::ObjectCastle)
-            //    {
-            //        std::ostringstream str;
-            //        str << "Map data does not match building " << building->get_index() <<
-            //          " position.";
-            //        throw ExceptionFreeserf(str.str());
-            //    }
+            foreach (var subreader in reader.GetSections("flag"))
+            {
+                Flag flag = flags.GetOrInsert((uint)subreader.Number);
+                flag.ReadFrom(subreader);
+            }
 
-            //    game.map->set_obj_index(building->get_position(), building->get_index());
-            //}
+            foreach (var subreader in reader.GetSections("building"))
+            {
+                Building building = buildings.GetOrInsert((uint)subreader.Number);
+                building.ReadFrom(subreader);
+            }
 
-            ///* Restore flag index */
-            //for (Flag* flag : game.flags)
-            //{
-            //    if (flag->get_index() == 0) continue;
+            foreach (var subreader in reader.GetSections("inventory"))
+            {
+                Inventory inventory = inventories.GetOrInsert((uint)subreader.Number);
+                inventory.ReadFrom(subreader);
+            }
 
-            //    if (game.map->get_obj(flag->get_position()) != Map::ObjectFlag)
-            //    {
-            //        std::ostringstream str;
-            //        str << "Map data does not match flag " << flag->get_index() <<
-            //          " position.";
-            //        throw ExceptionFreeserf(str.str());
-            //    }
+            foreach (var subreader in reader.GetSections("serf"))
+            {
+                Serf serf = serfs.GetOrInsert((uint)subreader.Number);
+                serf.ReadFrom(subreader);
+            }
 
-            //    game.map->set_obj_index(flag->get_position(), flag->get_index());
-            //}
+            // Restore idle serf flag
+            foreach (Serf serf in serfs)
+            {
+                if (serf.Index == 0)
+                    continue;
 
-            //game.game_speed = 0;
-            //game.game_speed_save = DEFAULT_GAME_SPEED;
+                if (serf.SerfState == Serf.State.IdleOnPath ||
+                    serf.SerfState == Serf.State.WaitIdleOnPath)
+                {
+                    map.SetIdleSerf(serf.Position);
+                }
 
-            //game.init_land_ownership();
-            //game.PostLoadRoadUpdate();
+                switch (serf.SerfState)
+                {
+                    case Serf.State.BuildingCastle:
+                    case Serf.State.IdleInStock:
+                    case Serf.State.DefendingCastle:
+                    case Serf.State.DefendingFortress:
+                    case Serf.State.DefendingHut:
+                    case Serf.State.DefendingTower:
+                    case Serf.State.Invalid:
+                    case Serf.State.Null:
+                    case Serf.State.WaitForResourceOut:
+                        break;
+                    default:
+                        AddSerfForDrawing(serf, serf.Position);
+                        break;
+                }
+            }
+
+            // Restore building index
+            foreach (Building building in buildings)
+            {
+                if (building.Index == 0)
+                    continue;
+
+                if (map.GetObject(building.Position) < Map.Object.SmallBuilding ||
+                    map.GetObject(building.Position) > Map.Object.Castle)
+                {
+                    throw new ExceptionFreeserf("Map data does not match building " + building.Index + " position.");
+                }
+
+                map.SetObjectIndex(building.Position, building.Index);
+
+                OnObjectPlaced(building.Position);
+            }
+
+            // Restore flag index
+            foreach (Flag flag in flags)
+            {
+                if (flag.Index == 0)
+                    continue;
+
+                if (map.GetObject(flag.Position) != Map.Object.Flag)
+                {
+                    throw new ExceptionFreeserf("Map data does not match flag " + flag.Index + " position.");
+                }
+
+                map.SetObjectIndex(flag.Position, flag.Index);
+
+                OnObjectPlaced(flag.Position);
+            }
+
+            gameSpeed = 0;
+            gameSpeedSave = DEFAULT_GAME_SPEED;
+
+            map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
+
+            InitLandOwnership();
+            PostLoadRoads();
         }
 
         public void WriteTo(SaveWriterText writer)
         {
-            // TODO
-            throw new ExceptionFreeserf("Game.WriteTo is not implemented yet.");
+            writer.Value("map.size").Write(map.Size);
+            writer.Value("game_type").Write(gameType);
+            writer.Value("tick").Write(tick);
+            writer.Value("game_stats_counter").Write(gameStatsCounter);
+            writer.Value("history_counter").Write(historyCounter);
+            writer.Value("random").Write(random.ToString());
 
-            //writer.value("map.size") << game.map->get_size();
-            //writer.value("game_type") << game.game_type;
-            //writer.value("tick") << game.tick;
-            //writer.value("game_stats_counter") << game.game_stats_counter;
-            //writer.value("history_counter") << game.history_counter;
-            //writer.value("random") << (std::string)game.rnd;
+            writer.Value("next_index").Write(0); // next_index (we keep this to be compatible to freeserf save games)
+            writer.Value("flag_search_counter").Write(flagSearchCounter);
 
-            //writer.value("next_index") << game.next_index;
-            //writer.value("flag_search_counter") << game.flag_search_counter;
+            for (int i = 0; i < 4; ++i)
+            {
+                writer.Value("player_history_index").Write(playerHistoryIndex[i]);
+            }
 
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    writer.value("player_history_index") << game.player_history_index[i];
-            //}
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    writer.value("player_history_counter") << game.player_history_counter[i];
-            //}
-            //writer.value("resource_history_index") << game.resource_history_index;
+            for (int i = 0; i < 3; ++i)
+            {
+                writer.Value("player_history_counter").Write(playerHistoryCounter[i]);
+            }
 
-            //writer.value("max_next_index") << game.max_next_index;
-            //writer.value("map.gold_morale_factor") << game.map_gold_morale_factor;
-            //writer.value("player_score_leader") << game.player_score_leader;
+            writer.Value("resource_history_index").Write(resourceHistoryIndex);
 
-            //writer.value("gold_deposit") << game.gold_total;
+            writer.Value("max_next_index").Write(0); // max_next_index (we keep this to be compatible to freeserf save games)
+            writer.Value("map.gold_morale_factor").Write(mapGoldMoraleFactor);
+            writer.Value("player_score_leader").Write(playerScoreLeader);
 
-            //const Map::UpdateState&update_state = game.map->get_update_state();
-            //writer.value("update_state.remove_signs_counter") <<
-            //  update_state.remove_signs_counter;
-            //writer.value("update_state.last_tick") << update_state.last_tick;
-            //writer.value("update_state.counter") << update_state.counter;
-            //writer.value("update_state.initial_pos") << game.map->pos_col(
-            //  update_state.initial_pos);
-            //writer.value("update_state.initial_pos") << game.map->pos_row(
-            //  update_state.initial_pos);
+            writer.Value("gold_deposit").Write(goldTotal);
 
-            //for (Player* player : game.players)
-            //{
-            //    SaveWriterText & player_writer = writer.add_section("player",
-            //                                                       player->get_index());
-            //    player_writer << *player;
-            //}
+            var updateState = map.GetUpdateState();
 
-            //for (Flag* flag : game.flags)
-            //{
-            //    if (flag->get_index() == 0) continue;
-            //    SaveWriterText & flag_writer = writer.add_section("flag", flag->get_index());
-            //    flag_writer << *flag;
-            //}
+            writer.Value("update_state.remove_signs_counter").Write(updateState.RemoveSignsCounter);
+            writer.Value("update_state.last_tick").Write(updateState.LastTick);
+            writer.Value("update_state.counter").Write(updateState.Counter);
+            writer.Value("update_state.initial_pos").Write(map.PosColumn(updateState.InitialPos));
+            writer.Value("update_state.initial_pos").Write(map.PosRow(updateState.InitialPos));
 
-            //for (Building* building : game.buildings)
-            //{
-            //    if (building->get_index() == 0) continue;
-            //    SaveWriterText & building_writer = writer.add_section("building",
-            //                                                         building->get_index());
-            //    building_writer << *building;
-            //}
+            foreach (var player in players)
+            {
+                var playerWriter = writer.AddSection("player", player.Index);
+                
+                player.WriteTo(playerWriter);
+            }
 
-            //for (Inventory* inventory : game.inventories)
-            //{
-            //    SaveWriterText & inventory_writer = writer.add_section("inventory",
-            //                                                        inventory->get_index());
-            //    inventory_writer << *inventory;
-            //}
+            foreach (var flag in flags)
+            {
+                if (flag.Index == 0)
+                    continue;
 
-            //for (Serf* serf : game.serfs)
-            //{
-            //    if (serf->get_index() == 0) continue;
-            //    SaveWriterText & serf_writer = writer.add_section("serf", serf->get_index());
-            //    serf_writer << *serf;
-            //}
+                var flagWriter = writer.AddSection("flag", flag.Index);
+                flag.WriteTo(flagWriter);
+            }
 
-            //writer << *game.map;
+            foreach (var building in buildings)
+            {
+                if (building.Index == 0)
+                    continue;
+
+                var buildingWriter = writer.AddSection("building", building.Index);
+                building.WriteTo(buildingWriter);
+            }
+
+            foreach (var inventory in inventories)
+            {
+                var inventoryWriter = writer.AddSection("inventory", inventory.Index);
+                inventory.WriteTo(inventoryWriter);
+            }
+
+            foreach (var serf in serfs)
+            {
+                if (serf.Index == 0)
+                    continue;
+
+                var serfWriter = writer.AddSection("serf", serf.Index);
+                serf.WriteTo(serfWriter);
+            }
+
+            map.WriteTo(writer);
         }
 
-        /* Load serf state from save game. */
+        // Load serf state from save game.
         bool LoadSerfs(SaveReaderBinary reader, int maxSerfIndex)
         {
-            // TODO
-            return false;
+            // Load serf bitmap.
+            int bitmapSize = 4 * ((maxSerfIndex + 31) / 32);
+            var bitmap = reader.Read((uint)bitmapSize);
 
-            /* Load serf bitmap. */
-            //int bitmap_size = 4 * ((max_serf_index + 31) / 32);
-            //uint8_t* bitmap = reader->read(bitmap_size);
-            //if (bitmap == NULL) return false;
+            if (bitmap == null)
+                return false;
 
-            ///* Load serf data. */
-            //for (int i = 0; i < max_serf_index; i++)
-            //{
-            //    SaveReaderBinary serf_reader = reader->extract(16);
-            //    if (BIT_TEST(bitmap[(i) >> 3], 7 - ((i) & 7)))
-            //    {
-            //        Serf* serf = serfs.get_or_insert(i);
-            //        serf_reader >> *serf;
-            //    }
-            //}
+            // Load serf data.
+            for (int i = 0; i < maxSerfIndex; ++i)
+            {
+                var serfReader = reader.Extract(16);
 
-            //return true;
+                if (Misc.BitTest(bitmap[(i) >> 3], 7 - ((i) & 7)))
+                {
+                    Serf serf = serfs.GetOrInsert((uint)i);
+                    serf.ReadFrom(serfReader);
+
+                    switch (serf.SerfState)
+                    {
+                        case Serf.State.BuildingCastle:
+                        case Serf.State.IdleInStock:
+                        case Serf.State.DefendingCastle:
+                        case Serf.State.DefendingFortress:
+                        case Serf.State.DefendingHut:
+                        case Serf.State.DefendingTower:
+                        case Serf.State.Invalid:
+                        case Serf.State.Null:
+                        case Serf.State.WaitForResourceOut:
+                            break;
+                        default:
+                            AddSerfForDrawing(serf, serf.Position);
+                            break;
+                    }
+                }
+            }
+
+            return true;
         }
 
-        /* Load flags state from save game. */
+        // Load flags state from save game.
         bool LoadFlags(SaveReaderBinary reader, int maxFlagIndex)
         {
-            // TODO
-            return false;
+            // Load flag bitmap.
+            int bitmapSize = 4 * ((maxFlagIndex + 31) / 32);
+            var bitmap = reader.Read((uint)bitmapSize);
 
-            /* Load flag bitmap. */
-            //int bitmap_size = 4 * ((max_flag_index + 31) / 32);
-            //uint8_t* bitmap = reader->read(bitmap_size);
-            //if (bitmap == NULL) return false;
+            if (bitmap == null)
+                return false;
 
-            ///* Load flag data. */
-            //for (int i = 0; i < max_flag_index; i++)
-            //{
-            //    SaveReaderBinary flag_reader = reader->extract(70);
-            //    if (BIT_TEST(bitmap[(i) >> 3], 7 - ((i) & 7)))
-            //    {
-            //        Flag* flag = flags.get_or_insert(i);
-            //        flag_reader >> *flag;
-            //    }
-            //}
+            // Load flag data.
+            for (int i = 0; i < maxFlagIndex; ++i)
+            {
+                var flagReader = reader.Extract(70);
 
-            ///* Set flag positions. */
-            //for (MapPos pos : map->geom())
-            //{
-            //    if (map->get_obj(pos) == Map::ObjectFlag)
-            //    {
-            //        Flag* flag = flags[map->get_obj_index(pos)];
-            //        flag->set_position(pos);
-            //    }
-            //}
+                if (Misc.BitTest(bitmap[(i) >> 3], 7 - ((i) & 7)))
+                {
+                    Flag flag = flags.GetOrInsert((uint)i);
+                    flag.ReadFrom(flagReader);
+                }
+            }
 
-            //return true;
+            // Set flag positions.
+            foreach (MapPos pos in map.Geometry)
+            {
+                if (map.GetObject(pos) == Map.Object.Flag)
+                {
+                    Flag flag = flags[map.GetObjectIndex(pos)];
+                    flag.Position = pos;
+
+                    OnObjectPlaced(flag.Position);
+                }
+            }
+
+            return true;
         }
 
-        /* Load buildings state from save game. */
+        // Load buildings state from save game.
         bool LoadBuildings(SaveReaderBinary reader, int maxBuildingIndex)
         {
-            // TODO
-            return false;
+            // Load building bitmap.
+            int bitmapSize = 4 * ((maxBuildingIndex + 31) / 32);
+            var bitmap = reader.Read((uint)bitmapSize);
 
-            /* Load building bitmap. */
-            //int bitmap_size = 4 * ((max_building_index + 31) / 32);
-            //uint8_t* bitmap = reader->read(bitmap_size);
-            //if (bitmap == NULL) return false;
+            if (bitmap == null)
+                return false;
 
-            ///* Load building data. */
-            //for (int i = 0; i < max_building_index; i++)
-            //{
-            //    SaveReaderBinary building_reader = reader->extract(18);
-            //    if (BIT_TEST(bitmap[(i) >> 3], 7 - ((i) & 7)))
-            //    {
-            //        Building* building = buildings.get_or_insert(i);
-            //        building_reader >> *building;
-            //    }
-            //}
+            // Load building data.
+            for (int i = 0; i < maxBuildingIndex; ++i)
+            {
+                var buildingReader = reader.Extract(18);
 
-            //return true;
+                if (Misc.BitTest(bitmap[(i) >> 3], 7 - ((i) & 7)))
+                {
+                    Building building = buildings.GetOrInsert((uint)i);
+                    building.ReadFrom(buildingReader);
+
+                    OnObjectPlaced(building.Position);
+                }
+            }
+
+            return true;
         }
 
-        /* Load inventories state from save game. */
+        // Load inventories state from save game.
         bool LoadInventories(SaveReaderBinary reader, int maxInventoryIndex)
         {
-            // TODO
-            return false;
+            // Load inventory bitmap.
+            int bitmapSize = 4 * ((maxInventoryIndex + 31) / 32);
+            var bitmap = reader.Read((uint)bitmapSize);
 
-            /* Load inventory bitmap. */
-            //int bitmap_size = 4 * ((max_inventory_index + 31) / 32);
-            //uint8_t* bitmap = reader->read(bitmap_size);
-            //if (bitmap == NULL) return false;
+            if (bitmap == null)
+                return false;
 
-            ///* Load inventory data. */
-            //for (int i = 0; i < max_inventory_index; i++)
-            //{
-            //    SaveReaderBinary inventory_reader = reader->extract(120);
-            //    if (BIT_TEST(bitmap[(i) >> 3], 7 - ((i) & 7)))
-            //    {
-            //        Inventory* inventory = inventories.get_or_insert(i);
-            //        inventory_reader >> *inventory;
-            //    }
-            //}
+            // Load inventory data.
+            for (int i = 0; i < maxInventoryIndex; ++i)
+            {
+                var inventoryReader = reader.Extract(120);
 
-            //return true;
+                if (Misc.BitTest(bitmap[(i) >> 3], 7 - ((i) & 7)))
+                {
+                    Inventory inventory = inventories.GetOrInsert((uint)i);
+                    inventory.ReadFrom(inventoryReader);
+                }
+            }
+
+            return true;
         }
 
         public override void OnHeightChanged(MapPos pos)
@@ -3486,26 +3482,34 @@ namespace Freeserf
             if (obj == Map.Object.Flag)
             {
                 var flag = GetFlagAtPos(pos);
-                var renderFlag = new Render.RenderFlag(flag, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
 
-                renderFlag.Visible = true;
+                if (!renderFlags.ContainsKey(flag))
+                {
+                    var renderFlag = new Render.RenderFlag(flag, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
 
-                renderFlags.Add(flag, renderFlag);
+                    renderFlag.Visible = true;
+
+                    renderFlags.Add(flag, renderFlag);
+                }
             }
             else if (obj == Map.Object.SmallBuilding ||
                      obj == Map.Object.LargeBuilding ||
                      obj == Map.Object.Castle)
             {
                 var building = GetBuildingAtPos(pos);
-                var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings), 
-                    renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource, renderView.AudioFactory.GetAudio());
 
-                renderBuilding.Visible = true;
+                if (!renderBuildings.ContainsKey(building))
+                {
+                    var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings),
+                        renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource, renderView.AudioFactory.GetAudio());
 
-                renderBuildings.Add(building, renderBuilding);
+                    renderBuilding.Visible = true;
 
-                if (!building.IsDone() || building.IsBurning())
-                    renderBuildingsInProgress.Add(renderBuilding);
+                    renderBuildings.Add(building, renderBuilding);
+
+                    if (!building.IsDone() || building.IsBurning())
+                        renderBuildingsInProgress.Add(renderBuilding);
+                }
             }
             else // map object
             {

@@ -112,6 +112,17 @@ namespace Freeserf
                 return false;
             }
 
+            // Initialize player AI
+            for (uint i = 0; i < newGame.GetPlayerCount(); ++i)
+            {
+                Player player = newGame.GetPlayer(i);
+
+                if (player.GetFace() < 12) // not you or your partner
+                {
+                    player.AI = new AI(player, player.GetPlayerInfo());
+                }
+            }
+
             lastSaveTime = DateTime.Now;
             currentGameSaveFile = path;
             SetCurrentGame(newGame);

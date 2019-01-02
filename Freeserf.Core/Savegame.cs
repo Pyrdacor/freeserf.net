@@ -547,7 +547,7 @@ namespace Freeserf
             {
                 string value = name.Substring(pos + 1, name.Length - pos - 1);
 
-                name = name.Substring(0, pos);
+                this.name = this.name.Substring(0, pos);
 
                 number = int.Parse(value);
             }
