@@ -2074,18 +2074,19 @@ namespace Freeserf
                     s.Walking.Res = (Resource.Type)reader.Value("state.res").ReadInt();
                     s.Walking.Dest = reader.Value("state.dest").ReadUInt();
                     s.Walking.Dir = reader.Value("state.dir").ReadInt();
+                    s.Walking.Dir1 = reader.Value("state.dir1").ReadInt();
                     s.Walking.WaitCounter = reader.Value("state.wait_counter").ReadInt();
                     break;
 
                 case State.EnteringBuilding:
-                    s.EnteringBuilding.FieldB = reader.Value("state.field_B").ReadInt();
+                    s.EnteringBuilding.FieldB = reader.Value("state.field_b").ReadInt();
                     s.EnteringBuilding.SlopeLength = reader.Value("state.slope_len").ReadInt();
                     break;
 
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
                 case State.KnightLeaveForFight:
-                    s.LeavingBuilding.FieldB = reader.Value("state.field_B").ReadInt();
+                    s.LeavingBuilding.FieldB = reader.Value("state.field_b").ReadInt();
                     s.LeavingBuilding.Dest = reader.Value("state.dest").ReadUInt();
                     s.LeavingBuilding.Dest2 = reader.Value("state.dest2").ReadInt();
                     s.LeavingBuilding.Dir = reader.Value("state.dir").ReadInt();
@@ -2093,7 +2094,7 @@ namespace Freeserf
                     break;
 
                 case State.ReadyToEnter:
-                    s.ReadyToEnter.FieldB = reader.Value("state.field_B").ReadInt();
+                    s.ReadyToEnter.FieldB = reader.Value("state.field_b").ReadInt();
                     break;
 
                 case State.Digging:
@@ -2150,7 +2151,7 @@ namespace Freeserf
                     break;
 
                 case State.Lost:
-                    s.Lost.FieldB = reader.Value("state.field_B").ReadInt();
+                    s.Lost.FieldB = reader.Value("state.field_b").ReadInt();
                     break;
 
                 case State.Mining:
@@ -2202,9 +2203,9 @@ namespace Freeserf
                 case State.KnightEngageAttackingFree:
                 case State.KnightEngageAttackingFreeJoin:
                 case State.KnightAttackingVictoryFree:
-                    s.Attacking.FieldB = reader.Value("state.field_B").ReadInt();
-                    s.Attacking.FieldC = reader.Value("state.field_C").ReadInt();
-                    s.Attacking.FieldD = reader.Value("state.field_D").ReadInt();
+                    s.Attacking.FieldB = reader.Value("state.field_b").ReadInt();
+                    s.Attacking.FieldC = reader.Value("state.field_c").ReadInt();
+                    s.Attacking.FieldD = reader.Value("state.field_d").ReadInt();
                     s.Attacking.DefIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
@@ -2212,7 +2213,7 @@ namespace Freeserf
                 case State.KnightEngageDefendingFree:
                     s.DefendingFree.DistColumn = reader.Value("state.dist_col").ReadInt();
                     s.DefendingFree.DistRow = reader.Value("state.dist_row").ReadInt();
-                    s.DefendingFree.FieldD = reader.Value("state.field_D").ReadInt();
+                    s.DefendingFree.FieldD = reader.Value("state.field_d").ReadInt();
                     s.DefendingFree.OtherDistColumn = reader.Value("state.other_dist_col").ReadInt();
                     s.DefendingFree.OtherDistRow = reader.Value("state.other_dist_row").ReadInt();
                     break;
@@ -2220,8 +2221,8 @@ namespace Freeserf
                 case State.KnightLeaveForWalkToFight:
                     s.LeaveForWalkToFight.DistColumn = reader.Value("state.dist_col").ReadInt();
                     s.LeaveForWalkToFight.DistRow = reader.Value("state.dist_row").ReadInt();
-                    s.LeaveForWalkToFight.FieldD = reader.Value("state.field_D").ReadInt();
-                    s.LeaveForWalkToFight.FieldE = reader.Value("state.field_E").ReadInt();
+                    s.LeaveForWalkToFight.FieldD = reader.Value("state.field_d").ReadInt();
+                    s.LeaveForWalkToFight.FieldE = reader.Value("state.field_e").ReadInt();
                     s.LeaveForWalkToFight.NextState = (State)reader.Value("state.next_state").ReadInt();
                     break;
 
@@ -2268,18 +2269,19 @@ namespace Freeserf
                     writer.Value("state.res").Write((int)s.Walking.Res);
                     writer.Value("state.dest").Write(s.Walking.Dest);
                     writer.Value("state.dir").Write(s.Walking.Dir);
+                    writer.Value("state.dir1").Write(s.Walking.Dir1);
                     writer.Value("state.wait_counter").Write(s.Walking.WaitCounter);
                     break;
 
                 case State.EnteringBuilding:
-                    writer.Value("state.field_B").Write(s.EnteringBuilding.FieldB);
+                    writer.Value("state.field_b").Write(s.EnteringBuilding.FieldB);
                     writer.Value("state.slope_len").Write(s.EnteringBuilding.SlopeLength);
                     break;
 
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
                 case State.KnightLeaveForFight:
-                    writer.Value("state.field_B").Write(s.LeavingBuilding.FieldB);
+                    writer.Value("state.field_b").Write(s.LeavingBuilding.FieldB);
                     writer.Value("state.dest").Write(s.LeavingBuilding.Dest);
                     writer.Value("state.dest2").Write(s.LeavingBuilding.Dest2);
                     writer.Value("state.dir").Write(s.LeavingBuilding.Dir);
@@ -2287,7 +2289,7 @@ namespace Freeserf
                     break;
 
                 case State.ReadyToEnter:
-                    writer.Value("state.field_B").Write(s.ReadyToEnter.FieldB);
+                    writer.Value("state.field_b").Write(s.ReadyToEnter.FieldB);
                     break;
 
                 case State.Digging:
@@ -2344,7 +2346,7 @@ namespace Freeserf
                     break;
 
                 case State.Lost:
-                    writer.Value("state.field_B").Write(s.Lost.FieldB);
+                    writer.Value("state.field_b").Write(s.Lost.FieldB);
                     break;
 
                 case State.Mining:
@@ -2396,9 +2398,9 @@ namespace Freeserf
                 case State.KnightEngageAttackingFree:
                 case State.KnightEngageAttackingFreeJoin:
                 case State.KnightAttackingVictoryFree:
-                    writer.Value("state.field_B").Write(s.Attacking.FieldB);
-                    writer.Value("state.field_C").Write(s.Attacking.FieldC);
-                    writer.Value("state.field_D").Write(s.Attacking.FieldD);
+                    writer.Value("state.field_b").Write(s.Attacking.FieldB);
+                    writer.Value("state.field_c").Write(s.Attacking.FieldC);
+                    writer.Value("state.field_d").Write(s.Attacking.FieldD);
                     writer.Value("state.def_index").Write(s.Attacking.DefIndex);
                     break;
 
@@ -2406,7 +2408,7 @@ namespace Freeserf
                 case State.KnightEngageDefendingFree:
                     writer.Value("state.dist_col").Write(s.DefendingFree.DistColumn);
                     writer.Value("state.dist_row").Write(s.DefendingFree.DistRow);
-                    writer.Value("state.field_D").Write(s.DefendingFree.FieldD);
+                    writer.Value("state.field_d").Write(s.DefendingFree.FieldD);
                     writer.Value("state.other_dist_col").Write(s.DefendingFree.OtherDistColumn);
                     writer.Value("state.other_dist_row").Write(s.DefendingFree.OtherDistRow);
                     break;
@@ -2414,8 +2416,8 @@ namespace Freeserf
                 case State.KnightLeaveForWalkToFight:
                     writer.Value("state.dist_col").Write(s.LeaveForWalkToFight.DistColumn);
                     writer.Value("state.dist_row").Write(s.LeaveForWalkToFight.DistRow);
-                    writer.Value("state.field_D").Write(s.LeaveForWalkToFight.FieldD);
-                    writer.Value("state.field_E").Write(s.LeaveForWalkToFight.FieldE);
+                    writer.Value("state.field_d").Write(s.LeaveForWalkToFight.FieldD);
+                    writer.Value("state.field_e").Write(s.LeaveForWalkToFight.FieldE);
                     writer.Value("state.next_state").Write((int)s.LeaveForWalkToFight.NextState);
                     break;
 
@@ -2425,7 +2427,7 @@ namespace Freeserf
                 case State.WakeOnPath:
                     writer.Value("state.rev_dir").Write((int)s.IdleOnPath.RevDir);
                     writer.Value("state.flag").Write(Game.GetFlag(s.IdleOnPath.FlagIndex).Index);
-                    writer.Value("state.field_E").Write(s.IdleOnPath.FieldE);
+                    writer.Value("state.field_e").Write(s.IdleOnPath.FieldE);
                     break;
 
                 case State.DefendingHut:

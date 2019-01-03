@@ -65,7 +65,6 @@ namespace Freeserf
         readonly Dictionary<long, Render.RenderBorderSegment> renderBorderSegments = new Dictionary<long, Render.RenderBorderSegment>();
         readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
 
-        Random initMapRandom;
         uint gameSpeedSave;
         uint gameSpeed;
         ushort tick;
@@ -251,10 +250,8 @@ namespace Freeserf
 
         public bool Init(uint mapSize, Random random)
         {
-            initMapRandom = random;
-
             map = new Map(new MapGeometry(mapSize), renderView);
-            var generator = new ClassicMissionMapGenerator(map, initMapRandom);
+            var generator = new ClassicMissionMapGenerator(map, random);
 
             generator.Init();
             generator.Generate();
@@ -287,7 +284,7 @@ namespace Freeserf
             }
 
             ClearSerfRequestFailure();
-            map.Update(tick, initMapRandom);
+            map.Update(tick, random);
 
             /* Update players */
             foreach (Player player in players)
@@ -3041,6 +3038,8 @@ namespace Freeserf
             PostLoadRoads();
 
             goldTotal = map.GetGoldDeposit();
+
+            map.AddChangeHandler(this);
         }
 
         public void ReadFrom(SaveReaderText reader)
@@ -3211,6 +3210,8 @@ namespace Freeserf
 
             InitLandOwnership();
             PostLoadRoads();
+
+            map.AddChangeHandler(this);
         }
 
         public void WriteTo(SaveWriterText writer)
