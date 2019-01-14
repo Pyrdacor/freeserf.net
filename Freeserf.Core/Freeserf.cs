@@ -21,12 +21,14 @@
  */
 
 using System;
+using System.Reflection;
 
 namespace Freeserf
 {
     public static partial class Global
     {
-        public static readonly string VERSION = "freeserf.net v0.2"; // TODO: VERSION_VCS;
+        public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
+        public static readonly string VERSION = $"freeserf.net v{Version.Major}.{Version.Minor}";
 
         /* The length between game updates in miliseconds. */
         public const int TICK_LENGTH = 20;

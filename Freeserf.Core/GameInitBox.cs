@@ -140,7 +140,6 @@ namespace Freeserf
         GameInfo mission = null;
 
         RandomInput randomInput = null;
-        Map map = null;
         ListSavedFiles fileList = null;
 
         // rendering
