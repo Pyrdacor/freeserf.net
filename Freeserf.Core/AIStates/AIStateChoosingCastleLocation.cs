@@ -41,7 +41,10 @@ namespace Freeserf.AIStates
                     if (!game.BuildCastle((uint)foundPos, player))
                         continue; // failed -> try again
                     else
+                    {
                         built = true;
+                        break;
+                    }
                 }
             }
 
@@ -145,7 +148,7 @@ namespace Freeserf.AIStates
 
             int numLargeSpots = 3;
             int numSmallSpots = 3;
-            bool keepDistanceToEnemies = aggressivity < 2;
+            int keepDistanceToEnemies = 30 - (aggressivity / 2) * 10;
 
             // if we tried too often we will only assure that there is a bit of trees and stones
             if (tries >= 40)
@@ -167,7 +170,14 @@ namespace Freeserf.AIStates
                 if (tries >= 80 && player.GetInitialSupplies() > 4)
                     numLargeSpots = 1; // we need to expand the territory to build the sawmill
 
-                keepDistanceToEnemies = false;
+                if (game.Map.Size < 5)
+                {
+                    // in small maps we no longer force enemy distance after many tries
+                    if (tries >= 120)
+                        keepDistanceToEnemies = 0;
+                    else if (tries >= 80)
+                        keepDistanceToEnemies = 15;
+                }
             }
             else
             {
@@ -213,7 +223,7 @@ namespace Freeserf.AIStates
                     return -1;
             }
 
-            if (keepDistanceToEnemies)
+            if (keepDistanceToEnemies > 0)
             {
                 for (uint i = 0; i < game.GetPlayerCount(); ++i)
                 {
@@ -224,7 +234,7 @@ namespace Freeserf.AIStates
 
                     int dist = Math.Min(Math.Abs(game.Map.DistX(pos, enemy.CastlePos)), Math.Abs(game.Map.DistY(pos, enemy.CastlePos)));
 
-                    if (dist < 30)
+                    if (dist < keepDistanceToEnemies)
                         return -1;
                 }
             }

@@ -39,7 +39,7 @@ namespace Freeserf.AIStates
             uint pos;
 
             // find a nice spot
-            if (ai.StupidDecision())
+            if (!IsEssentialBuilding(game, player) && ai.StupidDecision()) // no stupid decisions for essential buildings!
                 pos = FindRandomSpot(game, player, false);
             else
             {
@@ -59,6 +59,19 @@ namespace Freeserf.AIStates
 
             if (!built && ++tries > 10 + playerInfo.Intelligence / 5)
                 Kill(ai); // not able to build the building
+        }
+
+        bool IsEssentialBuilding(Game game, Player player)
+        {
+            switch (type)
+            {
+                case Building.Type.Lumberjack:
+                case Building.Type.Stonecutter:
+                case Building.Type.Sawmill:
+                    return game.GetPlayerBuildings(player, type).Count() == 0;
+                default:
+                    return false;
+            }
         }
 
         uint FindRandomSpot(Game game, Player player, bool checkCanBuild)
@@ -354,8 +367,55 @@ namespace Freeserf.AIStates
 
         uint FindSpotNearBorder(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
-            // TODO
-            return Global.BadMapPos;
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(b =>
+                b.BuildingType == Building.Type.Hut ||
+                b.BuildingType == Building.Type.Tower ||
+                b.BuildingType == Building.Type.Fortress ||
+                b.BuildingType == Building.Type.Castle);
+
+            List<Building> possibleBaseBuildings = new List<Building>();
+            Building bestBaseBuilding = null;
+
+            foreach (var militaryBuilding in militaryBuildings)
+            {
+                int numMilitaryBuildingsInArea = MilitaryBuildingsInArea(game.Map, militaryBuilding.Position, 9, 1, false);
+
+                if (numMilitaryBuildingsInArea <= 1)
+                {
+                    bestBaseBuilding = militaryBuilding;
+                    break;
+                }
+
+                if (numMilitaryBuildingsInArea <= 2)
+                    possibleBaseBuildings.Add(militaryBuilding);
+            }
+
+            if (bestBaseBuilding == null && possibleBaseBuildings.Count == 0)
+            {
+                foreach (var militaryBuilding in militaryBuildings)
+                {
+                    int numMilitaryBuildingsInArea = MilitaryBuildingsInArea(game.Map, militaryBuilding.Position, 6, 1, false);
+
+                    if (numMilitaryBuildingsInArea <= 1)
+                    {
+                        bestBaseBuilding = militaryBuilding;
+                        break;
+                    }
+
+                    if (numMilitaryBuildingsInArea <= 2)
+                        possibleBaseBuildings.Add(militaryBuilding);
+                }
+            }
+
+            if (bestBaseBuilding == null && possibleBaseBuildings.Count == 0)
+                return FindRandomSpot(game, player, true);
+
+            if (bestBaseBuilding == null)
+            {
+                bestBaseBuilding = possibleBaseBuildings[game.RandomInt() % possibleBaseBuildings.Count];
+            }
+
+            return game.Map.FindSpotNear(bestBaseBuilding.Position, 8, IsEmptySpot, game.GetRandom(), 4);
         }
 
         uint FindSpotForStock(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
@@ -367,7 +427,7 @@ namespace Freeserf.AIStates
 
         #region Map analysis
 
-        Map.FindData FindTree(Map map, uint pos)
+        static Map.FindData FindTree(Map map, uint pos)
         {
             return new Map.FindData()
             {
@@ -375,7 +435,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindStone(Map map, uint pos)
+        static Map.FindData FindStone(Map map, uint pos)
         {
             return new Map.FindData()
             {
@@ -392,7 +452,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindFish(Map map, uint pos)
+        static Map.FindData FindFish(Map map, uint pos)
         {
             return new Map.FindData()
             {
@@ -401,7 +461,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindMineral(Map map, uint pos)
+        static Map.FindData FindMineral(Map map, uint pos)
         {
             return new Map.FindData()
             {
@@ -410,7 +470,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindEmptySpot(Map map, uint pos)
+        static Map.FindData FindEmptySpot(Map map, uint pos)
         {
             return new Map.FindData()
             {
@@ -419,27 +479,37 @@ namespace Freeserf.AIStates
             };
         }
 
-        int CountMapObjects(List<object> data)
+        static int CountMapObjects(List<object> data)
         {
             return data.Count;
         }
 
-        int CountFish(List<object> data)
+        static int CountFish(List<object> data)
         {
             return data.Select(d => (int)d).Sum();
         }
 
-        int AmountInArea(Map map, uint basePosition, int range, Func<List<object>, int> countFunc, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
+        static int AmountInArea(Map map, uint basePosition, int range, Func<List<object>, int> countFunc, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
         {
             return countFunc(map.FindInArea(basePosition, range, searchFunc, minDist));
         }
 
-        int BuildingsInArea(Map map, uint basePosition, int range, Building.Type buildingType, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
+        static int BuildingsInArea(Map map, uint basePosition, int range, Building.Type buildingType, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
         {
             return map.FindInArea(basePosition, range, searchFunc, minDist).Count(f => (f as Building).BuildingType == buildingType);
         }
 
-        int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
+        int MilitaryBuildingsInArea(Map map, uint basePosition, int range, int minDist = 0, bool includeCastle = true)
+        {
+            return map.FindInArea(basePosition, range, FindBuilding, minDist).Count(f => (f as Building).IsMilitary(includeCastle));
+        }
+
+        static bool IsEmptySpot(Map map, uint basePosition)
+        {
+            return FindEmptySpot(map, basePosition).Success;
+        }
+
+        static int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
         {
             return map.FindInArea(basePosition, range, searchFunc, minDist).Where(f => ((KeyValuePair<Map.Minerals, uint>)f).Key == mineral).Select(f => (int)((KeyValuePair<Map.Minerals, uint>)f).Value).Sum();
         }

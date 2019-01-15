@@ -45,7 +45,10 @@ namespace Freeserf.AIStates
                     spot = largeSpots[index];
 
                     if (game.BuildBuilding(spot, mineType, player))
+                    {
+                        Kill(ai);
                         break;
+                    }
 
                     largeSpots.RemoveAt(index);
                 }
@@ -55,7 +58,10 @@ namespace Freeserf.AIStates
                     spot = smallSpots[index];
 
                     if (game.BuildBuilding(spot, mineType, player))
+                    {
+                        Kill(ai);
                         break;
+                    }
 
                     smallSpots.RemoveAt(index);
                 }
@@ -76,9 +82,11 @@ namespace Freeserf.AIStates
                     }
                     else
                     {
+                        int totalGeologistCount = geologists.Count;
                         geologists = geologists.Where(g => g.SerfState == Serf.State.IdleInStock).ToList();
-                        
-                        if (geologists.Count > 0)
+                        int sentOutGeologistCount = totalGeologistCount - geologists.Count;
+
+                        if (geologists.Count > 0 && sentOutGeologistCount < 2)
                         {
                             if (!SendGeologist(ai, game, player))
                             {
@@ -87,7 +95,7 @@ namespace Freeserf.AIStates
                                 return;
                             }
                         }
-                        else // this means there are geologist but none in stock (so they are already looking for minerals)
+                        else // this means there are geologist but none in stock (so they are already looking for minerals) or 2 or more are already looking for minerals
                         {
                             Kill(ai);
                             // check again in a while
@@ -119,21 +127,34 @@ namespace Freeserf.AIStates
 
         bool FindMountain(Map map, uint pos)
         {
-            if (FindMountain(map, pos, true))
-                return true;
-
             return FindMountain(map, pos, false);
+        }
+
+        bool FindMountainWithFlag(Map map, uint pos)
+        {
+            return FindMountain(map, pos, true);
         }
 
         void FindNearbyMountain(Game game, ref uint pos)
         {
-            pos = game.Map.FindSpotNear(pos, 17, FindMountain, game.GetRandom());
+            pos = game.Map.FindSpotNear(pos, 17, FindMountainWithFlag, game.GetRandom());
+
+            if (pos == Global.BadMapPos)
+                pos = game.Map.FindSpotNear(pos, 17, FindMountain, game.GetRandom());
+        }
+
+        Map.FindData FindFlag(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.HasFlag(pos),
+                Data = pos
+            };
         }
 
         bool SendGeologist(AI ai, Game game, Player player)
         {
-            var militaryBuildings = game.GetPlayerBuildings(player).Where(b =>
-                b.IsMilitary() || b.BuildingType == Building.Type.Castle);
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary());
 
             List<uint> possibleSpots = new List<uint>();
 
@@ -155,7 +176,7 @@ namespace Freeserf.AIStates
                 if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.Tower) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.Fortress) == 0 &&
-                    !game.GetPlayerBuildings(player).Where(b => b.IsMilitary() && b.BuildingType != Building.Type.Castle).Any(b => !b.HasSerf()))
+                    !game.GetPlayerBuildings(player).Where(b => b.IsMilitary(false)).Any(b => !b.HasSerf()))
                 {
                     // build only if there are no military buildings in progress or
                     // military buildings that are not occupied yet
@@ -178,6 +199,24 @@ namespace Freeserf.AIStates
                     return false;
 
                 flag = game.GetFlagAtPos(spot);
+
+                // link flag
+                var flagPositions = game.Map.FindInArea(flag.Position, 7, FindFlag, 2).Select(d => (uint)d);
+                Road bestRoad = null;
+
+                foreach (var flagPos in flagPositions)
+                {
+                    var road = Pathfinder.Map(game.Map, flag.Position, flagPos);
+
+                    if (road != null && road.Valid)
+                    {
+                        if (bestRoad == null || bestRoad.Length > road.Length)
+                            bestRoad = road;
+                    }
+                }
+
+                if (bestRoad != null)
+                    game.BuildRoad(bestRoad, player);
             }
 
             return game.SendGeologist(flag);

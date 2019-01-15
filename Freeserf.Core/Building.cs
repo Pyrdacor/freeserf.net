@@ -250,12 +250,12 @@ namespace Freeserf
             burningCounter -= delta;
         }
 
-        public bool IsMilitary()
+        public bool IsMilitary(bool includeCastle = true)
         {
             return (BuildingType == Type.Hut) ||
                     (BuildingType == Type.Tower) ||
                     (BuildingType == Type.Fortress) ||
-                    (BuildingType == Type.Castle);
+                    (BuildingType == Type.Castle && includeCastle);
         }
 
         /* Whether construction of the building is finished. */
