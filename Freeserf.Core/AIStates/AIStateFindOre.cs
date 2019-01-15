@@ -180,7 +180,7 @@ namespace Freeserf.AIStates
                 {
                     // build only if there are no military buildings in progress or
                     // military buildings that are not occupied yet
-                    ai.CreateState(AI.State.BuildBuilding, Building.Type.Hut);
+                    NextState = ai.CreateState(AI.State.BuildBuilding, Building.Type.Hut);
                 }
 
                 return false;

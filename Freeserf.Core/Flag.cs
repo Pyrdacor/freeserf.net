@@ -31,7 +31,7 @@ namespace Freeserf
     using MapPos = UInt32;
     using ListSerfs = List<Serf>;
 
-    public struct SerfPathInfo
+    public class SerfPathInfo
     {
         public int PathLength;
         public int SerfCount;

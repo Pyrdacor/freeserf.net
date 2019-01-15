@@ -1,9 +1,6 @@
 ﻿Map Rendering:
 
 - Improve grid drawing in minimap?
-- Roads are not at the right location. Sometimes even a bit inside water. Maybe the tiles below are not at the right pos?
-	- The relation between road segments is ok though
-- Is the leveling updated when the castle has been built?
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
 
@@ -13,13 +10,7 @@ Non-working code:
 - Sometimes a road can not be build in a direction where it should be possible (maybe this is due to wrong map position calculation)
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
-- OtherEndDir not valid exception in Serf.cs line 2801. I guess the CallTransporter call in Flag.cs line 864 is the problem. Direction and/or IsWaterPath are not right.
-  Maybe this is also the cause for sailors instead of transporters sometimes.
 - Minimap clicks are only sometimes right (at least the map movement)
-- PathFinder sometimes returns roads where parts already exist. Is this valid? The road placement afterwards leads to an exception when creating another render road segment on an existing one.
-	- So fix in pathfinder if this behavior is wrong or fix in render road segment creation logic if it is valid.
-	- Map.IsRoadSegmentValid should return false in these cases so maybe the error is there
-	- The bug occurs often when a path or building is destroyed (e.g. when the territory gets bigger)
 
 
 AI:
@@ -32,13 +23,6 @@ AI:
 - Sometimes unlimited geologists are sent out to look for minerals.
 
 
-Serf rendering:
-
-- I saw a serf using a boat on a normal road when transporting stuff. The idle animation was of a normal transporter. :D
-	- As other serfs can walk there too it must be an error with the animation index
-	- Saw it again. Two with a boat and one normal transporter on a very small road (where only one transporter could be). They even blocked each other. It's a bug.
-
-
 Logic:
 
 - Saw a builder that doesn't find the correct way (he runs in a cycle). Is this due to pathfinder time limitation?
@@ -46,8 +30,6 @@ Logic:
 - Also happened for a group of knights that always took the wrong path and could not get to a hut.
 - With increased game speed the AI is much faster than the game (e.g. buildings and roads are already built before the first serf leaves the castle).
   Maybe the long tick time at the start will not notice the game speed increase and therefore wait long for the next update cycle. This seems right as the game will then run smoothly.
-- A deadlock road circle is possible where every serf wait at another one in the circle. This must be resolved somehow. Maybe one will get lost state after some time? How was it done in original game?
-- Road cycles seem to be a problem generally. Resources are transported in a circle, serfs walk only inside the circle.
 - If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
 
 
@@ -95,6 +77,4 @@ TODO:
 Exceptions:
 
 - When a knight wins a fight there is often a bad torso sprite index
-- OtherEndPoint of flag is null
-- Something with road placement of AI (pathfinder)
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.")
