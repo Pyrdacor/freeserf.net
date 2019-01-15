@@ -807,6 +807,17 @@ namespace Freeserf
             return true;
         }
 
+        bool PlayerFaceAlreadyTaken(uint playerIndex, uint face)
+        {
+            for (uint i = 0; i < playerIndex; ++i)
+            {
+                if (mission.GetPlayer(i).Face == face)
+                    return true;
+            }
+
+            return false;
+        }
+
         bool HandlePlayerClick(uint playerIndex, int cx, int cy)
         {
             if (cx < 8 || cx > 8 + 64 || cy < 8 || cy > 76)
@@ -823,7 +834,13 @@ namespace Freeserf
                     {
                         if (playerIndex >= mission.PlayerCount) // add player
                         {
-                            var playerInfo = new PlayerInfo(new Random());
+                            PlayerInfo playerInfo;
+
+                            do
+                            {
+                                playerInfo = new PlayerInfo(new Random());
+                            } while (PlayerFaceAlreadyTaken(playerIndex, playerInfo.Face));
+
                             playerInfo.Color = PlayerInfo.PlayerColors[playerIndex];
                             mission.AddPlayer(playerInfo);
                             SetRedraw();
