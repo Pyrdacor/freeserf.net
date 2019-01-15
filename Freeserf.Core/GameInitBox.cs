@@ -922,7 +922,7 @@ namespace Freeserf
             }
             else // click on values
             {
-                cx -= 8 + 32 + 8 + 1;
+                cx -= 8 + 32 + 8 + 3;
 
                 if (cx < 0)
                 {
@@ -933,7 +933,7 @@ namespace Freeserf
                 {
                     uint value = (uint)Misc.Clamp(0, 66 - cy, 40);
 
-                    if (cx > 0 && cx < 6)
+                    if (cx >= 0 && cx < 6)
                     {
                         bool canNotChange = gameType == GameType.Mission ||
                                             gameType == GameType.Tutorial ||
@@ -943,7 +943,7 @@ namespace Freeserf
                         if (!canNotChange)
                             player.Supplies = value;
                     }
-                    else if (cx > 6 && cx < 12)
+                    else if (cx >= 6 && cx < 12)
                     {
                         bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
                                             (playerIndex == 1 && gameType == GameType.Multiplayer) ||
@@ -955,7 +955,7 @@ namespace Freeserf
                         if (!canNotChange)
                             player.Intelligence = value;
                     }
-                    else if (cx > 12 && cx < 18)
+                    else if (cx >= 12 && cx < 18)
                     {
                         bool canNotChange = gameType == GameType.Mission ||
                                             gameType == GameType.Tutorial ||
