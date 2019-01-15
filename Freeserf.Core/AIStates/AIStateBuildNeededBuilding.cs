@@ -193,6 +193,34 @@ namespace Freeserf.AIStates
                     }
                     // TODO ...
                     break;
+                case Building.Type.IronMine:
+                    if (count < 1 && ai.GameTime > (33 - Math.Max(ai.SteelFocus, ai.MilitaryFocus) * 10 - intelligence / 8) * 5000)
+                    {
+                        return NeedBuilding(ai, game, player, type);
+                    }
+                    // TODO ...
+                    break;
+                case Building.Type.GoldMine:
+                    if (count < 1 && ai.GameTime > (45 - Math.Max(ai.GoldFocus, ai.MilitaryFocus) * 10 - intelligence / 9) * 5000)
+                    {
+                        return NeedBuilding(ai, game, player, type);
+                    }
+                    // TODO ...
+                    break;
+                case Building.Type.StoneMine:
+                    if (count < 1 && ai.GameTime > (120 - Math.Max(ai.BuildingFocus, ai.ConstructionMaterialFocus) * 20 - intelligence / 10) * 5000)
+                    {
+                        return NeedBuilding(ai, game, player, type);
+                    }
+                    // TODO ...
+                    break;
+                case Building.Type.Fisher:
+                    if (count < 1 && ai.GameTime > (75 - ai.FoodFocus * 10 - intelligence / 10) * 1000)
+                    {
+                        return NeedBuilding(ai, game, player, type);
+                    }
+                    // TODO ...
+                    break;
                 // TODO ...
             }
 

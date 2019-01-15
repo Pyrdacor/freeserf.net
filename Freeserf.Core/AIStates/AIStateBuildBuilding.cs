@@ -46,7 +46,24 @@ namespace Freeserf.AIStates
                 pos = FindSpot(ai, game, player, (int)playerInfo.Intelligence);
 
                 if (pos == Global.BadMapPos)
-                    pos = FindRandomSpot(game, player, true);
+                {
+                    switch (type)
+                    {
+                        // For these buildings we will not choose a random spot if there is no valid spot.
+                        // It would not make sense to do so as they need resources around them.
+                        case Building.Type.CoalMine:
+                        case Building.Type.Fisher:
+                        case Building.Type.GoldMine:
+                        case Building.Type.IronMine:
+                        case Building.Type.Lumberjack:
+                        case Building.Type.Stonecutter:
+                        case Building.Type.StoneMine:
+                            break;
+                        default:
+                            pos = FindRandomSpot(game, player, true);
+                            break;
+                    }                    
+                }
             }
 
             if (pos != Global.BadMapPos && game.CanBuildBuilding(pos, type, player))
@@ -280,7 +297,7 @@ namespace Freeserf.AIStates
             {
                 var randomBuilding = buildings[game.RandomInt() % buildings.Count];
 
-                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Stonecutter, maxInArea))
+                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Fisher, maxInArea))
                 {
                     if (AmountInArea(game.Map, randomBuilding.Position, 8, CountFish, FindFish) > 0)
                         return FindSpotNear(game, player, randomBuilding.Position, 3);
@@ -486,7 +503,7 @@ namespace Freeserf.AIStates
 
         static int CountFish(List<object> data)
         {
-            return data.Select(d => (int)d).Sum();
+            return data.Select(d => (int)(uint)d).Sum();
         }
 
         static int AmountInArea(Map map, uint basePosition, int range, Func<List<object>, int> countFunc, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)

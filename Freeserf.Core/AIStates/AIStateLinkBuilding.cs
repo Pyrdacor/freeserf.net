@@ -26,9 +26,7 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            uint bestFlagPos = Global.BadMapPos;
-            int minDist = int.MaxValue;
-            Dictionary<uint, int> flags = new Dictionary<uint, int>();
+            Road bestRoad = null;
 
             foreach (var flag in game.GetPlayerFlags(player))
             {
@@ -39,19 +37,16 @@ namespace Freeserf.AIStates
                 int distY = game.Map.DistY(flag.Position, flagPos);
                 int dist = Misc.Round(Math.Sqrt(distX * distX + distY * distY));
 
-                if (dist < minDist)
-                {
-                    bestFlagPos = flag.Position;
-                    minDist = dist;
+                if (dist > 30) // too far away
+                    continue;
 
-                    if (dist == 2)
-                        break;
-                }
+                var road = Pathfinder.Map(game.Map, flag.Position, flagPos);
 
-                flags.Add(flag.Position, dist);
+                if (road != null && road.Valid && (bestRoad == null || road.Length < bestRoad.Length))
+                    bestRoad = road;
             }
 
-            if (bestFlagPos == Global.BadMapPos)
+            if (bestRoad == null)
             {
                 // could not find a valid flag to link to
                 // return to idle state and decide there what to do
@@ -59,29 +54,8 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            while (flags.Count > 0)
-            {
-                var road = Pathfinder.Map(game.Map, flagPos, bestFlagPos);
+            game.BuildRoad(bestRoad, player);
 
-                if (road == null || !road.Valid ||
-                    road.Length > minDist * 2) // maybe the nearest flag is behind the border and the way is much longer as thought
-                {
-                    flags.Remove(bestFlagPos);
-
-                    if (flags.Count == 0)
-                        break;
-
-                    bestFlagPos = flags.OrderBy(f => f.Value).First().Key;
-                    continue;
-                }
-
-                if (game.BuildRoad(road, player))
-                    break;
-                else
-                    flags.Remove(bestFlagPos);
-            }
-
-            // could not link the flags
             // return to idle state and decide there what to do
             Kill(ai);
         }
