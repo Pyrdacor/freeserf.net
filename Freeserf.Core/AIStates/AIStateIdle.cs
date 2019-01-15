@@ -17,6 +17,7 @@ namespace Freeserf.AIStates
     {
         int checkUnconnectedFlagsTick = 0;
         int buildNeededBuildingsTick = 0;
+        AIStateBuildNeededBuilding buildNeededBuildingState = new AIStateBuildNeededBuilding();
         
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
@@ -43,7 +44,12 @@ namespace Freeserf.AIStates
 
                 if (game.RandomInt() % 10 > 3)
                 {
-                    ai.PushState(ai.CreateState(AI.State.BuildNeededBuilding));
+                    if (!ai.ContainsState(buildNeededBuildingState))
+                    {
+                        buildNeededBuildingState.Reset();
+                        ai.PushState(buildNeededBuildingState);
+                    }
+                    
                     return;
                 }
             }

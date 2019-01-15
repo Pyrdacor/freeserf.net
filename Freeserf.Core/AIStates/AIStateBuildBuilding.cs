@@ -8,6 +8,8 @@ namespace Freeserf.AIStates
     //       or increase the plank amount for constructions.
     // TODO: The ai should prefer large buildings in large spots (especially at the beginning). Otherwise there might
     //       be no room for large building when one is needed.
+    // TODO: Some buildings should never been placed too near to enemies like toolmaker, weaponsmith, stock, etc.
+    //       Especially the toolmaker in the beginning is crucial.
     class AIStateBuildBuilding : AIState
     {
         bool built = false;
@@ -39,31 +41,14 @@ namespace Freeserf.AIStates
             uint pos;
 
             // find a nice spot
-            if (!IsEssentialBuilding(game, player) && ai.StupidDecision()) // no stupid decisions for essential buildings!
+            if (!IsEssentialBuilding(game, player) && !IsResourceNeedingBuilding() && ai.StupidDecision()) // no stupid decisions for essential buildings and buildings that need resources!
                 pos = FindRandomSpot(game, player, false);
             else
             {
                 pos = FindSpot(ai, game, player, (int)playerInfo.Intelligence);
 
-                if (pos == Global.BadMapPos)
-                {
-                    switch (type)
-                    {
-                        // For these buildings we will not choose a random spot if there is no valid spot.
-                        // It would not make sense to do so as they need resources around them.
-                        case Building.Type.CoalMine:
-                        case Building.Type.Fisher:
-                        case Building.Type.GoldMine:
-                        case Building.Type.IronMine:
-                        case Building.Type.Lumberjack:
-                        case Building.Type.Stonecutter:
-                        case Building.Type.StoneMine:
-                            break;
-                        default:
-                            pos = FindRandomSpot(game, player, true);
-                            break;
-                    }                    
-                }
+                if (pos == Global.BadMapPos && !IsResourceNeedingBuilding())
+                    pos = FindRandomSpot(game, player, true);
             }
 
             if (pos != Global.BadMapPos && game.CanBuildBuilding(pos, type, player))
@@ -86,6 +71,25 @@ namespace Freeserf.AIStates
                 case Building.Type.Stonecutter:
                 case Building.Type.Sawmill:
                     return game.GetPlayerBuildings(player, type).Count() == 0;
+                default:
+                    return false;
+            }
+        }
+
+        bool IsResourceNeedingBuilding()
+        {
+            switch (type)
+            {
+                // For these buildings we will not choose a random spot if there is no valid spot.
+                // It would not make sense to do so as they need resources around them.
+                case Building.Type.CoalMine:
+                case Building.Type.Fisher:
+                case Building.Type.GoldMine:
+                case Building.Type.IronMine:
+                case Building.Type.Lumberjack:
+                case Building.Type.Stonecutter:
+                case Building.Type.StoneMine:
+                    return true;
                 default:
                     return false;
             }
@@ -473,7 +477,7 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.GetResourceFish(pos) > 0u,
+                Success = map.IsInWater(pos) && map.GetResourceFish(pos) > 0u,
                 Data = map.GetResourceFish(pos)
             };
         }

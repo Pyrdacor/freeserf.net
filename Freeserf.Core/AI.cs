@@ -27,7 +27,7 @@ namespace Freeserf
 {
     abstract class AIState
     {
-        public bool Killed { get; private set; } = false;
+        public bool Killed { get; protected set; } = false;
         public AIState NextState { get; protected set; } = null;
         public int Delay { get; set; } = 0;
 
@@ -45,6 +45,14 @@ namespace Freeserf
                 NextState = ai.CreateState(state, param);
 
             Kill(ai);
+        }
+    }
+
+    abstract class ResetableAIState : AIState
+    {
+        public void Reset()
+        {
+            Killed = false;
         }
     }
 
@@ -323,6 +331,11 @@ namespace Freeserf
             states.Clear();
         }
 
+        internal bool ContainsState(AIState state)
+        {
+            return states.Contains(state);
+        }
+
         internal bool StupidDecision()
         {
             return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
@@ -403,7 +416,7 @@ namespace Freeserf
 
             if (currentState.Killed)
             {
-                if (currentState.NextState != null)
+                if (currentState.NextState != null && !currentState.NextState.Killed)
                     states.Push(currentState.NextState);
             }
 

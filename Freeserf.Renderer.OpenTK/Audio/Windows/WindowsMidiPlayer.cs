@@ -38,6 +38,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
         bool enabled = true;
         DataSource dataSource = null;
         bool runningStateChanged = false;
+        bool playingEvents = false;
 
         public WindowsMidiPlayer(DataSource dataSource)
         {
@@ -188,61 +189,73 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         void PlayEvents()
         {
-            if (CurrentXMI == null || !Running || !Enabled)
-            {
-                Stop();
+            if (playingEvents)
                 return;
-            }
 
-            if (Paused)
-            {
-                return;
-            }
+            playingEvents = true;
 
-            if (currentEventIndex == CurrentXMI.NumEvents)
+            try
             {
-                if (Looped)
-                {
-                    currentEventIndex = 0;
-                    trackStartTime = DateTime.Now;
-                }
-                else
+                if (CurrentXMI == null || !Running || !Enabled)
                 {
                     Stop();
                     return;
                 }
-            }
 
-            var currentTrackTime = CurrentTrackTime;
-
-            while (true)
-            {
-                var ev = CurrentXMI.GetEvent(currentEventIndex);
-
-                if (ev.StartTime < currentTrackTime + 5.0)
+                if (Paused)
                 {
-                    SendEvent(ev.ToMidiMessage());
-                    ++currentEventIndex;
+                    return;
+                }
 
-                    if (currentEventIndex == CurrentXMI.NumEvents)
+                if (currentEventIndex == CurrentXMI.NumEvents)
+                {
+                    if (Looped)
                     {
-                        if (Looped)
-                        {
-                            currentEventIndex = 0;
-                            trackStartTime = DateTime.Now;
-                            break;
-                        }
-                        else
-                        {
-                            Stop();
-                            return;
-                        }
+                        currentEventIndex = 0;
+                        trackStartTime = DateTime.Now;
+                    }
+                    else
+                    {
+                        Stop();
+                        return;
                     }
                 }
-                else
+
+                var currentTrackTime = CurrentTrackTime;
+
+                while (true)
                 {
-                    break;
+                    var ev = CurrentXMI.GetEvent(currentEventIndex);
+
+                    if (ev.StartTime < currentTrackTime + 5.0)
+                    {
+                        SendEvent(ev.ToMidiMessage());
+                        ++currentEventIndex;
+
+                        if (currentEventIndex == CurrentXMI.NumEvents)
+                        {
+                            if (Looped)
+                            {
+                                currentEventIndex = 0;
+                                trackStartTime = DateTime.Now;
+                                break;
+                            }
+                            else
+                            {
+                                Stop();
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
+            }
+            finally
+            {
+                playingEvents = false;
             }
         }
 

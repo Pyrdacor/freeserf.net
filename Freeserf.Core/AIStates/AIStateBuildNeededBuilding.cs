@@ -4,7 +4,12 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
-    class AIStateBuildNeededBuilding : AIState
+    // The idle state holds one single instance of this
+    // which is pushed to the state stack from time to time.
+    // So each AI only uses one instance of this state.
+    // Therefore we can store data over multiple executions,
+    // like the last build attempt.
+    class AIStateBuildNeededBuilding : ResetableAIState
     {
         enum CheckResult
         {
@@ -22,6 +27,9 @@ namespace Freeserf.AIStates
             Map.Minerals.Gold
         };
 
+        Building.Type lastBuildAttempt = Building.Type.None;
+        long lastBuildAttemptGameTime = long.MinValue;
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             CheckResult result = CheckResult.NotNeeded;
@@ -31,6 +39,9 @@ namespace Freeserf.AIStates
             {
                 var type = (Building.Type)i;
 
+                if (lastBuildAttempt == type && ai.GameTime - lastBuildAttemptGameTime < 10000)
+                    continue;
+
                 result = CheckBuilding(ai, game, player, intelligence, type);
 
                 if (result == CheckResult.Needed)
@@ -39,6 +50,9 @@ namespace Freeserf.AIStates
                         GoToState(ai, AI.State.FindOre, MineralFromMine[type - Building.Type.StoneMine]);
                     else
                         GoToState(ai, AI.State.BuildBuilding, type);
+
+                    lastBuildAttempt = type;
+                    lastBuildAttemptGameTime = ai.GameTime;
 
                     return;
                 }
