@@ -555,7 +555,7 @@ namespace Freeserf.Render
             int lwidth = (int)map.Columns * TILE_WIDTH;
             int lheight = (int)map.Rows * TILE_HEIGHT;
 
-            int renderX = (int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2;
+            int renderX = (int)ScrollX * TILE_WIDTH;
             int renderY = (int)ScrollY * TILE_HEIGHT;
 
             int x = mapPosition.X - renderX;
@@ -749,7 +749,7 @@ namespace Freeserf.Render
 
         public MapPos GetMapPosFromScreenPosition(Position position)
         {
-            int renderX = (int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2;
+            int renderX = (int)ScrollX * TILE_WIDTH;
             int renderY = (int)ScrollY * TILE_HEIGHT;
 
             // position inside the map
