@@ -223,6 +223,21 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 {
                     SendEvent(ev.ToMidiMessage());
                     ++currentEventIndex;
+
+                    if (currentEventIndex == CurrentXMI.NumEvents)
+                    {
+                        if (Looped)
+                        {
+                            currentEventIndex = 0;
+                            trackStartTime = DateTime.Now;
+                            break;
+                        }
+                        else
+                        {
+                            Stop();
+                            return;
+                        }
+                    }
                 }
                 else
                 {
