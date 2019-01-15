@@ -304,7 +304,16 @@ namespace Freeserf.AIStates
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Fisher, maxInArea))
                 {
                     if (AmountInArea(game.Map, randomBuilding.Position, 8, CountFish, FindFish) > 0)
-                        return FindSpotNear(game, player, randomBuilding.Position, 3);
+                    {
+                        Func<Map, uint, bool> findFish = (Map map, uint pos) =>
+                        {
+                            return FindFish(map, pos).Success;
+                        };
+
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findFish, game.GetRandom(), 1);
+
+                        return FindSpotNear(game, player, spot, 4);
+                    }
                 }
 
                 buildings.Remove(randomBuilding);
