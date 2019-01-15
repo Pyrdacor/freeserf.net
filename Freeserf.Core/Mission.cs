@@ -63,7 +63,7 @@ namespace Freeserf
         internal static readonly Player.Color[] PlayerColors = new Player.Color[4]
         {
             new Player.Color() {Red = 0x00, Green = 0xe3, Blue = 0xe3},
-            new Player.Color() {Red = 0xcf, Green = 0x63, Blue = 0x63}, // TODO: is a bit too pale
+            new Player.Color() {Red = 0xcf, Green = 0x63, Blue = 0x63},
             new Player.Color() {Red = 0xdf, Green = 0x7f, Blue = 0xef},
             new Player.Color() {Red = 0xef, Green = 0xef, Blue = 0x8f}
         };

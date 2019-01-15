@@ -823,7 +823,9 @@ namespace Freeserf
                     {
                         if (playerIndex >= mission.PlayerCount) // add player
                         {
-                            mission.AddPlayer(new PlayerInfo(new Random()));
+                            var playerInfo = new PlayerInfo(new Random());
+                            playerInfo.Color = PlayerInfo.PlayerColors[playerIndex];
+                            mission.AddPlayer(playerInfo);
                             SetRedraw();
                         }
                         else // remove
