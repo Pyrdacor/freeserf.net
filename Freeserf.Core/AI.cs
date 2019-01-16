@@ -425,6 +425,11 @@ namespace Freeserf
             }
         }
 
+        public void HandleEmptyMine(uint mineIndex)
+        {
+            PushState(CreateState(State.DestroyUselessBuildings, mineIndex));
+        }
+
         internal AIState CreateState(State state, object param = null)
         {
             switch (state)
@@ -456,8 +461,11 @@ namespace Freeserf
                 case State.AvoidCongestion:
                     return new AIStates.AIStateAvoidCongestion();
                 case State.DestroyUselessBuildings:
-                    return new AIStates.AIStateDestroyUselessBuildings();
-                // TODO ...
+                    if (param == null)
+                        return new AIStates.AIStateDestroyUselessBuildings();
+                    else
+                        return new AIStates.AIStateDestroyUselessBuildings((uint)param);
+                    // TODO ...
             }
 
             throw new ExceptionFreeserf("Unknown AI state");

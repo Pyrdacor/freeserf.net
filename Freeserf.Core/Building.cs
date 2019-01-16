@@ -363,7 +363,7 @@ namespace Freeserf
                 if (player.IsAi())
                 {
                     if (player.AI != null)
-                        player.AI.HandleEmptyMine();
+                        player.AI.HandleEmptyMine(Index);
                 }
 
                 player.AddNotification(Message.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));

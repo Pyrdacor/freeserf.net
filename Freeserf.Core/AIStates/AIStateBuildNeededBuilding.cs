@@ -60,11 +60,20 @@ namespace Freeserf.AIStates
         {
             CheckResult result = CheckResult.NotNeeded;
             int intelligence = (int)playerInfo.Intelligence;
+            bool checkedHut = false;
 
             foreach (var type in OrderedBuildingTypes)
             {
+                if (checkedHut && game.GetPlayerBuildings(player, Building.Type.Hut).Count() == 0)
+                    return; // don't build anything (except for essential buildings) before the first hut!
+
+                if (type == Building.Type.Hut)
+                    checkedHut = true;
+
                 if (lastBuildAttempts.ContainsKey(type) && ai.GameTime - lastBuildAttempts[type] < 120 * Global.TICKS_PER_SEC)
+                {
                     continue;
+                }
 
                 result = CheckBuilding(ai, game, player, intelligence, type);
 
@@ -219,6 +228,9 @@ namespace Freeserf.AIStates
                     {
                         // TODO: decide if build hut, tower or fortress
                         int focus = Math.Max(ai.MilitaryFocus, Math.Max((ai.DefendFocus + 1) / 2, ai.ExpandFocus)) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
+
+                        if (focus == 0 && game.GetPlayerBuildings(player, Building.Type.Hut).Count() == 0)
+                            focus = 1;
 
                         if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea()) / 400 + (focus + 1) * ai.GameTime / (850 * Global.TICKS_PER_SEC) - 1 &&
                             ai.GameTime > (90 - intelligence - focus * 15) * Global.TICKS_PER_SEC)

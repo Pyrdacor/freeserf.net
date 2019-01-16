@@ -569,6 +569,34 @@ namespace Freeserf
             knightOccupation[index] = (max << 4) | min;
         }
 
+        public void SetLowKnightOccupation()
+        {
+            knightOccupation[0] = 0x00;
+            knightOccupation[1] = 0x00;
+            knightOccupation[2] = 0x00;
+            knightOccupation[3] = 0x00;
+        }
+
+        public void SetMediumKnightOccupation(bool offensive)
+        {
+            uint value = offensive ? 0x20u : 0x21u;
+
+            knightOccupation[0] = 0x00;
+            knightOccupation[1] = 0x00;
+            knightOccupation[2] = value;
+            knightOccupation[3] = value;
+        }
+
+        public void SetHighKnightOccupation(bool offensive)
+        {
+            uint value = offensive ? 0x40u : 0x42u;
+
+            knightOccupation[0] = 0x20;
+            knightOccupation[1] = 0x20;
+            knightOccupation[2] = value;
+            knightOccupation[3] = value;
+        }
+
         public void IncreaseCastleKnights()
         {
             ++castleKnights;

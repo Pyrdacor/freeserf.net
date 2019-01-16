@@ -6,6 +6,13 @@
 - Since recently (I guess since the fix to map object positioning in the middle of january of 2019) there are map jumps again at some scroll positions.
   Also the minimap click re-location of the map is not working correctly anymore in all cases. And I saw missing render map objects at some scroll positions.
   - But maybe this is only an issue in even map sizes where map width and height differ. And maybe this was there for a long time.
+- Farm fields may overlay construction site marks even if they have a lower baseline.
+
+
+Serf rendering:
+
+- The baker is not visible while making bread.
+- The miller animation inside the mill is too fast and/or laggy.
 
 
 Non-working code:
@@ -14,6 +21,7 @@ Non-working code:
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Minimap clicks are only sometimes right (at least the map movement)
+- Some text of the notification box stays in the upper left corner of the screen after closing.
 
 
 AI:

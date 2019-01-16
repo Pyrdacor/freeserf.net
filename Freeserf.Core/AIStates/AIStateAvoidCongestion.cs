@@ -10,6 +10,8 @@ namespace Freeserf.AIStates
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             // TODO
+
+            Kill(ai);
         }
     }
 }

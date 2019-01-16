@@ -179,5 +179,31 @@ namespace Freeserf
 
             return max;
         }
+
+        public static int Min(int firstValue, int secondValue, params int[] values)
+        {
+            int min = Math.Min(firstValue, secondValue);
+
+            foreach (var value in values)
+            {
+                if (value < min)
+                    min = value;
+            }
+
+            return min;
+        }
+
+        public static int Max(int firstValue, int secondValue, params int[] values)
+        {
+            int min = Math.Min(firstValue, secondValue);
+
+            foreach (var value in values)
+            {
+                if (value < min)
+                    min = value;
+            }
+
+            return min;
+        }
     }
 }
