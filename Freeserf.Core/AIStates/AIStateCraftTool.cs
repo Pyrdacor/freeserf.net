@@ -15,6 +15,8 @@ namespace Freeserf.AIStates
             this.tool = tool;
         }
 
+        // TODO: If we don't have steel or planks and not are able to get some, this will run forever
+        // and will block other AI states that might be necessary to get other stuff!
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             this.player = player;

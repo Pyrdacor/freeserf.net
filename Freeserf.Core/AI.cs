@@ -57,7 +57,7 @@ namespace Freeserf
     }
 
     // TODO: The AI should not try to build a fisher when there is no water. Instead it must switch to a different food resource.
-    // TODO: Way too much huts in the beginning.
+    // TODO: The AI must change some settings (like military settings, resource priorities and so on).
 
     /*
      * AIs with higher intelligence should be more clever when dealing
