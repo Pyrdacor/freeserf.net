@@ -93,7 +93,11 @@ namespace Freeserf
             BuildNeededBuilding,
             CraftWeapons,
             CraftTool,
-            FindOre
+            FindOre,
+            AdjustSettings,
+            Attack,
+            AvoidCongestion,
+            DestroyUselessBuildings
             // TODO ...
         }
 
@@ -192,6 +196,30 @@ namespace Freeserf
         int[] minPlanksForMilitaryBuildings = new int[2]; // minimum free planks for tower and fortress
         int[] minStonesForMilitaryBuildings = new int[2]; // minimum free stones for tower and fortress
 
+        /// <summary>
+        /// Priorities can be 0, 1 or 2 (each value can only be used once).
+        /// </summary>
+        /// <param name="food">0: fish, 1: bread, 2: meat</param>
+        /// <returns></returns>
+        public int GetFoodSourcePriority(int food)
+        {
+            return foodSourcePriorities[food];
+        }
+        /// <summary>
+        /// Priority 2 means 60%, 1 means 30% and 0 means 10%.
+        /// </summary>
+        /// <param name="food">0: fish, 1: bread, 2: meat</param>
+        /// <returns></returns>
+        public int GetFoodSourcePriorityInPercentage(int food)
+        {
+            int priority = GetFoodSourcePriority(food);
+
+            if (priority == 0)
+                return 10;
+
+            return priority * 30;
+        }
+
         /* Military Focus
          * 
          * - Focuses on getting coal and iron
@@ -239,8 +267,9 @@ namespace Freeserf
             {
                 case 1: // Lady Amalie
                     foodSourcePriorities[0] = 0; // fish
-                    foodSourcePriorities[1] = 1; // bread
-                    foodSourcePriorities[2] = 2; // meat
+                    foodSourcePriorities[1] = 2; // bread
+                    foodSourcePriorities[2] = 1; // meat
+                    FoodFocus = 1;
                     break;
                 case 2: // Kumpy Onefinger
                     GoldFocus = 2;
@@ -396,11 +425,6 @@ namespace Freeserf
             }
         }
 
-        public void HandleEmptyMine()
-        {
-            // TODO
-        }
-
         internal AIState CreateState(State state, object param = null)
         {
             switch (state)
@@ -425,6 +449,14 @@ namespace Freeserf
                     return new AIStates.AIStateCraftWeapons();
                 case State.FindOre:
                     return new AIStates.AIStateFindOre((Map.Minerals)param);
+                case State.AdjustSettings:
+                    return new AIStates.AIStateAdjustSettings();
+                case State.Attack:
+                    return new AIStates.AIStateAttack();
+                case State.AvoidCongestion:
+                    return new AIStates.AIStateAvoidCongestion();
+                case State.DestroyUselessBuildings:
+                    return new AIStates.AIStateDestroyUselessBuildings();
                 // TODO ...
             }
 

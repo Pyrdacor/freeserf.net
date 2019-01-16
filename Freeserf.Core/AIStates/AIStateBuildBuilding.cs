@@ -154,36 +154,41 @@ namespace Freeserf.AIStates
                         else if (defendChance == 100)
                             defendChance = 85;
 
+                        defendChance -= 10;
+
                         if (game.RandomInt() % 100 < defendChance)
                         {
-                            var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 2 + ai.DefendFocus);
+                            var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Sawmill, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldSmelter, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldSmelter, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.IronMine, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldMine, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.IronMine, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.SteelSmelter, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldMine, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.SteelSmelter, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Sawmill, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Castle, 2 + ai.DefendFocus);
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Castle, 1 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                return FindSpotNearBorder(game, player, intelligence, 1 + Math.Min(2, (ai.MilitaryFocus + ai.ExpandFocus + ai.DefendFocus) / 2));
 
                             return spot;
                         }
@@ -438,7 +443,6 @@ namespace Freeserf.AIStates
             return Global.BadMapPos;
         }
 
-        // TODO: this works not very good in most cases
         uint FindSpotNearBorder(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
             var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary());
@@ -484,7 +488,12 @@ namespace Freeserf.AIStates
                 bestBaseBuilding = possibleBaseBuildings[game.RandomInt() % possibleBaseBuildings.Count];
             }
 
-            return game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMilitary, game.GetRandom(), 5);
+            var spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMilitary, game.GetRandom(), 5);
+
+            if (spot == Global.BadMapPos)
+                spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 4);
+
+            return spot;
         }
 
         uint FindSpotForStock(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
@@ -571,6 +580,11 @@ namespace Freeserf.AIStates
         int MilitaryBuildingsInArea(Map map, uint basePosition, int range, int minDist = 0, bool includeCastle = true)
         {
             return map.FindInArea(basePosition, range, FindBuilding, minDist).Count(f => (f as Building).IsMilitary(includeCastle));
+        }
+
+        bool IsEmptySpotWithoutMuchMilitary(Map map, uint basePosition)
+        {
+            return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) < 3;
         }
 
         bool IsEmptySpotWithoutMilitary(Map map, uint basePosition)

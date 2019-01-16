@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Freeserf.AIStates
 {
-    // TODO: Craft weapons (including building weapon smiths, train a weapon smith and so on).
-    class AIStateCraftWeapons : AIState
+    // TODO: Remove stonecutters or mines that can no longer quarry resources.
+    class AIStateDestroyUselessBuildings : AIState
     {
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {

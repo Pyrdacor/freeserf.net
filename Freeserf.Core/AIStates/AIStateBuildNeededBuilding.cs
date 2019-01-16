@@ -168,13 +168,6 @@ namespace Freeserf.AIStates
                     case Building.Type.Sawmill:
                     case Building.Type.Stonecutter:
                         return NeedBuilding(ai, game, player, type);
-                    case Building.Type.Hut:
-                        if (CanBuildMilitary(ai, game, player) && !player.EmergencyProgramActive && ai.HasResourcesForBuilding(type) &&
-                            ai.GameTime > (60 - intelligence / 2 - Math.Max(ai.ExpandFocus, ai.MilitaryFocus) * 15) * Global.TICKS_PER_SEC)
-                        {
-                            return NeedBuilding(ai, game, player, type);
-                        }
-                        break;
                 }
             }
 
@@ -227,7 +220,7 @@ namespace Freeserf.AIStates
                         // TODO: decide if build hut, tower or fortress
                         int focus = Math.Max(ai.MilitaryFocus, Math.Max((ai.DefendFocus + 1) / 2, ai.ExpandFocus)) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
 
-                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea()) / 350 + (focus + 1) * ai.GameTime / (875 * Global.TICKS_PER_SEC) - 1 &&
+                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea()) / 400 + (focus + 1) * ai.GameTime / (850 * Global.TICKS_PER_SEC) - 1 &&
                             ai.GameTime > (90 - intelligence - focus * 15) * Global.TICKS_PER_SEC)
                         {
                             return NeedBuilding(ai, game, player, type);
@@ -263,17 +256,97 @@ namespace Freeserf.AIStates
                     }
                     // TODO ...
                     break;
+                case Building.Type.Farm:
+                case Building.Type.Mill:
+                case Building.Type.Baker:
+                case Building.Type.PigFarm:
+                case Building.Type.Butcher:
                 case Building.Type.Fisher:
-                    if (count < 1 && ai.GameTime > (75 - ai.FoodFocus * 10 - intelligence / 10) * Global.TICKS_PER_SEC)
-                    {
+                    if (ai.GameTime > (120 - Math.Max(ai.FoodFocus, ai.BuildingFocus) * 15) * Global.TICKS_PER_SEC && NeedFoodBuilding(ai, game, player, type))
                         return NeedBuilding(ai, game, player, type);
-                    }
-                    // TODO ...
                     break;
                 // TODO ...
             }
 
             return CheckResult.NotNeeded;
+        }
+
+        bool NeedFoodBuilding(AI ai, Game game, Player player, Building.Type type)
+        {
+            int numberOfMines = game.GetPlayerBuildings(player).Where(b =>
+                b.BuildingType == Building.Type.CoalMine ||
+                b.BuildingType == Building.Type.IronMine ||
+                b.BuildingType == Building.Type.GoldMine ||
+                b.BuildingType == Building.Type.StoneMine).Count();
+            int numberOfFishers = game.GetPlayerBuildings(player, Building.Type.Fisher).Count();
+            int numberOfFarms = game.GetPlayerBuildings(player, Building.Type.Farm).Count();
+            int numberOfMills = game.GetPlayerBuildings(player, Building.Type.Mill).Count();
+            int numberOfBakers = game.GetPlayerBuildings(player, Building.Type.Baker).Count();
+            int numberOfPigFarms = game.GetPlayerBuildings(player, Building.Type.PigFarm).Count();
+            int numberOfButchers = game.GetPlayerBuildings(player, Building.Type.Butcher).Count();
+
+            int numPossibleMines = numberOfFishers + numberOfButchers * 3 + numberOfBakers * 3;
+            int numMineDiff = ai.FoodFocus + numberOfMines - numPossibleMines;
+
+            if (numMineDiff <= 0)
+            {
+                return false;
+            }
+            else
+            {
+                int numFoodEndBuildings = numberOfFishers + numberOfBakers + numberOfButchers;
+
+                switch (type)
+                {
+                    case Building.Type.Fisher:
+                        if (numFoodEndBuildings == 0)
+                            return ai.GetFoodSourcePriority(0) == 2;
+                        return (float)numberOfFishers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(0) / 100.0f;
+                    case Building.Type.Mill:
+                        if (numberOfFarms == 0)
+                            return false;
+                        if (numberOfMills < numberOfBakers * 2)
+                            return true;
+                        if (numFoodEndBuildings == 0)
+                            return ai.GetFoodSourcePriority(1) == 2;
+                        return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f;
+                    case Building.Type.Baker:
+                        if (numberOfMills == 0)
+                            return false;
+                        if (numFoodEndBuildings == 0)
+                            return ai.GetFoodSourcePriority(1) == 2;
+                        return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f;
+                    case Building.Type.PigFarm:
+                        if (numberOfFarms == 0)
+                            return false;
+                        if (numberOfPigFarms < numberOfButchers * 6)
+                            return true;
+                        if (numFoodEndBuildings == 0)
+                            return ai.GetFoodSourcePriority(2) == 2;
+                        return (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
+                    case Building.Type.Butcher:
+                        if (numberOfPigFarms == 0)
+                            return false;
+                        if (numFoodEndBuildings == 0)
+                            return ai.GetFoodSourcePriority(2) == 2;
+                        return (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
+                    case Building.Type.Farm:
+                        {
+                            int numNeeded = numberOfMills * 2 + (numberOfPigFarms + 5) / 6;
+
+                            if (numNeeded > numberOfFarms)
+                                return true;
+
+                            if (numFoodEndBuildings == 0)
+                                return ai.GetFoodSourcePriority(0) != 2;
+
+                            return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f ||
+                                (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
+                        }
+                }
+            }
+
+            return false;
         }
     }
 }
