@@ -30,10 +30,11 @@ namespace Freeserf
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
         public static readonly string VERSION = $"freeserf.net v{Version.Major}.{Version.Minor}";
 
-        /* The length between game updates in miliseconds. */
+        /* The length between game updates in milliseconds. */
         public const int TICK_LENGTH = 20;
         public const int TICKS_PER_SEC = 1000 / TICK_LENGTH;
-        
+        public const int TICKS_PER_MIN = 60 * TICKS_PER_SEC;
+
         public static void Run(string[] args)
         {
             string dataDir;

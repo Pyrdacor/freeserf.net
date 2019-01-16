@@ -56,6 +56,9 @@ namespace Freeserf
         }
     }
 
+    // TODO: The AI should not try to build a fisher when there is no water. Instead it must switch to a different food resource.
+    // TODO: Way too much huts in the beginning.
+
     /*
      * AIs with higher intelligence should be more clever when dealing
      * with low starting resources:
@@ -155,6 +158,10 @@ namespace Freeserf
         /// </summary>
         public int ExpandFocus { get; private set; } = 0; // 0 - 2
         /// <summary>
+        /// How much focus on defending (2 = build many military buildings to protect important buildings and keep as many knights there as possible)
+        /// </summary>
+        public int DefendFocus { get; private set; } = 0; // 0 - 2
+        /// <summary>
         /// How much focus at having much buildings
         /// </summary>
         public int BuildingFocus { get; private set; } = 0; // 0 - 2
@@ -205,6 +212,160 @@ namespace Freeserf
         {
             this.player = player;
             this.playerInfo = playerInfo;
+
+            // Default values
+            Aggressivity = 0;
+            MilitarySkill = 0;
+            MilitaryFocus = 0;
+            ExpandFocus = 0;
+            DefendFocus = 0;
+            BuildingFocus = 0;
+            GoldFocus = 0;
+            SteelFocus = 0;
+            FoodFocus = 0;
+            ConstructionMaterialFocus = 0;
+            foodSourcePriorities[0] = 2; // fish
+            foodSourcePriorities[1] = 1; // bread
+            foodSourcePriorities[2] = 0; // meat
+            militaryBuildingPriorities[0] = 2; // hut
+            militaryBuildingPriorities[1] = 1; // tower
+            militaryBuildingPriorities[2] = 0; // fortress
+            minPlanksForMilitaryBuildings[0] = 20; // tower
+            minPlanksForMilitaryBuildings[1] = 30; // fortress
+            minStonesForMilitaryBuildings[0] = 12; // tower
+            minStonesForMilitaryBuildings[1] = 18; // fortress
+
+            switch (playerInfo.Face)
+            {
+                case 1: // Lady Amalie
+                    foodSourcePriorities[0] = 0; // fish
+                    foodSourcePriorities[1] = 1; // bread
+                    foodSourcePriorities[2] = 2; // meat
+                    break;
+                case 2: // Kumpy Onefinger
+                    GoldFocus = 2;
+                    break;
+                case 3: // Balduin
+                    DefendFocus = 2;
+                    militaryBuildingPriorities[0] = 0; // hut
+                    militaryBuildingPriorities[1] = 1; // tower
+                    militaryBuildingPriorities[2] = 2; // fortress
+                    minPlanksForMilitaryBuildings[0] = 12; // tower
+                    minPlanksForMilitaryBuildings[1] = 15; // fortress
+                    minStonesForMilitaryBuildings[0] = 8; // tower
+                    minStonesForMilitaryBuildings[1] = 12; // fortress
+                    break;
+                case 4: // Frollin
+                    Aggressivity = 1;
+                    ExpandFocus = 2;
+                    break;
+                case 5: // Kallina
+                    Aggressivity = 1;
+                    ExpandFocus = 1;
+                    MilitarySkill = 2;
+                    break;
+                case 6: // Rasparuk
+                    Aggressivity = 1;
+                    GoldFocus = 1;
+                    SteelFocus = 1;
+                    ConstructionMaterialFocus = 2;
+                    MilitarySkill = 2;
+                    DefendFocus = 1;
+                    BuildingFocus = 2;
+                    FoodFocus = 1;
+                    militaryBuildingPriorities[0] = 1; // hut
+                    militaryBuildingPriorities[1] = 2; // tower
+                    militaryBuildingPriorities[2] = 0; // fortress
+                    break;
+                case 7: // Count Aldaba
+                    Aggressivity = 2;
+                    MilitarySkill = 2;
+                    MilitaryFocus = 1;
+                    ExpandFocus = 1;
+                    DefendFocus = 1;
+                    GoldFocus = 1;
+                    SteelFocus = 1;
+                    militaryBuildingPriorities[0] = 1; // hut
+                    militaryBuildingPriorities[1] = 2; // tower
+                    militaryBuildingPriorities[2] = 0; // fortress
+                    foodSourcePriorities[0] = 1; // fish
+                    foodSourcePriorities[1] = 2; // bread
+                    foodSourcePriorities[2] = 0; // meat
+                    break;
+                case 8: // King Rolph VII
+                    Aggressivity = 2;
+                    MilitarySkill = 2;
+                    MilitaryFocus = 2;
+                    ExpandFocus = 1;
+                    DefendFocus = 1;
+                    BuildingFocus = 1;
+                    GoldFocus = 1;
+                    SteelFocus = 1;
+                    FoodFocus = 1;
+                    ConstructionMaterialFocus = 1;
+                    militaryBuildingPriorities[0] = 0; // hut
+                    militaryBuildingPriorities[1] = 1; // tower
+                    militaryBuildingPriorities[2] = 2; // fortress
+                    foodSourcePriorities[0] = 0; // fish
+                    foodSourcePriorities[1] = 1; // bread
+                    foodSourcePriorities[2] = 2; // meat
+                    break;
+                case 9: // Homen Doublehorn
+                    Aggressivity = 2;
+                    MilitarySkill = 2;
+                    MilitaryFocus = 2;
+                    ExpandFocus = 2;
+                    BuildingFocus = 1;
+                    GoldFocus = 2;
+                    SteelFocus = 2;
+                    FoodFocus = 1;
+                    militaryBuildingPriorities[0] = 1; // hut
+                    militaryBuildingPriorities[1] = 2; // tower
+                    militaryBuildingPriorities[2] = 0; // fortress
+                    minPlanksForMilitaryBuildings[0] = 10; // tower
+                    minPlanksForMilitaryBuildings[1] = 25; // fortress
+                    minStonesForMilitaryBuildings[0] = 8; // tower
+                    minStonesForMilitaryBuildings[1] = 15; // fortress
+                    foodSourcePriorities[0] = 2; // fish
+                    foodSourcePriorities[1] = 0; // bread
+                    foodSourcePriorities[2] = 1; // meat
+                    break;
+                case 10: // Sollok the Joker
+                    Aggressivity = 2;
+                    MilitarySkill = 2;
+                    MilitaryFocus = 2;
+                    ExpandFocus = 2;
+                    BuildingFocus = 2;
+                    GoldFocus = 2;
+                    SteelFocus = 2;
+                    FoodFocus = 1;
+                    ConstructionMaterialFocus = 2;
+                    break;
+                case 11: // Enemy
+                    Aggressivity = 2;
+                    MilitarySkill = 2;
+                    MilitaryFocus = 2;
+                    ExpandFocus = 2;
+                    DefendFocus = 2;
+                    BuildingFocus = 2;
+                    GoldFocus = 2;
+                    SteelFocus = 2;
+                    FoodFocus = 2;
+                    ConstructionMaterialFocus = 2;
+                    foodSourcePriorities[0] = 1; // fish
+                    foodSourcePriorities[1] = 2; // bread
+                    foodSourcePriorities[2] = 0; // meat
+                    militaryBuildingPriorities[0] = 0; // hut
+                    militaryBuildingPriorities[1] = 2; // tower
+                    militaryBuildingPriorities[2] = 1; // fortress
+                    minPlanksForMilitaryBuildings[0] = 20; // tower
+                    minPlanksForMilitaryBuildings[1] = 30; // fortress
+                    minStonesForMilitaryBuildings[0] = 15; // tower
+                    minStonesForMilitaryBuildings[1] = 22; // fortress
+                    break;
+                default:
+                    break;
+            }
         }
 
         /// <summary>
@@ -372,7 +533,7 @@ namespace Freeserf
             if (lastTick == 0)
             {
                 lastTick = game.Tick;
-                GameTime = game.Tick;
+                GameTime += game.Tick;
             }
             else if (game.Tick < lastTick) // overflow
             {

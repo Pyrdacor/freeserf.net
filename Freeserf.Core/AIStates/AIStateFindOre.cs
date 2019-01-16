@@ -34,7 +34,7 @@ namespace Freeserf.AIStates
             var mineType = mineTypes[(int)oreType - 1];
             var largeSpots = AI.GetMemorizedMineralSpots(oreType, true).ToList();
             var smallSpots = AI.GetMemorizedMineralSpots(oreType, true).Where(s => !largeSpots.Contains(s)).ToList();
-            bool considerSmallSpots = (ai.GameTime > 120000 + playerInfo.Intelligence * 30000) || ai.StupidDecision();
+            bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_SEC + playerInfo.Intelligence * 30 * Global.TICKS_PER_SEC) || ai.StupidDecision();
 
             while (true)
             {

@@ -146,7 +146,50 @@ namespace Freeserf.AIStates
                 case Building.Type.Hut:
                 case Building.Type.Tower:
                 case Building.Type.Fortress:
-                    return FindSpotNearBorder(game, player, intelligence, 1 + ai.MilitaryFocus);
+                    {
+                        int defendChance = (2 - (ai.ExpandFocus - ai.DefendFocus)) * 25;
+
+                        if (defendChance == 0)
+                            defendChance = 15;
+                        else if (defendChance == 100)
+                            defendChance = 85;
+
+                        if (game.RandomInt() % 100 < defendChance)
+                        {
+                            var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Sawmill, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldSmelter, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.IronMine, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldMine, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.SteelSmelter, 2 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos)
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Castle, 2 + ai.DefendFocus);
+
+                            return spot;
+                        }
+                        else
+                            return FindSpotNearBorder(game, player, intelligence, 1 + Math.Min(2, (ai.MilitaryFocus + ai.ExpandFocus + ai.DefendFocus) / 2));
+                    }
                 case Building.Type.GoldMine:
                     return FindSpotWithMinerals(game, player, intelligence, Map.Minerals.Coal, 1 + ai.GoldFocus);
                 case Building.Type.GoldSmelter:
@@ -395,14 +438,10 @@ namespace Freeserf.AIStates
             return Global.BadMapPos;
         }
 
+        // TODO: this works not very good in most cases
         uint FindSpotNearBorder(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
-            var militaryBuildings = game.GetPlayerBuildings(player).Where(b =>
-                b.BuildingType == Building.Type.Hut ||
-                b.BuildingType == Building.Type.Tower ||
-                b.BuildingType == Building.Type.Fortress ||
-                b.BuildingType == Building.Type.Castle);
-
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary());
             List<Building> possibleBaseBuildings = new List<Building>();
             Building bestBaseBuilding = null;
 
@@ -410,13 +449,13 @@ namespace Freeserf.AIStates
             {
                 int numMilitaryBuildingsInArea = MilitaryBuildingsInArea(game.Map, militaryBuilding.Position, 9, 1, false);
 
-                if (numMilitaryBuildingsInArea <= 1)
+                if (numMilitaryBuildingsInArea == 0)
                 {
                     bestBaseBuilding = militaryBuilding;
                     break;
                 }
 
-                if (numMilitaryBuildingsInArea <= 2)
+                if (numMilitaryBuildingsInArea == 1)
                     possibleBaseBuildings.Add(militaryBuilding);
             }
 
@@ -426,13 +465,13 @@ namespace Freeserf.AIStates
                 {
                     int numMilitaryBuildingsInArea = MilitaryBuildingsInArea(game.Map, militaryBuilding.Position, 6, 1, false);
 
-                    if (numMilitaryBuildingsInArea <= 1)
+                    if (numMilitaryBuildingsInArea == 0)
                     {
                         bestBaseBuilding = militaryBuilding;
                         break;
                     }
 
-                    if (numMilitaryBuildingsInArea <= 2)
+                    if (numMilitaryBuildingsInArea == 1)
                         possibleBaseBuildings.Add(militaryBuilding);
                 }
             }
@@ -445,7 +484,7 @@ namespace Freeserf.AIStates
                 bestBaseBuilding = possibleBaseBuildings[game.RandomInt() % possibleBaseBuildings.Count];
             }
 
-            return game.Map.FindSpotNear(bestBaseBuilding.Position, 8, IsEmptySpot, game.GetRandom(), 4);
+            return game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMilitary, game.GetRandom(), 5);
         }
 
         uint FindSpotForStock(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
@@ -534,9 +573,9 @@ namespace Freeserf.AIStates
             return map.FindInArea(basePosition, range, FindBuilding, minDist).Count(f => (f as Building).IsMilitary(includeCastle));
         }
 
-        static bool IsEmptySpot(Map map, uint basePosition)
+        bool IsEmptySpotWithoutMilitary(Map map, uint basePosition)
         {
-            return FindEmptySpot(map, basePosition).Success;
+            return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) <= 1;
         }
 
         static int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)

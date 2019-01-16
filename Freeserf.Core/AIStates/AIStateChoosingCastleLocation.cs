@@ -178,6 +178,10 @@ namespace Freeserf.AIStates
                     else if (tries >= 80)
                         keepDistanceToEnemies = 15;
                 }
+                else if (tries >= 200) // if tried very long we will have mercy in any case
+                {
+                    keepDistanceToEnemies = 0;
+                }
             }
             else
             {
