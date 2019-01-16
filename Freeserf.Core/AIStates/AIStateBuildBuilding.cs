@@ -236,7 +236,14 @@ namespace Freeserf.AIStates
                 case Building.Type.Stock:
                     return FindSpotForStock(game, player, intelligence, 1 + ai.BuildingFocus);
                 case Building.Type.Stonecutter:
-                    return FindSpotWithStones(game, player, intelligence, 1 + Math.Min(1, ai.ConstructionMaterialFocus));
+                    {
+                        var spot = FindSpotWithStones(game, player, intelligence, 1 + Math.Min(1, ai.ConstructionMaterialFocus));
+
+                        if (spot != Global.BadMapPos && BuildingsInArea(game.Map, spot, 7, Building.Type.Stonecutter, FindBuilding, 1) > 0)
+                            spot = Global.BadMapPos; // don't build two stonecutters near each other
+
+                        return spot;
+                    }
                 case Building.Type.StoneMine:
                     return FindSpotWithMinerals(game, player, intelligence, Map.Minerals.Stone, 1 + ai.ConstructionMaterialFocus);
                 case Building.Type.ToolMaker:
