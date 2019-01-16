@@ -379,6 +379,9 @@ namespace Freeserf
 
         public int GetFlagPriority(Resource.Type resource)
         {
+            if (resource <= Resource.Type.None || resource >= Resource.Type.GroupFood)
+                return 0;
+
             return flagPriorities[(int)resource];
         }
 
