@@ -75,6 +75,10 @@
       <Project>{eefcf9aa-d472-4b79-ad82-c1871bb60dba}</Project>
       <Name>Freeserf.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj">
+      <Project>{cdcefbbe-df01-4454-ba67-49f4b846a5b1}</Project>
+      <Name>Freeserf.Network</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Freeserf.Renderer.OpenTK\Freeserf.Renderer.OpenTK.csproj">
       <Project>{2583ec5a-7b63-4005-9390-35c9144013cc}</Project>
       <Name>Freeserf.Renderer.OpenTK</Name>

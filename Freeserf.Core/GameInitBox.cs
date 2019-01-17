@@ -168,6 +168,8 @@ namespace Freeserf
 
         // used only for multiplayer games
         readonly bool[] playerIsAI = new bool[4];
+        public string ServerGameName { get; private set; } = "Freeserf Server";
+        public GameInfo ServerGameInfo => mission;
 
         class PlayerBox
         {
@@ -830,9 +832,13 @@ namespace Freeserf
                                 interf.Viewer.ChangeTo(Viewer.Type.LocalSpectator);
                                 break;
                             case GameType.MultiplayerClient:
-                                // starting a game means joining a server
                                 // TODO: client or remote spectator depending on settings
+                                GameManager.Instance.CloseGame();
                                 interf.Viewer.ChangeTo(Viewer.Type.Client);
+                                break;
+                            case GameType.MultiplayerServer:
+                                GameManager.Instance.CloseGame();
+                                interf.Viewer.ChangeTo(Viewer.Type.Server);
                                 break;
                         }
 

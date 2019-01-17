@@ -34,6 +34,9 @@ namespace Freeserf
             Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
             Log.SetLevel(Log.Level.Verbose);
 
+            Network.Network.DefaultClientFactory = new Network.ClientFactory();
+            Network.Network.DefaultServerFactory = new Network.ServerFactory();
+
             // TODO: for now we just load DOS data (test path)
             DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
 

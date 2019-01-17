@@ -25,11 +25,25 @@ using System.Text;
 
 namespace Freeserf.Network
 {
-    public interface IClient
+    public interface ILocalClient
     {
         uint PlayerIndex { get; }
         Game Game { get; set; }
-        IServer Server { get; }
+        IRemoteServer Server { get; }
+
+        void SendKeepAlive();
+        void SendDisconnect();
+
+        void RequestPlayerStateUpdate(uint playerIndex);
+        void RequestMapStateUpdate();
+        void RequestGameStateUpdate();
+    }
+
+    public interface IRemoteClient
+    {
+        uint PlayerIndex { get; }
+        Game Game { get; set; }
+        ILocalServer Server { get; }
 
         void SendKeepAlive();
         void SendDisconnect();
@@ -46,6 +60,6 @@ namespace Freeserf.Network
 
     public interface IClientFactory
     {
-        IClient Create(uint playerIndex);
+        ILocalClient CreateLocal(uint playerIndex);
     }
 }

@@ -254,7 +254,7 @@ namespace Freeserf
 
     internal class ServerViewer : LocalPlayerViewer
     {
-        Network.IServer server = null;
+        Network.ILocalServer server = null;
         internal override Interface MainInterface { get; }
 
         public ServerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
@@ -263,10 +263,10 @@ namespace Freeserf
             // Note: It is ok if the only clients are spectators, but running a server without any connected client make no sense.
             // Note: All clients must be setup at game start. Clients can not join during the game.
             // Note: There may be more than 3 clients because of spectators!
-            server = Network.Network.DefaultServerFactory.Create();
+            server = Network.Network.DefaultServerFactory.CreateLocal(previousViewer.MainInterface.ServerGameName, previousViewer.MainInterface.ServerGameInfo);
 
-            //Init();
-            //MainInterface = new ServerInterface(renderView, this, server);
+            Init();
+            MainInterface = new ServerInterface(renderView, this, server);
         }
 
         public override void OnNewGame(Game game)

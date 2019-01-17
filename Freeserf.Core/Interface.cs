@@ -129,6 +129,8 @@ namespace Freeserf
         public bool Ingame => Game != null && (initBox == null || !initBox.Displayed);
         public Viewer.Access AccessRights => Viewer.AccessRights;
         internal Viewer Viewer { get; set; }
+        public string ServerGameName => initBox?.ServerGameName ?? "";
+        public GameInfo ServerGameInfo => initBox?.ServerGameInfo;
 
         public Interface(IRenderView renderView, Viewer viewer)
             : base(renderView)
@@ -1411,9 +1413,9 @@ namespace Freeserf
 
     internal class ServerInterface : Interface
     {
-        readonly Network.IServer server = null;
+        readonly Network.ILocalServer server = null;
 
-        public ServerInterface(IRenderView renderView, Viewer viewer, Network.IServer server)
+        public ServerInterface(IRenderView renderView, Viewer viewer, Network.ILocalServer server)
             : base(renderView, viewer)
         {
             this.server = server;

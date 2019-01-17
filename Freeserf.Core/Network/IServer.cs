@@ -25,19 +25,36 @@ using System.Text;
 
 namespace Freeserf.Network
 {
-    public interface IServer
+    public partial class Global
     {
+        public const int NetworkPort = 5067;
+    }
+
+    public interface ILocalServer
+    {
+        string Name { get; }
+        string HostName { get; }
+
         void Init();
         void Close();
 
-        void ConnectClient(IClient client);
-        void DisconnectClient(IClient client);
+        List<IRemoteClient> Clients { get; }
+        bool AcceptClients { get; set; }
+    }
 
-        List<IClient> Clients { get; }
+    public interface IRemoteServer
+    {
+        string Name { get; }
+        string HostName { get; }
+
+        event EventHandler RequestReceived;
+
+        void HandleRequest();
+        void Respond();
     }
 
     public interface IServerFactory
     {
-        IServer Create();
+        ILocalServer CreateLocal(string name, GameInfo gameInfo);
     }
 }
