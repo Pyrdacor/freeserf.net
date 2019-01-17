@@ -22,6 +22,7 @@ Non-working code:
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Minimap clicks are only sometimes right (at least the map movement)
 - Some text of the notification box stays in the upper left corner of the screen after closing.
+- In AIvsAI the first player face can be the same as another player face.
 
 
 AI:

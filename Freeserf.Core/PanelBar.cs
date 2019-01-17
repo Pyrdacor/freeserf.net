@@ -105,27 +105,28 @@ namespace Freeserf
         Render.ILayerSprite[] background = new Render.ILayerSprite[20];
         System.Timers.Timer blinkTimer = new System.Timers.Timer();
         bool blinkTrigger = false;
+        Render.IColoredRect playerColorIndicator = null;
 
         public PanelBar(Interface interf)
             : base(interf)
         {
             this.interf = interf;
 
-            var layer = (byte)(BaseDisplayLayer + 1);
+            byte layerOffset = 1;
 
-            messageIcon = new Button(interf, 8, 12, Data.Resource.FrameBottom, 3u, layer);
+            messageIcon = new Button(interf, 8, 12, Data.Resource.FrameBottom, 3u, layerOffset);
             messageIcon.Clicked += MessageIcon_Clicked;
             AddChild(messageIcon, 40, 4, true);
 
-            returnIcon = new Button(interf, 8, 10, Data.Resource.FrameBottom, 4u, layer);
+            returnIcon = new Button(interf, 8, 10, Data.Resource.FrameBottom, 4u, layerOffset);
             returnIcon.Clicked += ReturnIcon_Clicked;
             AddChild(returnIcon, 40, 28, true);
 
-            panelButtons[0] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.BuildInactive, layer);
-            panelButtons[1] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.DestroyInactive, layer);
-            panelButtons[2] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Map, layer);
-            panelButtons[3] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Stats, layer);
-            panelButtons[4] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Sett, layer);
+            panelButtons[0] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.BuildInactive, layerOffset);
+            panelButtons[1] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.DestroyInactive, layerOffset);
+            panelButtons[2] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Map, layerOffset);
+            panelButtons[3] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Stats, layerOffset);
+            panelButtons[4] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.Sett, layerOffset);
 
             panelButtons[0].Clicked += PanelBarButton_Clicked;
             panelButtons[1].Clicked += PanelBarButton_Clicked;
@@ -144,6 +145,11 @@ namespace Freeserf
 
             for (int i = 0; i < 5; ++i)
                 AddChild(panelButtons[i], 64 + i * 48, 4, true);
+
+            // player color indicator
+            playerColorIndicator = interf.RenderView.ColoredRectFactory.Create(Width + 2, Height + 1, Render.Color.Transparent, BaseDisplayLayer);
+            playerColorIndicator.Layer = interf.RenderView.GetLayer(Freeserf.Layer.Gui);
+            playerColorIndicator.Visible = true;
 
             // background
             var data = interf.RenderView.DataSource;
@@ -217,6 +223,7 @@ namespace Freeserf
         {
             DrawPanelFrame();
             DrawPanelButtons();
+            DrawPlayerColor();
         }
 
         protected override void InternalHide()
@@ -287,6 +294,17 @@ namespace Freeserf
                 bg.Y = TotalY + BackgroundLayout[i * 3 + 2];
                 bg.Visible = Displayed;
             }
+        }
+
+        void DrawPlayerColor()
+        {
+            var playerColor = interf.GetPlayer().GetColor();
+
+            playerColorIndicator.X = TotalX - 1;
+            playerColorIndicator.Y = TotalY - 1;
+            playerColorIndicator.Resize(Width + 2, Height + 1);
+            playerColorIndicator.Color = new Render.Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+            playerColorIndicator.Visible = interf.AccessRights != Viewer.Access.Player;
         }
 
         public void Update()

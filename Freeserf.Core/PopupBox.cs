@@ -330,7 +330,11 @@ namespace Freeserf
             Demolish,
             OptionsSfx,
             Save,
-            NewName
+            NewName,
+            JumpToPlayer1,
+            JumpToPlayer2,
+            JumpToPlayer3,
+            JumpToPlayer4
         }
 
         Interface interf;
@@ -3152,8 +3156,6 @@ namespace Freeserf
 
         void DrawPlayerFacesBox()
 		{
-            // TODO: maybe after a click on a face the map jumps to the castle of this player?
-
             int numPlayers = interf.Game.GetPlayerCount();
             int width = (Width - 16) / 2;
             int height = (Height - 16) / 2;
@@ -3169,7 +3171,7 @@ namespace Freeserf
                 {
                     var player = interf.Game.GetPlayer((uint)i);
 
-                    SetIcon(24 + (i % 2) * 64, 13 + (i / 2) * 72, GetPlayerFaceSprite(player.GetFace()));
+                    SetButton(24 + (i % 2) * 64, 13 + (i / 2) * 72, GetPlayerFaceSprite(player.GetFace()), Action.JumpToPlayer1 + i);
                 }
                 else
                 {
@@ -4039,6 +4041,19 @@ namespace Freeserf
                 case Action.Demolish:
                     interf.DemolishObject();
                     interf.ClosePopup();
+                    break;
+                case Action.JumpToPlayer1:
+                case Action.JumpToPlayer2:
+                case Action.JumpToPlayer3:
+                case Action.JumpToPlayer4:
+                    {
+                        var castlePos = interf.Game.GetPlayer((uint)(action - Action.JumpToPlayer1)).CastlePos;
+
+                        if (castlePos != Global.BadMapPos)
+                            interf.Viewport.MoveToMapPos(castlePos, true);
+
+                        SetBox(Type.PlayerStatistics);
+                    }
                     break;
                 // TODO ...
                 default:

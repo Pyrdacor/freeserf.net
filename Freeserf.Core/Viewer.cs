@@ -130,8 +130,14 @@ namespace Freeserf
     {
         public override Access AccessRights => Access.Player;
 
+        protected LocalPlayerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
+            : base(renderView, previousViewer, gui, type)
+        {
+
+        }
+
         public LocalPlayerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
-            : base(renderView, previousViewer, gui, Type.LocalPlayer)
+            : this(renderView, previousViewer, gui, Type.LocalPlayer)
         {
 
         }
@@ -206,6 +212,115 @@ namespace Freeserf
             if (!(this is LocalPlayerViewer))
                 Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, this, Gui));
                 
+        }
+    }
+
+    internal class ServerViewer : LocalPlayerViewer
+    {
+        public ServerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+            : base(renderView, previousViewer, gui, Type.Server)
+        {
+
+        }
+
+        // TODO
+    }
+
+    internal class ClientViewer : RemoteSpectatorViewer
+    {
+        public override Access AccessRights => Access.Player;
+
+        public ClientViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+            : base(renderView, previousViewer, gui, Type.Client)
+        {
+
+        }
+
+        // TODO
+    }
+
+    internal class RemoteSpectatorViewer : Viewer
+    {
+        public override Access AccessRights => ViewerType == Type.RestrictedRemoteSpectator ? Access.RestrictedSpectator : Access.Spectator;
+        public override bool Ingame => MainInterface.Ingame;
+        internal override Interface MainInterface { get; }
+
+        protected RemoteSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
+            : base(renderView, gui, type)
+        {
+            if (previousViewer == null)
+            {
+                Init();
+                MainInterface = new RemoteInterface(renderView, this);
+                MainInterface.OpenGameInit(); // TODO
+            }
+            else
+            {
+                MainInterface = previousViewer.MainInterface;
+                MainInterface.Viewer = this;
+            }
+        }
+
+        public RemoteSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, bool restricted)
+            : this(renderView, previousViewer, gui, restricted ? Type.RestrictedRemoteSpectator : Type.RemoteSpectator)
+        {
+
+        }
+
+        public override void Update()
+        {
+            var remoteInterface = MainInterface as RemoteInterface;
+
+            remoteInterface.GetMapUpdate();
+            remoteInterface.GetGameUpdate();
+
+            if (AccessRights == Access.Spectator)
+            {
+                for (uint i = 0; i < remoteInterface.Game.GetPlayerCount(); ++i)
+                    remoteInterface.GetPlayerUpdate(i);
+            }
+            else
+            {
+                remoteInterface.GetPlayerUpdate(remoteInterface.GetPlayer().Index);
+            }
+
+            remoteInterface.Update();
+        }
+
+        public override void Draw()
+        {
+            MainInterface.Draw();
+        }
+
+        public override void DrawCursor(int x, int y)
+        {
+            MainInterface.DrawCursor(x, y);
+        }
+
+        public override bool SendEvent(Event.EventArgs args)
+        {
+            if (!args.Done)
+                args.Done = MainInterface.HandleEvent(args);
+
+            return args.Done;
+        }
+
+        public override void OnNewGame(Game game)
+        {
+            var music = MainInterface.Audio?.GetMusicPlayer();
+
+            if (music != null && music.Enabled)
+                music.PlayTrack((int)Audio.TypeMidi.Track0);
+
+            MainInterface.SetGame(game);
+            MainInterface.SetPlayer(0);
+        }
+
+        public override void OnEndGame(Game game)
+        {
+            MainInterface.SetGame(null);
+
+            Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, this, Gui));
         }
     }
 }

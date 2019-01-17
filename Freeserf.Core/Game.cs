@@ -322,6 +322,11 @@ namespace Freeserf
                 }
             }
 
+            UpdateVisuals();
+        }
+
+        public void UpdateVisuals()
+        {
             if (map?.RenderMap != null)
                 map.RenderMap.UpdateWaves(tick);
 
@@ -331,7 +336,7 @@ namespace Freeserf
             UpdateFlags();
             UpdateBuildings();
             UpdateSerfs();
-            UpdateGameStats();            
+            UpdateGameStats();
         }
 
         public void Pause()
@@ -351,7 +356,7 @@ namespace Freeserf
 
         public void IncreaseSpeed()
         {
-            if (gameSpeed < 40) // TODO: is this really correct? May should be 4?
+            if (gameSpeed < 40) // TODO: adjust later maybe
             {
                 ++gameSpeed;
                 Log.Info.Write("game", $"Game speed: {gameSpeed}");
@@ -1387,8 +1392,6 @@ namespace Freeserf
                     }
                 }
             }
-
-            UpdateBorders(pos, calculateRadius);
         }
 
         void UpdateBorders(MapPos pos)
@@ -2142,11 +2145,6 @@ namespace Freeserf
         {
             foreach (var renderBorderSegment in renderBorderSegments)
                 renderBorderSegment.Value.Update(map.RenderMap);
-        }
-
-        void UpdateBorders(MapPos center, int radius)
-        {
-            // TODO
         }
 
         // This is called after loading a game.

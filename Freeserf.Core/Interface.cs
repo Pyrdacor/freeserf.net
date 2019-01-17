@@ -857,7 +857,10 @@ namespace Freeserf
                 return;
             }
 
-            Game.Update();
+            if (this is RemoteInterface)
+                Game.UpdateVisuals();
+            else
+                Game.Update();
 
             UpdateBuildingRoadSegments();
 
@@ -1222,13 +1225,6 @@ namespace Freeserf
             PanelBar?.Update();
         }
 
-        static void UpdateMapHeight(MapPos pos, object data)
-        {
-            Interface i = data as Interface;
-
-            i.Viewport.RedrawMapPos(pos);
-        }
-
         protected override void Layout()
         {
             if (PanelBar != null)
@@ -1277,6 +1273,8 @@ namespace Freeserf
             SetRedraw();
         }
 
+        bool IsRemote => this is RemoteInterface;
+
         protected override bool HandleKeyPressed(char key, int modifier)
         {
             if (!Ingame)
@@ -1318,22 +1316,26 @@ namespace Freeserf
                 /* Game speed */
                 case '+':
                     {
-                        Game.IncreaseSpeed();
+                        if (!IsRemote)
+                            Game.IncreaseSpeed();
                         break;
                     }
                 case '-':
                     {
-                        Game.DecreaseSpeed();
+                        if (!IsRemote)
+                            Game.DecreaseSpeed();
                         break;
                     }
                 case '0':
                     {
-                        Game.ResetSpeed();
+                        if (!IsRemote)
+                            Game.ResetSpeed();
                         break;
                     }
                 case 'P':
                     {
-                        Game.Pause();
+                        if (!IsRemote)
+                            Game.Pause();
                         break;
                     }
 
@@ -1361,13 +1363,6 @@ namespace Freeserf
                         break;
                     }
 
-                /* Debug */
-                case 'G':
-                    {
-                        Viewport.ShowGrid = !Viewport.ShowGrid;
-                        break;
-                    }
-
                 /* Game control */
                 case 'B':
                     {
@@ -1376,21 +1371,27 @@ namespace Freeserf
                     }
                 case 'J':
                     {
-                        uint index = Game.GetNextPlayer(player).Index;
-                        SetPlayer(index);
-                        Log.Debug.Write("main", "Switched to player #" + index);
+                        if (Viewer.AccessRights != Viewer.Access.Player)
+                        {
+                            uint index = Game.GetNextPlayer(player).Index;
+                            SetPlayer(index);
+                            Log.Debug.Write("main", "Switched to player #" + index);
+                        }
+
                         break;
                     }
                 case 'Z':
                     if ((modifier & 1) != 0)
                     {
-                        GameStore.Instance.QuickSave("quicksave", Game);
+                        if (!IsRemote)
+                            GameStore.Instance.QuickSave("quicksave", Game);
                     }
                     break;
                 case 'N':
                     if ((modifier & 1) != 0)
                     {
-                        OpenGameInit();
+                        if (!IsRemote)
+                            OpenGameInit();
                     }
                     break;
                 case 'C':
@@ -1406,5 +1407,29 @@ namespace Freeserf
 
             return true;
         }       
+    }
+
+    internal class RemoteInterface : Interface
+    {
+        public RemoteInterface(IRenderView renderView, Viewer viewer)
+            : base(renderView, viewer)
+        {
+
+        }
+
+        public void GetMapUpdate()
+        {
+
+        }
+
+        public void GetGameUpdate()
+        {
+
+        }
+
+        public void GetPlayerUpdate(uint playerIndex)
+        {
+
+        }
     }
 }

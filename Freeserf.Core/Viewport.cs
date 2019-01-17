@@ -42,7 +42,6 @@ namespace Freeserf
         readonly ILayerSprite[,] builds = null;
         readonly ILayerSprite[] mapCursorSprites = new ILayerSprite[7];
 
-        public bool ShowGrid { get; set; } = false;
         public bool ShowPossibleBuilds { get; set; } = false;
 
         public Viewport(Interface interf, Map map)
@@ -128,11 +127,6 @@ namespace Freeserf
             interf.UpdateMinimap();
         }
 
-        public void RedrawMapPos(MapPos pos)
-        {
-
-        }
-
         protected override void InternalHide()
         {
             base.InternalHide();
@@ -143,14 +137,6 @@ namespace Freeserf
         protected override void InternalDraw()
         {
             DrawMapCursor();
-
-#if DEBUG
-            // TODO: draw grid
-            if (ShowGrid)
-            {
-
-            }
-#endif
         }
 
 
