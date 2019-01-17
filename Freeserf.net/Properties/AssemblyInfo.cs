@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Robert Schneckenhaus")]
 [assembly: AssemblyProduct("Freeserf.net")]
-[assembly: AssemblyCopyright("Copyright © Robert Schneckenhaus 2018")]
+[assembly: AssemblyCopyright("Copyright © Robert Schneckenhaus 2018-2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

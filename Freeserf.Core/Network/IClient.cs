@@ -1,5 +1,5 @@
 ﻿/*
- * AIStateAvoidCongestion.cs - AI state for actions to avoid congestion
+ * IClient.cs - Interface for network clients
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -19,16 +19,33 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf.AIStates
-{
-    // TODO: Avoid congestion by building new roads, removing roads, building stocks and so on.
-    class AIStateAvoidCongestion : AIState
-    {
-        public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
-        {
-            // TODO
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-            Kill(ai);
-        }
+namespace Freeserf.Network
+{
+    public interface IClient
+    {
+        uint PlayerIndex { get; }
+        Game Game { get; set; }
+        IServer Server { get; }
+
+        void SendKeepAlive();
+        void SendDisconnect();
+
+        void SendPlayerStateUpdate(uint playerIndex);
+        void SendMapStateUpdate();
+        void SendGameStateUpdate();
+
+        event EventHandler RequestReceived;
+
+        void HandleRequest();
+        void Respond();
+    }
+
+    public interface IClientFactory
+    {
+        IClient Create(uint playerIndex);
     }
 }

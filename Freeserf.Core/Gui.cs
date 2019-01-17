@@ -90,6 +90,19 @@ namespace Freeserf
                 }
             }
         }
+        public virtual bool Visible
+        {
+            get
+            {
+                if (!Displayed)
+                    return false;
+
+                if (Parent == null)
+                    return true;
+
+                return Parent.Visible;
+            }
+        }
         public GuiObject Parent
         {
             get => parent;
@@ -708,34 +721,32 @@ namespace Freeserf
 
         public override bool Displayed
         {
-            get
-            {
-                if (Parent != null && !Parent.Displayed)
-                    return false;
-
-                if (index == -1)
-                    return false;
-
-                return textRenderer.IsVisible(index);
-            }
+            get => base.Displayed;
             set
             {
 
-                if (base.Displayed == value)
+                if (Displayed == value)
                     return;
-
-                if (index == -1 && !value)
-                {
-                    base.Displayed = false;
-                    return;
-                }
-
-                if (index == -1 && value)
-                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
-
-                textRenderer.ShowText(index, value);
 
                 base.Displayed = value;
+
+                UpdateVisibility();
+            }
+        }
+
+        public void UpdateVisibility()
+        {
+            if (Visible)
+            {
+                if (index == -1)
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
+
+                textRenderer.ShowText(index, true);
+            }
+            else
+            {
+                if (index != -1)
+                    textRenderer.ShowText(index, false);
             }
         }
 

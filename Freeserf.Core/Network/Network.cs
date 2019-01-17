@@ -1,5 +1,5 @@
 ﻿/*
- * AIStateAvoidCongestion.cs - AI state for actions to avoid congestion
+ * Network.cs - Default factories for network servers and clients
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -19,16 +19,11 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf.AIStates
+namespace Freeserf.Network
 {
-    // TODO: Avoid congestion by building new roads, removing roads, building stocks and so on.
-    class AIStateAvoidCongestion : AIState
+    public static class Network
     {
-        public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
-        {
-            // TODO
-
-            Kill(ai);
-        }
+        public static IClientFactory DefaultClientFactory { get; set; } = null;
+        public static IServerFactory DefaultServerFactory { get; set; } = null;
     }
 }

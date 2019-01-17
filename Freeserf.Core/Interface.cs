@@ -1,8 +1,8 @@
 ﻿/*
  * Interface.cs - Top-level GUI interface
  *
- * Copyright (C) 2013  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -84,7 +84,7 @@ namespace Freeserf
 
         GameInitBox initBox;
 
-        MapPos mapCursorPos = 0u;
+        protected MapPos mapCursorPos = 0u;
         CursorType mapCursorType = CursorType.None;
         BuildPossibility buildPossibility = BuildPossibility.None;
 
@@ -850,7 +850,7 @@ namespace Freeserf
         };
 
         /* Called periodically when the game progresses. */
-        public void Update()
+        public virtual void Update()
         {
             if (Game == null)
             {
@@ -1406,7 +1406,34 @@ namespace Freeserf
             }
 
             return true;
-        }       
+        }
+    }
+
+    internal class ServerInterface : Interface
+    {
+        readonly Network.IServer server = null;
+
+        public ServerInterface(IRenderView renderView, Viewer viewer, Network.IServer server)
+            : base(renderView, viewer)
+        {
+            this.server = server;
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            foreach (var client in server.Clients)
+            {
+                var player = Game.GetPlayer(client.PlayerIndex);
+
+                if (player.Dirty)
+                    client.SendPlayerStateUpdate(player.Index);
+            }
+
+            for (uint i = 0; i < Game.GetPlayerCount(); ++i)
+                Game.GetPlayer(i).ResetDirtyFlag();
+        }
     }
 
     internal class RemoteInterface : Interface

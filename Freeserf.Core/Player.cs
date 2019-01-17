@@ -2,7 +2,7 @@
  * Player.cs - Player related functions
  *
  * Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -180,6 +180,13 @@ namespace Freeserf
         public MapPos CastlePos { get; internal set; } = Global.BadMapPos;
         public AI AI { get; set; } = null;
 
+        // Used for multiplayer games to see if an update is necessary.
+        public bool Dirty
+        {
+            get;
+            private set;
+        }
+
         public bool EmergencyProgramActive
         {
             get => emergencyProgramActive;
@@ -252,6 +259,13 @@ namespace Freeserf
             reproductionReset = (60 - reproduction) * 50;
             aiIntelligence = (1300 * intelligence) + 13535;
             reproductionCounter = (int)reproductionReset;
+
+            Dirty = true;
+        }
+
+        internal void ResetDirtyFlag()
+        {
+            Dirty = false;
         }
 
         public PlayerInfo GetPlayerInfo()
@@ -396,6 +410,8 @@ namespace Freeserf
             newMessage.Data = data;
 
             messages.Enqueue(newMessage);
+
+            Dirty = true;
         }
 
         public bool HasNotification()
@@ -405,6 +421,8 @@ namespace Freeserf
 
         public Message PopNotification()
         {
+            Dirty = true;
+
             return messages.Dequeue();
         }
 
@@ -412,7 +430,6 @@ namespace Freeserf
         {
             return messages.Peek();
         }
-
 
         public void AddTimer(int timeout, MapPos pos)
         {
@@ -431,6 +448,8 @@ namespace Freeserf
             foodCoalmine = 45850;
             foodIronmine = 45850;
             foodGoldmine = 65500;
+
+            Dirty = true;
         }
 
         /* Set defaults for planks distribution priorities. */
@@ -439,6 +458,8 @@ namespace Freeserf
             planksConstruction = 65500;
             planksBoatbuilder = 3275;
             planksToolmaker = 19650;
+
+            Dirty = true;
         }
 
         /* Set defaults for steel distribution priorities. */
@@ -446,6 +467,8 @@ namespace Freeserf
         {
             steelToolmaker = 45850;
             steelWeaponsmith = 65500;
+
+            Dirty = true;
         }
 
         /* Set defaults for coal distribution priorities. */
@@ -454,6 +477,8 @@ namespace Freeserf
             coalSteelsmelter = 32750;
             coalGoldsmelter = 65500;
             coalWeaponsmith = 52400;
+
+            Dirty = true;
         }
 
         /* Set defaults for wheat distribution priorities. */
@@ -461,6 +486,8 @@ namespace Freeserf
 		{
             wheatPigfarm = 65500;
             wheatMill = 32750;
+
+            Dirty = true;
         }
 
         /* Set defaults for tool production priorities. */
@@ -475,6 +502,8 @@ namespace Freeserf
             toolPriorities[6] = 32750; /* SAW */
             toolPriorities[7] = 45850; /* PICK */
             toolPriorities[8] = 6550; /* PINCER */
+
+            Dirty = true;
         }
 
         /* Set defaults for flag priorities. */
@@ -510,6 +539,8 @@ namespace Freeserf
             flagPriorities[(int)Resource.Type.Steel] = 24;
             flagPriorities[(int)Resource.Type.Stone] = 25;
             flagPriorities[(int)Resource.Type.Plank] = 26;
+
+            Dirty = true;
         }
 
         /* Set defaults for inventory priorities. */
@@ -545,6 +576,8 @@ namespace Freeserf
             inventoryPriorities[(int)Resource.Type.Sword] = 24;
             inventoryPriorities[(int)Resource.Type.GoldOre] = 25;
             inventoryPriorities[(int)Resource.Type.GoldBar] = 26;
+
+            Dirty = true;
         }
 
         public uint GetKnightOccupation(uint threatLevel)
@@ -567,6 +600,8 @@ namespace Freeserf
             }
 
             knightOccupation[index] = (max << 4) | min;
+
+            Dirty = true;
         }
 
         public void SetLowKnightOccupation()
@@ -575,6 +610,8 @@ namespace Freeserf
             knightOccupation[1] = 0x00;
             knightOccupation[2] = 0x00;
             knightOccupation[3] = 0x00;
+
+            Dirty = true;
         }
 
         public void SetMediumKnightOccupation(bool offensive)
@@ -585,6 +622,8 @@ namespace Freeserf
             knightOccupation[1] = 0x00;
             knightOccupation[2] = value;
             knightOccupation[3] = value;
+
+            Dirty = true;
         }
 
         public void SetHighKnightOccupation(bool offensive)
@@ -595,16 +634,22 @@ namespace Freeserf
             knightOccupation[1] = 0x20;
             knightOccupation[2] = value;
             knightOccupation[3] = value;
+
+            Dirty = true;
         }
 
         public void IncreaseCastleKnights()
         {
             ++castleKnights;
+
+            Dirty = true;
         }
 
         public void DecreaseCastleKnights()
         {
             --castleKnights;
+
+            Dirty = true;
         }
 
         public uint GetCastleKnights()
@@ -620,11 +665,15 @@ namespace Freeserf
         public void IncreaseCastleKnightsWanted()
 		{
             castleKnightsWanted = Math.Min(castleKnightsWanted + 1, 99);
+
+            Dirty = true;
         }
 
         public void DecreaseCastleKnightsWanted()
 		{
             castleKnightsWanted = Math.Max(1, castleKnightsWanted - 1);
+
+            Dirty = true;
         }
 
         public uint GetKnightMorale()
@@ -1069,6 +1118,8 @@ namespace Freeserf
         public void IncreaseSerfCount(Serf.Type type)
         {
             ++serfCount[(int)type];
+
+            Dirty = true;
         }
 
         public void DecreaseSerfCount(Serf.Type type)
@@ -1079,6 +1130,8 @@ namespace Freeserf
             }
 
             --serfCount[(int)type];
+
+            Dirty = true;
         }
 
         public uint[] GetSerfCounts()
@@ -1089,11 +1142,15 @@ namespace Freeserf
         public void IncreaseResourceCount(Resource.Type type)
         {
             ++resourceCount[(int)type];
+
+            Dirty = true;
         }
 
         public void DecreaseResourceCount(Resource.Type type)
         {
             --resourceCount[(int)type];
+
+            Dirty = true;
         }
 
         public void BuildingFounded(Building building)
@@ -1114,6 +1171,8 @@ namespace Freeserf
             {
                 ++incompleteBuildingCount[(int)building.BuildingType];
             }
+
+            Dirty = true;
         }
 
         public void BuildingBuilt(Building building)
@@ -1123,6 +1182,8 @@ namespace Freeserf
             totalBuildingScore += Building.BuildingGetScoreFromType(type);
             ++completedBuildingCount[(int)type];
             --incompleteBuildingCount[(int)type];
+
+            Dirty = true;
         }
 
         public void BuildingCaptured(Building building)
@@ -1157,6 +1218,9 @@ namespace Freeserf
                     /* TODO AI */
                 }
             }
+
+            Dirty = true;
+            defPlayer.Dirty = true;
         }
 
         public void BuildingDemolished(Building building)
@@ -1182,6 +1246,8 @@ namespace Freeserf
             {
                 --incompleteBuildingCount[(int)buildingType];
             }
+
+            Dirty = true;
         }
 
         public uint GetCompletedBuildingCount(Building.Type type)
@@ -1202,6 +1268,8 @@ namespace Freeserf
         public void SetToolPriority(int type, int priority)
         {
             toolPriorities[type] = priority;
+
+            Dirty = true;
         }
 
         public int[] GetFlagPriorities()
@@ -1477,11 +1545,15 @@ namespace Freeserf
         public void IncreaseLandArea()
         {
             ++totalLandArea;
+
+            Dirty = true;
         }
 
         public void DecreaseLandArea()
         {
             --totalLandArea;
+
+            Dirty = true;
         }
 
         public uint GetBuildingScore()
@@ -1498,16 +1570,22 @@ namespace Freeserf
         public void IncreaseMilitaryScore(uint val)
         {
             totalMilitaryScore += val;
+
+            Dirty = true;
         }
 
         public void DecreaseMilitaryScore(uint val)
         {
             totalMilitaryScore -= val;
+
+            Dirty = true;
         }
 
         public void IncreaseMilitaryMaxGold(int val)
         {
             militaryMaxGold += val;
+
+            Dirty = true;
         }
 
         public uint GetScore()
@@ -1600,6 +1678,8 @@ namespace Freeserf
         public void SetSerfToKnightRate(int rate)
         {
             serfToKnightRate = rate;
+
+            Dirty = true;
         }
 
         public uint GetFoodForBuilding(Building.Type buildingType)
@@ -1635,6 +1715,8 @@ namespace Freeserf
         public void SetFoodStonemine(uint val)
         {
             foodStonemine = val;
+
+            Dirty = true;
         }
 
         public uint GetFoodCoalmine()
@@ -1645,6 +1727,8 @@ namespace Freeserf
         public void SetFoodCoalmine(uint val)
         {
             foodCoalmine = val;
+
+            Dirty = true;
         }
 
         public uint GetFoodIronmine()
@@ -1655,6 +1739,8 @@ namespace Freeserf
         public void SetFoodIronmine(uint val)
         {
             foodIronmine = val;
+
+            Dirty = true;
         }
 
         public uint GetFoodGoldmine()
@@ -1665,6 +1751,8 @@ namespace Freeserf
         public void SetFoodGoldmine(uint val)
         {
             foodGoldmine = val;
+
+            Dirty = true;
         }
 
         public uint GetPlanksConstruction()
@@ -1675,6 +1763,8 @@ namespace Freeserf
         public void SetPlanksConstruction(uint val)
         {
             planksConstruction = val;
+
+            Dirty = true;
         }
 
         public uint GetPlanksBoatbuilder()
@@ -1685,6 +1775,8 @@ namespace Freeserf
         public void SetPlanksBoatbuilder(uint val)
         {
             planksBoatbuilder = val;
+
+            Dirty = true;
         }
 
         public uint GetPlanksToolmaker()
@@ -1695,6 +1787,8 @@ namespace Freeserf
         public void SetPlanksToolmaker(uint val)
         {
             planksToolmaker = val;
+
+            Dirty = true;
         }
 
         public uint GetSteelToolmaker()
@@ -1705,6 +1799,8 @@ namespace Freeserf
         public void SetSteelToolmaker(uint val)
         {
             steelToolmaker = val;
+
+            Dirty = true;
         }
 
         public uint GetSteelWeaponsmith()
@@ -1715,6 +1811,8 @@ namespace Freeserf
         public void SetSteelWeaponsmith(uint val)
         {
             steelWeaponsmith = val;
+
+            Dirty = true;
         }
 
         public uint GetCoalSteelsmelter()
@@ -1725,6 +1823,8 @@ namespace Freeserf
         public void SetCoalSteelsmelter(uint val)
         {
             coalSteelsmelter = val;
+
+            Dirty = true;
         }
 
         public uint GetCoalGoldsmelter()
@@ -1735,6 +1835,8 @@ namespace Freeserf
         public void SetCoalGoldsmelter(uint val)
         {
             coalGoldsmelter = val;
+
+            Dirty = true;
         }
 
         public uint GetCoalWeaponsmith()
@@ -1745,6 +1847,8 @@ namespace Freeserf
         public void SetCoalWeaponsmith(uint val)
         {
             coalWeaponsmith = val;
+
+            Dirty = true;
         }
 
         public uint GetWheatPigfarm()
@@ -1755,6 +1859,8 @@ namespace Freeserf
         public void SetWheatPigfarm(uint val)
         {
             wheatPigfarm = val;
+
+            Dirty = true;
         }
 
         public uint GetWheatMill()
@@ -1765,6 +1871,8 @@ namespace Freeserf
         public void SetWheatMill(uint val)
         {
             wheatMill = val;
+
+            Dirty = true;
         }
 
         /* Initialize AI parameters. */

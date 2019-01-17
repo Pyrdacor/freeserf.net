@@ -1,7 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Freeserf.Event;
+﻿/*
+ * Viewer.cs - Viewers (local/remote, player/spectator)
+ *
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ *
+ * This file is part of freeserf.net. freeserf.net is based on freeserf.
+ *
+ * freeserf.net is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * freeserf.net is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+using System;
 
 namespace Freeserf
 {
@@ -18,7 +36,7 @@ namespace Freeserf
         // Server should have multiple interfaces
         public static Viewer CreateServerPlayer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
         {
-            throw new NotSupportedException("Not supported yet.");
+            return new ServerViewer(renderView, previousViewer, gui);
         }
 
         // Client must also receive events from server (with the other clients player index)
@@ -129,6 +147,7 @@ namespace Freeserf
     internal class LocalPlayerViewer : LocalSpectatorViewer
     {
         public override Access AccessRights => Access.Player;
+        internal override Interface MainInterface { get; }
 
         protected LocalPlayerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
             : base(renderView, previousViewer, gui, type)
@@ -139,7 +158,21 @@ namespace Freeserf
         public LocalPlayerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
             : this(renderView, previousViewer, gui, Type.LocalPlayer)
         {
+            if (previousViewer == null)
+            {
+                Init();
+                MainInterface = new Interface(renderView, this);
+                MainInterface.OpenGameInit();
+            }
+            else
+            {
+                if (previousViewer.MainInterface.GetType() != typeof(Interface))
+                    MainInterface = new Interface(renderView, this);
+                else
+                    MainInterface = previousViewer.MainInterface;
 
+                MainInterface.Viewer = this;
+            }
         }
     }
 
@@ -152,6 +185,12 @@ namespace Freeserf
         protected LocalSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
             : base(renderView, gui, type)
         {
+
+        }
+
+        public LocalSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+            : this(renderView, previousViewer, gui, Type.LocalSpectator)
+        {
             if (previousViewer == null)
             {
                 Init();
@@ -160,15 +199,13 @@ namespace Freeserf
             }
             else
             {
-                MainInterface = previousViewer.MainInterface;
+                if (previousViewer.MainInterface.GetType() != typeof(Interface))
+                    MainInterface = new Interface(renderView, this);
+                else
+                    MainInterface = previousViewer.MainInterface;
+
                 MainInterface.Viewer = this;
             }
-        }
-
-        public LocalSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
-            : this(renderView, previousViewer, gui, Type.LocalSpectator)
-        {
-
         }
 
         public override void Update()
@@ -217,13 +254,58 @@ namespace Freeserf
 
     internal class ServerViewer : LocalPlayerViewer
     {
+        Network.IServer server = null;
+        internal override Interface MainInterface { get; }
+
         public ServerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
             : base(renderView, previousViewer, gui, Type.Server)
         {
+            // Note: It is ok if the only clients are spectators, but running a server without any connected client make no sense.
+            // Note: All clients must be setup at game start. Clients can not join during the game.
+            // Note: There may be more than 3 clients because of spectators!
+            server = Network.Network.DefaultServerFactory.Create();
 
+            //Init();
+            //MainInterface = new ServerInterface(renderView, this, server);
         }
 
-        // TODO
+        public override void OnNewGame(Game game)
+        {
+            base.OnNewGame(game);
+
+            foreach (var client in server.Clients)
+            {
+                client.Game = game;
+
+                client.SendGameStateUpdate();
+                client.SendMapStateUpdate();
+
+                for (uint i = 0; i < game.GetPlayerCount(); ++i)
+                    client.SendPlayerStateUpdate(i);
+            }
+        }
+
+        public override void OnEndGame(Game game)
+        {
+            base.OnEndGame(game);
+
+            foreach (var client in server.Clients)
+            {
+                client.SendDisconnect();
+            }
+
+            server.Close();
+        }
+
+        public override void Update()
+        {
+            foreach (var client in server.Clients)
+            {
+                client.SendKeepAlive();
+            }
+
+            base.Update();
+        }
     }
 
     internal class ClientViewer : RemoteSpectatorViewer
@@ -248,17 +330,8 @@ namespace Freeserf
         protected RemoteSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
             : base(renderView, gui, type)
         {
-            if (previousViewer == null)
-            {
-                Init();
-                MainInterface = new RemoteInterface(renderView, this);
-                MainInterface.OpenGameInit(); // TODO
-            }
-            else
-            {
-                MainInterface = previousViewer.MainInterface;
-                MainInterface.Viewer = this;
-            }
+            Init();
+            MainInterface = new RemoteInterface(renderView, this);
         }
 
         public RemoteSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, bool restricted)

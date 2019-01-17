@@ -2,7 +2,7 @@
  * PopupBox.cs - Popup GUI component
  *
  * Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -454,9 +454,9 @@ namespace Freeserf
             AddChild(MiniMap, 8, 9, false);
 
             fileList.SetSize(120, 100);
-            fileList.SetSelectionHandler((string item) =>
+            fileList.SetSelectionHandler((GameStore.SaveInfo item) =>
             {
-                fileField.Text = Path.GetFileNameWithoutExtension(item);
+                fileField.Text = Path.GetFileNameWithoutExtension(item.Path);
             });
             AddChild(fileList, 12, 22, false);
 

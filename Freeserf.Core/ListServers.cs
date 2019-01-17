@@ -1,5 +1,5 @@
 ﻿/*
- * AIStateAvoidCongestion.cs - AI state for actions to avoid congestion
+ * ListServers.cs - Server list GUI component
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -19,16 +19,18 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf.AIStates
+namespace Freeserf
 {
-    // TODO: Avoid congestion by building new roads, removing roads, building stocks and so on.
-    class AIStateAvoidCongestion : AIState
+    internal class ListServers : ListBox<string>
     {
-        public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
+        public ListServers(Interface interf)
+            : base(interf)
         {
             // TODO
+            items.Add("Test Server 1");
+            items.Add("Roberts Server");
 
-            Kill(ai);
+            Init(interf);
         }
     }
 }

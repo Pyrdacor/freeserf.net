@@ -2,7 +2,7 @@
  * Savegame.cs - Loading and saving of save games
  *
  * Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -234,6 +234,11 @@ namespace Freeserf
             public string Name = "";
             public string Path = "";
             public Type SaveType = Type.Legacy;
+
+            public override string ToString()
+            {
+                return Name;
+            }
         }
 
         protected GameStore()

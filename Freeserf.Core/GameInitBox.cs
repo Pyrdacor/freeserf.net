@@ -2,7 +2,7 @@
  * GameInitBox.cs - Game initialization GUI component
  *
  * Copyright (C) 2013-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -108,7 +108,8 @@ namespace Freeserf
             Decrement,
             Close,
             GenRandom,
-            ApplyRandom
+            ApplyRandom,
+            CreateServer
         }
 
         public enum GameType
@@ -116,9 +117,10 @@ namespace Freeserf
             Custom = 0,
             Mission = 1,
             Load = 2,
-            Multiplayer = 3,
+            MultiplayerClient = 3,
             Tutorial = 4,
-            AIvsAI = 5
+            AIvsAI = 5,
+            MultiplayerServer = 6
         }
 
         static readonly uint[] GameTypeSprites = new uint[]
@@ -128,7 +130,8 @@ namespace Freeserf
             500u,
             263u,
             261u,
-            264u
+            264u,
+            263u
         };
 
         Interface interf = null;
@@ -141,6 +144,7 @@ namespace Freeserf
 
         RandomInput randomInput = null;
         ListSavedFiles fileList = null;
+        ListServers serverList = null;
 
         // rendering
         Button buttonStart = null;
@@ -155,6 +159,15 @@ namespace Freeserf
         readonly PlayerBox[] playerBoxes = new PlayerBox[4];
         TextField textFieldVersion = null;
         Button buttonExit = null;
+        TextField textCreateServer = null;
+        Button buttonCreateServer = null;
+        // multiplayer options
+        CheckBox checkBoxServerValues = null; // the server sets the values of each player (otherwise each human client can set them for himself)
+        CheckBox checkBoxSameValues = null; // the server sets the values and they are used for every player in the game (clients can't set values)
+        // TODO: maybe the game speed should be setable (before the game) or changeable (option to change it in the game)
+
+        // used only for multiplayer games
+        readonly bool[] playerIsAI = new bool[4];
 
         class PlayerBox
         {
@@ -392,6 +405,10 @@ namespace Freeserf
             fileList.SetSize(310, 104);
             AddChild(fileList, 20, 55, false);
 
+            serverList = new ListServers(interf);
+            serverList.SetSize(310, 95);
+            AddChild(serverList, 20, 55, false);
+
             InitRenderComponents();
         }
 
@@ -412,9 +429,11 @@ namespace Freeserf
             textFieldHeader = new TextField(interf, 1, 9);
             textFieldName = new TextField(interf, 1, 9);
             textFieldValue = new TextField(interf, 1, 9);
+            textCreateServer = new TextField(interf, 1, 9);
             AddChild(textFieldHeader, 0, 0, false);
             AddChild(textFieldName, 0, 0, false);
             AddChild(textFieldValue, 0, 0, false);
+            AddChild(textCreateServer, 0, 0, false);
 
             buttonGameType = new Button(interf, 32, 32, type, GameTypeSprites[(int)gameType], buttonLayer);
             buttonGameType.Clicked += ButtonGameType_Clicked;
@@ -441,6 +460,48 @@ namespace Freeserf
             buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
             buttonExit.Clicked += ButtonExit_Clicked;
             AddChild(buttonExit, 8 * 38 + 12, 170);
+
+            buttonCreateServer = new Button(interf, 16, 16, type, 221u, buttonLayer);
+            buttonCreateServer.Clicked += ButtonCreateServer_Clicked;
+            AddChild(buttonCreateServer, 8 * 22 + 14, 151, false);
+
+            checkBoxServerValues = new CheckBox(interf);
+            checkBoxServerValues.Text = "Server Values";
+            checkBoxServerValues.CheckedChanged += CheckBoxServerValues_CheckedChanged;
+            AddChild(checkBoxServerValues, 24, 141, false);
+
+            checkBoxSameValues = new CheckBox(interf);
+            checkBoxSameValues.Text = "Identical Values";
+            checkBoxSameValues.CheckedChanged += CheckBoxSameValues_CheckedChanged;
+            AddChild(checkBoxSameValues, 180, 141, false);
+        }
+
+        private void CheckBoxServerValues_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxServerValues.Checked)
+                checkBoxSameValues.Checked = false;
+        }
+
+        private void CheckBoxSameValues_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxSameValues.Checked)
+            {
+                checkBoxServerValues.Checked = false;
+
+                var player1 = mission.GetPlayer(0);
+
+                for (uint i = 1; i < mission.PlayerCount; ++i)
+                {
+                    var player = mission.GetPlayer(i);
+
+                    playerBoxes[i].SetPlayerValues(player1.Supplies, player.Intelligence, player1.Reproduction);
+                }
+            }
+        }
+
+        private void ButtonCreateServer_Clicked(object sender, Button.ClickEventArgs args)
+        {
+            HandleAction(Action.CreateServer);
         }
 
         private void ButtonStart_Clicked(object sender, Button.ClickEventArgs e)
@@ -515,23 +576,114 @@ namespace Freeserf
                 playerBoxes[i].Visible = false;
         }
 
+        string[] GetSelectedServer()
+        {
+            var serverInfo = serverList.GetSelected().Trim();
+
+            if (string.IsNullOrEmpty(serverInfo))
+                return new string[4] { "", "", "", "" };
+
+            return serverInfo.Split();
+        }
+
+        string GetServerName()
+        {
+            var serverInfo = GetSelectedServer();
+
+            if (serverInfo.Length == 0)
+                return "";
+
+            return serverInfo[0];
+        }
+
+        string GetServerHostname()
+        {
+            var serverInfo = GetSelectedServer();
+
+            if (serverInfo.Length < 2)
+                return "";
+
+            return serverInfo[1];
+        }
+
+        int GetServerCurrentPlayers()
+        {
+            var serverInfo = GetSelectedServer();
+
+            if (serverInfo.Length < 3)
+                return 0;
+
+            try
+            {
+                return Math.Max(1, int.Parse(serverInfo[2]));
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        int GetServerMaxPlayers()
+        {
+            var serverInfo = GetSelectedServer();
+
+            if (serverInfo.Length < 4)
+                return 0;
+
+            try
+            {
+                return Math.Min(3, int.Parse(serverInfo[3]));
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         protected override void InternalDraw()
         {
             base.InternalDraw();
 
             buttonGameType.SetSpriteIndex(GameTypeSprites[(int)gameType]);
 
+            checkBoxServerValues.Displayed = gameType == GameType.MultiplayerServer;
+            checkBoxSameValues.Displayed = gameType == GameType.MultiplayerServer;
+
             switch (gameType)
             {
                 case GameType.Custom:
                 case GameType.AIvsAI:
-                    DrawBoxString(10, 2, textFieldHeader, (gameType == GameType.Custom) ? "New game" : "Demo");
-                    DrawBoxString(10, 18, textFieldName, "Mapsize:");
-                    DrawBoxString(20, 18, textFieldValue, mission.MapSize.ToString());
+                case GameType.MultiplayerClient:
+                case GameType.MultiplayerServer:
+                    DrawBoxString(10, 2, textFieldHeader, (gameType == GameType.Custom) ? "New game" : (gameType == GameType.AIvsAI) ? "Demo" : "Multiplayer");
 
-                    buttonUp.Displayed = false;
-                    buttonDown.Displayed = false;
-                    buttonMapSize.Displayed = true;
+                    if (gameType == GameType.MultiplayerClient)
+                    {
+                        DrawBoxString(10, 18, textFieldName, "Server:");
+                        string serverName = GetServerName();
+
+                        if (serverName.Length > 15)
+                            serverName = serverName.Substring(0, 12) + "...";
+
+                        DrawBoxString(18, 18, textFieldValue, serverName);
+                        DrawBoxString(24, 139, textCreateServer, "Create server");
+
+                        buttonUp.Displayed = false;
+                        buttonDown.Displayed = false;
+                        buttonMapSize.Displayed = false;
+                        buttonCreateServer.Displayed = true;
+                    }
+                    else
+                    {
+                        DrawBoxString(10, 18, textFieldName, "Mapsize:");
+                        DrawBoxString(20, 18, textFieldValue, mission.MapSize.ToString());
+                        HideBoxString(textCreateServer);
+
+                        buttonUp.Displayed = false;
+                        buttonDown.Displayed = false;
+                        buttonMapSize.Displayed = true;
+                        buttonCreateServer.Displayed = false;
+                    }                    
 
                     for (int i = 0; i < 4; ++i)
                     {
@@ -545,10 +697,12 @@ namespace Freeserf
                     DrawBoxString(10, 2, textFieldHeader, "Start mission");
                     DrawBoxString(10, 18, textFieldName, "Mission:");
                     DrawBoxString(20, 18, textFieldValue, (gameMission + 1).ToString());
+                    HideBoxString(textCreateServer);
 
                     buttonUp.Displayed = true;
                     buttonDown.Displayed = true;
                     buttonMapSize.Displayed = false;
+                    buttonCreateServer.Displayed = false;
 
                     for (int i = 0; i < 4; ++i)
                     {
@@ -557,24 +711,34 @@ namespace Freeserf
                     }
                     break;
                 case GameType.Load:
-                    DrawBoxString(10, 2, textFieldHeader, "Load game");
-                    DrawBoxString(10, 18, textFieldName, "Savegame:");
-                    DrawBoxString(21, 18, textFieldValue, System.IO.Path.GetFileNameWithoutExtension(fileList.GetSelected()));
-
-                    buttonUp.Displayed = false;
-                    buttonDown.Displayed = false;
-                    buttonMapSize.Displayed = false;
-
-                    for (int i = 0; i < 4; ++i)
                     {
-                        playerBoxes[i].ShowActivationButton = false;
-                        playerBoxes[i].ShowCopyValueButton = false;
+                        DrawBoxString(10, 2, textFieldHeader, "Load game");
+                        DrawBoxString(10, 18, textFieldName, "File:");
+
+                        string saveGameName = System.IO.Path.GetFileNameWithoutExtension(fileList.GetSelected().Path);
+
+                        if (saveGameName.Length > 17)
+                            saveGameName = saveGameName.Substring(0, 14) + "...";
+
+                        DrawBoxString(16, 18, textFieldValue, saveGameName);
+                        HideBoxString(textCreateServer);
+
+                        buttonUp.Displayed = false;
+                        buttonDown.Displayed = false;
+                        buttonMapSize.Displayed = false;
+                        buttonCreateServer.Displayed = false;
+
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            playerBoxes[i].ShowActivationButton = false;
+                            playerBoxes[i].ShowCopyValueButton = false;
+                        }
                     }
                     break;
             }
 
             /* Game info */
-            if (gameType != GameType.Load)
+            if (gameType != GameType.Load && gameType != GameType.MultiplayerClient)
             {
                 int bx = 0;
                 int by = 0;
@@ -606,7 +770,7 @@ namespace Freeserf
                     playerBoxes[i].Visible = false;
             }
 
-            /* Display program name and version in caption */
+            /* Display program name and version */
             DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
         }
 
@@ -614,11 +778,23 @@ namespace Freeserf
         {
             switch (action)
             {
+                case Action.CreateServer:
+                    gameType = GameType.MultiplayerServer;
+                    customMission = new GameInfo(new Random(), false);
+                    mission = customMission;
+                    mission.RemoveAllPlayers();
+                    mission.AddPlayer(12u, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
+                    randomInput.Displayed = true;
+                    randomInput.SetRandom(customMission.RandomBase);
+                    fileList.Displayed = false;
+                    serverList.Displayed = false;
+                    SetRedraw();
+                    break;
                 case Action.StartGame:
                 {
                     if (gameType == GameType.Load)
                     {
-                        string path = fileList.GetSelected();
+                        string path = fileList.GetSelected().Path;
 
                         if (string.IsNullOrWhiteSpace(path))
                         {
@@ -653,8 +829,10 @@ namespace Freeserf
                                 GameManager.Instance.CloseGame();
                                 interf.Viewer.ChangeTo(Viewer.Type.LocalSpectator);
                                 break;
-                            case GameType.Multiplayer:
-                                // TODO: client, server or remote spectator depending on settings
+                            case GameType.MultiplayerClient:
+                                // starting a game means joining a server
+                                // TODO: client or remote spectator depending on settings
+                                interf.Viewer.ChangeTo(Viewer.Type.Client);
                                 break;
                         }
 
@@ -666,6 +844,9 @@ namespace Freeserf
                     break;
                 }
                 case Action.ToggleGameType:
+                    if (gameType == GameType.MultiplayerServer)
+                        gameType = GameType.MultiplayerClient;
+
                     if (++gameType > GameType.AIvsAI)
                     {
                         gameType = GameType.Custom;
@@ -678,6 +859,7 @@ namespace Freeserf
                                 mission = GameInfo.GetMission((uint)gameMission);
                                 randomInput.Displayed = false;
                                 fileList.Displayed = false;
+                                serverList.Displayed = false;
                                 SetRedraw();
                                 break;
                             }
@@ -688,6 +870,7 @@ namespace Freeserf
                                 randomInput.Displayed = true;
                                 randomInput.SetRandom(customMission.RandomBase);
                                 fileList.Displayed = false;
+                                serverList.Displayed = false;
                                 SetRedraw();
                                 break;
                             }
@@ -696,13 +879,17 @@ namespace Freeserf
                                 randomInput.Displayed = false;
                                 fileList.Displayed = true;
                                 fileList.Select(0);
+                                serverList.Displayed = false;
                                 SetRedraw();
                                 break;
                             }
-                        case GameType.Multiplayer:
+                        case GameType.MultiplayerClient:
                             {
-                                // TODO
-                                HandleAction(Action.ToggleGameType);
+                                randomInput.Displayed = false;
+                                fileList.Displayed = false;
+                                serverList.Displayed = true;
+                                serverList.Select(0);
+                                SetRedraw();
                                 return;
                             }
                         case GameType.Tutorial:
@@ -713,13 +900,12 @@ namespace Freeserf
                             }
                         case GameType.AIvsAI:
                             {
-                                // TODO: first player should be also an AI
-
                                 customMission = new GameInfo(new Random(), true);
                                 mission = customMission;
                                 randomInput.Displayed = true;
                                 randomInput.SetRandom(customMission.RandomBase);
                                 fileList.Displayed = false;
+                                serverList.Displayed = false;
                                 SetRedraw();
                                 break;
                             }
@@ -777,7 +963,17 @@ namespace Freeserf
                         if (str.Length == 16)
                         {
                             customMission.SetRandomBase(randomInput.GetRandom(), gameType == GameType.AIvsAI);
-                            mission = customMission;
+
+                            // in a multiplayer game this will only affect the map, not the players
+                            if (gameType == GameType.MultiplayerClient)
+                            {
+
+                            }
+                            else
+                            {
+                                mission = customMission;
+                            }
+
                             SetRedraw();
                         }
                         break;
@@ -827,13 +1023,14 @@ namespace Freeserf
 
             if (cx >= 8 + 32 + 8 && cx < 8 + 32 + 8 + 24 && cy >= 8 && cy < 24) // click on activation button
             {
-                // players can only be removed or added in custom games and AI vs AI
-                if (gameType == GameType.Custom || gameType == GameType.AIvsAI)
+                // players can only be removed or added in custom games, AI vs AI and in multiplayer
+                if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.MultiplayerServer)
                 {
                     if (playerIndex > 0) // at least one player must be active
                     {
                         if (playerIndex >= mission.PlayerCount) // add player
                         {
+                            playerIndex = mission.PlayerCount;
                             PlayerInfo playerInfo;
 
                             do
@@ -842,12 +1039,21 @@ namespace Freeserf
                             } while (PlayerFaceAlreadyTaken(playerIndex, playerInfo.Face));
 
                             playerInfo.Color = PlayerInfo.PlayerColors[playerIndex];
+
+                            if (checkBoxSameValues.Checked)
+                            {
+                                playerInfo.Supplies = mission.GetPlayer(0).Supplies;
+                                playerInfo.Reproduction = mission.GetPlayer(0).Reproduction;
+                            }
+
                             mission.AddPlayer(playerInfo);
+                            playerIsAI[playerIndex] = true; // manually added players are always AI players
                             SetRedraw();
                         }
                         else // remove
                         {
                             mission.RemovePlayer(playerIndex);
+                            playerIsAI[playerIndex] = false;
                             SetRedraw();
                         }
                     }
@@ -866,7 +1072,7 @@ namespace Freeserf
             if (cx < 8 + 32 && cy < 72) // click on face
             {
                 bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
-                                    (playerIndex == 1 && gameType == GameType.Multiplayer) ||
+                                    (playerIndex == 1 && gameType == GameType.MultiplayerClient) ||
                                     gameType == GameType.Mission ||
                                     gameType == GameType.Tutorial ||
                                     gameType == GameType.Load;
@@ -902,7 +1108,8 @@ namespace Freeserf
             else if (cx >= 8 + 32 && cx < 8 + 32 + 8 && cy >= 8 && cy < 24) // click on copy values button
             {
                 // values can only copied in custom games and AI vs AI
-                if (gameType == GameType.Custom || gameType == GameType.AIvsAI)
+                // and to AI enemies in multiplayer
+                if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.MultiplayerServer)
                 {
                     for (uint i = 0; i < mission.PlayerCount; ++i)
                     {
@@ -939,17 +1146,39 @@ namespace Freeserf
                                             gameType == GameType.Tutorial ||
                                             gameType == GameType.Load;
 
+                        if (gameType == GameType.MultiplayerServer && playerIndex != 0 && !checkBoxServerValues.Checked && !checkBoxSameValues.Checked && !playerIsAI[playerIndex])
+                        {
+                            canNotChange = true;
+                        }
+
                         /* Supplies */
                         if (!canNotChange)
-                            player.Supplies = value;
+                        {
+                            if (checkBoxSameValues.Checked)
+                            {
+                                for (uint i = 0; i < mission.PlayerCount; ++i)
+                                {
+                                    mission.GetPlayer(i).Supplies = value;
+                                }
+                            }
+                            else
+                            {
+                                player.Supplies = value;
+                            }
+                        }
                     }
                     else if (cx >= 6 && cx < 12)
                     {
                         bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
-                                            (playerIndex == 1 && gameType == GameType.Multiplayer) ||
                                             gameType == GameType.Mission ||
                                             gameType == GameType.Tutorial ||
                                             gameType == GameType.Load;
+
+                        if (gameType == GameType.MultiplayerServer)
+                        {
+                            if (!playerIsAI[playerIndex])
+                                canNotChange = true;
+                        }
 
                         /* Intelligence */
                         if (!canNotChange)
@@ -961,9 +1190,26 @@ namespace Freeserf
                                             gameType == GameType.Tutorial ||
                                             gameType == GameType.Load;
 
+                        if (gameType == GameType.MultiplayerServer && playerIndex != 0 && !checkBoxServerValues.Checked && !checkBoxSameValues.Checked && !playerIsAI[playerIndex])
+                        {
+                            canNotChange = true;
+                        }
+
                         /* Reproduction */
                         if (!canNotChange)
-                            player.Reproduction = value;
+                        {
+                            if (checkBoxSameValues.Checked)
+                            {
+                                for (uint i = 0; i < mission.PlayerCount; ++i)
+                                {
+                                    mission.GetPlayer(i).Reproduction = value;
+                                }
+                            }
+                            else
+                            {
+                                player.Reproduction = value;
+                            }
+                        }
                     }
                 }
             }
