@@ -117,6 +117,10 @@ namespace Freeserf.AIStates
                 }
                 else if (result == CheckResult.NeededButNoSpecialistOrRes)
                 {
+                    if (game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0 &&
+                        player.GetCompletedBuildingCount(Building.Type.SteelSmelter) == 0)
+                        continue; // we can't craft when we don't have any steel
+
                     if (type == Building.Type.Hut ||
                         type == Building.Type.Tower ||
                         type == Building.Type.Fortress)
@@ -205,6 +209,60 @@ namespace Freeserf.AIStates
             // The essential buildings are handled above.
             if (player.EmergencyProgramActive)
                 return CheckResult.NotNeeded;
+
+            // Our focus must be to get a coal and iron mine running as we need steel.
+            // We also need a food source.
+            if (ai.HardTimes())
+            {
+                switch (type)
+                {
+                    case Building.Type.Fisher:
+                        if (count == 0 && game.Map.FindInTerritory(player.Index, FindFishNear).Count > 0) // fish present
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.Farm:
+                        if (count == 0 && !game.GetPlayerBuildings(player, Building.Type.Fisher).Any())
+                        {
+                            if (game.HasAnyOfResource(player, Resource.Type.Scythe) ||
+                                game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer))
+                                return CheckResult.Needed;
+                            else if (game.Map.FindInTerritory(player.Index, FindFishNear).Count == 0) // no fish
+                            {
+                                // First check if we can expand the territory.
+                                // If not trying to craft a scythe is our last hope.
+                                // Otherwise we can't do anything. If we are lucky
+                                // there is a piece of coal and iron on the way to
+                                // make a piece of steel.
+                                if (game.GetPossibleFreeKnightCount(player) == 0)
+                                    return CheckResult.NeededButNoSpecialistOrRes;
+                            }
+                        }
+                        break;
+                    case Building.Type.Hut:
+                        if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 && !game.GetPlayerBuildings(player, Building.Type.Hut).Any(b => !b.HasKnight())
+                            && ai.GameTime > count * 180 * Global.TICKS_PER_SEC && game.GetPossibleFreeKnightCount(player) > 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.CoalMine:
+                        if (count == 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.IronMine:
+                        if (count == 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.ToolMaker:
+                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.CoalMine) > 0 && player.GetCompletedBuildingCount(Building.Type.IronMine) > 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.Forester:
+                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.Sawmill) > 0 && player.GetCompletedBuildingCount(Building.Type.Hut) > 1)
+                            return CheckResult.Needed;
+                        break;
+                }
+
+                return CheckResult.NotNeeded;
+            }
 
             switch (type)
             {
@@ -298,7 +356,39 @@ namespace Freeserf.AIStates
                     if (ai.GameTime > (120 - Math.Max(ai.FoodFocus, ai.BuildingFocus) * 15) * Global.TICKS_PER_SEC && NeedFoodBuilding(ai, game, player, type))
                         return NeedBuilding(ai, game, player, type);
                     break;
-                // TODO ...
+                case Building.Type.SteelSmelter:
+                    {
+                        if (count < player.GetCompletedBuildingCount(Building.Type.IronMine) * 2 &&
+                            game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
+                            game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
+                            return NeedBuilding(ai, game, player, type);
+                    }
+                    break;
+                case Building.Type.GoldSmelter:
+                    {
+                        if (count < player.GetCompletedBuildingCount(Building.Type.GoldMine) * 3 &&
+                            game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
+                            game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
+                            return NeedBuilding(ai, game, player, type);
+                    }
+                    break;
+                case Building.Type.WeaponSmith:
+                    {
+                        if (count < Math.Min(player.GetCompletedBuildingCount(Building.Type.CoalMine), player.GetCompletedBuildingCount(Building.Type.SteelSmelter)))
+                            return NeedBuilding(ai, game, player, type);
+                    }
+                    break;
+                case Building.Type.Stock:
+                    if (count < (player.GetLandArea() - 1000 + ai.BuildingFocus * 350) / 1000 && ai.GameTime > 40 * Global.TICKS_PER_MIN &&
+                        player.GetCompletedBuildingCount(Building.Type.WeaponSmith) > count)
+                        return NeedBuilding(ai, game, player, type);
+                    break;
+                case Building.Type.Boatbuilder:
+                    if (count < 1 && ai.GameTime > 45 * Global.TICKS_PER_MIN &&
+                        game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 15 &&
+                        ai.Chance(10))
+                        return NeedBuilding(ai, game, player, type);
+                    break;
             }
 
             return CheckResult.NotNeeded;
@@ -380,6 +470,22 @@ namespace Freeserf.AIStates
             }
 
             return false;
+        }
+
+        static bool FindFish(Map map, uint pos)
+        {
+            return map.IsInWater(pos) && map.GetResourceFish(pos) > 0u;
+        }
+
+        static Map.FindData FindFishNear(Map map, uint pos)
+        {
+            var foundPos = map.FindSpotNear(pos, 4, FindFish, new Random());
+
+            return new Map.FindData()
+            {
+                Success = foundPos != Global.BadMapPos,
+                Data = foundPos
+            };
         }
     }
 }

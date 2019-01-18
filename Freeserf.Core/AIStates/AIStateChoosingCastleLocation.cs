@@ -115,7 +115,7 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.GetResourceFish(pos) > 0u
+                Success = FindWater(map, pos).Success && map.GetResourceFish(pos) > 0u
             };
         }
 
@@ -159,49 +159,70 @@ namespace Freeserf.AIStates
         {
             var map = game.Map;
 
-            int treeCount = map.FindInArea(pos, 7, FindTree, 1).Count;
-            int stoneCount = map.FindInArea(pos, 7, FindStone, 1).Count;
-            int fishCount = map.FindInArea(pos, 9, FindFish, 1).Count;
+            int treeCount = map.FindInArea(pos, 5, FindTree, 1).Count;
+            int stoneCount = map.FindInArea(pos, 5, FindStone, 1).Count;
+            int fishCount = map.FindInArea(pos, 7, FindFish, 1).Count;
             int mountainCountNear = map.FindInArea(pos, 3, FindMountain, 0).Count;
             int mountainCountFar = map.FindInArea(pos, 9, FindMountain, 4).Count;
-            int desertCount = map.FindInArea(pos, 9, FindDesert, 0).Count;
-            int waterCount = map.FindInArea(pos, 9, FindWater, 0).Count;
+            int desertCount = map.FindInArea(pos, 6, FindDesert, 0).Count;
+            int waterCount = map.FindInArea(pos, 6, FindWater, 0).Count;
 
             int numLargeSpots = 3;
             int numSmallSpots = 3;
             int keepDistanceToEnemies = 30 - (aggressivity / 2) * 10;
 
+            if (player.GetInitialSupplies() < 5)
+            {
+                // we need coal and iron close enough when starting with low supplies
+                var minerals = map.FindInArea(pos, 9, FindMineral, 1).Select(m => (KeyValuePair<Map.Minerals, uint>)m);
+
+                int ironCount = minerals.Where(m => m.Key == Map.Minerals.Iron).Select(m => (int)m.Value).Sum();
+                int coalCount = minerals.Where(m => m.Key == Map.Minerals.Coal).Select(m => (int)m.Value).Sum();
+
+                if (ironCount == 0 || coalCount == 0)
+                    return -1;
+            }
+
             // if we tried too often we will only assure that there is a bit of trees and stones
             if (tries >= 40)
             {
-                if (treeCount < 5 || stoneCount < 2)
-                    return -1;
-
-                if (mountainCountNear > 8) // too close to mountain
-                    return -1;
-
-                if (desertCount > 6) // too much desert
-                    return -1;
-
-                if (waterCount > 8) // too much water
-                    return -1;
-
-                numLargeSpots = 2; // the toolmaker can be build when we have expanded the land
-
-                if (tries >= 80 && player.GetInitialSupplies() > 4)
-                    numLargeSpots = 1; // we need to expand the territory to build the sawmill
-
-                if (game.Map.Size < 5)
+                if (tries < 1000) // after 1000 tries, just place it somewhere
                 {
-                    // in small maps we no longer force enemy distance after many tries
-                    if (tries >= 120)
+                    if (treeCount < 5 || stoneCount < 2)
+                        return -1;
+
+                    if (mountainCountNear > 7) // too close to mountain
+                        return -1;
+
+                    if (desertCount > 6) // too much desert
+                        return -1;
+
+                    if (waterCount > 8) // too much water
+                        return -1;
+
+                    if (player.GetInitialSupplies() < 5)
+                    {
+                        if (fishCount == 0 || stoneCount < 2 || treeCount < 5)
+                            return -1;
+                    }
+
+                    numLargeSpots = 2; // the toolmaker can be build when we have expanded the land
+
+                    if (tries >= 80 && player.GetInitialSupplies() > 4)
+                        numLargeSpots = 1; // we need to expand the territory to build the sawmill
+
+                    if (game.Map.Size < 5)
+                    {
+                        // in small maps we no longer force enemy distance after many tries
+                        if (tries >= 120)
+                            keepDistanceToEnemies = 0;
+                        else if (tries >= 80)
+                            keepDistanceToEnemies = 15;
+                    }
+                    else if (tries >= 200) // if tried very long we will have mercy in any case
+                    {
                         keepDistanceToEnemies = 0;
-                    else if (tries >= 80)
-                        keepDistanceToEnemies = 15;
-                }
-                else if (tries >= 200) // if tried very long we will have mercy in any case
-                {
-                    keepDistanceToEnemies = 0;
+                    }
                 }
             }
             else
@@ -209,7 +230,7 @@ namespace Freeserf.AIStates
                 if (mountainCountNear > 4) // too close to mountain
                     return -1;
 
-                if (desertCount > 6) // too much desert
+                if (desertCount > 3) // too much desert
                     return -1;
 
                 if (desertCount + waterCount + mountainCountNear + mountainCountFar > 10) // too much desert/water/mountain
@@ -230,7 +251,7 @@ namespace Freeserf.AIStates
                 if (treeCount + stoneCount + Math.Max(halfMountainCount, stoneOreCount) < minConstructionCount)
                     return -1;
 
-                int minFishCount = foodFocus;
+                int minFishCount = foodFocus * 5 + (player.GetInitialSupplies() < 5 ? 1 : 0);
 
                 if (fishCount < minFishCount)
                     return -1;
@@ -271,7 +292,7 @@ namespace Freeserf.AIStates
             int numLarge = 0;
             List<uint> largeSpots = new List<uint>();
 
-            for (int i = 0; i < 271; ++i)
+            for (int i = 0; i < 100; ++i)
             {
                 uint checkPos = map.PosAddSpirally(pos, (uint)i);
 

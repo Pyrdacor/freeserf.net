@@ -19,6 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Linq;
+
 namespace Freeserf.AIStates
 {
     // TODO: Change settings like tool and flag priorities, military settings and so on.
@@ -61,6 +63,28 @@ namespace Freeserf.AIStates
             // TODO: send strongest and knight cycling
 
             // Note: Toolmaker prios are handled by the CraftTool AI state.
+            // But if hard times are active we force a scythe or a pick.
+            if (ai.HardTimes())
+            {
+                // set all tool priorities to 0
+                for (int i = 0; i < 9; ++i)
+                    player.SetToolPriority(i, 0);
+
+                // give some planks and steel to the toolmaker
+                player.ResetPlanksPriority();
+                player.ResetSteelPriority();
+
+                if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() && !(game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer) || game.HasAnyOfResource(player, Resource.Type.Scythe)))
+                {
+                    // set the priority for the scythe to 100%
+                    player.SetToolPriority(Resource.Type.Scythe - Resource.Type.Shovel, 65500);
+                }
+                else
+                {
+                    // set the priority for the pick to 100%
+                    player.SetToolPriority(Resource.Type.Pick - Resource.Type.Shovel, 65500);
+                }
+            }
 
             Kill(ai);
         }

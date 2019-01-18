@@ -7,6 +7,7 @@
   Also the minimap click re-location of the map is not working correctly anymore in all cases. And I saw missing render map objects at some scroll positions.
   - But maybe this is only an issue in even map sizes where map width and height differ. And maybe this was there for a long time.
 - Farm fields may overlay construction site marks even if they have a lower baseline.
+- In rare cases the corner stone is in front of the toolmaker frame.
 
 
 Serf rendering:
@@ -33,6 +34,13 @@ AI:
   changing doesn't mean putting hundreds of flags at the same mountain.
 - Fishers are built without water (should not happen).
 - Sometimes unlimited geologists are sent out to look for minerals.
+- If the emergency program is active and all materials are on their way but a flag splits a path, it might happen that an essential building does not get all of its materials (seen with sawmill).
+- In hard times the start location should be near water. Otherwise the player has no chance at all. Also iron and coal should be close enough.
+- Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
+- In hard times the search for mountains should be better (look specific for coal and iron spots and with increased search range -> huts must be on point!)
+- In hard times the fisher is sometimes built too far away from the water.
+- Find Ore will often not work. The problem seems to be that the found spots for a flag are not on own territory (which is strange).
+- The AI should check that each building is linked with a "land" road (avoid water-only connections).
 
 
 Logic:
@@ -43,6 +51,7 @@ Logic:
 - A transporter first walks to the last flag and then goes back to the beginning of the road to goto idle mode.
   - I think in original game the transporter went straight to idle mode when he was at the right location.
   - Is this maybe caused by wrong road building direction? This is often seen in AIs. Maybe the linking of roads is reversed there?!
+- Not sure if the "towards" logic in Map class works correctly yet.
 
 
 Notification Box:

@@ -1410,6 +1410,11 @@ namespace Freeserf
             return s.Mining.Res;
         }
 
+        internal Resource.Type GetTransportedResource()
+        {
+            return s.Walking.Res;
+        }
+
         internal int GetAttackingFieldD()
         {
             return s.Attacking.FieldD;

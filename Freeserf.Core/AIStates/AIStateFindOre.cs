@@ -35,7 +35,7 @@ namespace Freeserf.AIStates
             this.oreType = oreType;
         }
 
-        static readonly Building.Type[] mineTypes = new Building.Type[4]
+        internal static readonly Building.Type[] MineTypes = new Building.Type[4]
         {
             Building.Type.GoldMine,
             Building.Type.IronMine,
@@ -52,10 +52,13 @@ namespace Freeserf.AIStates
             }
 
             uint spot = 0;
-            var mineType = mineTypes[(int)oreType - 1];
+            var mineType = MineTypes[(int)oreType - 1];
             var largeSpots = AI.GetMemorizedMineralSpots(oreType, true).ToList();
             var smallSpots = AI.GetMemorizedMineralSpots(oreType, true).Where(s => !largeSpots.Contains(s)).ToList();
             bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_SEC + playerInfo.Intelligence * 30 * Global.TICKS_PER_SEC) || ai.StupidDecision();
+
+            if (ai.HardTimes() && smallSpots.Count > 1 && ai.GameTime > 4 * Global.TICKS_PER_MIN)
+                considerSmallSpots = true;
 
             while (true)
             {
@@ -158,10 +161,10 @@ namespace Freeserf.AIStates
 
         void FindNearbyMountain(Game game, ref uint pos)
         {
-            pos = game.Map.FindSpotNear(pos, 17, FindMountainWithFlag, game.GetRandom());
+            pos = game.Map.FindSpotNear(pos, 9, FindMountainWithFlag, game.GetRandom(), 1);
 
             if (pos == Global.BadMapPos)
-                pos = game.Map.FindSpotNear(pos, 17, FindMountain, game.GetRandom());
+                pos = game.Map.FindSpotNear(pos, 9, FindMountain, game.GetRandom(), 1);
         }
 
         Map.FindData FindFlag(Map map, uint pos)
@@ -209,38 +212,65 @@ namespace Freeserf.AIStates
 
             var spotsWithFlag = possibleSpots.Where(s => game.Map.HasFlag(s)).ToList();
 
-            uint spot = (spotsWithFlag.Count > 0) ? spotsWithFlag[game.GetRandom().Next() % spotsWithFlag.Count] :
-                possibleSpots[game.GetRandom().Next() % possibleSpots.Count];
-
-            Flag flag = game.GetFlagAtPos(spot);
-
-            if (flag == null)
+            for (int i = 0; i < 10; ++i)
             {
-                if (!game.BuildFlag(spot, player))
-                    return false;
+                if (possibleSpots.Count == 0)
+                    break;
 
-                flag = game.GetFlagAtPos(spot);
+                uint spot = (spotsWithFlag.Count > 0) ? spotsWithFlag[game.GetRandom().Next() % spotsWithFlag.Count] :
+                    possibleSpots[game.GetRandom().Next() % possibleSpots.Count];
 
-                // link flag
-                var flagPositions = game.Map.FindInArea(flag.Position, 7, FindFlag, 2).Select(d => (uint)d);
-                Road bestRoad = null;
+                Flag flag = game.GetFlagAtPos(spot);
 
-                foreach (var flagPos in flagPositions)
+                if (flag == null)
                 {
-                    var road = Pathfinder.Map(game.Map, flag.Position, flagPos);
-
-                    if (road != null && road.Valid)
+                    if (!game.BuildFlag(spot, player))
                     {
-                        if (bestRoad == null || bestRoad.Length > road.Length)
-                            bestRoad = road;
+                        bool built = false;
+
+                        for (int d = 0; d < 5; ++d)
+                        {
+                            spot = game.Map.MoveTowards(spot, player.CastlePos);
+
+                            if (game.BuildFlag(spot, player))
+                            {
+                                built = true;
+                                break;
+                            }
+                        }
+
+                        if (!built)
+                        {
+                            possibleSpots.Remove(spot);
+                            continue;
+                        }
                     }
+
+                    flag = game.GetFlagAtPos(spot);
+
+                    // link flag
+                    var flagPositions = game.Map.FindInArea(flag.Position, 7, FindFlag, 2).Select(d => (uint)d);
+                    Road bestRoad = null;
+
+                    foreach (var flagPos in flagPositions)
+                    {
+                        var road = Pathfinder.Map(game.Map, flag.Position, flagPos);
+
+                        if (road != null && road.Valid)
+                        {
+                            if (bestRoad == null || bestRoad.Length > road.Length)
+                                bestRoad = road;
+                        }
+                    }
+
+                    if (bestRoad != null)
+                        game.BuildRoad(bestRoad, player);
                 }
 
-                if (bestRoad != null)
-                    game.BuildRoad(bestRoad, player);
+                return game.SendGeologist(flag);
             }
 
-            return game.SendGeologist(flag);
+            return false;
         }
     }
 }

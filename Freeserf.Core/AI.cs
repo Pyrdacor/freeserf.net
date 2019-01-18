@@ -1,7 +1,7 @@
 ﻿/*
  * AI.cs - Character AI logic
  *
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -452,7 +452,7 @@ namespace Freeserf
             if (!quick)
             {
                 // If bad knights are in military buildings and there are better
-                // ones in inventories, than swap with better ones
+                // ones in inventories, then swap with better ones -> cycle knights
             }
         }
 
@@ -570,6 +570,9 @@ namespace Freeserf
 
         internal bool StupidDecision()
         {
+            if (HardTimes()) // no stupid decisions in hard times (the game would be quickly over otherwise)
+                return false;
+
             return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
         }
 
@@ -599,6 +602,33 @@ namespace Freeserf
             return
                 game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= constructionInfo.Planks &&
                 game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= constructionInfo.Stones;
+        }
+
+        // This is the case if the AI has to do everything right to survive.
+        // Especially if starting with very few supplies.
+        internal bool HardTimes()
+        {
+            var game = player.Game;
+
+            int numMiners = game.GetPlayerSerfs(player).Count(s => s.GetSerfType() == Serf.Type.Miner);
+            int numPicks = game.GetResourceAmountInInventories(player, Resource.Type.Pick);
+
+            if (numMiners + numPicks > 2)
+                return false;
+
+            bool hasCoalMines = game.GetPlayerBuildings(player, Building.Type.CoalMine).Any();
+            bool hasIronMines = game.GetPlayerBuildings(player, Building.Type.IronMine).Any();
+
+            if (hasCoalMines && hasCoalMines && numMiners == 2)
+            {
+                bool hasFoodSource = game.GetPlayerBuildings(player, Building.Type.Fisher).Any() ||
+                    game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer);
+
+                if (hasFoodSource)
+                    return false;
+            }
+
+            return true;
         }
 
         #endregion

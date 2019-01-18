@@ -908,6 +908,129 @@ namespace Freeserf
         }
 
         /// <summary>
+        /// Searches the whole territory of a player.
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <param name="searchFunc"></param>
+        /// <returns></returns>
+        public List<object> FindInTerritory(uint owner, Func<Map, MapPos, FindData> searchFunc)
+        {
+            List<object> findings = new List<object>();
+
+            foreach (var pos in Geometry)
+            {
+                if (GetOwner(pos) == owner)
+                {
+                    var data = searchFunc(this, pos);
+
+                    if (data != null & data.Success)
+                        findings.Add(data.Data);
+                }
+            }
+
+            return findings;
+        }
+
+        /// <summary>
+        /// Searches the whole territory of a player and stops the search after finding the first.
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <param name="searchFunc"></param>
+        /// <returns></returns>
+        public object FindFirstInTerritory(uint owner, Func<Map, MapPos, FindData> searchFunc)
+        {
+            foreach (var pos in Geometry)
+            {
+                if (GetOwner(pos) == owner)
+                {
+                    var data = searchFunc(this, pos);
+
+                    if (data != null & data.Success)
+                        return data.Data;
+                }
+            }
+
+            return null;
+        }
+
+        public MapPos MoveTowards(MapPos origin, MapPos destination)
+        {
+            int distX = DistX(origin, destination);
+            int distY = DistY(origin, destination);
+
+            if (distX > 0) // origin right of destination
+            {
+                if (distY <= 0)
+                {
+                    return MoveLeft(origin);
+                }
+                else if (distY > 0)
+                {
+                    return MoveUpLeft(origin);
+                }
+            }
+            else if (distX < 0) // origin left of destination
+            {
+                if (distY < 0)
+                {
+                    return MoveDownRight(origin);
+                }
+                else if (distY >= 0)
+                {
+                    return MoveRight(origin);
+                }
+            }
+            else
+            {
+                if (distY < 0)
+                {
+                    return MoveDown(origin);
+                }
+                else if (distY > 0)
+                {
+                    return MoveUp(origin);
+                }
+            }
+
+            return origin;
+        }
+
+        public MapPos FindFirstSpotTowards(uint basePosition, Func<Map, MapPos, bool> targetSearchFunc, int minDist = 1)
+        {
+            uint owner = GetOwner(basePosition);
+            uint minSum = (uint)(minDist * minDist + minDist) / 2;
+            uint spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+
+            for (uint i = spiralOffset; i < 295; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePosition, i);
+
+                if (targetSearchFunc(this, pos))
+                {
+                    if (GetOwner(pos) == owner)
+                        return pos;
+                    else
+                    {
+                        int tries = 0;
+                        uint testPos = pos;
+                        uint lastTestPos;
+
+                        do
+                        {
+                            lastTestPos = testPos;
+                            testPos = MoveTowards(testPos, basePosition);
+                        } while (GetOwner(testPos) != owner && testPos != lastTestPos && ++tries < 10);
+
+                        if (GetOwner(pos) == owner)
+                            return pos;
+                    }
+                }
+            }
+
+            return Global.BadMapPos;
+        }
+
+        /// <summary>
         /// Searches the spiral around the base position.
         /// 
         /// The distances can range from 0 to 9.

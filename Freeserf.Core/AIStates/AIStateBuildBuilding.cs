@@ -68,7 +68,7 @@ namespace Freeserf.AIStates
             {
                 pos = FindSpot(ai, game, player, (int)playerInfo.Intelligence);
 
-                if (pos == Global.BadMapPos && !IsResourceNeedingBuilding())
+                if (pos == Global.BadMapPos && !IsResourceNeedingBuilding() && (!ai.HardTimes() || type == Building.Type.Sawmill || type == Building.Type.ToolMaker))
                     pos = FindRandomSpot(game, player, true);
             }
 
@@ -154,7 +154,23 @@ namespace Freeserf.AIStates
                 case Building.Type.Farm:
                     return FindSpotWithSpace(game, player, intelligence, 1 + ai.FoodFocus);
                 case Building.Type.Fisher:
-                    return FindSpotWithFish(game, player, intelligence, 1 + ai.FoodFocus);
+                    if (ai.HardTimes())
+                    {
+                        // we need to find fish in territory or near territory
+                        var spot = game.Map.FindFirstInTerritory(player.Index, FindFishInTerritory);
+
+                        if (spot != null)
+                            return FindSpotNear(game, player, (uint)spot, 3);
+
+                        spot = game.Map.FindFirstInTerritory(player.Index, FindFishNearBorder);
+
+                        if (spot != null)
+                            return FindSpotNear(game, player, (uint)spot, 5);
+
+                        return Global.BadMapPos;
+                    }
+                    else
+                        return FindSpotWithFish(game, player, intelligence, 1 + ai.FoodFocus);
                 case Building.Type.Forester:
                     {
                         uint spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Lumberjack, 1 + ai.ConstructionMaterialFocus);
@@ -168,6 +184,26 @@ namespace Freeserf.AIStates
                 case Building.Type.Tower:
                 case Building.Type.Fortress:
                     {
+                        if (ai.HardTimes() && type == Building.Type.Hut)
+                        {
+                            Func<Map, uint, bool> targetFunc = null;
+
+                            if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any())
+                                targetFunc = FindMountain;
+                            else
+                                targetFunc = FindWater;
+
+                            foreach (var building in game.GetPlayerBuildings(player).Where(b => b.IsMilitary()))
+                            {
+                                var spot = game.Map.FindFirstSpotTowards(building.Position, targetFunc);
+
+                                if (spot != Global.BadMapPos)
+                                    return game.Map.FindSpotNear(spot, 4, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 1);
+                            }
+
+                            return FindSpotNearBorder(game, player, intelligence, 2);
+                        }
+
                         int defendChance = (2 - (ai.ExpandFocus - ai.DefendFocus)) * 25;
 
                         if (defendChance == 0)
@@ -233,7 +269,14 @@ namespace Freeserf.AIStates
                 case Building.Type.IronMine:
                     return FindSpotWithMinerals(game, player, intelligence, Map.Minerals.Iron, 1 + ai.SteelFocus);
                 case Building.Type.Lumberjack:
-                    return FindSpotWithTrees(game, player, intelligence, 1 + ai.ConstructionMaterialFocus);
+                    for (int i = 7; i >= 4; --i)
+                    {
+                        var spot = FindSpotWithTrees(game, player, intelligence, i, 1 + ai.ConstructionMaterialFocus);
+
+                        if (spot != Global.BadMapPos)
+                            return spot;
+                    }
+                    return Global.BadMapPos;
                 case Building.Type.Mill:
                     return FindSpotNearBuilding(game, player, intelligence, Building.Type.Farm, 1 + ai.FoodFocus);
                 case Building.Type.PigFarm:
@@ -335,7 +378,7 @@ namespace Freeserf.AIStates
             {
                 var randomBuilding = buildings[game.RandomInt() % buildings.Count];
 
-                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, Building.Type.Stonecutter, maxInArea))
+                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, AIStateFindOre.MineTypes[(int)mineral], maxInArea))
                 {
                     if (MineralsInArea(game.Map, randomBuilding.Position, 9, mineral, FindMineral, 1) > 0)
                     {
@@ -364,7 +407,7 @@ namespace Freeserf.AIStates
 
         uint FindSpotWithFish(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
-            // search for stones near castle, fishers and military buildings
+            // search for fish near castle, fishers and military buildings
             var buildings = game.GetPlayerBuildings(player).Where(b =>
                 b.BuildingType == Building.Type.Castle ||
                 b.BuildingType == Building.Type.Fisher ||
@@ -398,7 +441,7 @@ namespace Freeserf.AIStates
             return Global.BadMapPos;
         }
 
-        uint FindSpotWithTrees(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
+        uint FindSpotWithTrees(Game game, Player player, int intelligence, int minTrees = 6, int maxInArea = int.MaxValue)
         {
             // search for trees near castle, lumberjacks, foresters and military buildings
             var buildings = game.GetPlayerBuildings(player).Where(b =>
@@ -416,7 +459,7 @@ namespace Freeserf.AIStates
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Lumberjack, maxInArea))
                 {
-                    if (AmountInArea(game.Map, randomBuilding.Position, 8, CountMapObjects, FindTree) > 6)
+                    if (AmountInArea(game.Map, randomBuilding.Position, 8, CountMapObjects, FindTree) >= minTrees)
                     {
                         Func<Map, uint, bool> findTree = (Map map, uint pos) =>
                         {
@@ -567,13 +610,43 @@ namespace Freeserf.AIStates
             };
         }
 
+        static Map.FindData FindFishInTerritory(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.IsInWater(pos),
+                Data = pos
+            };
+        }
+
+        static Map.FindData FindFishNearBorder(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.FindInArea(pos, 7, FindFish, 1).Any(),
+                Data = pos
+            };
+        }
+
         static Map.FindData FindMineral(Map map, uint pos)
         {
             return new Map.FindData()
             {
-                Success = map.GetResourceAmount(pos) > 0u,
+                Success = FindMountain(map, pos) && map.GetResourceAmount(pos) > 0u,
                 Data = new KeyValuePair<Map.Minerals, uint>(map.GetResourceType(pos), map.GetResourceAmount(pos))
             };
+        }
+
+        static bool FindMountain(Map map, uint pos)
+        {
+            return (map.TypeUp(pos) >= Map.Terrain.Tundra0 && map.TypeUp(pos) <= Map.Terrain.Tundra2) ||
+                   (map.TypeDown(pos) >= Map.Terrain.Tundra0 && map.TypeDown(pos) <= Map.Terrain.Tundra2);
+        }
+
+        static bool FindWater(Map map, uint pos)
+        {
+            return (map.TypeUp(pos) >= Map.Terrain.Water0 && map.TypeUp(pos) <= Map.Terrain.Water3) ||
+                   (map.TypeDown(pos) >= Map.Terrain.Water0 && map.TypeDown(pos) <= Map.Terrain.Water3);
         }
 
         static Map.FindData FindEmptySpot(Map map, uint pos)

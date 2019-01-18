@@ -89,6 +89,8 @@ namespace Freeserf.AIStates
         {
             triesBuildToolmaker = 0;
             player.ResetToolPriority();
+            player.ResetPlanksPriority();
+            player.ResetSteelPriority();
 
             base.Kill(ai);
         }

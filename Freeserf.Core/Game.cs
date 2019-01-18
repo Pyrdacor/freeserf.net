@@ -1744,6 +1744,23 @@ namespace Freeserf
             return players.Count();
         }
 
+        public int GetFreeKnightCount(Player player)
+        {
+            return serfs.Count(s => s.Player == player.Index && s.IsKnight() && s.SerfState == Serf.State.IdleInStock) - ((int)player.GetCastleKnightsWanted() - (int)player.GetCastleKnights());
+        }
+
+        public int GetPossibleFreeKnightCount(Player player)
+        {
+            int count = GetFreeKnightCount(player);
+
+            count += Math.Min(GetResourceAmountInInventories(player, Resource.Type.Sword), GetResourceAmountInInventories(player, Resource.Type.Shield));
+            count -= (int)player.GetIncompleteBuildingCount(Building.Type.Hut);
+            count -= (int)player.GetIncompleteBuildingCount(Building.Type.Tower);
+            count -= (int)player.GetIncompleteBuildingCount(Building.Type.Fortress);
+
+            return count;
+        }
+
         public IEnumerable<Serf> GetPlayerSerfs(Player player)
         {
             return serfs.Where(s => s.Player == player.Index);
@@ -1816,6 +1833,37 @@ namespace Freeserf
             }
 
             return amount;
+        }
+
+        public bool HasAnyOfResource(Player player, Resource.Type type)
+        {
+            foreach (var inventory in GetPlayerInventories(player))
+            {
+                if (inventory.GetCountOf(type) > 0)
+                    return true;
+            }
+
+            foreach (var flag in GetPlayerFlags(player))
+            {
+                if (flag.HasResources())
+                {
+                    for (int i = 0; i < Flag.FLAG_MAX_RES_COUNT; ++i)
+                    {
+                        if (flag.GetResourceAtSlot(i) == type)
+                            return true;
+                        else if (flag.GetResourceAtSlot(i) == Resource.Type.None)
+                            break;
+                    }
+                }
+            }
+
+            foreach (var transporter in GetPlayerSerfs(player).Where(s => s.GetSerfType() == Serf.Type.Transporter))
+            {
+                if (transporter.GetTransportedResource() == type)
+                    return true;
+            }
+
+            return false;
         }
 
         public Player GetNextPlayer(Player player)
