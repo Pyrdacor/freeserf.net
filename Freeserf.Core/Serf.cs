@@ -818,6 +818,11 @@ namespace Freeserf
             }
         }
 
+        public bool IsKnight()
+        {
+            return type >= Type.Knight0 && type <= Type.Knight4;
+        }
+
         public bool PlayingSfx()
         {
             return sound;
@@ -5479,8 +5484,7 @@ namespace Freeserf
                               map.HasOwner(dest) &&
                               map.GetOwner(dest) == Player)
                         {
-                            if (GetSerfType() >= Type.Knight0 &&
-                                GetSerfType() <= Type.Knight4)
+                            if (IsKnight())
                             {
                                 SetState(State.KnightFreeWalking);
                             }
@@ -7015,9 +7019,7 @@ namespace Freeserf
                                     return;
                                 }
                             }
-                            else if (other.SerfState == State.Walking &&
-                                     other.GetSerfType() >= Type.Knight0 &&
-                                     other.GetSerfType() <= Type.Knight4)
+                            else if (other.SerfState == State.Walking && other.IsKnight())
                             {
                                 pos = map.MoveLeft(pos);
 
@@ -7407,7 +7409,7 @@ namespace Freeserf
 
                 if (map.GetObject(dest) == 0 && map.GetHeight(dest) > 0)
                 {
-                    if (GetSerfType() >= Type.Knight0 && GetSerfType() <= Type.Knight4)
+                    if (IsKnight())
                     {
                         SetState(State.KnightFreeWalking);
                     }
