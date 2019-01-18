@@ -101,6 +101,17 @@ namespace Freeserf
             // TODO ...
         }
 
+        public enum AttackTarget
+        {
+            Random,
+            SmallMilitary,
+            FoodProduction,
+            MaterialProduction, // planks and stones
+            Mines,
+            WeaponProduction,
+            Stocks
+        }
+
         readonly Player player = null;
         readonly PlayerInfo playerInfo = null;
         readonly Stack<AIState> states = new Stack<AIState>();
@@ -195,6 +206,14 @@ namespace Freeserf
         int[] militaryBuildingPriorities = new int[3]; // 0 - 2 for hut, tower and fortress
         int[] minPlanksForMilitaryBuildings = new int[2]; // minimum free planks for tower and fortress
         int[] minStonesForMilitaryBuildings = new int[2]; // minimum free stones for tower and fortress
+        /// <summary>
+        /// The ai may prioritize specific targets when attacking
+        /// </summary>
+        public AttackTarget PrioritizedAttackTarget { get; private set; } = AttackTarget.Random;
+        /// <summary>
+        /// The ai may prioritize specific targets when attacking
+        /// </summary>
+        public AttackTarget SecondPrioritizedAttackTarget { get; private set; } = AttackTarget.Random;
 
         /// <summary>
         /// Priorities can be 0, 1 or 2 (each value can only be used once).
@@ -292,6 +311,7 @@ namespace Freeserf
                     Aggressivity = 1;
                     ExpandFocus = 1;
                     MilitarySkill = 2;
+                    PrioritizedAttackTarget = AttackTarget.FoodProduction;
                     break;
                 case 6: // Rasparuk
                     Aggressivity = 1;
@@ -305,6 +325,7 @@ namespace Freeserf
                     militaryBuildingPriorities[0] = 1; // hut
                     militaryBuildingPriorities[1] = 2; // tower
                     militaryBuildingPriorities[2] = 0; // fortress
+                    PrioritizedAttackTarget = AttackTarget.SmallMilitary;
                     break;
                 case 7: // Count Aldaba
                     Aggressivity = 2;
@@ -320,6 +341,8 @@ namespace Freeserf
                     foodSourcePriorities[0] = 1; // fish
                     foodSourcePriorities[1] = 2; // bread
                     foodSourcePriorities[2] = 0; // meat
+                    PrioritizedAttackTarget = AttackTarget.Stocks;
+                    SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
                     break;
                 case 8: // King Rolph VII
                     Aggressivity = 2;
@@ -338,6 +361,8 @@ namespace Freeserf
                     foodSourcePriorities[0] = 0; // fish
                     foodSourcePriorities[1] = 1; // bread
                     foodSourcePriorities[2] = 2; // meat
+                    PrioritizedAttackTarget = AttackTarget.MaterialProduction;
+                    SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
                     break;
                 case 9: // Homen Doublehorn
                     Aggressivity = 2;
@@ -358,6 +383,8 @@ namespace Freeserf
                     foodSourcePriorities[0] = 2; // fish
                     foodSourcePriorities[1] = 0; // bread
                     foodSourcePriorities[2] = 1; // meat
+                    PrioritizedAttackTarget = AttackTarget.Stocks;
+                    SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
                     break;
                 case 10: // Sollok the Joker
                     Aggressivity = 2;
@@ -369,6 +396,8 @@ namespace Freeserf
                     SteelFocus = 2;
                     FoodFocus = 1;
                     ConstructionMaterialFocus = 2;
+                    PrioritizedAttackTarget = AttackTarget.MaterialProduction;
+                    SecondPrioritizedAttackTarget = AttackTarget.WeaponProduction;
                     break;
                 case 11: // Enemy
                     Aggressivity = 2;
@@ -391,6 +420,8 @@ namespace Freeserf
                     minPlanksForMilitaryBuildings[1] = 30; // fortress
                     minStonesForMilitaryBuildings[0] = 15; // tower
                     minStonesForMilitaryBuildings[1] = 22; // fortress
+                    PrioritizedAttackTarget = AttackTarget.Mines;
+                    SecondPrioritizedAttackTarget = AttackTarget.MaterialProduction;
                     break;
                 default:
                     break;
@@ -540,6 +571,11 @@ namespace Freeserf
         internal bool StupidDecision()
         {
             return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
+        }
+
+        internal bool Chance(int percentage)
+        {
+            return random.Next() % 100 < percentage;
         }
 
 

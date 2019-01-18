@@ -47,11 +47,11 @@ namespace Freeserf.AIStates
             // check for unconnected flags once in a while
             checkUnconnectedFlagsTick += tick;
 
-            if (checkUnconnectedFlagsTick > (5 - (int)playerInfo.Intelligence / 15) * Global.TICKS_PER_SEC)
+            if (checkUnconnectedFlagsTick > (15 - (int)playerInfo.Intelligence / 15) * Global.TICKS_PER_SEC)
             {
                 checkUnconnectedFlagsTick = 0;
 
-                if (game.RandomInt() % 10 < 4)
+                if (ai.Chance(50))
                 {
                     ai.PushState(ai.CreateState(AI.State.LinkDisconnectedFlags));
                     return;
@@ -65,7 +65,7 @@ namespace Freeserf.AIStates
             {
                 buildNeededBuildingsTick = 0;
 
-                if (game.RandomInt() % 10 < 7)
+                if (ai.Chance(70))
                 {
                     if (!ai.ContainsState(buildNeededBuildingState))
                     {
@@ -84,7 +84,7 @@ namespace Freeserf.AIStates
             {
                 adjustSettingsTick = 0;
 
-                if (game.RandomInt() % 10 < 3)
+                if (ai.Chance(30))
                 {
                     ai.PushState(ai.CreateState(AI.State.AdjustSettings));
                     return;
@@ -98,7 +98,7 @@ namespace Freeserf.AIStates
             {
                 avoidCongestionTick = 0;
 
-                if (game.RandomInt() % 10 < 5)
+                if (ai.Chance(30))
                 {
                     ai.PushState(ai.CreateState(AI.State.AvoidCongestion));
                     return;
@@ -113,7 +113,7 @@ namespace Freeserf.AIStates
             {
                 destroyUselessBuildingsTick = 0;
 
-                if (game.RandomInt() % 10 < 4)
+                if (ai.Chance(40))
                 {
                     ai.PushState(ai.CreateState(AI.State.DestroyUselessBuildings));
                     return;
@@ -132,7 +132,7 @@ namespace Freeserf.AIStates
                 {
                     attackTick = 0;
 
-                    if (game.RandomInt() % 100 < 2 + Math.Max(ai.MilitarySkill, ai.Aggressivity) * 2)
+                    if (ai.Chance(2 + Math.Max(ai.MilitarySkill, ai.Aggressivity + 1) * 2))
                     {
                         ai.PushState(ai.CreateState(AI.State.Attack));
                         return;
