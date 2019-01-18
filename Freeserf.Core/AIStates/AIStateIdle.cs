@@ -40,7 +40,7 @@ namespace Freeserf.AIStates
         int avoidCongestionTick = 0;
         int destroyUselessBuildingsTick = 0;
         int attackTick = 0;
-        AIStateBuildNeededBuilding buildNeededBuildingState = new AIStateBuildNeededBuilding();
+        AIStateCheckNeededBuilding buildNeededBuildingState = new AIStateCheckNeededBuilding();
         
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {

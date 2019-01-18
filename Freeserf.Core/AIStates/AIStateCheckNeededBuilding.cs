@@ -30,7 +30,7 @@ namespace Freeserf.AIStates
     // So each AI only uses one instance of this state.
     // Therefore we can store data over multiple executions,
     // like the last build attempt.
-    class AIStateBuildNeededBuilding : ResetableAIState
+    class AIStateCheckNeededBuilding : ResetableAIState
     {
         enum CheckResult
         {

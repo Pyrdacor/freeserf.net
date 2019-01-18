@@ -90,7 +90,7 @@ namespace Freeserf
             BuildBuilding,
             LinkBuilding,
             LinkDisconnectedFlags,
-            BuildNeededBuilding,
+            CheckNeededBuilding,
             CraftWeapons,
             CraftTool,
             FindOre,
@@ -446,8 +446,8 @@ namespace Freeserf
                     return new AIStates.AIStateLinkBuilding((uint)param);
                 case State.LinkDisconnectedFlags:
                     return new AIStates.AIStateLinkDisconnectedFlags();
-                case State.BuildNeededBuilding:
-                    return new AIStates.AIStateBuildNeededBuilding();
+                case State.CheckNeededBuilding:
+                    return new AIStates.AIStateCheckNeededBuilding();
                 case State.CraftTool:
                     return new AIStates.AIStateCraftTool((Resource.Type)param);
                 case State.CraftWeapons:
