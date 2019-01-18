@@ -1,4 +1,5 @@
 ﻿using System;
+using Freeserf.Data;
 
 namespace Freeserf.Render
 {

@@ -20,7 +20,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     internal abstract class Converter
     {

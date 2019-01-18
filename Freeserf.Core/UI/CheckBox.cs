@@ -19,8 +19,10 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf
+namespace Freeserf.UI
 {
+    using Data = Data.Data;
+
     internal class CheckBox : GuiObject
     {
         readonly TextField textField = null;

@@ -25,9 +25,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
-    using Freeserf.Event;
+    using Freeserf.Data;
     using ResourceMap = Dictionary<Resource.Type, int>;
 
     // TODO: If stats should reflect the current state we have
@@ -360,7 +360,7 @@ namespace Freeserf
         int currentPlayerStatisticsMode = 0;
         int iconLayer = 0;
 
-        static Freeserf.BackgroundPattern[] backgrounds = null;
+        static UI.BackgroundPattern[] backgrounds = null;
 
         void SaveCurrentGame()
         {
@@ -388,16 +388,16 @@ namespace Freeserf
             var patterns = Enum.GetValues(typeof(BackgroundPattern));
             int index = 0;
 
-            backgrounds = new Freeserf.BackgroundPattern[patterns.Length];
+            backgrounds = new UI.BackgroundPattern[patterns.Length];
 
             foreach (BackgroundPattern pattern in patterns)
             {
                 if (pattern >= BackgroundPattern.OverallComparison && pattern <= BackgroundPattern.CombatPower)
-                    backgrounds[index++] = Freeserf.BackgroundPattern.CreatePlayerStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
+                    backgrounds[index++] = UI.BackgroundPattern.CreatePlayerStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
                 else if (pattern >= BackgroundPattern.Fish && pattern <= BackgroundPattern.Shield)
-                    backgrounds[index++] = Freeserf.BackgroundPattern.CreateResourceStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
+                    backgrounds[index++] = UI.BackgroundPattern.CreateResourceStatisticPopupBoxBackground(spriteFactory, (uint)pattern);
                 else
-                    backgrounds[index++] = Freeserf.BackgroundPattern.CreatePopupBoxBackground(spriteFactory, 320u + (uint)pattern);
+                    backgrounds[index++] = UI.BackgroundPattern.CreatePopupBoxBackground(spriteFactory, 320u + (uint)pattern);
             }
         }
 
@@ -431,8 +431,8 @@ namespace Freeserf
         public PopupBox(Interface interf)
             : base
             (
-                  interf, 
-                  Freeserf.BackgroundPattern.CreatePopupBoxBackground(interf.RenderView.SpriteFactory, 320u + (uint)BackgroundPattern.StripedGreen),
+                  interf,
+                  UI.BackgroundPattern.CreatePopupBoxBackground(interf.RenderView.SpriteFactory, 320u + (uint)BackgroundPattern.StripedGreen),
                   Border.CreatePopupBoxBorder(interf.RenderView.SpriteFactory)
             )
         {
@@ -704,7 +704,7 @@ namespace Freeserf
             SetRedraw();
         }
 
-        Freeserf.BackgroundPattern BackgroundFromType()
+        UI.BackgroundPattern BackgroundFromType()
         {
             BackgroundPattern pattern = BackgroundPattern.StripedGreen;
 

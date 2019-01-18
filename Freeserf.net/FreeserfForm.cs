@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows.Forms;
 using Freeserf.Renderer.OpenTK;
 using Orientation = Freeserf.Renderer.OpenTK.Orientation;
-using Freeserf.Render;
+using Freeserf.Data;
 
 namespace Freeserf
 {

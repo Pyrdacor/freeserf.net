@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using Freeserf.UI;
+using Freeserf.Data;
 
 namespace Freeserf.Render
 {
+    using Data = Data.Data;
+
     public class TextureAtlasManager
     {
         static TextureAtlasManager instance = null;

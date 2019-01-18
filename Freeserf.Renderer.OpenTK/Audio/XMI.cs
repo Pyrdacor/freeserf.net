@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using Freeserf.Data;
 
 namespace Freeserf.Renderer.OpenTK.Audio
 {
@@ -23,7 +24,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             mod.FillXMIEvents(events);
         }
 
-        public XMI(Buffer data)
+        public XMI(Data.Buffer data)
         {
             // Note: Chunk length and so on are encoded as big endian.
             // But as we don't use them we use little endian because
@@ -133,7 +134,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 (player as IMidiPlayer).Play(this, true);
         }
 
-        uint ParseDeltaTime(Buffer data)
+        uint ParseDeltaTime(Data.Buffer data)
         {
             uint deltaTime = 0;
 
@@ -150,7 +151,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             return deltaTime;
         }
 
-        void ParseMetaEvent(Buffer data)
+        void ParseMetaEvent(Data.Buffer data)
         {
             // we ignore most of them
             // we only need the "set tempo" event
@@ -190,7 +191,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             }
         }
 
-        void ParseEvent(Buffer data)
+        void ParseEvent(Data.Buffer data)
         {
             byte status = data.PeekByte();
 

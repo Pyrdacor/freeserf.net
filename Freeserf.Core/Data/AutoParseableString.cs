@@ -22,7 +22,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     /// <summary>
     ///  Replacement for std::stringstream in CommandLine

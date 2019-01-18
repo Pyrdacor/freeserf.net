@@ -21,10 +21,8 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
     using Freeserf.Event;
     using Freeserf.Render;

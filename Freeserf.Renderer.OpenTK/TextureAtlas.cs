@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Freeserf.Data;
 using Freeserf.Render;
 
 namespace Freeserf.Renderer.OpenTK
@@ -49,7 +50,7 @@ namespace Freeserf.Renderer.OpenTK
 
     public class TextureAtlasBuilder : ITextureAtlasBuilder
     {
-        readonly Dictionary<uint, Freeserf.Sprite> sprites = new Dictionary<uint, Freeserf.Sprite>();
+        readonly Dictionary<uint, Data.Sprite> sprites = new Dictionary<uint, Data.Sprite>();
 
         // key = max height of category
         class SpriteCategorySorter : IComparer<KeyValuePair<uint, List<uint>>>
@@ -60,7 +61,7 @@ namespace Freeserf.Renderer.OpenTK
             }
         }
 
-        public void AddSprite(uint spriteIndex, Freeserf.Sprite sprite)
+        public void AddSprite(uint spriteIndex, Data.Sprite sprite)
         {
             sprites.Add(spriteIndex, sprite);
         }

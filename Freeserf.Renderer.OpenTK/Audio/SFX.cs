@@ -4,7 +4,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
 {
     class SFX
     {
-        public static short[] ConvertToWav(Buffer data, int level = 0, bool invert = false)
+        public static short[] ConvertToWav(Data.Buffer data, int level = 0, bool invert = false)
         {
             List<short> wavData = new List<short>();
 

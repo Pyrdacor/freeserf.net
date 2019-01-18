@@ -1,5 +1,5 @@
 ﻿/*
- * ListSavedFiles.cs - Savegame list GUI component
+ * ListServers.cs - Server list GUI component
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -19,26 +19,18 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Freeserf
+namespace Freeserf.UI
 {
-    internal class ListSavedFiles : ListBox<GameStore.SaveInfo>
+    internal class ListServers : ListBox<string>
     {
-        GameStore saveGame = null;
-
-        public ListSavedFiles(Interface interf)
+        public ListServers(Interface interf)
             : base(interf)
         {
-            saveGame = GameStore.Instance;
-
-            foreach (var saveGame in saveGame.GetSavedGames())
-                items.Add(saveGame);
+            // TODO
+            items.Add("Test Server 1");
+            items.Add("Roberts Server");
 
             Init(interf);
-        }
-
-        public string GetFolderPath()
-        {
-            return saveGame?.FolderPath;
         }
     }
 }

@@ -26,7 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     public class SpriteInfo
     {

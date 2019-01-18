@@ -22,8 +22,9 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
-using Freeserf.Render;
+using Freeserf.Data;
 using Freeserf.Event;
+using Freeserf.Render;
 using Freeserf.Renderer.OpenTK.Audio;
 
 namespace Freeserf.Renderer.OpenTK
@@ -31,6 +32,7 @@ namespace Freeserf.Renderer.OpenTK
     using EventArgs = Event.EventArgs;
     using EventHandler = Event.EventHandler;
     using EventType = Event.Type;
+    using Data = Data.Data;
 
     public delegate bool FullscreenRequestHandler(bool fullscreen);
 
@@ -53,7 +55,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly ColoredRectFactory coloredRectFactory = null;
         readonly MinimapTextureFactory minimapTextureFactory = null;
         readonly AudioFactory audioFactory = null;
-        readonly Gui gui = null;
+        readonly UI.Gui gui = null;
         bool fullscreen = false;
 
         float sizeFactorX = 1.0f;
@@ -153,7 +155,7 @@ namespace Freeserf.Renderer.OpenTK
                 }
             }
 
-            gui = new Gui(this);
+            gui = new UI.Gui(this);
         }
 
         public void Close()

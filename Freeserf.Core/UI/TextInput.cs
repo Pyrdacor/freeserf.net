@@ -1,8 +1,8 @@
 ﻿/*
  * TextInput.cs - Text input GUI component
  *
- * Copyright (C) 2015  Wicked_Digger <wicked_digger@mail.ru>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2015       Wicked_Digger <wicked_digger@mail.ru>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -24,7 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
     internal class TextInput : GuiObject
     {

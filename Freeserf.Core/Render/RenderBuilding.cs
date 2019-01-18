@@ -20,9 +20,12 @@
  */
 
 using System.Collections.Generic;
+using Freeserf.Data;
 
 namespace Freeserf.Render
 {
+    using Data = Data.Data;
+
     // TODO: burning
     internal class RenderBuilding : RenderObject
     {

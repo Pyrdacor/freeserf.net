@@ -22,6 +22,7 @@
 
 using System;
 using System.Reflection;
+using Freeserf.Data;
 
 namespace Freeserf
 {

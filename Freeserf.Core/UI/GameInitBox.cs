@@ -22,8 +22,10 @@
 
 using System;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
+    using Data = Data.Data;
+
     class RandomInput : TextInput
     {
         string savedText = "";

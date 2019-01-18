@@ -20,9 +20,12 @@
  */
 
 using System.Collections.Generic;
+using Freeserf.Data;
 
 namespace Freeserf.Render
 {
+    using Data = Data.Data;
+
     // TODO: The baseline offset is bad when a serf walks through resources at a flag.
     //       The serf is always on top of the resources. Maybe fix later somehow.
     // TODO: Shadow

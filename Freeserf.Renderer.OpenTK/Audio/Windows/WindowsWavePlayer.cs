@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
+using Freeserf.Data;
 
 namespace Freeserf.Renderer.OpenTK.Audio.Windows
 {

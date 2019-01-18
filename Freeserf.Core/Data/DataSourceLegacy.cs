@@ -23,7 +23,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     public abstract class DataSourceLegacy : DataSource
     {

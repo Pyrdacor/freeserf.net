@@ -20,6 +20,7 @@
  */
 
 using System;
+using Freeserf.UI;
 
 namespace Freeserf
 {

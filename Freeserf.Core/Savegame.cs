@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Globalization;
+using Freeserf.Data;
 
 namespace Freeserf
 {

@@ -46,6 +46,6 @@ namespace Freeserf.Render
         IMinimapTextureFactory MinimapTextureFactory { get; }
         IAudioFactory AudioFactory { get; }
 
-        DataSource DataSource { get; }
+        Data.DataSource DataSource { get; }
     }
 }

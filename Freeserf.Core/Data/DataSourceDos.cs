@@ -24,7 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     using MaskImage = Tuple<Sprite, Sprite>;
 

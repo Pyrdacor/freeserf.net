@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Freeserf.Data;
 
 namespace Freeserf.Renderer.OpenTK.Audio
 {
@@ -17,7 +18,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
         class Note
         {
-            public Note(Buffer data)
+            public Note(Data.Buffer data)
             {
                 byte b1 = data.Pop<byte>();
                 byte b2 = data.Pop<byte>();
@@ -122,7 +123,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 return fineTune - 16;
         }
 
-        public MOD(Buffer data)
+        public MOD(Data.Buffer data)
         {
             data.SetEndianess(Endian.Endianess.Big);
 

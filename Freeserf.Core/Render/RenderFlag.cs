@@ -19,8 +19,12 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Data;
+
 namespace Freeserf.Render
 {
+    using Data = Data.Data;
+
     internal class RenderFlag : RenderObject
     {
         Flag flag = null;

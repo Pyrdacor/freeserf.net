@@ -24,7 +24,7 @@ using System;
 using System.Collections.Generic;
 using Freeserf.Render;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
     internal class ListBox<T> : GuiObject
     {

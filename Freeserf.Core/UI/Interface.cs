@@ -35,7 +35,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Freeserf.Render;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
     using MapPos = UInt32;
 

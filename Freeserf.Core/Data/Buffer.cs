@@ -24,7 +24,7 @@ using System;
 using System.IO;
 using System.Reflection.Emit;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     using Endianess = Endian.Endianess;
 

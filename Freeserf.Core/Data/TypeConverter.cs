@@ -22,7 +22,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     class TypeConverter : IConvertible
     {

@@ -1,8 +1,8 @@
 ﻿/*
  * PanelBar.cs - Panel GUI component
  *
- * Copyright (C) 2012  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2012       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -22,8 +22,9 @@
 
 using System;
 
-namespace Freeserf
+namespace Freeserf.UI
 {
+    using Data = Data.Data;
     using MapPos = UInt32;
 
     // TODO: Click events for timers

@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Freeserf.Render
 {
+    using Data = Data.Data;
+
     internal class TextRenderer
     {
         static readonly Encoding encoding = Encoding.GetEncoding("iso-8859-1");
@@ -313,9 +314,9 @@ namespace Freeserf.Render
                 if (bytes[i] != 32) // space
                 {
                     if (useSpecialDigits && bytes[i] >= '0' && bytes[i] <= '9')
-                        sprites[charIndex++].Sprite.TextureAtlasOffset = GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 78u + (uint)(bytes[i] - '0'));
+                        sprites[charIndex++].Sprite.TextureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 78u + (uint)(bytes[i] - '0'));
                     else
-                        sprites[charIndex++].Sprite.TextureAtlasOffset = GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharToSpriteIndex(bytes[i]));
+                        sprites[charIndex++].Sprite.TextureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharToSpriteIndex(bytes[i]));
                 }
             }
         }

@@ -22,7 +22,7 @@
 using System;
 using System.IO;
 
-namespace Freeserf
+namespace Freeserf.Data
 {
     internal class SubStream : Stream
     {
