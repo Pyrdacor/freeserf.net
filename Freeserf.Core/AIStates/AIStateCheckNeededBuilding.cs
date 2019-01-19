@@ -55,10 +55,10 @@ namespace Freeserf.AIStates
             Building.Type.Lumberjack,
             Building.Type.Stonecutter,
             Building.Type.Sawmill,
+            Building.Type.Forester,
             Building.Type.Hut,
             Building.Type.Tower,
-            Building.Type.Fortress,
-            Building.Type.Forester,
+            Building.Type.Fortress,            
             Building.Type.ToolMaker,
             Building.Type.SteelSmelter,
             Building.Type.WeaponSmith,
@@ -228,7 +228,8 @@ namespace Freeserf.AIStates
                 switch (type)
                 {
                     case Building.Type.Fisher:
-                        if (count == 0 && game.Map.FindInTerritory(player.Index, FindFishNear).Count > 0) // fish present
+                        if (count == 0 && game.HasAnyOfBuildingCompletedOrMaterialsAtPlace(player, Building.Type.Forester) &&
+                            game.Map.FindInTerritory(player.Index, FindFishNear).Count > 0) // fish present
                             return CheckResult.Needed;
                         break;
                     case Building.Type.Farm:
@@ -250,7 +251,9 @@ namespace Freeserf.AIStates
                         }
                         break;
                     case Building.Type.Hut:
-                        if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 && !game.GetPlayerBuildings(player, Building.Type.Hut).Any(b => !b.HasKnight())
+                        if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
+                            game.HasAnyOfBuildingCompletedOrMaterialsAtPlace(player, Building.Type.Forester) && 
+                            !game.GetPlayerBuildings(player, Building.Type.Hut).Any(b => !b.HasKnight())
                             && ai.GameTime > count * 180 * Global.TICKS_PER_SEC && game.GetPossibleFreeKnightCount(player) > 0)
                             return CheckResult.Needed;
                         break;
@@ -267,7 +270,7 @@ namespace Freeserf.AIStates
                             return CheckResult.Needed;
                         break;
                     case Building.Type.Forester:
-                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.Sawmill) > 0 && player.GetCompletedBuildingCount(Building.Type.Hut) > 1)
+                        if (count == 0)
                             return CheckResult.Needed;
                         break;
                 }

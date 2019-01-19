@@ -185,6 +185,12 @@ namespace Freeserf.AIStates
             // search for mountains near military buildings
             foreach (var building in militaryBuildings)
             {
+                if (game.Map.FindSpotNear(building.Position, 4, FindMountain, game.GetRandom(), 1) != Global.BadMapPos)
+                {
+                    possibleSpots.Add(game.Map.MoveDownRight(building.Position));
+                    continue;
+                }
+
                 uint pos = building.Position;
                 FindNearbyMountain(game, ref pos);
 

@@ -22,6 +22,7 @@ Non-working code:
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Minimap clicks are only sometimes right (at least the map movement)
 - In AIvsAI the first player face can be the same as another player face.
+- Sometimes the player color indicator in AI vs AI is drawn strangly over the panel bar.
 
 
 AI:
@@ -39,7 +40,6 @@ AI:
 - In hard times the fisher is sometimes built too far away from the water.
 - Find Ore will often not work. The problem seems to be that the found spots for a flag are not on own territory (which is strange).
 - The AI should check that each building is linked with a "land" road (avoid water-only connections).
-- Turn of the boat builder plank supply if there are several boats.
 
 
 Logic:
