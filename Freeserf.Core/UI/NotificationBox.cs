@@ -342,8 +342,14 @@ namespace Freeserf.UI
         void DrawString(int x, int y, TextField textField, string str)
         {
             textField.Text = str;
-            textField.MoveTo(x, y);
-            textField.Displayed = Displayed;
+            
+            if (textField.Parent == null)
+                AddChild(textField, x, y);
+            else
+            {
+                textField.MoveTo(x, y);
+                textField.Displayed = Displayed;
+            }
 
             // TODO: textField.ColorText = Color.Green;
             // TODO: textField.ColorBg = Color.Black;

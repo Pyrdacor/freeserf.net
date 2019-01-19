@@ -5,8 +5,7 @@
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
 - Since recently (I guess since the fix to map object positioning in the middle of january of 2019) there are map jumps again at some scroll positions.
   Also the minimap click re-location of the map is not working correctly anymore in all cases. And I saw missing render map objects at some scroll positions.
-  - But maybe this is only an issue in even map sizes where map width and height differ. And maybe this was there for a long time.
-- Farm fields may overlay construction site marks even if they have a lower baseline.
+- Farm fields may overlay construction site marks even if they have a lower baseline. Same is true for rocks.
 - In rare cases the corner stone is in front of the toolmaker frame.
 
 
@@ -22,7 +21,6 @@ Non-working code:
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Minimap clicks are only sometimes right (at least the map movement)
-- Some text of the notification box stays in the upper left corner of the screen after closing.
 - In AIvsAI the first player face can be the same as another player face.
 
 
@@ -34,9 +32,9 @@ AI:
   changing doesn't mean putting hundreds of flags at the same mountain.
 - Fishers are built without water (should not happen).
 - Sometimes unlimited geologists are sent out to look for minerals.
-- If the emergency program is active and all materials are on their way but a flag splits a path, it might happen that an essential building does not get all of its materials (seen with sawmill).
 - In hard times the start location should be near water. Otherwise the player has no chance at all. Also iron and coal should be close enough.
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
+	- This is only necessary if an enemy is near enough.
 - In hard times the search for mountains should be better (look specific for coal and iron spots and with increased search range -> huts must be on point!)
 - In hard times the fisher is sometimes built too far away from the water.
 - Find Ore will often not work. The problem seems to be that the found spots for a flag are not on own territory (which is strange).
