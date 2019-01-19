@@ -35,7 +35,7 @@ namespace Freeserf.AIStates
             if (ai.ExpandFocus == 2 && ai.DefendFocus == 2 && ai.Aggressivity < 2)
                 highKnightOccupationPreference = 1;
 
-            if (highKnightOccupationPreference == 0)
+            if (highKnightOccupationPreference == 0 || ai.HardTimes())
             {
                 player.SetLowKnightOccupation();
             }
@@ -48,17 +48,118 @@ namespace Freeserf.AIStates
                 player.SetHighKnightOccupation(ai.DefendFocus < 2);
             }
 
-            // TODO: castle knights (always keep at least 3, only in really rare situations we may use 1 or 2)
+            // castle knights
+            if (ai.HardTimes())
+                player.SetCastleKnightsWanted(1u);
+            else
+            {
+                // every 10-20 minutes (depending on intelligence) an additional knight should protect the castle (starting at 20 minutes)
+                var additionalKnights = Misc.Max(0, (ai.GameTime - 20 * Global.TICKS_PER_MIN) / ((20 - playerInfo.Intelligence / 4) * Global.TICKS_PER_MIN));
+
+                // every 40-60 minutes (depending on focus) an additional knight should protect the castle
+                additionalKnights += ai.GameTime / ((60 - Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) * 10) * Global.TICKS_PER_MIN);
+
+                player.SetCastleKnightsWanted(3u + (uint)Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) + (uint)additionalKnights);
+            }
 
             // TODO: flag/inventory prios
 
             // TODO: inventory serf/resource in/out modes
 
-            // TODO: serf to knight rate
+            // serf to knight rate
+            player.SetSerfToKnightRate((1 + Misc.Max(ai.Aggressivity, ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus)) * ushort.MaxValue / 3);
 
-            // TODO: food distribution
+            // food distribution
+            player.ResetFoodPriority();
 
-            // TODO: plank, steel, coal and wheat distribution
+            if (ai.HardTimes())
+            {
+                player.SetFoodCoalmine(ushort.MaxValue);
+                player.SetFoodGoldmine(ushort.MinValue);
+                player.SetFoodIronmine(ushort.MaxValue);
+                player.SetFoodStonemine(ushort.MinValue);
+            }
+            else
+            {
+                int focusSum = ai.GoldFocus + System.Math.Max(ai.SteelFocus, ai.MilitaryFocus) + ai.ConstructionMaterialFocus + 4;
+
+                float goldPerc = (ai.GoldFocus + 1) / (float)focusSum;
+                float coalAndIronPerc = (System.Math.Max(ai.SteelFocus, ai.MilitaryFocus) + 1) / (float)focusSum;
+                float stonePerc = (ai.ConstructionMaterialFocus + 1) / (float)focusSum;
+
+                player.SetFoodGoldmine((uint)Misc.Round(goldPerc * ushort.MaxValue));
+                player.SetFoodCoalmine((uint)Misc.Round(coalAndIronPerc * ushort.MaxValue));
+                player.SetFoodIronmine((uint)Misc.Round(coalAndIronPerc * ushort.MaxValue));
+                player.SetFoodStonemine((uint)Misc.Round(stonePerc * ushort.MaxValue));
+
+                // TODO: Maybe adjust later a bit, depending on count of mine type and the total resource amount.
+            }
+
+            // plank distribution
+            player.ResetPlanksPriority();
+
+            int numBoats = game.GetResourceAmountInInventories(player, Resource.Type.Boat);
+            int numPlanks = game.GetResourceAmountInInventories(player, Resource.Type.Plank);
+
+            if (numBoats >= 100 || (numBoats >= 50 && numPlanks < 100) || (numBoats >= 10 && numPlanks < 30))
+                player.SetPlanksBoatbuilder(ushort.MinValue);
+            else
+                player.SetPlanksBoatbuilder(3275u); // this is the default value
+
+            if (player.EmergencyProgramActive)
+            {
+                player.SetPlanksBoatbuilder(ushort.MinValue);
+                player.SetPlanksToolmaker(ushort.MinValue);
+                player.SetPlanksConstruction(ushort.MaxValue); // max
+            }
+
+            // steel distribution
+            player.ResetSteelPriority();
+
+            if (ai.HardTimes())
+            {
+                // in hard times distribute all steel to the toolmaker
+                player.SetSteelToolmaker(ushort.MaxValue);
+                player.SetSteelWeaponsmith(ushort.MinValue);
+            }
+            // TODO: if military focus is high, the weaponsmith should become nearly any steel there is
+
+            // coal distribution
+            player.ResetCoalPriority();
+
+            if (ai.HardTimes() || (ai.GameTime < 30 * Global.TICKS_PER_MIN && game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0))
+            {
+                // in hard times distribute all coal to the steelsmelter
+                player.SetCoalGoldsmelter(0u);
+                player.SetCoalSteelsmelter(65500u);
+                player.SetCoalWeaponsmith(0u);
+            }
+            else
+            {
+                int focusSum = ai.GoldFocus + ai.SteelFocus + ai.MilitaryFocus + 3;
+
+                float goldPerc = (ai.GoldFocus + 1) / (float)focusSum;
+                float steelPerc = (System.Math.Max(ai.SteelFocus, ai.MilitaryFocus - 1) + 1) / (float)focusSum;
+                float weaponPerc = (ai.MilitaryFocus + 1) / (float)focusSum;
+
+                player.SetCoalGoldsmelter((uint)Misc.Round(goldPerc * ushort.MaxValue));
+                player.SetCoalSteelsmelter((uint)Misc.Round(steelPerc * ushort.MaxValue));
+                player.SetCoalWeaponsmith((uint)Misc.Round(weaponPerc * ushort.MaxValue));
+            }
+
+            // wheat distribution
+            player.ResetWheatPriority();
+
+            if (ai.GetFoodSourcePriority(1) > ai.GetFoodSourcePriority(2))
+            {
+                player.SetWheatMill(65500u);
+                player.SetWheatPigfarm(45850u);
+            }
+            else
+            {
+                player.SetWheatMill(45850u);
+                player.SetWheatPigfarm(65500u);
+            }
 
             // TODO: send strongest and knight cycling
 
@@ -68,21 +169,17 @@ namespace Freeserf.AIStates
             {
                 // set all tool priorities to 0
                 for (int i = 0; i < 9; ++i)
-                    player.SetToolPriority(i, 0);
-
-                // give some planks and steel to the toolmaker
-                player.ResetPlanksPriority();
-                player.ResetSteelPriority();
+                    player.SetToolPriority(i, ushort.MinValue);
 
                 if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() && !(game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer) || game.HasAnyOfResource(player, Resource.Type.Scythe)))
                 {
                     // set the priority for the scythe to 100%
-                    player.SetToolPriority(Resource.Type.Scythe - Resource.Type.Shovel, 65500);
+                    player.SetToolPriority(Resource.Type.Scythe - Resource.Type.Shovel, ushort.MaxValue);
                 }
                 else
                 {
                     // set the priority for the pick to 100%
-                    player.SetToolPriority(Resource.Type.Pick - Resource.Type.Shovel, 65500);
+                    player.SetToolPriority(Resource.Type.Pick - Resource.Type.Shovel, ushort.MaxValue);
                 }
             }
 

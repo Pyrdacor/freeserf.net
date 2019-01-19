@@ -662,6 +662,13 @@ namespace Freeserf
             return castleKnightsWanted;
         }
 
+        public void SetCastleKnightsWanted(uint amount)
+        {
+            castleKnightsWanted = Misc.Clamp(1, amount, 99);
+
+            Dirty = true;
+        }
+
         public void IncreaseCastleKnightsWanted()
 		{
             castleKnightsWanted = Math.Min(castleKnightsWanted + 1, 99);
