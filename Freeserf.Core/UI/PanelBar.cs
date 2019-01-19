@@ -148,7 +148,7 @@ namespace Freeserf.UI
                 AddChild(panelButtons[i], 64 + i * 48, 4, true);
 
             // player color indicator
-            playerColorIndicator = interf.RenderView.ColoredRectFactory.Create(Width + 2, Height + 1, Render.Color.Transparent, BaseDisplayLayer);
+            playerColorIndicator = interf.RenderView.ColoredRectFactory.Create(Width + 2, Height + 1, Render.Color.Transparent, 0);
             playerColorIndicator.Layer = interf.RenderView.GetLayer(Freeserf.Layer.Gui);
             playerColorIndicator.Visible = true;
 
