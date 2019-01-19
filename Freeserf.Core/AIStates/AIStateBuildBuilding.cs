@@ -188,7 +188,8 @@ namespace Freeserf.AIStates
                         {
                             Func<Map, uint, bool> targetFunc = null;
 
-                            if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any())
+                            if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() ||
+                                game.Map.FindFirstInTerritory(player.Index, FindFishInTerritory) != null)
                                 targetFunc = FindMountain;
                             else
                                 targetFunc = FindWater;
@@ -215,6 +216,7 @@ namespace Freeserf.AIStates
 
                         if (game.RandomInt() % 100 < defendChance)
                         {
+                            // TODO: The order should be a bit random. Otherwise some buildings will be decorated with huts every game.
                             var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
