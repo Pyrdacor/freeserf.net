@@ -164,9 +164,20 @@ namespace Freeserf.AIStates
                 return CheckResult.NotNeeded;
 
             var neededForBuilding = Building.Requests[(int)type];
+            int inventory = -1;
 
-            int inventory = game.FindInventoryWithValidSpecialist(player, neededForBuilding.SerfType,
-                neededForBuilding.ResType1, neededForBuilding.ResType2);
+            if (type == Building.Type.Hut || type == Building.Type.Tower || type == Building.Type.Fortress)
+            {
+                if (game.GetFreeKnightCount(player) != 0)
+                    return CheckResult.Needed;
+                else
+                    return CheckResult.NeededButNoSpecialistOrRes;
+            }
+            else
+            {
+                inventory = game.FindInventoryWithValidSpecialist(player, neededForBuilding.SerfType,
+                    neededForBuilding.ResType1, neededForBuilding.ResType2);
+            }
 
             if (inventory != -1)
             {
@@ -358,7 +369,7 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.SteelSmelter:
                     {
-                        if (count < player.GetCompletedBuildingCount(Building.Type.IronMine) * 2 &&
+                        if (count < player.GetCompletedBuildingCount(Building.Type.IronMine) * Math.Max(2, ai.SteelFocus + 1) &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
                             return NeedBuilding(ai, game, player, type);
@@ -366,7 +377,7 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.GoldSmelter:
                     {
-                        if (count < player.GetCompletedBuildingCount(Building.Type.GoldMine) * 3 &&
+                        if (count < player.GetCompletedBuildingCount(Building.Type.GoldMine) * (ai.GoldFocus + 2) &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
                             return NeedBuilding(ai, game, player, type);
@@ -374,7 +385,7 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.WeaponSmith:
                     {
-                        if (count < Math.Min(player.GetCompletedBuildingCount(Building.Type.CoalMine), player.GetCompletedBuildingCount(Building.Type.SteelSmelter)))
+                        if (count < Math.Min(player.GetCompletedBuildingCount(Building.Type.CoalMine) + 1, player.GetCompletedBuildingCount(Building.Type.SteelSmelter)))
                             return NeedBuilding(ai, game, player, type);
                     }
                     break;

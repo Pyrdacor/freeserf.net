@@ -74,15 +74,15 @@ namespace Freeserf.AIStates
             }
 
             // give planks and steel to toolmaker
-            player.SetPlanksToolmaker(65500);
-            player.SetSteelToolmaker(65500);
+            player.SetPlanksToolmaker(ushort.MaxValue);
+            player.SetSteelToolmaker(ushort.MaxValue);
 
             // set all tool priorities to 0
             for (int i = 0; i < 9; ++i)
-                player.SetToolPriority(i, 0);
+                player.SetToolPriority(i, ushort.MinValue);
 
             // set the priority for the tool to 100%
-            player.SetToolPriority(tool - Resource.Type.Shovel, 65500);
+            player.SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
         }
 
         public override void Kill(AI ai)

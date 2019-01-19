@@ -198,7 +198,7 @@ namespace Freeserf.AIStates
                                 var spot = game.Map.FindFirstSpotTowards(building.Position, targetFunc);
 
                                 if (spot != Global.BadMapPos)
-                                    return game.Map.FindSpotNear(spot, 4, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 1);
+                                    return game.Map.FindSpotNear(spot, 2, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 1);
                             }
 
                             return FindSpotNearBorder(game, player, intelligence, 2);
