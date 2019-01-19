@@ -931,6 +931,8 @@ namespace Freeserf.UI
                             SetRedraw();
                             break;
                         case GameType.Custom:
+                        case GameType.AIvsAI:
+                        case GameType.MultiplayerServer:
                             if (customMission.MapSize == 9u)
                                 return;
                             customMission.MapSize = customMission.MapSize + 1u;
@@ -947,6 +949,8 @@ namespace Freeserf.UI
                             SetRedraw();
                             break;
                         case GameType.Custom:
+                        case GameType.AIvsAI:
+                        case GameType.MultiplayerServer:
                             if (customMission.MapSize == 3u)
                                 return;
                             customMission.MapSize = customMission.MapSize - 1u;
@@ -975,7 +979,7 @@ namespace Freeserf.UI
                             // in a multiplayer game this will only affect the map, not the players
                             if (gameType == GameType.MultiplayerClient)
                             {
-
+                                // TODO
                             }
                             else
                             {
