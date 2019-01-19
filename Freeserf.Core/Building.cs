@@ -661,6 +661,14 @@ namespace Freeserf
             return numPlanks == stock[0].Maximum && numStones == stock[1].Maximum;
         }
 
+        public bool HasAllConstructionMaterialsAtLocation()
+        {
+            if (IsDone())
+                return true;
+
+            return stock[0].Available == stock[0].Maximum && stock[1].Available == stock[1].Maximum;
+        }
+
         public uint MilitaryGoldCount()
         {
             uint count = 0;

@@ -1761,6 +1761,16 @@ namespace Freeserf
             return count;
         }
 
+        // Checks if at least one of the given building is completed or all
+        // the required materials are at a buildings spot.
+        public bool HasAnyOfBuildingCompletedOrMaterialsAtPlace(Player player, Building.Type type)
+        {
+            if (player.GetCompletedBuildingCount(type) != 0)
+                return true;
+
+            return GetPlayerBuildings(player, type).Any(b => b.HasAllConstructionMaterialsAtLocation());
+        }
+
         public IEnumerable<Serf> GetPlayerSerfs(Player player)
         {
             return serfs.Where(s => s.Player == player.Index);

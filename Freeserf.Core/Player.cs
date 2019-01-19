@@ -1406,9 +1406,9 @@ namespace Freeserf
             if (numLumberjacks != 0 && numStoneCutters != 0 && numSawMills != 0)
             {
                 // check if all resources are delivered to the construction sites
-                if (lumberjacks.Any(l => l.IsDone() || l.HasAllConstructionMaterials()) &&
-                    stonecutters.Any(s => s.IsDone() || s.HasAllConstructionMaterials()) &&
-                    sawmills.Any(s => s.IsDone() || s.HasAllConstructionMaterials()))
+                if (lumberjacks.Any(l => l.IsDone() || l.HasAllConstructionMaterialsAtLocation()) &&
+                    stonecutters.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()) &&
+                    sawmills.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()))
                 {
                     EmergencyProgramActive = false;
                     return;
