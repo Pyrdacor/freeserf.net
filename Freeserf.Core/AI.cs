@@ -295,6 +295,9 @@ namespace Freeserf
                     break;
                 case 3: // Balduin
                     DefendFocus = 2;
+                    foodSourcePriorities[0] = 0; // fish
+                    foodSourcePriorities[1] = 1; // bread
+                    foodSourcePriorities[2] = 2; // meat
                     militaryBuildingPriorities[0] = 0; // hut
                     militaryBuildingPriorities[1] = 1; // tower
                     militaryBuildingPriorities[2] = 2; // fortress

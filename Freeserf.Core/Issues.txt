@@ -6,7 +6,7 @@
 - Since recently (I guess since the fix to map object positioning in the middle of january of 2019) there are map jumps again at some scroll positions.
   Also the minimap click re-location of the map is not working correctly anymore in all cases. And I saw missing render map objects at some scroll positions.
 - Farm fields may overlay construction site marks even if they have a lower baseline. Same is true for rocks.
-- In rare cases the corner stone is in front of the toolmaker frame.
+- Often the corner stone is in front of the toolmaker frame.
 
 
 Serf rendering:
@@ -39,6 +39,7 @@ AI:
 - In hard times the fisher is sometimes built too far away from the water.
 - Find Ore will often not work. The problem seems to be that the found spots for a flag are not on own territory (which is strange).
 - The AI should check that each building is linked with a "land" road (avoid water-only connections).
+- Turn of the boat builder plank supply if there are several boats.
 
 
 Logic:
