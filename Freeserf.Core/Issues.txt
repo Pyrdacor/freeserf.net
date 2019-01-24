@@ -24,7 +24,6 @@ Non-working code:
 - Map clicks are not always considered or at the right spot/tile
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Minimap clicks are only sometimes right (at least the map movement)
-- In AIvsAI the first player face can be the same as another player face.
 - Sometimes the player color indicator in AI vs AI is drawn strangly over the panel bar.
 
 
@@ -34,9 +33,6 @@ AI:
 - Linking flags should also allow for placing flags on paths and merging paths to a near flag
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but
   changing doesn't mean putting hundreds of flags at the same mountain.
-- Fishers are built without water (should not happen).
-- Sometimes unlimited geologists are sent out to look for minerals.
-- In hard times the start location should be near water. Otherwise the player has no chance at all. Also iron and coal should be close enough.
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
 - In hard times the search for mountains should be better (look specific for coal and iron spots and with increased search range -> huts must be on point!)

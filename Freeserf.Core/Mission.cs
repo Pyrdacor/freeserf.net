@@ -433,20 +433,29 @@ namespace Freeserf
                 players[0].Intelligence = 40;
             }
 
+            PlayerInfo playerInfo = null;
+
             // Player 1
-            players.Add(new PlayerInfo(random));
+
+            do
+            {
+                playerInfo = new PlayerInfo(random);
+            }
+            while (playerInfo.Face == players[0].Face);
+
+            players.Add(playerInfo);
 
             uint val = random.Next();
 
             if ((val & 7) != 0)
             {
                 // Player 2
-                PlayerInfo playerInfo = null;
 
                 do
                 {
                     playerInfo = new PlayerInfo(random);
-                } while (playerInfo.Face == players[1].Face);
+                }
+                while (playerInfo.Face == players[0].Face || playerInfo.Face == players[1].Face);
 
                 players.Add(playerInfo);
 
@@ -460,7 +469,7 @@ namespace Freeserf
                     {
                         playerInfo = new PlayerInfo(random);
                     }
-                    while (playerInfo.Face == players[1].Face || playerInfo.Face == players[2].Face);
+                    while (playerInfo.Face == players[0].Face || playerInfo.Face == players[1].Face || playerInfo.Face == players[2].Face);
 
                     players.Add(playerInfo);
                 }
