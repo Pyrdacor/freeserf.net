@@ -5,6 +5,7 @@
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
 - Since recently (I guess since the fix to map object positioning in the middle of january of 2019) there are map jumps again at some scroll positions.
   Also the minimap click re-location of the map is not working correctly anymore in all cases. And I saw missing render map objects at some scroll positions.
+  And sometimes the "show possible builds" only is displayed for half of the map. Also the map cursor has the same issue. Building seem to work though in some of these places.
 
 
 Serf rendering:
@@ -17,6 +18,9 @@ Non-working code:
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Minimap clicks are only sometimes right (at least the map movement)
 - Sometimes the player color indicator in AI vs AI is drawn strangly over the panel bar.
+- Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
+	- I guess this happens when the emergency program gets active at a specific time.
+	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered. 
 
 
 AI:
@@ -67,6 +71,7 @@ Missing stuff:
 - multiplayer
 	- multiplayer should support coop mode (one player is played by two or more clients)
 - button to merge roads to a flag
+- mine elevator/miner animation
 
 
 TODO:
@@ -76,7 +81,7 @@ TODO:
 - Finish AIs
 - Finish rendering of fighting serfs (additional serf stuff)
 - Finish rendering of all additional stuff for all buildings (only mine elevator drawing is not perfect yet)
-- Add more game options (like tutorial, multiplayer games or AI vs AI)
+- Add more game options (like tutorial)
 - Improve/fix sound
 - Look through all TODO code comments and resolve them
 - Bugfixing (important is the serf logic which seems to be very bugged in some situations)

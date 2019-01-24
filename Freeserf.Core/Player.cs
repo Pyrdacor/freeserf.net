@@ -1475,6 +1475,8 @@ namespace Freeserf
                             {
                                 transporter.ResetTransport(flag);
                             }
+
+                            building.RemoveRequestedMaterials();
                         }
                     }
                 }
