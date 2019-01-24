@@ -1150,7 +1150,7 @@ namespace Freeserf.UI
 
                 if (cy >= 25 && cy < 72)
                 {
-                    uint value = (uint)Misc.Clamp(0, 66 - cy, 40);
+                    uint value = (uint)Misc.Clamp(0, 67 - cy, 40);
 
                     if (cx >= 0 && cx < 6)
                     {

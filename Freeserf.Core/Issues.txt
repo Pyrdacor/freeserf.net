@@ -26,7 +26,6 @@ Non-working code:
 - Minimap clicks are only sometimes right (at least the map movement)
 - In AIvsAI the first player face can be the same as another player face.
 - Sometimes the player color indicator in AI vs AI is drawn strangly over the panel bar.
-- Clicking the player values in GameInitBox is one pixel too low
 
 
 AI:
@@ -44,9 +43,9 @@ AI:
 - In hard times the fisher is sometimes built too far away from the water.
 - Find Ore will often not work. The problem seems to be that the found spots for a flag are not on own territory (which is strange).
 - The AI should check that each building is linked with a "land" road (avoid water-only connections).
-- After hard times end the AI builds huts without having knights. Should not happen.
 - Road building may be bad in later game. There might be large road systems that are fully independent of others so a serf has to walk for ages to get there.
-- More than one geologist should be used to look for minerals and they should search in different locations if possible.
+- After hard times end the AI builds huts without having knights. Should not happen.
+- After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
 
 
 Logic:
@@ -60,8 +59,6 @@ Logic:
 - Not sure if the "towards" logic in Map class works correctly yet.
 - Geologists give up too fast.
 - Once a freewalking lumberjack blockes a road and stand there waiting.
-- Sometimes a sawmill could not get enough planks while emergency program was active. Other buildings got also planks because at the beginning there was no emergency program active due to a bit of plank reserve.
-  - This happens with a bit of supplies (I guess around 3-6).
 
 
 Notification Box:
