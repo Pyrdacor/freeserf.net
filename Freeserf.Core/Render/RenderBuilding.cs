@@ -310,7 +310,7 @@ namespace Freeserf.Render
             if (crossOrStoneSprite != null)
             {
                 crossOrStoneSprite.Layer = renderLayer;
-                crossOrStoneSprite.BaseLineOffset = -8;
+                crossOrStoneSprite.BaseLineOffset = 0;
             }
 
             if (burningSprites != null)
@@ -619,7 +619,7 @@ namespace Freeserf.Render
             {
                 crossOrStoneSprite.X = renderPosition.X + crossOrStoneSpriteOffset.X;
                 crossOrStoneSprite.Y = renderPosition.Y + crossOrStoneSpriteOffset.Y;
-                crossOrStoneSprite.BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 1) - (crossOrStoneSprite.Y + crossOrStoneSprite.Height));
+                crossOrStoneSprite.BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 2) - (crossOrStoneSprite.Y + crossOrStoneSprite.Height));
             }
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
@@ -635,7 +635,7 @@ namespace Freeserf.Render
                 stones[i].Y = renderPosition.Y + materialSpriteInfos[0].Position.Y - 8 + i;
 
                 if (frameSprite != null)
-                    stones[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 1) - (stones[i].Y + stones[i].Height));
+                    stones[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 2) - (stones[i].Y + stones[i].Height));
             }
 
             // Planks waiting
@@ -645,7 +645,7 @@ namespace Freeserf.Render
                 planks[i].Y = renderPosition.Y + materialSpriteInfos[1].Position.Y - 6 + i;
 
                 if (frameSprite != null)
-                    planks[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 1) - (planks[i].Y + planks[i].Height));
+                    planks[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 2) - (planks[i].Y + planks[i].Height));
             }
 
             if (building.IsBurning())

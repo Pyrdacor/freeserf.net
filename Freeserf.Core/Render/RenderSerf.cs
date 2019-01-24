@@ -366,7 +366,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || building.GetProgress() > 0xffff)
+            if (building.IsDone() || Misc.BitTest(building.GetProgress(), 15))
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -387,7 +387,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || building.GetProgress() > 0xffff)
+            if (building.IsDone() || Misc.BitTest(building.GetProgress(), 15))
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -430,7 +430,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || building.GetProgress() > 0xffff)
+            if (building.IsDone() || Misc.BitTest(building.GetProgress(), 15))
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -595,7 +595,7 @@ namespace Freeserf.Render
 
                     if (baseLine != -1)
                     {
-                        SetBaseLine(baseLine);
+                        SetBaseLine(baseLine + 1);
                     }
                 }
                 else if (serf.SerfState == Serf.State.StoneCutting)
@@ -612,28 +612,28 @@ namespace Freeserf.Render
                 else
                 {
                     // adjust baseline when walking around a building
-                    if (map.GetObject(map.MoveLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveLeft(pos)) <= Map.Object.Castle)
+                    if (map.HasBuilding(map.MoveLeft(pos)))
                     {
                         building = game.GetBuildingAtPos(map.MoveLeft(pos));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
-                    if (map.GetObject(map.MoveUpLeft(pos)) > Map.Object.Flag && map.GetObject(map.MoveUpLeft(pos)) <= Map.Object.Castle)
+                    if (map.HasBuilding(map.MoveUpLeft(pos)))
                     {
                         building = game.GetBuildingAtPos(map.MoveUpLeft(pos));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
-                    if (map.GetObject(map.MoveRight(pos)) > Map.Object.Flag && map.GetObject(map.MoveRight(pos)) <= Map.Object.Castle)
+                    if (map.HasBuilding(map.MoveRight(pos)))
                     {
                         building = game.GetBuildingAtPos(map.MoveRight(pos));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
                     }
-                    if (map.GetObject(map.MoveUp(pos)) > Map.Object.Flag && map.GetObject(map.MoveUp(pos)) <= Map.Object.Castle)
+                    if (map.HasBuilding(map.MoveUp(pos)))
                     {
                         building = game.GetBuildingAtPos(map.MoveUp(pos));
 
