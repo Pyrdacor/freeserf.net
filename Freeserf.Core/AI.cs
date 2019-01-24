@@ -528,7 +528,7 @@ namespace Freeserf
         /// <param name="flag">The flag to link</param>
         /// <param name="maxLength">Build only if the best connection length is at max this</param>
         /// <param name="allowWater">If true the connection could be a water path</param>
-        public bool LinkFlag(Flag flag, int maxLength = int.MaxValue, bool allowWater = false)
+        internal bool LinkFlag(Flag flag, int maxLength = int.MaxValue, bool allowWater = false)
         {
             if (maxLength < 2)
                 return false;
@@ -629,6 +629,18 @@ namespace Freeserf
                 return false;
 
             return game.BuildFlag(bestRoadEndPos, player) && game.BuildRoad(bestRoad, player);
+        }
+
+        /// <summary>
+        /// This includes knights, sword/shield pairs or a weapon smith
+        /// </summary>
+        /// <returns></returns>
+        internal bool HasRequirementsForKnights(Game game)
+        {
+            if (game.GetPlayerBuildings(player, Building.Type.WeaponSmith).Count() > 0)
+                return true;
+
+            return game.GetPossibleFreeKnightCount(player) > 0;
         }
 
         internal AIState CreateState(State state, object param = null)

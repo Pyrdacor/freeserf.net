@@ -711,12 +711,12 @@ namespace Freeserf
 
             if (inStock >= 0)
             {
-                --stock[inStock].Requested;
-
-                if (stock[inStock].Requested < 0)
+                if (stock[inStock].Requested == 0)
                 {
                     throw new ExceptionFreeserf("Failed to cancel unrequested resource delivery.");
                 }
+
+                --stock[inStock].Requested;
             }
             else
             {
@@ -903,13 +903,13 @@ namespace Freeserf
                 {
                     if (stock[i].Type == resource)
                     {
-                        ++stock[i].Available;
-                        --stock[i].Requested;
-
-                        if (stock[i].Requested < 0)
+                        if (stock[i].Requested == 0)
                         {
                             throw new ExceptionFreeserf("Delivered more resources than requested.");
                         }
+
+                        ++stock[i].Available;
+                        --stock[i].Requested;
 
                         return;
                     }

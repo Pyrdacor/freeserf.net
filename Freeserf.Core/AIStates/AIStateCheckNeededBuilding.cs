@@ -269,10 +269,6 @@ namespace Freeserf.AIStates
                         if (count == 0)
                             return CheckResult.Needed;
                         break;
-                    case Building.Type.ToolMaker:
-                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.CoalMine) > 0 && player.GetCompletedBuildingCount(Building.Type.IronMine) > 0)
-                            return CheckResult.Needed;
-                        break;
                     case Building.Type.Forester:
                         if (count == 0)
                             return CheckResult.Needed;
@@ -281,6 +277,11 @@ namespace Freeserf.AIStates
 
                 return CheckResult.NotNeeded;
             }
+
+            // If we can't produce knights and don't have any left, we won't build
+            // several buildings until we have a weaponsmith. Otherwise we might
+            // run out of space for large buildings and therefore a weaponsmith.
+            bool hasKnightRequirements = ai.HasRequirementsForKnights(game);
 
             switch (type)
             {
@@ -373,6 +374,8 @@ namespace Freeserf.AIStates
                 case Building.Type.PigFarm:
                 case Building.Type.Butcher:
                 case Building.Type.Fisher:
+                    if (!hasKnightRequirements)
+                        return CheckResult.NotNeeded;
                     if (ai.GameTime > (120 - Math.Max(ai.FoodFocus, ai.BuildingFocus) * 15) * Global.TICKS_PER_SEC && NeedFoodBuilding(ai, game, player, type))
                         return NeedBuilding(ai, game, player, type);
                     break;
@@ -389,6 +392,9 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.GoldSmelter:
                     {
+                        if (!hasKnightRequirements)
+                            return CheckResult.NotNeeded;
+
                         if (count < player.GetCompletedBuildingCount(Building.Type.GoldMine) * (ai.GoldFocus + 2) &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
@@ -397,15 +403,27 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.WeaponSmith:
                     {
-                        if (count == 0 && game.GetResourceAmountInInventories(player, Resource.Type.Coal) >= 10 && game.GetResourceAmountInInventories(player, Resource.Type.Steel) >= 10 &&
-                            ai.GameTime > (10 - Misc.Max(ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus - 1, ai.Aggressivity - 1) - game.RandomInt() % 3) * Global.TICKS_PER_MIN)
-                            return NeedBuilding(ai, game, player, type);
+                        if (count == 0)
+                        {
+                            if (player.GetCompletedBuildingCount(Building.Type.ToolMaker) > 0 && player.GetCompletedBuildingCount(Building.Type.SteelSmelter) > 0)
+                            {
+                                return NeedBuilding(ai, game, player, type);
+                            }
+                            else if (game.GetResourceAmountInInventories(player, Resource.Type.Coal) >= 10 && game.GetResourceAmountInInventories(player, Resource.Type.Steel) >= 10 &&
+                                ai.GameTime > (10 - Misc.Max(ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus - 1, ai.Aggressivity - 1) - game.RandomInt() % 3) * Global.TICKS_PER_MIN)
+                            {
+                                return NeedBuilding(ai, game, player, type);
+                            }
+                        }
 
                         if (count < Math.Min(player.GetCompletedBuildingCount(Building.Type.CoalMine) + 1, player.GetCompletedBuildingCount(Building.Type.SteelSmelter)))
                             return NeedBuilding(ai, game, player, type);
                     }
                     break;
                 case Building.Type.Stock:
+                    if (!hasKnightRequirements)
+                        return CheckResult.NotNeeded;
+
                     if (count < (player.GetLandArea() - 1000 + ai.BuildingFocus * 350) / 1000 && ai.GameTime > 40 * Global.TICKS_PER_MIN &&
                         player.GetCompletedBuildingCount(Building.Type.WeaponSmith) > count)
                         return NeedBuilding(ai, game, player, type);

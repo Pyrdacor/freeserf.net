@@ -1469,12 +1469,6 @@ namespace Freeserf
                             building.BuildingType != Building.Type.Sawmill &&
                             building.BuildingType != Building.Type.Stonecutter)
                         {
-                            while (building.GetRequestedInStock(0) > 0)
-                                building.CancelTransportedResource(Resource.Type.Plank);
-
-                            while (building.GetRequestedInStock(1) > 0)
-                                building.CancelTransportedResource(Resource.Type.Stone);
-
                             var flag = Game.GetFlag(building.GetFlagIndex());
 
                             foreach (var transporter in Game.GetPlayerSerfs(this).Where(s => s.GetSerfType() == Serf.Type.Transporter || s.GetSerfType() == Serf.Type.TransporterInventory))
