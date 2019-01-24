@@ -52,12 +52,13 @@ namespace Freeserf.AIStates
             }
 
             uint spot = 0;
+            int maxGeologists = ai.HardTimes() ? 2 : 2 + (int)(ai.GameTime / ((45 - Misc.Max(ai.GoldFocus, ai.SteelFocus) * 5) * Global.TICKS_PER_MIN));
             var mineType = MineTypes[(int)oreType - 1];
-            var largeSpots = AI.GetMemorizedMineralSpots(oreType, true).ToList();
-            var smallSpots = AI.GetMemorizedMineralSpots(oreType, true).Where(s => !largeSpots.Contains(s)).ToList();
+            var largeSpots = AI.GetMemorizedMineralSpots(oreType, true).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index).ToList();
+            var smallSpots = AI.GetMemorizedMineralSpots(oreType, false).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index && !largeSpots.Contains(s)).ToList();
             bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_SEC + playerInfo.Intelligence * 30 * Global.TICKS_PER_SEC) || ai.StupidDecision();
 
-            if (ai.HardTimes() && smallSpots.Count > 1 && ai.GameTime > 4 * Global.TICKS_PER_MIN)
+            if (ai.HardTimes() && smallSpots.Count > 1 && ai.GameTime >= 10 * Global.TICKS_PER_MIN)
                 considerSmallSpots = true;
 
             while (true)
@@ -110,13 +111,26 @@ namespace Freeserf.AIStates
                         geologists = geologists.Where(g => g.SerfState == Serf.State.IdleInStock).ToList();
                         int sentOutGeologistCount = totalGeologistCount - geologists.Count;
 
-                        if (geologists.Count > 0 && sentOutGeologistCount < 2)
+                        if (geologists.Count > 0 && sentOutGeologistCount < maxGeologists)
                         {
                             if (!SendGeologist(ai, game, player))
                             {
                                 // TODO: what should we do then? -> try to craft a hammer? wait for generics? abort?
                                 Kill(ai);
                                 return;
+                            }
+                            else
+                            {
+                                int numMaxAdditional = maxGeologists - sentOutGeologistCount - 1;
+
+                                if (numMaxAdditional > 0)
+                                {
+                                    int numAdditional = game.RandomInt() % (1 + numMaxAdditional);
+
+                                    // can we also send another one?
+                                    while (numAdditional-- != 0)
+                                        SendGeologist(ai, game, player);
+                                }
                             }
                         }
                         else // this means there are geologist but none in stock (so they are already looking for minerals) or 2 or more are already looking for minerals

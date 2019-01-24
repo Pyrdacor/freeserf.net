@@ -1453,7 +1453,38 @@ namespace Freeserf
             int remainingStones = stones - numStonesNeeded;
 
             if (remainingPlanks <= 0 || remainingStones <= 0)
-                EmergencyProgramActive = true;
+            {
+                if (!EmergencyProgramActive)
+                {
+                    EmergencyProgramActive = true;
+
+                    // If the emergency program gets activated we cancel all
+                    // transported resources to non-essential buildings.
+                    foreach (var building in Game.GetPlayerBuildings(this))
+                    {
+                        if (building.IsDone())
+                            continue;
+
+                        if (building.BuildingType != Building.Type.Lumberjack &&
+                            building.BuildingType != Building.Type.Sawmill &&
+                            building.BuildingType != Building.Type.Stonecutter)
+                        {
+                            while (building.GetRequestedInStock(0) > 0)
+                                building.CancelTransportedResource(Resource.Type.Plank);
+
+                            while (building.GetRequestedInStock(1) > 0)
+                                building.CancelTransportedResource(Resource.Type.Stone);
+
+                            var flag = Game.GetFlag(building.GetFlagIndex());
+
+                            foreach (var transporter in Game.GetPlayerSerfs(this).Where(s => s.GetSerfType() == Serf.Type.Transporter || s.GetSerfType() == Serf.Type.TransporterInventory))
+                            {
+                                transporter.ResetTransport(flag);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void UpdateStats(int resource)

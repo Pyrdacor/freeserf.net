@@ -193,6 +193,16 @@ namespace Freeserf
 
             return result == pos;
         }
+
+        public bool IsWaterPath(Map map)
+        {
+            if (!Valid || Dirs.Count == 0)
+                return false;
+
+            var secondPos = map.Move(begin, Dirs.Peek());
+
+            return map.IsInWater(secondPos);
+        }
     }
 
     public class Map : IEquatable<Map>

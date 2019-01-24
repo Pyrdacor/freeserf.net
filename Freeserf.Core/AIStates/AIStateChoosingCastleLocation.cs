@@ -123,7 +123,7 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.GetResourceAmount(pos) > 0u,
+                Success = FindMountain(map, pos).Success &&  map.GetResourceAmount(pos) > 0u,
                 Data = new KeyValuePair<Map.Minerals, uint>(map.GetResourceType(pos), map.GetResourceAmount(pos))
             };
         }
@@ -243,6 +243,12 @@ namespace Freeserf.AIStates
                 int ironCount = minerals.Where(m => m.Key == Map.Minerals.Iron).Select(m => (int)m.Value).Sum();
                 int coalCount = minerals.Where(m => m.Key == Map.Minerals.Coal).Select(m => (int)m.Value).Sum();
 
+                if (player.GetInitialSupplies() < 5)
+                {
+                    if (treeCount < 8 || stoneCount < 4 || fishCount < 1 || ironCount == 0 || coalCount == 0)
+                        return -1;
+                }
+
                 // low intelligence will treat half the mountains as the right mineral without checking
                 int halfMountainCount = (mountainCountNear + mountainCountFar) / 2;
 
@@ -308,7 +314,7 @@ namespace Freeserf.AIStates
                 }
 
                 // TODO: What if a building would block another building spot.
-                if (numLarge >= numLargeSpots && numSmall >= numSmallSpots)
+                if (numLarge >= numLargeSpots && (numSmall - numLargeSpots) >= numSmallSpots)
                     return (int)largeSpots[0];
             }
 

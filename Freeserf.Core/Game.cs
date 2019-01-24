@@ -1746,7 +1746,7 @@ namespace Freeserf
 
         public int GetFreeKnightCount(Player player)
         {
-            return serfs.Count(s => s.Player == player.Index && s.IsKnight() && s.SerfState == Serf.State.IdleInStock) - ((int)player.GetCastleKnightsWanted() - (int)player.GetCastleKnights());
+            return Math.Max(0, serfs.Count(s => s.Player == player.Index && s.IsKnight() && s.SerfState == Serf.State.IdleInStock) - ((int)player.GetCastleKnightsWanted() - (int)player.GetCastleKnights()));
         }
 
         public int GetPossibleFreeKnightCount(Player player)
@@ -1757,8 +1757,9 @@ namespace Freeserf
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Hut);
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Tower);
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Fortress);
+            count -= (int)player.Game.GetPlayerBuildings(player).Count(b => b.IsMilitary() && !b.HasKnight());
 
-            return count;
+            return Math.Max(0, count);
         }
 
         // Checks if at least one of the given building is completed or all

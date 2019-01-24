@@ -49,17 +49,22 @@ namespace Freeserf.AIStates
             }
 
             // castle knights
-            if (ai.HardTimes())
+            if (ai.HardTimes() || (game.GetPossibleFreeKnightCount(player) == 0 && game.GetPlayerBuildings(player, Building.Type.WeaponSmith).Count() == 0))
                 player.SetCastleKnightsWanted(1u);
             else
             {
-                // every 10-20 minutes (depending on intelligence) an additional knight should protect the castle (starting at 20 minutes)
-                var additionalKnights = Misc.Max(0, (ai.GameTime - 20 * Global.TICKS_PER_MIN) / ((20 - playerInfo.Intelligence / 4) * Global.TICKS_PER_MIN));
+                uint additionalKnights = 0;
 
-                // every 40-60 minutes (depending on focus) an additional knight should protect the castle
-                additionalKnights += ai.GameTime / ((60 - Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) * 10) * Global.TICKS_PER_MIN);
+                if (game.GetPlayerBuildings(player).Count(b => b.IsMilitary() && !b.HasKnight()) == 0)
+                {
+                    // every 45-53 minutes (depending on intelligence) an additional knight should protect the castle (starting at 35 minutes)
+                    additionalKnights = (uint)Misc.Max(0, (int)((ai.GameTime - 35 * Global.TICKS_PER_MIN) / ((53 - playerInfo.Intelligence / 5) * Global.TICKS_PER_MIN)));
 
-                player.SetCastleKnightsWanted(3u + (uint)Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) + (uint)additionalKnights);
+                    // every 40-60 minutes (depending on focus) an additional knight should protect the castle
+                    additionalKnights += (uint)(ai.GameTime / ((60 - Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) * 10) * Global.TICKS_PER_MIN));
+                }
+
+                player.SetCastleKnightsWanted(3u + (uint)Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) + additionalKnights);
             }
 
             // TODO: flag/inventory prios

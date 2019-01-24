@@ -112,7 +112,7 @@ namespace Freeserf.AIStates
                 else if (result == CheckResult.NeededButNoGenerics)
                 {
                     // we can't do much but wait
-                    // TODO: Maybe lower the "generic to knights" ratio?
+                    // TODO: Maybe lower the "generic to knights" ratio? Only if knights are not the needed serfs.
                     continue;
                 }
                 else if (result == CheckResult.NeededButNoSpecialistOrRes)
@@ -186,6 +186,10 @@ namespace Freeserf.AIStates
 
                 return CheckResult.Needed;
             }
+
+            if (game.HasAnyOfResource(player, neededForBuilding.ResType1) &&
+                (neededForBuilding.ResType2 == Resource.Type.None || game.HasAnyOfResource(player, neededForBuilding.ResType2)))
+                return CheckResult.Needed;
 
             return CheckResult.NeededButNoSpecialistOrRes;
         }
@@ -319,6 +323,8 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.Hut:
                     {
+                        if (game.GetPossibleFreeKnightCount(player) == 0)
+                            return CheckResult.NotNeeded;
                         // TODO: decide if build hut, tower or fortress
                         int focus = Math.Max(ai.MilitaryFocus, Math.Max((ai.DefendFocus + 1) / 2, ai.ExpandFocus)) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
 
@@ -372,6 +378,9 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.SteelSmelter:
                     {
+                        if (count != 0 && game.GetPlayerBuildings(player, Building.Type.WeaponSmith).Count() == 0)
+                            return CheckResult.NotNeeded;
+
                         if (count < player.GetCompletedBuildingCount(Building.Type.IronMine) * Math.Max(2, ai.SteelFocus + 1) &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
@@ -388,6 +397,10 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.WeaponSmith:
                     {
+                        if (count == 0 && game.GetResourceAmountInInventories(player, Resource.Type.Coal) >= 10 && game.GetResourceAmountInInventories(player, Resource.Type.Steel) >= 10 &&
+                            ai.GameTime > (10 - Misc.Max(ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus - 1, ai.Aggressivity - 1) - game.RandomInt() % 3) * Global.TICKS_PER_MIN)
+                            return NeedBuilding(ai, game, player, type);
+
                         if (count < Math.Min(player.GetCompletedBuildingCount(Building.Type.CoalMine) + 1, player.GetCompletedBuildingCount(Building.Type.SteelSmelter)))
                             return NeedBuilding(ai, game, player, type);
                     }

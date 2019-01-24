@@ -1610,7 +1610,7 @@ namespace Freeserf
             }
 
             Serf serf = data.Inventory.CallTransporter(water);
-            Flag destFlag = Game.GetFlag(inventory.Index);
+            Flag destFlag = Game.GetFlag(inventory.GetFlagIndex());
 
             length[(int)dir] |= Misc.BitU(7);
             source2.length[(int)dir2] |= Misc.BitU(7);

@@ -1415,6 +1415,11 @@ namespace Freeserf
             return s.Walking.Res;
         }
 
+        internal uint GetTransportDestination()
+        {
+            return s.Walking.Dest;
+        }
+
         internal int GetAttackingFieldD()
         {
             return s.Attacking.FieldD;

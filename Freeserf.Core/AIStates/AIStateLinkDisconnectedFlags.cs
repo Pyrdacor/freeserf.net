@@ -20,6 +20,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf.AIStates
 {
@@ -30,46 +31,68 @@ namespace Freeserf.AIStates
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             bool remainingFlagsToLinkExist = false;
+            var flags = game.GetPlayerFlags(player).ToList(); // ToList is important because the collection could be changed in foreach below.
 
-            foreach (var flag in game.GetPlayerFlags(player))
+            foreach (var flag in flags)
             {
                 if (!connectTriesPerFlag.ContainsKey(flag))
                     connectTriesPerFlag[flag] = 0;
 
-                if ((flag.Paths() == 0 || flag.FindNearestInventoryForSerf() == -1) && ++connectTriesPerFlag[flag] < 3)
+                if ((flag.LandPaths() == 0 || flag.FindNearestInventoryForSerf() == -1) && ++connectTriesPerFlag[flag] < 3)
                 {
-                    if (!LinkFlag(game, player, flag.Position))
-                        remainingFlagsToLinkExist = true;                    
+                    if (!ai.LinkFlag(flag))
+                        remainingFlagsToLinkExist = true;
+                    else
+                        continue;
+                }
+
+                // we also check if the link is good
+                DirectionCycleCW cycle = DirectionCycleCW.CreateDefault();
+                List<Direction> pathes = new List<Direction>();
+
+                foreach (var dir in cycle)
+                {
+                    if (flag.HasPath(dir))
+                    {
+                        pathes.Add(dir);
+                    }
+                }
+
+                if (pathes.Count == 1)
+                {
+                    int roadLength = 0;
+                    uint pos = flag.Position;
+                    Direction dir = pathes[0];
+
+                    while (true)
+                    {
+                        ++roadLength;
+                        pos = game.Map.Move(pos, dir);
+
+                        if (game.Map.HasFlag(pos))
+                            break;
+
+                        var pathCycle = DirectionCycleCW.CreateDefault();
+
+                        foreach (var pathDir in pathCycle)
+                        {
+                            if (pathDir != dir.Reverse() && game.Map.HasPath(pos, pathDir))
+                            {
+                                dir = pathDir;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (roadLength > 4)
+                    {
+                        ai.LinkFlag(flag, 4, true);
+                    }
                 }
             }
 
             if (!remainingFlagsToLinkExist)
                 Kill(ai);
-        }
-
-        Map.FindData FindFlag(Map map, uint pos)
-        {
-            return new Map.FindData()
-            {
-                Success = map.HasFlag(pos),
-                Data = pos
-            };
-        }
-
-        bool LinkFlag(Game game, Player player, uint pos)
-        {
-            var flagsInRange = game.Map.FindInArea(pos, 9, FindFlag, 1);
-
-            if (flagsInRange.Count == 0)
-                return false;
-
-            var flagPos = (uint)flagsInRange[game.RandomInt() % flagsInRange.Count];
-            var road = Pathfinder.Map(game.Map, pos, flagPos);
-
-            if (road != null && road.Valid)
-                return game.BuildRoad(road, player);
-
-            return false;
         }
     }
 }

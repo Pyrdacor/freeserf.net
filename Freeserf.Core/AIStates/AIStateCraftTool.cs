@@ -28,6 +28,7 @@ namespace Freeserf.AIStates
         Resource.Type tool = Resource.Type.None;
         Player player = null;
         int triesBuildToolmaker = 0;
+        int tries = 0;
 
         public AIStateCraftTool(Resource.Type tool)
         {
@@ -83,10 +84,14 @@ namespace Freeserf.AIStates
 
             // set the priority for the tool to 100%
             player.SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
+
+            if (++tries == 20) // don't block for too long
+                Kill(ai);
         }
 
         public override void Kill(AI ai)
         {
+            tries = 0;
             triesBuildToolmaker = 0;
             player.ResetToolPriority();
             player.ResetPlanksPriority();

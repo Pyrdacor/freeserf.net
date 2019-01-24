@@ -464,6 +464,173 @@ namespace Freeserf
             PushState(CreateState(State.DestroyUselessBuildings, mineIndex));
         }
 
+        static bool CheckLinkedBuildings(Building.Type type1, Building.Type type2)
+        {
+            switch (type1)
+            {
+                case Building.Type.Baker:
+                    return type2 == Building.Type.Mill;
+                case Building.Type.Butcher:
+                    return type2 == Building.Type.PigFarm;
+                case Building.Type.Castle:
+                    return type2 == Building.Type.WeaponSmith || type2 == Building.Type.GoldSmelter;
+                case Building.Type.CoalMine:
+                    return type2 == Building.Type.WeaponSmith || type2 == Building.Type.SteelSmelter || type2 == Building.Type.GoldSmelter;
+                case Building.Type.Farm:
+                    return type2 == Building.Type.Mill || type2 == Building.Type.PigFarm;
+                case Building.Type.GoldMine:
+                    return type2 == Building.Type.GoldSmelter;
+                case Building.Type.GoldSmelter:
+                    return type2 == Building.Type.GoldMine || type2 == Building.Type.CoalMine || type2 == Building.Type.Stock || type2 == Building.Type.Castle;
+                case Building.Type.IronMine:
+                    return type2 == Building.Type.SteelSmelter;
+                case Building.Type.Lumberjack:
+                    return type2 == Building.Type.Sawmill;
+                case Building.Type.Mill:
+                case Building.Type.PigFarm:
+                    return type2 == Building.Type.Farm;
+                case Building.Type.Sawmill:
+                    return type2 == Building.Type.Lumberjack || type2 == Building.Type.ToolMaker;
+                case Building.Type.SteelSmelter:
+                    return type2 == Building.Type.CoalMine || type2 == Building.Type.IronMine || type2 == Building.Type.ToolMaker || type2 == Building.Type.WeaponSmith;
+                case Building.Type.Stock:
+                    return type2 == Building.Type.WeaponSmith || type2 == Building.Type.GoldSmelter;
+                case Building.Type.ToolMaker:
+                    return type2 == Building.Type.Sawmill || type2 == Building.Type.SteelSmelter;
+                case Building.Type.WeaponSmith:
+                    return type2 == Building.Type.CoalMine || type2 == Building.Type.SteelSmelter || type2 == Building.Type.Stock || type2 == Building.Type.Castle;
+            }
+
+            return false;
+        }
+
+        Map.FindData FindFlag(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.HasFlag(pos),
+                Data = pos
+            };
+        }
+
+        Map.FindData FindPath(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.Paths(pos) != 0,
+                Data = pos
+            };
+        }
+
+        /// <summary>
+        /// Links the flag to the road system.
+        /// </summary>
+        /// <param name="flag">The flag to link</param>
+        /// <param name="maxLength">Build only if the best connection length is at max this</param>
+        /// <param name="allowWater">If true the connection could be a water path</param>
+        public bool LinkFlag(Flag flag, int maxLength = int.MaxValue, bool allowWater = false)
+        {
+            if (maxLength < 2)
+                return false;
+
+            Road bestRoad = null;
+            int lenghtOffset = 0;
+            var game = player.Game;
+            var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
+
+            var flags = (maxLength < 10) ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(pos => game.GetFlagAtPos((uint)pos)) : game.GetPlayerFlags(player);
+
+            foreach (var otherFlag in flags)
+            {
+                if (flag.Position == otherFlag.Position)
+                    continue; // not link to self
+
+                int distX = game.Map.DistX(flag.Position, otherFlag.Position);
+                int distY = game.Map.DistY(flag.Position, otherFlag.Position);
+                int dist = Misc.Round(Math.Sqrt(distX * distX + distY * distY));
+
+                if (dist > maxLength) // too far away
+                    continue;
+
+                var road = Pathfinder.Map(game.Map, flag.Position, otherFlag.Position);
+
+                if (road != null && road.Valid)
+                {
+                    if (road.Length > maxLength)
+                        continue;
+
+                    if (!allowWater && road.IsWaterPath(game.Map))
+                        continue;
+
+                    if (buildingType != Building.Type.None && otherFlag.HasBuilding() && CheckLinkedBuildings(buildingType, otherFlag.GetBuilding().BuildingType))
+                    {
+                        if (bestRoad != null && road.Length > bestRoad.Length + lenghtOffset)
+                            continue;
+
+                        bestRoad = road;
+                        lenghtOffset = 3;
+                    }
+
+                    if (bestRoad == null || road.Length < bestRoad.Length - lenghtOffset)
+                        bestRoad = road;
+                }
+            }
+
+            if (bestRoad == null)
+            {
+                // Could not find a valid flag to link to.
+                if (maxLength < 6) // Only link larger pathes.
+                    return false;
+
+                // Try to build one on a nearby path.
+                return LinkFlagToNearbyPath(game, flag, maxLength, allowWater);
+            }
+
+            return game.BuildRoad(bestRoad, player);
+        }
+
+        bool LinkFlagToNearbyPath(Game game, Flag flag, int maxLength, bool allowWater)
+        {
+            // TODO: Don't link to an existing road to this flag!
+
+            if (maxLength > 6)
+                maxLength = 6;
+
+            var pathes = game.Map.FindInArea(flag.Position, maxLength, FindPath, 2);
+            Road bestRoad = null;
+            uint bestRoadEndPos = Global.BadMapPos;
+
+            foreach (var path in pathes)
+            {
+                uint pos = (uint)path;
+
+                if (!game.CanBuildFlag(pos, player))
+                    continue;
+
+                var road = Pathfinder.Map(game.Map, flag.Position, pos);
+
+                if (road != null && road.Valid)
+                {
+                    if (road.Length > maxLength)
+                        continue;
+
+                    if (!allowWater && road.IsWaterPath(game.Map))
+                        continue;
+
+                    if (bestRoad == null || road.Length < bestRoad.Length)
+                    {
+                        bestRoad = road;
+                        bestRoadEndPos = pos;
+                    }
+                }
+            }
+
+            if (bestRoad == null)
+                return false;
+
+            return game.BuildFlag(bestRoadEndPos, player) && game.BuildRoad(bestRoad, player);
+        }
+
         internal AIState CreateState(State state, object param = null)
         {
             switch (state)

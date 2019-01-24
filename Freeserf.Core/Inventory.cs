@@ -218,6 +218,9 @@ namespace Freeserf
 
         public uint GetCountOf(Resource.Type resource)
         {
+            if (!resources.ContainsKey(resource))
+                return 0u;
+
             return (uint)resources[resource];
         }
 

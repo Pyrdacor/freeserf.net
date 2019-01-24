@@ -127,7 +127,20 @@ namespace Freeserf.AIStates
                 while (!game.CanBuildBuilding(spot, type, player))
                 {
                     if (++tries > 20)
-                        return Global.BadMapPos;
+                    {
+                        spot = FindSpotNearBuilding(game, player, 40, Building.Type.Hut);
+
+                        if (spot == Global.BadMapPos)
+                            spot = FindSpotNearBuilding(game, player, 40, Building.Type.Tower);
+
+                        if (spot == Global.BadMapPos)
+                            spot = FindSpotNearBuilding(game, player, 40, Building.Type.Fortress);
+
+                        if (spot == Global.BadMapPos)
+                            spot = FindSpotNearBuilding(game, player, 40, Building.Type.Castle);
+
+                        return spot;
+                    }
 
                     spot = game.Map.GetRandomCoord(game.GetRandom());
                 }
@@ -199,7 +212,12 @@ namespace Freeserf.AIStates
                                 var spot = game.Map.FindFirstSpotTowards(building.Position, targetFunc);
 
                                 if (spot != Global.BadMapPos)
-                                    return game.Map.FindSpotNear(spot, 2, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 1);
+                                {
+                                    spot = game.Map.FindSpotNear(spot, 3, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 1);
+
+                                    if (spot != Global.BadMapPos && game.CanBuildBuilding(spot, type, player))
+                                        return spot;
+                                }
                             }
 
                             return FindSpotNearBorder(game, player, intelligence, 2);
@@ -470,7 +488,12 @@ namespace Freeserf.AIStates
 
                         var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findTree, game.GetRandom(), 1);
 
-                        return FindSpotNear(game, player, spot, 3);
+                        int maxDist = 3;
+
+                        if (!game.Map.HasOwner(spot) || game.Map.GetOwner(spot) != player.Index)
+                            maxDist = 6;
+
+                        return FindSpotNear(game, player, spot, maxDist);
                     }
                 }
 
