@@ -1471,12 +1471,9 @@ namespace Freeserf
                         {
                             var flag = Game.GetFlag(building.GetFlagIndex());
 
-                            foreach (var transporter in Game.GetPlayerSerfs(this).Where(s => s.GetSerfType() == Serf.Type.Transporter || s.GetSerfType() == Serf.Type.TransporterInventory))
-                            {
-                                transporter.ResetTransport(flag);
-                            }
+                            Game.FlagResetTransport(flag);
 
-                            building.RemoveRequestedMaterials();
+                            //building.RemoveRequestedMaterials();
                         }
                     }
                 }

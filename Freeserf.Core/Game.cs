@@ -2609,7 +2609,7 @@ namespace Freeserf
             return water;
         }
 
-        protected void FlagResetTransport(Flag flag)
+        internal void FlagResetTransport(Flag flag)
         {
             /* Clear destination for any serf with resources for this flag. */
             foreach (Serf serf in serfs)
