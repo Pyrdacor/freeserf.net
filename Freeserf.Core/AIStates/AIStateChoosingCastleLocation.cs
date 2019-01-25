@@ -186,11 +186,11 @@ namespace Freeserf.AIStates
             // if we tried too often we will only assure that there is a bit of trees and stones
             if (tries >= 40)
             {
+                if (treeCount < 5 || stoneCount < 2)
+                    return -1;
+
                 if (tries < 1000) // after 1000 tries, just place it somewhere
                 {
-                    if (treeCount < 5 || stoneCount < 2)
-                        return -1;
-
                     if (mountainCountNear > 7) // too close to mountain
                         return -1;
 
@@ -275,7 +275,7 @@ namespace Freeserf.AIStates
                     return -1;
             }
 
-            if (keepDistanceToEnemies > 0)
+            if (keepDistanceToEnemies > 0 && tries < 1000)
             {
                 for (uint i = 0; i < game.GetPlayerCount(); ++i)
                 {
