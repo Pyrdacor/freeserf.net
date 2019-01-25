@@ -126,30 +126,12 @@ namespace Freeserf
         protected string comment = "";
         Dictionary<char, Option> options = new Dictionary<char, Option>();
 
-        public bool Process(string[] args2)
+        public bool Process(string[] args)
         {
-            Queue<string> arguments = new Queue<string>(args2.Length);
+            Queue<string> arguments = new Queue<string>(args.Length);
 
-            foreach (var arg in args2)
+            foreach (var arg in args)
                 arguments.Enqueue(arg);
-
-            if (arguments.Count < 1)
-            {
-                return false;
-            }
-
-            path = arguments.Dequeue();
-
-            var pos = path.LastIndexOf(@"\/");
-
-            if (pos != -1)
-            {
-                progname = path.Substring(pos + 1, path.Length - pos - 1);
-            }
-            else
-            {
-                progname = path;
-            }
 
             while (arguments.Count > 0)
             {

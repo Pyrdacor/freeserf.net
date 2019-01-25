@@ -30,21 +30,26 @@ namespace Freeserf
     {
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
         public static readonly string VERSION = $"freeserf.net v{Version.Major}.{Version.Minor}";
+        public static readonly string EXTENDED_VERSION = $"freeserf.net v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
 
         /* The length between game updates in milliseconds. */
         public const int TICK_LENGTH = 20;
         public const int TICKS_PER_SEC = 1000 / TICK_LENGTH;
         public const int TICKS_PER_MIN = 60 * TICKS_PER_SEC;
 
-        public static void Run(string[] args)
+        public class InitInfo
         {
-            string dataDir;
-            string saveFile;
+            public CommandLine CommandLine;
+            public string DataDirectory;
+            public string SaveGame;
+            public int ScreenWidth = -1;
+            public int ScreenHeight = -1;
+            public bool Fullscreen = false;
+        }
 
-            uint screenWidth = 0;
-            uint screenHeight = 0;
-            bool fullscreen = false;
-
+        public static InitInfo Init(string[] args)
+        {
+            var initInfo = new InitInfo();
             var commandLine = new CommandLine();
 
             commandLine.AddOption('d', "Set Debug output level").AddParameter("NUM", (AutoParseableString s) =>
@@ -59,11 +64,11 @@ namespace Freeserf
                 return true;
             });
 
-            commandLine.AddOption('f', "Run in Fullscreen mode", () => { fullscreen = true; });
+            commandLine.AddOption('f', "Run in Fullscreen mode", () => { initInfo.Fullscreen = true; });
 
             commandLine.AddOption('g', "Use specified data directory").AddParameter("DATA-PATH", (AutoParseableString s) =>
             {
-                s.Retrieve(out dataDir);
+                s.Retrieve(out initInfo.DataDirectory);
 
                 return true;
             });
@@ -76,16 +81,16 @@ namespace Freeserf
 
             commandLine.AddOption('l', "Load saved game").AddParameter("FILE", (AutoParseableString s) =>
             {
-                saveFile = s.ReadToEnd();
+                initInfo.SaveGame = s.ReadToEnd();
 
                 return true;
             });
 
             commandLine.AddOption('r', "Set display resolution (e.g. 800x600)").AddParameter("RES", (AutoParseableString s) =>
             {
-                s.Retrieve(out screenWidth);
+                s.Retrieve(out initInfo.ScreenWidth);
                 s.Skip(1); // 'x'
-                s.Retrieve(out screenHeight);
+                s.Retrieve(out initInfo.ScreenHeight);
 
                 return true;
             });
@@ -93,91 +98,19 @@ namespace Freeserf
             // TODO: email configurable
             commandLine.SetComment("Please report bugs to <robert.schneckenhaus@web.de>");
 
+            Log.Info.Write("main", EXTENDED_VERSION);
+
             if (!commandLine.Process(args))
             {
-                Environment.Exit(1);
-                return;
+                if (args.Length > 0)
+                    Log.Warn.Write("main", "Invalid command line options");
+
+                return new InitInfo(); // default values
             }
 
-            Log.Info.Write("main", "freeserf.net " + VERSION);
+            initInfo.CommandLine = commandLine;
 
-//            Data* data = Data::get_instance();
-//            if (!data->load(dataDir))
-//            {
-//                Log::Error["main"] << "Could not load game data.";
-//                return EXIT_FAILURE;
-//            }
-
-//            Log::Info["main"] << "Initialize graphics...";
-
-//            Graphics* gfx = nullptr;
-//            try
-//            {
-//                gfx = Graphics::get_instance();
-//            }
-//            catch (ExceptionFreeserf &e) {
-//                Log::Error[e.get_system().c_str()] << e.what();
-//                return EXIT_FAILURE;
-//            }
-
-//            /* TODO move to right place */
-//            Audio* audio = Audio::get_instance();
-//            Audio::PPlayer player = audio->get_music_player();
-//            if (player)
-//            {
-//                player->play_track(Audio::TypeMidiTrack0);
-//            }
-
-//            GameManager* game_manager = GameManager::get_instance();
-
-//            /* Either load a save game if specified or
-//               start a new game. */
-//            if (!saveFile.empty())
-//            {
-//                if (!game_manager->load_game(saveFile))
-//                {
-//                    return EXIT_FAILURE;
-//                }
-//            }
-//            else
-//            {
-//                if (!game_manager->start_random_game())
-//                {
-//                    return EXIT_FAILURE;
-//                }
-//            }
-
-//            /* Initialize interface */
-//            Interface *interface = new Interface();
-//  if ((screen_width == 0) || (screen_height == 0)) {
-//    gfx->get_resolution(&screen_width, &screen_height);
-//    }
-//    interface->set_size(screen_width, screen_height);
-//    interface->set_displayed(true);
-
-//  if (save_file.empty()) {
-//    interface->open_game_init();
-//}
-
-///* Init game loop */
-//EventLoop* event_loop = EventLoop::get_instance();
-//event_loop->add_handler(interface);
-
-//  /* Start game loop */
-//  event_loop->run();
-
-//event_loop->del_handler(interface);
-
-//  Log::Info["main"] << "Cleaning up...";
-
-//  /* Clean up */
-//  delete interface;
-//delete audio;
-//delete gfx;
-//delete event_loop;
-//delete game_manager;
-
-//  return EXIT_SUCCESS;
+            return initInfo;
         }
     }
 }

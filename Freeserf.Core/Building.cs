@@ -912,6 +912,7 @@ namespace Freeserf
                         if (stock[i].Requested == 0)
                         {
                             // TODO: This exception occurs from time to time.
+                            Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
                             throw new ExceptionFreeserf("Delivered more resources than requested.");
                         }
 
@@ -923,6 +924,7 @@ namespace Freeserf
                 }
 
                 // TODO: This exception occurs from time to time.
+                Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
                 throw new ExceptionFreeserf("Delivered unexpected resource.");
             }
         }

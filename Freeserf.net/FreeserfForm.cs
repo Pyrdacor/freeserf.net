@@ -15,9 +15,15 @@ namespace Freeserf
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
         static Timer clickWaitTimer = new Timer();
+        Global.InitInfo initInfo = null;
 
-        public FreeserfForm()
+        public FreeserfForm(string[] args)
         {
+            Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+            Log.SetLevel(Log.Level.Error);
+
+            initInfo = Global.Init(args); // this may change the log level
+
             InitializeComponent();
         }
 
@@ -31,9 +37,6 @@ namespace Freeserf
 
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
-            Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
-            Log.SetLevel(Log.Level.Debug);
-
             Network.Network.DefaultClientFactory = new Network.ClientFactory();
             Network.Network.DefaultServerFactory = new Network.ServerFactory();
 
@@ -46,12 +49,22 @@ namespace Freeserf
                 Close();
             }
 
-            SetClientSize(1280, 960);
+            // TODO: use the rest of the command line and maybe extend the command line
 
-            gameView = new GameView(dosData, new Size(1280, 960), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+            if (initInfo.ScreenWidth == -1)
+                initInfo.ScreenWidth = 1280;
+            if (initInfo.ScreenHeight == -1)
+                initInfo.ScreenHeight = 960;
+
+            SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
+
+            gameView = new GameView(dosData, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
             gameView.FullscreenRequestHandler = FullscreenRequestHandler;
 
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
+
+            if (initInfo.Fullscreen)
+                SetFullscreen(true);
 
             gameView.Closed += GameView_Closed;
 
