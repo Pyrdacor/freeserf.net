@@ -6,6 +6,7 @@ At the moment there is still a lot of work to do.
 
 ## Download the game
 
+#### [v0.9 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.9.zip)
 #### [v0.8 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.8.zip)
 #### [v0.7 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.7.zip)
 #### [v0.6 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.6.zip)
@@ -24,7 +25,8 @@ Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It i
 
 Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
 
-Things that are missing are mostly AI logic and some game types. Serf fighting is not tested yet.
+Things that are missing are mostly AI logic and tutorial games. Serf fighting is not tested yet.
+Multiplayer support is prepared but not really implemented yet.
 
 There are still some bugs (mainly in serf logic and map position calculation).
 
@@ -38,12 +40,12 @@ But the game is playable for most parts.
 
 ## Roadmap
 
-### Phase 1: Porting
+### Phase 1: Porting (99.99%)
 
 The first step is to port everything from C++ to C# and ensure that the game runs.
 There may be some quick&dirty implementations or things that could be done better.
 
-### Phase 2: Optimizing
+### Phase 2: Optimizing (in progress)
 
 This includes bug fixing and C#-specific optimizations.
 Moreover this includes performance and stability optimizations if needed.
