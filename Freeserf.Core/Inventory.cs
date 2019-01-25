@@ -78,6 +78,11 @@ namespace Freeserf
             {
                 serfs.Add(type, 0u);
             }
+
+            for (var r = Resource.Type.Fish; r <= Resource.Type.Shield; ++r)
+            {
+                resources.Add(r, 0);
+            }
         }
 
         /* Inventory owner */
@@ -218,9 +223,6 @@ namespace Freeserf
 
         public uint GetCountOf(Resource.Type resource)
         {
-            if (!resources.ContainsKey(resource))
-                return 0u;
-
             return (uint)resources[resource];
         }
 
