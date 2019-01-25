@@ -56,6 +56,18 @@ namespace Freeserf
             if (initInfo.ScreenHeight == -1)
                 initInfo.ScreenHeight = 960;
 
+            if (initInfo.ScreenWidth < 640)
+                initInfo.ScreenWidth = 640;
+            if (initInfo.ScreenHeight < 480)
+                initInfo.ScreenHeight = 480;
+
+            var screen = Screen.FromHandle(Handle);
+
+            if (initInfo.ScreenWidth > screen.Bounds.Width)
+                initInfo.ScreenWidth = screen.Bounds.Width;
+            if (initInfo.ScreenHeight > screen.Bounds.Height)
+                initInfo.ScreenHeight = screen.Bounds.Height;
+
             SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
 
             gameView = new GameView(dosData, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
