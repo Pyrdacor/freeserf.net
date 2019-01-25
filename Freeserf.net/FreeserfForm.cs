@@ -32,7 +32,7 @@ namespace Freeserf
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
             Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
-            Log.SetLevel(Log.Level.Verbose);
+            Log.SetLevel(Log.Level.Debug);
 
             Network.Network.DefaultClientFactory = new Network.ClientFactory();
             Network.Network.DefaultServerFactory = new Network.ServerFactory();
