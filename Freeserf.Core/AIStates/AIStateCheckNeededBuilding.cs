@@ -251,6 +251,9 @@ namespace Freeserf.AIStates
                                 // make a piece of steel.
                                 if (game.GetPossibleFreeKnightCount(player) == 0)
                                     return CheckResult.NeededButNoSpecialistOrRes;
+
+                                // TODO: Another chance would be to expand the territority until we find
+                                // some fish and build a fisher.
                             }
                         }
                         break;
@@ -341,32 +344,66 @@ namespace Freeserf.AIStates
                         break;
                     }
                 case Building.Type.CoalMine:
-                    if (count < 1 && ai.GameTime > (30 - Math.Max(ai.GoldFocus, Math.Max(ai.SteelFocus, ai.MilitaryFocus)) * 10 - intelligence / 7) * 5 * Global.TICKS_PER_SEC)
+                    if (count < 1 && ai.GameTime > (30 - Misc.Max(ai.GoldFocus, ai.SteelFocus, ai.MilitaryFocus) * 10 - intelligence / 7) * 5 * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    // TODO ...
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((20 - Misc.Max(ai.GoldFocus, ai.SteelFocus, ai.MilitaryFocus) * 2) * Global.TICKS_PER_MIN)))
+                    {
+                        uint numIronMines = player.GetCompletedBuildingCount(Building.Type.IronMine);
+                        uint numGoldMines = player.GetCompletedBuildingCount(Building.Type.GoldMine);
+                        uint numWeaponSmiths = player.GetCompletedBuildingCount(Building.Type.WeaponSmith);
+
+                        var maxNeededCoalMines = Math.Max(2, 1 + (numIronMines + ai.SteelFocus / 2) + (numGoldMines + ai.GoldFocus / 2) + (numWeaponSmiths + ai.MilitaryFocus / 2));
+
+                        if (count < maxNeededCoalMines)
+                            return NeedBuilding(ai, game, player, type);
+                    }
                     break;
                 case Building.Type.IronMine:
                     if (count < 1 && ai.GameTime > (33 - Math.Max(ai.SteelFocus, ai.MilitaryFocus) * 10 - intelligence / 8) * 5 * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    // TODO ...
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((24 - Misc.Max(ai.SteelFocus, ai.MilitaryFocus) * 2) * Global.TICKS_PER_MIN)))
+                    {
+                        uint numCoalMines = player.GetCompletedBuildingCount(Building.Type.CoalMine);
+
+                        var maxNeededIronMines = Math.Max(2, 1 + (numCoalMines + Misc.Max(ai.SteelFocus, ai.MilitaryFocus) / 2));
+
+                        if (count < maxNeededIronMines)
+                            return NeedBuilding(ai, game, player, type);
+                    }
                     break;
                 case Building.Type.GoldMine:
                     if (count < 1 && ai.GameTime > (45 - Math.Max(ai.GoldFocus, ai.MilitaryFocus - 1) * 10 - intelligence / 9) * 5 * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    // TODO ...
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((32 - Misc.Max(ai.GoldFocus, ai.MilitaryFocus - 1) * 4) * Global.TICKS_PER_MIN)))
+                    {
+                        uint numCoalMines = player.GetCompletedBuildingCount(Building.Type.CoalMine);
+
+                        var maxNeededGoldMines = Math.Max(2, 1 + (numCoalMines + Misc.Max(ai.GoldFocus, ai.MilitaryFocus) / 2));
+
+                        if (count < maxNeededGoldMines)
+                            return NeedBuilding(ai, game, player, type);
+                    }
                     break;
                 case Building.Type.StoneMine:
                     if (count < 1 && ai.GameTime > (120 - Math.Max(ai.BuildingFocus, ai.ConstructionMaterialFocus) * 20 - intelligence / 10) * 5 * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    // TODO ...
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 40 * Global.TICKS_PER_MIN) / ((40 - ai.ConstructionMaterialFocus * 4) * Global.TICKS_PER_MIN)))
+                    {
+                        uint numSawMills = player.GetCompletedBuildingCount(Building.Type.Sawmill);
+
+                        var maxNeededStoneMines = Math.Max(2, 1 + (numSawMills + ai.ConstructionMaterialFocus / 2));
+
+                        if (count < maxNeededStoneMines)
+                            return NeedBuilding(ai, game, player, type);
+                    }
                     break;
                 case Building.Type.Farm:
                 case Building.Type.Mill:
