@@ -2915,8 +2915,6 @@ namespace Freeserf
 
                 if (otherFlag == null)
                 {
-                    // TODO: This exception occurs from time to time. I think s.Walking.Dir1 is just zerod out in this case.
-                    //       Value 0 means Direction.Right. If there is nothing in this direction, the exception will be thrown.
                     throw new ExceptionFreeserf("Path has no other end flag in selected dir.");
                 }
 

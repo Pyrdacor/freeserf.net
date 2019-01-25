@@ -274,7 +274,7 @@ namespace Freeserf.AIStates
 
                     foreach (var flagPos in flagPositions)
                     {
-                        var road = Pathfinder.Map(game.Map, flag.Position, flagPos);
+                        var road = Pathfinder.FindShortestPath(game.Map, flag.Position, flagPos);
 
                         if (road != null && road.Valid)
                         {

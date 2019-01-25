@@ -522,19 +522,60 @@ namespace Freeserf
             };
         }
 
+        bool BuildingNeedsInventoryResIn(Building.Type type)
+        {
+            switch (type)
+            {
+                case Building.Type.Forester:
+                case Building.Type.Fortress:
+                case Building.Type.Hut:
+                case Building.Type.None:
+                case Building.Type.Stock:
+                case Building.Type.Tower:
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+        bool BuildingNeedsInventoryResOut(Building.Type type)
+        {
+            switch (type)
+            {
+                case Building.Type.CoalMine:
+                case Building.Type.Farm:
+                case Building.Type.Fisher:
+                case Building.Type.Forester:
+                case Building.Type.Fortress:
+                case Building.Type.GoldMine:
+                case Building.Type.Hut:
+                case Building.Type.IronMine:
+                case Building.Type.Lumberjack:
+                case Building.Type.None:
+                case Building.Type.Stock:
+                case Building.Type.Stonecutter:
+                case Building.Type.StoneMine:
+                case Building.Type.Tower:
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
         /// <summary>
         /// Links the flag to the road system.
         /// </summary>
         /// <param name="flag">The flag to link</param>
         /// <param name="maxLength">Build only if the best connection length is at max this</param>
         /// <param name="allowWater">If true the connection could be a water path</param>
-        internal bool LinkFlag(Flag flag, int maxLength = int.MaxValue, bool allowWater = false)
+        internal bool LinkFlag(Flag flag, int maxLength = 12, bool allowWater = false)
         {
             if (maxLength < 2)
                 return false;
 
             Road bestRoad = null;
-            int lenghtOffset = 0;
+            uint bestRoadTotalCost = uint.MaxValue;
+            uint costAdd = 0;
             var game = player.Game;
             var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
 
@@ -552,7 +593,12 @@ namespace Freeserf
                 if (dist > maxLength) // too far away
                     continue;
 
-                var road = Pathfinder.Map(game.Map, flag.Position, otherFlag.Position);
+                uint flagCost = otherFlag.GetCostToNearestInventory(BuildingNeedsInventoryResIn(buildingType), BuildingNeedsInventoryResOut(buildingType));
+
+                if (flagCost == uint.MaxValue)
+                    continue; // flag has no connection to an inventory
+
+                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, otherFlag.Position);
 
                 if (road != null && road.Valid)
                 {
@@ -564,15 +610,22 @@ namespace Freeserf
 
                     if (buildingType != Building.Type.None && otherFlag.HasBuilding() && CheckLinkedBuildings(buildingType, otherFlag.GetBuilding().BuildingType))
                     {
-                        if (bestRoad != null && road.Length > bestRoad.Length + lenghtOffset)
+                        if (bestRoad != null && flagCost + road.Cost >= bestRoadTotalCost + costAdd)
                             continue;
 
                         bestRoad = road;
-                        lenghtOffset = 3;
+                        bestRoadTotalCost = flagCost + road.Cost;
+                        costAdd = 750u;
+
+                        if (bestRoad.Cost <= costAdd)
+                            break;
                     }
 
-                    if (bestRoad == null || road.Length < bestRoad.Length - lenghtOffset)
+                    if (bestRoad == null || flagCost + road.Cost < bestRoadTotalCost - costAdd)
+                    {
                         bestRoad = road;
+                        bestRoadTotalCost = flagCost + road.Cost;
+                    }
                 }
             }
 
@@ -607,7 +660,7 @@ namespace Freeserf
                 if (!game.CanBuildFlag(pos, player))
                     continue;
 
-                var road = Pathfinder.Map(game.Map, flag.Position, pos);
+                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, pos);
 
                 if (road != null && road.Valid)
                 {
@@ -617,7 +670,7 @@ namespace Freeserf
                     if (!allowWater && road.IsWaterPath(game.Map))
                         continue;
 
-                    if (bestRoad == null || road.Length < bestRoad.Length)
+                    if (bestRoad == null || road.Cost < bestRoad.Cost)
                     {
                         bestRoad = road;
                         bestRoadEndPos = pos;

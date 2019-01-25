@@ -87,22 +87,88 @@ namespace Freeserf
             begin = Global.BadMapPos;
         }
 
+        public static Road CreateBuildingRoad(MapPos flagPosition)
+        {
+            var road = new Road();
+
+            // these roads will have a cost of 0
+            road.Start(flagPosition);
+            road.Extend(Direction.UpLeft);
+
+            return road;
+        }
+
+        public static Road CreateRoadFromMapPath(Map map, MapPos start, Direction startDirection)
+        {
+            if (!map.HasPath(start, startDirection))
+                throw new ExceptionFreeserf("Invalid map path.");
+
+            var road = new Road();
+            var pos = start;
+            var dir = startDirection;
+
+            road.Start(start);
+
+            do
+            {
+                road.Cost += Pathfinder.ActualCost(map, pos, dir);
+                road.Extend(dir);
+                pos = map.Move(pos, dir);
+
+                var cycle = DirectionCycleCW.CreateDefault();
+
+                foreach (var d in cycle)
+                {
+                    if (d != dir.Reverse() && map.HasPath(pos, d))
+                    {
+                        dir = d;
+                        break;
+                    }
+                }
+            }
+            while (!map.HasFlag(pos) && !map.HasBuilding(pos));
+
+            if (map.HasBuilding(pos) || map.HasBuilding(start))
+                road.Cost = 0;
+
+            return road;
+        }
+
+        public Road Reverse(Map map)
+        {
+            var road = new Road();
+
+            road.Start(GetEnd(map));
+
+            var dirs = Dirs.ToList();
+
+            for (int i = dirs.Count - 1; i >= 0; --i)
+                road.Extend(dirs[i].Reverse());
+
+            road.Cost = Cost;
+
+            return road;
+        }
+
         public bool Valid => begin != Global.BadMapPos;
         public MapPos Source => begin;
         public Dirs Dirs => dirs;
         public uint Length => (uint)dirs.Count;
         public Direction Last => dirs.Peek();
         public bool Extendable => Length < MaxLength;
+        public uint Cost { get; internal set; } = 0;
 
         public void Invalidate()
         {
             begin = Global.BadMapPos;
             dirs.Clear();
+            Cost = 0;
         }
 
         public void Start(MapPos start)
         {
             begin = start;
+            Cost = 0;
         }
         
         public bool IsValidExtension(Map map, Direction dir)
@@ -144,6 +210,24 @@ namespace Freeserf
             }
 
             dirs.Push(dir);
+
+            return true;
+        }
+
+        public bool Extend(Map map, Road road)
+        {
+            if (begin == Global.BadMapPos || road == null || !road.Valid)
+            {
+                return false;
+            }
+
+            if (GetEnd(map) != road.begin)
+            {
+                return false;
+            }
+
+            foreach (var dir in road.Dirs)
+                dirs.Push(dir);
 
             return true;
         }

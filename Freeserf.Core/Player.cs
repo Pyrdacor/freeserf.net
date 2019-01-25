@@ -1473,6 +1473,10 @@ namespace Freeserf
 
                             Game.FlagResetTransport(flag);
 
+                            // TODO: The following line should avoid that materials are
+                            //       never re-sent after emergency program ended.
+                            //       But unfortunately it causes some exceptions.
+                            //       Have a look at this later!
                             //building.RemoveRequestedMaterials();
                         }
                     }

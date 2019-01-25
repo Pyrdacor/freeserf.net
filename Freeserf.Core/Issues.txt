@@ -49,6 +49,8 @@ Logic:
 - Not sure if the "towards" logic in Map class works correctly yet.
 - Geologists give up too fast.
 - Once a freewalking lumberjack blockes a road and stand there waiting.
+- Sometimes there is a deadlock of walking serfs. Saw a digger and a transporter that were waiting at each other but could just switch positions.
+  - In debug there were two diggers (one with state WaitIdleOnPath and one with Walking). A digger should never have WaitIdleOnPath I think as this is for transporters only!
 
 
 Notification Box:
@@ -75,6 +77,12 @@ Missing stuff:
 - mine elevator/miner animation
 
 
+Nice to have:
+
+- After closing a game the GameInitBox should display the last started game settings.
+  This way a map can be played again or the RNG number can be memorized.
+
+
 TODO:
 
 - Finish game saving/loading
@@ -91,6 +99,7 @@ TODO:
 - Check if all shortcuts/keystrokes work as expected (if not implement them)
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected)
 - Localization (texts should be of the right language later)
+- Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
 
 
 Exceptions:

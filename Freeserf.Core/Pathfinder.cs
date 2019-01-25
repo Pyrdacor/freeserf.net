@@ -38,6 +38,15 @@ namespace Freeserf
         public Direction Dir;
     }
 
+    class FlagSearchNode
+    {
+        public FlagSearchNode Parent;
+        public uint GScore;
+        public uint FScore;
+        public Flag Flag;
+        public Direction Dir;
+    }
+
     class PriorityQueue<T> : IEnumerable<T> where T : class
     {
         IComparer<T> comparer;
@@ -147,11 +156,26 @@ namespace Freeserf
             }
         }
 
-        /* Find the shortest path from start to end (using A*) considering that
-           the walking time for a serf walking in any direction of the path
-           should be minimized. Returns a malloc'ed array of directions and
-           the size of this array in length. */
-        public static Road Map(Map map, MapPos start, MapPos end, Road buildingRoad = null)
+        class FlagSearchNodeComparer : IComparer<FlagSearchNode>
+        {
+            public int Compare(FlagSearchNode left, FlagSearchNode right)
+            {
+                return right.FScore.CompareTo(left.FScore);
+            }
+        }
+
+        /// <summary>
+        /// Find the shortest path from start to end (using A*) considering that
+        /// the walking time for a serf walking in any direction of the path
+        /// should be minimized.Returns a malloc'ed array of directions and
+        /// the size of this array in length.
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="buildingRoad"></param>
+        /// <returns></returns>
+        public static Road FindShortestPath(Map map, MapPos start, MapPos end, Road buildingRoad = null)
         {
             DateTime startTime = DateTime.Now;
             PriorityQueue<SearchNode> open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
@@ -179,6 +203,8 @@ namespace Freeserf
                     /* Construct solution */
                     Road solution = new Road();
                     solution.Start(start);
+
+                    solution.Cost = node.GScore;
 
                     while (node.Parent != null)
                     {
@@ -260,6 +286,128 @@ namespace Freeserf
             return new Road();
         }
 
+
+        /// <summary>
+        /// Find the shortest existing connection between two arbitrary flags.
+        /// 
+        /// The returned collection contains the directions at each flag on
+        /// the path.
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public static List<Direction> FindShortestRoad(Map map, Flag start, Flag end, out uint totalCost)
+        {
+            if (start == end)
+            {
+                totalCost = 0;
+                return new List<Direction>();
+            }
+
+            totalCost = uint.MaxValue;
+            DateTime startTime = DateTime.Now;
+            PriorityQueue<FlagSearchNode> open = new PriorityQueue<FlagSearchNode>(new FlagSearchNodeComparer());
+            List<FlagSearchNode> closed = new List<FlagSearchNode>();
+
+            /* Create start node */
+            FlagSearchNode node = new FlagSearchNode()
+            {
+                Flag = end,
+                GScore = 0,
+                FScore = HeuristicCost(map, start.Position, end.Position)
+            };
+
+            open.Push(node);
+
+            while (open.Count != 0)
+            {
+                if ((DateTime.Now - startTime).TotalMilliseconds > 2 * Global.TICK_LENGTH)
+                    return null; // tried too long
+
+                node = open.Pop();
+
+                if (node.Flag == start)
+                {
+                    /* Construct solution */
+                    List<Direction> solution = new List<Direction>();
+
+                    totalCost = node.GScore;
+
+                    while (node.Parent != null)
+                    {
+                        solution.Add(node.Dir.Reverse());
+                        node = node.Parent;
+                    }
+
+                    return solution;
+                }
+
+                /* Put current node on closed list. */
+                closed.Insert(0, node);
+
+                var cycle = DirectionCycleCW.CreateDefault();
+
+                foreach (Direction d in cycle)
+                {
+                    var newRoad = node.Flag.GetRoad(d);
+                    var newFlag = node.Flag.GetOtherEndFlag(d);
+
+                    /* Check if neighbour is valid. */
+                    if (newFlag == null || newRoad == null)
+                    {
+                        continue;
+                    }
+                    
+                    uint cost = newRoad.Cost;
+
+                    /* Check if neighbour is in closed list. */
+                    if (closed.Any(n => n.Flag == newFlag))
+                        continue;
+
+                    /* See if neighbour is already in open list. */
+                    bool inOpen = false;
+
+                    foreach (var n in open)
+                    {
+                        if (n.Flag == newFlag)
+                        {
+                            inOpen = true;
+
+                            if (n.GScore >= node.GScore + cost)
+                            {
+                                n.GScore = node.GScore + cost;
+                                n.FScore = n.GScore + HeuristicCost(map, newFlag, start);
+                                n.Parent = node;
+                                n.Dir = d;
+
+                                // Move element to the back and heapify
+                                open.Push(open.Pop());
+                            }
+
+                            break;
+                        }
+                    }
+
+                    /* If not found in the open set, create a new node. */
+                    if (!inOpen)
+                    {
+                        FlagSearchNode newNode = new FlagSearchNode();
+
+                        newNode.Flag = newFlag;
+                        newNode.GScore = node.GScore + cost;
+                        newNode.FScore = newNode.GScore + HeuristicCost(map, newFlag, start);
+                        newNode.Parent = node;
+                        newNode.Dir = d;
+
+                        open.Push(newNode);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         static readonly uint[] walkCost = new uint[]
         {
             255u, 319u, 383u, 447u, 511u
@@ -286,13 +434,33 @@ namespace Freeserf
             return (dist > 0) ? (uint)dist * walkCost[hDiff / dist] : 0u;
         }
 
-        static uint ActualCost(Map map, MapPos pos, Direction dir)
+        internal static uint ActualCost(Map map, MapPos pos, Direction dir)
         {
             MapPos otherPos = map.Move(pos, dir);
 
             int hDiff = Math.Abs((int)map.GetHeight(pos) - (int)map.GetHeight(otherPos));
 
             return walkCost[hDiff];
+        }
+
+        static uint HeuristicCost(Map map, Flag start, Flag end)
+        {
+            /* Calculate distance to target. */
+            int distColumn = map.DistX(start.Position, end.Position);
+            int distRow = map.DistY(start.Position, end.Position);
+
+            int dist = 0;
+
+            if ((distColumn > 0 && distRow > 0) || (distColumn < 0 && distRow < 0))
+            {
+                dist = Math.Max(Math.Abs(distColumn), Math.Abs(distRow));
+            }
+            else
+            {
+                dist = Math.Abs(distColumn) + Math.Abs(distRow);
+            }
+
+            return (uint)dist;
         }
     }
 }

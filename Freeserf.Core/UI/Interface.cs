@@ -644,6 +644,8 @@ namespace Freeserf.UI
                 return -1;
             }
 
+            buildingRoad.Cost += Pathfinder.ActualCost(Game.Map, buildingRoad.GetEnd(Game.Map), dir);
+
             AddBuildingRoadSegment(buildingRoad.GetEnd(Game.Map), dir);
             buildingRoad.Extend(dir);
 

@@ -92,6 +92,7 @@ namespace Freeserf
             public Building Building { get { return obj as Building; } set { obj = value; } }
             public Flag Flag { get { return obj as Flag; } set { obj = value; } }
             public object Object { get { return obj; } set { obj = value; } }
+            public Road Road { get; set; }
         }
 
         int[] otherEndDir = new int[6];
@@ -138,7 +139,30 @@ namespace Freeserf
                 length[i] = 0u;
                 otherEndDir[i] = 0;
                 OtherEndPoints[i].Flag = null;
+                OtherEndPoints[i].Road = null;
             }
+        }
+
+        public uint GetCostToNearestInventory(bool inventorySupportsResIn, bool inventorySupportsResOut)
+        {
+            var player = Game.GetPlayer(GetOwner());
+            uint bestCost = uint.MaxValue;
+
+            foreach (var inventory in Game.GetPlayerInventories(player))
+            {
+                if (inventorySupportsResIn && inventory.GetResourceMode() != Inventory.Mode.In)
+                    continue;
+
+                if (inventorySupportsResOut && inventory.GetResourceMode() == Inventory.Mode.Out)
+                    continue;
+
+                Pathfinder.FindShortestRoad(Game.Map, this, Game.GetFlag(inventory.GetFlagIndex()), out uint cost);
+
+                if (cost < bestCost)
+                    bestCost = cost;
+            }
+
+            return bestCost;
         }
 
         /* Bitmap of all directions with outgoing paths. */
@@ -187,6 +211,7 @@ namespace Freeserf
 
             otherEndDir[(int)dir] &= 0x78;
             OtherEndPoints[(int)dir].Flag = null;
+            OtherEndPoints[(int)dir].Road = null;
 
             /* Mark resource path for recalculation if they would
             have followed the removed path. */
@@ -337,6 +362,11 @@ namespace Freeserf
         public Flag GetOtherEndFlag(Direction dir)
         {
             return OtherEndPoints[(int)dir].Flag;
+        }
+
+        public Road GetRoad(Direction dir)
+        {
+            return OtherEndPoints[(int)dir].Road;
         }
 
         /* Whether the given direction has a resource pickup scheduled. */
@@ -493,16 +523,19 @@ namespace Freeserf
                 if (j == Direction.UpLeft && HasBuilding())
                 {
                     OtherEndPoints[(int)j].Building = Game.CreateBuilding(offset / 18);
+                    OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, Position, j);
                 }
                 else
                 {
                     if (offset < 0)
                     {
                         OtherEndPoints[(int)j].Flag = null;
+                        OtherEndPoints[(int)j].Road = null;
                     }
                     else
                     {
                         OtherEndPoints[(int)j].Flag = Game.CreateFlag(offset / 70);
+                        OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, Position, j);
                     }
                 }
             }
@@ -557,6 +590,7 @@ namespace Freeserf
                 if (i == Direction.UpLeft && HasBuilding())
                 {
                     OtherEndPoints[(int)i].Building = Game.CreateBuilding(objectIndex);
+                    OtherEndPoints[(int)i].Road = Road.CreateRoadFromMapPath(Game.Map, Position, i);
                 }
                 else
                 {
@@ -568,6 +602,7 @@ namespace Freeserf
                     }
 
                     OtherEndPoints[(int)i].Flag = otherFlag;
+                    OtherEndPoints[(int)i].Road = otherFlag == null ? null : Road.CreateRoadFromMapPath(Game.Map, Position, i);
                 }
 
                 otherEndDir[(int)i] = reader.Value("other_end_dir")[(int)i].ReadInt();
@@ -667,12 +702,14 @@ namespace Freeserf
         public void LinkBuilding(Building building)
         {
             OtherEndPoints[(int)Direction.UpLeft].Building = building;
+            OtherEndPoints[(int)Direction.UpLeft].Road = Road.CreateBuildingRoad(Game.Map.MoveDownRight(building.Position));
             endPoint |= Misc.Bit(6);
         }
 
         public void UnlinkBuilding()
         {
             OtherEndPoints[(int)Direction.UpLeft].Building = null;
+            OtherEndPoints[(int)Direction.UpLeft].Road = null;
             endPoint &= ~Misc.Bit(6);
             ClearFlags();
         }
@@ -760,7 +797,7 @@ namespace Freeserf
             return destIndex.Value;
         }
 
-        public void LinkWithFlag(Flag destFlag, bool waterPath, uint length, Direction inDir, Direction outDir)
+        public void LinkWithFlag(Flag destFlag, bool waterPath, Direction inDir, Direction outDir, Road road)
         {
             destFlag.AddPath(inDir, waterPath);
             AddPath(outDir, waterPath);
@@ -768,13 +805,16 @@ namespace Freeserf
             destFlag.otherEndDir[(int)inDir] = (destFlag.otherEndDir[(int)inDir] & 0xc7) | ((int)outDir << 3);
             otherEndDir[(int)outDir] = (otherEndDir[(int)outDir] & 0xc7) | ((int)inDir << 3);
 
-            uint len = GetRoadLengthValue(length);
+            uint len = GetRoadLengthValue(road.Length);
 
             destFlag.length[(int)inDir] = len << 4;
             this.length[(int)outDir] = len << 4;
 
             destFlag.OtherEndPoints[(int)inDir].Flag = this;
             OtherEndPoints[(int)outDir].Flag = destFlag;
+
+            destFlag.OtherEndPoints[(int)inDir].Road = road.Reverse(Game.Map);
+            OtherEndPoints[(int)outDir].Road = road;
         }
 
         public void Update()
@@ -919,6 +959,9 @@ namespace Freeserf
             OtherEndPoints[(int)dir].Flag = otherFlag;
             otherFlag.OtherEndPoints[(int)otherDir].Flag = this;
 
+            OtherEndPoints[(int)dir].Road = Road.CreateRoadFromMapPath(Game.Map, Position, dir);
+            otherFlag.OtherEndPoints[(int)otherDir].Road = OtherEndPoints[(int)dir].Road.Reverse(Game.Map);
+
             int maxSerfs = maxPathSerfs[len];
 
             if (SerfRequested(dir))
@@ -1041,6 +1084,9 @@ namespace Freeserf
 
             flag1.OtherEndPoints[(int)dir1].Flag = flag2;
             flag2.OtherEndPoints[(int)dir2].Flag = flag1;
+
+            flag1.OtherEndPoints[(int)dir1].Road.Extend(Game.Map, OtherEndPoints[(int)path1Dir].Road);
+            flag2.OtherEndPoints[(int)dir2].Road.Extend(Game.Map, OtherEndPoints[(int)path2Dir].Road);
 
             flag1.transporter &= ~Misc.Bit((int)dir1);
             flag2.transporter &= ~Misc.Bit((int)dir2);

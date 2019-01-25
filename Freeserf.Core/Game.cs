@@ -917,7 +917,7 @@ namespace Freeserf
             Flag sourceFlag = GetFlagAtPos(road.Source);
             Flag destFlag = GetFlagAtPos(dest);
 
-            sourceFlag.LinkWithFlag(destFlag, waterPath, road.Length, inDir, outDir);
+            sourceFlag.LinkWithFlag(destFlag, waterPath, inDir, outDir, road);
 
             return true;
         }
