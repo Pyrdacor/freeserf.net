@@ -58,8 +58,20 @@ namespace Freeserf.Data
 
             if (!match.Success || match.Index == 0)
             {
-                val = -1;
-                return;
+                if (content.Length == 0)
+                {
+                    val = -1;
+                    return;
+                }
+                else
+                {
+                    if (!int.TryParse(content, out val))
+                        val = -1;
+
+                    content = "";
+
+                    return;
+                }
             }
 
             string valueString = content.Substring(0, match.Index);
