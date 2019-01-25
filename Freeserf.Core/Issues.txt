@@ -22,6 +22,7 @@ Non-working code:
 	- I guess this happens when the emergency program gets active at a specific time.
 	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
 - When closing and re-open the toolmaker priority popup, the values can't be changed. After "set defaults" it works again. Maybe this is also true for other slidebars?!
+- Since the recent (25 Jan 2019) changes with road pathfinding, there are performance issues with multiple flags/buildings and with 4 AI players.
 
 
 AI:
@@ -100,6 +101,7 @@ TODO:
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected, get materials after demolishing)
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
+- Add a fast search algorithm to find stuff on the map in a bigger range than 9. Then use it in AI.
 
 
 Exceptions:

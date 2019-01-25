@@ -911,6 +911,7 @@ namespace Freeserf
                     {
                         if (stock[i].Requested == 0)
                         {
+                            // TODO: This exception occurs from time to time.
                             throw new ExceptionFreeserf("Delivered more resources than requested.");
                         }
 
@@ -921,6 +922,7 @@ namespace Freeserf
                     }
                 }
 
+                // TODO: This exception occurs from time to time.
                 throw new ExceptionFreeserf("Delivered unexpected resource.");
             }
         }

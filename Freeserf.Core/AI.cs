@@ -568,7 +568,7 @@ namespace Freeserf
         /// <param name="flag">The flag to link</param>
         /// <param name="maxLength">Build only if the best connection length is at max this</param>
         /// <param name="allowWater">If true the connection could be a water path</param>
-        internal bool LinkFlag(Flag flag, int maxLength = 12, bool allowWater = false)
+        internal bool LinkFlag(Flag flag, int maxLength = 9, bool allowWater = false)
         {
             if (maxLength < 2)
                 return false;
@@ -578,6 +578,10 @@ namespace Freeserf
             uint costAdd = 0;
             var game = player.Game;
             var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
+
+            // TODO: This seems to cause performance issues when many flags are present.
+            // For now we limit it to range 9 so only flags in an area are used.
+            // See default value of parameter maxLength. It was 12 before.
 
             var flags = (maxLength < 10) ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(pos => game.GetFlagAtPos((uint)pos)) : game.GetPlayerFlags(player);
 

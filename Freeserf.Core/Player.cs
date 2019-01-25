@@ -1477,6 +1477,10 @@ namespace Freeserf
                             //       never re-sent after emergency program ended.
                             //       But unfortunately it causes some exceptions.
                             //       Have a look at this later!
+                            // TODO: The exceptions also occur without this.
+                            //       Maybe it is because of FlagResetTransport?
+                            //       But it also occurs with much of resources
+                            //       so even without active emergency program.
                             //building.RemoveRequestedMaterials();
                         }
                     }
