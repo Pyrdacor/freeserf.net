@@ -107,6 +107,15 @@ namespace Freeserf.AIStates
             // tool was crafted?
             if (GetCurrentToolCount(game, player) > previousCount)
             {
+                // After crafting reset the values.
+                // This can be changed by another craft tool state
+                // or by the adjust settings state then.
+                // We do this to avoid building the same tool
+                // multiple times in a row.
+                player.SetPlanksToolmaker(ushort.MinValue);
+                player.SetSteelToolmaker(ushort.MinValue);
+                player.ResetToolPriority();
+
                 Kill(ai);
                 return;
             }

@@ -101,10 +101,21 @@ namespace Freeserf.AIStates
             }
 
             // plank distribution
-            player.ResetPlanksPriority();
-
             int numBoats = game.GetResourceAmountInInventories(player, Resource.Type.Boat);
             int numPlanks = game.GetResourceAmountInInventories(player, Resource.Type.Plank);
+
+            if (numPlanks < 10)
+            {
+                // with low planks we only give planks to constructions (the craft tool state may change that)
+                player.SetPlanksBoatbuilder(ushort.MinValue);
+                player.SetPlanksToolmaker(ushort.MinValue);
+                player.SetPlanksConstruction(ushort.MaxValue); // max
+            }
+            else
+            {
+                // otherwise use the defaults
+                player.ResetPlanksPriority();
+            }
 
             if (numBoats >= 100 || (numBoats >= 50 && numPlanks < 100) || (numBoats >= 10 && numPlanks < 30))
                 player.SetPlanksBoatbuilder(ushort.MinValue);

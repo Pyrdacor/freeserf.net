@@ -43,6 +43,7 @@ namespace Freeserf.AIStates
         Player player = null;
         PlayerInfo playerInfo = null;
         bool searching = false;
+        object searchingMutex = new object();
         CancellationTokenSource cancellationSource = new CancellationTokenSource(); // TODO: use it to cancel when game closes, etc
 
         public AIStateBuildBuilding(Building.Type buildingType)
@@ -70,7 +71,10 @@ namespace Freeserf.AIStates
                 builtPosition = pos;
             }
 
-            searching = false;
+            lock (searchingMutex)
+            {
+                searching = false;
+            }
 
             if (builtPosition == Global.BadMapPos && ++tries > 10 + playerInfo.Intelligence / 5)
                 Kill(ai); // not able to build the building
@@ -80,12 +84,25 @@ namespace Freeserf.AIStates
         {
             var state = param as AIStateBuildBuilding;
 
-            state.Search();
+            try
+            {
+                state.Search();
+            }
+            finally
+            {
+                lock(searchingMutex)
+                {
+                    searching = false;
+                }
+            }
         }
 
         public override void Kill(AI ai)
         {
-            searching = false;
+            lock (searchingMutex)
+            {
+                searching = false;
+            }
 
             base.Kill(ai);            
         }
@@ -114,10 +131,13 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            if (searching)
-                return;
+            lock (searchingMutex)
+            {
+                if (searching)
+                    return;
 
-            searching = true;
+                searching = true;
+            }
 
             Task.Factory.StartNew(Search, this, cancellationSource.Token, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
