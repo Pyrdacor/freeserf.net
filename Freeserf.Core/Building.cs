@@ -905,13 +905,32 @@ namespace Freeserf
                     {
                         if (stock[i].Requested == 0)
                         {
-                            // TODO: This exception occurs from time to time.
-                            Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                            throw new ExceptionFreeserf("Delivered more resources than requested.");
-                        }
+                            if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone())
+                            {
+                                // In emergency program we set the requested amount to zero.
+                                // But sometimes the resource might still delivered.
+                                // In this case we just add the delivered resource.
+                                // But not if the building does not need it anymore.
+                                if (stock[i].Maximum == 0)
+                                {
+                                    Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
+                                    throw new ExceptionFreeserf("Delivered more resources than requested.");
+                                }
 
-                        ++stock[i].Available;
-                        --stock[i].Requested;
+                                ++stock[i].Available;
+                            }
+                            else
+                            {
+                                // TODO: This exception occurs from time to time. Maybe fixed now?
+                                Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
+                                throw new ExceptionFreeserf("Delivered more resources than requested.");
+                            }
+                        }
+                        else
+                        {
+                            ++stock[i].Available;
+                            --stock[i].Requested;
+                        }
 
                         return;
                     }
@@ -1653,7 +1672,15 @@ namespace Freeserf
             // if this is not an essential building
             if (player.EmergencyProgramActive && BuildingType != Type.Lumberjack &&
                 BuildingType != Type.Sawmill && BuildingType != Type.Stonecutter)
+            {
+                if (!holder && serfRequested && !serfRequestFailed)
+                    serfRequested = false;
+
+                stock[0].Requested = 0;
+                stock[1].Requested = 0;
+
                 return;
+            }
 
             /* Request builder serf */
             if (!serfRequestFailed && !holder && !serfRequested)
