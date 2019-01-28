@@ -47,6 +47,14 @@ namespace Freeserf
         public Direction Dir;
     }
 
+    class SimpleSearchNode
+    {
+        public SimpleSearchNode Parent;
+        public uint Dist;
+        public uint Cost;
+        public MapPos Pos;
+    }
+
     class PriorityQueue<T> : IEnumerable<T> where T : class
     {
         IComparer<T> comparer;
@@ -164,6 +172,96 @@ namespace Freeserf
             }
         }
 
+        class SimpleSearchNodeComparer : IComparer<SimpleSearchNode>
+        {
+            public int Compare(SimpleSearchNode left, SimpleSearchNode right)
+            {
+                return (right.Dist + right.Cost).CompareTo(left.Dist + left.Cost);
+            }
+        }
+
+        public static MapPos FindNearestSpot(Map map, MapPos start, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, uint> costFunction = null, int maxDist = int.MaxValue)
+        {
+            DateTime startTime = DateTime.Now;
+            PriorityQueue<SimpleSearchNode> open = new PriorityQueue<SimpleSearchNode>(new SimpleSearchNodeComparer());
+            List<MapPos> visited = new List<MapPos>();
+
+            /* Create start node */
+            SimpleSearchNode node = new SimpleSearchNode()
+            {
+                Pos = start,
+                Dist = 0,
+            };
+
+            open.Push(node);
+
+            while (open.Count != 0)
+            {
+                if ((DateTime.Now - startTime).TotalMilliseconds > 2 * Global.TICK_LENGTH)
+                    return Global.BadMapPos; // tried too long
+
+                node = open.Pop();
+
+                if (searchFunc(map, node.Pos))
+                    return node.Pos;
+
+                /* Put current node on closed list. */
+                visited.Insert(0, node.Pos);
+
+                if (node.Dist >= maxDist)
+                    continue;
+
+                var cycle = DirectionCycleCW.CreateDefault();
+
+                foreach (Direction d in cycle)
+                {
+                    MapPos newPos = map.Move(node.Pos, d);
+                    uint dist = node.Dist + 1;
+
+                    // Check if neighbour was already visited.
+                    if (visited.Contains(newPos))
+                        continue;
+
+                    // See if neighbour is already in open list.
+                    bool inOpen = false;
+
+                    foreach (var n in open)
+                    {
+                        if (n.Pos == newPos)
+                        {
+                            inOpen = true;
+
+                            if (n.Dist > dist)
+                            {
+                                n.Dist = dist;
+                                n.Parent = node;
+
+                                // Move element to the back and heapify
+                                open.Push(open.Pop());
+                            }
+
+                            break;
+                        }
+                    }
+
+                    // If not found in the open set, create a new node.
+                    if (!inOpen)
+                    {
+                        SimpleSearchNode newNode = new SimpleSearchNode();
+
+                        newNode.Pos = newPos;
+                        newNode.Dist = dist;
+                        newNode.Parent = node;
+                        newNode.Cost = (costFunction == null) ? 0u : costFunction(map, newPos);
+
+                        open.Push(newNode);
+                    }
+                }
+            }
+
+            return Global.BadMapPos;
+        }
+
         /// <summary>
         /// Find the shortest path from start to end (using A*) considering that
         /// the walking time for a serf walking in any direction of the path
@@ -252,7 +350,7 @@ namespace Freeserf
                         {
                             inOpen = true;
 
-                            if (n.GScore >= node.GScore + cost)
+                            if (n.GScore > node.GScore + cost)
                             {
                                 n.GScore = node.GScore + cost;
                                 n.FScore = n.GScore + HeuristicCost(map, newPos, start);
@@ -374,7 +472,7 @@ namespace Freeserf
                         {
                             inOpen = true;
 
-                            if (n.GScore >= node.GScore + cost)
+                            if (n.GScore > node.GScore + cost)
                             {
                                 n.GScore = node.GScore + cost;
                                 n.FScore = n.GScore + HeuristicCost(map, newFlag, start);
@@ -416,20 +514,8 @@ namespace Freeserf
         static uint HeuristicCost(Map map, MapPos start, MapPos end)
         {
             /* Calculate distance to target. */
-            int distColumn = map.DistX(start, end);
-            int distRow = map.DistY(start, end);
-
             int hDiff = Math.Abs((int)map.GetHeight(start) - (int)map.GetHeight(end));
-            int dist = 0;
-
-            if ((distColumn > 0 && distRow > 0) || (distColumn < 0 && distRow < 0))
-            {
-                dist = Math.Max(Math.Abs(distColumn), Math.Abs(distRow));
-            }
-            else
-            {
-                dist = Math.Abs(distColumn) + Math.Abs(distRow);
-            }
+            int dist = map.Dist(start, end);
 
             return (dist > 0) ? (uint)dist * walkCost[hDiff / dist] : 0u;
         }
@@ -446,21 +532,7 @@ namespace Freeserf
         static uint HeuristicCost(Map map, Flag start, Flag end)
         {
             /* Calculate distance to target. */
-            int distColumn = map.DistX(start.Position, end.Position);
-            int distRow = map.DistY(start.Position, end.Position);
-
-            int dist = 0;
-
-            if ((distColumn > 0 && distRow > 0) || (distColumn < 0 && distRow < 0))
-            {
-                dist = Math.Max(Math.Abs(distColumn), Math.Abs(distRow));
-            }
-            else
-            {
-                dist = Math.Abs(distColumn) + Math.Abs(distRow);
-            }
-
-            return (uint)dist;
+            return (uint)map.Dist(start.Position, end.Position);
         }
     }
 }

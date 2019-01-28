@@ -22,6 +22,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Freeserf.AIStates
 {
@@ -33,32 +35,23 @@ namespace Freeserf.AIStates
     //       Especially the toolmaker in the beginning is crucial.
     class AIStateBuildBuilding : AIState
     {
-        bool built = false;
         Building.Type type = Building.Type.None;
         uint builtPosition = Global.BadMapPos;
         int tries = 0;
+        AI ai = null;
         Game game = null;
+        Player player = null;
+        PlayerInfo playerInfo = null;
+        bool searching = false;
+        CancellationTokenSource cancellationSource = new CancellationTokenSource(); // TODO: use it to cancel when game closes, etc
 
         public AIStateBuildBuilding(Building.Type buildingType)
         {
             type = buildingType;
         }
 
-        public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
+        void Search()
         {
-            this.game = game;
-
-            if (built)
-            {
-                if (!Killed)
-                {
-                    NextState = ai.CreateRandomDelayedState(AI.State.LinkBuilding, 0, (5 - (int)playerInfo.Intelligence / 9) * 1000, builtPosition);
-                    Kill(ai);
-                }
-
-                return;
-            }
-
             uint pos;
 
             // find a nice spot
@@ -74,14 +67,59 @@ namespace Freeserf.AIStates
 
             if (pos != Global.BadMapPos && game.CanBuildBuilding(pos, type, player))
             {
-                built = game.BuildBuilding(pos, type, player);
-
-                if (built)
-                    builtPosition = pos;
+                builtPosition = pos;
             }
 
-            if (!built && ++tries > 10 + playerInfo.Intelligence / 5)
+            searching = false;
+
+            if (builtPosition == Global.BadMapPos && ++tries > 10 + playerInfo.Intelligence / 5)
                 Kill(ai); // not able to build the building
+        }
+
+        void Search(object param)
+        {
+            var state = param as AIStateBuildBuilding;
+
+            state.Search();
+        }
+
+        public override void Kill(AI ai)
+        {
+            searching = false;
+
+            base.Kill(ai);            
+        }
+
+        public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
+        {
+            this.ai = ai;
+            this.game = game;
+            this.player = player;
+            this.playerInfo = playerInfo;
+
+            if (builtPosition != Global.BadMapPos)
+            {
+                if (game.BuildBuilding(builtPosition, type, player))
+                {
+                    NextState = ai.CreateRandomDelayedState(AI.State.LinkBuilding, 0, (5 - (int)playerInfo.Intelligence / 9) * 1000, builtPosition);
+
+                    // If this was a toolmaker and we are in hard times we set planks for toolmaker to zero for now.
+                    // If a tool is needed, this setting is changed by the craft tool AI state.
+                    if (type == Building.Type.ToolMaker && ai.HardTimes())
+                        player.SetPlanksToolmaker(0u);
+                }
+
+                Kill(ai);
+
+                return;
+            }
+
+            if (searching)
+                return;
+
+            searching = true;
+
+            Task.Factory.StartNew(Search, this, cancellationSource.Token, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         bool IsEssentialBuilding(Game game, Player player)
@@ -178,7 +216,7 @@ namespace Freeserf.AIStates
                         spot = game.Map.FindFirstInTerritory(player.Index, FindFishNearBorder);
 
                         if (spot != null)
-                            return FindSpotNear(game, player, (uint)spot, 5);
+                            return FindSpotNear(game, player, (uint)spot, 4);
 
                         return Global.BadMapPos;
                     }
@@ -200,24 +238,81 @@ namespace Freeserf.AIStates
                         if (ai.HardTimes() && type == Building.Type.Hut)
                         {
                             Func<Map, uint, bool> targetFunc = null;
+                            int searchRange = 0;
 
                             if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() ||
                                 game.Map.FindFirstInTerritory(player.Index, FindFishInTerritory) != null)
-                                targetFunc = FindMountain;
+                            {
+                                targetFunc = FindMountainOutsideTerritory;
+                                searchRange = 32;
+                            }
                             else
+                            {
                                 targetFunc = FindWater;
+                                searchRange = 50; // this may take a while but we really need that fish!
+                            }
+
+                            uint bestSpot = Global.BadMapPos;
+                            int bestDist = int.MaxValue;
+
+                            Func<Map, uint, uint> costFunction = (Map map, uint pos) =>
+                            {
+                                uint baseCost = (uint)map.FindInArea(pos, 6, FindMilitary, 1).Count * 4;
+
+                                if (!game.Map.HasOwner(pos))
+                                    return baseCost;
+
+                                if (game.Map.GetOwner(pos) == player.Index)
+                                    return baseCost + 2u;
+
+                                return baseCost + 10u;
+                            };
+
+                            Func<Map, uint, bool> checkSpotFunc = (Map map, uint pos) =>
+                            {
+                                return game.CanBuildBuilding(pos, type, player);
+                            };
+
+                            Func<Map, uint, int> rateSpotFunc = (Map map, uint pos) =>
+                            {
+                                var militaryBuildings = map.FindInArea(pos, 8, FindMilitary, 1);
+                                int minDist = int.MaxValue;
+
+                                foreach (var building in militaryBuildings)
+                                {
+                                    int dist = map.Dist(pos, (building as Building).Position);
+
+                                    if (dist < minDist)
+                                        minDist = dist;
+                                }
+
+                                return int.MaxValue - minDist;
+                            };
 
                             foreach (var building in game.GetPlayerBuildings(player).Where(b => b.IsMilitary()))
                             {
-                                var spot = game.Map.FindFirstSpotTowards(building.Position, targetFunc);
+                                var target = Pathfinder.FindNearestSpot(game.Map, building.Position, targetFunc, costFunction, 30);
 
-                                if (spot != Global.BadMapPos)
+                                if (target != Global.BadMapPos)
                                 {
-                                    spot = game.Map.FindSpotNear(spot, 3, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 1);
+                                    var spot = building.Position;
 
-                                    if (spot != Global.BadMapPos && game.CanBuildBuilding(spot, type, player))
-                                        return spot;
+                                    for (int i = 0; i < 8; ++i)
+                                        spot = game.Map.MoveTowards(spot, target);
+
+                                    spot = game.Map.FindSpotNear(spot, 3, checkSpotFunc, rateSpotFunc);
+
+                                    if (spot != Global.BadMapPos && game.Map.Dist(building.Position, spot) < bestDist)
+                                    {
+                                        bestSpot = spot;
+                                        bestDist = game.Map.Dist(building.Position, target);
+                                    }
                                 }
+                            }
+
+                            if (bestSpot != Global.BadMapPos)
+                            {
+                                return bestSpot;
                             }
 
                             return FindSpotNearBorder(game, player, intelligence, 2);
@@ -621,7 +716,16 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(pos) >= Map.Object.SmallBuilding && map.GetObject(pos) <= Map.Object.Castle,
+                Success = map.HasBuilding(pos) && map.GetOwner(pos) == player.Index,
+                Data = game.GetBuildingAtPos(pos)
+            };
+        }
+
+        Map.FindData FindMilitary(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.HasBuilding(pos) && game.GetBuildingAtPos(pos).IsMilitary() && map.GetOwner(pos) == player.Index,
                 Data = game.GetBuildingAtPos(pos)
             };
         }
@@ -639,7 +743,7 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.IsInWater(pos),
+                Success = map.IsInWater(pos) && map.GetResourceFish(pos) > 0u,
                 Data = pos
             };
         }
@@ -648,7 +752,7 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.FindInArea(pos, 7, FindFish, 1).Any(),
+                Success = map.FindInArea(pos, 4, FindFish, 1).Any(),
                 Data = pos
             };
         }
@@ -660,6 +764,11 @@ namespace Freeserf.AIStates
                 Success = FindMountain(map, pos) && map.GetResourceAmount(pos) > 0u,
                 Data = new KeyValuePair<Map.Minerals, uint>(map.GetResourceType(pos), map.GetResourceAmount(pos))
             };
+        }
+
+        static bool FindMountainOutsideTerritory(Map map, uint pos)
+        {
+            return FindMountain(map, pos) && !map.HasOwner(pos);
         }
 
         static bool FindMountain(Map map, uint pos)
@@ -674,11 +783,11 @@ namespace Freeserf.AIStates
                    (map.TypeDown(pos) >= Map.Terrain.Water0 && map.TypeDown(pos) <= Map.Terrain.Water3);
         }
 
-        static Map.FindData FindEmptySpot(Map map, uint pos)
+        Map.FindData FindEmptySpot(Map map, uint pos)
         {
             return new Map.FindData()
             {
-                Success = Map.MapSpaceFromObject[(int)map.GetObject(pos)] == Map.Space.Open,
+                Success = Map.MapSpaceFromObject[(int)map.GetObject(pos)] == Map.Space.Open && map.GetOwner(pos) == player.Index,
                 Data = pos
             };
         }

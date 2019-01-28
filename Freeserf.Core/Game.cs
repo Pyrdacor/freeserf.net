@@ -494,8 +494,7 @@ namespace Freeserf
             {
                 MapPos p = map.PosAddSpirally(pos, i);
 
-                if (map.GetObject(p) >= Map.Object.SmallBuilding &&
-                    map.GetObject(p) <= Map.Object.Castle)
+                if (map.HasBuilding(p))
                 {
                     Building building = buildings[map.GetObjectIndex(p)];
 
@@ -1844,6 +1843,38 @@ namespace Freeserf
             }
 
             return amount;
+        }
+
+        public int GetTotalResourceCount(Player player, Resource.Type type)
+        {
+            int count = 0;
+
+            foreach (var inventory in GetPlayerInventories(player))
+            {
+                count += (int)inventory.GetCountOf(type);
+            }
+
+            foreach (var flag in GetPlayerFlags(player))
+            {
+                if (flag.HasResources())
+                {
+                    for (int i = 0; i < Flag.FLAG_MAX_RES_COUNT; ++i)
+                    {
+                        if (flag.GetResourceAtSlot(i) == type)
+                            ++count;
+                        else if (flag.GetResourceAtSlot(i) == Resource.Type.None)
+                            break;
+                    }
+                }
+            }
+
+            foreach (var transporter in GetPlayerSerfs(player).Where(s => s.GetSerfType() == Serf.Type.Transporter))
+            {
+                if (transporter.GetTransportedResource() == type)
+                    ++count;
+            }
+
+            return count;
         }
 
         public bool HasAnyOfResource(Player player, Resource.Type type)

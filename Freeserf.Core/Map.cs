@@ -74,6 +74,7 @@ namespace Freeserf
     using MapPos = UInt32;
     using Dirs = Stack<Direction>;
     using ChangeHandlers = List<Map.Handler>;
+    using System.Collections;
 
     public class Road
     {
@@ -851,6 +852,21 @@ namespace Freeserf
             return Geometry.DistY(pos1, pos2);
         }
 
+        public int Dist(MapPos pos1, MapPos pos2)
+        {
+            int distColumn = DistX(pos1, pos2);
+            int distRow = DistY(pos1, pos2);
+
+            if ((distColumn > 0 && distRow > 0) || (distColumn < 0 && distRow < 0))
+            {
+                return Math.Max(Math.Abs(distColumn), Math.Abs(distRow));
+            }
+            else
+            {
+                return Math.Abs(distColumn) + Math.Abs(distRow);
+            }
+        }
+
         // Get random position
         public MapPos GetRandomCoord(Random random)
         {
@@ -1052,35 +1068,43 @@ namespace Freeserf
             int distX = DistX(origin, destination);
             int distY = DistY(origin, destination);
 
-            if (distX > 0) // origin right of destination
+            if (distX < 0) // origin right of destination
             {
-                if (distY <= 0)
+                if (distY > 0)
                 {
-                    return MoveLeft(origin);
+                    return MoveDown(MoveLeft(origin));
                 }
-                else if (distY > 0)
+                else if (distY < 0)
                 {
                     return MoveUpLeft(origin);
                 }
+                else
+                {
+                    return MoveLeft(origin);
+                }
             }
-            else if (distX < 0) // origin left of destination
+            else if (distX > 0) // origin left of destination
             {
-                if (distY < 0)
+                if (distY > 0)
                 {
                     return MoveDownRight(origin);
                 }
-                else if (distY >= 0)
+                else if (distY < 0)
+                {
+                    return MoveUp(MoveRight(origin));
+                }
+                else
                 {
                     return MoveRight(origin);
                 }
             }
             else
             {
-                if (distY < 0)
+                if (distY > 0)
                 {
                     return MoveDown(origin);
                 }
-                else if (distY > 0)
+                else if (distY < 0)
                 {
                     return MoveUp(origin);
                 }
@@ -1124,6 +1148,78 @@ namespace Freeserf
             return Global.BadMapPos;
         }
 
+        public MapPos FindNearest(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, int minDist)
+        {
+            if (searchRange <= 0)
+                return Global.BadMapPos;
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDist * minDist + minDist) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePos, (uint)i);
+
+                // as the spiral goes from inner to outer, the first found position is the nearest one
+                if (searchFunc(this, pos))
+                    return pos;
+            }
+
+            return Global.BadMapPos;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="basePos"></param>
+        /// <param name="searchRange"></param>
+        /// <param name="searchFunc"></param>
+        /// <param name="rateFunc">The lower the value, the better the position. Zero is the best value.</param>
+        /// <param name="minDist"></param>
+        /// <returns></returns>
+        public MapPos FindBest(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, int> rateFunc, int minDist)
+        {
+            if (searchRange <= 0)
+                return Global.BadMapPos;
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDist * minDist + minDist) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+
+            MapPos bestPos = Global.BadMapPos;
+            int bestValue = int.MaxValue;
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePos, (uint)i);
+
+                if (searchFunc(this, pos))
+                {
+                    int rating = rateFunc(this, pos);
+
+                    if (rating == 0)
+                        return pos;
+
+                    if (rating < bestValue)
+                    {
+                        bestPos = pos;
+                        bestValue = rating;
+                    }
+                }
+            }
+
+            return bestPos;
+        }
+
         /// <summary>
         /// Searches the spiral around the base position.
         /// 
@@ -1136,7 +1232,7 @@ namespace Freeserf
         /// <returns></returns>
         public List<object> FindInArea(MapPos basePos, int searchRange, Func<Map, MapPos, FindData> searchFunc, int minDist = 0)
         {
-            if (searchRange < 0)
+            if (searchRange <= 0)
                 return new List<object>();
 
             List<object> findings = new List<object>();
@@ -1162,9 +1258,55 @@ namespace Freeserf
             return findings;
         }
 
+        public MapPos FindSpotNear(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, int> rateFunc, int minDist = 0)
+        {
+            if (searchRange <= 0)
+                return Global.BadMapPos;
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDist * minDist + minDist) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+
+            List<MapPos> spots = new List<MapPos>();
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePos, (uint)i);
+
+                if (searchFunc(this, pos))
+                    spots.Add(pos);
+            }
+
+            if (spots.Count == 0)
+                return Global.BadMapPos;
+
+            MapPos bestSpot = Global.BadMapPos;
+            int bestRating = int.MaxValue;
+
+            foreach (var spot in spots)
+            {
+                int rating = rateFunc(this, spot);
+
+                if (rating < bestRating)
+                {
+                    bestSpot = spot;
+                    bestRating = rating;
+                }
+            }
+
+            if (bestSpot == Global.BadMapPos) // all spots have worst rating -> return the first one
+                return spots[0];
+
+            return bestSpot;
+        }
+
         public MapPos FindSpotNear(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Random random, int minDist = 0)
         {
-            if (searchRange < 0)
+            if (searchRange <= 0)
                 return Global.BadMapPos;
 
             if (searchRange > 9)

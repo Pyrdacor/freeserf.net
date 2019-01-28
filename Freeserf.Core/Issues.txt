@@ -6,6 +6,7 @@
 - Since recently (I guess since the fix to map object positioning in the middle of january of 2019) there are map jumps again at some scroll positions.
   Also the minimap click re-location of the map is not working correctly anymore in all cases. And I saw missing render map objects at some scroll positions.
   And sometimes the "show possible builds" only is displayed for half of the map. Also the map cursor has the same issue. Building seem to work though in some of these places.
+- Borders and pathes are not always fully rendered at the top of the screen.
 
 
 Serf rendering:
@@ -37,6 +38,8 @@ AI:
 - Road building may be bad in later game. There might be large road systems that are fully independent of others so a serf has to walk for ages to get there.
 - After hard times end the AI builds huts without having knights. Should not happen.
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
+- Sometimes the AI does not link a building even if it is possible.
+- The AI should not place buildings in a way that the flag is not linkable.
 
 
 Logic:
@@ -52,6 +55,8 @@ Logic:
 - Once a freewalking lumberjack blockes a road and stand there waiting.
 - Sometimes there is a deadlock of walking serfs. Saw a digger and a transporter that were waiting at each other but could just switch positions.
   - In debug there were two diggers (one with state WaitIdleOnPath and one with Walking). A digger should never have WaitIdleOnPath I think as this is for transporters only!
+- Sometimes construction materials are not moved out of the castle. The construction site gets no resources. After demolishing/rebuilding it works again.
+  This also happens if the building was already built a bit. And it seems to happen quite often lately.
 
 
 Notification Box:
@@ -76,6 +81,7 @@ Missing stuff:
 	- multiplayer should support coop mode (one player is played by two or more clients)
 - button to merge roads to a flag
 - mine elevator/miner animation
+- ground analysis for local spectators?
 
 
 Nice to have:

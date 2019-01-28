@@ -386,9 +386,9 @@ namespace Freeserf
             return (build & 4) != 0;
         }
 
-        public uint GetSerfCount(int type)
+        public uint GetSerfCount(Serf.Type type)
         {
-            return serfCount[type];
+            return serfCount[(int)type];
         }
 
         public int GetFlagPriority(Resource.Type resource)
@@ -1473,15 +1473,9 @@ namespace Freeserf
 
                             Game.FlagResetTransport(flag);
 
-                            // TODO: The following line should avoid that materials are
-                            //       never re-sent after emergency program ended.
-                            //       But unfortunately it causes some exceptions.
-                            //       Have a look at this later!
-                            // TODO: The exceptions also occur without this.
-                            //       Maybe it is because of FlagResetTransport?
-                            //       But it also occurs with much of resources
-                            //       so even without active emergency program.
-                            //building.RemoveRequestedMaterials();
+                            // Set priority for construction materials to 0
+                            building.SetPriorityInStock(0, 0u);
+                            building.SetPriorityInStock(1, 0u);
                         }
                     }
                 }

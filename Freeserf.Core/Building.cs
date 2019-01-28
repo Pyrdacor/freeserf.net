@@ -831,12 +831,6 @@ namespace Freeserf
             stock[1].Requested = 0;
         }
 
-        public void RemoveRequestedMaterials()
-        {
-            stock[0].Requested = 0;
-            stock[1].Requested = 0;
-        }
-
         public int GetMaxPriorityForResource(Resource.Type resource, int minimum = 0)
         {
             int maxPrio = -1;

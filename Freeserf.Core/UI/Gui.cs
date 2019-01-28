@@ -222,9 +222,11 @@ namespace Freeserf.UI
             {
                 InternalDraw();
 
-                foreach (var child in children)
+                for (int i = children.Count - 1; i >= 0; --i)
                 {
-                    child.Draw();
+                    // The collection might change while drawing (e.g. through key events).
+                    // In worst case we draw a child twice.
+                    children[i].Draw();
                 }
 
                 redraw = false;

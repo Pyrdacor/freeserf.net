@@ -2031,7 +2031,7 @@ namespace Freeserf.UI
             {
                 if (i != (int)Serf.Type.TransporterInventory)
                 {
-                    total += (int)player.GetSerfCount(i);
+                    total += (int)player.GetSerfCount((Serf.Type)i);
                 }
             }
 

@@ -176,7 +176,7 @@ namespace Freeserf.AIStates
                 for (int i = 0; i < 9; ++i)
                     player.SetToolPriority(i, ushort.MinValue);
 
-                if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() && !(game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer) || game.HasAnyOfResource(player, Resource.Type.Scythe)))
+                if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() && !(player.GetSerfCount(Serf.Type.Farmer) != 0 || game.HasAnyOfResource(player, Resource.Type.Scythe)))
                 {
                     // set the priority for the scythe to 100%
                     player.SetToolPriority(Resource.Type.Scythe - Resource.Type.Shovel, ushort.MaxValue);

@@ -52,9 +52,9 @@ namespace Freeserf.AIStates
 
         static readonly Building.Type[] OrderedBuildingTypes = new Building.Type[]
         {
+            Building.Type.Sawmill,
             Building.Type.Lumberjack,
             Building.Type.Stonecutter,
-            Building.Type.Sawmill,
             Building.Type.Forester,
             Building.Type.Hut,
             Building.Type.Tower,
@@ -139,16 +139,29 @@ namespace Freeserf.AIStates
                         }
                         else
                         {
-                            // TODO: In some cases only one tool is missing so we should
-                            //       not craft the other one. Or the tools are in different
-                            //       inventories. We have to optimize this later.
+                            // TODO: The tools may be in different inventories. We have to optimize this later.
+                            
+                            if (game.GetTotalResourceCount(player, neededForBuilding.ResType1) != 0)
+                            {
+                                // We only need the second one
+                                GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType2);
+                                return;
+                            }
+                            else if (game.GetTotalResourceCount(player, neededForBuilding.ResType2) != 0)
+                            {
+                                // We only need the first one
+                                GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType1);
+                                return;
+                            }
 
+                            // We need both
                             Kill(ai);
                             ai.PushStates
                             (
                                 ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType1),
                                 ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType2)
                             );
+
                             return;
                         }
                     }
@@ -240,7 +253,7 @@ namespace Freeserf.AIStates
                         if (count == 0 && !game.GetPlayerBuildings(player, Building.Type.Fisher).Any())
                         {
                             if (game.HasAnyOfResource(player, Resource.Type.Scythe) ||
-                                game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer))
+                                player.GetSerfCount(Serf.Type.Farmer) != 0)
                                 return CheckResult.Needed;
                             else if (game.Map.FindInTerritory(player.Index, FindFishNear).Count == 0) // no fish
                             {
@@ -251,9 +264,6 @@ namespace Freeserf.AIStates
                                 // make a piece of steel.
                                 if (game.GetPossibleFreeKnightCount(player) == 0)
                                     return CheckResult.NeededButNoSpecialistOrRes;
-
-                                // TODO: Another chance would be to expand the territority until we find
-                                // some fish and build a fisher.
                             }
                         }
                         break;
@@ -275,6 +285,23 @@ namespace Freeserf.AIStates
                     case Building.Type.Forester:
                         if (count == 0)
                             return CheckResult.Needed;
+                        break;
+                        // If we have at least one coal and iron, we can build a steelsmelter and a toolmaker to produce a scythe or pincer.
+                        // This can happen with a bit more than minimum supplies or if the mines produce something without a food source.
+                        // We will craft a scythe if we can't build a fisher. We will craft a pincer and/or hammer if we have no more knights.
+                    case Building.Type.ToolMaker:
+                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.SteelSmelter) != 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.SteelSmelter:
+                        if (count == 0 && game.GetResourceAmountInInventories(player, Resource.Type.Coal) != 0 &&
+                            game.GetResourceAmountInInventories(player, Resource.Type.IronOre) != 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.WeaponSmith:
+                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.ToolMaker) != 0 &&
+                            game.GetPossibleFreeKnightCount(player) == 0)
+                            return NeedBuilding(ai, game, player, type);
                         break;
                 }
 
@@ -490,7 +517,7 @@ namespace Freeserf.AIStates
             int numberOfBakers = game.GetPlayerBuildings(player, Building.Type.Baker).Count();
             int numberOfPigFarms = game.GetPlayerBuildings(player, Building.Type.PigFarm).Count();
             int numberOfButchers = game.GetPlayerBuildings(player, Building.Type.Butcher).Count();
-            bool hasPotentialFarmer = game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer) ||
+            bool hasPotentialFarmer = player.GetSerfCount(Serf.Type.Farmer) != 0 ||
                 game.GetResourceAmountInInventories(player, Resource.Type.Scythe) != 0;
 
             // If there are no mines and some game time has passed

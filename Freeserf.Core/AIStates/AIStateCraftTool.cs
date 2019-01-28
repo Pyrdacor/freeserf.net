@@ -29,10 +29,58 @@ namespace Freeserf.AIStates
         Player player = null;
         int triesBuildToolmaker = 0;
         int tries = 0;
+        int previousCount = -1;
 
-        public AIStateCraftTool(Resource.Type tool)
+        public AIStateCraftTool(Game game, Player player, Resource.Type tool)
         {
             this.tool = tool;
+
+            previousCount = GetCurrentToolCount(game, player);
+        }
+
+        // This includes tool count and amount of serfs that use the tool.
+        int GetCurrentToolCount(Game game, Player player)
+        {
+            int count = game.GetTotalResourceCount(player, tool);
+
+            switch (tool)
+            {
+                case Resource.Type.Axe:
+                    count += (int)player.GetSerfCount(Serf.Type.Lumberjack);
+                    break;
+                case Resource.Type.Cleaver:
+                    count += (int)player.GetSerfCount(Serf.Type.Butcher);
+                    break;
+                case Resource.Type.Hammer:
+                    count += (int)player.GetSerfCount(Serf.Type.BoatBuilder);
+                    count += (int)player.GetSerfCount(Serf.Type.Builder);
+                    count += (int)player.GetSerfCount(Serf.Type.Geologist);
+                    count += (int)player.GetSerfCount(Serf.Type.Toolmaker);
+                    count += (int)player.GetSerfCount(Serf.Type.WeaponSmith);
+                    break;
+                case Resource.Type.Pick:
+                    count += (int)player.GetSerfCount(Serf.Type.Miner);
+                    count += (int)player.GetSerfCount(Serf.Type.Stonecutter);
+                    break;
+                case Resource.Type.Pincer:
+                    count += (int)player.GetSerfCount(Serf.Type.WeaponSmith);
+                    break;
+                case Resource.Type.Rod:
+                    count += (int)player.GetSerfCount(Serf.Type.Fisher);
+                    break;
+                case Resource.Type.Saw:
+                    count += (int)player.GetSerfCount(Serf.Type.Sawmiller);
+                    count += (int)player.GetSerfCount(Serf.Type.Toolmaker);
+                    break;
+                case Resource.Type.Scythe:
+                    count += (int)player.GetSerfCount(Serf.Type.Farmer);
+                    break;
+                case Resource.Type.Shovel:
+                    count += (int)player.GetSerfCount(Serf.Type.Digger);
+                    break;
+            }
+
+            return count;
         }
 
         // TODO: If we don't have steel or planks and not are able to get some, this will run forever
@@ -56,22 +104,11 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            // Check all toolmaker flags for the tool
-            foreach (var toolmaker in toolmakers)
+            // tool was crafted?
+            if (GetCurrentToolCount(game, player) > previousCount)
             {
-                var flag = game.GetFlagAtPos(game.Map.MoveDownRight(toolmaker.Position));
-
-                if (flag.HasResources())
-                {
-                    for (int i = 0; i < 8; ++i)
-                    {
-                        if (flag.GetResourceAtSlot(i) == tool) // tool was crafted
-                        {
-                            Kill(ai);
-                            return;
-                        }
-                    }
-                }
+                Kill(ai);
+                return;
             }
 
             // give planks and steel to toolmaker

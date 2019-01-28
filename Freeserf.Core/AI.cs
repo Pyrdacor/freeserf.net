@@ -590,9 +590,7 @@ namespace Freeserf
                 if (flag.Position == otherFlag.Position)
                     continue; // not link to self
 
-                int distX = game.Map.DistX(flag.Position, otherFlag.Position);
-                int distY = game.Map.DistY(flag.Position, otherFlag.Position);
-                int dist = Misc.Round(Math.Sqrt(distX * distX + distY * distY));
+                int dist = game.Map.Dist(flag.Position, otherFlag.Position);
 
                 if (dist > maxLength) // too far away
                     continue;
@@ -719,7 +717,7 @@ namespace Freeserf
                 case State.CheckNeededBuilding:
                     return new AIStates.AIStateCheckNeededBuilding();
                 case State.CraftTool:
-                    return new AIStates.AIStateCraftTool((Resource.Type)param);
+                    return new AIStates.AIStateCraftTool(player.Game, player, (Resource.Type)param);
                 case State.CraftWeapons:
                     return new AIStates.AIStateCraftWeapons();
                 case State.FindOre:
@@ -849,7 +847,7 @@ namespace Freeserf
         {
             var game = player.Game;
 
-            int numMiners = game.GetPlayerSerfs(player).Count(s => s.GetSerfType() == Serf.Type.Miner);
+            int numMiners = (int)player.GetSerfCount(Serf.Type.Miner);
             int numPicks = game.GetResourceAmountInInventories(player, Resource.Type.Pick);
 
             if (numMiners + numPicks > 2)
@@ -861,7 +859,7 @@ namespace Freeserf
             if (hasCoalMines && hasCoalMines && numMiners == 2)
             {
                 bool hasFoodSource = game.GetPlayerBuildings(player, Building.Type.Fisher).Any() ||
-                    game.GetPlayerSerfs(player).Any(s => s.GetSerfType() == Serf.Type.Farmer);
+                    player.GetSerfCount(Serf.Type.Farmer) != 0;
 
                 if (hasFoodSource)
                     return false;
