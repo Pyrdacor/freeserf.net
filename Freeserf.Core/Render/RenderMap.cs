@@ -128,6 +128,7 @@ namespace Freeserf.Render
         readonly Dictionary<uint, Position> maskOffsets = new Dictionary<MapPos, Position>(81 + 81);
         readonly uint numColumns = 0;
         readonly uint numRows = 0;
+        readonly int columnRowFactor = 2;
         Map map = null;
         ITextureAtlas textureAtlasTiles = null;
         ITextureAtlas textureAtlasWaves = null;
@@ -146,6 +147,8 @@ namespace Freeserf.Render
             ITextureAtlas textureAtlasTiles, ITextureAtlas textureAtlasWaves,
             DataSource dataSource)
         {
+            columnRowFactor = (map.Size % 2 == 0) ? 4 : 2;
+
             ScrollX = 0;
             ScrollY = 0;
             this.numColumns = numColumns;
@@ -340,7 +343,7 @@ namespace Freeserf.Render
                 column += (int)map.Columns;
 
             if (row < 0)
-                row += 2 * (int)map.Rows;
+                row += columnRowFactor * (int)map.Rows;
 
             ScrollTo((uint)column, (uint)row);
         }
@@ -371,12 +374,13 @@ namespace Freeserf.Render
             int row = (int)map.PosRow(pos) - (int)numRows / 2;
             int centerRow = (int)map.PosRow(pos);
 
-            if (centerRow > row)
+            if (centerRow >= row)
                 column -= (centerRow - row) / 2;
             else
             {
-                column += centerRow / 2;
-                column -= row / 2;
+                column -= (centerRow + ((int)map.Rows - row)) / 2;
+                //column -= (columnRowFactor * (int)map.Rows - centerRow) / 2;
+                //column -= row / 2;
             }
 
             if (column < 0)
@@ -385,7 +389,7 @@ namespace Freeserf.Render
                 column -= (int)map.Columns;
 
             if (row < 0)
-                row += 2 * (int)map.Rows;
+                row += (int)map.Rows;
 
             ScrollToMapPos(map.Pos((uint)column, (uint)row));
         }
@@ -742,7 +746,7 @@ namespace Freeserf.Render
 
             column &= map.ColumnMask;
 
-            if (row >= 2 * map.Rows)
+            if (row >= columnRowFactor * map.Rows)
                 row &= map.RowMask;
 
             return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
@@ -778,7 +782,7 @@ namespace Freeserf.Render
             ScrollX &= map.ColumnMask;
 
             // cap at double rows as half rows have influence on the column
-            if (ScrollY >= 2 * map.Rows)
+            if (ScrollY >= columnRowFactor * map.Rows)
                 ScrollY &= map.RowMask;
 
             RenderArea = new Rect((int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,

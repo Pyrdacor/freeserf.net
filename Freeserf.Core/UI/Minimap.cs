@@ -29,7 +29,8 @@ namespace Freeserf.UI
     using MapPos = UInt32;
 
     // Note: The minimap is drawn as 128x128.
-    // TODO: Handle drag and zoom
+    // TODO: Dragging is very slow (especially when zoomed)
+    // TODO: Clicks in 2:1 map sizes are not right
     internal class Minimap : GuiObject
     {
         const int MaxScale = 8;
@@ -260,12 +261,13 @@ namespace Freeserf.UI
             if (visibleHeight * scale < 128)
                 visibleHeight = 128 / scale;
 
-            int relX = x - visibleHeight / 2;
+            int relX = x - visibleWidth / 2;
             int relY = y - visibleHeight / 2;
 
             mapPosition.X += relX * RenderMap.TILE_WIDTH;
             mapPosition.Y += relY * RenderMap.TILE_HEIGHT;
 
+            // TODO: y regarding the grid seems to be 3 pixels to high (with scale 1). Maybe the grid is out of place as other positions work.
             var pos = map.RenderMap.GetMapPosFromMapCoordinates(mapPosition.X, mapPosition.Y);
 
             interf.GotoMapPos(pos);
