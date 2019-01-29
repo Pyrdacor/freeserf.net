@@ -52,7 +52,12 @@ namespace Freeserf.AIStates
 
             // if we cannot link the building, we will demolish it
             if (!ai.LinkFlag(game.GetFlagAtPos(flagPos)))
+            {
                 game.DemolishBuilding(buildingPos, player);
+
+                if (game.Map.Paths(flagPos) == 0)
+                    game.DemolishFlag(flagPos, player);
+            }
 
             // return to idle state and decide there what to do
             Kill(ai);
