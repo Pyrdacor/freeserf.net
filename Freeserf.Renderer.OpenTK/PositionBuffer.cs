@@ -29,6 +29,7 @@ namespace Freeserf.Renderer.OpenTK
         int index = 0;
         bool disposed = false;
         short[] buffer = null;
+        readonly object bufferLock = new object();
         int size;
         readonly IndexPool indices = new IndexPool();
         bool changedSinceLastCreation = true;
@@ -141,7 +142,7 @@ namespace Freeserf.Renderer.OpenTK
 
                         if (buffer != null)
                         {
-                            lock (buffer)
+                            lock (bufferLock)
                             {
                                 buffer = null;
                             }
@@ -171,7 +172,7 @@ namespace Freeserf.Renderer.OpenTK
             if (!changedSinceLastCreation || buffer == null)
                 return;
 
-            lock (buffer)
+            lock (bufferLock)
             {
                 GL.BufferData(BufferTarget.ArrayBuffer, Size * sizeof(short),
                     buffer, usageHint);
@@ -190,7 +191,7 @@ namespace Freeserf.Renderer.OpenTK
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, index);
 
-            lock (buffer)
+            lock (bufferLock)
             {
                 GL.BufferData(BufferTarget.ArrayBuffer, Size * sizeof(short),
                     buffer, usageHint);

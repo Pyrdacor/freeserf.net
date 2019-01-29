@@ -905,6 +905,7 @@ namespace Freeserf
                     {
                         if (stock[i].Requested == 0)
                         {
+                            // TODO: The exception occurs. Seen with GoldBar and Hut. There seems to be a bug.
                             if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone())
                             {
                                 // In emergency program we set the requested amount to zero.

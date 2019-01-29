@@ -72,6 +72,7 @@ namespace Freeserf
 
     public class Collection<T> : IEnumerable<T> where T : class, IGameObject
     {
+        readonly object objectsLock = new object();
         Game game;
         uint firstFreeIndex = 0;
         Dictionary<uint, T> objects = new Dictionary<uint, T>();
@@ -98,7 +99,10 @@ namespace Freeserf
                 obj = ObjectFactory<T>.Create(game, firstFreeIndex++);
             }
 
-            objects.Add(obj.Index, obj);
+            lock (objectsLock)
+            {
+                objects.Add(obj.Index, obj);
+            }
 
             return obj;
         }
@@ -107,7 +111,10 @@ namespace Freeserf
         {
             if (!objects.ContainsKey(index))
             {
-                objects.Add(index, ObjectFactory<T>.Create(game, index));
+                lock (objectsLock)
+                {
+                    objects.Add(index, ObjectFactory<T>.Create(game, index));
+                }
 
                 if (freeIndices.Contains(index))
                     freeIndices.Remove(index);
@@ -135,14 +142,20 @@ namespace Freeserf
                 else
                     freeIndices.Add(index);
 
-                objects.Remove(index);                
+                lock (objectsLock)
+                {
+                    objects.Remove(index);
+                }
             }
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            foreach (var entry in objects)
-                yield return entry.Value;
+            lock (objectsLock)
+            {
+                foreach (var entry in objects)
+                    yield return entry.Value;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

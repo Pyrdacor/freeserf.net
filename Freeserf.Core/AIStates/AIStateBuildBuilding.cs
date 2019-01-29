@@ -42,7 +42,7 @@ namespace Freeserf.AIStates
         Player player = null;
         PlayerInfo playerInfo = null;
         bool searching = false;
-        object searchingMutex = new object();
+        readonly object searchingLock = new object();
 
         public AIStateBuildBuilding(Building.Type buildingType)
         {
@@ -69,7 +69,7 @@ namespace Freeserf.AIStates
                 builtPosition = pos;
             }
 
-            lock (searchingMutex)
+            lock (searchingLock)
             {
                 searching = false;
             }
@@ -88,7 +88,7 @@ namespace Freeserf.AIStates
             }
             finally
             {
-                lock(searchingMutex)
+                lock(searchingLock)
                 {
                     searching = false;
                 }
@@ -97,7 +97,7 @@ namespace Freeserf.AIStates
 
         public override void Kill(AI ai)
         {
-            lock (searchingMutex)
+            lock (searchingLock)
             {
                 searching = false;
             }
@@ -129,7 +129,7 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            lock (searchingMutex)
+            lock (searchingLock)
             {
                 if (searching)
                     return;
