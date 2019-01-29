@@ -28,6 +28,7 @@ namespace Freeserf
         StreamReader streamReader = null;
         long readPosition = 0;
         bool logging = true;
+        bool streamDisposed = false;
 
         public DebugConsole()
         {
@@ -38,6 +39,22 @@ namespace Freeserf
 
         private void Stream_Flushed(object sender, EventArgs e)
         {
+            if (Disposing || IsDisposed || streamDisposed)
+                return;
+
+            if (InvokeRequired)
+            {
+                if (Disposing || IsDisposed || streamDisposed)
+                    return;
+
+                Invoke(new MethodInvoker(delegate
+                {
+                    Stream_Flushed(sender, e);
+                }));
+
+                return;
+            }
+
             stream.Position = readPosition;
             TextBoxConsole.AppendText(streamReader.ReadToEnd());
             readPosition = stream.Length;
@@ -60,12 +77,14 @@ namespace Freeserf
             Log.SetStream(stream);
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            base.OnClosed(e);
-
+            streamDisposed = true;
             Log.SetStream(null);
             streamReader?.Dispose();
+            streamReader = null;
+
+            base.OnClosed(e);
         }
 
         private void DebugConsole_Load(object sender, EventArgs e)
