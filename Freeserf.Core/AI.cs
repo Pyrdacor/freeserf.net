@@ -692,10 +692,10 @@ namespace Freeserf
         /// <returns></returns>
         internal bool HasRequirementsForKnights(Game game)
         {
-            if (game.GetPlayerBuildings(player, Building.Type.WeaponSmith).Count() > 0)
+            if (player.GetTotalBuildingCount(Building.Type.WeaponSmith) != 0)
                 return true;
 
-            return game.GetPossibleFreeKnightCount(player) > 0;
+            return game.GetPossibleFreeKnightCount(player) != 0;
         }
 
         internal AIState CreateState(State state, object param = null)
@@ -826,9 +826,9 @@ namespace Freeserf
             var game = player.Game;
 
             return
-                game.GetPlayerBuildings(player, Building.Type.Lumberjack).Count() > 0 &&
-                game.GetPlayerBuildings(player, Building.Type.Stonecutter).Count() > 0 &&
-                game.GetPlayerBuildings(player, Building.Type.Sawmill).Count() > 0;
+                player.GetTotalBuildingCount(Building.Type.Lumberjack) != 0 &&
+                player.GetTotalBuildingCount(Building.Type.Stonecutter) != 0 &&
+                player.GetTotalBuildingCount(Building.Type.Sawmill) != 0;
         }
 
         internal bool HasResourcesForBuilding(Building.Type type)
@@ -853,12 +853,12 @@ namespace Freeserf
             if (numMiners + numPicks > 2)
                 return false;
 
-            bool hasCoalMines = game.GetPlayerBuildings(player, Building.Type.CoalMine).Any();
-            bool hasIronMines = game.GetPlayerBuildings(player, Building.Type.IronMine).Any();
+            bool hasCoalMines = player.GetTotalBuildingCount(Building.Type.CoalMine) != 0;
+            bool hasIronMines = player.GetTotalBuildingCount(Building.Type.IronMine) != 0;
 
             if (hasCoalMines && hasCoalMines && numMiners == 2)
             {
-                bool hasFoodSource = game.GetPlayerBuildings(player, Building.Type.Fisher).Any() ||
+                bool hasFoodSource = player.GetTotalBuildingCount(Building.Type.Fisher) != 0 ||
                     player.GetSerfCount(Serf.Type.Farmer) != 0;
 
                 if (hasFoodSource)

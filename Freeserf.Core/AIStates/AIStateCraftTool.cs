@@ -89,10 +89,8 @@ namespace Freeserf.AIStates
         {
             this.player = player;
 
-            var toolmakers = game.GetPlayerBuildings(player, Building.Type.ToolMaker);
-
             // First ensure that we have a toolmaker
-            if (!toolmakers.Any())
+            if (player.GetTotalBuildingCount(Building.Type.ToolMaker) == 0)
             {
                 if (++triesBuildToolmaker > 3) // we couldn't create the toolmaker for 3 times
                 {

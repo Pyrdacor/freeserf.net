@@ -1267,6 +1267,11 @@ namespace Freeserf
             return incompleteBuildingCount[(int)type];
         }
 
+        public uint GetTotalBuildingCount(Building.Type type)
+        {
+            return GetCompletedBuildingCount(type) + GetIncompleteBuildingCount(type);
+        }
+
         public int GetToolPriority(int type)
         {
             return toolPriorities[type];
@@ -1402,16 +1407,16 @@ namespace Freeserf
 
         void UpdateEmergencyProgram()
         {
-            var lumberjacks = Game.GetPlayerBuildings(this, Building.Type.Lumberjack);
-            var stonecutters = Game.GetPlayerBuildings(this, Building.Type.Stonecutter);
-            var sawmills = Game.GetPlayerBuildings(this, Building.Type.Sawmill);
-
-            int numLumberjacks = lumberjacks.Count();
-            int numStoneCutters = stonecutters.Count();
-            int numSawMills = sawmills.Count();
+            int numLumberjacks = (int)GetTotalBuildingCount(Building.Type.Lumberjack);
+            int numStoneCutters = (int)GetTotalBuildingCount(Building.Type.Stonecutter);
+            int numSawMills = (int)GetTotalBuildingCount(Building.Type.Sawmill);
 
             if (numLumberjacks != 0 && numStoneCutters != 0 && numSawMills != 0)
             {
+                var lumberjacks = Game.GetPlayerBuildings(this, Building.Type.Lumberjack);
+                var stonecutters = Game.GetPlayerBuildings(this, Building.Type.Stonecutter);
+                var sawmills = Game.GetPlayerBuildings(this, Building.Type.Sawmill);
+
                 // check if all resources are delivered to the construction sites
                 if (lumberjacks.Any(l => l.IsDone() || l.HasAllConstructionMaterialsAtLocation()) &&
                     stonecutters.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()) &&

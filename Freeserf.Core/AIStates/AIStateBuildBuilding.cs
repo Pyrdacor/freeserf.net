@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Freeserf.AIStates
 {
@@ -44,7 +43,6 @@ namespace Freeserf.AIStates
         PlayerInfo playerInfo = null;
         bool searching = false;
         object searchingMutex = new object();
-        CancellationTokenSource cancellationSource = new CancellationTokenSource(); // TODO: use it to cancel when game closes, etc
 
         public AIStateBuildBuilding(Building.Type buildingType)
         {
@@ -139,7 +137,7 @@ namespace Freeserf.AIStates
                 searching = true;
             }
 
-            Task.Factory.StartNew(Search, this, cancellationSource.Token, TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            new Thread(new ParameterizedThreadStart(Search)).Start(this);
         }
 
         bool IsEssentialBuilding(Game game, Player player)
@@ -149,7 +147,7 @@ namespace Freeserf.AIStates
                 case Building.Type.Lumberjack:
                 case Building.Type.Stonecutter:
                 case Building.Type.Sawmill:
-                    return game.GetPlayerBuildings(player, type).Count() == 0;
+                    return player.GetTotalBuildingCount(type) == 0;
                 default:
                     return false;
             }
@@ -260,7 +258,7 @@ namespace Freeserf.AIStates
                             Func<Map, uint, bool> targetFunc = null;
                             int searchRange = 0;
 
-                            if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() ||
+                            if (player.GetTotalBuildingCount(Building.Type.Fisher) != 0 ||
                                 game.Map.FindFirstInTerritory(player.Index, FindFishInTerritory) != null)
                             {
                                 targetFunc = FindMountainOutsideTerritory;
@@ -311,7 +309,7 @@ namespace Freeserf.AIStates
 
                             foreach (var building in game.GetPlayerBuildings(player).Where(b => b.IsMilitary()))
                             {
-                                var target = Pathfinder.FindNearestSpot(game.Map, building.Position, targetFunc, costFunction, 30);
+                                var target = Pathfinder.FindNearestSpot(game.Map, building.Position, targetFunc, costFunction, searchRange);
 
                                 if (target != Global.BadMapPos)
                                 {

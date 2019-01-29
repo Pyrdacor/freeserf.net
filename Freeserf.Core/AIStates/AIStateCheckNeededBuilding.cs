@@ -50,7 +50,7 @@ namespace Freeserf.AIStates
 
         readonly Dictionary<Building.Type, long> lastBuildAttempts = new Dictionary<Building.Type, long>();
 
-        static readonly Building.Type[] OrderedBuildingTypes = new Building.Type[]
+        readonly List<Building.Type> OrderedBuildingTypes = new List<Building.Type>()
         {
             Building.Type.Sawmill,
             Building.Type.Lumberjack,
@@ -82,89 +82,112 @@ namespace Freeserf.AIStates
             CheckResult result = CheckResult.NotNeeded;
             int intelligence = (int)playerInfo.Intelligence;
             bool checkedHut = false;
+            List<Building.Type> moveToEnd = new List<Building.Type>();
 
-            foreach (var type in OrderedBuildingTypes)
+            try
             {
-                if (checkedHut && game.GetPlayerBuildings(player, Building.Type.Hut).Count() == 0)
-                    return; // don't build anything (except for essential buildings) before the first hut!
-
-                if (type == Building.Type.Hut)
-                    checkedHut = true;
-
-                if (lastBuildAttempts.ContainsKey(type) && ai.GameTime - lastBuildAttempts[type] < 120 * Global.TICKS_PER_SEC)
+                foreach (var type in OrderedBuildingTypes)
                 {
-                    continue;
-                }
+                    if (checkedHut && player.GetTotalBuildingCount(Building.Type.Hut) == 0)
+                        return; // don't build anything (except for essential buildings) before the first hut!
 
-                result = CheckBuilding(ai, game, player, intelligence, type);
+                    if (type == Building.Type.Hut)
+                        checkedHut = true;
 
-                if (result == CheckResult.Needed)
-                {
-                    if (type >= Building.Type.StoneMine && type <= Building.Type.GoldMine)
-                        GoToState(ai, AI.State.FindOre, MineralFromMine[type - Building.Type.StoneMine]);
-                    else
-                        GoToState(ai, AI.State.BuildBuilding, type);
-
-                    lastBuildAttempts[type] = ai.GameTime;
-
-                    return;
-                }
-                else if (result == CheckResult.NeededButNoGenerics)
-                {
-                    // we can't do much but wait
-                    // TODO: Maybe lower the "generic to knights" ratio? Only if knights are not the needed serfs.
-                    continue;
-                }
-                else if (result == CheckResult.NeededButNoSpecialistOrRes)
-                {
-                    if (game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0 &&
-                        player.GetCompletedBuildingCount(Building.Type.SteelSmelter) == 0)
-                        continue; // we can't craft when we don't have any steel
-
-                    if (type == Building.Type.Hut ||
-                        type == Building.Type.Tower ||
-                        type == Building.Type.Fortress)
+                    if (lastBuildAttempts.ContainsKey(type) && ai.GameTime - lastBuildAttempts[type] < 120 * Global.TICKS_PER_SEC)
                     {
-                        GoToState(ai, AI.State.CraftWeapons);
+                        continue;
+                    }
+
+                    result = CheckBuilding(ai, game, player, intelligence, type);
+
+                    if (result == CheckResult.Needed)
+                    {
+                        if (type >= Building.Type.StoneMine && type <= Building.Type.GoldMine)
+                            GoToState(ai, AI.State.FindOre, MineralFromMine[type - Building.Type.StoneMine]);
+                        else
+                            GoToState(ai, AI.State.BuildBuilding, type);
+
+                        lastBuildAttempts[type] = ai.GameTime;
+
+                        // Move the building to the end later
+                        if (player.GetTotalBuildingCount(Building.Type.Hut) != 0)
+                            moveToEnd.Add(type);
+
                         return;
                     }
-                    else
+                    else if (result == CheckResult.NeededButNoGenerics)
                     {
-                        var neededForBuilding = Building.Requests[(int)type];
+                        // Move the building to the end later
+                        moveToEnd.Add(type);
 
-                        if (neededForBuilding.ResType2 == Resource.Type.None)
+                        // we can't do much but wait
+                        // TODO: Maybe lower the "generic to knights" ratio? Only if knights are not the needed serfs.
+                        continue;
+                    }
+                    else if (result == CheckResult.NeededButNoSpecialistOrRes)
+                    {
+                        // Move the building to the end later
+                        moveToEnd.Add(type);
+
+                        if (game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0 &&
+                            player.GetCompletedBuildingCount(Building.Type.SteelSmelter) == 0)
+                            continue; // we can't craft when we don't have any steel
+
+                        if (type == Building.Type.Hut ||
+                            type == Building.Type.Tower ||
+                            type == Building.Type.Fortress)
                         {
-                            GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType1);
+                            GoToState(ai, AI.State.CraftWeapons);
                             return;
                         }
                         else
                         {
-                            // TODO: The tools may be in different inventories. We have to optimize this later.
-                            
-                            if (game.GetTotalResourceCount(player, neededForBuilding.ResType1) != 0)
+                            var neededForBuilding = Building.Requests[(int)type];
+
+                            if (neededForBuilding.ResType2 == Resource.Type.None)
                             {
-                                // We only need the second one
-                                GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType2);
-                                return;
-                            }
-                            else if (game.GetTotalResourceCount(player, neededForBuilding.ResType2) != 0)
-                            {
-                                // We only need the first one
                                 GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType1);
                                 return;
                             }
+                            else
+                            {
+                                // TODO: The tools may be in different inventories. We have to optimize this later.
 
-                            // We need both
-                            Kill(ai);
-                            ai.PushStates
-                            (
-                                ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType1),
-                                ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType2)
-                            );
+                                if (game.GetTotalResourceCount(player, neededForBuilding.ResType1) != 0)
+                                {
+                                    // We only need the second one
+                                    GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType2);
+                                    return;
+                                }
+                                else if (game.GetTotalResourceCount(player, neededForBuilding.ResType2) != 0)
+                                {
+                                    // We only need the first one
+                                    GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType1);
+                                    return;
+                                }
 
-                            return;
+                                // We need both
+                                Kill(ai);
+                                ai.PushStates
+                                (
+                                    ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType1),
+                                    ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType2)
+                                );
+
+                                return;
+                            }
                         }
                     }
+                }
+            }
+            finally
+            {
+                foreach (var type in moveToEnd)
+                {
+                    // Move the buildings to the end of the check list
+                    OrderedBuildingTypes.Remove(type);
+                    OrderedBuildingTypes.Add(type);
                 }
             }
 
@@ -219,9 +242,9 @@ namespace Freeserf.AIStates
 
         CheckResult CheckBuilding(AI ai, Game game, Player player, int intelligence, Building.Type type)
         {
-            int count = game.GetPlayerBuildings(player, type).Count();
+            int count = (int)player.GetTotalBuildingCount(type);
 
-            if (count < 1)
+            if (count == 0)
             {
                 switch (type)
                 {
@@ -250,7 +273,7 @@ namespace Freeserf.AIStates
                             return CheckResult.Needed;
                         break;
                     case Building.Type.Farm:
-                        if (count == 0 && !game.GetPlayerBuildings(player, Building.Type.Fisher).Any())
+                        if (count == 0 && player.GetTotalBuildingCount(Building.Type.Fisher) == 0)
                         {
                             if (game.HasAnyOfResource(player, Resource.Type.Scythe) ||
                                 player.GetSerfCount(Serf.Type.Farmer) != 0)
@@ -328,7 +351,7 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.Forester:
                     {
-                        int lumberjackCount = game.GetPlayerBuildings(player, Building.Type.Lumberjack).Count();
+                        int lumberjackCount = (int)player.GetTotalBuildingCount(Building.Type.Lumberjack);
 
                         if (count < lumberjackCount + ai.ConstructionMaterialFocus / 2 && ai.GameTime > 30 * Global.TICKS_PER_SEC - ai.ConstructionMaterialFocus * 3 * Global.TICKS_PER_SEC + count * (2 * Global.TICKS_PER_MIN - ai.ConstructionMaterialFocus * 20 * Global.TICKS_PER_SEC))
                         {
@@ -359,7 +382,7 @@ namespace Freeserf.AIStates
                         // TODO: decide if build hut, tower or fortress
                         int focus = Math.Max(ai.MilitaryFocus, Math.Max((ai.DefendFocus + 1) / 2, ai.ExpandFocus)) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
 
-                        if (focus == 0 && game.GetPlayerBuildings(player, Building.Type.Hut).Count() == 0)
+                        if (focus == 0 && player.GetTotalBuildingCount(Building.Type.Hut) == 0)
                             focus = 1;
 
                         if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / 250 + (focus + 1) * ai.GameTime / (850 * Global.TICKS_PER_SEC) - 1 &&
@@ -445,7 +468,7 @@ namespace Freeserf.AIStates
                     break;
                 case Building.Type.SteelSmelter:
                     {
-                        if (count != 0 && game.GetPlayerBuildings(player, Building.Type.WeaponSmith).Count() == 0)
+                        if (count != 0 && player.GetTotalBuildingCount(Building.Type.WeaponSmith) == 0)
                             return CheckResult.NotNeeded;
 
                         if (count < player.GetCompletedBuildingCount(Building.Type.IronMine) * Math.Max(2, ai.SteelFocus + 1) &&
@@ -510,13 +533,13 @@ namespace Freeserf.AIStates
                 b.BuildingType == Building.Type.IronMine ||
                 b.BuildingType == Building.Type.GoldMine ||
                 b.BuildingType == Building.Type.StoneMine).Count();
-            int numberOfFishers = game.GetPlayerBuildings(player, Building.Type.Fisher).Count();
-            int numberOfFarms = game.GetPlayerBuildings(player, Building.Type.Farm).Count();
+            int numberOfFishers = (int)player.GetTotalBuildingCount(Building.Type.Fisher);
+            int numberOfFarms = (int)player.GetTotalBuildingCount(Building.Type.Farm);
             int numberOfCompletedFarms = (int)player.GetCompletedBuildingCount(Building.Type.Farm);
-            int numberOfMills = game.GetPlayerBuildings(player, Building.Type.Mill).Count();
-            int numberOfBakers = game.GetPlayerBuildings(player, Building.Type.Baker).Count();
-            int numberOfPigFarms = game.GetPlayerBuildings(player, Building.Type.PigFarm).Count();
-            int numberOfButchers = game.GetPlayerBuildings(player, Building.Type.Butcher).Count();
+            int numberOfMills = (int)player.GetTotalBuildingCount(Building.Type.Mill);
+            int numberOfBakers = (int)player.GetTotalBuildingCount(Building.Type.Baker);
+            int numberOfPigFarms = (int)player.GetTotalBuildingCount(Building.Type.PigFarm);
+            int numberOfButchers = (int)player.GetTotalBuildingCount(Building.Type.Butcher);
             bool hasPotentialFarmer = player.GetSerfCount(Serf.Type.Farmer) != 0 ||
                 game.GetResourceAmountInInventories(player, Resource.Type.Scythe) != 0;
 

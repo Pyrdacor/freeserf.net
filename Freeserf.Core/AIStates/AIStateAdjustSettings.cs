@@ -49,7 +49,7 @@ namespace Freeserf.AIStates
             }
 
             // castle knights
-            if (ai.HardTimes() || (game.GetPossibleFreeKnightCount(player) == 0 && game.GetPlayerBuildings(player, Building.Type.WeaponSmith).Count() == 0))
+            if (ai.HardTimes() || (game.GetPossibleFreeKnightCount(player) == 0 && player.GetTotalBuildingCount(Building.Type.WeaponSmith) == 0))
                 player.SetCastleKnightsWanted(1u);
             else
             {
@@ -187,7 +187,7 @@ namespace Freeserf.AIStates
                 for (int i = 0; i < 9; ++i)
                     player.SetToolPriority(i, ushort.MinValue);
 
-                if (game.GetPlayerBuildings(player, Building.Type.Fisher).Any() && !(player.GetSerfCount(Serf.Type.Farmer) != 0 || game.HasAnyOfResource(player, Resource.Type.Scythe)))
+                if (player.GetTotalBuildingCount(Building.Type.Fisher) != 0 && !(player.GetSerfCount(Serf.Type.Farmer) != 0 || game.HasAnyOfResource(player, Resource.Type.Scythe)))
                 {
                     // set the priority for the scythe to 100%
                     player.SetToolPriority(Resource.Type.Scythe - Resource.Type.Shovel, ushort.MaxValue);
