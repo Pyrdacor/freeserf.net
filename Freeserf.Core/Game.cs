@@ -2227,13 +2227,13 @@ namespace Freeserf
 
         void UpdateRoads()
         {
-            foreach (var renderRoadSegment in renderRoadSegments)
+            foreach (var renderRoadSegment in renderRoadSegments.ToList())
                 renderRoadSegment.Value.Update(map.RenderMap);
         }
 
         void UpdateBorders()
         {
-            foreach (var renderBorderSegment in renderBorderSegments)
+            foreach (var renderBorderSegment in renderBorderSegments.ToList())
                 renderBorderSegment.Value.Update(map.RenderMap);
         }
 

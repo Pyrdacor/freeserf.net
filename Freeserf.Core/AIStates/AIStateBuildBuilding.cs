@@ -88,9 +88,9 @@ namespace Freeserf.AIStates
             }
             finally
             {
-                lock(searchingLock)
+                lock(state.searchingLock)
                 {
-                    searching = false;
+                    state.searching = false;
                 }
             }
         }
@@ -207,6 +207,9 @@ namespace Freeserf.AIStates
 
         uint FindSpot(AI ai, Game game, Player player, int intelligence)
         {
+            // TODO: Fishers, lumberjacks, stonecutters and so on should prefer spots with more resources
+            // over those with only few resources. Same goes for mines.
+
             switch (type)
             {
                 case Building.Type.Baker:

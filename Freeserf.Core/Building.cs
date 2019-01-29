@@ -905,7 +905,7 @@ namespace Freeserf
                     {
                         if (stock[i].Requested == 0)
                         {
-                            // TODO: The exception occurs. Seen with GoldBar and Hut. There seems to be a bug.
+                            // TODO: The exception occurs. Seen with GoldBar and Hut and Plank and CoalMine. There seems to be a bug.
                             if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone())
                             {
                                 // In emergency program we set the requested amount to zero.
@@ -915,7 +915,8 @@ namespace Freeserf
                                 if (stock[i].Maximum == 0)
                                 {
                                     Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                                    throw new ExceptionFreeserf("Delivered more resources than requested.");
+                                    // TODO: For now we ignore this bug as it won't hurt as much as an exception.
+                                    //throw new ExceptionFreeserf("Delivered more resources than requested.");
                                 }
 
                                 ++stock[i].Available;
@@ -924,7 +925,8 @@ namespace Freeserf
                             {
                                 // TODO: This exception occurs from time to time. Maybe fixed now?
                                 Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                                throw new ExceptionFreeserf("Delivered more resources than requested.");
+                                // TODO: For now we ignore this bug as it won't hurt as much as an exception.
+                                //throw new ExceptionFreeserf("Delivered more resources than requested.");
                             }
                         }
                         else

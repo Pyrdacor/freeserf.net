@@ -2883,7 +2883,7 @@ namespace Freeserf
             {
                 Map map = Game.Map;
                 Building building = Game.GetBuildingAtPos(map.MoveUpLeft(Position));
-                building.RequestedSerfReached(this);
+                building.RequestedSerfReached(this); // TODO: null ref exception
 
                 if (map.HasSerf(map.MoveUpLeft(Position)))
                 {

@@ -579,17 +579,15 @@ namespace Freeserf
             var game = player.Game;
             var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
 
-            // TODO: This seems to cause performance issues when many flags are present.
-            // For now we limit it to range 9 so only flags in an area are used.
-            // See default value of parameter maxLength. It was 12 before.
-            // TODO: Maybe run the calling AI states in a separate thread later.
-
             var flags = (maxLength < 10) ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(pos => game.GetFlagAtPos((uint)pos)) : game.GetPlayerFlags(player);
 
             foreach (var otherFlag in flags)
             {
                 if (flag.Position == otherFlag.Position)
                     continue; // not link to self
+
+                if (flag.HasDirectConnectionTo(otherFlag)) // TODO: maybe let this happen in special cases later
+                    continue; // not link if already linked
 
                 int dist = game.Map.Dist(flag.Position, otherFlag.Position);
 

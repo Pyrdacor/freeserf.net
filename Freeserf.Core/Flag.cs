@@ -165,6 +165,17 @@ namespace Freeserf
             return bestCost;
         }
 
+        public bool HasDirectConnectionTo(Flag flag)
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                if (OtherEndPoints[i].Flag == flag)
+                    return true;
+            }
+
+            return false;
+        }
+
         /* Bitmap of all directions with outgoing paths. */
         public int Paths()
         {

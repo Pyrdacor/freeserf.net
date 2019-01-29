@@ -38,8 +38,11 @@ AI:
 - Road building may be bad in later game. There might be large road systems that are fully independent of others so a serf has to walk for ages to get there.
 - After hard times end the AI builds huts without having knights. Should not happen.
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
-- Sometimes the AI does not link a building even if it is possible.
-- The AI should not place buildings in a way that the flag is not linkable.
+- The AI should not place buildings in a way that the flag is not linkable. (For now the AI just demolishes the building if this happens.)
+- Flags for geologists are too far away from mountains.
+- With much starting supplies the AIs (even smart ones) build their castle in locations without stone.
+- If a building is demolished because it can not be linked, the ai might retry this spot very often and burn the building down often.
+  Therefore this spot should not considered as a build spot in the first place. The problem is that linking is a separate state after building at the moment.
 
 
 Logic:
@@ -50,13 +53,14 @@ Logic:
 - A transporter first walks to the last flag and then goes back to the beginning of the road to goto idle mode.
   - I think in original game the transporter went straight to idle mode when he was at the right location.
   - Is this maybe caused by wrong road building direction? This is often seen in AIs. Maybe the linking of roads is reversed there?!
-- Not sure if the "towards" logic in Map class works correctly yet.
 - Geologists give up too fast.
-- Once a freewalking lumberjack blockes a road and stand there waiting.
+- Once a freewalking lumberjack blockes a road and stand there waiting. Also seen a forester. He was not even on the road but tried to walk towards it. The transporter on the road
+  was also blocked by this.
 - Sometimes there is a deadlock of walking serfs. Saw a digger and a transporter that were waiting at each other but could just switch positions.
   - In debug there were two diggers (one with state WaitIdleOnPath and one with Walking). A digger should never have WaitIdleOnPath I think as this is for transporters only!
 - Sometimes construction materials are not moved out of the castle. The construction site gets no resources. After demolishing/rebuilding it works again.
   This also happens if the building was already built a bit. And it seems to happen quite often lately.
+  - Since a change in update logic this seem to be fixed. Further testing needed.
 
 
 Notification Box:
@@ -114,3 +118,4 @@ Exceptions:
 
 - When a knight wins a fight there is often a bad torso sprite index
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.")
+  - Not seen for a long time. Maybe only when setting the castle knights manually?
