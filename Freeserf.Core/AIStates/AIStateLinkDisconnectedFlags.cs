@@ -58,7 +58,20 @@ namespace Freeserf.AIStates
                     }
                 }
 
-                if (pathes.Count == 1)
+                bool finishedLinking = false;
+
+                if (flag.HasBuilding())
+                {
+                    var building = flag.GetBuilding();
+
+                    // don't link flags of foresters and farms more than necessary as they need space for their work
+                    if (building.BuildingType == Building.Type.Forester || building.BuildingType == Building.Type.Farm)
+                        finishedLinking = true;
+                }
+
+                // TODO: maybe check later if there are foresters or farms around and stop linking in the area then
+
+                if (!finishedLinking && pathes.Count == 1)
                 {
                     int roadLength = 0;
                     uint pos = flag.Position;
