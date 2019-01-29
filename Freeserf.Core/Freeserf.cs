@@ -45,6 +45,7 @@ namespace Freeserf
             public int ScreenWidth = -1;
             public int ScreenHeight = -1;
             public bool Fullscreen = false;
+            public bool ConsoleWindow = false;
         }
 
         public static InitInfo Init(string[] args)
@@ -93,6 +94,11 @@ namespace Freeserf
                 s.Retrieve(out initInfo.ScreenHeight);
 
                 return true;
+            });
+
+            commandLine.AddOption('c', "Log to console window", () =>
+            {
+                initInfo.ConsoleWindow = true;
             });
 
             // TODO: email configurable

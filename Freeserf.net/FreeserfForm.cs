@@ -16,10 +16,11 @@ namespace Freeserf
         int lastDragY = int.MinValue;
         static Timer clickWaitTimer = new Timer();
         Global.InitInfo initInfo = null;
+        DebugConsole debugConsole = null;
 
         public FreeserfForm(string[] args)
         {
-            Log.SetFile(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+            Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
             Log.SetLevel(Log.Level.Error);
 
             initInfo = Global.Init(args); // this may change the log level
@@ -39,6 +40,14 @@ namespace Freeserf
         {
             Network.Network.DefaultClientFactory = new Network.ClientFactory();
             Network.Network.DefaultServerFactory = new Network.ServerFactory();
+
+            if (initInfo.ConsoleWindow)
+            {
+                debugConsole = new DebugConsole();
+
+                debugConsole.Show();
+                debugConsole.AttachLog();
+            }
 
             // TODO: for now we just load DOS data (test path)
             DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
@@ -87,6 +96,8 @@ namespace Freeserf
 
             FrameTimer.Interval = Global.TICK_LENGTH;
             FrameTimer.Start();
+
+            BringToFront();
         }
 
         void GameView_Closed(object sender, EventArgs e)
@@ -254,16 +265,6 @@ namespace Freeserf
 
         void RenderControl_MouseDown(object sender, MouseEventArgs e)
         {
-            /*lastX = int.MinValue;
-
-            Position pos = gameView.ScreenToView(new Position(e.X, e.Y));
-
-            if (pos == null)
-                return;
-
-            lastX = pos.X;
-            lastY = pos.Y;*/
-
             if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
             {
                 lastDragX = e.X;
@@ -413,6 +414,9 @@ namespace Freeserf
             if (FrameTimer.Enabled)
                 FrameTimer.Stop();
 
+            if (debugConsole != null)
+                debugConsole.Close();
+
             Cursor.Show();
         }
 
@@ -424,6 +428,11 @@ namespace Freeserf
         void RenderControl_MouseLeave(object sender, EventArgs e)
         {
             Cursor.Show();
+        }
+
+        private void FreeserfForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // TODO: Ask for saving?
         }
     }
 }

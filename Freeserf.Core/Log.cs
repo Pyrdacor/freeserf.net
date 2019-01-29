@@ -167,9 +167,11 @@ namespace Freeserf
             }
         }
 
-        public static void SetFile(System.IO.Stream stream)
+        public static void SetStream(System.IO.Stream stream)
         {
             Log.stream = stream;
+
+            SetLevel(level); // this will attach the streams to the levels
         }
 
         public static void SetLevel(Level level)
