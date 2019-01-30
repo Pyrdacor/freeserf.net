@@ -3,18 +3,15 @@
 - Improve grid drawing in minimap?
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
-- The minimap click re-location of the map is not working correctly in maps with even numbered sizes (2:1 maps). Build indicators and map cursor are still not
-  shown in half of the map in 2:1 maps.
-- Minimap clicks are only sometimes right (at least the map movement)
-
-
-Serf rendering:
 
 
 Non-working code:
 
 - Sometimes a road can not be build in a direction where it should be possible (maybe this is due to wrong map position calculation)
 - Map clicks are not always considered or at the right spot/tile
+- The minimap click re-location of the map is not working correctly in maps with even numbered sizes (2:1 maps). Build indicators and map cursor are still not
+  shown in half of the map in 2:1 maps.
+- Minimap clicks are only sometimes right (at least the map movement)
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Sometimes the player color indicator in AI vs AI is drawn strangly over the panel bar.
 - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
@@ -24,21 +21,22 @@ Non-working code:
 
 AI:
 
+Flags / buildings / roads:
 - Linking flags should also allow for merging paths
-- Finding minerals and mine spots is not good yet. The search spots should change from time to time but
-  changing doesn't mean putting hundreds of flags at the same mountain.
-- Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
-	- This is only necessary if an enemy is near enough.
-- In hard times the search for mountains should be better (look specific for coal and iron spots and with increased search range -> huts must be on point!)
-- In hard times the fisher is sometimes built too far away from the water.
-- Road building may be bad in later game. There might be large road systems that are fully independent of others so a serf has to walk for ages to get there.
-- After hard times end the AI builds huts without having knights. Should not happen.
-- After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
 - The AI should not place buildings in a way that the flag is not linkable. (For now the AI just demolishes the building if this happens.)
-- Flags for geologists are too far away from mountains.
-- With much starting supplies the AIs (even smart ones) build their castle in locations without stone.
 - If a building is demolished because it can not be linked, the ai might retry this spot very often and burn the building down often.
   Therefore this spot should not considered as a build spot in the first place. The problem is that linking is a separate state after building at the moment.
+
+Misc:  
+- Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
+	- This is only necessary if an enemy is near enough.
+- After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
+- With much starting supplies the AIs (even smart ones) build their castle in locations without stone.
+
+Mining / finding minerals:
+- Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.
+- In hard times the search for mountains should be better (look specific for coal and iron spots).
+- Flags for geologists are too far away from mountains.
 - Looking for mineral spots and actually building mines should be two separate steps (there are already but at the moment the FindOre state also builds the mine).
 
 
@@ -106,7 +104,6 @@ TODO:
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected, get materials after demolishing)
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
-- Add a fast search algorithm to find stuff on the map in a bigger range than 9. Then use it in AI.
 
 
 Exceptions:
