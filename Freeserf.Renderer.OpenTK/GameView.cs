@@ -76,14 +76,14 @@ namespace Freeserf.Renderer.OpenTK
             SizingPolicy sizingPolicy = SizingPolicy.FitRatio, 
             OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
         {
-            VirtualScreen = new Rect(0, 0, virtualScreenSize.Width, virtualScreenSize.Height);
+            VirtualScreen = new Rect(0, 0, Math.Min(virtualScreenSize.Width, Global.MAX_VIRTUAL_SCREEN_WIDTH), Math.Min(virtualScreenSize.Height, Global.MAX_VIRTUAL_SCREEN_HEIGHT));
             virtualScreenDisplay = new Rect(VirtualScreen);
             this.sizingPolicy = sizingPolicy;
             this.orientationPolicy = orientationPolicy;
             this.deviceType = deviceType;
-            isLandscapeRatio = virtualScreenSize.Width > virtualScreenSize.Height;
+            isLandscapeRatio = VirtualScreen.Size.Width > VirtualScreen.Size.Height;
 
-            context = new Context(virtualScreenSize.Width, virtualScreenSize.Height);
+            context = new Context(VirtualScreen.Size.Width, VirtualScreen.Size.Height);
 
             if (dataSource == null || !dataSource.IsLoaded)
                 throw new ExceptionFreeserf("Given data source is not useable.");

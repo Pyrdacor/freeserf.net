@@ -61,9 +61,9 @@ namespace Freeserf
             // TODO: use the rest of the command line and maybe extend the command line
 
             if (initInfo.ScreenWidth == -1)
-                initInfo.ScreenWidth = 1280;
+                initInfo.ScreenWidth = Global.MAX_VIRTUAL_SCREEN_WIDTH;
             if (initInfo.ScreenHeight == -1)
-                initInfo.ScreenHeight = 960;
+                initInfo.ScreenHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
 
             if (initInfo.ScreenWidth < 640)
                 initInfo.ScreenWidth = 640;
@@ -178,7 +178,7 @@ namespace Freeserf
             {
                 WindowState = FormWindowState.Normal;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
-                SetClientSize(1280, 960);
+                SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
                 gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
                 TopMost = false;
             }

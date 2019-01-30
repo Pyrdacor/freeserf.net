@@ -395,6 +395,10 @@ namespace Freeserf.UI
 
         public Gui(Render.IRenderView renderView)
         {
+            if (renderView.VirtualScreen.Size.Width > Global.MAX_VIRTUAL_SCREEN_WIDTH ||
+                renderView.VirtualScreen.Size.Height > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
+                throw new ExceptionFreeserf($"The virtual screen must not be larger than {Global.MAX_VIRTUAL_SCREEN_WIDTH}x{Global.MAX_VIRTUAL_SCREEN_HEIGHT}.");
+
             this.renderView = renderView;
 
             // At the beginning we start with a local player.
