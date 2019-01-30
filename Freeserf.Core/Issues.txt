@@ -20,8 +20,6 @@ Non-working code:
 - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
 	- I guess this happens when the emergency program gets active at a specific time.
 	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
-- When closing and re-open the toolmaker priority popup, the values can't be changed. After "set defaults" it works again. Maybe this is also true for other slidebars?!
-- Since the recent (25 Jan 2019) changes with road pathfinding, there are performance issues with multiple flags/buildings and with 4 AI players.
 
 
 AI:
@@ -41,6 +39,7 @@ AI:
 - With much starting supplies the AIs (even smart ones) build their castle in locations without stone.
 - If a building is demolished because it can not be linked, the ai might retry this spot very often and burn the building down often.
   Therefore this spot should not considered as a build spot in the first place. The problem is that linking is a separate state after building at the moment.
+- Looking for mineral spots and actually building mines should be two separate steps (there are already but at the moment the FindOre state also builds the mine).
 
 
 Logic:

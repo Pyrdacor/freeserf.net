@@ -98,6 +98,8 @@ namespace Freeserf.UI
             else
                 Fill = 50;
 
+            SetRedraw();
+
             return true;
         }
 
