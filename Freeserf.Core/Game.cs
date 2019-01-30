@@ -2088,8 +2088,6 @@ namespace Freeserf
            resources that are needed outside of the inventory into the out queue. */
         protected void UpdateInventories()
         {
-            /* AI: TODO */
-
             Resource.Type[] resources = null;
             int arrIndex = 0;
 
@@ -2407,7 +2405,7 @@ namespace Freeserf
         protected void UpdateSerfs()
         {
             // Note: Do not use foreach here as serf.Update()
-            // may delete the building and therefore change the
+            // may delete the serf and therefore change the
             // collection while we iterate through it!
 
             // Therefore we use a copied list here.

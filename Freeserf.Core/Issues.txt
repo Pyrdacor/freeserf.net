@@ -44,8 +44,6 @@ AI:
 
 Logic:
 
-- With increased game speed the AI is much faster than the game (e.g. buildings and roads are already built before the first serf leaves the castle).
-  Maybe the long tick time at the start will not notice the game speed increase and therefore wait long for the next update cycle. This seems right as the game will then run smoothly.
 - If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
 - A transporter first walks to the last flag and then goes back to the beginning of the road to goto idle mode.
   - I think in original game the transporter went straight to idle mode when he was at the right location.
