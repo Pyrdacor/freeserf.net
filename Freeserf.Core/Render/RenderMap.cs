@@ -566,7 +566,10 @@ namespace Freeserf.Render
             int x = mapPosition.X - renderX;
             int y = mapPosition.Y - renderY;
 
-            while (y < 0)
+            int xDiff = Math.Min(0, -(lwidth - Global.MAX_VIRTUAL_SCREEN_WIDTH));
+            int yDiff = Math.Min(0, -(lheight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
+
+            while (y < yDiff)
             {
                 x -= (int)map.Rows * TILE_WIDTH / 2;
                 y += lheight;
@@ -578,7 +581,7 @@ namespace Freeserf.Render
                 y -= lheight;
             }
 
-            while (x < 0)
+            while (x < xDiff)
                 x += lwidth;
 
             while (x >= lwidth)
