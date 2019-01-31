@@ -45,6 +45,7 @@
             this.RenderControl.VSync = false;
             this.RenderControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RenderControl_KeyDown);
             this.RenderControl.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.RenderControl_KeyPress);
+            this.RenderControl.KeyUp += new System.Windows.Forms.KeyEventHandler(this.RenderControl_KeyUp);
             this.RenderControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseClick);
             this.RenderControl.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDoubleClick);
             this.RenderControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseDown);
@@ -52,6 +53,7 @@
             this.RenderControl.MouseLeave += new System.EventHandler(this.RenderControl_MouseLeave);
             this.RenderControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseMove);
             this.RenderControl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.RenderControl_MouseUp);
+            this.RenderControl.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.RenderControl_PreviewKeyDown);
             // 
             // FrameTimer
             // 

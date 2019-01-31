@@ -111,7 +111,9 @@ namespace Freeserf.UI
             Close,
             GenRandom,
             ApplyRandom,
-            CreateServer
+            CreateServer,
+            IncrementLarge,
+            DecrementLarge
         }
 
         public enum GameType
@@ -958,6 +960,42 @@ namespace Freeserf.UI
                             break;
                     }
                     break;
+                case Action.IncrementLarge:
+                    switch (gameType)
+                    {
+                        case GameType.Mission:
+                            gameMission = Math.Min(gameMission + 5, (int)GameInfo.GetMissionCount() - 1);
+                            mission = GameInfo.GetMission((uint)gameMission);
+                            SetRedraw();
+                            break;
+                        case GameType.Custom:
+                        case GameType.AIvsAI:
+                        case GameType.MultiplayerServer:
+                            if (customMission.MapSize == 9u)
+                                return;
+                            customMission.MapSize = Math.Min(9u, customMission.MapSize + 2u);
+                            SetRedraw();
+                            break;
+                    }
+                    break;
+                case Action.DecrementLarge:
+                    switch (gameType)
+                    {
+                        case GameType.Mission:
+                            gameMission = Math.Max(0, gameMission - 5);
+                            mission = GameInfo.GetMission((uint)gameMission);
+                            SetRedraw();
+                            break;
+                        case GameType.Custom:
+                        case GameType.AIvsAI:
+                        case GameType.MultiplayerServer:
+                            if (customMission.MapSize == 3u)
+                                return;
+                            customMission.MapSize = Math.Max(3u, customMission.MapSize - 2u);
+                            SetRedraw();
+                            break;
+                    }
+                    break;
                 case Action.Close:
                     interf.CloseGameInit();
                     interf.RenderView.Close();
@@ -1013,6 +1051,28 @@ namespace Freeserf.UI
             }
 
             return true;
+        }
+
+        protected override bool HandleKeyPressed(char key, int modifier)
+        {
+            if (key == (char)33) // page up
+            {
+                HandleAction(Action.IncrementLarge);
+            }
+            else if (key == (char)34) // page down
+            {
+                HandleAction(Action.DecrementLarge);
+            }
+            else if (key == (char)38) // up
+            {
+                HandleAction(Action.Increment);
+            }
+            else if (key == (char)40) // down
+            {
+                HandleAction(Action.Decrement);
+            }
+
+            return base.HandleKeyPressed(key, modifier);
         }
 
         bool PlayerFaceAlreadyTaken(uint playerIndex, uint face)

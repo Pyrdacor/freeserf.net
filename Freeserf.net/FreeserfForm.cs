@@ -286,8 +286,34 @@ namespace Freeserf
                 pressedMouseButtons &= ~e.Button;
         }
 
+        bool[] KeysDown = new bool[256];
+
+        void HandleKeyDrag()
+        {
+            int dx = 0;
+            int dy = 0;
+
+            if (KeysDown[(int)Keys.Left])
+                dx += 32;
+            if (KeysDown[(int)Keys.Right])
+                dx -= 32;
+            if (KeysDown[(int)Keys.Up])
+                dy -= 32;
+            if (KeysDown[(int)Keys.Down])
+                dy += 32;
+
+            gameView?.NotifyDrag(0, 0, -dx, dy, Event.Button.Right);
+        }
+
+        private void RenderControl_KeyUp(object sender, KeyEventArgs e)
+        {
+            KeysDown[(int)e.KeyCode] = false;
+        }
+
         void RenderControl_KeyDown(object sender, KeyEventArgs e)
         {
+            KeysDown[(int)e.KeyCode] = true;
+
             if (e.Control && e.KeyCode == Keys.F)
             {
                 ToggleFullscreen();
@@ -298,19 +324,23 @@ namespace Freeserf
             switch (e.KeyCode)
             {
                 case Keys.Left:
-                    gameView?.NotifyDrag(0, 0, -32, 0, Event.Button.Left);
+                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                    HandleKeyDrag();
                     e.Handled = true;
                     break;
                 case Keys.Right:
-                    gameView?.NotifyDrag(0, 0, 32, 0, Event.Button.Left);
+                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                    HandleKeyDrag();
                     e.Handled = true;
                     break;
                 case Keys.Up:
-                    gameView?.NotifyDrag(0, 0, 0, -32, Event.Button.Left);
+                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                    HandleKeyDrag();
                     e.Handled = true;
                     break;
                 case Keys.Down:
-                    gameView?.NotifyDrag(0, 0, 0, 32, Event.Button.Left);
+                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                    HandleKeyDrag();
                     e.Handled = true;
                     break;
                 case Keys.F10:
@@ -433,6 +463,19 @@ namespace Freeserf
         private void FreeserfForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // TODO: Ask for saving?
+        }
+
+        private void RenderControl_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Right:
+                case Keys.Left:
+                case Keys.Up:
+                case Keys.Down:
+                    e.IsInputKey = true;
+                    break;
+            }
         }
     }
 }
