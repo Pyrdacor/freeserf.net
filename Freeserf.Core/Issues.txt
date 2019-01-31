@@ -7,13 +7,9 @@
 
 Non-working code:
 
-- Sometimes a road can not be build in a direction where it should be possible (maybe this is due to wrong map position calculation)
-- Map clicks are not always considered or at the right spot/tile
-- The minimap click re-location of the map is not working correctly in maps with even numbered sizes (2:1 maps). Build indicators and map cursor are still not
-  shown in half of the map in 2:1 maps.
-- Minimap clicks are only sometimes right (at least the map movement)
+- Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
+- Minimap clicks are only most of the time right
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
-- Sometimes the player color indicator in AI vs AI is drawn strangly over the panel bar.
 - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
 	- I guess this happens when the emergency program gets active at a specific time.
 	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
@@ -25,8 +21,6 @@ AI:
 Flags / buildings / roads:
 - Linking flags should also allow for merging paths
 - The AI should not place buildings in a way that the flag is not linkable. (For now the AI just demolishes the building if this happens.)
-- If a building is demolished because it can not be linked, the ai might retry this spot very often and burn the building down often.
-  Therefore this spot should not considered as a build spot in the first place. The problem is that linking is a separate state after building at the moment.
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.

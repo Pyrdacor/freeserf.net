@@ -562,6 +562,25 @@ namespace Freeserf
             }
         }
 
+        internal bool CanLinkFlag(uint flagPos, bool noWater = true)
+        {
+            var map = player.Game.Map;
+
+            // Note: For now this only checks flags in a search range of 9
+            var flags = map.FindInArea(flagPos, 9, FindFlag, 2);
+
+            if (flags.Count == 0)
+                return false;
+
+            foreach (var flag in flags)
+            {
+                if (Pathfinder.FindShortestPath(map, flagPos, (uint)flag) != null)
+                    return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Links the flag to the road system.
         /// </summary>
