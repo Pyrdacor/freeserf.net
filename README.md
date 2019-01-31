@@ -6,15 +6,9 @@ At the moment there is still a lot of work to do.
 
 ## Download the game
 
-#### [v0.9 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.9.zip)
-#### [v0.8 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.8.zip)
-#### [v0.7 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.7.zip)
-#### [v0.6 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.6.zip)
-#### [v0.5 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.5.zip)
-#### [v0.4 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.4.zip)
-#### [v0.3 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.3.zip)
-#### [v0.2 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.2.zip)
-#### [v0.1 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v0.1.zip)
+Just released v1.0 (the first release candidate). It will contain some minor issues but it should run quite ok.
+
+#### [v1.0 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.0.zip)
 
 Builds for other platforms will follow later.
 
