@@ -173,10 +173,15 @@ namespace Freeserf.Renderer.OpenTK
             get => context.Zoom;
             set
             {
+                float oldZoom = context.Zoom;
+
                 if (gui.Ingame)
                     context.Zoom = value;
                 else
                     context.Zoom = 0.0f;
+
+                if (!Misc.FloatEqual(oldZoom, context.Zoom))
+                    ZoomChanged?.Invoke(this, System.EventArgs.Empty);
             }
         }
 
@@ -197,6 +202,8 @@ namespace Freeserf.Renderer.OpenTK
                     fullscreen = value;
             }
         }
+
+        public event System.EventHandler ZoomChanged;
 
         public DataSource DataSource { get; }
 

@@ -318,6 +318,14 @@ namespace Freeserf.UI
             return 1310 * Misc.Clamp(0, x - 7, 50);
         }
 
+        public virtual void HandleZoomChange()
+        {
+            foreach (var child in children)
+            {
+                child.HandleZoomChange();
+            }
+        }
+
         public virtual bool HandleEvent(Event.EventArgs e)
         {
             if (!Enabled || !Displayed)
@@ -401,6 +409,8 @@ namespace Freeserf.UI
 
             this.renderView = renderView;
 
+            renderView.ZoomChanged += RenderView_ZoomChanged;
+
             // At the beginning we start with a local player.
             // Depending on the chosen game mode the viewer may be changed.
             SetViewer(Viewer.CreateLocalPlayer(renderView, null, this));
@@ -410,6 +420,11 @@ namespace Freeserf.UI
             renderView.SpecialClick += RenderView_DoubleClick;
             renderView.Drag += RenderView_Drag;
             renderView.KeyPress += RenderView_KeyPress;
+        }
+
+        void RenderView_ZoomChanged(object sender, EventArgs e)
+        {
+            viewer.MainInterface.HandleZoomChange();
         }
 
         internal void SetViewer(Viewer viewer)

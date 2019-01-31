@@ -40,6 +40,8 @@ namespace Freeserf.Render
         void ResetZoom();
         bool Fullscreen { get; set; }
 
+        event System.EventHandler ZoomChanged;
+
         ISpriteFactory SpriteFactory { get; }
         ITriangleFactory TriangleFactory { get; }
         IColoredRectFactory ColoredRectFactory { get; }

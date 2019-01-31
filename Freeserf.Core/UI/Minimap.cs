@@ -30,7 +30,6 @@ namespace Freeserf.UI
 
     // Note: The minimap is drawn as 128x128.
     // TODO: Dragging is very slow (especially when zoomed)
-    // TODO: Clicks in 2:1 map sizes are not right
     internal class Minimap : GuiObject
     {
         const int MaxScale = 8;
@@ -102,6 +101,13 @@ namespace Freeserf.UI
             sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 
+        public override void HandleZoomChange()
+        {
+            base.HandleZoomChange();
+
+            UpdateMinimap(true);
+        }
+
         /* Initialize minimap data. */
         public void UpdateMinimap(bool force = false)
         {
@@ -115,24 +121,11 @@ namespace Freeserf.UI
 
             mapOffset = offset;
 
-            var mapCoordinates = map.RenderMap.CoordinateSpace.TileSpaceToMapSpace(offset);
-            mapCoordinates.X -= (64 / scale) * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH;
-            mapCoordinates.Y -= (64 / scale) * RenderMap.TILE_HEIGHT - RenderMap.TILE_HEIGHT / 2;
+            var mapCoordinates = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(offset);
+            mapCoordinates.X -= (64 / scale) * RenderMap.TILE_WIDTH + RenderMap.TILE_WIDTH;
+            mapCoordinates.Y -= (64 / scale) * RenderMap.TILE_HEIGHT - RenderMap.TILE_HEIGHT;
 
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
-
-            if (mapCoordinates.Y < 0)
-            {
-                mapCoordinates.Y += lheight;
-                mapCoordinates.X -= (32 / scale) * RenderMap.TILE_WIDTH;
-            }
-            else if (mapCoordinates.Y >= lheight)
-            {
-                mapCoordinates.Y -= lheight;
-                mapCoordinates.X += (32 / scale) * RenderMap.TILE_WIDTH;
-            }
-
-            offset = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapCoordinates.X, mapCoordinates.Y);
+            offset = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(mapCoordinates.X, mapCoordinates.Y);
 
             byte[] minimapData = new byte[128 * 128 * 4];
             int visibleWidth = Math.Min(128, (int)map.Columns) / scale;
@@ -147,18 +140,33 @@ namespace Freeserf.UI
             if (visibleHeight * scale < 128)
                 visibleHeight = 128 / scale;
 
+            var virtualScreenSize = interf.RenderView.VirtualScreen.Size;
+            var zoom = map.RenderMap.ZoomFactor;
+            int viewRectWidth = Misc.Round(virtualScreenSize.Width / zoom) / RenderMap.TILE_WIDTH;
+            int viewRectHeight = Misc.Round(virtualScreenSize.Height / zoom) / RenderMap.TILE_HEIGHT;
+            int viewRectX = (visibleWidth - viewRectWidth) / 2;
+            int viewRectY = (visibleHeight - viewRectHeight) / 2;
+
             for (int c = 0; c < visibleWidth; ++c)
             {
                 var start = pos;
 
                 for (int r = 0; r < visibleHeight; ++r)
                 {
-                    tileColor = GetTileColor(pos, index++);
-
-                    if (tileColor == GridColor)
+                    if (((c == viewRectX || c == viewRectX + viewRectWidth) && r >= viewRectY && r < viewRectY + viewRectHeight) ||
+                        ((r == viewRectY || r == viewRectY + viewRectHeight) && c >= viewRectX && c < viewRectX + viewRectWidth))
+                    {
                         SetGridColor(minimapData, c, r, scale);
+                    }
                     else
-                        SetColor(minimapData, c, r, scale, tileColor);
+                    {
+                        tileColor = GetTileColor(pos, index++);
+
+                        if (tileColor == GridColor)
+                            SetGridColor(minimapData, c, r, scale);
+                        else
+                            SetColor(minimapData, c, r, scale, tileColor);
+                    }
 
                     if (map.PosRow(pos) % 2 == 0)
                         pos = map.MoveDownRight(pos);
@@ -266,8 +274,8 @@ namespace Freeserf.UI
             int visibleHeight = Math.Min(128, (int)map.Rows / scale);
             var mapPosition = map.RenderMap.CoordinateSpace.TileSpaceToMapSpace(mapOffset);
 
-            mapPosition.X += RenderMap.TILE_WIDTH / 2;
-            mapPosition.Y += RenderMap.TILE_HEIGHT / 2;
+            mapPosition.X -= RenderMap.TILE_WIDTH / 2;
+            mapPosition.Y -= RenderMap.TILE_HEIGHT;
 
             if (visibleWidth * scale < 128)
                 visibleWidth = 128 / scale;

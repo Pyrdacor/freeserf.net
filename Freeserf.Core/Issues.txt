@@ -8,7 +8,7 @@
 Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
-- Minimap clicks are only most of the time right
+- Minimap clicks near the map origin move to wrong x location
 - Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
 	- I guess this happens when the emergency program gets active at a specific time.

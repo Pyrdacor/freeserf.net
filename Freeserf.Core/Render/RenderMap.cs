@@ -369,7 +369,6 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
-        // TODO: could be a bit adjusted (1 tile?). Especially when zoomed.
         public void CenterMapPos(MapPos pos)
         {
             var mapPosition = CoordinateSpace.TileSpaceToMapSpace(pos);
@@ -377,30 +376,20 @@ namespace Freeserf.Render
             mapPosition.X -= (int)numColumns * TILE_WIDTH / 2;
             mapPosition.Y -= (int)numRows * TILE_HEIGHT / 2;
 
-            ScrollToMapPos(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
+            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
 
-            /*int column = (int)map.PosColumn(pos) - (int)numColumns / 2;
-            int row = (int)map.PosRow(pos) - (int)numRows / 2;
-            int centerRow = (int)map.PosRow(pos);
-
-            if (centerRow >= row)
-                column -= (centerRow - row) / 2;
-            else
+            if (mapPosition.Y < 0)
             {
-                column -= (centerRow + ((int)map.Rows - row)) / 2;
-                //column -= (columnRowFactor * (int)map.Rows - centerRow) / 2;
-                //column -= row / 2;
+                mapPosition.Y += lheight;
+                mapPosition.X -= (int)map.Rows * TILE_WIDTH / 2;
+            }
+            else if (mapPosition.Y >= lheight)
+            {
+                mapPosition.Y -= lheight;
+                mapPosition.X += (int)map.Rows * TILE_WIDTH / 2;
             }
 
-            if (column < 0)
-                column += (int)map.Columns;
-            else if (column >= map.Columns)
-                column -= (int)map.Columns;
-
-            if (row < 0)
-                row += (int)map.Rows;
-
-            ScrollToMapPos(map.Pos((uint)column, (uint)row));*/
+            ScrollToMapPos(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
         }
 
         void UpdateTriangleUp(int index, int yOffset, int m, int left, int right, MapPos pos)
