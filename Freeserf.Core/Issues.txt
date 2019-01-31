@@ -33,6 +33,8 @@ Mining / finding minerals:
 - Flags for geologists are too far away from mountains.
 - Looking for mineral spots and actually building mines should be two separate steps (there are already but at the moment the FindOre state also builds the mine).
 
+Some AI values are lost when saving/loading games!
+
 
 Logic:
 
