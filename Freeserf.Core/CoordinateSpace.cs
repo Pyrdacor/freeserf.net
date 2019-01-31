@@ -5,6 +5,44 @@ namespace Freeserf
     using Render;
     using MapPos = UInt32;
 
+    /* Space transformations. */
+    /* The game world space is a three dimensional space with the axes
+       named "column", "row" and "height". The (column, row) coordinate
+       can be encoded as a MapPos.
+
+       The landscape is composed of a mesh of vertices in the game world
+       space. There is one vertex for each integer position in the
+       (column, row)-space. The height value of such a vertex is stored
+       in the map data. Height values at non-integer (column, row)-points
+       can be obtained by interpolation from the nearest three vertices.
+
+       The game world can be projected onto a two-dimensional space called
+       map pixel space by the following transformation:
+
+        mx =  Tw*c  -(Tw/2)*r
+        my =  Th*r  -4*h
+
+       where (mx,my) is the coordinate in map pixel space; (c,r,h) is
+       the coordinate in game world space; and (Tw,Th) is the width and
+       height of a map tile in pixel units (these two values are defined
+       as MAP_TILE_WIDTH and MAP_TILE_HEIGHT in the code).
+
+       The map pixels space can be transformed into screen space by a
+       simple translation.
+
+       Note that the game world space wraps around when the edge is
+       reached, i.e. decrementing the column by one when standing at
+       (c,r,h) = (0,0,0) leads to the point (N-1,0,0) where N is the
+       width of the map in columns. This also happens when crossing
+       the row edge.
+
+       The map pixel space also wraps around but the vertical wrap-around
+       is a bit more tricky, so care must be taken when translating
+       map pixel coordinates. When an edge is traversed vertically,
+       the x-coordinate has to be offset by half the height of the map,
+       because of the skew in the translation from game world space to
+       map pixel space.
+    */
     internal class CoordinateSpace
     {
         readonly Map map = null;
