@@ -20,7 +20,6 @@ AI:
 
 Flags / buildings / roads:
 - Linking flags should also allow for merging paths
-- The AI should not place buildings in a way that the flag is not linkable. (For now the AI just demolishes the building if this happens.)
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
@@ -74,7 +73,6 @@ Missing stuff:
 - button to merge roads to a flag
 - mine elevator/miner animation
 - ground analysis for local spectators?
-- minimap view rect
 
 
 Nice to have:
@@ -91,7 +89,7 @@ TODO:
 - Finish rendering of fighting serfs (additional serf stuff)
 - Finish rendering of all additional stuff for all buildings (only mine elevator drawing is not perfect yet)
 - Add more game options (like tutorial)
-- Improve/fix sound
+- Improve/fix sound and add music/sound players for all operating systems
 - Look through all TODO code comments and resolve them
 - Bugfixing (important is the serf logic which seems to be very bugged in some situations)
 - Remove unused code and improve bad code
