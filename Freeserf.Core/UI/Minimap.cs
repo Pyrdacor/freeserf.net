@@ -118,6 +118,20 @@ namespace Freeserf.UI
             var mapCoordinates = map.RenderMap.CoordinateSpace.TileSpaceToMapSpace(offset);
             mapCoordinates.X -= (64 / scale) * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH;
             mapCoordinates.Y -= (64 / scale) * RenderMap.TILE_HEIGHT - RenderMap.TILE_HEIGHT / 2;
+
+            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
+
+            if (mapCoordinates.Y < 0)
+            {
+                mapCoordinates.Y += lheight;
+                mapCoordinates.X -= (32 / scale) * RenderMap.TILE_WIDTH;
+            }
+            else if (mapCoordinates.Y >= lheight)
+            {
+                mapCoordinates.Y -= lheight;
+                mapCoordinates.X += (32 / scale) * RenderMap.TILE_WIDTH;
+            }
+
             offset = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapCoordinates.X, mapCoordinates.Y);
 
             byte[] minimapData = new byte[128 * 128 * 4];
@@ -266,6 +280,19 @@ namespace Freeserf.UI
 
             mapPosition.X += relX * RenderMap.TILE_WIDTH;
             mapPosition.Y += relY * RenderMap.TILE_HEIGHT;
+
+            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
+
+            if (mapPosition.Y < 0)
+            {
+                mapPosition.Y += lheight;
+                mapPosition.X -= (int)map.Rows * RenderMap.TILE_WIDTH / 2;
+            }
+            else if (mapPosition.Y >= lheight)
+            {
+                mapPosition.Y -= lheight;
+                mapPosition.X += (int)map.Rows * RenderMap.TILE_WIDTH / 2;
+            }
 
             // TODO: y regarding the grid seems to be 3 pixels to high (with scale 1). Maybe the grid is out of place as other positions work.
             var pos = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapPosition.X, mapPosition.Y);

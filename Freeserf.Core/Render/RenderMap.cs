@@ -137,7 +137,6 @@ namespace Freeserf.Render
 
         public uint ScrollX { get; private set; } = 0;
         public uint ScrollY { get; private set; } = 0;
-        //public Rect RenderArea { get; private set; } = new Rect();
         public uint NumVisibleColumns => numColumns + ADDITIONAL_X_TILES;
         public uint NumVisibleRows => numRows + ADDITIONAL_Y_TILES;
         public float ZoomFactor { get; set; } = 1.0f;
@@ -373,7 +372,14 @@ namespace Freeserf.Render
         // TODO: could be a bit adjusted (1 tile?). Especially when zoomed.
         public void CenterMapPos(MapPos pos)
         {
-            int column = (int)map.PosColumn(pos) - (int)numColumns / 2;
+            var mapPosition = CoordinateSpace.TileSpaceToMapSpace(pos);
+
+            mapPosition.X -= (int)numColumns * TILE_WIDTH / 2;
+            mapPosition.Y -= (int)numRows * TILE_HEIGHT / 2;
+
+            ScrollToMapPos(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
+
+            /*int column = (int)map.PosColumn(pos) - (int)numColumns / 2;
             int row = (int)map.PosRow(pos) - (int)numRows / 2;
             int centerRow = (int)map.PosRow(pos);
 
@@ -394,7 +400,7 @@ namespace Freeserf.Render
             if (row < 0)
                 row += (int)map.Rows;
 
-            ScrollToMapPos(map.Pos((uint)column, (uint)row));
+            ScrollToMapPos(map.Pos((uint)column, (uint)row));*/
         }
 
         void UpdateTriangleUp(int index, int yOffset, int m, int left, int right, MapPos pos)
@@ -781,7 +787,7 @@ namespace Freeserf.Render
         public MapPos GetCenteredPosition()
         {
             //return GetMapPosFromScreenPosition(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));
-            return CoordinateSpace.ViewSpaceToTileSpace(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));
+            return CoordinateSpace.ViewSpaceToTileSpace((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2);
         }
 
         void UpdatePosition()
@@ -791,9 +797,6 @@ namespace Freeserf.Render
             // cap at double rows as half rows have influence on the column
             if (ScrollY >= columnRowFactor * map.Rows)
                 ScrollY &= map.RowMask;
-
-            //RenderArea = new Rect((int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
-            //    ((int)numColumns + ADDITIONAL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             bool odd = ScrollY % 2 == 1;
             int index = 0;

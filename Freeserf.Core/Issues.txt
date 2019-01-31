@@ -80,6 +80,7 @@ Missing stuff:
 - button to merge roads to a flag
 - mine elevator/miner animation
 - ground analysis for local spectators?
+- minimap view rect
 
 
 Nice to have:
