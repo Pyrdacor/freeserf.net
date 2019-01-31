@@ -17,6 +17,7 @@ Non-working code:
 - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
 	- I guess this happens when the emergency program gets active at a specific time.
 	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
+- Possible builds contain not all possible building locations
 
 
 AI:

@@ -128,7 +128,7 @@ namespace Freeserf.Render
 
         public void Update(RenderMap map)
         {
-            var renderPosition = map.GetScreenPosition(pos);
+            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(pos);
 
             sprite.X = renderPosition.X + offsetX;
             sprite.Y = renderPosition.Y + offsetY;

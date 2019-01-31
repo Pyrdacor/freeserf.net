@@ -137,16 +137,19 @@ namespace Freeserf.Render
 
         public uint ScrollX { get; private set; } = 0;
         public uint ScrollY { get; private set; } = 0;
-        public Rect RenderArea { get; private set; } = new Rect();
+        //public Rect RenderArea { get; private set; } = new Rect();
         public uint NumVisibleColumns => numColumns + ADDITIONAL_X_TILES;
         public uint NumVisibleRows => numRows + ADDITIONAL_Y_TILES;
         public float ZoomFactor { get; set; } = 1.0f;
+        public CoordinateSpace CoordinateSpace { get; } = null;
 
         public RenderMap(uint numColumns, uint numRows, Map map,
             ITriangleFactory triangleFactory, ISpriteFactory spriteFactory,
             ITextureAtlas textureAtlasTiles, ITextureAtlas textureAtlasWaves,
             DataSource dataSource)
         {
+            CoordinateSpace = new CoordinateSpace(map, this);
+
             columnRowFactor = (map.Size % 2 == 0) ? 4 : 2;
 
             ScrollX = 0;
@@ -555,217 +558,217 @@ namespace Freeserf.Render
            because of the skew in the translation from game world space to
            map pixel space.
         */
-        public Position GetScreenPositionFromMapPosition(Position mapPosition)
-        {
-            int lwidth = (int)map.Columns * TILE_WIDTH;
-            int lheight = (int)map.Rows * TILE_HEIGHT;
+        //public Position GetScreenPositionFromMapPosition(Position mapPosition)
+        //{
+        //    int lwidth = (int)map.Columns * TILE_WIDTH;
+        //    int lheight = (int)map.Rows * TILE_HEIGHT;
 
-            int renderX = (int)ScrollX * TILE_WIDTH;
-            int renderY = (int)ScrollY * TILE_HEIGHT;
+        //    int renderX = (int)ScrollX * TILE_WIDTH;
+        //    int renderY = (int)ScrollY * TILE_HEIGHT;
 
-            int x = mapPosition.X - renderX;
-            int y = mapPosition.Y - renderY;
+        //    int x = mapPosition.X - renderX;
+        //    int y = mapPosition.Y - renderY;
 
-            int xDiff = Math.Min(0, -(lwidth - Global.MAX_VIRTUAL_SCREEN_WIDTH));
-            int yDiff = Math.Min(0, -(lheight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
+        //    int xDiff = Math.Min(0, -(lwidth - Global.MAX_VIRTUAL_SCREEN_WIDTH));
+        //    int yDiff = Math.Min(0, -(lheight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
 
-            while (y < yDiff)
-            {
-                x -= (int)map.Rows * TILE_WIDTH / 2;
-                y += lheight;
-            }
+        //    while (y < yDiff)
+        //    {
+        //        x -= (int)map.Rows * TILE_WIDTH / 2;
+        //        y += lheight;
+        //    }
 
-            while (y >= lheight)
-            {
-                x += (int)map.Rows * TILE_WIDTH / 2;
-                y -= lheight;
-            }
+        //    while (y >= lheight)
+        //    {
+        //        x += (int)map.Rows * TILE_WIDTH / 2;
+        //        y -= lheight;
+        //    }
 
-            while (x < xDiff)
-                x += lwidth;
+        //    while (x < xDiff)
+        //        x += lwidth;
 
-            while (x >= lwidth)
-                x -= lwidth;
+        //    while (x >= lwidth)
+        //        x -= lwidth;
 
-            return new Position(x, y);
-        }
+        //    return new Position(x, y);
+        //}
 
-        public Position GetMapPosition(MapPos pos)
-        {
-            int lwidth = (int)map.Columns * TILE_WIDTH;
-            int lheight = (int)map.Rows * TILE_HEIGHT;
+        //public Position GetMapPosition(MapPos pos)
+        //{
+        //    int lwidth = (int)map.Columns * TILE_WIDTH;
+        //    int lheight = (int)map.Rows * TILE_HEIGHT;
 
-            int x = TILE_WIDTH * (int)map.PosColumn(pos) - (TILE_WIDTH / 2) * (int)map.PosRow(pos);
-            int y = TILE_HEIGHT * (int)map.PosRow(pos) - 4 * (int)map.GetHeight(pos);
+        //    int x = TILE_WIDTH * (int)map.PosColumn(pos) - (TILE_WIDTH / 2) * (int)map.PosRow(pos);
+        //    int y = TILE_HEIGHT * (int)map.PosRow(pos) - 4 * (int)map.GetHeight(pos);
 
-            if (y < 0)
-            {
-                x -= (int)map.Rows * TILE_WIDTH / 2;
-                y += lheight;
-            }
+        //    if (y < 0)
+        //    {
+        //        x -= (int)map.Rows * TILE_WIDTH / 2;
+        //        y += lheight;
+        //    }
 
-            if (x < 0)
-                x += lwidth;
-            else if (x >= lwidth)
-                x -= lwidth;
+        //    if (x < 0)
+        //        x += lwidth;
+        //    else if (x >= lwidth)
+        //        x -= lwidth;
 
-            return new Position(x, y);
-        }
+        //    return new Position(x, y);
+        //}
 
-        public Position GetScreenPosition(MapPos pos)
-        {
-            var mapPosition = GetMapPosition(pos);
+        //public Position GetScreenPosition(MapPos pos)
+        //{
+        //    var mapPosition = GetMapPosition(pos);
 
-            return GetScreenPositionFromMapPosition(mapPosition);
-        }
+        //    return GetScreenPositionFromMapPosition(mapPosition);
+        //}
 
-        uint GetRow(uint column, uint startRow, int y, bool? down = null, int lastDiff = -1)
-        {
-            var pos = map.Pos(column, startRow);
-            int realY = (int)startRow * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
+        //uint GetRow(uint column, uint startRow, int y, bool? down = null, int lastDiff = -1)
+        //{
+        //    var pos = map.Pos(column, startRow);
+        //    int realY = (int)startRow * TILE_HEIGHT - 4 * (int)map.GetHeight(pos);
 
-            int lower = y - TILE_HEIGHT / 2;
-            int upper = y + TILE_HEIGHT / 2;
+        //    int lower = y - TILE_HEIGHT / 2;
+        //    int upper = y + TILE_HEIGHT / 2;
 
-            if (realY < lower)
-            {
-                if (down.HasValue && !down.Value) // previous was up
-                {
-                    if (lastDiff < lower - realY) // last row was closer
-                        return startRow + 1;
+        //    if (realY < lower)
+        //    {
+        //        if (down.HasValue && !down.Value) // previous was up
+        //        {
+        //            if (lastDiff < lower - realY) // last row was closer
+        //                return startRow + 1;
 
-                    return startRow;
-                }
+        //            return startRow;
+        //        }
 
-                pos = (startRow % 2 == 0) ? map.MoveDown(pos) : map.MoveDownRight(pos);
-                down = false;
-                lastDiff = lower - realY;
-            }
-            else if (realY > upper)
-            {
-                if (down.HasValue && down.Value) // previous was down
-                {
-                    if (lastDiff < realY - upper) // last row was closer
-                    {
-                        if (startRow == 0)
-                            return map.Rows - 1;
-                        else
-                            return startRow - 1;
-                    }
+        //        pos = (startRow % 2 == 0) ? map.MoveDown(pos) : map.MoveDownRight(pos);
+        //        down = false;
+        //        lastDiff = lower - realY;
+        //    }
+        //    else if (realY > upper)
+        //    {
+        //        if (down.HasValue && down.Value) // previous was down
+        //        {
+        //            if (lastDiff < realY - upper) // last row was closer
+        //            {
+        //                if (startRow == 0)
+        //                    return map.Rows - 1;
+        //                else
+        //                    return startRow - 1;
+        //            }
 
-                    return startRow;
-                }
+        //            return startRow;
+        //        }
 
-                pos = (startRow % 2 == 1) ? map.MoveUp(pos) : map.MoveUpLeft(pos);
-                down = true;
-                lastDiff = realY - upper;
-            }
-            else
-            {
-                return startRow;
-            }
+        //        pos = (startRow % 2 == 1) ? map.MoveUp(pos) : map.MoveUpLeft(pos);
+        //        down = true;
+        //        lastDiff = realY - upper;
+        //    }
+        //    else
+        //    {
+        //        return startRow;
+        //    }
 
-            return GetRow(map.PosColumn(pos), map.PosRow(pos), y, down, lastDiff);
-        }
+        //    return GetRow(map.PosColumn(pos), map.PosRow(pos), y, down, lastDiff);
+        //}
 
-        public MapPos GetMapPosFromMapCoordinates(int x, int y)
-        {
-            int lwidth = (int)map.Columns * TILE_WIDTH;
-            int lheight = (int)map.Rows * TILE_HEIGHT;
+        //public MapPos GetMapPosFromMapCoordinates(int x, int y)
+        //{
+        //    int lwidth = (int)map.Columns * TILE_WIDTH;
+        //    int lheight = (int)map.Rows * TILE_HEIGHT;
 
-            while (y < 0)
-            {
-                x += (int)map.Rows * TILE_WIDTH / 2;
-                y += lheight;
-            }
+        //    while (y < 0)
+        //    {
+        //        x += (int)map.Rows * TILE_WIDTH / 2;
+        //        y += lheight;
+        //    }
 
-            while (y >= lheight)
-            {
-                x -= (int)map.Rows * TILE_WIDTH / 2;
-                y -= lheight;
-            }
+        //    while (y >= lheight)
+        //    {
+        //        x -= (int)map.Rows * TILE_WIDTH / 2;
+        //        y -= lheight;
+        //    }
 
-            while (x < 0)
-                x += lwidth;
+        //    while (x < 0)
+        //        x += lwidth;
 
-            while (x >= lwidth)
-                x -= lwidth;
+        //    while (x >= lwidth)
+        //        x -= lwidth;
 
-            int mappedX = x + (y * TILE_WIDTH) / (2 * TILE_HEIGHT);
-            int column = mappedX / TILE_WIDTH;
-            int row = y / TILE_HEIGHT;
-            int lastDist = int.MaxValue;
-            var pos = map.Pos((uint)column, 0u);
-            MapPos lastPos = pos;
+        //    int mappedX = x + (y * TILE_WIDTH) / (2 * TILE_HEIGHT);
+        //    int column = mappedX / TILE_WIDTH;
+        //    int row = y / TILE_HEIGHT;
+        //    int lastDist = int.MaxValue;
+        //    var pos = map.Pos((uint)column, 0u);
+        //    MapPos lastPos = pos;
 
-            pos = map.MoveDownN(pos, row);
+        //    pos = map.MoveDownN(pos, row);
 
-            while (true)
-            {
-                int rowY = GetMapPosition(pos).Y;
+        //    while (true)
+        //    {
+        //        int rowY = GetMapPosition(pos).Y;
 
-                int dist = Math.Abs(rowY - y);
+        //        int dist = Math.Abs(rowY - y);
 
-                if (lastDist < dist)
-                {
-                    var mapPosition = GetMapPosition(lastPos);
+        //        if (lastDist < dist)
+        //        {
+        //            var mapPosition = GetMapPosition(lastPos);
 
-                    int xOff = x - mapPosition.X;
-                    bool moved = true;
+        //            int xOff = x - mapPosition.X;
+        //            bool moved = true;
 
-                    if (xOff >= TILE_WIDTH / 2)
-                        lastPos = map.MoveRight(lastPos);
-                    else if (xOff < -TILE_WIDTH / 2)
-                        lastPos = map.MoveLeft(lastPos);
-                    else
-                        moved = false;
+        //            if (xOff >= TILE_WIDTH / 2)
+        //                lastPos = map.MoveRight(lastPos);
+        //            else if (xOff < -TILE_WIDTH / 2)
+        //                lastPos = map.MoveLeft(lastPos);
+        //            else
+        //                moved = false;
 
-                    // re-check y dist
-                    if (moved)
-                    {
-                        // TODO: as we moved to left or right, the height may lead to a wrong tile
-                    }
+        //            // re-check y dist
+        //            if (moved)
+        //            {
+        //                // TODO: as we moved to left or right, the height may lead to a wrong tile
+        //            }
 
-                    return lastPos;
-                }
+        //            return lastPos;
+        //        }
 
-                lastDist = dist;
-                lastPos = pos;
+        //        lastDist = dist;
+        //        lastPos = pos;
 
-                if (row % 2 == 0)
-                    pos = map.MoveDown(pos);
-                else
-                    pos = map.MoveDownRight(pos);
+        //        if (row % 2 == 0)
+        //            pos = map.MoveDown(pos);
+        //        else
+        //            pos = map.MoveDownRight(pos);
 
-                ++row;
-            }
-        }
+        //        ++row;
+        //    }
+        //}
 
-        public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow)
-        {
-            // axis-aligned map column and row
-            var column = ScrollX + renderColumn;
-            var row = ScrollY + renderRow;
+        //public MapPos GetMapPosFromScreenPosition(uint renderColumn, uint renderRow)
+        //{
+        //    // axis-aligned map column and row
+        //    var column = ScrollX + renderColumn;
+        //    var row = ScrollY + renderRow;
 
-            column &= map.ColumnMask;
+        //    column &= map.ColumnMask;
 
-            if (row >= columnRowFactor * map.Rows)
-                row &= map.RowMask;
+        //    if (row >= columnRowFactor * map.Rows)
+        //        row &= map.RowMask;
 
-            return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
-        }
+        //    return GetMapPosFromMapCoordinates((int)column * TILE_WIDTH, (int)row * TILE_HEIGHT);
+        //}
 
-        public MapPos GetMapPosFromScreenPosition(Position position)
-        {
-            int renderX = (int)ScrollX * TILE_WIDTH;
-            int renderY = (int)ScrollY * TILE_HEIGHT;
+        //public MapPos GetMapPosFromScreenPosition(Position position)
+        //{
+        //    int renderX = (int)ScrollX * TILE_WIDTH;
+        //    int renderY = (int)ScrollY * TILE_HEIGHT;
 
-            // position inside the map
-            int x = renderX + position.X;
-            int y = renderY + position.Y;
+        //    // position inside the map
+        //    int x = renderX + position.X;
+        //    int y = renderY + position.Y;
 
-            return GetMapPosFromMapCoordinates(x, y);
-        }
+        //    return GetMapPosFromMapCoordinates(x, y);
+        //}
 
         public MapPos GetMapOffset()
         {
@@ -777,7 +780,8 @@ namespace Freeserf.Render
 
         public MapPos GetCenteredPosition()
         {
-            return GetMapPosFromScreenPosition(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));
+            //return GetMapPosFromScreenPosition(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));
+            return CoordinateSpace.ViewSpaceToTileSpace(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));
         }
 
         void UpdatePosition()
@@ -788,8 +792,8 @@ namespace Freeserf.Render
             if (ScrollY >= columnRowFactor * map.Rows)
                 ScrollY &= map.RowMask;
 
-            RenderArea = new Rect((int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
-                ((int)numColumns + ADDITIONAL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
+            //RenderArea = new Rect((int)ScrollX * TILE_WIDTH + TILE_WIDTH / 2, (int)(ScrollY & map.RowMask) * TILE_HEIGHT,
+            //    ((int)numColumns + ADDITIONAL_X_TILES) * TILE_WIDTH, ((int)numRows + ADDITIONAL_Y_TILES) * TILE_HEIGHT);
 
             bool odd = ScrollY % 2 == 1;
             int index = 0;

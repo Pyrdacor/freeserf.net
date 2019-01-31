@@ -165,7 +165,7 @@ namespace Freeserf.UI
 
         void DrawMapCursorSprite(MapPos pos, int index, uint spriteIndex)
         {
-            var renderPos = map.RenderMap.GetScreenPosition(pos);
+            var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(pos);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
             var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
 
@@ -194,7 +194,7 @@ namespace Freeserf.UI
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
-                var renderPos = map.RenderMap.GetScreenPosition(map.RenderMap.GetMapPosFromScreenPosition(column, row));
+                var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(column, row));
 
                 builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
                 builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;
@@ -228,7 +228,7 @@ namespace Freeserf.UI
             {
                 for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
                 {
-                    var pos = map.RenderMap.GetMapPosFromScreenPosition(c, r);
+                    var pos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(c, r);
 
                     /* Draw possible building */
                     int sprite = -1;
@@ -306,7 +306,7 @@ namespace Freeserf.UI
 
             var position = new Position(x, y);
 
-            var mapPos = map.RenderMap.GetMapPosFromScreenPosition(position);
+            var mapPos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
 
             if (interf.IsBuildingRoad())
             {
@@ -424,7 +424,7 @@ namespace Freeserf.UI
 
             var position = new Position(x, y);
 
-            var mapPos = map.RenderMap.GetMapPosFromScreenPosition(position);
+            var mapPos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
             Player player = interf.GetPlayer();
 
             if (interf.IsBuildingRoad())

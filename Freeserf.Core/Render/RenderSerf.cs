@@ -377,7 +377,7 @@ namespace Freeserf.Render
 
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
 
-            return map.RenderMap.GetScreenPosition(building.Position).Y + info.OffsetY + info.Height;
+            return map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).Y + info.OffsetY + info.Height;
         }
 
         static bool InFrontOfBuilding(int x, int width, Building building, DataSource dataSource, Map map)
@@ -398,7 +398,7 @@ namespace Freeserf.Render
 
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
 
-            int buildingLeft = map.RenderMap.GetScreenPosition(building.Position).X + info.OffsetX;
+            int buildingLeft = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).X + info.OffsetX;
             int buildingRight = buildingLeft + info.Width;
 
             int serfLeft = x;
@@ -440,7 +440,7 @@ namespace Freeserf.Render
             }
 
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
-            int buildingBaseLine = map.RenderMap.GetScreenPosition(building.Position).Y + info.OffsetY + info.Height;
+            int buildingBaseLine = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).Y + info.OffsetY + info.Height;
 
             int serfBaseLine = this.sprite.Y + this.sprite.Height;
 
@@ -456,7 +456,7 @@ namespace Freeserf.Render
         public void Update(Game game, DataSource dataSource, int tick, Map map, uint pos)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs);
-            var renderPosition = map.RenderMap.GetScreenPosition(pos);
+            var renderPosition = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(pos);
             int x = 0;
             int y = 0;
             int body = -1;
@@ -601,7 +601,7 @@ namespace Freeserf.Render
                 else if (serf.SerfState == Serf.State.StoneCutting)
                 {
                     var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, 65); // biggest rock
-                    int rockBaseLine = map.RenderMap.GetScreenPosition(serf.Position).Y + info.OffsetY + info.Height;
+                    int rockBaseLine = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(serf.Position).Y + info.OffsetY + info.Height;
 
                     SetBaseLine(rockBaseLine + 1);
                 }

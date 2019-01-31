@@ -115,10 +115,10 @@ namespace Freeserf.UI
 
             mapOffset = offset;
 
-            var mapCoordinates = map.RenderMap.GetMapPosition(offset);
+            var mapCoordinates = map.RenderMap.CoordinateSpace.TileSpaceToMapSpace(offset);
             mapCoordinates.X -= (64 / scale) * RenderMap.TILE_WIDTH - RenderMap.TILE_WIDTH;
             mapCoordinates.Y -= (64 / scale) * RenderMap.TILE_HEIGHT - RenderMap.TILE_HEIGHT / 2;
-            offset = map.RenderMap.GetMapPosFromMapCoordinates(mapCoordinates.X, mapCoordinates.Y);
+            offset = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapCoordinates.X, mapCoordinates.Y);
 
             byte[] minimapData = new byte[128 * 128 * 4];
             int visibleWidth = Math.Min(128, (int)map.Columns) / scale;
@@ -250,7 +250,7 @@ namespace Freeserf.UI
 
             int visibleWidth = Math.Min(128, (int)map.Columns / scale);
             int visibleHeight = Math.Min(128, (int)map.Rows / scale);
-            var mapPosition = map.RenderMap.GetMapPosition(mapOffset);
+            var mapPosition = map.RenderMap.CoordinateSpace.TileSpaceToMapSpace(mapOffset);
 
             mapPosition.X += RenderMap.TILE_WIDTH / 2;
             mapPosition.Y += RenderMap.TILE_HEIGHT / 2;
@@ -268,7 +268,7 @@ namespace Freeserf.UI
             mapPosition.Y += relY * RenderMap.TILE_HEIGHT;
 
             // TODO: y regarding the grid seems to be 3 pixels to high (with scale 1). Maybe the grid is out of place as other positions work.
-            var pos = map.RenderMap.GetMapPosFromMapCoordinates(mapPosition.X, mapPosition.Y);
+            var pos = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapPosition.X, mapPosition.Y);
 
             interf.GotoMapPos(pos);
 
@@ -361,11 +361,11 @@ namespace Freeserf.UI
         {
             if (button == Event.Button.Left)
             {
-                // jump to map pos
-                HandleClickLeft(x, y);
-
                 // close the minimap
                 interf.ClosePopup();
+
+                // jump to map pos
+                HandleClickLeft(x, y);                
             }
 
             return true;
