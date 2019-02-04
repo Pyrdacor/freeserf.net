@@ -14,6 +14,8 @@ Builds for other platforms will follow later.
 
 Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It is not included in the zip file.
 
+You have to install .NET Framework 4.6.1 to run the game. You can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
+
 
 ## Current State
 
