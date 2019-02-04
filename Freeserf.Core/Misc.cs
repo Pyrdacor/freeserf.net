@@ -139,6 +139,16 @@ namespace Freeserf
             return Math.Max(low, Math.Min(value, high));
         }
 
+        public static void Clamp(float low, ref float value, float high)
+        {
+            value = Clamp(low, value, high);
+        }
+
+        public static float Clamp(float low, float value, float high)
+        {
+            return Math.Max(low, Math.Min(value, high));
+        }
+
         public static bool FloatEqual(float f1, float f2)
         {
             return Math.Abs(f1 - f2) < 0.00001f;

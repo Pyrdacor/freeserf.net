@@ -47,9 +47,37 @@ namespace Freeserf
         [STAThread]
         static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FreeserfForm(args));
+            try
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new FreeserfForm(args));
+            }
+            catch (FileNotFoundException ex)
+            {
+                Log.Error.Write("main", "Exception: " + ex.Message);
+
+                if (ex.StackTrace.Contains("System.Reflection.Assembly.Load") && ex.FileName.Contains("netstandard"))
+                {
+                    try
+                    {
+                        MessageBox.Show(".NET Standard 2.0 is missing. Please install it.", ".NET Standard missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch
+                    {
+                        // ignore
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write("main", "Exception: " + ex.Message);
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

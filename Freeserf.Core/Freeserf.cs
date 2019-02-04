@@ -47,7 +47,7 @@ namespace Freeserf
             public string SaveGame;
             public int ScreenWidth = -1;
             public int ScreenHeight = -1;
-            public bool Fullscreen = false;
+            public bool? Fullscreen = null;
             public bool ConsoleWindow = false;
         }
 

@@ -36,6 +36,8 @@ namespace Freeserf
             Size = new System.Drawing.Size(width + diffX, height + diffY);
         }
 
+        static readonly string UserConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf.net", "user.cfg");
+
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
             Network.Network.DefaultClientFactory = new Network.ClientFactory();
@@ -49,21 +51,34 @@ namespace Freeserf
                 debugConsole.AttachLog();
             }
 
+            UserConfig.Load(UserConfigFile);
+
             // TODO: for now we just load DOS data (test path)
             DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
 
             if (!dosData.Load())
             {
-                MessageBox.Show(this, "Error loading DOS data.", "Error");
+                MessageBox.Show(this, "Error loading DOS data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
             }
 
             // TODO: use the rest of the command line and maybe extend the command line
 
+            if (UserConfig.Video.ResolutionWidth < 640)
+                UserConfig.Video.ResolutionWidth = 640;
+            if (UserConfig.Video.ResolutionWidth > Global.MAX_VIRTUAL_SCREEN_WIDTH)
+                UserConfig.Video.ResolutionWidth = Global.MAX_VIRTUAL_SCREEN_WIDTH;
+            if (UserConfig.Video.ResolutionHeight < 480)
+                UserConfig.Video.ResolutionHeight = 480;
+            if (UserConfig.Video.ResolutionHeight > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
+                UserConfig.Video.ResolutionHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
+
             if (initInfo.ScreenWidth == -1)
-                initInfo.ScreenWidth = Global.MAX_VIRTUAL_SCREEN_WIDTH;
+                initInfo.ScreenWidth = UserConfig.Video.ResolutionWidth;
             if (initInfo.ScreenHeight == -1)
-                initInfo.ScreenHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
+                initInfo.ScreenHeight = UserConfig.Video.ResolutionHeight;
+            if (initInfo.Fullscreen == null)
+                initInfo.Fullscreen = UserConfig.Video.Fullscreen;
 
             if (initInfo.ScreenWidth < 640)
                 initInfo.ScreenWidth = 640;
@@ -77,6 +92,10 @@ namespace Freeserf
             if (initInfo.ScreenHeight > screen.Bounds.Height)
                 initInfo.ScreenHeight = screen.Bounds.Height;
 
+            UserConfig.Video.ResolutionWidth = initInfo.ScreenWidth;
+            UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
+            UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
+
             SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
 
             gameView = new GameView(dosData, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
@@ -84,8 +103,24 @@ namespace Freeserf
 
             gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
 
-            if (initInfo.Fullscreen)
+            if (initInfo.Fullscreen == true)
                 SetFullscreen(true);
+
+            var audio = gameView.AudioFactory?.GetAudio();
+
+            if (audio != null)
+            {
+                var musicPlayer = audio.GetMusicPlayer();
+                var soundPlayer = audio.GetSoundPlayer();
+                var volumeController = audio.GetVolumeController();
+
+                if (musicPlayer != null)
+                    musicPlayer.Enabled = UserConfig.Audio.Music;
+                if (soundPlayer != null)
+                    soundPlayer.Enabled = UserConfig.Audio.Sound;
+                if (volumeController != null)
+                    volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
+            }
 
             gameView.Closed += GameView_Closed;
 
@@ -193,6 +228,8 @@ namespace Freeserf
                 return false;
 
             gameView.Fullscreen = fullscreen;
+
+            UserConfig.Video.Fullscreen = gameView.Fullscreen;
 
             return gameView.Fullscreen == fullscreen; // dit it work?
         }
@@ -436,20 +473,6 @@ namespace Freeserf
             RenderControl_KeyPress(sender, e); // forward form key press to render control key press
         }
 
-        void FreeserfForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            if (clickWaitTimer.Enabled)
-                clickWaitTimer.Stop();
-
-            if (FrameTimer.Enabled)
-                FrameTimer.Stop();
-
-            if (debugConsole != null)
-                debugConsole.Close();
-
-            Cursor.Show();
-        }
-
         void RenderControl_MouseEnter(object sender, EventArgs e)
         {
             Cursor.Hide();
@@ -463,6 +486,27 @@ namespace Freeserf
         private void FreeserfForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // TODO: Ask for saving?
+
+            if (clickWaitTimer.Enabled)
+                clickWaitTimer.Stop();
+
+            if (FrameTimer.Enabled)
+                FrameTimer.Stop();
+
+            if (debugConsole != null)
+                debugConsole.Close();
+
+            Cursor.Show();
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(UserConfigFile));
+                UserConfig.Save(UserConfigFile);
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         private void RenderControl_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)

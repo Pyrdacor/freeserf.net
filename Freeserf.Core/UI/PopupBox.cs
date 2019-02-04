@@ -3924,6 +3924,7 @@ namespace Freeserf.UI
                     break;
                 case Action.OptionsFullscreen:
                     interf.RenderView.Fullscreen = !interf.RenderView.Fullscreen;
+                    UserConfig.Video.Fullscreen = interf.RenderView.Fullscreen;
                     SetRedraw();
                     break;
                 case Action.OptionsMusic:
@@ -3933,7 +3934,12 @@ namespace Freeserf.UI
                         if (music != null)
                         {
                             music.Enabled = !music.Enabled;
+                            UserConfig.Audio.Music = music.Enabled;
                             SetRedraw();
+                        }
+                        else
+                        {
+                            UserConfig.Audio.Music = false;
                         }
                     }
                     break;
@@ -3944,7 +3950,12 @@ namespace Freeserf.UI
                         if (sfx != null)
                         {
                             sfx.Enabled = !sfx.Enabled;
+                            UserConfig.Audio.Sound = sfx.Enabled;
                             SetRedraw();
+                        }
+                        else
+                        {
+                            UserConfig.Audio.Sound = false;
                         }
                     }
                     break;
@@ -3955,7 +3966,12 @@ namespace Freeserf.UI
                         if (volumeControl != null)
                         {
                             volumeControl.VolumeDown();
+                            UserConfig.Audio.Volume = volumeControl.GetVolume();
                             SetRedraw();
+                        }
+                        else
+                        {
+                            UserConfig.Audio.Volume = 0.0f;
                         }
                     }
                     break;
@@ -3966,7 +3982,12 @@ namespace Freeserf.UI
                         if (volumeControl != null)
                         {
                             volumeControl.VolumeUp();
+                            UserConfig.Audio.Volume = volumeControl.GetVolume();
                             SetRedraw();
+                        }
+                        else
+                        {
+                            UserConfig.Audio.Volume = 0.0f;
                         }
                     }
                     break;
@@ -3991,19 +4012,24 @@ namespace Freeserf.UI
                         interf.SetConfig(4);
                         interf.SetConfig(5);
                     }
+                    UserConfig.Game.Options = interf.GetConfig();
                     SetRedraw();
                     break;
                 case Action.OptionsPathwayScrolling:
                     interf.SwitchConfig(6);
+                    UserConfig.Game.Options = interf.GetConfig();
                     break;
                 case Action.OptionsFastMapclick:
                     interf.SwitchConfig(7);
+                    UserConfig.Game.Options = interf.GetConfig();
                     break;
                 case Action.OptionsFastBuilding:
                     interf.SwitchConfig(2);
+                    UserConfig.Game.Options = interf.GetConfig();
                     break;
                 case Action.OptionsInvertScrolling:
                     interf.SwitchConfig(1);
+                    UserConfig.Game.Options = interf.GetConfig();
                     break;
                 case Action.QuitCancel:
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)

@@ -141,6 +141,7 @@ namespace Freeserf.UI
             TextRenderer = new TextRenderer(renderView);
 
             displayed = true;
+            config = UserConfig.Game.Options;
 
             mapCursorSprites[0] = new SpriteLocation { Sprite = 31 };
             mapCursorSprites[1] = new SpriteLocation { Sprite = 32 };
@@ -264,6 +265,11 @@ namespace Freeserf.UI
         public Player.Color GetPlayerColor(uint playerIndex)
         {
             return Game.GetPlayer(playerIndex).GetColor();
+        }
+
+        public int GetConfig()
+        {
+            return config;
         }
 
         public bool GetConfig(int i)
