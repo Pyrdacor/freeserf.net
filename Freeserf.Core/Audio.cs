@@ -55,7 +55,7 @@ namespace Freeserf
             ResourceFound = 26,
             PickBlow = 28,
             MetalHammering = 30,
-            AxBlow = 32,
+            AxeBlow = 32,
             TreeFall = 34,
             WoodHammering = 36,
             Elevator = 38,

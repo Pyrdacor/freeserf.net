@@ -899,7 +899,7 @@ namespace Freeserf.Render
                        t == 0x85)
                     {
                         serf.StartPlayingSfx();
-                        PlaySound(Audio.TypeSfx.AxBlow);
+                        PlaySound(Audio.TypeSfx.AxeBlow);
                         /* TODO Dangerous reference to unknown state vars.
                            It is probably free walking. */
                         if (serf.GetFreeWalkingNegDist2() == 0 &&

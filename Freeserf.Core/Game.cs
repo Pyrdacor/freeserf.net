@@ -94,6 +94,7 @@ namespace Freeserf
 
         int knightMoraleCounter;
         int inventoryScheduleCounter;
+        int birdSoundCounter;
 
         public Map Map => map;
         public ushort Tick => tick;
@@ -145,6 +146,7 @@ namespace Freeserf
 
             knightMoraleCounter = 0;
             inventoryScheduleCounter = 0;
+            birdSoundCounter = 0;
 
             goldTotal = 0;
         }
@@ -337,6 +339,26 @@ namespace Freeserf
             UpdateBuildings();
             UpdateSerfs();
             UpdateGameStats();
+
+            /* Play bird sounds */
+            birdSoundCounter -= tickDiff;
+
+            if (birdSoundCounter < 0)
+            {
+                PlaySound(Audio.TypeSfx.BirdChirp0 + 4 * (RandomInt() & 0x3));
+                birdSoundCounter += 0xfff + RandomInt() & 0x3ff;
+            }
+        }
+
+        void PlaySound(Audio.TypeSfx type)
+        {
+            var audio = renderView.AudioFactory.GetAudio();
+            var player = audio?.GetSoundPlayer();
+
+            if (player != null)
+            {
+                player.PlayTrack((int)type);
+            }
         }
 
         public void Pause()
