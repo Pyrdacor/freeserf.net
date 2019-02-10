@@ -598,7 +598,7 @@ namespace Freeserf
             var game = player.Game;
             var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
 
-            var flags = (maxLength < 10) ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(pos => game.GetFlagAtPos((uint)pos)) : game.GetPlayerFlags(player);
+            var flags = (maxLength < 10) ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(pos => game.GetFlagAtPos((uint)pos)) : game.GetPlayerFlags(player).ToList();
 
             foreach (var otherFlag in flags)
             {

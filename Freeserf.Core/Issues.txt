@@ -106,3 +106,4 @@ Exceptions:
 - When a knight wins a fight there is often a bad torso sprite index
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.")
   - Not seen for a long time. Maybe only when setting the castle knights manually?
+- Target array is too small

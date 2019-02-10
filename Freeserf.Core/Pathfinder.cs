@@ -277,7 +277,7 @@ namespace Freeserf
         {
             DateTime startTime = DateTime.Now;
             PriorityQueue<SearchNode> open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
-            List<SearchNode> closed = new List<SearchNode>();
+            Dictionary<MapPos, SearchNode> closed = new Dictionary<MapPos, SearchNode>();
 
             /* Create start node */
             SearchNode node = new SearchNode()
@@ -315,7 +315,7 @@ namespace Freeserf
                 }
 
                 /* Put current node on closed list. */
-                closed.Insert(0, node);
+                closed.Add(node.Pos, node);
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
@@ -338,7 +338,7 @@ namespace Freeserf
                     }
 
                     /* Check if neighbour is in closed list. */
-                    if (closed.Any(n => n.Pos == newPos))
+                    if (closed.ContainsKey(newPos))
                         continue;
 
                     /* See if neighbour is already in open list. */
@@ -406,7 +406,7 @@ namespace Freeserf
             totalCost = uint.MaxValue;
             DateTime startTime = DateTime.Now;
             PriorityQueue<FlagSearchNode> open = new PriorityQueue<FlagSearchNode>(new FlagSearchNodeComparer());
-            List<FlagSearchNode> closed = new List<FlagSearchNode>();
+            Dictionary<Flag, FlagSearchNode> closed = new Dictionary<Flag, FlagSearchNode>();
 
             /* Create start node */
             FlagSearchNode node = new FlagSearchNode()
@@ -442,7 +442,7 @@ namespace Freeserf
                 }
 
                 /* Put current node on closed list. */
-                closed.Insert(0, node);
+                closed.Add(node.Flag, node);
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
@@ -460,7 +460,7 @@ namespace Freeserf
                     uint cost = newRoad.Cost;
 
                     /* Check if neighbour is in closed list. */
-                    if (closed.Any(n => n.Flag == newFlag))
+                    if (closed.ContainsKey(newFlag))
                         continue;
 
                     /* See if neighbour is already in open list. */

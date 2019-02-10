@@ -148,7 +148,7 @@ namespace Freeserf
             var player = Game.GetPlayer(GetOwner());
             uint bestCost = uint.MaxValue;
 
-            foreach (var inventory in Game.GetPlayerInventories(player))
+            foreach (var inventory in Game.GetPlayerInventories(player).ToList())
             {
                 if (inventorySupportsResIn && inventory.GetResourceMode() != Inventory.Mode.In)
                     continue;
