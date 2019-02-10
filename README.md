@@ -6,8 +6,7 @@ At the moment there is still a lot of work to do.
 
 ## Download the game
 
-Just released v1.0 (the first release candidate). It will contain some minor issues but it should run quite ok.
-
+#### [v1.1 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.1.zip)
 #### [v1.0 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.0.zip)
 
 Builds for other platforms will follow later.
