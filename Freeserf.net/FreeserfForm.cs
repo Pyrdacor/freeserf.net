@@ -60,6 +60,7 @@ namespace Freeserf
             {
                 MessageBox.Show(this, "Error loading DOS data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
+                return;
             }
 
             // TODO: use the rest of the command line and maybe extend the command line
@@ -461,7 +462,7 @@ namespace Freeserf
                 case 'Ö':
                 case 'ü':
                 case 'Ü':
-                    // TODO: Encoding                    
+                    // TODO: Encoding
                     gameView?.NotifyKeyPressed(e.KeyChar, 0);
                     e.Handled = true;
                     break;
