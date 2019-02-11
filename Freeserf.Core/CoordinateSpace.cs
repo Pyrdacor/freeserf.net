@@ -47,11 +47,14 @@ namespace Freeserf
     {
         readonly Map map = null;
         readonly RenderMap renderMap = null;
+        readonly int columnRowFactor = 2;
 
         internal CoordinateSpace(Map map, RenderMap renderMap)
         {
             this.map = map;
             this.renderMap = renderMap;
+
+            columnRowFactor = (map.Size % 2 == 0) ? 4 : 2;
         }
 
         public Position TileSpaceToMapSpace(MapPos pos)
@@ -138,13 +141,13 @@ namespace Freeserf
 
             while (y < 0)
             {
-                x += (int)map.Rows * RenderMap.TILE_WIDTH / 2;
+                x += (columnRowFactor - 1) * (int)map.Rows * RenderMap.TILE_WIDTH / 2;
                 y += lheight;
             }
 
             while (y >= lheight)
             {
-                x -= (int)map.Rows * RenderMap.TILE_WIDTH / 2;
+                x -= (columnRowFactor - 1) * (int)map.Rows * RenderMap.TILE_WIDTH / 2;
                 y -= lheight;
             }
 
