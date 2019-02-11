@@ -574,7 +574,7 @@ namespace Freeserf
 
             foreach (var flag in flags)
             {
-                if (Pathfinder.FindShortestPath(map, flagPos, (uint)flag) != null)
+                if (Pathfinder.FindShortestPath(map, flagPos, (uint)flag, null, 15) != null)
                     return true;
             }
 
@@ -618,7 +618,7 @@ namespace Freeserf
                 if (flagCost == uint.MaxValue)
                     continue; // flag has no connection to an inventory
 
-                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, otherFlag.Position);
+                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, otherFlag.Position, null, 15);
 
                 if (road != null && road.Valid)
                 {
@@ -680,7 +680,7 @@ namespace Freeserf
                 if (!game.CanBuildFlag(pos, player))
                     continue;
 
-                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, pos);
+                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, pos, null, 15);
 
                 if (road != null && road.Valid)
                 {

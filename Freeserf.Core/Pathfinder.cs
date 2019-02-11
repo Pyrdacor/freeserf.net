@@ -273,11 +273,15 @@ namespace Freeserf
         /// <param name="end"></param>
         /// <param name="buildingRoad"></param>
         /// <returns></returns>
-        public static Road FindShortestPath(Map map, MapPos start, MapPos end, Road buildingRoad = null)
+        public static Road FindShortestPath(Map map, MapPos start, MapPos end, Road buildingRoad = null, int maxLength = int.MaxValue)
         {
+            if (maxLength < 1)
+                return new Road();
+
             DateTime startTime = DateTime.Now;
             PriorityQueue<SearchNode> open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
             Dictionary<MapPos, SearchNode> closed = new Dictionary<MapPos, SearchNode>();
+            uint maxCost = (uint)maxLength * 511u; // 511 is the max road segment cost
 
             /* Create start node */
             SearchNode node = new SearchNode()
@@ -323,6 +327,9 @@ namespace Freeserf
                 {
                     MapPos newPos = map.Move(node.Pos, d);
                     uint cost = ActualCost(map, node.Pos, d);
+
+                    if (node.GScore + cost > maxCost)
+                        continue; // exceeded max length / max cost
 
                     /* Check if neighbour is valid. */
                     if (!map.IsRoadSegmentValid(node.Pos, d) ||
