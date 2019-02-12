@@ -50,15 +50,16 @@ namespace Freeserf.AIStates
 
             switch (ai.PrioritizedPlayer)
             {
+                default:
                 case AI.AttackPlayer.Random:
-                    return players[game.RandomInt() % players.Count];
+                    break;
                 case AI.AttackPlayer.RandomHuman:
                     if (humanPlayers.Count != 0)
-                        return humanPlayers[game.RandomInt() % humanPlayers.Count];
+                        players = new List<int>(humanPlayers);
                     break;
                 case AI.AttackPlayer.RandomAI:
                     if (aiPlayers.Count != 0)
-                        return aiPlayers[game.RandomInt() % aiPlayers.Count];
+                        players = new List<int>(aiPlayers);
                     break;
                 case AI.AttackPlayer.Weakest:
                     // TODO
@@ -67,30 +68,101 @@ namespace Freeserf.AIStates
                     // TODO
                     break;
                 case AI.AttackPlayer.WorstProtected:
-                    // TODO
+                    {
+                        // Here more than one player could be selected. Just remove indices from the lists above.
+                        int minOccupation = 3;
+                        List<int> playersToRemove = new List<int>(2);
+
+                        for (int i = 0; i < players.Count; ++i)
+                        {
+                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3u) >> 4) & 0x7);
+
+                            if (occupation < minOccupation)
+                            {
+                                for (int j = 0; j < i; ++j)
+                                {
+                                    if (!playersToRemove.Contains(players[j]))
+                                        playersToRemove.Add(players[j]);
+                                }
+
+                                minOccupation = occupation;
+                            }
+                            else if (occupation > minOccupation)
+                            {
+                                playersToRemove.Add(players[i]);
+                            }
+                        }
+
+                        foreach (var player in playersToRemove)
+                        {
+                            players.Remove(player);
+                            humanPlayers.Remove(player);
+                            aiPlayers.Remove(player);
+                        }
+                    }
                     break;
             }
 
             switch (ai.SecondPrioritizedPlayer)
             {
+                default:
                 case AI.AttackPlayer.Random:
-                    return players[game.RandomInt() % players.Count];
+                    break;
                 case AI.AttackPlayer.RandomHuman:
-                    return (humanPlayers.Count == 0) ? -1 : humanPlayers[game.RandomInt() % humanPlayers.Count];
+                    if (humanPlayers.Count != 0)
+                        players = new List<int>(humanPlayers);
+                    break;
                 case AI.AttackPlayer.RandomAI:
-                    return (aiPlayers.Count == 0) ? -1 : aiPlayers[game.RandomInt() % aiPlayers.Count];
+                    if (aiPlayers.Count != 0)
+                        players = new List<int>(aiPlayers);
+                    break;
                 case AI.AttackPlayer.Weakest:
-                    // TODO
+                    if (players.Count != 0)
+                    {
+                        // TODO
+                    }
                     break;
                 case AI.AttackPlayer.Worst:
-                    // TODO
+                    if (players.Count != 0)
+                    {
+                        // TODO
+                    }
                     break;
                 case AI.AttackPlayer.WorstProtected:
-                    // TODO
+                    if (players.Count != 0)
+                    {
+                        int minOccupation = 3;
+                        List<int> playersToRemove = new List<int>(2);
+
+                        for (int i = 0; i < players.Count; ++i)
+                        {
+                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3u) >> 4) & 0x7);
+
+                            if (occupation < minOccupation)
+                            {
+                                for (int j = 0; j < i; ++j)
+                                {
+                                    if (!playersToRemove.Contains(players[j]))
+                                        playersToRemove.Add(players[j]);
+                                }
+
+                                minOccupation = occupation;
+                            }
+                            else if (occupation > minOccupation)
+                            {
+                                playersToRemove.Add(players[i]);
+                            }
+                        }
+
+                        foreach (var player in playersToRemove)
+                        {
+                            players.Remove(player);
+                        }
+                    }
                     break;
             }
 
-            return -1;
+            return (players.Count == 0) ? -1 : players[game.RandomInt() % players.Count];
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
@@ -112,26 +184,26 @@ namespace Freeserf.AIStates
                     default:
                     case AI.AttackTarget.Random:
                         // with random we won't check for secondary targets
-                        AttackRandom(game, player, (int)playerInfo.Intelligence);
+                        AttackRandom(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         Kill(ai);
                         break;
                     case AI.AttackTarget.SmallMilitary:
-                        foundTarget = AttackSmallMilitary(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackSmallMilitary(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.FoodProduction:
-                        foundTarget = AttackFoodProduction(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackFoodProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.MaterialProduction:
-                        foundTarget = AttackMaterialProduction(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackMaterialProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Mines:
-                        foundTarget = AttackMines(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackMines(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.WeaponProduction:
-                        foundTarget = AttackWeaponProduction(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackWeaponProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Stocks:
-                        foundTarget = AttackStocks(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackStocks(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                 }
 
@@ -145,71 +217,87 @@ namespace Freeserf.AIStates
                 {
                     default:
                     case AI.AttackTarget.Random:
-                        AttackRandom(game, player, (int)playerInfo.Intelligence);
+                        AttackRandom(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.SmallMilitary:
-                        AttackSmallMilitary(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackSmallMilitary(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.FoodProduction:
-                        AttackFoodProduction(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackFoodProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.MaterialProduction:
-                        AttackMaterialProduction(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackMaterialProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Mines:
-                        AttackMines(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackMines(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.WeaponProduction:
-                        AttackWeaponProduction(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackWeaponProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Stocks:
-                        AttackStocks(game, player, (int)playerInfo.Intelligence);
+                        foundTarget = AttackStocks(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                 }
+
+                if (!foundTarget)
+                    AttackRandom(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
             }
 
             Kill(ai);
         }
 
-        void AttackRandom(Game game, Player player, int intelligence)
+        void AttackRandom(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
 
         }
 
-        bool AttackSmallMilitary(Game game, Player player, int intelligence)
+        bool AttackSmallMilitary(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackFoodProduction(Game game, Player player, int intelligence)
+        bool AttackFoodProduction(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackMaterialProduction(Game game, Player player, int intelligence)
+        bool AttackMaterialProduction(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackMines(Game game, Player player, int intelligence)
+        bool AttackMines(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackWeaponProduction(Game game, Player player, int intelligence)
+        bool AttackWeaponProduction(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackStocks(Game game, Player player, int intelligence)
+        bool AttackStocks(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
+        }
+
+        // The higher the return value, the better is this target in terms of winning chance.
+        int CheckTargetBuilding(Game game, Player player, uint pos)
+        {
+            int numMaxAttackKnights = player.KnightsAvailableForAttack(pos);
+
+            if (numMaxAttackKnights == 0)
+                return int.MinValue;
+
+            int numKnights = (int)game.GetBuildingAtPos(pos).GetKnightCount();
+
+            return numMaxAttackKnights - numKnights;
         }
     }
 }
