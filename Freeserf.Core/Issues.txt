@@ -19,21 +19,31 @@ AI:
 
 Flags / buildings / roads:
 - Linking flags should also allow for merging paths
+- Sometimes a building is build in a spot where the flag could not be linked and burned down afterwards (multiple times). This was fixed but it seems that it does still occur.
+- AIs with much resources build so much buildings at a time that no one is finished in a reasonable time. Maybe limit the number of constructed buildings. This will also relax traffic a bit.
+- AIs that prefer farms seem to build unlimited (at least way too much) farms.
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
 - With much starting supplies the AIs (even smart ones) build their castle in locations without stone.
+- New lumberjacks/foresters are build way too fast (especially the third one)
 
 Mining / finding minerals:
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.
 - In hard times the search for mountains should be better (look specific for coal and iron spots).
 - Flags for geologists are too far away from mountains.
 - Looking for mineral spots and actually building mines should be two separate steps (there are already but at the moment the FindOre state also builds the mine).
+- Sometimes there are way too many geologist out there. This also causes traffic. It seems that every single hammer is used to train a geologist.
 
 Some AI values are lost when saving/loading games!
-Add attacking!
+Finish attacking logic!
+
+
+Performance:
+
+- While debugging the game pauses from time to time (more game time = longer and more pauses). The game is unplayable very quick.
 
 
 Logic:
@@ -54,6 +64,7 @@ Logic:
 
 Notification Box:
 
+Bad display of text/image.
 Test again because font char gaps should be smaller now!
 
 - Text too long for:
@@ -107,3 +118,5 @@ Exceptions:
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.")
   - Not seen for a long time. Maybe only when setting the castle knights manually?
 - Target array is too small
+- Delivered unexpected resource
+- KeyNotFoundException (maybe when knights fight)

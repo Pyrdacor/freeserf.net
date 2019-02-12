@@ -31,7 +31,8 @@ namespace Freeserf.AIStates
     // TODO: The ai should prefer large buildings in large spots (especially at the beginning). Otherwise there might
     //       be no room for large building when one is needed.
     // TODO: Some buildings should never been placed too near to enemies like toolmaker, weaponsmith, stock, etc.
-    //       Especially the toolmaker in the beginning is crucial.
+    //       Especially the toolmaker in the beginning is crucial. Smart players should never build non-military
+    //       buildings at the border if an enemy is near (except for mines).
     class AIStateBuildBuilding : AIState
     {
         Building.Type type = Building.Type.None;

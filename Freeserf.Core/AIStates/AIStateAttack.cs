@@ -287,6 +287,8 @@ namespace Freeserf.AIStates
             if (bestBuildingScore == int.MinValue)
                 return false; // no valid target
 
+            // TODO: smart players should think twice if they attack and the score is too bad
+
             uint targetPosition = bestTargets[game.RandomInt() % bestTargets.Count];
 
             return Attack(game, player, targetPosition);
