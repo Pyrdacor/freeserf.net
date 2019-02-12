@@ -538,62 +538,17 @@ namespace Freeserf.UI
                         player.tempIndex = map.GetObjectIndex(mapPos);
                     }
                     else
-                    { 
+                    {
                         /* Foreign building */
                         /* TODO handle coop mode*/
-                        Building building = interf.Game.GetBuildingAtPos(mapPos);
-
-                        player.buildingAttacked = (int)building.Index;
-
-                        if (building.IsDone() &&
-                            building.IsMilitary())
+                        if (player.PrepareAttack(mapPos))
                         {
-                            if (!building.IsActive() ||
-                                building.GetThreatLevel() != 3)
-                            {
-                                /* It is not allowed to attack
-                                   if currently not occupied or
-                                   is too far from the border. */
-                                PlaySound(Audio.TypeSfx.NotAccepted);
-                                return false;
-                            }
-
-                            bool found = false;
-
-                            for (int i = 257; i >= 0; --i)
-                            {
-                                MapPos pos = map.PosAddSpirally(building.Position, (uint)(7 + 257 - i));
-
-                                if (map.HasOwner(pos) && map.GetOwner(pos) == player.Index)
-                                {
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (!found)
-                            {
-                                PlaySound(Audio.TypeSfx.NotAccepted);
-                                return false;
-                            }
-
-                            /* Action accepted */
-                            PlaySound(Audio.TypeSfx.Click);
-
-                            int maxKnights = 0;
-
-                            switch (building.BuildingType)
-                            {
-                                case Building.Type.Hut: maxKnights = 3; break;
-                                case Building.Type.Tower: maxKnights = 6; break;
-                                case Building.Type.Fortress: maxKnights = 12; break;
-                                case Building.Type.Castle: maxKnights = 20; break;
-                                default: Debug.NotReached(); break;
-                            }
-
-                            int knights = player.KnightsAvailableForAttack(building.Position);
-                            player.knightsAttacking = Math.Min(knights, maxKnights);
+                            PlaySound(Audio.TypeSfx.Accepted);
                             interf.OpenPopup(PopupBox.Type.StartAttack);
+                        }
+                        else
+                        {
+                            PlaySound(Audio.TypeSfx.NotAccepted);
                         }
                     }
                 }

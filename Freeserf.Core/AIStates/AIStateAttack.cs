@@ -20,6 +20,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf.AIStates
 {
@@ -246,9 +247,57 @@ namespace Freeserf.AIStates
             Kill(ai);
         }
 
+        bool Attack(Game game, Player player, uint targetPosition)
+        {
+            if (!player.PrepareAttack(targetPosition))
+                return false;
+
+            player.StartAttack();
+
+            return true;
+        }
+
+        bool AttackRandom(Game game, Player player, List<Building> possibleTargets)
+        {
+            List<uint> bestTargets = new List<uint>();
+            int bestBuildingScore = int.MinValue;
+
+            foreach (var building in possibleTargets)
+            {
+                if (!building.IsMilitary() || !building.IsDone() || building.IsBurning())
+                    continue;
+
+                if (!building.IsActive() || building.GetThreatLevel() != 3)
+                    continue;
+
+                int score = CheckTargetBuilding(game, player, building.Position);
+
+                if (score > bestBuildingScore)
+                {
+                    bestBuildingScore = score;
+                    bestTargets.Clear();
+                    bestTargets.Add(building.Position);
+                }
+                else if (score == bestBuildingScore)
+                {
+                    bestTargets.Add(building.Position);
+                }
+            }
+
+            if (bestBuildingScore == int.MinValue)
+                return false; // no valid target
+
+            uint targetPosition = bestTargets[game.RandomInt() % bestTargets.Count];
+
+            return Attack(game, player, targetPosition);
+        }
+
         void AttackRandom(Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
+            var targetPlayer = game.GetPlayer(targetPlayerIndex);
+            var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(b => b.IsMilitary(true)).ToList();
 
+            AttackRandom(game, player, targetPlayerMilitaryBuildings);
         }
 
         bool AttackSmallMilitary(Game game, Player player, int intelligence, uint targetPlayerIndex)
