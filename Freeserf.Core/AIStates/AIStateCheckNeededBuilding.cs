@@ -630,8 +630,13 @@ namespace Freeserf.AIStates
                             if (numNeeded > numberOfFarms)
                                 return true;
 
-                            if (numFoodEndBuildings == 0 && numberOfFarms == 0)
-                                return ai.GetFoodSourcePriority(0) != 2;
+                            if (numFoodEndBuildings == 0)
+                            {
+                                if (numberOfFarms == 0)
+                                    return ai.GetFoodSourcePriority(0) != 2;
+
+                                return false;
+                            }
 
                             return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f ||
                                 (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
