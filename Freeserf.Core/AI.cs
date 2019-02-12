@@ -112,6 +112,16 @@ namespace Freeserf
             Stocks
         }
 
+        public enum AttackPlayer
+        {
+            Random,
+            Weakest, // military
+            Worst, // all statistics
+            RandomHuman,
+            RandomAI,
+            WorstProtected // least military building occupation
+        }
+
         readonly Player player = null;
         readonly PlayerInfo playerInfo = null;
         readonly Stack<AIState> states = new Stack<AIState>();
@@ -214,6 +224,14 @@ namespace Freeserf
         /// The ai may prioritize specific targets when attacking
         /// </summary>
         public AttackTarget SecondPrioritizedAttackTarget { get; private set; } = AttackTarget.Random;
+        /// <summary>
+        /// The ai may prioritize specific players when attacking
+        /// </summary>
+        public AttackPlayer PrioritizedPlayer { get; private set; } = AttackPlayer.Random;
+        /// <summary>
+        /// The ai may prioritize specific players when attacking
+        /// </summary>
+        public AttackPlayer SecondPrioritizedPlayer { get; private set; } = AttackPlayer.Random;
 
         /// <summary>
         /// Priorities can be 0, 1 or 2 (each value can only be used once).
@@ -289,6 +307,8 @@ namespace Freeserf
                     foodSourcePriorities[1] = 2; // bread
                     foodSourcePriorities[2] = 1; // meat
                     FoodFocus = 1;
+                    PrioritizedPlayer = AttackPlayer.RandomAI;
+                    SecondPrioritizedPlayer = AttackPlayer.Random;
                     break;
                 case 2: // Kumpy Onefinger
                     GoldFocus = 2;
@@ -329,6 +349,7 @@ namespace Freeserf
                     militaryBuildingPriorities[1] = 2; // tower
                     militaryBuildingPriorities[2] = 0; // fortress
                     PrioritizedAttackTarget = AttackTarget.SmallMilitary;
+                    PrioritizedPlayer = AttackPlayer.WorstProtected;
                     break;
                 case 7: // Count Aldaba
                     Aggressivity = 2;
@@ -346,6 +367,7 @@ namespace Freeserf
                     foodSourcePriorities[2] = 0; // meat
                     PrioritizedAttackTarget = AttackTarget.Stocks;
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
+                    PrioritizedPlayer = AttackPlayer.WorstProtected;
                     break;
                 case 8: // King Rolph VII
                     Aggressivity = 2;
@@ -366,6 +388,8 @@ namespace Freeserf
                     foodSourcePriorities[2] = 2; // meat
                     PrioritizedAttackTarget = AttackTarget.MaterialProduction;
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
+                    PrioritizedPlayer = AttackPlayer.WorstProtected;
+                    SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
                 case 9: // Homen Doublehorn
                     Aggressivity = 2;
@@ -388,6 +412,8 @@ namespace Freeserf
                     foodSourcePriorities[2] = 1; // meat
                     PrioritizedAttackTarget = AttackTarget.Stocks;
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
+                    PrioritizedPlayer = AttackPlayer.WorstProtected;
+                    SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
                 case 10: // Sollok the Joker
                     Aggressivity = 2;
@@ -401,6 +427,8 @@ namespace Freeserf
                     ConstructionMaterialFocus = 2;
                     PrioritizedAttackTarget = AttackTarget.MaterialProduction;
                     SecondPrioritizedAttackTarget = AttackTarget.WeaponProduction;
+                    PrioritizedPlayer = AttackPlayer.WorstProtected;
+                    SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
                 case 11: // Enemy
                     Aggressivity = 2;
@@ -425,6 +453,8 @@ namespace Freeserf
                     minStonesForMilitaryBuildings[1] = 22; // fortress
                     PrioritizedAttackTarget = AttackTarget.Mines;
                     SecondPrioritizedAttackTarget = AttackTarget.MaterialProduction;
+                    PrioritizedPlayer = AttackPlayer.WorstProtected;
+                    SecondPrioritizedPlayer = AttackPlayer.RandomHuman;
                     break;
                 default:
                     break;

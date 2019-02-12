@@ -9,7 +9,6 @@ Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 - Minimap clicks near the map origin move to wrong x location
-- Sometimes road building is strange. No road is built in direction but then 2-3 at once.
 - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
 	- I guess this happens when the emergency program gets active at a specific time.
 	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
@@ -34,6 +33,7 @@ Mining / finding minerals:
 - Looking for mineral spots and actually building mines should be two separate steps (there are already but at the moment the FindOre state also builds the mine).
 
 Some AI values are lost when saving/loading games!
+Add attacking!
 
 
 Logic:

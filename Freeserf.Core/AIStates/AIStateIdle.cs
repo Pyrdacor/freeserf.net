@@ -125,7 +125,7 @@ namespace Freeserf.AIStates
             {
                 int attackCheckInterval = (60 - 15 * Math.Max(ai.Aggressivity, (ai.MilitaryFocus + 1) / 2)) * Global.TICKS_PER_SEC;
 
-                if (ai.GameTime >= (5 - (ai.Aggressivity + ai.MilitaryFocus) / 3) * Global.TICKS_PER_MIN)
+                if (ai.GameTime >= (30 - ai.Aggressivity * 3 - ai.MilitaryFocus) * Global.TICKS_PER_MIN)
                     attackTick += tick;
 
                 if (attackTick > attackCheckInterval)
