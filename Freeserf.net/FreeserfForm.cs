@@ -283,14 +283,16 @@ namespace Freeserf
 
             gameView.SetCursorPosition(e.X, e.Y);
 
-            pressedMouseButtons = e.Button;
+            var button = e.Button & (MouseButtons.Left | MouseButtons.Right);
 
-            if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
+            pressedMouseButtons = button;
+
+            if (button == MouseButtons.Left || button == MouseButtons.Right)
             {
                 if (lastDragX == int.MinValue)
                     return;
 
-                gameView.NotifyDrag(e.X, e.Y, lastDragX - e.X, lastDragY - e.Y, ConvertMouseButton(e.Button));
+                gameView.NotifyDrag(e.X, e.Y, lastDragX - e.X, lastDragY - e.Y, ConvertMouseButton(button));
                 lastDragX = e.X;
                 lastDragY = e.Y;
             }
@@ -303,13 +305,15 @@ namespace Freeserf
 
         void RenderControl_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)
+            var button = e.Button & (MouseButtons.Left | MouseButtons.Right);
+
+            if (button == MouseButtons.Left || button == MouseButtons.Right)
             {
                 lastDragX = e.X;
                 lastDragY = e.Y;
             }
 
-            pressedMouseButtons |= e.Button;
+            pressedMouseButtons |= button;
 
             if (pressedMouseButtons == (MouseButtons.Left | MouseButtons.Right))
             {
@@ -320,8 +324,10 @@ namespace Freeserf
 
         void RenderControl_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.None)
-                pressedMouseButtons &= ~e.Button;
+            var button = e.Button & (MouseButtons.Left | MouseButtons.Right);
+
+            if (button != MouseButtons.None)
+                pressedMouseButtons &= ~button;
         }
 
         bool[] KeysDown = new bool[256];
