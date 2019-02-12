@@ -205,15 +205,15 @@ namespace Freeserf
 
         public static int Max(int firstValue, int secondValue, params int[] values)
         {
-            int min = Math.Min(firstValue, secondValue);
+            int max = Math.Max(firstValue, secondValue);
 
             foreach (var value in values)
             {
-                if (value < min)
-                    min = value;
+                if (value > max)
+                    max = value;
             }
 
-            return min;
+            return max;
         }
     }
 }
