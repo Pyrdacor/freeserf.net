@@ -331,6 +331,11 @@ namespace Freeserf.AIStates
                 return CheckResult.NotNeeded;
             }
 
+            int numIncompleteBuildings = game.GetPlayerBuildings(player).Count(b => !b.IsDone());
+
+            if (numIncompleteBuildings > 2 + player.GetLandArea() / 200 + ai.GameTime / (20 * Global.TICKS_PER_MIN) + Math.Max(ai.ExpandFocus - 1, ai.BuildingFocus))
+                return CheckResult.NotNeeded;
+
             // If we can't produce knights and don't have any left, we won't build
             // several buildings until we have a weaponsmith. Otherwise we might
             // run out of space for large buildings and therefore a weaponsmith.
@@ -528,6 +533,10 @@ namespace Freeserf.AIStates
 
         bool NeedFoodBuilding(AI ai, Game game, Player player, Building.Type type)
         {
+            // TODO: Fishers can't be build in any case or on any map.
+            // Therefore the ratio for food end buildings need adjustment in this case.
+            // Otherwise no new food chains will be build.
+
             int numberOfMines = game.GetPlayerBuildings(player).Where(b =>
                 b.BuildingType == Building.Type.CoalMine ||
                 b.BuildingType == Building.Type.IronMine ||
@@ -638,8 +647,17 @@ namespace Freeserf.AIStates
                                 return false;
                             }
 
-                            return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f ||
-                                (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
+                            /*if (ai.GetFoodSourcePriority(1) == 2)
+                                return (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
+                            else if (ai.GetFoodSourcePriority(2) == 2)
+                                return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f;
+                            else
+                            {
+                                return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f ||
+                                    (float)numberOfButchers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(2) / 100.0f;
+                            }*/
+
+                            return false;
                         }
                 }
             }
