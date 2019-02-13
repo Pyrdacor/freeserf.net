@@ -516,7 +516,8 @@ namespace Freeserf.AIStates
                     if (!hasKnightRequirements)
                         return CheckResult.NotNeeded;
 
-                    if (count < (player.GetLandArea() - 1000 + ai.BuildingFocus * 350) / 1000 && ai.GameTime > 40 * Global.TICKS_PER_MIN &&
+                    if (count < (game.Map.Size + 1) / 2 + ai.BuildingFocus &&
+                        count < ((int)player.GetLandArea() + ai.BuildingFocus * 100) / 1000 && ai.GameTime > 40 * Global.TICKS_PER_MIN &&
                         player.GetCompletedBuildingCount(Building.Type.WeaponSmith) > count)
                         return NeedBuilding(ai, game, player, type);
                     break;
@@ -587,7 +588,7 @@ namespace Freeserf.AIStates
                 }
             }
 
-            int numPossibleMines = numberOfFishers + numberOfButchers * 3 + numberOfBakers * 3;
+            int numPossibleMines = numberOfFishers + numberOfButchers * 3 + numberOfBakers * 2;
             int numMineDiff = ai.FoodFocus + numberOfMines - numPossibleMines;
 
             if (numMineDiff <= 0)
