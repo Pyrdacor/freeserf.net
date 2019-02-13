@@ -340,14 +340,7 @@ namespace Freeserf.AIStates
                             return FindSpotNearBorder(game, player, intelligence, 2);
                         }
 
-                        int defendChance = (2 - (ai.ExpandFocus - ai.DefendFocus)) * 25;
-
-                        if (defendChance == 0)
-                            defendChance = 15;
-                        else if (defendChance == 100)
-                            defendChance = 85;
-
-                        defendChance -= 10;
+                        int defendChance = 2 + (2 - (ai.ExpandFocus - ai.DefendFocus)) * 8; // 2, 10, 18, 26 or 34 %
 
                         if (game.RandomInt() % 100 < defendChance)
                         {
