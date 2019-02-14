@@ -1181,6 +1181,9 @@ namespace Freeserf
 
         public void IncreaseSerfCount(Serf.Type type)
         {
+            if (type == Serf.Type.None || type == Serf.Type.Dead)
+                return;
+
             ++serfCount[(int)type];
 
             Dirty = true;
@@ -1188,6 +1191,9 @@ namespace Freeserf
 
         public void DecreaseSerfCount(Serf.Type type)
 		{
+            if (type == Serf.Type.None || type == Serf.Type.Dead)
+                return;
+
             if (serfCount[(int)type] == 0)
             {
                 throw new ExceptionFreeserf("Failed to decrease serf count");

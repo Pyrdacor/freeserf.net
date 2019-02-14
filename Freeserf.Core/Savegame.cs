@@ -211,6 +211,7 @@ namespace Freeserf
 
         public abstract SaveReaderTextValue Value(string name);
         public abstract Readers GetSections(string name);
+        public abstract bool HasValue(string name);
     }
 
     public abstract class SaveWriterText
@@ -581,6 +582,11 @@ namespace Freeserf
         {
             throw new ExceptionFreeserf("Recursive sections are not allowed");
         }
+
+        public override bool HasValue(string name)
+        {
+            return values.ContainsKey(name);
+        }
     }
 
     class SaveReaderTextFile : SaveReaderText
@@ -639,6 +645,11 @@ namespace Freeserf
             }
 
             return result;
+        }
+
+        public override bool HasValue(string name)
+        {
+            return values.ContainsKey(name);
         }
     }
 }

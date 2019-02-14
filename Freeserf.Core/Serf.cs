@@ -407,19 +407,31 @@ namespace Freeserf
                knightAttacking,
                knightAttackingVictory,
                knightEngageAttackingFree,
-               knightEngageAttackingFreeJoin,
-               knightAttackingVictoryFree,
+               knightEngageAttackingFreeJoin
             */
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SAttacking
             {
-                public int FieldB; /* B */
-                public int FieldC; /* C */
+                public int Move; /* B */
+                public int AttackerWon; /* C */
                 public int FieldD; /* D */
                 public int DefIndex; /* E */
             }
             [FieldOffset(0)]
             public SAttacking Attacking;
+
+            /* States: knightAttackingVictoryFree
+            */
+            [StructLayout(LayoutKind.Sequential, Pack = 1)]
+            public struct SAttackingVictoryFree
+            {
+                public int Move; /* B */
+                public int DistColumn; /* C */
+                public int DistRow; /* D */
+                public int DefIndex; /* E */
+            }
+            [FieldOffset(0)]
+            public SAttackingVictoryFree AttackingVictoryFree;
 
             /* States: knightDefendingFree,
                knightEngageDefendingFree */
@@ -781,6 +793,10 @@ namespace Freeserf
         public void SetSerfType(Type newType)
         {
             Type oldType = GetSerfType();
+
+            if (oldType == newType)
+                return;
+
             type = newType;
 
             /* Register this type as transporter */
@@ -2217,10 +2233,31 @@ namespace Freeserf
                 case State.KnightAttackingVictory:
                 case State.KnightEngageAttackingFree:
                 case State.KnightEngageAttackingFreeJoin:
-                case State.KnightAttackingVictoryFree:
-                    s.Attacking.FieldB = reader.Value("state.field_b").ReadInt();
-                    s.Attacking.FieldC = reader.Value("state.field_c").ReadInt();
+                    if (reader.HasValue("state.move"))
+                        s.Attacking.Move = reader.Value("state.move").ReadInt();
+                    else
+                        s.Attacking.Move = reader.Value("state.field_b").ReadInt();
+                    if (reader.HasValue("state.attacker_won"))
+                        s.Attacking.AttackerWon = reader.Value("state.attacker_won").ReadInt();
+                    else
+                        s.Attacking.AttackerWon = reader.Value("state.field_c").ReadInt();
                     s.Attacking.FieldD = reader.Value("state.field_d").ReadInt();
+                    s.Attacking.DefIndex = reader.Value("state.def_index").ReadInt();
+                    break;
+
+                case State.KnightAttackingVictoryFree:
+                    if (reader.HasValue("state.move"))
+                        s.AttackingVictoryFree.Move = reader.Value("state.move").ReadInt();
+                    else
+                        s.AttackingVictoryFree.Move = reader.Value("state.field_b").ReadInt();
+                    if (reader.HasValue("state.dist_col"))
+                        s.AttackingVictoryFree.DistColumn = reader.Value("state.dist_col").ReadInt();
+                    else
+                        s.AttackingVictoryFree.DistColumn = reader.Value("state.field_c").ReadInt();
+                    if (reader.HasValue("state.dist_row"))
+                        s.AttackingVictoryFree.DistRow = reader.Value("state.dist_row").ReadInt();
+                    else
+                        s.AttackingVictoryFree.DistRow = reader.Value("state.field_c").ReadInt();
                     s.Attacking.DefIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
@@ -2411,12 +2448,18 @@ namespace Freeserf
                 case State.KnightAttacking:
                 case State.KnightAttackingVictory:
                 case State.KnightEngageAttackingFree:
-                case State.KnightEngageAttackingFreeJoin:
-                case State.KnightAttackingVictoryFree:
-                    writer.Value("state.field_b").Write(s.Attacking.FieldB);
-                    writer.Value("state.field_c").Write(s.Attacking.FieldC);
+                case State.KnightEngageAttackingFreeJoin:                
+                    writer.Value("state.move").Write(s.Attacking.Move);
+                    writer.Value("state.field_c").Write(s.Attacking.AttackerWon);
                     writer.Value("state.field_d").Write(s.Attacking.FieldD);
                     writer.Value("state.def_index").Write(s.Attacking.DefIndex);
+                    break;
+
+                case State.KnightAttackingVictoryFree:
+                    writer.Value("state.move").Write(s.AttackingVictoryFree.Move);
+                    writer.Value("state.dist_col").Write(s.AttackingVictoryFree.DistColumn);
+                    writer.Value("state.dist_row").Write(s.AttackingVictoryFree.DistRow);
+                    writer.Value("state.def_index").Write(s.AttackingVictoryFree.DefIndex);
                     break;
 
                 case State.KnightDefendingFree:
@@ -2802,7 +2845,7 @@ namespace Freeserf
                 playerIndex = defender.Player;
                 value = defExpFactor;
                 ktype = defender.GetSerfType();
-                attacker.s.Attacking.FieldC = 1;
+                attacker.s.Attacking.AttackerWon = 1;
                 Log.Debug.Write("serf", $"Fight: {morale} vs {defMorale} ({result}). Attacker winning.");
             }
             else
@@ -2810,7 +2853,7 @@ namespace Freeserf
                 playerIndex = attacker.Player;
                 value = expFactor;
                 ktype = attacker.GetSerfType();
-                attacker.s.Attacking.FieldC = 0;
+                attacker.s.Attacking.AttackerWon = 0;
                 Log.Debug.Write("serf", $"Fight: {morale} vs {defMorale} ({result}). Defender winning.");
             }
 
@@ -2818,7 +2861,7 @@ namespace Freeserf
 
             player.DecreaseMilitaryScore(value);
             player.DecreaseSerfCount(ktype);
-            attacker.s.Attacking.FieldB = Game.RandomInt() & 0x70;
+            attacker.s.Attacking.Move = Game.RandomInt() & 0x70;
         }
 
         static bool HandleSerfWalkingStateSearchCB(Flag flag, object data)
@@ -6797,11 +6840,11 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                int move = KnightAttackMoves[s.Attacking.FieldB];
+                int move = KnightAttackMoves[s.Attacking.Move];
 
                 if (move < 0)
                 {
-                    if (s.Attacking.FieldC == 0)
+                    if (s.Attacking.AttackerWon == 0)
                     {
                         /* Defender won. */
                         if (SerfState == State.KnightAttackingFree)
@@ -6838,9 +6881,9 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
-                            s.Attacking.FieldB = defSerf.s.DefendingFree.FieldD;
-                            s.Attacking.FieldC = defSerf.s.DefendingFree.OtherDistColumn;
-                            s.Attacking.FieldD = defSerf.s.DefendingFree.OtherDistRow;
+                            s.AttackingVictoryFree.Move = defSerf.s.DefendingFree.FieldD;
+                            s.AttackingVictoryFree.DistColumn = defSerf.s.DefendingFree.OtherDistColumn;
+                            s.AttackingVictoryFree.DistRow = defSerf.s.DefendingFree.OtherDistRow;
                         }
                         else
                         {
@@ -6857,14 +6900,17 @@ namespace Freeserf
                         defSerf.tick = Game.Tick;
                         defSerf.Animation = 147 + (int)GetSerfType();
                         defSerf.Counter = 255;
-                        SetSerfType(Type.Dead);
+                        defSerf.SetSerfType(Type.Dead);
                     }
                 }
                 else
                 {
                     /* Go to next move in fight sequence. */
-                    ++s.Attacking.FieldB;
-                    if (s.Attacking.FieldC == 0) move = 4 - move;
+                    ++s.Attacking.Move;
+
+                    if (s.Attacking.AttackerWon == 0)
+                        move = 4 - move;
+
                     s.Attacking.FieldD = move;
 
                     int off = (Game.RandomInt() * KnightFightAnimMax[move]) >> 16;
@@ -7163,7 +7209,7 @@ namespace Freeserf
 
         void HandleKnightAttackingVictoryFree()
         {
-            Serf other = Game.GetSerf((uint)s.Attacking.DefIndex);
+            Serf other = Game.GetSerf((uint)s.AttackingVictoryFree.DefIndex);
 
             ushort delta = (ushort)(Game.Tick - other.tick);
             other.tick = Game.Tick;
@@ -7173,17 +7219,17 @@ namespace Freeserf
             {
                 Game.DeleteSerf(other);
 
-                int distCol = s.Attacking.FieldC;
-                int distRow = s.Attacking.FieldD;
+                int distColumn = s.AttackingVictoryFree.DistColumn;
+                int distRow = s.AttackingVictoryFree.DistRow;
 
                 SetState(State.KnightAttackingFreeWait);
 
-                s.FreeWalking.Dist1 = distCol;
+                s.FreeWalking.Dist1 = distColumn;
                 s.FreeWalking.Dist2 = distRow;
                 s.FreeWalking.NegDist1 = 0;
                 s.FreeWalking.NegDist2 = 0;
 
-                if (s.Attacking.FieldB != 0)
+                if (s.Attacking.Move != 0)
                 {
                     s.FreeWalking.Flags = 1;
                 }
