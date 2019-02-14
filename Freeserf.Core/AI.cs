@@ -171,6 +171,10 @@ namespace Freeserf
         /// </summary>
         public int Aggressivity { get; private set; } = 0; // 0 - 2
         /// <summary>
+        /// Prefering rushing (2 = rushes very often)
+        /// </summary>
+        public int RushAffinity { get; private set; } = 0; // 0 - 2
+        /// <summary>
         /// How skilled in fights (2 = skilled fighter)
         /// </summary>
         public int MilitarySkill { get; private set; } = 0; // 0 - 2
@@ -393,6 +397,7 @@ namespace Freeserf
                     break;
                 case 9: // Homen Doublehorn
                     Aggressivity = 2;
+                    RushAffinity = 1;
                     MilitarySkill = 2;
                     MilitaryFocus = 2;
                     ExpandFocus = 2;
@@ -417,6 +422,7 @@ namespace Freeserf
                     break;
                 case 10: // Sollok the Joker
                     Aggressivity = 2;
+                    RushAffinity = 2;
                     MilitarySkill = 2;
                     MilitaryFocus = 2;
                     ExpandFocus = 2;
@@ -432,6 +438,7 @@ namespace Freeserf
                     break;
                 case 11: // Enemy
                     Aggressivity = 2;
+                    RushAffinity = 1;
                     MilitarySkill = 2;
                     MilitaryFocus = 2;
                     ExpandFocus = 2;

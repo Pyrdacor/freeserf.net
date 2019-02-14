@@ -1113,7 +1113,7 @@ namespace Freeserf
             return origin;
         }
 
-        public MapPos FindFirstSpotTowards(uint basePosition, Func<Map, MapPos, bool> targetSearchFunc, int minDist = 1)
+        public MapPos FindFarthestTerritorySpotTowards(uint basePosition, Func<Map, MapPos, bool> targetSearchFunc, int minDist = 1)
         {
             uint owner = GetOwner(basePosition);
             uint minSum = (uint)(minDist * minDist + minDist) / 2;
