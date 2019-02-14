@@ -832,14 +832,19 @@ namespace Freeserf.AIStates
             return map.FindInArea(basePosition, range, FindBuilding, minDist).Count(f => (f as Building).IsMilitary(includeCastle));
         }
 
+        int UnfinishedMilitaryBuildingsInArea(Map map, uint basePosition, int range, int minDist = 0, bool includeCastle = true)
+        {
+            return map.FindInArea(basePosition, range, FindBuilding, minDist).Count(f => (f as Building).IsMilitary(includeCastle) && !(f as Building).IsDone());
+        }
+
         bool IsEmptySpotWithoutMuchMilitary(Map map, uint basePosition)
         {
-            return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) < 3;
+            return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) < 3 && UnfinishedMilitaryBuildingsInArea(map, basePosition, 8) == 0;
         }
 
         bool IsEmptySpotWithoutMilitary(Map map, uint basePosition)
         {
-            return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) <= 1;
+            return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) < 2;
         }
 
         static int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
