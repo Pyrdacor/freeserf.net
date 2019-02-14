@@ -555,37 +555,42 @@ namespace Freeserf.AIStates
 
             // If there are no mines and some game time has passed
             // the AI will at least build one of its favorite food source chain.
-            if (numberOfMines == 0 && ai.GameTime >= (5 - ai.FoodFocus) * Global.TICKS_PER_MIN)
+            if (numberOfMines == 0)
             {
-                switch (type)
+                if (ai.GameTime >= (25 - ai.FoodFocus * 4 - (type == Building.Type.Fisher ? 5 : 0)) * Global.TICKS_PER_MIN)
                 {
-                    case Building.Type.Fisher:
-                        if (numberOfFishers == 0 && (ai.GetFoodSourcePriority(0) == 2 || !hasPotentialFarmer))
-                            return true;
-                        break;
-                    case Building.Type.Farm:
-                        if (numberOfFarms == 0 && ai.GetFoodSourcePriority(0) != 2 && hasPotentialFarmer)
-                            return true;
-                        break;
-                    case Building.Type.Mill:
-                        if (numberOfCompletedFarms != 0 && numberOfMills < Math.Max(1, ai.FoodFocus) && ai.GetFoodSourcePriority(1) == 2 &&
-                            game.GetResourceAmountInInventories(player, Resource.Type.Plank) > 3)
-                            return true;
-                        break;
-                    case Building.Type.Baker:
-                        if (numberOfMills != 0 && numberOfBakers == 0 && ai.GetFoodSourcePriority(1) == 2)
-                            return true;
-                        break;
-                    case Building.Type.PigFarm:
-                        if (numberOfCompletedFarms != 0 && numberOfPigFarms < 2 + ai.FoodFocus && ai.GetFoodSourcePriority(2) == 2 &&
-                            game.GetResourceAmountInInventories(player, Resource.Type.Plank) > 4)
-                            return true;
-                        break;
-                    case Building.Type.Butcher:
-                        if (numberOfPigFarms != 0 && numberOfButchers == 0 && ai.GetFoodSourcePriority(2) == 2)
-                            return true;
-                        break;
+                    switch (type)
+                    {
+                        case Building.Type.Fisher:
+                            if (numberOfFishers == 0 && (ai.GetFoodSourcePriority(0) == 2 || !hasPotentialFarmer))
+                                return true;
+                            break;
+                        case Building.Type.Farm:
+                            if (numberOfFarms == 0 && ai.GetFoodSourcePriority(0) != 2 && hasPotentialFarmer)
+                                return true;
+                            break;
+                        case Building.Type.Mill:
+                            if (numberOfCompletedFarms != 0 && numberOfMills < Math.Max(1, ai.FoodFocus) && ai.GetFoodSourcePriority(1) == 2 &&
+                                game.GetResourceAmountInInventories(player, Resource.Type.Plank) > 3)
+                                return true;
+                            break;
+                        case Building.Type.Baker:
+                            if (numberOfMills != 0 && numberOfBakers == 0 && ai.GetFoodSourcePriority(1) == 2)
+                                return true;
+                            break;
+                        case Building.Type.PigFarm:
+                            if (numberOfCompletedFarms != 0 && numberOfPigFarms < 2 + ai.FoodFocus && ai.GetFoodSourcePriority(2) == 2 &&
+                                game.GetResourceAmountInInventories(player, Resource.Type.Plank) > 4)
+                                return true;
+                            break;
+                        case Building.Type.Butcher:
+                            if (numberOfPigFarms != 0 && numberOfButchers == 0 && ai.GetFoodSourcePriority(2) == 2)
+                                return true;
+                            break;
+                    }
                 }
+
+                return false;
             }
 
             int numPossibleMines = numberOfFishers + numberOfButchers * 3 + numberOfBakers * 2;
@@ -606,7 +611,9 @@ namespace Freeserf.AIStates
                             return ai.GetFoodSourcePriority(0) == 2;
                         return (float)numberOfFishers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(0) / 100.0f;
                     case Building.Type.Mill:
-                        if (numberOfCompletedFarms == 0)
+                        if (numberOfMills > 1 + numberOfBakers * 2)
+                            return false;
+                        if (numberOfCompletedFarms == 0 && game.GetResourceAmountInInventories(player, Resource.Type.Wheat) < 10)
                             return false;
                         if (numberOfMills < numberOfBakers * 2)
                             return true;
@@ -620,7 +627,9 @@ namespace Freeserf.AIStates
                             return ai.GetFoodSourcePriority(1) == 2;
                         return (float)numberOfBakers / numFoodEndBuildings < ai.GetFoodSourcePriorityInPercentage(1) / 100.0f;
                     case Building.Type.PigFarm:
-                        if (numberOfCompletedFarms == 0)
+                        if (numberOfPigFarms > 2 + numberOfButchers * 6)
+                            return false;
+                        if (numberOfCompletedFarms == 0 && game.GetResourceAmountInInventories(player, Resource.Type.Wheat) < 10)
                             return false;
                         if (numberOfPigFarms < numberOfButchers * 6)
                             return true;
