@@ -519,7 +519,9 @@ namespace Freeserf.Render
                     x = renderPosition.X + animation.X;
                     y = renderPosition.Y + animation.Y;
 
-                    DrawAdditionalSerf(game, tick, map, animation, renderPosition);
+                    // TODO: The defending serf is already drawn. What is the purpose of this?
+                    // The only thing that is necessary is the fighting flash.
+                    //DrawAdditionalSerf(game, tick, map, animation, renderPosition);
                 }
                 else if(fightingEnemy != null)
                 {
@@ -538,21 +540,33 @@ namespace Freeserf.Render
 
             head = (body == -1) ? -1 : GetHeadSprite(ref body);
 
+            // fights look very strange (at least the attacker)
+
             if (body >= 0)
             {
                 uint torsoSpriteIndexWithoutColor = TorsoOffset + (uint)body;
                 uint torsoSpriteIndex = torsoSpriteIndexWithoutColor + serf.Player * TorsoPlayerOffset;
 
-                var torsoSpriteInfo = torsoSpriteInfos[torsoSpriteIndexWithoutColor];
+                // TODO: This commented if/else was added to avoid an exception. But since DrawAdditionalSerf is no longer called, it seems to be ok now.
+                //if (torsoSpriteInfos.ContainsKey(torsoSpriteIndexWithoutColor))
+                {
+                    var torsoSpriteInfo = torsoSpriteInfos[torsoSpriteIndexWithoutColor];
 
-                sprite.X = x + torsoSpriteInfo.Position.X;
-                sprite.Y = y + torsoSpriteInfo.Position.Y;
-                sprite.Resize(torsoSpriteInfo.Size.Width, torsoSpriteInfo.Size.Height);
-                sprite.TextureAtlasOffset = textureAtlas.GetOffset(torsoSpriteIndex);
-                sprite.BaseLineOffset = baseLineOffset;
+                    sprite.X = x + torsoSpriteInfo.Position.X;
+                    sprite.Y = y + torsoSpriteInfo.Position.Y;
+                    sprite.Resize(torsoSpriteInfo.Size.Width, torsoSpriteInfo.Size.Height);
+                    sprite.TextureAtlasOffset = textureAtlas.GetOffset(torsoSpriteIndex);
+                    sprite.BaseLineOffset = baseLineOffset;
 
-                sprite.Visible = true;
-                shadowSprite.Visible = true; // TODO
+                    sprite.Visible = true;
+                    shadowSprite.Visible = true; // TODO
+                }
+                /*else
+                {
+                    head = -1;
+                    sprite.Visible = false;
+                    shadowSprite.Visible = false; // TODO
+                }*/
             }
             else
             {
@@ -712,6 +726,7 @@ namespace Freeserf.Render
                             var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, sprite);
                             var offset = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs).GetOffset(5000u + sprite);
 
+                            // TODO: the fighting flashs x-coordinate is too high
                             fightingFlashVisible = true;
                             fightingFlash.X = renderPosition.X + FightingFlashOffsets[2 * anim];
                             fightingFlash.Y = renderPosition.Y - FightingFlashOffsets[2 * anim + 1];
