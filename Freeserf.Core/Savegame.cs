@@ -245,31 +245,7 @@ namespace Freeserf
 
         protected GameStore()
         {
-            FolderPath = ".";
-
-#if WINDOWS
-            FolderPath = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Saved Games");
-#elif __APPLE__
-            FolderPath = Environment.GetEnvironmentVariable("HOME");
-            FolderPath += "/Library/Application Support";
-#else
-            FolderPath = Environment.GetEnvironmentVariable("HOME");
-            FolderPath += "/.local/share";
-#endif
-
-            FolderPath += "/freeserf";
-
-#if !WINDOWS
-            FolderPath += "/saves";
-
-            if (!is_folder_exists(folder_path))
-            {
-                if (!create_folder(folder_path))
-                {
-                    throw ExceptionFreeserf("Failed to create folder");
-                }
-            }
-#endif
+            FolderPath = FileSystem.Paths.SaveGameFolder;
 
             if (!Directory.Exists(FolderPath))
             {

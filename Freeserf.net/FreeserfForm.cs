@@ -36,8 +36,6 @@ namespace Freeserf
             Size = new System.Drawing.Size(width + diffX, height + diffY);
         }
 
-        static readonly string UserConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf.net", "user.cfg");
-
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
             Network.Network.DefaultClientFactory = new Network.ClientFactory();
@@ -51,7 +49,7 @@ namespace Freeserf
                 debugConsole.AttachLog();
             }
 
-            UserConfig.Load(UserConfigFile);
+            UserConfig.Load(FileSystem.Paths.UserConfigPath);
 
             // TODO: for now we just load DOS data (test path)
             DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
@@ -507,8 +505,8 @@ namespace Freeserf
 
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(UserConfigFile));
-                UserConfig.Save(UserConfigFile);
+                Directory.CreateDirectory(Path.GetDirectoryName(FileSystem.Paths.UserConfigPath));
+                UserConfig.Save(FileSystem.Paths.UserConfigPath);
             }
             catch
             {
