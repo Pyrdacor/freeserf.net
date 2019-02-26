@@ -17,6 +17,15 @@ Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It i
 You have to install .NET Framework 4.6.1 to run the game. You can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
 
 
+## Support development
+
+If you want to support this project you can donate with PayPal.
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=76DV5MK5GNEMS&source=url)
+
+Thank you very much.
+
+
 ## Current State
 
 Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
