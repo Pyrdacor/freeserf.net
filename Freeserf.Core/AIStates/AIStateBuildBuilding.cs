@@ -704,8 +704,67 @@ namespace Freeserf.AIStates
 
         uint FindSpotForStock(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
-            // TODO
-            return Global.BadMapPos;
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary(false));
+            List<Building> possibleBaseBuildings = new List<Building>();
+
+            foreach (var militaryBuilding in militaryBuildings)
+            {
+                var buildingsInArea = game.Map.FindInArea(militaryBuilding.Position, 9, FindBuilding, 1);
+                int numMilitary = 0;
+                bool nearCastle = false;
+
+                foreach (var building in buildingsInArea)
+                {
+                    var b = building as Building;
+
+                    if (b.BuildingType == Building.Type.Castle)
+                    {
+                        nearCastle = true;
+                        break;
+                    }
+
+                    if ((building as Building).IsMilitary(false))
+                        ++numMilitary;
+                }
+
+                if (!nearCastle && numMilitary > 3)
+                {
+                    possibleBaseBuildings.Add(militaryBuilding);
+                }
+            }
+
+            int bestBuildingInventoryDist = 0;
+            uint bestBuildingPos = Global.BadMapPos;
+            var inventories = game.GetPlayerInventories(player);
+
+            foreach (var building in possibleBaseBuildings)
+            {
+                int buildingDist = int.MaxValue;
+                var flag = game.GetFlag(building.GetFlagIndex());
+
+                foreach (var inventory in inventories)
+                {
+                    var inventoryBuilding = game.GetBuilding(inventory.GetBuildingIndex());
+
+                    int dist = Pathfinder.FindShortestRoad(game.Map, game.GetFlag(inventoryBuilding.GetFlagIndex()), flag, out uint cost).Count;
+
+                    if (dist < buildingDist)
+                        buildingDist = dist;
+                }
+
+                if (buildingDist > bestBuildingInventoryDist)
+                {
+                    bestBuildingInventoryDist = buildingDist;
+                    bestBuildingPos = building.Position;
+                }
+            }
+
+            if (bestBuildingPos == Global.BadMapPos)
+            {
+                return bestBuildingPos;
+            }
+
+            return game.Map.FindSpotNear(bestBuildingPos, 6, CanBuildLarge, game.GetRandom(), 1);
         }
 
 
@@ -845,6 +904,11 @@ namespace Freeserf.AIStates
         bool IsEmptySpotWithoutMilitary(Map map, uint basePosition)
         {
             return FindEmptySpot(map, basePosition).Success && MilitaryBuildingsInArea(map, basePosition, 8) < 2;
+        }
+
+        bool CanBuildLarge(Map map, uint pos)
+        {
+            return game.CanBuildLarge(pos);
         }
 
         static int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
