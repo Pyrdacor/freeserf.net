@@ -9,9 +9,6 @@ Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 - Minimap clicks near the map origin move to wrong x location
-- Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
-	- I guess this happens when the emergency program gets active at a specific time.
-	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
 - Possible builds contain not all possible building locations
 
 
@@ -55,13 +52,16 @@ Logic:
   - I think in original game the transporter went straight to idle mode when he was at the right location.
   - Is this maybe caused by wrong road building direction? This is often seen in AIs. Maybe the linking of roads is reversed there?!
 - Geologists give up too fast.
-- Once a freewalking lumberjack blockes a road and stand there waiting. Also seen a forester. He was not even on the road but tried to walk towards it. The transporter on the road
+- Once a freewalking lumberjack blocks a road and stand there waiting. Also seen a forester. He was not even on the road but tried to walk towards it. The transporter on the road
   was also blocked by this.
 - Sometimes there is a deadlock of walking serfs. Saw a digger and a transporter that were waiting at each other but could just switch positions.
   - In debug there were two diggers (one with state WaitIdleOnPath and one with Walking). A digger should never have WaitIdleOnPath I think as this is for transporters only!
 - Sometimes construction materials are not moved out of the castle. The construction site gets no resources. After demolishing/rebuilding it works again.
   This also happens if the building was already built a bit. And it seems to happen quite often lately.
   - Since a change in update logic this seem to be fixed. Further testing needed.
+  - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
+	- I guess this happens when the emergency program gets active at a specific time.
+	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
 
 
 Notification Box:
@@ -97,7 +97,6 @@ Nice to have:
 
 TODO:
 
-- Finish game saving/loading
 - Check/improve map position selection (clicks, minimap clicks, centering)
 - Finish AIs
 - Finish rendering of fighting serfs (additional serf stuff)
