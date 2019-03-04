@@ -723,7 +723,7 @@ namespace Freeserf.AIStates
                         break;
                     }
 
-                    if ((building as Building).IsMilitary(false))
+                    if (b.IsMilitary(false))
                         ++numMilitary;
                 }
 

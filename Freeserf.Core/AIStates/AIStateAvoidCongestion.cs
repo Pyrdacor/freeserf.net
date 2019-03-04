@@ -27,6 +27,8 @@ namespace Freeserf.AIStates
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             // TODO
+            // Step 1: Find flags with high traffic (waiting serfs, many resources)
+            // Step 2: Do something to decongest the nearby roads
 
             Kill(ai);
         }
