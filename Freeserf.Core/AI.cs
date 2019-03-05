@@ -27,9 +27,15 @@ namespace Freeserf
 {
     abstract class AIState
     {
+        readonly AI.State state = AI.State.None;
         public bool Killed { get; protected set; } = false;
         public AIState NextState { get; protected set; } = null;
         public int Delay { get; set; } = 0;
+
+        protected AIState(AI.State state)
+        {
+            this.state = state;
+        }
 
         public abstract void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick);
 
@@ -46,10 +52,52 @@ namespace Freeserf
 
             Kill(ai);
         }
+
+        public static AIState Read(AI ai, string name, SaveReaderText reader)
+        {
+            var type = (AI.State)reader.Value($"{name}.type").ReadInt();
+
+            if (type == AI.State.None)
+                return null;
+
+            var state = ai.CreateState(type);
+
+            state.ReadFrom(name, reader);
+
+            return state;
+        }
+
+        protected virtual void ReadFrom(string name, SaveReaderText reader)
+        {
+            // TODO: override in some derived state classes that have parameters or other state values
+            // TODO
+        }
+
+        public virtual void WriteTo(string name, SaveWriterText writer)
+        {
+            // TODO: override in some derived state classes that have parameters or other state values
+
+            writer.Value($"{name}.type").Write(state);
+            writer.Value($"{name}.killed").Write(Killed);
+
+            if (NextState == null)
+                writer.Value($"{name}.next_state.type").Write(AI.State.None);
+            else
+                // TODO: Could we come to an infinite recursive loop here?
+                NextState.WriteTo($"{name}.next_state", writer);
+
+            writer.Value($"{name}.delay").Write(Delay);
+        }
     }
 
     abstract class ResetableAIState : AIState
     {
+        protected ResetableAIState(AI.State state)
+            : base(state)
+        {
+
+        }
+
         public void Reset()
         {
             Killed = false;
@@ -84,6 +132,7 @@ namespace Freeserf
     {
         public enum State
         {
+            None = -1,
             Idle,
             ChooseCastleLocation,
             CastleBuilt,
@@ -760,23 +809,24 @@ namespace Freeserf
                 case State.Idle:
                     return new AIStates.AIStateIdle();
                 case State.ChooseCastleLocation:
-                    return new AIStates.AIStateChoosingCastleLocation();
+                    return new AIStates.AIStateChooseCastleLocation();
                 case State.CastleBuilt:
                     return new AIStates.AIStateCastleBuilt();
                 case State.BuildBuilding:
-                    return new AIStates.AIStateBuildBuilding((Building.Type)param);
+                    return new AIStates.AIStateBuildBuilding(param == null ? Building.Type.None : (Building.Type)param);
                 case State.LinkBuilding:
-                    return new AIStates.AIStateLinkBuilding((uint)param);
+                    return new AIStates.AIStateLinkBuilding(param == null ? 0u : (uint)param);
                 case State.LinkDisconnectedFlags:
                     return new AIStates.AIStateLinkDisconnectedFlags();
                 case State.CheckNeededBuilding:
                     return new AIStates.AIStateCheckNeededBuilding();
                 case State.CraftTool:
-                    return new AIStates.AIStateCraftTool(player.Game, player, (Resource.Type)param);
+                    // TODO: When loading a save game, is player and player.Game already valid when loading the state?
+                    return new AIStates.AIStateCraftTool(player.Game, player, param == null ? Resource.Type.None : (Resource.Type)param);
                 case State.CraftWeapons:
                     return new AIStates.AIStateCraftWeapons();
                 case State.FindOre:
-                    return new AIStates.AIStateFindOre((Map.Minerals)param);
+                    return new AIStates.AIStateFindMinerals(param == null ? Map.Minerals.None : (Map.Minerals)param);
                 case State.AdjustSettings:
                     return new AIStates.AIStateAdjustSettings();
                 case State.Attack:
@@ -980,6 +1030,37 @@ namespace Freeserf
             }
 
             lastTick = game.Tick;
+        }
+
+        public void ReadFrom(SaveReaderText reader)
+        {
+            // TODO
+        }
+
+        public void WriteTo(SaveWriterText writer)
+        {
+            writer.Value("player").Write(player.Index);
+            writer.Value("character").Write(playerInfo.Face);
+            writer.Value("supplies").Write(playerInfo.Supplies);
+            writer.Value("intelligence").Write(playerInfo.Intelligence);
+            writer.Value("reproduction").Write(playerInfo.Reproduction);
+
+            writer.Value("numStates").Write(states.Count);
+            int stateIndex = 0;
+
+            foreach (var state in states)
+                state.WriteTo("state" + stateIndex++, writer);
+
+            writer.Value("last_tick").Write(lastTick);
+            writer.Value("last_update").Write(lastUpdate);
+            writer.Value("game_time").Write(GameTime);
+            writer.Value("random").Write(random.ToString());
+
+            writer.Value("can_attack").Write(CanAttack);
+            writer.Value("can_expand").Write(CanExpand);
+            writer.Value("max_military_buildings").Write(MaxMilitaryBuildings);
+
+            // TODO ...
         }
     }
 

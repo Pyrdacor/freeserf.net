@@ -77,6 +77,12 @@ namespace Freeserf.AIStates
             Building.Type.Boatbuilder
         };
 
+        public AIStateCheckNeededBuilding()
+            : base(AI.State.CheckNeededBuilding)
+        {
+
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             CheckResult result = CheckResult.NotNeeded;

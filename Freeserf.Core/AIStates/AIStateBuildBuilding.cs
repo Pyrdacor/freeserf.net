@@ -46,6 +46,7 @@ namespace Freeserf.AIStates
         readonly object searchingLock = new object();
 
         public AIStateBuildBuilding(Building.Type buildingType)
+            : base(AI.State.BuildBuilding)
         {
             type = buildingType;
         }
@@ -508,7 +509,7 @@ namespace Freeserf.AIStates
             {
                 var randomBuilding = buildings[game.RandomInt() % buildings.Count];
 
-                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, AIStateFindOre.MineTypes[(int)mineral], maxInArea))
+                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, AIStateFindMinerals.MineTypes[(int)mineral], maxInArea))
                 {
                     if (MineralsInArea(game.Map, randomBuilding.Position, 9, mineral, FindMineral, 1) > 0)
                     {

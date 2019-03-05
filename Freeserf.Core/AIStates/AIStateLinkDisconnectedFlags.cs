@@ -34,6 +34,12 @@ namespace Freeserf.AIStates
         readonly object linkingLock = new object();
         readonly object linkingFailedLock = new object();
 
+        public AIStateLinkDisconnectedFlags()
+            : base(AI.State.LinkDisconnectedFlags)
+        {
+
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             lock (linkingLock)

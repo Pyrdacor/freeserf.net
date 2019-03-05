@@ -25,6 +25,12 @@ namespace Freeserf.AIStates
 {
     class AIStateCastleBuilt : AIState
     {
+        public AIStateCastleBuilt()
+            : base(AI.State.CastleBuilt)
+        {
+
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             if (!game.GetPlayerBuildings(player, Building.Type.Castle).Any(c => c.IsDone()))

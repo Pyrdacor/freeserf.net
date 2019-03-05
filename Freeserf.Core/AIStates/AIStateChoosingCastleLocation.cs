@@ -25,7 +25,7 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
-    class AIStateChoosingCastleLocation : AIState
+    class AIStateChooseCastleLocation : AIState
     {
         const int scansPerUpdate = 50;
         bool built = false;
@@ -37,6 +37,12 @@ namespace Freeserf.AIStates
         int foodFocus = -1;
         int constructionMaterialFocus = -1;
         int aggressivity = -1;
+
+        public AIStateChooseCastleLocation()
+            : base(AI.State.ChooseCastleLocation)
+        {
+
+        }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {

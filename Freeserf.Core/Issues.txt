@@ -9,7 +9,7 @@ Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 - Minimap clicks near the map origin move to wrong x location
-- Possible builds contain not all possible building locations
+- Possible builds contain not all possible building locations (e.g. for the castle)
 
 
 AI:

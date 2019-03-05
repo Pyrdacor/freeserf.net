@@ -27,6 +27,12 @@ namespace Freeserf.AIStates
     // TODO: Attack enemy buildings and find good spots to attack.
     class AIStateAttack : AIState
     {
+        public AIStateAttack()
+            : base(AI.State.Attack)
+        {
+
+        }
+
         int GetTargetPlayer(AI ai, Game game, uint selfIndex)
         {
             List<int> players = new List<int>(3);

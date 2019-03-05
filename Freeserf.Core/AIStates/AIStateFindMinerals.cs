@@ -26,11 +26,12 @@ using System.Linq;
 namespace Freeserf.AIStates
 {
     // Find ore and build a mine there
-    class AIStateFindOre : AIState
+    class AIStateFindMinerals : AIState
     {
         Map.Minerals oreType = Map.Minerals.None;
 
-        public AIStateFindOre(Map.Minerals oreType)
+        public AIStateFindMinerals(Map.Minerals oreType)
+            : base(AI.State.FindOre)
         {
             this.oreType = oreType;
         }

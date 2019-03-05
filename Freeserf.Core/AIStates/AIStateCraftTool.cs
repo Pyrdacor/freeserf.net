@@ -32,6 +32,7 @@ namespace Freeserf.AIStates
         int previousCount = -1;
 
         public AIStateCraftTool(Game game, Player player, Resource.Type tool)
+            : base(AI.State.CraftTool)
         {
             this.tool = tool;
 

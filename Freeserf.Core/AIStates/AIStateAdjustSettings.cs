@@ -26,6 +26,12 @@ namespace Freeserf.AIStates
     // TODO: Change settings like tool and flag priorities, military settings and so on.
     class AIStateAdjustSettings : AIState
     {
+        public AIStateAdjustSettings()
+            : base(AI.State.AdjustSettings)
+        {
+
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             // knight occupation setting 

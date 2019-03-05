@@ -31,11 +31,13 @@ namespace Freeserf.AIStates
         uint buildingIndex = uint.MaxValue;
 
         public AIStateDestroyUselessBuildings()
+            : base(AI.State.DestroyUselessBuildings)
         {
 
         }
 
         public AIStateDestroyUselessBuildings(uint buildingIndex)
+            : base(AI.State.DestroyUselessBuildings)
         {
             this.buildingIndex = buildingIndex;
         }

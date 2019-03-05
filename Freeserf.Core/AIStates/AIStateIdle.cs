@@ -41,7 +41,13 @@ namespace Freeserf.AIStates
         int destroyUselessBuildingsTick = 0;
         int attackTick = 0;
         AIStateCheckNeededBuilding buildNeededBuildingState = new AIStateCheckNeededBuilding();
-        
+
+        public AIStateIdle()
+            : base(AI.State.Idle)
+        {
+
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             // check for unconnected flags once in a while

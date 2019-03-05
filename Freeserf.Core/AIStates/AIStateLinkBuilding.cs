@@ -28,6 +28,7 @@ namespace Freeserf.AIStates
         uint buildingPos = Global.BadMapPos;
 
         public AIStateLinkBuilding(uint buildingPos)
+            : base(AI.State.LinkBuilding)
         {
             this.buildingPos = buildingPos;
         }
