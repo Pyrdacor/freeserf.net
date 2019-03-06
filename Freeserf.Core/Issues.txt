@@ -111,6 +111,7 @@ TODO:
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected, get materials after demolishing)
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
+- Feature to record a game and replay/watch it (like watching an AIvsAI game)
 
 
 Exceptions:
