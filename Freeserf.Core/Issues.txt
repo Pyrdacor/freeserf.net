@@ -112,6 +112,11 @@ TODO:
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
 - Feature to record a game and replay/watch it (like watching an AIvsAI game)
+- Feature: Crash handler:
+	- Should try to save the current game
+	- Should try to continue without crashing
+	- Should show detailed error information
+	- Should allow to send a bug report
 
 
 Exceptions:
