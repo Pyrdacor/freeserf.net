@@ -51,6 +51,22 @@ namespace Freeserf.AIStates
             type = buildingType;
         }
 
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            type = reader.Value($"{name}.building_type").ReadBuilding();
+            builtPosition = reader.Value($"{name}.built_position").ReadUInt();
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.building_type").Write(type);
+            writer.Value($"{name}.built_position").Write(builtPosition);
+        }
+
         void Search()
         {
             uint pos;

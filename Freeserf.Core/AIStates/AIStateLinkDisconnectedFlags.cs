@@ -26,7 +26,7 @@ using System.Threading;
 
 namespace Freeserf.AIStates
 {
-    class AIStateLinkDisconnectedFlags : AIState
+    class AIStateLinkDisconnectedFlags : ResetableAIState
     {
         readonly Dictionary<Flag, int> connectTriesPerFlag = new Dictionary<Flag, int>();
         readonly Dictionary<Flag, int> linkingFailed = new Dictionary<Flag, int>();
@@ -38,6 +38,64 @@ namespace Freeserf.AIStates
             : base(AI.State.LinkDisconnectedFlags)
         {
 
+        }
+
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            int numConnectTriesPerFlag = reader.Value($"{name}.connect_tries_per_flag.count").ReadInt();
+
+            for (int i = 0; i < numConnectTriesPerFlag; ++i)
+            {
+                var flagIndex = reader.Value($"{name}.connect_tries_per_flag.flag{i}").ReadUInt();
+                var tries = reader.Value($"{name}.connect_tries_per_flag.tries{i}").ReadInt();
+                var flag = game.GetFlag(flagIndex);
+
+                connectTriesPerFlag.Add(flag, tries);
+            }
+
+            int numLinkingFailed = reader.Value($"{name}.linking_failed.count").ReadInt();
+
+            for (int i = 0; i < numLinkingFailed; ++i)
+            {
+                var flagIndex = reader.Value($"{name}.linking_failed.flag{i}").ReadUInt();
+                var amount = reader.Value($"{name}.linking_failed.amount{i}").ReadInt();
+                var flag = game.GetFlag(flagIndex);
+
+                linkingFailed.Add(flag, amount);
+            }
+
+            linkingCount = reader.Value($"{name}.linking_count").ReadInt();
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.connect_tries_per_flag.count").Write(connectTriesPerFlag.Count);
+            int index = 0;
+
+            foreach (var connectTries in connectTriesPerFlag)
+            {
+                writer.Value($"{name}.connect_tries_per_flag.flag{index}").Write(connectTries.Key.Index);
+                writer.Value($"{name}.connect_tries_per_flag.tries{index}").Write(connectTries.Value);
+
+                ++index;
+            }
+
+            writer.Value($"{name}.linking_failed.count").Write(linkingFailed.Count);
+            index = 0;
+
+            foreach (var linkFailed in linkingFailed)
+            {
+                writer.Value($"{name}.linking_failed.flag{index}").Write(linkFailed.Key.Index);
+                writer.Value($"{name}.linking_failed.amount{index}").Write(linkFailed.Value);
+
+                ++index;
+            }
+
+            writer.Value($"{name}.linking_count").Write(linkingCount);
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)

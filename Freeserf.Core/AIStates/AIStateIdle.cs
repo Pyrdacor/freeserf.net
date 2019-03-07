@@ -34,13 +34,14 @@ namespace Freeserf.AIStates
     // The idle state will decide what to do next.
     class AIStateIdle : AIState
     {
-        int checkUnconnectedFlagsTick = 0;
+        int checkDisconnectedFlagsTick = 0;
         int buildNeededBuildingsTick = 0;
         int adjustSettingsTick = 0;
         int avoidCongestionTick = 0;
         int destroyUselessBuildingsTick = 0;
         int attackTick = 0;
         AIStateCheckNeededBuilding buildNeededBuildingState = new AIStateCheckNeededBuilding();
+        AIStateLinkDisconnectedFlags linkDisconnectedFlagsState = new AIStateLinkDisconnectedFlags();
 
         public AIStateIdle()
             : base(AI.State.Idle)
@@ -48,18 +49,60 @@ namespace Freeserf.AIStates
 
         }
 
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            checkDisconnectedFlagsTick = reader.Value($"{name}.check_disconnected_flags_tick").ReadInt();
+            buildNeededBuildingsTick = reader.Value($"{name}.build_needed_buildings_tick").ReadInt();
+            adjustSettingsTick = reader.Value($"{name}.adjust_settings_tick").ReadInt();
+            avoidCongestionTick = reader.Value($"{name}.avoid_congestion_tick").ReadInt();
+            destroyUselessBuildingsTick = reader.Value($"{name}.destroy_useless_buildings_tick").ReadInt();
+            attackTick = reader.Value($"{name}.attack_tick").ReadInt();
+
+            buildNeededBuildingState = (AIStateCheckNeededBuilding)Read(game, ai, $"{name}.build_needed_building_state", reader);
+            linkDisconnectedFlagsState = (AIStateLinkDisconnectedFlags)Read(game, ai, $"{name}.link_disconnected_flags_state", reader);
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.check_disconnected_flags_tick").Write(checkDisconnectedFlagsTick);
+            writer.Value($"{name}.build_needed_buildings_tick").Write(buildNeededBuildingsTick);
+            writer.Value($"{name}.adjust_settings_tick").Write(adjustSettingsTick);
+            writer.Value($"{name}.avoid_congestion_tick").Write(avoidCongestionTick);
+            writer.Value($"{name}.destroy_useless_buildings_tick").Write(destroyUselessBuildingsTick);
+            writer.Value($"{name}.attack_tick").Write(attackTick);
+
+            if (buildNeededBuildingState == null)
+                writer.Value($"{name}.build_needed_building_state.type").Write(AI.State.None);
+            else
+                buildNeededBuildingState.WriteTo($"{name}.build_needed_building_state", writer);
+
+            if (linkDisconnectedFlagsState == null)
+                writer.Value($"{name}.link_disconnected_flags_state.type").Write(AI.State.None);
+            else
+                linkDisconnectedFlagsState.WriteTo($"{name}.link_disconnected_flags_state", writer);
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             // check for unconnected flags once in a while
-            checkUnconnectedFlagsTick += tick;
+            checkDisconnectedFlagsTick += tick;
 
-            if (checkUnconnectedFlagsTick > (15 - (int)playerInfo.Intelligence / 15) * Global.TICKS_PER_SEC)
+            if (checkDisconnectedFlagsTick > (15 - (int)playerInfo.Intelligence / 15) * Global.TICKS_PER_SEC)
             {
-                checkUnconnectedFlagsTick = 0;
+                checkDisconnectedFlagsTick = 0;
 
                 if (ai.Chance(50))
                 {
-                    ai.PushState(ai.CreateState(AI.State.LinkDisconnectedFlags));
+                    if (!ai.ContainsState(linkDisconnectedFlagsState))
+                    {
+                        linkDisconnectedFlagsState.Reset();
+                        ai.PushState(linkDisconnectedFlagsState);
+                    }
+
                     return;
                 }
             }

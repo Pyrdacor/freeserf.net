@@ -53,30 +53,31 @@ namespace Freeserf
             Kill(ai);
         }
 
-        public static AIState Read(AI ai, string name, SaveReaderText reader)
+        public static AIState Read(Game game, AI ai, string name, SaveReaderText reader)
         {
-            var type = (AI.State)reader.Value($"{name}.type").ReadInt();
+            var type = reader.Value($"{name}.type").ReadEnum<AI.State>();
 
             if (type == AI.State.None)
                 return null;
 
             var state = ai.CreateState(type);
 
-            state.ReadFrom(name, reader);
+            state.ReadFrom(game, ai, name, reader);
 
             return state;
         }
 
-        protected virtual void ReadFrom(string name, SaveReaderText reader)
+        protected virtual void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
         {
-            // TODO: override in some derived state classes that have parameters or other state values
-            // TODO
+            // Note: The type is read in the static Read function
+
+            Killed = reader.Value($"{name}.killed").ReadBool();
+            NextState = Read(game, ai, $"{name}.next_state", reader);
+            Delay = reader.Value($"{name}.delay").ReadInt();
         }
 
         public virtual void WriteTo(string name, SaveWriterText writer)
         {
-            // TODO: override in some derived state classes that have parameters or other state values
-
             writer.Value($"{name}.type").Write(state);
             writer.Value($"{name}.killed").Write(Killed);
 
@@ -171,13 +172,13 @@ namespace Freeserf
             WorstProtected // least military building occupation
         }
 
-        readonly Player player = null;
-        readonly PlayerInfo playerInfo = null;
+        Player player = null;
+        PlayerInfo playerInfo = null;
         readonly Stack<AIState> states = new Stack<AIState>();
         int lastTick = 0;
         long lastUpdate = 0;
         internal long GameTime { get; private set; } = 0;
-        readonly Random random = new Random(Guid.NewGuid().ToString());
+        Random random = new Random(Guid.NewGuid().ToString());
 
         // Special AI values
         public bool CanAttack { get; protected set; } = true;
@@ -331,6 +332,11 @@ namespace Freeserf
             this.player = player;
             this.playerInfo = playerInfo;
 
+            Init();
+        }
+
+        void Init()
+        {
             // Default values
             Aggressivity = 0;
             MilitarySkill = 0;
@@ -1032,12 +1038,89 @@ namespace Freeserf
             lastTick = game.Tick;
         }
 
-        public void ReadFrom(SaveReaderText reader)
+        public static AI Read(SaveReaderText reader, Game game, bool firstAI)
         {
-            // TODO
+            var player = game.GetPlayer(reader.Value("player").ReadUInt());
+            var character = reader.Value("character").ReadUInt();
+            var supplies = reader.Value("supplies").ReadUInt();
+            var intelligence = reader.Value("intelligence").ReadUInt();
+            var reproduction = reader.Value("reproduction").ReadUInt();
+            var playerInfo = new PlayerInfo(character, PlayerInfo.PlayerColors[player.Index], intelligence, supplies, reproduction);
+
+            var ai = new AI(player, playerInfo);
+
+            ai.ReadFrom(reader, game, firstAI);
+
+            return ai;
         }
 
-        public void WriteTo(SaveWriterText writer)
+        void ReadFrom(SaveReaderText reader, Game game, bool firstAI)
+        {
+            int numStates = reader.Value("num_states").ReadInt();
+            
+            for (int i = 0; i < numStates; ++i)
+            {
+                var state = AIState.Read(game, this, "state" + i, reader);
+
+                if (state != null)
+                    PushState(state);
+            }
+
+            lastTick = reader.Value("last_tick").ReadInt();
+            lastUpdate = reader.Value("last_update").ReadLong();
+            GameTime = reader.Value("game_time").ReadLong();
+            random = new Random(reader.Value("random").ReadString());
+
+            CanAttack = reader.Value("can_attack").ReadBool();
+            CanExpand = reader.Value("can_expand").ReadBool();
+            MaxMilitaryBuildings = reader.Value("max_military_buildings").ReadInt();
+
+            // first AI stores the mineral memory
+            if (firstAI)
+            {
+                memorizedMineralSpots.Clear();
+
+                foreach (Map.Minerals mineral in Enum.GetValues(typeof(Map.Minerals)))
+                {
+                    if (mineral == Map.Minerals.None)
+                        continue;
+
+                    string name = "mineral_" + Enum.GetName(typeof(Map.Minerals), mineral).ToLower();
+                    int index = 0;
+
+                    while (true)
+                    {
+                        string spotName = name + "_" + index;
+
+                        if (reader.HasValue(spotName + "_pos") && reader.HasValue(spotName + "_large"))
+                        {
+                            var pos = reader.Value(spotName + "_pos").ReadUInt();
+                            var large = reader.Value(spotName + "_large").ReadBool();
+                            var spot = new MineralSpot()
+                            {
+                                Position = pos,
+                                Large = large
+                            };
+
+                            if (index == 0)
+                                memorizedMineralSpots.Add(mineral, new List<MineralSpot>());
+
+                            memorizedMineralSpots[mineral].Add(spot);
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                        ++index;
+                    }
+                }
+            }
+
+            Init();
+        }
+
+        public void WriteTo(SaveWriterText writer, bool firstAI)
         {
             writer.Value("player").Write(player.Index);
             writer.Value("character").Write(playerInfo.Face);
@@ -1045,7 +1128,7 @@ namespace Freeserf
             writer.Value("intelligence").Write(playerInfo.Intelligence);
             writer.Value("reproduction").Write(playerInfo.Reproduction);
 
-            writer.Value("numStates").Write(states.Count);
+            writer.Value("num_states").Write(states.Count);
             int stateIndex = 0;
 
             foreach (var state in states)
@@ -1060,7 +1143,22 @@ namespace Freeserf
             writer.Value("can_expand").Write(CanExpand);
             writer.Value("max_military_buildings").Write(MaxMilitaryBuildings);
 
-            // TODO ...
+            // first AI stores the mineral memory
+            if (firstAI)
+            {
+                foreach (KeyValuePair<Map.Minerals, List<MineralSpot>> memorizedMineralSpot in memorizedMineralSpots)
+                {
+                    string name = "mineral_" + Enum.GetName(typeof(Map.Minerals), memorizedMineralSpot.Key).ToLower();
+                    int index = 0;
+
+                    foreach (var mineralSpot in memorizedMineralSpot.Value)
+                    {
+                        string spotName = name + "_" + index;
+                        writer.Value(spotName + "_pos").Write(mineralSpot.Position);
+                        writer.Value(spotName + "_large").Write(mineralSpot.Position);
+                    }
+                }
+            }
         }
     }
 

@@ -39,6 +39,26 @@ namespace Freeserf.AIStates
             previousCount = GetCurrentToolCount(game, player);
         }
 
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            tool = reader.Value($"{name}.tool").ReadResource();
+            triesBuildToolmaker = reader.Value($"{name}.tries_build_toolmaker").ReadInt();
+            tries = reader.Value($"{name}.tries").ReadInt();
+            previousCount = reader.Value($"{name}.previous_count").ReadInt();
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.tool").Write(tool);
+            writer.Value($"{name}.tries_build_toolmaker").Write(triesBuildToolmaker);
+            writer.Value($"{name}.tries").Write(tries);
+            writer.Value($"{name}.previous_count").Write(previousCount);
+        }
+
         // This includes tool count and amount of serfs that use the tool.
         int GetCurrentToolCount(Game game, Player player)
         {

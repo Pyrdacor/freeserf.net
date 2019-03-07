@@ -3320,6 +3320,25 @@ namespace Freeserf
             PostLoadRoads();
 
             map.AddChangeHandler(this);
+
+            // make map objects visible
+            foreach (var tile in map.Geometry)
+            {
+                if (map.GetObject(tile) != Map.Object.None && !map.HasFlag(tile) && !map.HasBuilding(tile))
+                    OnObjectPlaced(tile);
+            }
+
+            // load AI
+            bool firstAI = true;
+
+            foreach (var subreader in reader.GetSections("player_ai"))
+            {
+                Player player = players.GetOrInsert((uint)subreader.Number);
+
+                player.AI = AI.Read(subreader, this, firstAI);
+
+                firstAI = false;
+            }
         }
 
         public void WriteTo(SaveWriterText writer)
@@ -3401,6 +3420,21 @@ namespace Freeserf
             }
 
             map.WriteTo(writer);
+
+            // store AI
+            bool firstAI = true;
+
+            foreach (var player in players)
+            {
+                if (player.IsAi())
+                {
+                    var aiWriter = writer.AddSection("player_ai", player.Index);
+
+                    player.AI.WriteTo(aiWriter, firstAI);
+
+                    firstAI = false;
+                }
+            }
         }
 
         // Load serf state from save game.

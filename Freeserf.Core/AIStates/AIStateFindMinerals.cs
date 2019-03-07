@@ -28,12 +28,26 @@ namespace Freeserf.AIStates
     // Find ore and build a mine there
     class AIStateFindMinerals : AIState
     {
-        Map.Minerals oreType = Map.Minerals.None;
+        Map.Minerals mineralType = Map.Minerals.None;
 
-        public AIStateFindMinerals(Map.Minerals oreType)
+        public AIStateFindMinerals(Map.Minerals mineralType)
             : base(AI.State.FindOre)
         {
-            this.oreType = oreType;
+            this.mineralType = mineralType;
+        }
+
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            mineralType = (Map.Minerals)reader.Value($"{name}.mineral_type").ReadInt();
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.mineral_type").Write(mineralType);
         }
 
         internal static readonly Building.Type[] MineTypes = new Building.Type[4]
@@ -46,7 +60,7 @@ namespace Freeserf.AIStates
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
-            if (oreType == Map.Minerals.None)
+            if (mineralType == Map.Minerals.None)
             {
                 Kill(ai);
                 return;
@@ -54,9 +68,9 @@ namespace Freeserf.AIStates
 
             uint spot = 0;
             int maxGeologists = ai.HardTimes() ? 2 : 2 + (int)(ai.GameTime / ((45 - Misc.Max(ai.GoldFocus, ai.SteelFocus) * 5) * Global.TICKS_PER_MIN));
-            var mineType = MineTypes[(int)oreType - 1];
-            var largeSpots = AI.GetMemorizedMineralSpots(oreType, true).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index).ToList();
-            var smallSpots = AI.GetMemorizedMineralSpots(oreType, false).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index && !largeSpots.Contains(s)).ToList();
+            var mineType = MineTypes[(int)mineralType - 1];
+            var largeSpots = AI.GetMemorizedMineralSpots(mineralType, true).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index).ToList();
+            var smallSpots = AI.GetMemorizedMineralSpots(mineralType, false).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index && !largeSpots.Contains(s)).ToList();
             bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_SEC + playerInfo.Intelligence * 30 * Global.TICKS_PER_SEC) || ai.StupidDecision();
 
             if (ai.HardTimes() && smallSpots.Count > 1 && ai.GameTime >= 10 * Global.TICKS_PER_MIN)
@@ -102,7 +116,7 @@ namespace Freeserf.AIStates
                         {
                             // TODO: what should we do then? -> try to craft a hammer? wait for generics? abort?
                             Kill(ai);
-                            ai.CreateRandomDelayedState(AI.State.FindOre, 10000, (120 - (int)playerInfo.Intelligence) * 2000, oreType);
+                            ai.CreateRandomDelayedState(AI.State.FindOre, 10000, (120 - (int)playerInfo.Intelligence) * 2000, mineralType);
                             return;
                         }
                     }
@@ -138,7 +152,7 @@ namespace Freeserf.AIStates
                         {
                             Kill(ai);
                             // check again in a while
-                            ai.CreateRandomDelayedState(AI.State.FindOre, 30000, (120 - (int)playerInfo.Intelligence) * 2000, oreType);
+                            ai.CreateRandomDelayedState(AI.State.FindOre, 30000, (120 - (int)playerInfo.Intelligence) * 2000, mineralType);
                             return;
                         }
                     }

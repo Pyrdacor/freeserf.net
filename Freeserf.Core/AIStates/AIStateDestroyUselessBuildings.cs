@@ -42,6 +42,20 @@ namespace Freeserf.AIStates
             this.buildingIndex = buildingIndex;
         }
 
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            buildingIndex = reader.Value($"{name}.building_index").ReadUInt();
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.building_index").Write(buildingIndex);
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             if (buildingIndex != uint.MaxValue)

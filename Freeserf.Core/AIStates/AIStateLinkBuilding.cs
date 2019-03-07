@@ -25,24 +25,38 @@ namespace Freeserf.AIStates
 {
     class AIStateLinkBuilding : AIState
     {
-        uint buildingPos = Global.BadMapPos;
+        uint buildingPosition = Global.BadMapPos;
 
         public AIStateLinkBuilding(uint buildingPos)
             : base(AI.State.LinkBuilding)
         {
-            this.buildingPos = buildingPos;
+            this.buildingPosition = buildingPos;
+        }
+
+        protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
+        {
+            base.ReadFrom(game, ai, name, reader);
+
+            buildingPosition = reader.Value($"{name}.building_position").ReadUInt();
+        }
+
+        public override void WriteTo(string name, SaveWriterText writer)
+        {
+            base.WriteTo(name, writer);
+
+            writer.Value($"{name}.building_position").Write(buildingPosition);
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
-            if (game.GetBuildingAtPos(buildingPos) == null) // building has gone (maybe an enemy took the land)
+            if (game.GetBuildingAtPos(buildingPosition) == null) // building has gone (maybe an enemy took the land)
             {
                 Kill(ai);
                 return;
             }
 
-            var buildingType = game.GetBuildingAtPos(buildingPos).BuildingType;
-            var flagPos = game.Map.MoveDownRight(buildingPos);
+            var buildingType = game.GetBuildingAtPos(buildingPosition).BuildingType;
+            var flagPos = game.Map.MoveDownRight(buildingPosition);
 
             // don't link if already linked
             if (game.Map.Paths(flagPos) > 0 && game.GetFlagAtPos(flagPos).FindNearestInventoryForSerf() != -1)
@@ -54,7 +68,7 @@ namespace Freeserf.AIStates
             // if we cannot link the building, we will demolish it
             if (!ai.LinkFlag(game.GetFlagAtPos(flagPos)))
             {
-                game.DemolishBuilding(buildingPos, player);
+                game.DemolishBuilding(buildingPosition, player);
 
                 if (game.Map.Paths(flagPos) == 0)
                     game.DemolishFlag(flagPos, player);

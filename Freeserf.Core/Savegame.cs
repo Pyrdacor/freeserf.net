@@ -151,24 +151,46 @@ namespace Freeserf
             return ReadInt() != 0;
         }
 
+        public long ReadLong()
+        {
+            return long.Parse(value);
+        }
+
         public Direction ReadDirection()
         {
-            return (Direction)ReadInt();
+            return ReadEnum<Direction>();
         }
 
         public Resource.Type ReadResource()
         {
-            return (Resource.Type)ReadInt();
+            return ReadEnum<Resource.Type>();
         }
 
         public Building.Type ReadBuilding()
         {
-            return (Building.Type)ReadInt();
+            return ReadEnum<Building.Type>();
         }
 
         public Serf.State ReadSerfState()
         {
-            return (Serf.State)ReadInt();
+            return ReadEnum<Serf.State>();
+        }
+
+        dynamic ReadEnum(Type enumType)
+        {
+            try
+            {
+                return ReadInt();
+            }
+            catch
+            {
+                return Enum.Parse(enumType, value, true);
+            }
+        }
+
+        public T ReadEnum<T>()
+        {
+            return (T)ReadEnum(typeof(T));
         }
 
         public ushort ReadWord()
@@ -200,7 +222,7 @@ namespace Freeserf
 
         public void Write(bool val)
         {
-            Value += ((Value.Length > 0) ? "," : "") + ((val) ? "1" : "0");
+            Value += ((Value.Length > 0) ? "," : "") + (val ? "1" : "0");
         }
     }
 
