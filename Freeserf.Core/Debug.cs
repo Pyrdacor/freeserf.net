@@ -21,10 +21,12 @@
  */
 
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Freeserf
 {
+    // TODO: Add system to each exception creation/raising in project
     public class ExceptionFreeserf : Exception
     {
         public string Description
@@ -33,11 +35,46 @@ namespace Freeserf
             protected set;
         }
 
-        public virtual string System => "Unspecified";
+        public virtual string System { get; private set; } = null;
 
-        public ExceptionFreeserf(string description)
+        public string SourceFile { get; }
+        public int SourceLineNumber { get; }
+        public Game Game { get; } = null;
+
+        public ExceptionFreeserf(string description, [CallerLineNumber] int lineNumber = 0,
+            [CallerFilePath] string file = "")
         {
             Description = description;
+            SourceFile = file;
+            SourceLineNumber = lineNumber;
+        }
+
+        public ExceptionFreeserf(string system, string description,
+            [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string file = "")
+        {
+            System = system;
+            Description = description;
+            SourceFile = file;
+            SourceLineNumber = lineNumber;
+        }
+
+        public ExceptionFreeserf(Game game, string description, [CallerLineNumber] int lineNumber = 0,
+            [CallerFilePath] string file = "")
+        {
+            Description = description;
+            SourceFile = file;
+            SourceLineNumber = lineNumber;
+            Game = game;
+        }
+
+        public ExceptionFreeserf(Game game, string system, string description,
+            [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string file = "")
+        {
+            System = system;
+            Description = description;
+            SourceFile = file;
+            SourceLineNumber = lineNumber;
+            Game = game;
         }
 
         public override string ToString()
@@ -45,21 +82,17 @@ namespace Freeserf
             return Message;
         }
 
-        public override string Message => "[" + System + "]" + Description;
+        public override string Message => System == null ? Description : "[" + System + "]" + Description;
     }
 
     public static class Debug
     {
-        static string SourceCodeLocation([CallerLineNumber] int lineNumber = 0,
-            [CallerFilePath] string file = "")
-        {
-            return " at line " + lineNumber + " of " + file + ".";
-        }
 
 #if DEBUG
-        public static void NotReached()
+        public static void NotReached([CallerLineNumber] int lineNumber = 0,
+            [CallerFilePath] string file = "")
         {
-            Log.Error.Write("debug", "NOT_REACHED" + SourceCodeLocation());
+            Log.Error.Write("debug", "NOT_REACHED at line " + lineNumber + " of " + Path.GetFileName(file) + ".");
             Environment.Exit(6);
         }
 #else

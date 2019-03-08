@@ -63,6 +63,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CrashHandlerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CrashHandlerForm.Designer.cs">
+      <DependentUpon>CrashHandlerForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DebugConsole.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -77,6 +83,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="CrashHandlerForm.resx">
+      <DependentUpon>CrashHandlerForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DebugConsole.resx">
       <DependentUpon>DebugConsole.cs</DependentUpon>
     </EmbeddedResource>

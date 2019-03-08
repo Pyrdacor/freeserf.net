@@ -372,12 +372,23 @@ namespace Freeserf
         public bool QuickSave(string prefix, Game game)
         {
             /* Build filename including time stamp. */
-            GameStore saveGame = new GameStore();
+            GameStore saveGame = new GameStore(); // TODO: Do we need this?
             string name = DateTime.Now.ToString("dd-MM-yy-HH-mm-ss", CultureInfo.InvariantCulture);
 
             string path = Path.Combine(saveGame.FolderPath, prefix + "-" + name + ".save");
 
             return Save(path, game);
+        }
+
+        public bool QuickSave(string prefix, Game game, out string savedPath)
+        {
+            /* Build filename including time stamp. */
+            GameStore saveGame = new GameStore(); // TODO: Do we need this?
+            string name = DateTime.Now.ToString("dd-MM-yy-HH-mm-ss", CultureInfo.InvariantCulture);
+
+            savedPath = Path.Combine(saveGame.FolderPath, prefix + "-" + name + ".save");
+
+            return Save(savedPath, game);
         }
 
         public bool Read(StreamReader reader, Game game)

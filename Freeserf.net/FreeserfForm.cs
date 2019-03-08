@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 using Freeserf.Renderer.OpenTK;
 using Orientation = Freeserf.Renderer.OpenTK.Orientation;
@@ -17,6 +19,7 @@ namespace Freeserf
         static Timer clickWaitTimer = new Timer();
         Global.InitInfo initInfo = null;
         DebugConsole debugConsole = null;
+        CrashHandlerForm crashHandlerForm = new CrashHandlerForm();
 
         public FreeserfForm(string[] args)
         {
@@ -151,7 +154,10 @@ namespace Freeserf
             {
                 FrameTimer.Stop();
                 Log.Error.Write("render", ex.Message);
-                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                
+
+                if (crashHandlerForm.RaiseException(ex) == UI.CrashReaction.Restart)
+                    Process.Start(Assembly.GetEntryAssembly().Location);
+
                 Close();
                 return;
             }
