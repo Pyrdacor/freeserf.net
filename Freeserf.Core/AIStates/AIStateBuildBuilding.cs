@@ -361,34 +361,36 @@ namespace Freeserf.AIStates
 
                         if (game.RandomInt() % 100 < defendChance)
                         {
-                            // TODO: The order should be a bit random. Otherwise some buildings will be decorated with huts every game.
-                            var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 1 + ai.DefendFocus);
+                            uint spot = Global.BadMapPos;
 
-                            if (spot == Global.BadMapPos)
+                            if (ai.Chance(10))
+                                spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 1 + ai.DefendFocus);
+
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldSmelter, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.IronMine, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldMine, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.SteelSmelter, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Sawmill, 1 + ai.DefendFocus);
 
-                            if (spot == Global.BadMapPos)
+                            if (spot == Global.BadMapPos && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Castle, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)

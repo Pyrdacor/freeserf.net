@@ -106,7 +106,6 @@ namespace Freeserf
     }
 
     // TODO: The AI should not try to build a fisher when there is no water. Instead it must switch to a different food resource.
-    // TODO: The AI must change some settings (like military settings, resource priorities and so on).
 
     /*
      * AIs with higher intelligence should be more clever when dealing
@@ -148,7 +147,6 @@ namespace Freeserf
             Attack,
             AvoidCongestion,
             DestroyUselessBuildings
-            // TODO ...
         }
 
         public enum AttackTarget
@@ -844,7 +842,6 @@ namespace Freeserf
                         return new AIStates.AIStateDestroyUselessBuildings();
                     else
                         return new AIStates.AIStateDestroyUselessBuildings((uint)param);
-                    // TODO ...
             }
 
             throw new ExceptionFreeserf(player.Game, "ai", "Unknown AI state");

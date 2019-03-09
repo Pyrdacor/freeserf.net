@@ -795,8 +795,6 @@ namespace Freeserf
             if (map.Paths(pos) != 0)
                 return false;
 
-            // TODO: What about desert and snow? Is this handled somewhere else?
-
             return true;
         }
 
@@ -1280,9 +1278,7 @@ namespace Freeserf
                 {
                     MapPos checkPos = map.PosAdd(pos, j, i);
 
-                    if (map.GetObject(checkPos) >= Map.Object.SmallBuilding &&
-                        map.GetObject(checkPos) <= Map.Object.Castle &&
-                        map.HasPath(checkPos, Direction.DownRight)) // TODO(_): Why wouldn't this be set?
+                    if (map.HasBuilding(checkPos))
                     { 
                         Building building = GetBuildingAtPos(checkPos);
                         int militaryType = -1;

@@ -23,7 +23,6 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
-    // TODO: Change settings like tool and flag priorities, military settings and so on.
     class AIStateAdjustSettings : AIState
     {
         public AIStateAdjustSettings()
@@ -144,7 +143,12 @@ namespace Freeserf.AIStates
                 player.SetSteelToolmaker(ushort.MaxValue);
                 player.SetSteelWeaponsmith(ushort.MinValue);
             }
-            // TODO: if military focus is high, the weaponsmith should become nearly any steel there is
+            else if (ai.MilitaryFocus == 2)
+            {
+                // if military focus is high, the weaponsmith gets nearly any steel there is
+                player.SetSteelToolmaker(1 * ushort.MaxValue / 8);
+                player.SetSteelWeaponsmith(7 * ushort.MaxValue / 8);
+            }
 
             // coal distribution
             player.ResetCoalPriority();

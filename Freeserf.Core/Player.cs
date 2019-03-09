@@ -856,7 +856,7 @@ namespace Freeserf
             for (int i = 0; i < attackingBuildingCount; i++)
             {
                 /* TODO building index may not be valid any more(?). */
-                Building building = Game.GetBuilding((uint)attackingBuildings[i]);
+                Building building = Game.GetBuilding(attackingBuildings[i]);
 
                 if (building.IsBurning() || map.GetOwner(building.Position) != Index)
                 {

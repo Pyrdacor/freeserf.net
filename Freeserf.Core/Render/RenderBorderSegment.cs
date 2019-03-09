@@ -40,7 +40,7 @@ namespace Freeserf.Render
             UpdateAppearance();
         }
 
-        // TODO: call this after leveling the ground near the border etc
+        // TODO: call this after leveling the ground near the border etc (is this even possible?)
         // e.g. when map height changes
         // also used on initialization
         internal void UpdateAppearance()

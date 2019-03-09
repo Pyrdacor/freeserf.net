@@ -714,7 +714,6 @@ namespace Freeserf
 
         // Rendering
         Render.IRenderView renderView = null;
-        // TODO: road segments
         internal Render.RenderMap RenderMap { get; private set; } = null;
 
         /* Callback for map height changes */

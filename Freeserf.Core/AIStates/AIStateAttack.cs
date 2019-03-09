@@ -69,11 +69,33 @@ namespace Freeserf.AIStates
                         players = new List<int>(aiPlayers);
                     break;
                 case AI.AttackPlayer.Weakest:
-                    // TODO
-                    break;
+                    {
+                        Player weakestPlayer = null;
+
+                        for (int i = 0; i < game.GetPlayerCount(); ++i)
+                        {
+                            var player = game.GetPlayer((uint)i);
+
+                            if (weakestPlayer == null || weakestPlayer.GetTotalMilitaryScore() > player.GetTotalMilitaryScore())
+                                weakestPlayer = player;
+                        }
+
+                        return (int)weakestPlayer.Index;
+                    }
                 case AI.AttackPlayer.Worst:
-                    // TODO
-                    break;
+                    {
+                        Player worst = null;
+
+                        for (int i = 0; i < game.GetPlayerCount(); ++i)
+                        {
+                            var player = game.GetPlayer((uint)i);
+
+                            if (worst == null || worst.GetScore() > player.GetScore())
+                                worst = player;
+                        }
+
+                        return (int)worst.Index;
+                    }
                 case AI.AttackPlayer.WorstProtected:
                     {
                         // Here more than one player could be selected. Just remove indices from the lists above.
@@ -126,13 +148,33 @@ namespace Freeserf.AIStates
                 case AI.AttackPlayer.Weakest:
                     if (players.Count != 0)
                     {
-                        // TODO
+                        Player weakestPlayer = null;
+
+                        foreach (var i in players)
+                        {
+                            var player = game.GetPlayer((uint)i);
+
+                            if (weakestPlayer == null || weakestPlayer.GetTotalMilitaryScore() > player.GetTotalMilitaryScore())
+                                weakestPlayer = player;
+                        }
+
+                        return (int)weakestPlayer.Index;
                     }
                     break;
                 case AI.AttackPlayer.Worst:
                     if (players.Count != 0)
                     {
-                        // TODO
+                        Player worst = null;
+
+                        foreach (var i in players)
+                        {
+                            var player = game.GetPlayer((uint)i);
+
+                            if (worst == null || worst.GetScore() > player.GetScore())
+                                worst = player;
+                        }
+
+                        return (int)worst.Index;
                     }
                     break;
                 case AI.AttackPlayer.WorstProtected:

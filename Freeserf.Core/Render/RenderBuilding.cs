@@ -26,7 +26,6 @@ namespace Freeserf.Render
 {
     using Data = Data.Data;
 
-    // TODO: burning
     internal class RenderBuilding : RenderObject
     {
         internal static readonly uint[] MapBuildingFrameSprite = new uint[]
