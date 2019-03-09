@@ -1,7 +1,7 @@
 ﻿/*
  * Pathes.cs - Default freeserf paths
  *
- * Copyright (C) 2019 Robert Schneckenhaus<robert.schneckenhaus@web.de>
+ * Copyright (C) 2019 Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net.freeserf.net is based on freeserf.
  *

@@ -34,5 +34,6 @@ namespace Freeserf.UI
         CrashReaction RaiseException(Exception exception);
 
         string ReportEmail { get; set; }
+        string ReportSubject { get; set; }
     }
 }

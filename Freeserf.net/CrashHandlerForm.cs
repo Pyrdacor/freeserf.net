@@ -20,6 +20,9 @@
  */
 
 using System;
+using System.Diagnostics;
+using System.Text;
+using System.Web;
 using System.Windows.Forms;
 
 namespace Freeserf
@@ -34,6 +37,7 @@ namespace Freeserf
         string mailContent = "";
         Game game = null;
         public string ReportEmail { get; set; } = "robert.schneckenhaus@web.de";
+        public string ReportSubject { get; set; } = "Crash Report";
 
         public UI.CrashReaction RaiseException(Exception exception)
         {
@@ -102,7 +106,14 @@ namespace Freeserf
 
         private void ButtonSendReport_Click(object sender, EventArgs e)
         {
-            // TODO
+            try
+            {
+                Process.Start($"mailto:{ReportEmail}?subject={Uri.EscapeDataString(ReportSubject)}&body={Uri.EscapeDataString(mailContent)}");
+            }
+            catch
+            {
+                MessageBox.Show(this, "Error sending email.", "Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
             ButtonSendReport.Visible = false;
         }
