@@ -194,7 +194,7 @@ namespace Freeserf
             {
                 if ((int)goldTotal < -delta)
                 {
-                    throw new ExceptionFreeserf("Failed to decrease global gold counter.");
+                    throw new ExceptionFreeserf(this, "game", "Failed to decrease global gold counter.");
                 }
             }
 
@@ -239,7 +239,7 @@ namespace Freeserf
 
             if (player == null)
             {
-                throw new ExceptionFreeserf("Failed to create new player.");
+                throw new ExceptionFreeserf(this, "game", "Failed to create new player.");
             }
 
             player.Init(intelligence, supplies, reproduction);
@@ -318,7 +318,7 @@ namespace Freeserf
                 if (player.IsAi())
                 {
                     if (player.AI == null)
-                        throw new ExceptionFreeserf("AI is not set for AI player.");
+                        throw new ExceptionFreeserf(this, "game", "AI is not set for AI player.");
 
                     player.AI.Update(this);
                 }
@@ -1523,7 +1523,7 @@ namespace Freeserf
 
             if (!flag.HasBuilding())
             {
-                throw new ExceptionFreeserf("Failed to cancel transported resource.");
+                throw new ExceptionFreeserf(this, "game", "Failed to cancel transported resource.");
             }
 
             flag.GetBuilding().CancelTransportedResource(type);
@@ -2215,7 +2215,7 @@ namespace Freeserf
 
                             if (!destBuilding.AddRequestedResource(resource, false))
                             {
-                                throw new ExceptionFreeserf("Failed to request resource.");
+                                throw new ExceptionFreeserf(this, "game", "Failed to request resource.");
                             }
 
                             /* Put resource in out queue */
@@ -2924,7 +2924,7 @@ namespace Freeserf
 
             if (flag.HasBuilding())
             {
-                throw new ExceptionFreeserf("Failed to demolish flag with building.");
+                throw new ExceptionFreeserf(this, "game", "Failed to demolish flag with building.");
             }
 
             FlagRemovePlayerRefs(flag);
@@ -3099,7 +3099,7 @@ namespace Freeserf
             // Avoid allocating a huge map if the input file is invalid
             if (mapSize < 3 || mapSize > 10)
             {
-                throw new ExceptionFreeserf("Invalid map size in file");
+                throw new ExceptionFreeserf("game", "Invalid map size in file");
             }
 
             map = new Map(new MapGeometry((uint)mapSize), renderView);
@@ -3158,7 +3158,7 @@ namespace Freeserf
 
             if (sections == null || sections.Count == 0 || sections[0] == null)
             {
-                throw new ExceptionFreeserf("Failed to find section \"game\"");
+                throw new ExceptionFreeserf("game", "Failed to find section \"game\"");
             }
 
             var gameReader = sections[0];
@@ -3287,7 +3287,7 @@ namespace Freeserf
                 if (map.GetObject(building.Position) < Map.Object.SmallBuilding ||
                     map.GetObject(building.Position) > Map.Object.Castle)
                 {
-                    throw new ExceptionFreeserf("Map data does not match building " + building.Index + " position.");
+                    throw new ExceptionFreeserf("game", "Map data does not match building " + building.Index + " position.");
                 }
 
                 map.SetObjectIndex(building.Position, building.Index);
@@ -3303,7 +3303,7 @@ namespace Freeserf
 
                 if (map.GetObject(flag.Position) != Map.Object.Flag)
                 {
-                    throw new ExceptionFreeserf("Map data does not match flag " + flag.Index + " position.");
+                    throw new ExceptionFreeserf("game", "Map data does not match flag " + flag.Index + " position.");
                 }
 
                 map.SetObjectIndex(flag.Position, flag.Index);

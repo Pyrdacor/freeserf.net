@@ -56,7 +56,7 @@ namespace Freeserf.Render
             Create(spriteFactory, dataSource);
 
             if (sprite == null)
-                throw new ExceptionFreeserf("Failed to create sprite");
+                throw new ExceptionFreeserf("render", "Failed to create sprite");
 
             sprite.Layer = renderLayer;
 

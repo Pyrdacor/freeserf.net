@@ -348,7 +348,7 @@ namespace Freeserf.Data
             }
             catch
             {
-                throw new ExceptionFreeserf($"Failed to open file '{path}'");
+                throw new ExceptionFreeserf("data", $"Failed to open file '{path}'");
             }
 
             byte[] data = new byte[fileStream.Length];
@@ -484,7 +484,7 @@ namespace Freeserf.Data
             uint remaining = (uint)(end - read);
 
             if (remaining < length)
-                throw new ExceptionFreeserf("Buffer is not large enough.");
+                throw new ExceptionFreeserf("data", "Buffer is not large enough.");
 
             byte[] array = new byte[length];
 
@@ -499,7 +499,7 @@ namespace Freeserf.Data
         protected void CopyTo(Buffer other)
         {
             if (data == null)
-                throw new ExceptionFreeserf("Tried to copy an empty buffer.");
+                throw new ExceptionFreeserf("data", "Tried to copy an empty buffer.");
 
             if (other.data == null)
                 other.data = new BufferStream(Size);
@@ -528,7 +528,7 @@ namespace Freeserf.Data
             try
             {
                 if (!fileStream.CanWrite)
-                    throw new ExceptionFreeserf($"Unablte to write to readonly file '{path}'");
+                    throw new ExceptionFreeserf("data", $"Unable to write to readonly file '{path}'");
 
                 data.CopyTo(fileStream);
             }

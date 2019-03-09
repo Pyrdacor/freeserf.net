@@ -55,7 +55,7 @@ namespace Freeserf
         public byte ReadByte()
         {
             if (!HasDataLeft(1))
-                throw new ExceptionFreeserf("Invalid read past end.");
+                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
 
             return reader.ReadByte();
         }
@@ -63,7 +63,7 @@ namespace Freeserf
         public ushort ReadWord()
         {
             if (!HasDataLeft(2))
-                throw new ExceptionFreeserf("Invalid read past end.");
+                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
 
             return reader.ReadUInt16();
         }
@@ -71,7 +71,7 @@ namespace Freeserf
         public uint ReadDWord()
         {
             if (!HasDataLeft(4))
-                throw new ExceptionFreeserf("Invalid read past end.");
+                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
 
             return reader.ReadUInt32();
         }
@@ -90,7 +90,7 @@ namespace Freeserf
         {
             if (!HasDataLeft(size))
             {
-                throw new ExceptionFreeserf("Invalid extract past end.");
+                throw new ExceptionFreeserf("savegame", "Invalid extract past end.");
             }
 
             var subStream = new SubStream(this.reader.BaseStream, size);
@@ -104,7 +104,7 @@ namespace Freeserf
         public byte[] Read(uint size)
         {
             if (!HasDataLeft(size))
-                throw new ExceptionFreeserf("Invalid read past end.");
+                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
 
             return reader.ReadBytes((int)size);
         }
@@ -277,7 +277,7 @@ namespace Freeserf
                 }
                 catch
                 {
-                    throw new ExceptionFreeserf("Failed to create folder");
+                    throw new ExceptionFreeserf("savegame", "Failed to create folder");
                 }
             }
         }
@@ -581,7 +581,7 @@ namespace Freeserf
         {
             if (!values.ContainsKey(name))
             {
-                throw new ExceptionFreeserf("Failed to load value: " + name);
+                throw new ExceptionFreeserf("savegame", "Failed to load value: " + name);
             }
 
             return values[name];
@@ -589,7 +589,7 @@ namespace Freeserf
 
         public override Readers GetSections(string name)
         {
-            throw new ExceptionFreeserf("Recursive sections are not allowed");
+            throw new ExceptionFreeserf("savegame", "Recursive sections are not allowed");
         }
 
         public override bool HasValue(string name)
@@ -635,7 +635,7 @@ namespace Freeserf
         {
             if (!values.ContainsKey(name))
             {
-                throw new ExceptionFreeserf("Failed to load value: " + name);
+                throw new ExceptionFreeserf("savegame", "Failed to load value: " + name);
             }
 
             return values[name];

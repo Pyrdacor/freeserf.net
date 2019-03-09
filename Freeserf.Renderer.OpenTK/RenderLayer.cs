@@ -182,13 +182,13 @@ namespace Freeserf.Renderer.OpenTK
         public void TestNode(IRenderNode node)
         {
             if (!(node is Node))
-                throw new InvalidCastException("The given render node is not valid for this renderer.");
+                throw new ExceptionFreeserf("render", "The given render node is not valid for this renderer.");
 
             if ((node as Node).Shape != renderBuffer.Shape)
-                throw new InvalidOperationException($"Only nodes with shape {Enum.GetName(typeof(Shape), renderBuffer.Shape)} are allowed for this layer.");
+                throw new ExceptionFreeserf("render", $"Only nodes with shape {Enum.GetName(typeof(Shape), renderBuffer.Shape)} are allowed for this layer.");
 
             if (node is ColoredRect && renderBufferColorRects == null)
-                throw new ExceptionFreeserf("This layer does not support colored rects.");
+                throw new ExceptionFreeserf("render", "This layer does not support colored rects.");
         }
     }
 
@@ -197,12 +197,12 @@ namespace Freeserf.Renderer.OpenTK
         public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Color colorKey = null)
         {
             if (!(texture is Texture))
-                throw new InvalidCastException("The given texture is not valid for this renderer.");
+                throw new ExceptionFreeserf("render", "The given texture is not valid for this renderer.");
 
             switch (layer)
             {
                 case Layer.None:
-                    throw new InvalidOperationException($"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
+                    throw new ExceptionFreeserf("render", $"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
                 default:
                     return new RenderLayer(layer, texture as Texture, supportColoredRects, colorKey);
             }

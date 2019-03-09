@@ -78,7 +78,7 @@ namespace Freeserf
         {
             if (d == Direction.None)
             {
-                throw new ExceptionFreeserf("Failed to turn uninitialised direction");
+                throw new ExceptionFreeserf("map", "Failed to turn uninitialised direction");
             }
 
             int td = ((int)d + times) % 6;
@@ -150,7 +150,7 @@ namespace Freeserf
         {
             if (start == Direction.None)
             {
-                throw new ExceptionFreeserf("Failed to init DirectionCycle with uninitialised direction");
+                throw new ExceptionFreeserf("map", "Failed to init DirectionCycle with uninitialised direction");
             }
 
             this.start = start;
@@ -514,7 +514,7 @@ namespace Freeserf
         {
             if (Size > 20)
             {
-                throw new ExceptionFreeserf("Above size 20 the map positions can no longer fit in a 32-bit integer.");
+                throw new ExceptionFreeserf("map", "Above size 20 the map positions can no longer fit in a 32-bit integer.");
             }
 
             ColumnSize = 5 + Size / 2;

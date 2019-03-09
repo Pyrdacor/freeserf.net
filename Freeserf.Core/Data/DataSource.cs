@@ -97,7 +97,7 @@ namespace Freeserf.Data
         public Sprite RepeatTo(int height)
         {
             if (height < Height)
-                throw new ExceptionFreeserf("Height must be greater or equal to previous height.");
+                throw new ExceptionFreeserf("data", "Height must be greater or equal to previous height.");
 
             if (height == Height)
                 return this;
@@ -130,7 +130,7 @@ namespace Freeserf.Data
         public Sprite ClearTo(int height)
         {
             if (height < Height)
-                throw new ExceptionFreeserf("Height must be greater or equal to previous height.");
+                throw new ExceptionFreeserf("data", "Height must be greater or equal to previous height.");
 
             if (height == Height)
                 return this;
@@ -154,10 +154,10 @@ namespace Freeserf.Data
         public Sprite ClearTo(int width, int height)
         {
             if (width < Width)
-                throw new ExceptionFreeserf("Width must be greater or equal to previous width.");
+                throw new ExceptionFreeserf("data", "Width must be greater or equal to previous width.");
 
             if (height < Height)
-                throw new ExceptionFreeserf("Height must be greater or equal to previous height.");
+                throw new ExceptionFreeserf("data", "Height must be greater or equal to previous height.");
 
             if (width == Width && height == Height)
                 return this;
@@ -209,7 +209,7 @@ namespace Freeserf.Data
         {
             if (mask.Width > width)
             {
-                throw new ExceptionFreeserf("Failed to apply mask to sprite");
+                throw new ExceptionFreeserf("data", "Failed to apply mask to sprite");
             }
 
             Sprite masked = new Sprite(mask);
@@ -313,10 +313,10 @@ namespace Freeserf.Data
         unsafe public virtual void Add(int x, int y, Sprite other)
         {
             if (x < 0 || y < 0)
-                throw new ExceptionFreeserf("Offset is negative.");
+                throw new ExceptionFreeserf("data", "Offset is negative.");
 
             if (width < x + other.Width || height < y + other.Height)
-                throw new ExceptionFreeserf("Sprite can not be added at this position.");
+                throw new ExceptionFreeserf("data", "Sprite can not be added at this position.");
 
             fixed (byte* srcPointer = other.GetData())
             fixed (byte* resPointer = data)
@@ -668,7 +668,7 @@ namespace Freeserf.Data
             }
 
             if (animationTable[animation] == null)
-                throw new ExceptionFreeserf($"Animation table entry at index {animation} not initialized.");
+                throw new ExceptionFreeserf("data", $"Animation table entry at index {animation} not initialized.");
 
             return animationTable[animation].Count;
         }
@@ -681,7 +681,7 @@ namespace Freeserf.Data
                 phase >= animationTable[animation].Count)
             {
                 if (animationTable[animation] == null)
-                    throw new ExceptionFreeserf($"Animation table entry at index {animation} not initialized.");
+                    throw new ExceptionFreeserf("data", $"Animation table entry at index {animation} not initialized.");
 
                 Log.Error.Write("data", $"Failed to get animation #{animation} phase #{phase} (got only {animationTable[animation].Count} phases)");
 

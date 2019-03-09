@@ -396,18 +396,18 @@ namespace Freeserf.Render
         {
             if (((left - m) < -4) || ((left - m) > 4))
             {
-                throw new ExceptionFreeserf("Failed to draw triangle up (1).");
+                throw new ExceptionFreeserf("render", "Failed to draw triangle up (1).");
             }
             if (((right - m) < -4) || ((right - m) > 4))
             {
-                throw new ExceptionFreeserf("Failed to draw triangle up (2).");
+                throw new ExceptionFreeserf("render", "Failed to draw triangle up (2).");
             }
 
             int mask = 4 + m - left + 9 * (4 + m - right);
 
             if (TileMaskUp[mask] < 0)
             {
-                throw new ExceptionFreeserf("Failed to draw triangle up (3).");
+                throw new ExceptionFreeserf("render", "Failed to draw triangle up (3).");
             }
 
             var terrain = map.TypeUp(map.MoveUp(pos));
@@ -423,18 +423,18 @@ namespace Freeserf.Render
         {
             if (((left - m) < -4) || ((left - m) > 4))
             {
-                throw new ExceptionFreeserf("Failed to draw triangle down (1).");
+                throw new ExceptionFreeserf("render", "Failed to draw triangle down (1).");
             }
             if (((right - m) < -4) || ((right - m) > 4))
             {
-                throw new ExceptionFreeserf("Failed to draw triangle down (2).");
+                throw new ExceptionFreeserf("render", "Failed to draw triangle down (2).");
             }
 
             int mask = 4 + left - m + 9 * (4 + right - m);
 
             if (TileMaskDown[mask] < 0)
             {
-                throw new ExceptionFreeserf("Failed to draw triangle down (3).");
+                throw new ExceptionFreeserf("render", "Failed to draw triangle down (3).");
             }
 
             var terrain = map.TypeDown(map.MoveUpLeft(pos));

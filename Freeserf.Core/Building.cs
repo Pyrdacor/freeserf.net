@@ -713,7 +713,7 @@ namespace Freeserf
             {
                 if (stock[inStock].Requested == 0)
                 {
-                    throw new ExceptionFreeserf("Failed to cancel unrequested resource delivery.");
+                    throw new ExceptionFreeserf(Game, "building", "Failed to cancel unrequested resource delivery.");
                 }
 
                 --stock[inStock].Requested;
@@ -722,7 +722,7 @@ namespace Freeserf
             {
                 if (!HasInventory())
                 {
-                    throw new ExceptionFreeserf("Not inventory");
+                    throw new ExceptionFreeserf(Game, "building", "Not inventory");
                 }
             }
         }
@@ -942,7 +942,7 @@ namespace Freeserf
                 // TODO: This exception occurs from time to time.
                 // TODO: Seen for IronMine (was finished but a plank arrived).
                 Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                throw new ExceptionFreeserf("Delivered unexpected resource.");
+                throw new ExceptionFreeserf(Game, "building", "Delivered unexpected resource.");
             }
         }
 
@@ -1792,7 +1792,7 @@ namespace Freeserf
 
                     if (serf == null)
                     {
-                        throw new ExceptionFreeserf("Index of nonexistent serf in the queue.");
+                        throw new ExceptionFreeserf(Game, "building", "Index of nonexistent serf in the queue.");
                     }
 
                     if (bestKnight == null || serf.GetSerfType() < bestKnight.GetSerfType())
@@ -1980,7 +1980,7 @@ namespace Freeserf
 
                     if (serf == null)
                     {
-                        throw new ExceptionFreeserf("Index of nonexistent serf in the queue.");
+                        throw new ExceptionFreeserf(Game, "building", "Index of nonexistent serf in the queue.");
                     }
 
                     if (leavingSerf == null || serf.GetSerfType() < leavingSerf.GetSerfType())

@@ -86,7 +86,7 @@ namespace Freeserf.Renderer.OpenTK
             context = new Context(VirtualScreen.Size.Width, VirtualScreen.Size.Height);
 
             if (dataSource == null || !dataSource.IsLoaded)
-                throw new ExceptionFreeserf("Given data source is not useable.");
+                throw new ExceptionFreeserf("data", "Given data source is not useable.");
 
             DataSource = dataSource;
 

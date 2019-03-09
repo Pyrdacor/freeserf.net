@@ -1196,7 +1196,7 @@ namespace Freeserf
 
             if (serfCount[(int)type] == 0)
             {
-                throw new ExceptionFreeserf("Failed to decrease serf count");
+                throw new ExceptionFreeserf(Game, "player", "Failed to decrease serf count");
             }
 
             --serfCount[(int)type];

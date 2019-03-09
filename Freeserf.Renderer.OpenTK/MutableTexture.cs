@@ -59,10 +59,10 @@ namespace Freeserf.Renderer.OpenTK
         public void SetPixels(byte[] pixelData)
         {
             if (pixelData == null)
-                throw new ExceptionFreeserf("Pixel data was null.");
+                throw new ExceptionFreeserf("textures", "Pixel data was null.");
 
             if (pixelData.Length != data.Length)
-                throw new ExceptionFreeserf("Pixel data size does not match texture data size.");
+                throw new ExceptionFreeserf("textures", "Pixel data size does not match texture data size.");
 
             System.Buffer.BlockCopy(pixelData, 0, data, 0, pixelData.Length);
         }
@@ -100,7 +100,7 @@ namespace Freeserf.Renderer.OpenTK
         public void FillMinimapTexture(byte[] colorData)
         {
             if (!(minimap is MutableTexture))
-                throw new ExceptionFreeserf("The given minimap texture is no mutable texture known by this renderer.");
+                throw new ExceptionFreeserf("textures", "The given minimap texture is no mutable texture known by this renderer.");
 
             (minimap as MutableTexture).SetPixels(colorData);
             (minimap as MutableTexture).Finish(0);
@@ -109,7 +109,7 @@ namespace Freeserf.Renderer.OpenTK
         public void ResizeMinimapTexture(int width, int height)
         {
             if (!(minimap is MutableTexture))
-                throw new ExceptionFreeserf("The given minimap texture is no mutable texture known by this renderer.");
+                throw new ExceptionFreeserf("textures", "The given minimap texture is no mutable texture known by this renderer.");
 
             (minimap as MutableTexture).Resize(width, height);
         }

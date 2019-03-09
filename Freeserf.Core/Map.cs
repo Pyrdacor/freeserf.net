@@ -102,7 +102,7 @@ namespace Freeserf
         public static Road CreateRoadFromMapPath(Map map, MapPos start, Direction startDirection)
         {
             if (!map.HasPath(start, startDirection))
-                throw new ExceptionFreeserf("Invalid map path.");
+                throw new ExceptionFreeserf("map", "Invalid map path.");
 
             var road = new Road();
             var pos = start;
@@ -725,7 +725,7 @@ namespace Freeserf
             // Some code may still assume that map has at least size 3.
             if (geometry.Size < 3)
             {
-                throw new ExceptionFreeserf("Failed to create map with size less than 3.");
+                throw new ExceptionFreeserf("map", "Failed to create map with size less than 3.");
             }
 
             Geometry = geometry;

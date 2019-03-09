@@ -269,7 +269,7 @@ namespace Freeserf.Data
             {
                 if (mask.Width > width)
                 {
-                    throw new ExceptionFreeserf("Failed to apply mask");
+                    throw new ExceptionFreeserf("data", "Failed to apply mask");
                 }
 
                 SpriteAmiga masked = new SpriteAmiga(mask.Width, mask.Height);

@@ -3025,7 +3025,7 @@ namespace Freeserf.UI
                     var serfType = serf.GetSerfType();
 
                     if (serfType < Serf.Type.Knight0 || serfType > Serf.Type.Knight4)
-                        throw new ExceptionFreeserf("Not a knight among the castle defenders.");
+                        throw new ExceptionFreeserf(interf.Game, "gui", "Not a knight among the castle defenders.");
 
                     ++knights[serfType - Serf.Type.Knight0];
 

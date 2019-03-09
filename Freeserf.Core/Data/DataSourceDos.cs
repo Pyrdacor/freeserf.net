@@ -35,14 +35,14 @@ namespace Freeserf.Data
         {
             if (buffer.Size < 8)
             {
-                throw new ExceptionFreeserf("Data is not TPWM archive");
+                throw new ExceptionFreeserf("data", "Data is not TPWM archive");
             }
 
             Buffer id = buffer.Pop(4);
 
             if (id.ToString(4) != "TPWM")
             {
-                throw new ExceptionFreeserf("Data is not TPWM archive");
+                throw new ExceptionFreeserf("data", "Data is not TPWM archive");
             }
         }
 
@@ -80,12 +80,12 @@ namespace Freeserf.Data
             }
             catch
             {
-                throw new ExceptionFreeserf("TPWM source data corrupted");
+                throw new ExceptionFreeserf("data", "TPWM source data corrupted");
             }
 
             if (result.Size != resSize)
             {
-                throw new ExceptionFreeserf("TPWM source data corrupted");
+                throw new ExceptionFreeserf("data", "TPWM source data corrupted");
             }
 
             return result;
@@ -183,7 +183,7 @@ namespace Freeserf.Data
             {
                 if (data.Size < 10)
                 {
-                    throw new ExceptionFreeserf("Failed to extract DOS sprite");
+                    throw new ExceptionFreeserf("data", "Failed to extract DOS sprite");
                 }
 
                 deltaX = data.Pop<sbyte>();
@@ -204,7 +204,7 @@ namespace Freeserf.Data
 
                 if (size != (width * height + 10))
                 {
-                    throw new ExceptionFreeserf("Failed to extract DOS solid sprite");
+                    throw new ExceptionFreeserf("data", "Failed to extract DOS solid sprite");
                 }
 
                 MutableBuffer result = new MutableBuffer(Endian.Endianess.Big);

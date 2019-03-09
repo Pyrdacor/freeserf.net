@@ -74,12 +74,12 @@ namespace Freeserf.FileSystem
                 if (reader.ReadByte() != 0x56 || // 'V'
                     reader.ReadByte() != 0x46 || // 'F'
                     reader.ReadByte() != 0x53)   // 'S'
-                    throw new ExceptionFreeserf("Invalid virtual file system.");
+                    throw new ExceptionFreeserf("data", "Invalid virtual file system.");
 
                 byte version = reader.ReadByte();
 
                 if (version > CurrentFileVersion)
-                    throw new ExceptionFreeserf("Virtual file system version is not supported.");
+                    throw new ExceptionFreeserf("data", "Virtual file system version is not supported.");
 
                 ReleaseDate = DecodeDate(reader);
 
@@ -171,7 +171,7 @@ namespace Freeserf.FileSystem
             }
             catch (ArgumentOutOfRangeException)
             {
-                throw new ExceptionFreeserf("Invalid release date in virtual file system.");
+                throw new ExceptionFreeserf("data", "Invalid release date in virtual file system.");
             }
         }
 

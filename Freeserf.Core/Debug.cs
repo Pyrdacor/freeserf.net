@@ -26,7 +26,6 @@ using System.Runtime.CompilerServices;
 
 namespace Freeserf
 {
-    // TODO: Add system to each exception creation/raising in project
     public class ExceptionFreeserf : Exception
     {
         public string Description

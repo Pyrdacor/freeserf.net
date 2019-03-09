@@ -317,7 +317,7 @@ namespace Freeserf
 
             if (resources[type] == 0)
             {
-                throw new ExceptionFreeserf("No resource with type.");
+                throw new ExceptionFreeserf(Game, "inventory", "No resource with type.");
             }
 
             --resources[type];

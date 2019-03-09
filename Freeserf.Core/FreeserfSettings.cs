@@ -68,7 +68,7 @@ namespace Freeserf
                 case 8:
                     break;
                 default:
-                    throw new ExceptionFreeserf("Data type");
+                    throw new ExceptionFreeserf("data", "Data type");
             }
 
             return (T)Convert.ChangeType(ul, typeof(T));

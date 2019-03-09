@@ -390,7 +390,7 @@ namespace Freeserf
         {
             if (fromSlot >= FLAG_MAX_RES_COUNT)
             {
-                throw new ExceptionFreeserf("Wrong flag slot index.");
+                throw new ExceptionFreeserf(Game, "flag", "Wrong flag slot index.");
             }
 
             if (slot[fromSlot].Type == Resource.Type.None)
@@ -412,7 +412,7 @@ namespace Freeserf
         {
             if (res < Resource.Type.MinValue || res > Resource.Type.MaxValue)
             {
-                throw new ExceptionFreeserf("Wrong resource type.");
+                throw new ExceptionFreeserf(Game, "flag", "Wrong resource type.");
             }
 
             for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
@@ -1403,7 +1403,7 @@ namespace Freeserf
 
                     if (!destBuilding.AddRequestedResource(res, true))
                     {
-                        throw new ExceptionFreeserf("Failed to request resource.");
+                        throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
                     }
 
                     this.slot[slot].Dest = destBuilding.GetFlagIndex();
@@ -1444,7 +1444,7 @@ namespace Freeserf
 
                     if ((dir < Direction.Right) || (dir > Direction.Up))
                     {
-                        throw new ExceptionFreeserf("Failed to request resource.");
+                        throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
                     }
 
                     if (!IsScheduled(dir))

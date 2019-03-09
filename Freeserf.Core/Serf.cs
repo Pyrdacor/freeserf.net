@@ -2950,7 +2950,7 @@ namespace Freeserf
 
                 if (flag == null)
                 {
-                    throw new ExceptionFreeserf("Flag expected as destination of walking serf.");
+                    throw new ExceptionFreeserf(Game, "serf", "Flag expected as destination of walking serf.");
                 }
 
                 Direction dir = (Direction)s.Walking.Dir1;
@@ -2958,7 +2958,7 @@ namespace Freeserf
 
                 if (otherFlag == null)
                 {
-                    throw new ExceptionFreeserf("Path has no other end flag in selected dir.");
+                    throw new ExceptionFreeserf(Game, "serf", "Path has no other end flag in selected dir.");
                 }
 
                 Direction otherDir = flag.GetOtherEndDir(dir);
@@ -3712,7 +3712,7 @@ namespace Freeserf
 
                             if (inventory == null)
                             {
-                                throw new ExceptionFreeserf("Not inventory.");
+                                throw new ExceptionFreeserf(Game, "serf", "Not inventory.");
                             }
 
                             inventory.SerfComeBack();
@@ -4297,7 +4297,7 @@ namespace Freeserf
 
             if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Res - 1), s.MoveResourceOut.ResDest))
             {
-                throw new ExceptionFreeserf("Failed to drop resource.");
+                throw new ExceptionFreeserf(Game, "serf", "Failed to drop resource.");
             }
 
             SetState(State.ReadyToEnter);
@@ -4680,7 +4680,7 @@ namespace Freeserf
             // A suitable direction has been found; walk.
             if (dir < Direction.Right)
             {
-                throw new ExceptionFreeserf("Wrong direction.");
+                throw new ExceptionFreeserf(Game, "serf", "Wrong direction.");
             }
 
             int dx = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) < 2) ? 1 : 0);

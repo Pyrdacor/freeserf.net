@@ -847,7 +847,7 @@ namespace Freeserf
                     // TODO ...
             }
 
-            throw new ExceptionFreeserf("Unknown AI state");
+            throw new ExceptionFreeserf(player.Game, "ai", "Unknown AI state");
         }
 
         /// <summary>
