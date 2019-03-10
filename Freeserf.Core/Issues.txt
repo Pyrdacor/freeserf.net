@@ -12,6 +12,11 @@ Non-working code:
 - Possible builds contain not all possible building locations (e.g. for the castle)
 
 
+UI:
+
+- Text in lists in GameInitBox (Load/Multiplayer) overdraw the options box content
+
+
 AI:
 
 Flags / buildings / roads:
@@ -114,6 +119,7 @@ TODO:
 - Feature to record a game and replay/watch it (like watching an AIvsAI game)
 - Crash handler:
 	- Should try to continue without crashing
+- End game screens, Intro, Outro, etc
 
 
 Exceptions:

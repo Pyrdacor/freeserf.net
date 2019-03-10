@@ -24,6 +24,7 @@ using System;
 
 namespace Freeserf.UI
 {
+    using Freeserf.Event;
     using Data = Data.Data;
 
     class RandomInput : TextInput
@@ -485,13 +486,13 @@ namespace Freeserf.UI
             AddChild(checkBoxSameValues, 180, 141, false);
         }
 
-        private void CheckBoxServerValues_CheckedChanged(object sender, EventArgs e)
+        private void CheckBoxServerValues_CheckedChanged(object sender, System.EventArgs e)
         {
             if (checkBoxServerValues.Checked)
                 checkBoxSameValues.Checked = false;
         }
 
-        private void CheckBoxSameValues_CheckedChanged(object sender, EventArgs e)
+        private void CheckBoxSameValues_CheckedChanged(object sender, System.EventArgs e)
         {
             if (checkBoxSameValues.Checked)
             {
@@ -879,8 +880,13 @@ namespace Freeserf.UI
                         {
                             interf.OpenGameInit(GameType.Load);
 
-                            // TODO: show error?
+                            interf.OpenPopup(PopupBox.Type.DiskMsg);
+
                             return;
+                        }
+                        else
+                        {
+                            interf.OpenPopup(PopupBox.Type.DiskMsg);
                         }
                     }
                     else
@@ -1042,6 +1048,14 @@ namespace Freeserf.UI
                 default:
                     break;
             }
+        }
+
+        public override bool HandleEvent(EventArgs e)
+        {
+            if (interf.PopupBox != null && interf.PopupBox.Displayed)
+                return interf.PopupBox.HandleEvent(e);
+
+            return base.HandleEvent(e);
         }
 
         protected override bool HandleClickLeft(int x, int y)

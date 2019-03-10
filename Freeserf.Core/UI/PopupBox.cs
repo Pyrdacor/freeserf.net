@@ -763,7 +763,6 @@ namespace Freeserf.UI
                 case Type.SettSelectFile: /* UNUSED */
                 case Type.LoadArchive:
                 case Type.Type25:
-                case Type.DiskMsg:
                 case Type.GameEnd:
                 case Type.JsCalib:
                 case Type.JsCalibUpLeft:
@@ -790,6 +789,9 @@ namespace Freeserf.UI
                     break;
                 case Type.PlayerStatistics:
                     pattern = BackgroundPattern.OverallComparison + ((currentPlayerStatisticsMode >> 2) & 3);
+                    break;
+                case Type.DiskMsg: // save success or error
+                    pattern = BackgroundPattern.StaresGreen;
                     break;
             }
 
@@ -3199,6 +3201,41 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
         }
 
+        void DrawDiskMessageBox()
+        {
+            uint iconIndex = 220u;
+
+            switch (GameStore.Instance.LastOperationResult)
+            {
+                case GameStore.LastOperationStatus.SaveSuccess:
+                    SetText(15, 33, "Game was saved");
+                    SetText(22, 74, "successfully.");
+                    iconIndex = 288u;
+                    break;
+                case GameStore.LastOperationStatus.SaveFail:
+                    SetText(15, 33, "Game could not");
+                    SetText(39, 74, "be saved.");
+                    break;
+                case GameStore.LastOperationStatus.LoadSuccess:
+                    SetText(11, 33, "Game was loaded");
+                    SetText(22, 74, "successfully.");
+                    iconIndex = 288u;
+                    break;
+                case GameStore.LastOperationStatus.LoadFail:
+                    SetText(15, 33, "Game could not");
+                    SetText(34, 74, "be loaded.");
+                    break;
+                default:
+                    SetRedraw();
+                    interf.ClosePopup();
+                    return;
+            }
+
+            SetIcon(48, 110, 93u); // disk symbol
+            SetIcon(80, 110, iconIndex); // success/failed symbol
+            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+        }
+
         void ActivateTransportItem(int index)
 		{
             var player = interf.GetPlayer();
@@ -4130,7 +4167,7 @@ namespace Freeserf.UI
             // TODO
 
             /* Dispatch to one of the popup box functions above. */
-                    switch (Box)
+            switch (Box)
             {
                 case Type.Map:
                     DrawMapBox();
@@ -4268,6 +4305,9 @@ namespace Freeserf.UI
                     break;
                 case Type.LoadSave:
                     DrawSaveBox();
+                    break;
+                case Type.DiskMsg:
+                    DrawDiskMessageBox();
                     break;
                 default:
                     break;

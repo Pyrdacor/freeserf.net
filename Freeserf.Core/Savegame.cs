@@ -287,6 +287,17 @@ namespace Freeserf
         public string FolderPath { get; protected set; } = "";
         protected List<SaveInfo> savedGames = new List<SaveInfo>();
 
+        public enum LastOperationStatus
+        {
+            None,
+            SaveSuccess,
+            SaveFail,
+            LoadSuccess,
+            LoadFail
+        }
+
+        public LastOperationStatus LastOperationResult { get; private set; } = LastOperationStatus.None;
+
         public static GameStore Instance
         {
             get
@@ -318,7 +329,20 @@ namespace Freeserf
 
             game.WriteTo(writer);
 
-            return writer.Save(path);
+            try
+            {
+                bool success = writer.Save(path);
+
+                LastOperationResult = success ? LastOperationStatus.SaveSuccess : LastOperationStatus.SaveFail;
+
+                return success;
+            }
+            catch
+            {
+                LastOperationResult = LastOperationStatus.SaveFail;
+
+                throw;
+            }
         }
 
         public bool Load(string path, Game game)
@@ -327,6 +351,7 @@ namespace Freeserf
             {
                 if (!File.Exists(path))
                 {
+                    LastOperationResult = LastOperationStatus.LoadFail;
                     Log.Error.Write("savegame", $"Unable to open save game file: '{path}'");
                     return false;
                 }
@@ -354,16 +379,19 @@ namespace Freeserf
                         }
                         catch (ExceptionFreeserf ex2)
                         {
+                            LastOperationResult = LastOperationStatus.LoadFail;
                             Log.Error.Write("savegame", "Failed to load save game: " + ex2.Message);
                             return false;
                         }
                     }
 
+                    LastOperationResult = LastOperationStatus.LoadSuccess;
                     return true;
                 }
             }
             catch (Exception ex)
             {
+                LastOperationResult = LastOperationStatus.LoadFail;
                 Log.Error.Write("savegame", "Failed to load save game: " + ex.Message);
                 return false;
             }
