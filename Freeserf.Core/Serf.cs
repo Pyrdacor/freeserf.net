@@ -2284,7 +2284,7 @@ namespace Freeserf
                 case State.WakeOnPath:
                     s.IdleOnPath.RevDir = (Direction)reader.Value("state.rev_dir").ReadInt();
                     s.IdleOnPath.FlagIndex = Game.CreateFlag(reader.Value("state.flag").ReadInt()).Index;
-                    s.IdleOnPath.FieldE = reader.Value("state.field_E").ReadInt();
+                    s.IdleOnPath.FieldE = reader.Value("state.field_e").ReadInt();
                     break;
                 case State.DefendingHut:
                 case State.DefendingTower:
