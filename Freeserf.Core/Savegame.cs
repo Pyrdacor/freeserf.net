@@ -341,10 +341,10 @@ namespace Freeserf
                     }
                     catch (ExceptionFreeserf ex1)
                     {
-                        readerBinary.Close();
+                        readerText.Close();
 
                         Log.Warn.Write("savegame", "Unable to load save game: " + ex1.Message);
-                        Log.Warn.Write("savegame", "Trying compatability mode...");
+                        Log.Warn.Write("savegame", "Trying compatibility mode...");
 
                         stream.Position = 0;
 
