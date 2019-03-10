@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Globalization;
 using Freeserf.Data;
@@ -382,6 +383,16 @@ namespace Freeserf
                             LastOperationResult = LastOperationStatus.LoadFail;
                             Log.Error.Write("savegame", "Failed to load save game: " + ex2.Message);
                             return false;
+                        }
+                    }
+
+                    for (int i = 0; i < game.GetPlayerCount(); ++i)
+                    {
+                        var player = game.GetPlayer((uint)i);
+
+                        if (player.HasCastle())
+                        {
+                            player.CastlePos = game.GetPlayerBuildings(player, Building.Type.Castle).First().Position;
                         }
                     }
 
