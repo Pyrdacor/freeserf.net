@@ -1075,7 +1075,7 @@ namespace Freeserf
             // first AI stores the mineral memory
             if (firstAI)
             {
-                memorizedMineralSpots.Clear();
+                ClearMemory();
 
                 foreach (Map.Minerals mineral in Enum.GetValues(typeof(Map.Minerals)))
                 {

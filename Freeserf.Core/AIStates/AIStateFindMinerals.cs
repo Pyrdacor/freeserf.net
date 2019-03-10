@@ -40,7 +40,7 @@ namespace Freeserf.AIStates
         {
             base.ReadFrom(game, ai, name, reader);
 
-            mineralType = (Map.Minerals)reader.Value($"{name}.mineral_type").ReadInt();
+            mineralType = reader.Value($"{name}.mineral_type").ReadEnum<Map.Minerals>();
         }
 
         public override void WriteTo(string name, SaveWriterText writer)
