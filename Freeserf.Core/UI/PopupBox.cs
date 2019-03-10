@@ -428,6 +428,8 @@ namespace Freeserf.UI
             }
         }
 
+        public override byte BaseDisplayLayer => 200; // the popup box should stay in the front
+
         public PopupBox(Interface interf)
             : base
             (
