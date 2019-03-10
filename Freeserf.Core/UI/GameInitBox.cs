@@ -387,7 +387,7 @@ namespace Freeserf.UI
             }
         }
 
-        public GameInitBox(Interface interf)
+        public GameInitBox(Interface interf, GameType gameType)
             : base
             (
                 interf, 
@@ -414,6 +414,9 @@ namespace Freeserf.UI
             serverList = new ListServers(interf);
             serverList.SetSize(310, 95);
             AddChild(serverList, 20, 55, false);
+
+            this.gameType = gameType;
+            UpdateGameType();
 
             InitRenderComponents();
         }
@@ -780,6 +783,68 @@ namespace Freeserf.UI
             DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
         }
 
+        void UpdateGameType()
+        {
+            switch (gameType)
+            {
+                case GameType.Mission:
+                    {
+                        mission = GameInfo.GetMission((uint)gameMission);
+                        randomInput.Displayed = false;
+                        fileList.Displayed = false;
+                        serverList.Displayed = false;
+                        SetRedraw();
+                        break;
+                    }
+                case GameType.Custom:
+                    {
+                        customMission = new GameInfo(new Random(), false);
+                        mission = customMission;
+                        randomInput.Displayed = true;
+                        randomInput.SetRandom(customMission.RandomBase);
+                        fileList.Displayed = false;
+                        serverList.Displayed = false;
+                        SetRedraw();
+                        break;
+                    }
+                case GameType.Load:
+                    {
+                        randomInput.Displayed = false;
+                        fileList.Displayed = true;
+                        fileList.Select(0);
+                        serverList.Displayed = false;
+                        SetRedraw();
+                        break;
+                    }
+                case GameType.MultiplayerClient:
+                    {
+                        randomInput.Displayed = false;
+                        fileList.Displayed = false;
+                        serverList.Displayed = true;
+                        serverList.Select(0);
+                        SetRedraw();
+                        return;
+                    }
+                case GameType.Tutorial:
+                    {
+                        // TODO
+                        HandleAction(Action.ToggleGameType);
+                        return;
+                    }
+                case GameType.AIvsAI:
+                    {
+                        customMission = new GameInfo(new Random(), true);
+                        mission = customMission;
+                        randomInput.Displayed = true;
+                        randomInput.SetRandom(customMission.RandomBase);
+                        fileList.Displayed = false;
+                        serverList.Displayed = false;
+                        SetRedraw();
+                        break;
+                    }
+            }
+        }
+
         public void HandleAction(Action action)
         {
             switch (action)
@@ -800,6 +865,8 @@ namespace Freeserf.UI
                 {
                     if (gameType == GameType.Load)
                     {
+                        interf.CloseGameInit();
+
                         string path = fileList.GetSelected().Path;
 
                         if (string.IsNullOrWhiteSpace(path))
@@ -808,13 +875,13 @@ namespace Freeserf.UI
                             return;
                         }
 
-                        if (!GameManager.Instance.LoadGame(path, interf.RenderView))
+                        if (!GameManager.Instance.LoadGame(path, interf.RenderView, interf.Viewer))
                         {
+                            interf.OpenGameInit(GameType.Load);
+
                             // TODO: show error?
                             return;
                         }
-
-                        interf.CloseGameInit();
                     }
                     else
                     {
@@ -851,6 +918,7 @@ namespace Freeserf.UI
                             return;
                         }
                     }
+
                     break;
                 }
                 case Action.ToggleGameType:
@@ -862,64 +930,7 @@ namespace Freeserf.UI
                         gameType = GameType.Custom;
                     }
 
-                    switch (gameType)
-                    {
-                        case GameType.Mission:
-                            {
-                                mission = GameInfo.GetMission((uint)gameMission);
-                                randomInput.Displayed = false;
-                                fileList.Displayed = false;
-                                serverList.Displayed = false;
-                                SetRedraw();
-                                break;
-                            }
-                        case GameType.Custom:
-                            {
-                                customMission = new GameInfo(new Random(), false);
-                                mission = customMission;
-                                randomInput.Displayed = true;
-                                randomInput.SetRandom(customMission.RandomBase);
-                                fileList.Displayed = false;
-                                serverList.Displayed = false;
-                                SetRedraw();
-                                break;
-                            }
-                        case GameType.Load:
-                            {
-                                randomInput.Displayed = false;
-                                fileList.Displayed = true;
-                                fileList.Select(0);
-                                serverList.Displayed = false;
-                                SetRedraw();
-                                break;
-                            }
-                        case GameType.MultiplayerClient:
-                            {
-                                randomInput.Displayed = false;
-                                fileList.Displayed = false;
-                                serverList.Displayed = true;
-                                serverList.Select(0);
-                                SetRedraw();
-                                return;
-                            }
-                        case GameType.Tutorial:
-                            {
-                                // TODO
-                                HandleAction(Action.ToggleGameType);
-                                return;
-                            }
-                        case GameType.AIvsAI:
-                            {
-                                customMission = new GameInfo(new Random(), true);
-                                mission = customMission;
-                                randomInput.Displayed = true;
-                                randomInput.SetRandom(customMission.RandomBase);
-                                fileList.Displayed = false;
-                                serverList.Displayed = false;
-                                SetRedraw();
-                                break;
-                            }
-                    }
+                    UpdateGameType();                    
                     break;
                 case Action.ShowOptions:
                     interf.OpenPopup(PopupBox.Type.GameInitOptions);

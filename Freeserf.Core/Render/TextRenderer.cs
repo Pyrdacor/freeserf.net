@@ -100,7 +100,7 @@ namespace Freeserf.Render
 
         public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null, int characterGapSize = 8)
         {
-            // look if we have a unused render text
+            // look if we have an unused render text
             int index = renderTexts.FindIndex(r => r == null);
 
             var spritePool = characterSprites.Where(s => !s.InUse);

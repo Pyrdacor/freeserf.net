@@ -353,7 +353,7 @@ namespace Freeserf.UI
         }
 
         /* Open box for starting a new game */
-        public void OpenGameInit()
+        public void OpenGameInit(GameInitBox.GameType gameType = GameInitBox.GameType.Custom)
         {
             // the following code will start the intro mission that is played in the background while the GameInitBox is active
             GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView);
@@ -364,7 +364,7 @@ namespace Freeserf.UI
 
             if (initBox == null)
             {
-                initBox = new GameInitBox(this);
+                initBox = new GameInitBox(this, gameType);
                 AddChild(initBox, 0, 0);
             }
 

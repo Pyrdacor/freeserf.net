@@ -64,7 +64,12 @@ namespace Freeserf.UI
                 text = value;
 
                 if (index == -1)
+                {
                     index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
+
+                    if (Displayed)
+                        textRenderer.ShowText(index, true);
+                }
                 else
                     textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), characterGapSize);
 
@@ -82,7 +87,6 @@ namespace Freeserf.UI
             get => base.Displayed;
             set
             {
-
                 if (Displayed == value)
                     return;
 
