@@ -202,6 +202,12 @@ namespace Freeserf
                     var mapPosition = TileSpaceToMapSpace(lastPos);
 
                     int xOff = x - mapPosition.X;
+
+                    if (xOff > lwidth / 2)
+                        xOff -= lwidth;
+                    else if (xOff < -lwidth / 2)
+                        xOff += lwidth;
+
                     bool moved = true;
 
                     if (xOff >= RenderMap.TILE_WIDTH / 2)
