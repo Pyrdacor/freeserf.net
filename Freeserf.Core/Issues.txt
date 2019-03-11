@@ -8,6 +8,7 @@
 Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
+	- This also hinders road building sometimes
 - Minimap clicks near the map origin move to wrong x location
 - Possible builds contain not all possible building locations (e.g. for the castle)
 
@@ -43,6 +44,11 @@ Finish attacking logic!
 Performance:
 
 - While debugging the game pauses from time to time (more game time = longer and more pauses). The game is unplayable very quick.
+
+
+Bugs:
+
+- When loading a savegame, playing it and close it afterwards without saving, it seems that the game is saved again at closing automatically somehow. The savegame was changed.
 
 
 Logic:
