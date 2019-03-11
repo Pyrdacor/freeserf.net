@@ -6,6 +6,7 @@ At the moment there is still a lot of work to do.
 
 ## Download the game
 
+#### [v1.5 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.5.zip)
 #### [v1.4 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.4.zip)
 #### [v1.3 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.3.zip)
 #### [v1.2 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.2.zip)
@@ -35,7 +36,7 @@ Most of the code is ported or re-implemented. There is a working OpenTK renderer
 Things that are missing are mostly AI logic and tutorial games. Serf fighting is not fully tested yet.
 Multiplayer support is prepared but not really implemented yet.
 
-There are still some bugs (mainly in serf logic and map position calculation).
+There are still some bugs (mainly in serf logic).
 
 But the game is playable for most parts. Since version 1.3 savegames should work correctly (even with AI).
 
