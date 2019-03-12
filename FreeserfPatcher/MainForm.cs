@@ -21,6 +21,7 @@ namespace FreeserfPatcher
         readonly string newVersion = "";
         readonly List<string> freeserfArgs = new List<string>();
         bool close = false;
+        byte[] patcherFileData = null;
 
         public MainForm(string[] args)
         {
@@ -69,11 +70,11 @@ namespace FreeserfPatcher
             Close();
         }
 
-        string RetrieveTextFile(string uri, int bufferSize)
+        string RetrieveTextFile(string uri, int bufferSize, int timeout)
         {
             try
             {
-                var data = RetrieveFile(uri, bufferSize);
+                var data = RetrieveFile(uri, bufferSize, timeout);
 
                 if (data == null)
                     return null;
@@ -87,35 +88,44 @@ namespace FreeserfPatcher
             }
         }
 
-        byte[] RetrieveFile(string uri, int bufferSize)
+        byte[] RetrieveFile(string uri, int bufferSize, int timeout)
         {
             // TODO: connection timeout / async
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(uri);
+            httpRequest.Timeout = timeout;
             httpRequest.Method = WebRequestMethods.Http.Get;
 
-            HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            var responseStream = httpResponse.GetResponseStream();
-
-            byte[] buffer = new byte[bufferSize];
-            List<byte> data = new List<byte>();
-
-            while (true)
+            try
             {
-                int length = responseStream.Read(buffer, 0, buffer.Length);
+                HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+                var responseStream = httpResponse.GetResponseStream();
 
-                if (length == 0)
-                    break;
+                byte[] buffer = new byte[bufferSize];
+                List<byte> data = new List<byte>();
 
-                data.AddRange(buffer.Take(length));
+                while (true)
+                {
+                    int length = responseStream.Read(buffer, 0, buffer.Length);
+
+                    if (length == 0)
+                        break;
+
+                    data.AddRange(buffer.Take(length));
+                }
+
+                if (data.Count == 0)
+                {
+                    // TODO: update failed -> missing data
+                    return null;
+                }
+
+                return data.ToArray();
             }
-
-            if (data.Count == 0)
+            catch
             {
-                // TODO: update failed -> missing data
+                // TODO: retrieving file failed
                 return null;
             }
-
-            return data.ToArray();
         }
 
         void PatchWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -123,7 +133,7 @@ namespace FreeserfPatcher
             SetProgressLabel("Retrieving file list ...");
 
             string fileList = UpdateUri + newVersion + "/files.txt";
-            string fileListContent = RetrieveTextFile(fileList, 128);
+            string fileListContent = RetrieveTextFile(fileList, 128, 500);
 
             if (fileListContent == null)
             {
@@ -153,7 +163,13 @@ namespace FreeserfPatcher
             {
                 SetProgressLabel("Retrieving \"" + Path.GetFileName(filename) + "\" ...");
 
-                var fileData = RetrieveFile(filename, 2048);
+                var fileData = RetrieveFile(filename, 2048, 10000);
+
+                if (Path.GetFileName(filename) == Path.GetFileName(Assembly.GetEntryAssembly().Location)) // update patcher
+                {
+                    patcherFileData = fileData;
+                    return;
+                }
 
                 string localPath = Path.Combine(DestinationPath, Path.GetFileName(filename));
 
@@ -224,6 +240,40 @@ namespace FreeserfPatcher
                 freeserfArgs.Add("--no-updates");
 
             Process.Start(freeserfExePath, string.Join(" ", freeserfArgs.ToArray()));
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (patcherFileData != null)
+            {
+                try
+                {
+                    string tempFile = Path.GetTempFileName();
+                    File.WriteAllBytes(tempFile, patcherFileData);
+
+                    string batchFile = "ping -n 2 127.0.0.1 > nul" + Environment.NewLine +
+                        "ren \"" + tempFile + "\" \"" + Assembly.GetEntryAssembly().Location + "\"" + Environment.NewLine +
+                        "del \"" + tempFile + "\"" + Environment.NewLine;
+
+                    tempFile = Path.GetTempFileName();
+                    batchFile += "del \"" + tempFile + "\"";
+
+                    File.WriteAllText(tempFile, batchFile);
+
+                    var process = new Process();
+
+                    process.StartInfo = new ProcessStartInfo(tempFile);
+                    process.StartInfo.CreateNoWindow = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+                    process.Start();
+                }
+                catch
+                {
+                    // TODO: error patching patcher
+                }
+            }
         }
     }
 }

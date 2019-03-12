@@ -64,56 +64,64 @@ namespace Freeserf
 
             // TODO: connection timeout / async
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(UpdateUri + "recent.txt");
+            httpRequest.Timeout = 250;
             httpRequest.Method = WebRequestMethods.Http.Get;
 
-            HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            var responseStream = httpResponse.GetResponseStream();
-
-            byte[] buffer = new byte[24];
-
-            int length = responseStream.Read(buffer, 0, 24);
-            
-            if (length == 0)
-                return false;
-
-            string version = Encoding.UTF8.GetString(buffer, 0, length);
-            Regex versionRegex = new Regex(@"([0-9]+)\.([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
-            var match = versionRegex.Match(version);
-
-            if (match.Success && match.Length == version.Length && match.Groups.Count >= 4)
+            try
             {
-                int major = int.Parse(match.Groups[1].Value);
-                int minor = int.Parse(match.Groups[2].Value);
-                int patch = int.Parse(match.Groups[3].Value);
+                HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+                var responseStream = httpResponse.GetResponseStream();
 
-                var currentVersion = Assembly.GetEntryAssembly().GetName().Version;
+                byte[] buffer = new byte[24];
 
-                if (major < currentVersion.Major)
+                int length = responseStream.Read(buffer, 0, 24);
+
+                if (length == 0)
                     return false;
 
-                if (major == currentVersion.Major)
+                string version = Encoding.UTF8.GetString(buffer, 0, length);
+                Regex versionRegex = new Regex(@"([0-9]+)\.([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
+                var match = versionRegex.Match(version);
+
+                if (match.Success && match.Length == version.Length && match.Groups.Count >= 4)
                 {
-                    if (minor < currentVersion.Minor)
+                    int major = int.Parse(match.Groups[1].Value);
+                    int minor = int.Parse(match.Groups[2].Value);
+                    int patch = int.Parse(match.Groups[3].Value);
+
+                    var currentVersion = Assembly.GetEntryAssembly().GetName().Version;
+
+                    if (major < currentVersion.Major)
                         return false;
 
-                    if (minor == currentVersion.Minor)
+                    if (major == currentVersion.Major)
                     {
-                        if (patch <= currentVersion.Revision)
+                        if (minor < currentVersion.Minor)
                             return false;
+
+                        if (minor == currentVersion.Minor)
+                        {
+                            if (patch <= currentVersion.Build)
+                                return false;
+                        }
                     }
+
+                    string patchersArguments = "\"" + Assembly.GetEntryAssembly().Location + "\"" + " " +
+                        $"{currentVersion.Major}.{currentVersion.Minor}.{currentVersion.Build}" + " " +
+                        $"{major}.{minor}.{patch}" + " " +
+                        string.Join(" ", args);
+
+                    Process.Start(patcherPath, patchersArguments);
+
+                    return true;
                 }
 
-                string patchersArguments = "\"" + Assembly.GetEntryAssembly().Location + "\"" + " " +
-                    $"{currentVersion.Major}.{currentVersion.Minor}.{currentVersion.Revision}" + " " +
-                    $"{major}.{minor}.{patch}" + " " +
-                    string.Join(" ", args);
-
-                Process.Start(patcherPath, patchersArguments);
-
-                return true;
+                return false;
             }
-
-            return false;
+            catch
+            {
+                return false;
+            }
         }
 
         [STAThread]
