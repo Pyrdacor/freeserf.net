@@ -1,13 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace Freeserf
 {
     public static class Program
     {
+        public static readonly string UpdateUri = "https://github.com/Pyrdacor/freeserf.net/raw/master/updates/Windows/";
+
         public static string ExecutablePath
         {
             get;
@@ -44,9 +49,81 @@ namespace Freeserf
             }
         }
 
+        static bool CheckForUpdates(string[] args)
+        {
+            foreach (var arg in args)
+            {
+                if (arg == "--no-updates")
+                    return false;
+            }
+
+            string patcherPath = Path.Combine(ExecutablePath, "FreeserfPatcher.exe");
+
+            if (!File.Exists(patcherPath))
+                return false;
+
+            // TODO: connection timeout / async
+            HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(UpdateUri + "recent.txt");
+            httpRequest.Method = WebRequestMethods.Http.Get;
+
+            HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            var responseStream = httpResponse.GetResponseStream();
+
+            byte[] buffer = new byte[24];
+
+            int length = responseStream.Read(buffer, 0, 24);
+            
+            if (length == 0)
+                return false;
+
+            string version = Encoding.UTF8.GetString(buffer, 0, length);
+            Regex versionRegex = new Regex(@"([0-9]+)\.([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
+            var match = versionRegex.Match(version);
+
+            if (match.Success && match.Length == version.Length && match.Groups.Count >= 4)
+            {
+                int major = int.Parse(match.Groups[1].Value);
+                int minor = int.Parse(match.Groups[2].Value);
+                int patch = int.Parse(match.Groups[3].Value);
+
+                var currentVersion = Assembly.GetEntryAssembly().GetName().Version;
+
+                if (major < currentVersion.Major)
+                    return false;
+
+                if (major == currentVersion.Major)
+                {
+                    if (minor < currentVersion.Minor)
+                        return false;
+
+                    if (minor == currentVersion.Minor)
+                    {
+                        if (patch <= currentVersion.Revision)
+                            return false;
+                    }
+                }
+
+                string patchersArguments = "\"" + Assembly.GetEntryAssembly().Location + "\"" + " " +
+                    $"{currentVersion.Major}.{currentVersion.Minor}.{currentVersion.Revision}" + " " +
+                    $"{major}.{minor}.{patch}" + " " +
+                    string.Join(" ", args);
+
+                Process.Start(patcherPath, patchersArguments);
+
+                return true;
+            }
+
+            return false;
+        }
+
         [STAThread]
         public static void Main(string[] args)
         {
+            if (CheckForUpdates(args))
+            {
+                return;
+            }
+
             try
             {
                 Application.EnableVisualStyles();
