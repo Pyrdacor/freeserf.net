@@ -187,15 +187,18 @@ namespace Freeserf
             int row = y / RenderMap.TILE_HEIGHT;
             int lastDist = int.MaxValue;
             var pos = map.Pos((uint)column, 0u);
-            MapPos lastPos = pos;
 
             pos = map.MoveDownN(pos, row);
+            MapPos lastPos = pos;
 
             while (true)
             {
                 int rowY = TileSpaceToMapSpace(pos).Y;
 
                 int dist = Math.Abs(rowY - y);
+
+                if (dist >= lheight / 2)
+                    dist = Math.Abs(dist - lheight);
 
                 if (lastDist < dist)
                 {
@@ -207,6 +210,11 @@ namespace Freeserf
                         xOff -= lwidth;
                     else if (xOff < -lwidth / 2)
                         xOff += lwidth;
+
+                    if (xOff > lwidth / 4)
+                        xOff -= lwidth / 2;
+                    else if (xOff < -lwidth / 4)
+                        xOff += lwidth / 2;
 
                     bool moved = true;
 
