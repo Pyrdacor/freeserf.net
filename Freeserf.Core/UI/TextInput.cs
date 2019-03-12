@@ -204,14 +204,14 @@ namespace Freeserf.UI
                 return false;
             }
 
-            if (key == '\b' && text.Length > 0)
+            if (key == Event.SystemKeys.Backspace && text.Length > 0)
             {
                 text = text.Substring(0, text.Length - 1);
                 SetRedraw();
                 return true;
             }
 
-            if (key == '\n')
+            if (key == Event.SystemKeys.Return)
             {
                 LooseFocus();
                 return true;

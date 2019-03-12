@@ -469,6 +469,16 @@ namespace Freeserf.UI
             return result;
         }
 
+        public bool CanDemolish()
+        {
+            return panelButtonIds[1] != ButtonId.DestroyInactive;
+        }
+
+        public void Demolish()
+        {
+            ButtonClick(1);
+        }
+
         /* Handle a click on the panel buttons. */
         void ButtonClick(int button)
         {
@@ -648,6 +658,7 @@ namespace Freeserf.UI
                         else
                         {
                             PlaySound(Audio.TypeSfx.Accepted);
+                            interf.UpdateMapCursorPos(interf.GetMapCursorPos());
                         }
                     }
                     break;

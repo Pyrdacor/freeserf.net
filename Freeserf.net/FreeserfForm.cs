@@ -400,8 +400,16 @@ namespace Freeserf
                     e.Handled = true;
                     break;
                 case Keys.Enter:
-                    gameView?.NotifyKeyPressed('\n', 0);
+                    gameView?.NotifyKeyPressed(Event.SystemKeys.Return, 0);
                     e.SuppressKeyPress = true;
+                    e.Handled = true;
+                    break;
+                case Keys.Back:
+                    gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, 0);
+                    e.Handled = true;
+                    break;
+                case Keys.Delete:
+                    gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
                     e.Handled = true;
                     break;
                 default:

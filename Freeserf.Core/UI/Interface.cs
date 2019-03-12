@@ -1293,7 +1293,7 @@ namespace Freeserf.UI
             switch (key)
             {
                 /* Interface control */
-                case '\t':
+                case Event.SystemKeys.Tab:
                     {
                         if ((modifier & 2) != 0)
                         {
@@ -1305,7 +1305,7 @@ namespace Freeserf.UI
                         }
                         break;
                     }
-                case (char)27:
+                case Event.SystemKeys.Escape:
                     {
                         if (NotificationBox != null && NotificationBox.Displayed)
                         {
@@ -1408,6 +1408,12 @@ namespace Freeserf.UI
                     if ((modifier & 1) != 0)
                     {
                         OpenPopup(PopupBox.Type.QuitConfirm);
+                    }
+                    break;
+                case Event.SystemKeys.Delete:
+                    if (PanelBar != null && PanelBar.CanDemolish())
+                    {
+                        PanelBar.Demolish();
                     }
                     break;
 

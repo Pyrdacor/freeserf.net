@@ -1080,19 +1080,19 @@ namespace Freeserf.UI
 
         protected override bool HandleKeyPressed(char key, int modifier)
         {
-            if (key == (char)33) // page up
+            if (key == SystemKeys.PageUp) // page up
             {
                 HandleAction(Action.IncrementLarge);
             }
-            else if (key == (char)34) // page down
+            else if (key == SystemKeys.PageDown) // page down
             {
                 HandleAction(Action.DecrementLarge);
             }
-            else if (key == (char)38) // up
+            else if (key == SystemKeys.Up) // up
             {
                 HandleAction(Action.Increment);
             }
-            else if (key == (char)40) // down
+            else if (key == SystemKeys.Down) // down
             {
                 HandleAction(Action.Decrement);
             }
