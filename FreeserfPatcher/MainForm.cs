@@ -80,7 +80,7 @@ namespace FreeserfPatcher
 
                 return Encoding.UTF8.GetString(data);
             }
-            catch
+            catch (Exception ex)
             {
                 // TODO: update failed -> invalid data (e.g. not UTF8)
                 return null;
