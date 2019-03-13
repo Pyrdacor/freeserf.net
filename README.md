@@ -6,6 +6,7 @@ At the moment there is still a lot of work to do.
 
 ## Download the game
 
+#### [v1.7 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.7.zip)
 #### [v1.6 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.6.zip)
 #### [v1.5 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.5.zip)
 #### [v1.4 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.4.zip)
