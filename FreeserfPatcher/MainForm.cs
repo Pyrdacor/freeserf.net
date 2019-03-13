@@ -133,7 +133,7 @@ namespace FreeserfPatcher
             SetProgressLabel("Retrieving file list ...");
 
             string fileList = UpdateUri + newVersion + "/files.txt";
-            string fileListContent = RetrieveTextFile(fileList, 128, 500);
+            string fileListContent = RetrieveTextFile(fileList, 128, 5000);
 
             if (fileListContent == null)
             {
@@ -163,7 +163,7 @@ namespace FreeserfPatcher
             {
                 SetProgressLabel("Retrieving \"" + Path.GetFileName(filename) + "\" ...");
 
-                var fileData = RetrieveFile(filename, 2048, 10000);
+                var fileData = RetrieveFile(filename, 2048, 15000);
 
                 if (Path.GetFileName(filename) == Path.GetFileName(Assembly.GetEntryAssembly().Location)) // update patcher
                 {
