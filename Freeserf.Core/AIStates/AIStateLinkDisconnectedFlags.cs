@@ -50,9 +50,17 @@ namespace Freeserf.AIStates
             {
                 var flagIndex = reader.Value($"{name}.connect_tries_per_flag.flag{i}").ReadUInt();
                 var tries = reader.Value($"{name}.connect_tries_per_flag.tries{i}").ReadInt();
-                var flag = game.GetFlag(flagIndex);
 
-                connectTriesPerFlag.Add(flag, tries);
+                try
+                {
+                    var flag = game.GetFlag(flagIndex);
+
+                    connectTriesPerFlag.Add(flag, tries);
+                }
+                catch
+                {
+                    // ignore
+                }
             }
 
             int numLinkingFailed = reader.Value($"{name}.linking_failed.count").ReadInt();
@@ -61,9 +69,17 @@ namespace Freeserf.AIStates
             {
                 var flagIndex = reader.Value($"{name}.linking_failed.flag{i}").ReadUInt();
                 var amount = reader.Value($"{name}.linking_failed.amount{i}").ReadInt();
-                var flag = game.GetFlag(flagIndex);
 
-                linkingFailed.Add(flag, amount);
+                try
+                {
+                    var flag = game.GetFlag(flagIndex);
+
+                    linkingFailed.Add(flag, amount);
+                }
+                catch
+                {
+                    // ignore
+                }
             }
 
             linkingCount = reader.Value($"{name}.linking_count").ReadInt();
@@ -107,6 +123,39 @@ namespace Freeserf.AIStates
             }
 
             var flags = game.GetPlayerFlags(player);
+
+            // check if memorized flags still exist
+            // otherwise remove them
+            var keys = connectTriesPerFlag.Keys.ToList();
+
+            foreach (var key in keys)
+            {
+                try
+                {
+                    game.GetFlag(key.Index);
+                }
+                catch (KeyNotFoundException)
+                {
+                    connectTriesPerFlag.Remove(key);
+                }
+            }
+
+            lock (linkingFailedLock)
+            {
+                keys = linkingFailed.Keys.ToList();
+
+                foreach (var key in keys)
+                {
+                    try
+                    {
+                        game.GetFlag(key.Index);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        linkingFailed.Remove(key);
+                    }
+                }
+            }
 
             foreach (var flag in flags)
             {
