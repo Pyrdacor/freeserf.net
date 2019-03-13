@@ -1,8 +1,6 @@
 # freeserf.net
 freeserf.net is a C# port of [freeserf](https://github.com/freeserf/freeserf).
 
-At the moment there is still a lot of work to do.
-
 
 ## Download the game
 
@@ -20,6 +18,15 @@ Builds for other platforms will follow later.
 Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It is not included in the zip file.
 
 You have to install .NET Framework 4.6.1 to run the game. You can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
+
+
+## Patches
+
+Since version 1.7 there is a patcher for the Windows assembly which will allow me to provide fast patches for the game. This will ease bugfixing and testing without the need to download a new version manually. If you don't want to receive patches you may run the game with the command line option "--no-updates".
+
+Moreover the patcher will ask you to confirm patch download so you can also skip it.
+
+This feature may be removed later if it bothers people but in this phase it really helps to get rid of bugs and provide patches for testers that can't compile the game by theirselves.
 
 
 ## Support development
