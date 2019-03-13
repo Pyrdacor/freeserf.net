@@ -1150,7 +1150,7 @@ namespace Freeserf
 
                     foreach (var mineralSpot in memorizedMineralSpot.Value)
                     {
-                        string spotName = name + "_" + index;
+                        string spotName = name + "_" + index++;
                         writer.Value(spotName + "_pos").Write(mineralSpot.Position);
                         writer.Value(spotName + "_large").Write(mineralSpot.Position);
                     }
