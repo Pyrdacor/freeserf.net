@@ -84,7 +84,7 @@ namespace Freeserf.UI
 
             displayLayerOffset = offset;
 
-            sprite.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset);
+            sprite.DisplayLayer = (byte)Misc.Min(255, BaseDisplayLayer + displayLayerOffset);
         }
 
         public void SetResourceType(Data.Resource type)

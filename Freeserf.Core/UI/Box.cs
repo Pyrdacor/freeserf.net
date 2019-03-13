@@ -487,7 +487,7 @@ namespace Freeserf.UI
                 if (Parent == null)
                     return 0;
 
-                return (byte)Math.Min(255, Parent.BaseDisplayLayer + 20);
+                return (byte)Math.Min(255, Parent.BaseDisplayLayer + 30);
             }
         }
 
