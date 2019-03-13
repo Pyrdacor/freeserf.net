@@ -251,9 +251,9 @@ namespace Freeserf.UI
                 copyValuesButton.Layer = layer;
 
                 // max values for the values seem to be 40
-                suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87), (byte)(baseDisplayLayer + 3));
-                intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b), (byte)(baseDisplayLayer + 3));
-                reproductionValue = coloredRectFactory.Create(4, 40, new Render.Color(0xa7, 0x27, 0x27), (byte)(baseDisplayLayer + 3));
+                suppliesValue = coloredRectFactory.Create(4, 40, new Render.Color(0x00, 0x93, 0x87), (byte)(baseDisplayLayer + 4));
+                intelligenceValue = coloredRectFactory.Create(4, 40, new Render.Color(0x6b, 0xab, 0x3b), (byte)(baseDisplayLayer + 4));
+                reproductionValue = coloredRectFactory.Create(4, 40, new Render.Color(0xa7, 0x27, 0x27), (byte)(baseDisplayLayer + 4));
                 suppliesValue.Layer = layer;
                 intelligenceValue.Layer = layer;
                 reproductionValue.Layer = layer;
@@ -304,9 +304,9 @@ namespace Freeserf.UI
                 activationButton.DisplayLayer = (byte)(displayLayer + 3);
                 copyValuesButton.DisplayLayer = (byte)(displayLayer + 4);
 
-                suppliesValue.DisplayLayer = (byte)(displayLayer + 3);
-                intelligenceValue.DisplayLayer = (byte)(displayLayer + 3);
-                reproductionValue.DisplayLayer = (byte)(displayLayer + 3);
+                suppliesValue.DisplayLayer = (byte)(displayLayer + 4);
+                intelligenceValue.DisplayLayer = (byte)(displayLayer + 4);
+                reproductionValue.DisplayLayer = (byte)(displayLayer + 4);
             }
 
             public void SetPosition(int baseX, int baseY, int x, int y)
