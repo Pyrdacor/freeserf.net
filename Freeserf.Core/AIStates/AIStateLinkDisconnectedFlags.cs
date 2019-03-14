@@ -92,7 +92,7 @@ namespace Freeserf.AIStates
             writer.Value($"{name}.connect_tries_per_flag.count").Write(connectTriesPerFlag.Count);
             int index = 0;
 
-            foreach (var connectTries in connectTriesPerFlag)
+            foreach (var connectTries in connectTriesPerFlag.ToList())
             {
                 writer.Value($"{name}.connect_tries_per_flag.flag{index}").Write(connectTries.Key.Index);
                 writer.Value($"{name}.connect_tries_per_flag.tries{index}").Write(connectTries.Value);
@@ -103,7 +103,7 @@ namespace Freeserf.AIStates
             writer.Value($"{name}.linking_failed.count").Write(linkingFailed.Count);
             index = 0;
 
-            foreach (var linkFailed in linkingFailed)
+            foreach (var linkFailed in linkingFailed.ToList())
             {
                 writer.Value($"{name}.linking_failed.flag{index}").Write(linkFailed.Key.Index);
                 writer.Value($"{name}.linking_failed.amount{index}").Write(linkFailed.Value);
