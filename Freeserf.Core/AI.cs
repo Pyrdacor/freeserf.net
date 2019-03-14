@@ -1099,9 +1099,6 @@ namespace Freeserf
                                 Large = large
                             };
 
-                            if (index == 0)
-                                memorizedMineralSpots.Add(mineral, new List<MineralSpot>());
-
                             memorizedMineralSpots[mineral].Add(spot);
                         }
                         else
