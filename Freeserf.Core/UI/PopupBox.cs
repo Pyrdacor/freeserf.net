@@ -252,6 +252,7 @@ namespace Freeserf.UI
             QuitConfirm,
             QuitCancel,
             NoSaveQuitConfirm,
+            SaveAndQuit,
             ShowQuit,
             ShowOptions,
             ShowExtendedOptions,
@@ -790,7 +791,7 @@ namespace Freeserf.UI
                 case Type.PlayerStatistics:
                     pattern = BackgroundPattern.OverallComparison + ((currentPlayerStatisticsMode >> 2) & 3);
                     break;
-                case Type.DiskMsg: // save success or error
+                case Type.DiskMsg: // save/load success or error
                     pattern = BackgroundPattern.StaresGreen;
                     break;
             }
@@ -2527,7 +2528,7 @@ namespace Freeserf.UI
             SetText(8, 19, "   Do you want");
             SetText(8, 29, "     to quit");
             SetText(8, 39, "   this game?");
-            clickableTextField = SetText(8, 54, "  Yes       No");
+            clickableTextField = SetText(8, 54, "  Yes        No");
         }
 
         void DrawNoSaveQuitConfirmBox()
@@ -2537,7 +2538,7 @@ namespace Freeserf.UI
             SetText(8, 99, "   recently.");
             SetText(8, 109, "    Are you");
             SetText(8, 119, "     sure?");
-            clickableTextField = SetText(8, 134, "  Yes       No");
+            clickableTextField = SetText(8, 134, "  Save  Yes  No");
         }
 
         void DrawExtendedOptionsBox(Action closeAction)
@@ -3204,6 +3205,7 @@ namespace Freeserf.UI
         void DrawDiskMessageBox()
         {
             uint iconIndex = 220u;
+            Action closeAction = Action.CloseBox;
 
             switch (GameStore.Instance.LastOperationResult)
             {
@@ -3211,10 +3213,12 @@ namespace Freeserf.UI
                     SetText(15, 33, "Game was saved");
                     SetText(22, 74, "successfully.");
                     iconIndex = 288u;
+                    closeAction = Action.QuitConfirm;
                     break;
                 case GameStore.LastOperationStatus.SaveFail:
                     SetText(15, 33, "Game could not");
                     SetText(39, 74, "be saved.");
+                    closeAction = Action.QuitCancel;
                     break;
                 case GameStore.LastOperationStatus.LoadSuccess:
                     SetText(11, 33, "Game was loaded");
@@ -3233,7 +3237,7 @@ namespace Freeserf.UI
 
             SetIcon(48, 110, 93u); // disk symbol
             SetIcon(80, 110, iconIndex); // success/failed symbol
-            SetButton(120, 137, 60u, Action.CloseBox); // exit button
+            SetButton(120, 137, 60u, closeAction); // exit button
         }
 
         void ActivateTransportItem(int index)
@@ -4069,16 +4073,17 @@ namespace Freeserf.UI
                     UserConfig.Game.Options = interf.GetConfig();
                     break;
                 case Action.QuitCancel:
-                    if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)
+                    if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm || Box == Type.DiskMsg)
                         SetBox(Type.SettlerMenu);
                     // TODO
                     break;
                 case Action.QuitConfirm:
+                case Action.NoSaveQuitConfirm:
                     // no saving
                     interf.ClosePopup();
                     interf.OpenGameInit();
                     break;
-                case Action.NoSaveQuitConfirm:
+                case Action.SaveAndQuit:
                     {
                         var saveFile = GameManager.Instance.GetCurrentGameSaveFile();
 
@@ -4090,9 +4095,8 @@ namespace Freeserf.UI
                         {
                             GameStore.Instance.QuickSave("quicksave", interf.Game);
                         }
-                        // TODO: info message about saving?
-                        interf.ClosePopup();
-                        interf.OpenGameInit();
+
+                        SetBox(Type.DiskMsg);
                     }
                     break;
                 case Action.Save:
@@ -4356,7 +4360,7 @@ namespace Freeserf.UI
                         else
                             HandleAction(Action.QuitConfirm, x, y);
                     }
-                    else if (relativeX >= 16 + 24 + 56 && relativeX < 16 + 24 + 56 + 16) // No
+                    else if (relativeX >= 16 + 24 + 64 && relativeX < 16 + 24 + 64 + 16) // No
                     {
                         HandleAction(Action.QuitCancel, x, y);
                     }
@@ -4371,11 +4375,15 @@ namespace Freeserf.UI
                 {
                     int relativeX = x - clickableTextField.TotalX;
 
-                    if (relativeX >= 16 && relativeX < 16 + 24) // Yes
+                    if (relativeX >= 16 && relativeX < 16 + 32) // Save
+                    {
+                        HandleAction(Action.SaveAndQuit, x, y);
+                    }
+                    else if (relativeX >= 16 + 32 + 16 && relativeX < 16 + 32 + 16 + 24) // Yes
                     {
                         HandleAction(Action.NoSaveQuitConfirm, x, y);
                     }
-                    else if (relativeX >= 16 + 24 + 56 && relativeX < 16 + 24 + 56 + 16) // No
+                    else if (relativeX >= 16 + 32 + 16 + 24 + 16 && relativeX < 16 + 32 + 16 + 24 + 16 + 16) // No
                     {
                         HandleAction(Action.QuitCancel, x, y);
                     }

@@ -46,11 +46,6 @@ Performance:
 - While debugging the game pauses from time to time (more game time = longer and more pauses). The game is unplayable very quick.
 
 
-Bugs:
-
-- When loading a savegame, playing it and close it afterwards without saving, it seems that the game is saved again at closing automatically somehow. The savegame was changed.
-
-
 Logic:
 
 - If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
