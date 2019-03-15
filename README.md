@@ -4,6 +4,7 @@ freeserf.net is a C# port of [freeserf](https://github.com/freeserf/freeserf).
 
 ## Download the game
 
+#### [v1.8 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.8.zip)
 #### [v1.7 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.7.zip)
 #### [v1.6 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.6.zip)
 #### [v1.5 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.5.zip)
