@@ -41,100 +41,107 @@ namespace Freeserf
 
         private void FreeserfForm_Load(object sender, EventArgs e)
         {
-            Network.Network.DefaultClientFactory = new Network.ClientFactory();
-            Network.Network.DefaultServerFactory = new Network.ServerFactory();
-
-            if (initInfo.ConsoleWindow)
+            try
             {
-                debugConsole = new DebugConsole();
+                Network.Network.DefaultClientFactory = new Network.ClientFactory();
+                Network.Network.DefaultServerFactory = new Network.ServerFactory();
 
-                debugConsole.Show();
-                debugConsole.AttachLog();
+                if (initInfo.ConsoleWindow)
+                {
+                    debugConsole = new DebugConsole();
+
+                    debugConsole.Show();
+                    debugConsole.AttachLog();
+                }
+
+                UserConfig.Load(FileSystem.Paths.UserConfigPath);
+
+                // TODO: for now we just load DOS data (test path)
+                DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
+
+                if (!dosData.Load())
+                {
+                    MessageBox.Show(this, "Error loading DOS data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Close();
+                    return;
+                }
+
+                // TODO: use the rest of the command line and maybe extend the command line
+
+                if (UserConfig.Video.ResolutionWidth < 640)
+                    UserConfig.Video.ResolutionWidth = 640;
+                if (UserConfig.Video.ResolutionWidth > Global.MAX_VIRTUAL_SCREEN_WIDTH)
+                    UserConfig.Video.ResolutionWidth = Global.MAX_VIRTUAL_SCREEN_WIDTH;
+                if (UserConfig.Video.ResolutionHeight < 480)
+                    UserConfig.Video.ResolutionHeight = 480;
+                if (UserConfig.Video.ResolutionHeight > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
+                    UserConfig.Video.ResolutionHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
+
+                if (initInfo.ScreenWidth == -1)
+                    initInfo.ScreenWidth = UserConfig.Video.ResolutionWidth;
+                if (initInfo.ScreenHeight == -1)
+                    initInfo.ScreenHeight = UserConfig.Video.ResolutionHeight;
+                if (initInfo.Fullscreen == null)
+                    initInfo.Fullscreen = UserConfig.Video.Fullscreen;
+
+                if (initInfo.ScreenWidth < 640)
+                    initInfo.ScreenWidth = 640;
+                if (initInfo.ScreenHeight < 480)
+                    initInfo.ScreenHeight = 480;
+
+                var screen = Screen.FromHandle(Handle);
+
+                if (initInfo.ScreenWidth > screen.Bounds.Width)
+                    initInfo.ScreenWidth = screen.Bounds.Width;
+                if (initInfo.ScreenHeight > screen.Bounds.Height)
+                    initInfo.ScreenHeight = screen.Bounds.Height;
+
+                UserConfig.Video.ResolutionWidth = initInfo.ScreenWidth;
+                UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
+                UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
+
+                SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
+
+                gameView = new GameView(dosData, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+                gameView.FullscreenRequestHandler = FullscreenRequestHandler;
+
+                gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
+
+                if (initInfo.Fullscreen == true)
+                    SetFullscreen(true);
+
+                var audio = gameView.AudioFactory?.GetAudio();
+
+                if (audio != null)
+                {
+                    var musicPlayer = audio.GetMusicPlayer();
+                    var soundPlayer = audio.GetSoundPlayer();
+                    var volumeController = audio.GetVolumeController();
+
+                    if (musicPlayer != null)
+                        musicPlayer.Enabled = UserConfig.Audio.Music;
+                    if (soundPlayer != null)
+                        soundPlayer.Enabled = UserConfig.Audio.Sound;
+                    if (volumeController != null)
+                        volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
+                }
+
+                gameView.Closed += GameView_Closed;
+
+                RenderControl.MouseWheel += RenderControl_MouseWheel;
+
+                clickWaitTimer.Tick += ClickWaitTimer_Tick;
+                clickWaitTimer.Interval = 130;
+
+                FrameTimer.Interval = Global.TICK_LENGTH;
+                FrameTimer.Start();
+
+                BringToFront();
             }
-
-            UserConfig.Load(FileSystem.Paths.UserConfigPath);
-
-            // TODO: for now we just load DOS data (test path)
-            DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
-
-            if (!dosData.Load())
+            catch (Exception ex)
             {
-                MessageBox.Show(this, "Error loading DOS data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Close();
-                return;
+                ReportException("Load", ex);
             }
-
-            // TODO: use the rest of the command line and maybe extend the command line
-
-            if (UserConfig.Video.ResolutionWidth < 640)
-                UserConfig.Video.ResolutionWidth = 640;
-            if (UserConfig.Video.ResolutionWidth > Global.MAX_VIRTUAL_SCREEN_WIDTH)
-                UserConfig.Video.ResolutionWidth = Global.MAX_VIRTUAL_SCREEN_WIDTH;
-            if (UserConfig.Video.ResolutionHeight < 480)
-                UserConfig.Video.ResolutionHeight = 480;
-            if (UserConfig.Video.ResolutionHeight > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
-                UserConfig.Video.ResolutionHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
-
-            if (initInfo.ScreenWidth == -1)
-                initInfo.ScreenWidth = UserConfig.Video.ResolutionWidth;
-            if (initInfo.ScreenHeight == -1)
-                initInfo.ScreenHeight = UserConfig.Video.ResolutionHeight;
-            if (initInfo.Fullscreen == null)
-                initInfo.Fullscreen = UserConfig.Video.Fullscreen;
-
-            if (initInfo.ScreenWidth < 640)
-                initInfo.ScreenWidth = 640;
-            if (initInfo.ScreenHeight < 480)
-                initInfo.ScreenHeight = 480;
-
-            var screen = Screen.FromHandle(Handle);
-
-            if (initInfo.ScreenWidth > screen.Bounds.Width)
-                initInfo.ScreenWidth = screen.Bounds.Width;
-            if (initInfo.ScreenHeight > screen.Bounds.Height)
-                initInfo.ScreenHeight = screen.Bounds.Height;
-
-            UserConfig.Video.ResolutionWidth = initInfo.ScreenWidth;
-            UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
-            UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
-
-            SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
-
-            gameView = new GameView(dosData, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
-            gameView.FullscreenRequestHandler = FullscreenRequestHandler;
-
-            gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
-
-            if (initInfo.Fullscreen == true)
-                SetFullscreen(true);
-
-            var audio = gameView.AudioFactory?.GetAudio();
-
-            if (audio != null)
-            {
-                var musicPlayer = audio.GetMusicPlayer();
-                var soundPlayer = audio.GetSoundPlayer();
-                var volumeController = audio.GetVolumeController();
-
-                if (musicPlayer != null)
-                    musicPlayer.Enabled = UserConfig.Audio.Music;
-                if (soundPlayer != null)
-                    soundPlayer.Enabled = UserConfig.Audio.Sound;
-                if (volumeController != null)
-                    volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
-            }
-
-            gameView.Closed += GameView_Closed;
-
-            RenderControl.MouseWheel += RenderControl_MouseWheel;
-
-            clickWaitTimer.Tick += ClickWaitTimer_Tick;
-            clickWaitTimer.Interval = 130;
-
-            FrameTimer.Interval = Global.TICK_LENGTH;
-            FrameTimer.Start();
-
-            BringToFront();
         }
 
         void GameView_Closed(object sender, EventArgs e)
@@ -153,12 +160,9 @@ namespace Freeserf
             catch (Exception ex)
             {
                 FrameTimer.Stop();
-                Log.Error.Write("render", ex.Message);
 
-                if (crashHandlerForm.RaiseException(ex) == UI.CrashReaction.Restart)
-                    Process.Start(Assembly.GetEntryAssembly().Location);
-
-                Close();
+                ReportException("FrameTimer", ex);
+                
                 return;
             }
 
@@ -206,21 +210,28 @@ namespace Freeserf
 
         void HandleFullscreenChange()
         {
-            if (fullscreen)
+            try
             {
-                FormBorderStyle = FormBorderStyle.None;
-                WindowState = FormWindowState.Maximized;
-                gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
-                TopMost = true;
-                BringToFront();
+                if (fullscreen)
+                {
+                    FormBorderStyle = FormBorderStyle.None;
+                    WindowState = FormWindowState.Maximized;
+                    gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
+                    TopMost = true;
+                    BringToFront();
+                }
+                else
+                {
+                    WindowState = FormWindowState.Normal;
+                    FormBorderStyle = FormBorderStyle.FixedDialog;
+                    SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
+                    gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
+                    TopMost = false;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                WindowState = FormWindowState.Normal;
-                FormBorderStyle = FormBorderStyle.FixedDialog;
-                SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
-                gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
-                TopMost = false;
+                ReportException("FullscreenChange", ex);
             }
         }
 
@@ -274,10 +285,17 @@ namespace Freeserf
 
         void RenderControl_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (e.Delta < 0)
-                ZoomOut();
-            else if (e.Delta > 0)
-                ZoomIn();
+            try
+            {
+                if (e.Delta < 0)
+                    ZoomOut();
+                else if (e.Delta > 0)
+                    ZoomIn();
+            }
+            catch (Exception ex)
+            {
+                ReportException("MouseWheel", ex);
+            }
         }
 
         void RenderControl_MouseMove(object sender, MouseEventArgs e)
@@ -285,25 +303,32 @@ namespace Freeserf
             if (gameView == null)
                 return;
 
-            gameView.SetCursorPosition(e.X, e.Y);
-
-            var button = e.Button & (MouseButtons.Left | MouseButtons.Right);
-
-            pressedMouseButtons = button;
-
-            if (button == MouseButtons.Left || button == MouseButtons.Right)
+            try
             {
-                if (lastDragX == int.MinValue)
-                    return;
+                gameView.SetCursorPosition(e.X, e.Y);
 
-                gameView.NotifyDrag(e.X, e.Y, lastDragX - e.X, lastDragY - e.Y, ConvertMouseButton(button));
-                lastDragX = e.X;
-                lastDragY = e.Y;
+                var button = e.Button & (MouseButtons.Left | MouseButtons.Right);
+
+                pressedMouseButtons = button;
+
+                if (button == MouseButtons.Left || button == MouseButtons.Right)
+                {
+                    if (lastDragX == int.MinValue)
+                        return;
+
+                    gameView.NotifyDrag(e.X, e.Y, lastDragX - e.X, lastDragY - e.Y, ConvertMouseButton(button));
+                    lastDragX = e.X;
+                    lastDragY = e.Y;
+                }
+                else
+                {
+                    lastDragX = int.MinValue;
+                    lastDragY = int.MinValue;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lastDragX = int.MinValue;
-                lastDragY = int.MinValue;
+                ReportException("MouseMove", ex);
             }
         }
 
@@ -321,7 +346,15 @@ namespace Freeserf
 
             if (pressedMouseButtons == (MouseButtons.Left | MouseButtons.Right))
             {
-                gameView?.NotifySpecialClick(e.X, e.Y);
+                try
+                {
+                    gameView?.NotifySpecialClick(e.X, e.Y);
+                }
+                catch (Exception ex)
+                {
+                    ReportException("MouseDown", ex);
+                }
+
                 pressedMouseButtons = MouseButtons.None;
             }
         }
@@ -362,74 +395,81 @@ namespace Freeserf
         {
             KeysDown[(int)e.KeyCode] = true;
 
-            if (e.Control && e.KeyCode == Keys.F)
+            try
             {
-                ToggleFullscreen();
-                e.Handled = true;
-                return;
-            }
-
-            switch (e.KeyCode)
-            {
-                case Keys.Left:
-                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
-                    HandleKeyDrag();
-                    e.Handled = true;
-                    break;
-                case Keys.Right:
-                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
-                    HandleKeyDrag();
-                    e.Handled = true;
-                    break;
-                case Keys.Up:
-                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
-                    HandleKeyDrag();
-                    e.Handled = true;
-                    break;
-                case Keys.Down:
-                    gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
-                    HandleKeyDrag();
-                    e.Handled = true;
-                    break;
-                case Keys.F10:
-                    gameView?.NotifyKeyPressed('n', 1);
-                    e.Handled = true;
-                    break;
-                case Keys.F11:
+                if (e.Control && e.KeyCode == Keys.F)
+                {
                     ToggleFullscreen();
                     e.Handled = true;
-                    break;
-                case Keys.Enter:
-                    gameView?.NotifyKeyPressed(Event.SystemKeys.Return, 0);
-                    e.SuppressKeyPress = true;
-                    e.Handled = true;
-                    break;
-                case Keys.Back:
-                    gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, 0);
-                    e.Handled = true;
-                    break;
-                case Keys.Delete:
-                    gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
-                    e.Handled = true;
-                    break;
-                default:
-                    {
-                        if (e.KeyValue < 128) // only valid ascii characters
+                    return;
+                }
+
+                switch (e.KeyCode)
+                {
+                    case Keys.Left:
+                        gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                        HandleKeyDrag();
+                        e.Handled = true;
+                        break;
+                    case Keys.Right:
+                        gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                        HandleKeyDrag();
+                        e.Handled = true;
+                        break;
+                    case Keys.Up:
+                        gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                        HandleKeyDrag();
+                        e.Handled = true;
+                        break;
+                    case Keys.Down:
+                        gameView?.NotifyKeyPressed((char)e.KeyValue, 0);
+                        HandleKeyDrag();
+                        e.Handled = true;
+                        break;
+                    case Keys.F10:
+                        gameView?.NotifyKeyPressed('n', 1);
+                        e.Handled = true;
+                        break;
+                    case Keys.F11:
+                        ToggleFullscreen();
+                        e.Handled = true;
+                        break;
+                    case Keys.Enter:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Return, 0);
+                        e.SuppressKeyPress = true;
+                        e.Handled = true;
+                        break;
+                    case Keys.Back:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, 0);
+                        e.Handled = true;
+                        break;
+                    case Keys.Delete:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
+                        e.Handled = true;
+                        break;
+                    default:
                         {
-                            byte modifier = 0;
+                            if (e.KeyValue < 128) // only valid ascii characters
+                            {
+                                byte modifier = 0;
 
-                            if (e.Control)
-                                modifier |= 1;
-                            if (e.Shift)
-                                modifier |= 2;
-                            if (e.Alt)
-                                modifier |= 4;
+                                if (e.Control)
+                                    modifier |= 1;
+                                if (e.Shift)
+                                    modifier |= 2;
+                                if (e.Alt)
+                                    modifier |= 4;
 
-                            gameView?.NotifyKeyPressed((char)e.KeyValue, modifier);
-                            e.Handled = true;
+                                gameView?.NotifyKeyPressed((char)e.KeyValue, modifier);
+                                e.Handled = true;
+                            }
                         }
-                    }
-                    break;
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                ReportException("KeyDown", ex);
             }
         }
 
@@ -448,7 +488,14 @@ namespace Freeserf
         {
             clickWaitTimer.Stop();
 
-            gameView?.NotifyDoubleClick(e.X, e.Y, ConvertMouseButton(e.Button));
+            try
+            {
+                gameView?.NotifyDoubleClick(e.X, e.Y, ConvertMouseButton(e.Button));
+            }
+            catch (Exception ex)
+            {
+                ReportException("MouseDoubleClick", ex);
+            }
         }
 
         void ClickWaitTimer_Tick(object sender, EventArgs e)
@@ -457,33 +504,73 @@ namespace Freeserf
 
             clickWaitTimer.Stop();
 
-            gameView?.NotifyClick(args.X, args.Y, ConvertMouseButton(args.Button));
+            try
+            {
+                gameView?.NotifyClick(args.X, args.Y, ConvertMouseButton(args.Button));
+            }
+            catch (Exception ex)
+            {
+                ReportException("MouseClick", ex);
+            }
+        }
+
+        void ReportException(string source, Exception exception)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                    ReportException(source, exception);
+                }));
+
+                return;
+            }
+
+            if (clickWaitTimer != null && clickWaitTimer.Enabled)
+                clickWaitTimer.Stop();
+
+            if (FrameTimer != null && FrameTimer.Enabled)
+                FrameTimer.Stop();
+
+            Log.Error.Write(source, exception.Message);
+
+            if (crashHandlerForm.RaiseException(exception) == UI.CrashReaction.Restart)
+                Process.Start(Assembly.GetEntryAssembly().Location);
+
+            Close();
         }
 
         void RenderControl_KeyPress(object sender, KeyPressEventArgs e)
         {
-            switch (e.KeyChar)
+            try
             {
-                case '<':
-                    ZoomOut();
-                    e.Handled = true;
-                    break;
-                case '>':
-                    ZoomIn();
-                    e.Handled = true;
-                    break;
-                case '+':
-                case '-':
-                case 'ä':
-                case 'Ä':
-                case 'ö':
-                case 'Ö':
-                case 'ü':
-                case 'Ü':
-                    // TODO: Encoding
-                    gameView?.NotifyKeyPressed(e.KeyChar, 0);
-                    e.Handled = true;
-                    break;
+                switch (e.KeyChar)
+                {
+                    case '<':
+                        ZoomOut();
+                        e.Handled = true;
+                        break;
+                    case '>':
+                        ZoomIn();
+                        e.Handled = true;
+                        break;
+                    case '+':
+                    case '-':
+                    case 'ä':
+                    case 'Ä':
+                    case 'ö':
+                    case 'Ö':
+                    case 'ü':
+                    case 'Ü':
+                        // TODO: Encoding
+                        gameView?.NotifyKeyPressed(e.KeyChar, 0);
+                        e.Handled = true;
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                ReportException("KeyPress", ex);
             }
         }
 

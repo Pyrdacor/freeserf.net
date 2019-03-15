@@ -62,7 +62,8 @@ namespace Freeserf
 
             GenerateMailContent(exception);
 
-            SetText(exception.Message);
+            SetText(exception.Message + Environment.NewLine + Environment.NewLine + new string('=', 10) + " Stack Trace: " + new string('=', 10) +
+                Environment.NewLine + Environment.NewLine + exception.StackTrace);
 
             var result = ShowDialog();
 

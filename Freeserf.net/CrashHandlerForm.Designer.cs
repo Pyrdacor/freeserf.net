@@ -77,6 +77,7 @@
             this.TextMessage.Multiline = true;
             this.TextMessage.Name = "TextMessage";
             this.TextMessage.ReadOnly = true;
+            this.TextMessage.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.TextMessage.Size = new System.Drawing.Size(440, 113);
             this.TextMessage.TabIndex = 3;
             // 
@@ -95,7 +96,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(464, 162);
+            this.ClientSize = new System.Drawing.Size(464, 166);
             this.Controls.Add(this.ButtonSave);
             this.Controls.Add(this.TextMessage);
             this.Controls.Add(this.ButtonSendReport);
