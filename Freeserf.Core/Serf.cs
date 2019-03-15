@@ -2484,7 +2484,7 @@ namespace Freeserf
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
                     writer.Value("state.rev_dir").Write((int)s.IdleOnPath.RevDir);
-                    writer.Value("state.flag").Write(Game.GetFlag(s.IdleOnPath.FlagIndex).Index);
+                    writer.Value("state.flag").Write(s.IdleOnPath.FlagIndex);
                     writer.Value("state.field_e").Write(s.IdleOnPath.FieldE);
                     break;
 
