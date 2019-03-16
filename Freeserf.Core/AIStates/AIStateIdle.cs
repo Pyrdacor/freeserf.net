@@ -91,11 +91,11 @@ namespace Freeserf.AIStates
             // check for unconnected flags once in a while
             checkDisconnectedFlagsTick += tick;
 
-            if (checkDisconnectedFlagsTick > (15 - (int)playerInfo.Intelligence / 15) * Global.TICKS_PER_SEC)
+            if (checkDisconnectedFlagsTick > (180 - (int)playerInfo.Intelligence * 3) * Global.TICKS_PER_SEC)
             {
                 checkDisconnectedFlagsTick = 0;
 
-                if (ai.Chance(50))
+                if (ai.Chance(50 + (int)playerInfo.Intelligence / 4))
                 {
                     if (!ai.ContainsState(linkDisconnectedFlagsState))
                     {
@@ -110,11 +110,11 @@ namespace Freeserf.AIStates
             // check for needed buildings and build them
             buildNeededBuildingsTick += tick;
 
-            if (buildNeededBuildingsTick > (10 - (int)playerInfo.Intelligence / 9) * Global.TICKS_PER_SEC)
+            if (buildNeededBuildingsTick > (18 - (int)playerInfo.Intelligence / 6) * Global.TICKS_PER_SEC)
             {
                 buildNeededBuildingsTick = 0;
 
-                if (ai.Chance(70))
+                if (ai.Chance(85 + (int)playerInfo.Intelligence / 4))
                 {
                     if (!ai.ContainsState(buildNeededBuildingState))
                     {
@@ -129,11 +129,11 @@ namespace Freeserf.AIStates
             // check for setting adjustment
             adjustSettingsTick += tick;
 
-            if (adjustSettingsTick > (32 - (int)playerInfo.Intelligence / 3) * Global.TICKS_PER_SEC)
+            if (adjustSettingsTick > (60 - (int)playerInfo.Intelligence) * Global.TICKS_PER_SEC)
             {
                 adjustSettingsTick = 0;
 
-                if (ai.Chance(30))
+                if (ai.Chance(30 + (int)playerInfo.Intelligence))
                 {
                     ai.PushState(ai.CreateState(AI.State.AdjustSettings));
                     return;
@@ -143,11 +143,11 @@ namespace Freeserf.AIStates
             // check for avoid congestion
             avoidCongestionTick += tick;
 
-            if (avoidCongestionTick > (160 - (int)playerInfo.Intelligence) * Global.TICKS_PER_SEC)
+            if (avoidCongestionTick > (300 - (int)playerInfo.Intelligence) * Global.TICKS_PER_SEC)
             {
                 avoidCongestionTick = 0;
 
-                if (ai.Chance(30))
+                if (ai.Chance(30 + (int)playerInfo.Intelligence / 4))
                 {
                     ai.PushState(ai.CreateState(AI.State.AvoidCongestion));
                     return;
@@ -162,7 +162,7 @@ namespace Freeserf.AIStates
             {
                 destroyUselessBuildingsTick = 0;
 
-                if (ai.Chance(40))
+                if (ai.Chance(40 + (int)playerInfo.Intelligence))
                 {
                     ai.PushState(ai.CreateState(AI.State.DestroyUselessBuildings));
                     return;
@@ -172,7 +172,7 @@ namespace Freeserf.AIStates
             // check for attacking
             if (ai.CanAttack && !ai.HardTimes() && game.GetPossibleFreeKnightCount(player) > (15 - ai.Aggressivity * 3))
             {
-                int attackCheckInterval = (60 - 15 * Math.Max(ai.Aggressivity, (ai.MilitaryFocus + 1) / 2)) * Global.TICKS_PER_SEC;
+                int attackCheckInterval = (80 - (int)playerInfo.Intelligence / 2 - 15 * Math.Max(ai.Aggressivity, (ai.MilitaryFocus + 1) / 2)) * Global.TICKS_PER_SEC;
 
                 if (ai.GameTime >= (60 - ai.Aggressivity - ai.MilitaryFocus - ai.RushAffinity * 8) * Global.TICKS_PER_MIN)
                     attackTick += tick;

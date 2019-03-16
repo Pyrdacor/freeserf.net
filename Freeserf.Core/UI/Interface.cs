@@ -1385,7 +1385,7 @@ namespace Freeserf.UI
                         {
                             uint index = Game.GetNextPlayer(player).Index;
                             SetPlayer(index);
-                            Log.Debug.Write("main", "Switched to player #" + index);
+                            Log.Info.Write("main", "Switched to player #" + index);
                         }
 
                         break;
