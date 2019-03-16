@@ -75,8 +75,8 @@ namespace Freeserf.AIStates
                 }
             }
 
-            // lower the ai focus after several tries to finally find a spot
-            if (++tries % 20 == 0)
+            // lower the ai focus after several tries to finally find a spot (only on small maps)
+            if (game.Map.Size < 6 && ++tries % (5 + game.Map.Size * 5) == 0)
             {
                 if (goldFocus > 0)
                     --goldFocus;
@@ -188,9 +188,27 @@ namespace Freeserf.AIStates
                 if (ironCount == 0 || coalCount == 0)
                     return -1;
             }
+            else // good amount of starting resources
+            {
+                if (map.Size > 5)
+                {
+                    if (treeCount < 12 || stoneCount < 6)
+                        return -1;
+                }
+                else if (map.Size == 5)
+                {
+                    if (treeCount < 9 || stoneCount < 5)
+                        return -1;
+                }
+                else if (map.Size == 4)
+                {
+                    if (treeCount < 7 || stoneCount < 4)
+                        return -1;
+                }
+            }
 
             // if we tried too often we will only assure that there is a bit of trees and stones
-            if (tries >= 40)
+            if (map.Size < 6 && tries >= 25 + map.Size * 5)
             {
                 if (treeCount < 5 || stoneCount < 2)
                     return -1;
