@@ -49,9 +49,14 @@ namespace Freeserf.Renderer.OpenTK
                 usageHint = BufferUsageHint.StaticDraw;
         }
 
-        public int Add(byte layer)
+        public int Add(byte layer, int index = -1)
         {
-            int index = indices.AssignNextFreeIndex();
+            bool reused = true;
+
+            if (index == -1)
+                index = indices.AssignNextFreeIndex(out reused);
+            else
+                reused = indices.AssignIndex(index);
 
             if (buffer == null)
             {
@@ -70,9 +75,12 @@ namespace Freeserf.Renderer.OpenTK
                         Array.Resize(ref buffer, buffer.Length + 256);
                     else
                         Array.Resize(ref buffer, buffer.Length + 512);
+
+                    changedSinceLastCreation = true;
                 }
 
-                ++size;
+                if (!reused)
+                    ++size;
 
                 if (buffer[index] != layer)
                 {

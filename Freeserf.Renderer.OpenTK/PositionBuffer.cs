@@ -59,9 +59,14 @@ namespace Freeserf.Renderer.OpenTK
             return buffer[index] != short.MaxValue;
         }
 
-        public int Add(short x, short y)
+        public int Add(short x, short y, int index = -1)
         {
-            int index = indices.AssignNextFreeIndex();
+            bool reused = true;
+
+            if (index == -1)
+                index = indices.AssignNextFreeIndex(out reused);
+            else
+                reused = indices.AssignIndex(index);
 
             if (buffer == null)
             {
@@ -81,9 +86,13 @@ namespace Freeserf.Renderer.OpenTK
                         Array.Resize(ref buffer, buffer.Length + 512);
                     else
                         Array.Resize(ref buffer, buffer.Length + 1024);
+
+                    changedSinceLastCreation = true;
                 }
 
-                size += 2;
+                if (!reused)
+                    size += 2;
+
                 int bufferIndex = index * 2;
 
                 if (buffer[bufferIndex + 0] != x ||

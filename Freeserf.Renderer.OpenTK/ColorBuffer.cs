@@ -49,9 +49,14 @@ namespace Freeserf.Renderer.OpenTK
                 usageHint = BufferUsageHint.StaticDraw;
         }
 
-        public int Add(Render.Color color)
+        public int Add(Render.Color color, int index = -1)
         {
-            int index = indices.AssignNextFreeIndex();
+            bool reused = true;
+
+            if (index == -1)
+                index = indices.AssignNextFreeIndex(out reused);
+            else
+                reused = indices.AssignIndex(index);
 
             if (buffer == null)
             {
@@ -73,9 +78,12 @@ namespace Freeserf.Renderer.OpenTK
                         Array.Resize(ref buffer, buffer.Length + 256);
                     else
                         Array.Resize(ref buffer, buffer.Length + 512);
+
+                    changedSinceLastCreation = true;
                 }
 
-                size += 4;
+                if (!reused)
+                    size += 4;
 
                 int bufferIndex = index * 4;
 

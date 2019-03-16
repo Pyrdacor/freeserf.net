@@ -127,30 +127,34 @@ namespace Freeserf.Renderer.OpenTK
                 size = sizeTransformation(size);
 
             int index = positionBuffer.Add((short)position.X, (short)position.Y);
-            positionBuffer.Add((short)(position.X + size.Width), (short)position.Y);
-            positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height));
-            positionBuffer.Add((short)position.X, (short)(position.Y + size.Height));
+            positionBuffer.Add((short)(position.X + size.Width), (short)position.Y, index + 1);
+            positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height), index + 2);
+            positionBuffer.Add((short)position.X, (short)(position.Y + size.Height), index + 3);
 
             if (layerBuffer != null)
             {
-                if (layerBuffer.Add(coloredRect.DisplayLayer) != index)
+                int layerBufferIndex = layerBuffer.Add(coloredRect.DisplayLayer);
+
+                if (layerBufferIndex != index)
                     throw new System.Exception("Invalid index");
 
-                layerBuffer.Add(coloredRect.DisplayLayer);
-                layerBuffer.Add(coloredRect.DisplayLayer);
-                layerBuffer.Add(coloredRect.DisplayLayer);
+                layerBuffer.Add(coloredRect.DisplayLayer, layerBufferIndex + 1);
+                layerBuffer.Add(coloredRect.DisplayLayer, layerBufferIndex + 2);
+                layerBuffer.Add(coloredRect.DisplayLayer, layerBufferIndex + 3);
             }
 
             if (colorBuffer != null)
             {
                 var color = coloredRect.Color;
 
-                if (colorBuffer.Add(color) != index)
+                int colorBufferIndex = colorBuffer.Add(color);
+
+                if (colorBufferIndex != index)
                     throw new System.Exception("Invalid index");
 
-                colorBuffer.Add(color);
-                colorBuffer.Add(color);
-                colorBuffer.Add(color);
+                colorBuffer.Add(color, colorBufferIndex + 1);
+                colorBuffer.Add(color, colorBufferIndex + 2);
+                colorBuffer.Add(color, colorBufferIndex + 3);
             }
 
             return index;
@@ -169,52 +173,60 @@ namespace Freeserf.Renderer.OpenTK
                 size = sizeTransformation(size);
 
             int index = positionBuffer.Add((short)position.X, (short)position.Y);
-            positionBuffer.Add((short)(position.X + size.Width), (short)position.Y);
-            positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height));
-            positionBuffer.Add((short)position.X, (short)(position.Y + size.Height));
+            positionBuffer.Add((short)(position.X + size.Width), (short)position.Y, index + 1);
+            positionBuffer.Add((short)(position.X + size.Width), (short)(position.Y + size.Height), index + 2);
+            positionBuffer.Add((short)position.X, (short)(position.Y + size.Height), index + 3);
 
             if (textureAtlasOffsetBuffer != null)
             {
-                if (textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y) != index)
+                int textureAtlasOffsetBufferIndex = textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
+
+                if (textureAtlasOffsetBufferIndex != index)
                     throw new System.Exception("Invalid index");
 
-                textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y);
-                textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
-                textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
+                textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y, textureAtlasOffsetBufferIndex + 1);
+                textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 2);
+                textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 3);
             }
 
             if (Masked && maskSpriteTextureAtlasOffset != null)
             {
-                if (maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y) != index)
+                int maskTextureAtlasOffsetBufferIndex = maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y);
+
+                if (maskTextureAtlasOffsetBufferIndex != index)
                     throw new System.Exception("Invalid index");
 
-                maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)maskSpriteTextureAtlasOffset.Y);
-                maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
-                maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
+                maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)maskSpriteTextureAtlasOffset.Y, maskTextureAtlasOffsetBufferIndex + 1);
+                maskTextureAtlasOffsetBuffer.Add((short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height), maskTextureAtlasOffsetBufferIndex + 2);
+                maskTextureAtlasOffsetBuffer.Add((short)maskSpriteTextureAtlasOffset.X, (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height), maskTextureAtlasOffsetBufferIndex + 3);
             }
 
             if (Shape != Shape.Triangle && baseLineBuffer != null)
             {
                 ushort baseLine = (ushort)(position.Y + size.Height + sprite.BaseLineOffset);
 
-                if (baseLineBuffer.Add(baseLine) != index)
+                int baseLineBufferIndex = baseLineBuffer.Add(baseLine);
+
+                if (baseLineBufferIndex != index)
                     throw new System.Exception("Invalid index");
 
-                baseLineBuffer.Add(baseLine);
-                baseLineBuffer.Add(baseLine);
-                baseLineBuffer.Add(baseLine);
+                baseLineBuffer.Add(baseLine, baseLineBufferIndex + 1);
+                baseLineBuffer.Add(baseLine, baseLineBufferIndex + 2);
+                baseLineBuffer.Add(baseLine, baseLineBufferIndex + 3);
             }
 
             if (layerBuffer != null)
             {
                 byte layer = (sprite is Render.ILayerSprite) ? (sprite as Render.ILayerSprite).DisplayLayer : (byte)0;
 
-                if (layerBuffer.Add(layer) != index)
+                int layerBufferIndex = layerBuffer.Add(layer);
+
+                if (layerBufferIndex != index)
                     throw new System.Exception("Invalid index");
 
-                layerBuffer.Add(layer);
-                layerBuffer.Add(layer);
-                layerBuffer.Add(layer);
+                layerBuffer.Add(layer, layerBufferIndex + 1);
+                layerBuffer.Add(layer, layerBufferIndex + 2);
+                layerBuffer.Add(layer, layerBufferIndex + 3);
             }
 
             return index;
@@ -308,24 +320,48 @@ namespace Freeserf.Renderer.OpenTK
             for (int i = 0; i < 4; ++i)
             {
                 positionBuffer.Update(index + i, short.MaxValue, short.MaxValue); // ensure it is not visible
+                positionBuffer.Remove(index + i);
             }
 
-            positionBuffer.Remove(index);
-
             if (textureAtlasOffsetBuffer != null)
+            {
                 textureAtlasOffsetBuffer.Remove(index);
+                textureAtlasOffsetBuffer.Remove(index + 1);
+                textureAtlasOffsetBuffer.Remove(index + 2);
+                textureAtlasOffsetBuffer.Remove(index + 3);
+            }
 
             if (maskTextureAtlasOffsetBuffer != null)
+            {
                 maskTextureAtlasOffsetBuffer.Remove(index);
+                maskTextureAtlasOffsetBuffer.Remove(index + 1);
+                maskTextureAtlasOffsetBuffer.Remove(index + 2);
+                maskTextureAtlasOffsetBuffer.Remove(index + 3);
+            }
 
             if (baseLineBuffer != null)
+            {
                 baseLineBuffer.Remove(index);
+                baseLineBuffer.Remove(index + 1);
+                baseLineBuffer.Remove(index + 2);
+                baseLineBuffer.Remove(index + 3);
+            }
 
             if (colorBuffer != null)
+            {
                 colorBuffer.Remove(index);
+                colorBuffer.Remove(index + 1);
+                colorBuffer.Remove(index + 2);
+                colorBuffer.Remove(index + 3);
+            }
 
             if (layerBuffer != null)
+            {
                 layerBuffer.Remove(index);
+                layerBuffer.Remove(index + 1);
+                layerBuffer.Remove(index + 2);
+                layerBuffer.Remove(index + 3);
+            }
 
             // TODO: this code causes problems. commented out for now
             /*if (newSize != -1)

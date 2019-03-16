@@ -26,33 +26,49 @@ namespace Freeserf.Renderer.OpenTK
 {
     internal class IndexPool
     {
-        Dictionary<int, bool> assignedIndices = new Dictionary<int, bool>();
+        readonly List<int> releasedIndices = new List<int>();
         int firstFree = 0;
 
-        public int AssignNextFreeIndex()
+        public int AssignNextFreeIndex(out bool reused)
         {
-            bool firstRun = true;
-
-            while (assignedIndices.ContainsKey(firstFree) && assignedIndices[firstFree])
+            if (releasedIndices.Count > 0)
             {
-                if (++firstFree == int.MaxValue)
-                {
-                    if (!firstRun)
-                        throw new Exception("Now free index available.");
+                reused = true;
 
-                    firstFree = 0;
-                    firstRun = false;
-                }
+                int index = releasedIndices[0];
+
+                releasedIndices.RemoveAt(0);
+
+                return index;
             }
 
-            assignedIndices[firstFree] = true;
+            reused = false;
 
-            return firstFree;
+            if (firstFree == int.MaxValue)
+            {
+                throw new ExceptionFreeserf("render", "No free index available.");
+            }
+
+            return firstFree++;
         }
 
         public void UnassignIndex(int index)
         {
-            assignedIndices[index] = false;
+            releasedIndices.Add(index);
+        }
+
+        public bool AssignIndex(int index)
+        {
+            if (releasedIndices.Contains(index))
+            {
+                releasedIndices.Remove(index);
+                return true;
+            }
+
+            if (index == firstFree)
+                ++firstFree;
+
+            return false;
         }
     }
 }
