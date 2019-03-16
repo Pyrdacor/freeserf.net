@@ -923,6 +923,9 @@ namespace Freeserf
 
         internal bool Chance(int percentage)
         {
+            if (percentage == 100)
+                return true;
+
             return random.Next() % 100 < percentage;
         }
 

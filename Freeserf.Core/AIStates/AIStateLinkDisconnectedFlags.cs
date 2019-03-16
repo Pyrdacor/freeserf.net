@@ -118,7 +118,7 @@ namespace Freeserf.AIStates
         {
             lock (linkingLock)
             {
-                if (linkingCount != 0)
+                if (linkingCount > 0)
                     return;
             }
 
@@ -252,8 +252,11 @@ namespace Freeserf.AIStates
 
             lock (linkingLock)
             {
-                if (linkingCount == 0)
+                if (linkingCount <= 0)
+                {
+                    linkingCount = 0;
                     Kill(ai);
+                }
             }
         }
 
