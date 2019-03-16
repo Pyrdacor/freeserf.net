@@ -220,6 +220,24 @@ namespace Freeserf.UI
             panelButtons[index].SetSpriteIndex((uint)buttonId);
         }
 
+        public override bool Displayed
+        {
+            get => base.Displayed;
+            set
+            {
+                base.Displayed = value;
+
+                if (value)
+                {
+                    foreach (var button in panelButtons)
+                        button.Displayed = true;
+
+                    messageIcon.Displayed = true;
+                    returnIcon.Displayed = true;
+                }
+            }
+        }
+
         protected override void InternalDraw()
         {
             DrawPanelFrame();
@@ -233,6 +251,8 @@ namespace Freeserf.UI
 
             foreach (var bg in background)
                 bg.Visible = false;
+
+            playerColorIndicator.Visible = false;
         }
 
         protected internal override void UpdateParent()
@@ -301,11 +321,13 @@ namespace Freeserf.UI
         {
             var playerColor = interf.GetPlayer().GetColor();
 
+            playerColorIndicator.DisplayLayer = 0;
             playerColorIndicator.X = TotalX - 1;
             playerColorIndicator.Y = TotalY - 1;
             playerColorIndicator.Resize(Width + 2, Height + 1);
             playerColorIndicator.Color = new Render.Color(playerColor.Red, playerColor.Green, playerColor.Blue);
             playerColorIndicator.Visible = interf.AccessRights != Viewer.Access.Player;
+            playerColorIndicator.DisplayLayer = 0;
         }
 
         public void Update()

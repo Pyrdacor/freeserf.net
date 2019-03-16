@@ -158,6 +158,10 @@ namespace Freeserf.UI
             SetSize(640, 480); // original size
 
             Viewport = null;
+
+            PanelBar = new PanelBar(this);
+            AddChild(PanelBar, 0, 0, false);
+            Layout();
         }
 
         internal void DrawCursor(int x, int y)
@@ -371,10 +375,8 @@ namespace Freeserf.UI
             initBox.Displayed = true;
             initBox.Enabled = true;
 
-            if (PanelBar != null)
-            {
-                PanelBar.Displayed = false;
-            }
+            PanelBar.Displayed = false;
+            PanelBar.Enabled = false;
 
             if (Viewport != null)
                 Viewport.Enabled = false;
@@ -394,11 +396,8 @@ namespace Freeserf.UI
                 initBox = null;
             }
 
-            if (PanelBar != null)
-            {
-                PanelBar.Displayed = true;
-                PanelBar.Enabled = true;
-            }
+            PanelBar.Displayed = true;
+            PanelBar.Enabled = true;
 
             Viewport.Enabled = true;
             Layout();
@@ -541,12 +540,6 @@ namespace Freeserf.UI
                 return;
             }
 
-            if (PanelBar != null)
-            {
-                DeleteChild(PanelBar);
-                PanelBar = null;
-            }
-
             this.player = Game.GetPlayer(player);
 
             /* Move viewport to initial position */
@@ -554,15 +547,17 @@ namespace Freeserf.UI
 
             if (this.player != null)
             {
-                if (PanelBar == null && Ingame)
-                {
-                    PanelBar = new PanelBar(this);
-                    AddChild(PanelBar, 0, 0, true);
-                    Layout();
-                }
+                if (Ingame)
+                    PanelBar.Displayed = true;
+                else
+                    PanelBar.Displayed = false;
 
                 if (this.player.CastlePos != Global.BadMapPos)
                     initPos = this.player.CastlePos;
+            }
+            else
+            {
+                PanelBar.Displayed = false;
             }
 
             UpdateMapCursorPos(initPos);
@@ -1411,7 +1406,7 @@ namespace Freeserf.UI
                     }
                     break;
                 case Event.SystemKeys.Delete:
-                    if (PanelBar != null && PanelBar.CanDemolish())
+                    if (PanelBar != null && PanelBar.Displayed && PanelBar.CanDemolish())
                     {
                         PanelBar.Demolish();
                     }
