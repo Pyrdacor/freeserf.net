@@ -588,7 +588,7 @@ namespace Freeserf.UI
 
         string[] GetSelectedServer()
         {
-            var serverInfo = serverList.GetSelected().Trim();
+            var serverInfo = serverList.GetSelected()?.Trim();
 
             if (string.IsNullOrEmpty(serverInfo))
                 return new string[4] { "", "", "", "" };
@@ -725,7 +725,8 @@ namespace Freeserf.UI
                         DrawBoxString(10, 2, textFieldHeader, "Load game");
                         DrawBoxString(10, 18, textFieldName, "File:");
 
-                        string saveGameName = System.IO.Path.GetFileNameWithoutExtension(fileList.GetSelected().Path);
+                        string path = fileList.GetSelected()?.Path;
+                        string saveGameName = string.IsNullOrWhiteSpace(path) ? "" : System.IO.Path.GetFileNameWithoutExtension(path);
 
                         if (saveGameName.Length > 17)
                             saveGameName = saveGameName.Substring(0, 14) + "...";
@@ -868,7 +869,7 @@ namespace Freeserf.UI
                     {
                         interf.CloseGameInit();
 
-                        string path = fileList.GetSelected().Path;
+                        string path = fileList.GetSelected()?.Path;
 
                         if (string.IsNullOrWhiteSpace(path))
                         {
