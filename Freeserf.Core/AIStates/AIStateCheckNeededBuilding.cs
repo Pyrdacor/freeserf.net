@@ -246,6 +246,11 @@ namespace Freeserf.AIStates
             return militaryBuildings.Count() < ai.MaxMilitaryBuildings;
         }
 
+        bool TestBuilding(int count, AI ai, Game game, Player player, int spawnEveryMinutes, int spawnEveryTotalLand, int chance = 100)
+        {
+            return ai.GameTime > (count + 1) * spawnEveryMinutes * Global.TICKS_PER_MIN && player.GetLandArea() > (count + 1) * spawnEveryTotalLand && ai.Chance(chance);
+        }
+
         CheckResult CheckBuilding(AI ai, Game game, Player player, int intelligence, Building.Type type)
         {
             int count = (int)player.GetTotalBuildingCount(type);
@@ -350,58 +355,60 @@ namespace Freeserf.AIStates
             switch (type)
             {
                 case Building.Type.Lumberjack:
-                    if (count < 2 && ai.GameTime > (20 - ai.ConstructionMaterialFocus * 8 + game.RandomInt() % 6) * Global.TICKS_PER_MIN)
+                    if (TestBuilding(count, ai, game, player, 45 - ai.ConstructionMaterialFocus * 7, 55 - ai.ConstructionMaterialFocus * 10, 75))
                     {
-                        return NeedBuilding(ai, game, player, type);
+                        if (game.GetResourceAmountInInventories(player, Resource.Type.Plank) < 70 + ai.ConstructionMaterialFocus * ai.ConstructionMaterialFocus * 40 - count * 3)
+                            return NeedBuilding(ai, game, player, type);
                     }
-                    else if (count < 3 && ai.GameTime > (45 - ai.ConstructionMaterialFocus * 15 + game.RandomInt() % 11) * Global.TICKS_PER_MIN)
-                    {
-                        return NeedBuilding(ai, game, player, type);
-                    }
-                    // TODO ...
                     break;
                 case Building.Type.Forester:
                     {
                         int lumberjackCount = (int)player.GetTotalBuildingCount(Building.Type.Lumberjack);
 
-                        if (count < lumberjackCount + ai.ConstructionMaterialFocus / 2 && ai.GameTime > 30 * Global.TICKS_PER_SEC - ai.ConstructionMaterialFocus * 3 * Global.TICKS_PER_SEC + count * (2 * Global.TICKS_PER_MIN - ai.ConstructionMaterialFocus * 20 * Global.TICKS_PER_SEC))
+                        if (count < lumberjackCount + ai.ConstructionMaterialFocus && TestBuilding(count, ai, game, player, 30 - ai.ConstructionMaterialFocus * 7, 60 - ai.ConstructionMaterialFocus * 20, 50))
                         {
                             return NeedBuilding(ai, game, player, type);
                         }
                     }
                     break;
                 case Building.Type.Stonecutter:
-                    if (count < 2 && ai.GameTime > (60 - ai.ConstructionMaterialFocus * 7 + game.RandomInt() % 17) * Global.TICKS_PER_MIN)
+                    if (TestBuilding(count, ai, game, player, 110 - ai.ConstructionMaterialFocus * 32, 100 - ai.ConstructionMaterialFocus * 20, 75))
                     {
-                        return NeedBuilding(ai, game, player, type);
+                        if (game.GetResourceAmountInInventories(player, Resource.Type.Stone) < 50 + ai.ConstructionMaterialFocus * ai.ConstructionMaterialFocus * 30 - count * 5)
+                            return NeedBuilding(ai, game, player, type);
                     }
-                    else if (count < 3 && ai.GameTime > (108 - ai.ConstructionMaterialFocus * 12 + game.RandomInt() % 21) * Global.TICKS_PER_MIN)
+                    break;
+                case Building.Type.Sawmill:
                     {
-                        return NeedBuilding(ai, game, player, type);
+                        int lumberjackCount = (int)player.GetTotalBuildingCount(Building.Type.Lumberjack);
+
+                        if (count < lumberjackCount * 3 - ai.ConstructionMaterialFocus && TestBuilding(count, ai, game, player, 120 - ai.ConstructionMaterialFocus * 10, 400 - ai.ConstructionMaterialFocus * 15, 30))
+                            return NeedBuilding(ai, game, player, type);
                     }
-                    // TODO ...
                     break;
                 case Building.Type.ToolMaker:
                     if (count < 1 && ai.GameTime > 30 * Global.TICKS_PER_SEC + (2 - intelligence / 20) * Global.TICKS_PER_MIN)
                         return NeedBuilding(ai, game, player, type);
-                    // TODO ...
+                    if (count < 2 && game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 100 && game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 20 &&
+                        game.GetResourceAmountInInventories(player, Resource.Type.Steel) >= 75 && TestBuilding(1, ai, game, player, 180, 800, 5))
+                        return NeedBuilding(ai, game, player, type);
                     break;
                 case Building.Type.Hut:
                     {
                         if (game.GetPossibleFreeKnightCount(player) == 0)
                             return CheckResult.NotNeeded;
                         // TODO: decide if build hut, tower or fortress
-                        int focus = Math.Max(ai.MilitaryFocus, Math.Max((ai.DefendFocus + 1) / 2, ai.ExpandFocus)) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
+                        int focus = Misc.Max(ai.MilitaryFocus, (ai.DefendFocus + 1) / 2, ai.ExpandFocus) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
 
                         if (focus == 0 && player.GetTotalBuildingCount(Building.Type.Hut) == 0)
                             focus = 1;
 
-                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / 250 + (focus + 1) * ai.GameTime / (850 * Global.TICKS_PER_SEC) - 1 &&
+                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / 250 + (focus + 1) * ai.GameTime / (600 * Global.TICKS_PER_SEC) - 1 &&
                             ai.GameTime > (90 - intelligence - focus * 15) * Global.TICKS_PER_SEC)
                         {
                             return NeedBuilding(ai, game, player, type);
                         }
-                        // TODO ...
+
                         break;
                     }
                 case Building.Type.CoalMine:
@@ -437,7 +444,7 @@ namespace Freeserf.AIStates
                     }
                     break;
                 case Building.Type.GoldMine:
-                    if (count < 1 && ai.GameTime > (45 - Math.Max(ai.GoldFocus, ai.MilitaryFocus - 1) * 10 - intelligence / 9) * 5 * Global.TICKS_PER_SEC)
+                    if (count < 1 && ai.GameTime > (45 - Math.Max(ai.GoldFocus, ai.MilitaryFocus - 1) * 7 - intelligence / 9) * 5 * Global.TICKS_PER_SEC)
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
@@ -497,6 +504,12 @@ namespace Freeserf.AIStates
                             game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
                             return NeedBuilding(ai, game, player, type);
+                        else if (count < ai.GoldFocus && game.GetResourceAmountInInventories(player, Resource.Type.GoldOre) >= 24 - ai.GoldFocus * 11)
+                        {
+                            // Gold focus: 0 -> min 24 ore, 1 -> min 13 ore, 2 -> min 2 ore
+                            if (ai.GameTime > (60 - ai.GoldFocus * 20 + count * 20) * Global.TICKS_PER_MIN)
+                                return NeedBuilding(ai, game, player, type);
+                        }
                     }
                     break;
                 case Building.Type.WeaponSmith:

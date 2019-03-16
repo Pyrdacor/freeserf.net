@@ -62,10 +62,6 @@ namespace Freeserf.Renderer.OpenTK
                 else
                     vertexArrayObject = new VertexArrayObject(MaskedTextureShader.Instance.ShaderProgram);
             }
-            /*else if (layered)
-            {
-                vertexArrayObject = new VertexArrayObject(LayeredTextureShader.Instance.ShaderProgram);
-            }*/
             else
             {
                 vertexArrayObject = new VertexArrayObject(TextureShader.Instance.ShaderProgram);

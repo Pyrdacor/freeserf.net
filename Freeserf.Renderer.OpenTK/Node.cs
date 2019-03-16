@@ -150,10 +150,13 @@ namespace Freeserf.Renderer.OpenTK
 
         public void Delete()
         {
-            RemoveFromLayer();
-            deleted = true;
-            visible = false;
-            visibleRequest = false;            
+            if (!deleted)
+            {
+                RemoveFromLayer();
+                deleted = true;
+                visible = false;
+                visibleRequest = false;
+            }
         }
 
         public int X
