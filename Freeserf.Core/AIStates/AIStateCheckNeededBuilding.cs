@@ -502,12 +502,13 @@ namespace Freeserf.AIStates
 
                         if (count < player.GetCompletedBuildingCount(Building.Type.GoldMine) * (ai.GoldFocus + 2) &&
                             game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 5 &&
-                            game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3)
+                            game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 3 &&
+                            TestBuilding(count, ai, game, player, 80 - ai.GoldFocus * 10, 50 - ai.GoldFocus * 5, 20))
                             return NeedBuilding(ai, game, player, type);
-                        else if (count < ai.GoldFocus && game.GetResourceAmountInInventories(player, Resource.Type.GoldOre) >= 24 - ai.GoldFocus * 11)
+                        else if (count < 1 && game.GetResourceAmountInInventories(player, Resource.Type.GoldOre) >= 35 - ai.GoldFocus * 16)
                         {
-                            // Gold focus: 0 -> min 24 ore, 1 -> min 13 ore, 2 -> min 2 ore
-                            if (ai.GameTime > (60 - ai.GoldFocus * 20 + count * 20) * Global.TICKS_PER_MIN)
+                            // Gold focus: 0 -> min 35 ore, 1 -> min 19 ore, 2 -> min 3 ore
+                            if (ai.GameTime > (60 - ai.GoldFocus * 20) * Global.TICKS_PER_MIN)
                                 return NeedBuilding(ai, game, player, type);
                         }
                     }
