@@ -129,7 +129,7 @@ namespace Freeserf
         int reproductionCounter = 0;
         uint reproductionReset = 0;
         int serfToKnightRate = 20000;
-        ushort serfToKnightCounter = 0x8000; /* Overflow is important */
+        int serfToKnightCounter = 0x8000; /* Overflow is important */
         int analysisGoldore = 0;
         int analysisIronore = 0;
         int analysisCoal = 0;
@@ -1078,18 +1078,18 @@ namespace Freeserf
             return serf;
         }
 
-        /* Spawn new serf. Returns 0 on success.
+        /* Spawn new serf.
            The serf object and inventory are returned if non-NULL. */
-        public int SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
+        public bool SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
 		{
             if (!CanSpawn())
-                return -1;
+                return false;
 
             var inventories = Game.GetPlayerInventories(this);
 
-            if (inventories.Count() < 1)
+            if (inventories.Count() == 0)
             {
-                return -1;
+                return false;
             }
 
             Inventory inv = null;
@@ -1123,7 +1123,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    return -1;
+                    return false;
                 }
             }
 
@@ -1131,7 +1131,7 @@ namespace Freeserf
 
             if (s == null)
             {
-                return -1;
+                return false;
             }
 
             if (serf != null)
@@ -1140,7 +1140,7 @@ namespace Freeserf
             if (inventory != null)
                 inventory.Value = inv;
 
-            return 0;
+            return true;
         }
 
         public bool TickSendGenericDelay()
@@ -1408,7 +1408,7 @@ namespace Freeserf
 
                 while (reproductionCounter < 0)
                 {
-                    serfToKnightCounter = (ushort)(serfToKnightCounter + serfToKnightRate);
+                    serfToKnightCounter = (serfToKnightCounter + serfToKnightRate) % ushort.MaxValue;
 
                     if (serfToKnightCounter < serfToKnightRate)
                     {
@@ -1428,15 +1428,14 @@ namespace Freeserf
                         /* Create knight serf */
                         Pointer<Serf> serf = new Pointer<Serf>();
                         Pointer<Inventory> inventory = new Pointer<Inventory>();
-                        int r = SpawnSerf(serf, inventory, true);
 
-                        if (r >= 0)
+                        if (SpawnSerf(serf, inventory, true))
                         {
                             if (inventory.Value.GetCountOf(Resource.Type.Sword) != 0 &&
                                 inventory.Value.GetCountOf(Resource.Type.Shield) != 0)
                             {
                                 --knightsToSpawn;
-                                inventory.Value.SpecializeSerf(serf.Value, Serf.Type.Knight0);
+                                inventory.Value.PromoteSerfToKnight(serf.Value);
                             }
                         }
                     }

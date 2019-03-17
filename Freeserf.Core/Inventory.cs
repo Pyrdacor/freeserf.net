@@ -621,9 +621,8 @@ namespace Freeserf
         public void KnightTraining(Serf serf, int p)
         {
             Serf.Type oldType = serf.GetSerfType();
-            int r = serf.TrainKnight(p);
 
-            if (r == 0)
+            if (serf.TrainKnight(p))
                 serfs[oldType] = 0;
 
             SerfIdleInStock(serf);

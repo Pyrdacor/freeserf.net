@@ -854,7 +854,7 @@ namespace Freeserf
             sound = false;
         }
 
-        public int TrainKnight(int p)
+        public bool TrainKnight(int p)
         {
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
@@ -869,13 +869,13 @@ namespace Freeserf
                     SetSerfType((Type)(oldType + 1));
                     Counter = 6000;
 
-                    return 0;
+                    return true;
                 }
 
                 Counter += 6000;
             }
 
-            return -1;
+            return false;
         }
 
         /* Change serf state to lost, but make necessary clean up
