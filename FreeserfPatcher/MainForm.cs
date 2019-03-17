@@ -176,6 +176,11 @@ namespace FreeserfPatcher
                 try
                 {
                     File.WriteAllBytes(localPath, fileData);
+
+                    if (Path.GetFileName(localPath) == "changelog.txt" && File.Exists(localPath))
+                    {
+                        Process.Start(localPath);
+                    }
                 }
                 catch
                 {
