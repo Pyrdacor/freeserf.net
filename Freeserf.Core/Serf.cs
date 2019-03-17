@@ -1829,15 +1829,19 @@ namespace Freeserf
                     HandleSerfStateKnightLeaveForWalkToFight();
                     break;
                 case State.IdleOnPath:
+                    FixNonTransporterState();
                     HandleSerfIdleOnPathState();
                     break;
                 case State.WaitIdleOnPath:
+                    FixNonTransporterState();
                     HandleSerfWaitIdleOnPathState();
                     break;
                 case State.WakeAtFlag:
+                    FixNonTransporterState();
                     HandleSerfWakeAtFlagState();
                     break;
                 case State.WakeOnPath:
+                    FixNonTransporterState();
                     HandleSerfWakeOnPathState();
                     break;
                 case State.DefendingHut: /* 70 */
@@ -1862,6 +1866,14 @@ namespace Freeserf
                     Log.Debug.Write("serf", $"Serf state {SerfState} isn't processed");
                     SerfState = State.Null;
                     break;
+            }
+        }
+
+        void FixNonTransporterState()
+        {
+            if (type != Type.Transporter)
+            {
+                FindInventory();
             }
         }
 
@@ -2983,6 +2995,7 @@ namespace Freeserf
             Direction dir = (Direction)(s.Walking.Dir + 6);
 
             Map map = Game.Map;
+
             /* Only check for loops once in a while. */
             ++s.Walking.WaitCounter;
 
