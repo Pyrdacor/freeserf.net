@@ -64,7 +64,7 @@ namespace Freeserf
 
             // TODO: connection timeout / async
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(UpdateUri + "recent.txt");
-            httpRequest.Timeout = 1000;
+            httpRequest.Timeout = 1300;
             httpRequest.Method = WebRequestMethods.Http.Get;
 
             try

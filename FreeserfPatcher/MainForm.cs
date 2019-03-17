@@ -22,6 +22,7 @@ namespace FreeserfPatcher
         readonly List<string> freeserfArgs = new List<string>();
         bool close = false;
         byte[] patcherFileData = null;
+        string changelog = "";
 
         public MainForm(string[] args)
         {
@@ -66,6 +67,9 @@ namespace FreeserfPatcher
 
         void PatchWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (!string.IsNullOrWhiteSpace(changelog))
+                new ChangelogForm(changelog).ShowDialog();
+
             RunFreeserf();
             Close();
         }
@@ -179,7 +183,15 @@ namespace FreeserfPatcher
 
                     if (Path.GetFileName(localPath) == "changelog.txt" && File.Exists(localPath))
                     {
-                        Process.Start(localPath);
+                        changelog = File.ReadAllText(localPath);
+
+                        if (!changelog.Contains("\r\n"))
+                        {
+                            if (changelog.Contains("\r"))
+                                changelog = changelog.Replace("\r", "\r\n");
+                            else if (changelog.Contains("\n"))
+                                changelog = changelog.Replace("\n", "\r\n");
+                        }
                     }
                 }
                 catch
@@ -244,7 +256,14 @@ namespace FreeserfPatcher
             if (!freeserfArgs.Contains("--no-updates"))
                 freeserfArgs.Add("--no-updates");
 
-            Process.Start(freeserfExePath, string.Join(" ", freeserfArgs.ToArray()));
+            try
+            {
+                Process.Start(freeserfExePath, string.Join(" ", freeserfArgs.ToArray()));
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -257,10 +276,10 @@ namespace FreeserfPatcher
                     File.WriteAllBytes(tempFile, patcherFileData);
 
                     string batchFile = "ping -n 2 127.0.0.1 > nul" + Environment.NewLine +
-                        "ren \"" + tempFile + "\" \"" + Assembly.GetEntryAssembly().Location + "\"" + Environment.NewLine +
+                        "copy \"" + tempFile + "\" \"" + Assembly.GetEntryAssembly().Location + "\"" + Environment.NewLine +
                         "del \"" + tempFile + "\"" + Environment.NewLine;
 
-                    tempFile = Path.GetTempFileName();
+                    tempFile = Path.GetTempFileName() + ".bat";
                     batchFile += "del \"" + tempFile + "\"";
 
                     File.WriteAllText(tempFile, batchFile);
