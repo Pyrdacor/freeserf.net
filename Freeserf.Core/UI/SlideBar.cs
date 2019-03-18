@@ -37,7 +37,7 @@ namespace Freeserf.UI
 
             icon = new Icon(interf, 64, 8, Data.Resource.Icon, 236u, (byte)(displayLayerOffset + 1));
 
-            fillRect = interf.RenderView.ColoredRectFactory.Create(0, 4, new Render.Color(0x6b, 0xab, 0x3b), (byte)(displayLayerOffset + 2));
+            fillRect = interf.RenderView.ColoredRectFactory.Create(0, 4, new Render.Color(0x6b, 0xab, 0x3b), (byte)(displayLayerOffset + 12));
             fillRect.Layer = Layer;
 
             SetSize(64, 8);
@@ -84,7 +84,9 @@ namespace Freeserf.UI
 
         protected internal override void UpdateParent()
         {
-            fillRect.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset + 2);
+            base.UpdateParent();
+
+            fillRect.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset + 12);
         }
 
         protected override bool HandleClickLeft(int x, int y)

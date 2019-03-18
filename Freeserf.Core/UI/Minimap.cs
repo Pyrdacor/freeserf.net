@@ -98,6 +98,8 @@ namespace Freeserf.UI
 
         protected internal override void UpdateParent()
         {
+            base.UpdateParent();
+
             sprite.DisplayLayer = (byte)(BaseDisplayLayer + 1);
         }
 

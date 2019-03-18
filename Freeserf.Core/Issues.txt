@@ -6,22 +6,13 @@
 - Sometimes borders remain from the last game (not deleted properly?)
 
 
-UI Rendering:
-
-- The player color in AIvsAI is drawn over the panel bar many times. It occurs when changing player or leaving game and start a new one. Sometimes even in the first game. (fixed?)
-- Slide bar borders are no longer visible. When clicking some appear and some disappear again.
-- After a game quit the button to remove the second or third player was not shown (but was clickable).
-
-
 Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 	- This also hinders road building sometimes
 - Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
-- Serfs are not auto-converted to knights
 - After game loading the game freezes for some time (few seconds) and then running normally
-- Total serf count (especially generics) does not match the count of generics in the inventories
 
 
 AI:

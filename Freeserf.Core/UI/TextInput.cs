@@ -125,6 +125,8 @@ namespace Freeserf.UI
 
         protected internal override void UpdateParent()
         {
+            base.UpdateParent();
+
             background.DisplayLayer = BaseDisplayLayer;
         }
 
