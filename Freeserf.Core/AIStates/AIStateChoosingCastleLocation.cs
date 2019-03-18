@@ -76,7 +76,7 @@ namespace Freeserf.AIStates
             }
 
             // lower the ai focus after several tries to finally find a spot (only on small maps)
-            if (game.Map.Size < 6 && ++tries % (5 + game.Map.Size * 5) == 0)
+            if (++tries % (5 + game.Map.Size * 5) == 0)
             {
                 if (goldFocus > 0)
                     --goldFocus;
@@ -208,7 +208,7 @@ namespace Freeserf.AIStates
             }
 
             // if we tried too often we will only assure that there is a bit of trees and stones
-            if (map.Size < 6 && tries >= 25 + map.Size * 5)
+            if (tries >= 25 + map.Size * 5)
             {
                 if (treeCount < 5 || stoneCount < 2)
                     return -1;
