@@ -21,9 +21,10 @@ Flags / buildings / roads:
 - Linking flags should also allow for merging paths
 - Sometimes a building is build in a spot where the flag could not be linked and burned down afterwards (multiple times). This was fixed but it seems that it does still occur.
 - AIs with much resources build so much buildings at a time that no one is finished in a reasonable time. Maybe limit the number of constructed buildings. This will also relax traffic a bit.
-- AIs that prefer farms seem to build unlimited (at least way too much) farms.
+- AIs that prefer farms seem to build unlimited (at least way too much) farms. (seems to be fixed)
 - First stock is build too early
 - Buildings military buildings is either to slow for expansion or not well placed. In any case the territory is too full most of the time.
+- There are too much mines at the same mountain after some time.
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
