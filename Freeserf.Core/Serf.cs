@@ -811,7 +811,7 @@ namespace Freeserf
             {
                 player.DecreaseSerfCount(oldType);
             }
-            if (type != Type.Dead)
+            if (type != Type.Dead && type != Type.Generic) // generic count is increased on creating
             {
                 player.IncreaseSerfCount(newType);
             }
