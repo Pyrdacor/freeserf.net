@@ -16,7 +16,7 @@ Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 	- This also hinders road building sometimes
-- Minimap clicks near the map origin move to wrong x location
+- Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - Serfs are not auto-converted to knights
 

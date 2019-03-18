@@ -6510,6 +6510,9 @@ namespace Freeserf
                             res = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
                         }
 
+                        if (res == -1)
+                            res = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
+
                         SetState(State.MoveResourceOut);
                         s.MoveResourceOut.Res = 1 + (uint)res;
                         s.MoveResourceOut.ResDest = 0;
