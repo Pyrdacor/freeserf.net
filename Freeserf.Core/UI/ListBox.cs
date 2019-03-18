@@ -141,6 +141,7 @@ namespace Freeserf.UI
                 {
                     int y = 3 + (i - firstVisibleItem) * 9;
 
+                    textEntries[i].MoveTo(textEntries[i].X, y);
                     textEntries[i].Displayed = y < (Height - 6);
                 }
 
@@ -180,7 +181,7 @@ namespace Freeserf.UI
                 return false;
             }
 
-            int nextFirstVisibleItem = firstVisibleItem + dy / 32;
+            int nextFirstVisibleItem = firstVisibleItem + dy;
 
             if (nextFirstVisibleItem < 0)
             {
