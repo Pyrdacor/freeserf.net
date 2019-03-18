@@ -77,7 +77,10 @@ namespace Freeserf.AIStates
             // TODO: inventory serf/resource in/out modes
 
             // serf to knight rate
-            player.SetSerfToKnightRate((1 + Misc.Max(ai.Aggressivity, ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus)) * ushort.MaxValue / 3);
+            if (player.GetSerfCount(Serf.Type.Generic) >= 10)
+                player.SetSerfToKnightRate((1 + Misc.Max(ai.Aggressivity, ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus)) * ushort.MaxValue / 3);
+            else
+                player.SetSerfToKnightRate(20000); // default value
 
             // food distribution
             player.ResetFoodPriority();

@@ -129,7 +129,8 @@ namespace Freeserf.AIStates
             // check for setting adjustment
             adjustSettingsTick += tick;
 
-            if (adjustSettingsTick > (60 - (int)playerInfo.Intelligence) * Global.TICKS_PER_SEC)
+            if (adjustSettingsTick > (60 - (int)playerInfo.Intelligence) * Global.TICKS_PER_SEC ||
+                (player.GetSerfCount(Serf.Type.Generic) < 10 && player.GetSerfToKnightRate() > 20000))
             {
                 adjustSettingsTick = 0;
 

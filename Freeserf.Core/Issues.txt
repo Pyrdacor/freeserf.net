@@ -19,6 +19,8 @@ Non-working code:
 - Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - Serfs are not auto-converted to knights
+- After game loading the game freezes for some time (few seconds) and then running normally
+- Total serf count (especially generics) does not match the count of generics in the inventories
 
 
 AI:

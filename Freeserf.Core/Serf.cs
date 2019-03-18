@@ -866,7 +866,7 @@ namespace Freeserf
                 {
                     /* Level up */
                     Type oldType = GetSerfType();
-                    SetSerfType((Type)(oldType + 1));
+                    SetSerfType(oldType + 1);
                     Counter = 6000;
 
                     return true;
@@ -953,7 +953,7 @@ namespace Freeserf
 
             Building building = Game.GetBuilding(inventory.GetBuildingIndex());
             Position = building.Position;
-            tick = (ushort)Game.Tick;
+            tick = Game.Tick;
             SetState(State.IdleInStock);
             s.IdleInStock.InvIndex = inventory.Index;
         }
@@ -1233,7 +1233,7 @@ namespace Freeserf
 
         public void CastleDeleted(MapPos castlePos, bool transporter)
         {
-            if ((!transporter || (GetSerfType() == Type.TransporterInventory)) &&
+            if ((!transporter || GetSerfType() == Type.TransporterInventory) &&
                 Position == castlePos)
             {
                 if (transporter)
@@ -6510,7 +6510,7 @@ namespace Freeserf
                             res = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
                         }
 
-                        if (res == -1)
+                        if (res == -1) // TODO: This was added because res is sometimes -1 when totalToolPrio > 0. But should this happen? And in what case?
                             res = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
 
                         SetState(State.MoveResourceOut);
