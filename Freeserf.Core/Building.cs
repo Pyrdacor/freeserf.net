@@ -942,7 +942,7 @@ namespace Freeserf
                 // TODO: This exception occurs from time to time.
                 // TODO: Seen for IronMine (was finished but a plank arrived).
                 Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                throw new ExceptionFreeserf(Game, "building", "Delivered unexpected resource.");
+                throw new ExceptionFreeserf(Game, "building", "Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}"");
             }
         }
 

@@ -401,6 +401,7 @@ namespace Freeserf
             res = slot[fromSlot].Type;
             dest = slot[fromSlot].Dest;
             slot[fromSlot].Type = Resource.Type.None;
+            slot[fromSlot].Dest = 0u;
             slot[fromSlot].Dir = Direction.None;
 
             FixScheduled();
