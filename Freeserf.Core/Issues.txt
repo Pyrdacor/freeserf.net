@@ -13,6 +13,7 @@ Non-working code:
 - Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After game loading the game freezes for some time (few seconds) and then running normally
+- After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
 
 
 AI:
@@ -97,6 +98,7 @@ Nice to have:
 - After closing a game the GameInitBox should display the last started game settings.
   This way a map can be played again or the RNG number can be memorized.
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
+- Custom games and AIvsAI should share the map size setting.
 
 
 TODO:

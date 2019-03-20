@@ -114,25 +114,6 @@ namespace Freeserf
 
             CloseGame();
 
-            // Initialize player AI
-            for (uint i = 0; i < newGame.GetPlayerCount(); ++i)
-            {
-                Player player = newGame.GetPlayer(i);
-
-                if (i == 0)
-                {
-                    if (player.GetFace() >= 12) // first player is human
-                        viewer.ChangeTo(Viewer.Type.LocalPlayer);
-                    else
-                        viewer.ChangeTo(Viewer.Type.LocalSpectator);
-                }
-
-                if (player.GetFace() < 12) // not you or your partner
-                {
-                    player.AI = new AI(player, player.GetPlayerInfo());
-                }
-            }
-
             lastSaveTime = DateTime.Now;
             currentGameSaveFile = path;
             SetCurrentGame(newGame);
