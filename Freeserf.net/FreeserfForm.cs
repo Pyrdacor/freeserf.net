@@ -235,7 +235,7 @@ namespace Freeserf
             }
         }
 
-        bool SetFullscreen(bool fullscreen)
+        bool SetFullscreen(bool fullscreen, bool save = true)
         {
             if (this.fullscreen == fullscreen)
                 return false;
@@ -245,7 +245,8 @@ namespace Freeserf
 
             gameView.Fullscreen = fullscreen;
 
-            UserConfig.Video.Fullscreen = gameView.Fullscreen;
+            if (save)
+                UserConfig.Video.Fullscreen = gameView.Fullscreen;
 
             return gameView.Fullscreen == fullscreen; // dit it work?
         }
@@ -533,6 +534,8 @@ namespace Freeserf
                 FrameTimer.Stop();
 
             Log.Error.Write(source, exception.Message);
+
+            SetFullscreen(false, false);
 
             if (crashHandlerForm.RaiseException(exception) == UI.CrashReaction.Restart)
                 Process.Start(Assembly.GetEntryAssembly().Location);
