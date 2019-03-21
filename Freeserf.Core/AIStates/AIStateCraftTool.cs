@@ -36,7 +36,7 @@ namespace Freeserf.AIStates
         {
             this.tool = tool;
 
-            previousCount = GetCurrentToolCount(game, player);
+            previousCount = (tool == Resource.Type.None) ? 0 : GetCurrentToolCount(game, player);
         }
 
         protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
