@@ -4,6 +4,7 @@ Version 1.9.5:
 - Fixed AI game loading bug
 - Fixed crashes associated with multi-threading
 - Fixed some other crashes
+- Fixed bugs with fights
 
 
 Version 1.9.4:
