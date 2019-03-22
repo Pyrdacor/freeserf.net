@@ -21,6 +21,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -59,9 +60,9 @@ namespace Freeserf
         Render.IRenderView renderView = null;
         readonly Dictionary<Serf, Render.RenderSerf> renderSerfs = new Dictionary<Serf, Render.RenderSerf>();
         readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
-        readonly Dictionary<Flag, Render.RenderFlag> renderFlags = new Dictionary<Flag, Render.RenderFlag>();
-        readonly Dictionary<MapPos, Render.RenderMapObject> renderObjects = new Dictionary<MapPos, Render.RenderMapObject>();
-        readonly Dictionary<long, Render.RenderRoadSegment> renderRoadSegments = new Dictionary<long, Render.RenderRoadSegment>();
+        readonly ConcurrentDictionary<Flag, Render.RenderFlag> renderFlags = new ConcurrentDictionary<Flag, Render.RenderFlag>();
+        readonly ConcurrentDictionary<MapPos, Render.RenderMapObject> renderObjects = new ConcurrentDictionary<MapPos, Render.RenderMapObject>();
+        readonly ConcurrentDictionary<long, Render.RenderRoadSegment> renderRoadSegments = new ConcurrentDictionary<long, Render.RenderRoadSegment>();
         readonly Dictionary<long, Render.RenderBorderSegment> renderBorderSegments = new Dictionary<long, Render.RenderBorderSegment>();
         readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
 
@@ -2939,8 +2940,8 @@ namespace Freeserf
             /* Remove resources from flag. */
             flag.RemoveAllResources();
 
-            renderFlags[flag].Delete();
-            renderFlags.Remove(flag);
+            if (renderFlags.TryRemove(flag, out Render.RenderFlag renderFlag) && renderFlag != null)
+                renderFlag.Delete();
 
             flags.Erase(flag.Index);
 
@@ -3601,11 +3602,8 @@ namespace Freeserf
             if (oldObject != Map.Object.None && newObject < Map.Object.Tree0)
             {
                 // we don't draw buildings etc with renderObjects
-                if (renderObjects.ContainsKey(pos))
-                {
-                    renderObjects[pos].Delete();
-                    renderObjects.Remove(pos);
-                }
+                if (renderObjects.TryRemove(pos, out Render.RenderMapObject renderObject) && renderObject != null)
+                    renderObject.Delete();
             }
             else if (renderObjects.ContainsKey(pos))
             {
@@ -3628,7 +3626,7 @@ namespace Freeserf
 
                     renderFlag.Visible = true;
 
-                    renderFlags.Add(flag, renderFlag);
+                    renderFlags.TryAdd(flag, renderFlag);
                 }
             }
             else if (obj == Map.Object.SmallBuilding ||
@@ -3658,7 +3656,7 @@ namespace Freeserf
 
                     renderObject.Visible = true;
 
-                    renderObjects.Add(pos, renderObject);
+                    renderObjects.TryAdd(pos, renderObject);
                 }
             }
         }
@@ -3707,7 +3705,7 @@ namespace Freeserf
 
             renderRoadSegment.Visible = true;
 
-            renderRoadSegments.Add(index, renderRoadSegment);
+            renderRoadSegments.TryAdd(index, renderRoadSegment);
         }
 
         void RemoveRoadSegment(MapPos pos, Direction dir)
@@ -3723,14 +3721,8 @@ namespace Freeserf
 
             long index = Render.RenderRoadSegment.CreateIndex(pos, dir);
 
-            // TODO: the following code crashed from time to time without the contains key check
-            // TODO: which case could lead to this? maybe look further into it as it should not happen
-            // TODO: even without the check.
-            if (renderRoadSegments.ContainsKey(index))
-            {
-                renderRoadSegments[index].Delete();
-                renderRoadSegments.Remove(index);
-            }
+            if (renderRoadSegments.TryRemove(index, out Render.RenderRoadSegment renderRoadSegment) && renderRoadSegment != null)
+                renderRoadSegment.Delete();
         }
     }
 }
