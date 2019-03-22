@@ -2871,8 +2871,9 @@ namespace Freeserf
 
             var player = Game.GetPlayer(playerIndex);
 
-            player.DecreaseMilitaryScore(value);
-            player.DecreaseSerfCount(ktype);
+            // TODO: Commented the following lines as the serf type later is set to 'Dead' and so the serf count and military score would be decreased twice. Needs testing.
+            //player.DecreaseMilitaryScore(value);
+            //player.DecreaseSerfCount(ktype);
             attacker.s.Attacking.Move = Game.RandomInt() & 0x70;
         }
 
