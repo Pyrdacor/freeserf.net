@@ -4,6 +4,7 @@
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
 - Sometimes borders remain from the last game (not deleted properly?)
+- In rare cases a flag seem to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
 
 
 Non-working code:

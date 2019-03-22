@@ -990,6 +990,8 @@ namespace Freeserf
             var flagPos = map.MoveDownRight(pos);
             Flag flag = GetFlagAtPos(flagPos);
 
+            // TODO: Sometimes there is no flag but a path in only one direction. This should not happen.
+
             if (flag == null)
             {
                 if (!BuildFlag(flagPos, player))
@@ -2838,6 +2840,9 @@ namespace Freeserf
             {
                 path2Dir = Direction.Up;
             }
+
+            if (path1Dir == Direction.None || path2Dir == Direction.None)
+                return; // Should not happen, but to avoid exceptions just stop path splitting if it happens.
 
             SerfPathInfo path1Data = new SerfPathInfo();
             SerfPathInfo path2Data = new SerfPathInfo();

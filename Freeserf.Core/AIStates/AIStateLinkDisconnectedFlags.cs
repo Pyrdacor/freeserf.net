@@ -132,7 +132,8 @@ namespace Freeserf.AIStates
             {
                 try
                 {
-                    game.GetFlag(key.Index);
+                    if (game.GetFlag(key.Index) == null)
+                        connectTriesPerFlag.Remove(key);
                 }
                 catch (KeyNotFoundException)
                 {
@@ -148,7 +149,8 @@ namespace Freeserf.AIStates
                 {
                     try
                     {
-                        game.GetFlag(key.Index);
+                        if (game.GetFlag(key.Index) == null)
+                            linkingFailed.Remove(key);
                     }
                     catch (KeyNotFoundException)
                     {

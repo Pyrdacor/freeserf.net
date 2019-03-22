@@ -131,7 +131,19 @@ namespace Freeserf
             return objects[index];
         }
 
-        public T this[uint index] => objects[index];
+        public T this[uint index]
+        {
+            get
+            {
+                lock (objectsLock)
+                {
+                    if (!objects.ContainsKey(index))
+                        return null;
+
+                    return objects[index];
+                }
+            }
+        }
 
         public void Erase(uint index)
         {
