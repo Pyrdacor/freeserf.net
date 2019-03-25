@@ -2246,7 +2246,7 @@ namespace Freeserf
 
         void UpdateRoads()
         {
-            foreach (var renderRoadSegment in renderRoadSegments.ToList())
+            foreach (var renderRoadSegment in renderRoadSegments.ToArray())
                 renderRoadSegment.Value.Update(map.RenderMap);
         }
 
