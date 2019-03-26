@@ -44,7 +44,7 @@ Thank you very much.
 
 Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
 
-Things that are missing are mostly AI logic and tutorial games. Serf fighting is not fully tested yet.
+Things that are missing are some minor parts of AI logic and tutorial games. Serf fighting is not fully tested yet.
 Multiplayer support is prepared but not really implemented yet.
 
 But the game is playable for most parts.
