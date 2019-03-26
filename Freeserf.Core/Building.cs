@@ -939,6 +939,10 @@ namespace Freeserf
                     }
                 }
 
+                // TODO: For now we just add the resource back to the castle. Later we have to find the reason for this.
+                Game.GetBuildingAtPos(Game.GetPlayer(Player).CastlePos).GetInventory().PushResource(resource);
+                return;
+
                 // TODO: This exception occurs from time to time.
                 // TODO: Seen for IronMine (was finished but a plank arrived).
                 Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone().ToString()}");
