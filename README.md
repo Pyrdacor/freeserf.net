@@ -1,5 +1,5 @@
 # freeserf.net
-freeserf.net is a C# port of [freeserf](https://github.com/freeserf/freeserf).
+freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
 
 
 ## Download the game
@@ -47,9 +47,7 @@ Most of the code is ported or re-implemented. There is a working OpenTK renderer
 Things that are missing are mostly AI logic and tutorial games. Serf fighting is not fully tested yet.
 Multiplayer support is prepared but not really implemented yet.
 
-There are still some bugs (mainly in serf logic).
-
-But the game is playable for most parts. Since version 1.3 savegames should work correctly (even with AI).
+But the game is playable for most parts.
 
 ![Normal Game](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_1.png "Start a normal game")
 ![Mission](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_2.png "Start a mission")
@@ -59,18 +57,18 @@ But the game is playable for most parts. Since version 1.3 savegames should work
 
 ## Roadmap
 
-### Phase 1: Porting (99.99%)
+### Phase 1: Porting (100%)
 
 The first step is to port everything from C++ to C# and ensure that the game runs.
 There may be some quick&dirty implementations or things that could be done better.
 
-### Phase 2: Optimizing (in progress)
+### Phase 2: Optimizing (85%)
 
 This includes bug fixing and C#-specific optimizations.
 Moreover this includes performance and stability optimizations if needed.
 Also the plan is to make everything cross-plattform as much as possible.
 
-### Phase 3: Extending
+### Phase 3: Extending (10%)
 
 This includes:
 
