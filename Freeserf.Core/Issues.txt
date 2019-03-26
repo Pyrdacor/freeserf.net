@@ -15,6 +15,12 @@ Non-working code:
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After game loading the game freezes for some time (few seconds) and then running normally
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
+- Dragging the minimap will reset the position in most cases
+
+
+UI:
+
+- Savegame filename lengths must be limited to not exceed list width (especially in the ingame save menu).
 
 
 AI:
@@ -27,11 +33,26 @@ Flags / buildings / roads:
 - First stock is build too early
 - Buildings military buildings is either to slow for expansion or not well placed. In any case the territory is too full most of the time.
 - There are too much mines at the same mountain after some time.
+- At some territory size the AIs will stop building military buildings and therefore expansion stops
+- Stonecutters should not be placed near other stonecutters
+- Mines should not be built without miners/picks
+- Mine amount should be limited in relation to food sources. Saw games with dozens of mines but only one fisher. This should not happen.
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
+- In hard times the steel smelter should be built before the toolmaker
+- In hard times the toolmaker should be instructed directly to craft some tools (like first for weapon smith, then for another lumberjack and for another miner or a scythe for a farmer).
+	- Without fisher or with small lake, the scythe has prio
+	- With fisher, the pincer and hammer have prio
+	- After these another axe and another pick should follow
+- Hard time should be also possible in later game (e.g. after losing land). In this case miners could not be available for iron or coal because
+  they are used for gold or stone mines. This must be considered then and maybe those mines should be demolished to free miners.
+- The check stone and gather stone radius of stonecutters should be equal so that stonecutters who won't gather anymore stone should be demolished immediately (this is crucial in hard times).
+- If hard times is disabled with iron and coal mine, the following time may take long until a normal game is possible. Maybe hard times should last
+  until there is a working weaponsmith and a second food source. If for instance the player only has a fisher and focuses on construction material or gold,
+  the rare fish is most of the time distributed to stone or gold mines and therefore no weapons or tools are created for some time. This is bad.
 
 Mining / finding minerals:
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.
@@ -60,6 +81,7 @@ Logic:
   was also blocked by this.
 - Sometimes there is a deadlock of walking serfs. Saw a digger and a transporter that were waiting at each other but could just switch positions.
   - In debug there were two diggers (one with state WaitIdleOnPath and one with Walking). A digger should never have WaitIdleOnPath I think as this is for transporters only!
+  - Also seen a transporter or generic serf which waits for another generic serf which flickers and changes directions like crazy. This crazy serf is on top of an idle serf.
 - Sometimes construction materials are not moved out of the castle. The construction site gets no resources. After demolishing/rebuilding it works again. The knight stayed there forever.
   This also happens if the building was already built a bit. And it seems to happen quite often lately.
   - Since a change in update logic this seem to be fixed. Further testing needed.
@@ -85,13 +107,12 @@ Test again because font char gaps should be smaller now!
 
 Missing stuff:
 
-- spectators must be able to view all players (building stocks etc) or must be able to select a player
-	- building stocks works now but the statistics and settings are only for player 1
 - multiplayer
 	- multiplayer should support coop mode (one player is played by two or more clients)
 - button to merge roads to a flag
 - mine elevator/miner animation
 - ground analysis for local spectators?
+- possible builds for local spectators?
 
 
 Nice to have:
