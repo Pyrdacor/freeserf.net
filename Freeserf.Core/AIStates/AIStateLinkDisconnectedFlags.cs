@@ -159,106 +159,114 @@ namespace Freeserf.AIStates
                 }
             }
 
-            foreach (var flag in flags)
+            try
             {
-                // If it failed to link a flag we will only re-check it
-                // after 2 minutes.
-                lock (linkingFailedLock)
+                foreach (var flag in flags)
                 {
-                    if (linkingFailed.ContainsKey(flag))
+                    // If it failed to link a flag we will only re-check it
+                    // after 2 minutes.
+                    lock (linkingFailedLock)
                     {
-                        int time = linkingFailed[flag];
+                        if (linkingFailed.ContainsKey(flag))
+                        {
+                            int time = linkingFailed[flag];
 
-                        if (tick < time)
-                            time = int.MaxValue - time + tick;
-                        else
-                            time = tick - time;
+                            if (tick < time)
+                                time = int.MaxValue - time + tick;
+                            else
+                                time = tick - time;
 
-                        if (time >= 2 * Global.TICKS_PER_MIN)
-                            linkingFailed.Remove(flag);
-                        else
-                            continue;
+                            if (time >= 2 * Global.TICKS_PER_MIN)
+                                linkingFailed.Remove(flag);
+                            else
+                                continue;
+                        }
+                    }
+
+                    if (!connectTriesPerFlag.ContainsKey(flag))
+                        connectTriesPerFlag[flag] = 0;
+
+                    if ((flag.LandPaths() == 0 || flag.FindNearestInventoryForSerf() == -1) && ++connectTriesPerFlag[flag] < 3)
+                    {
+                        LinkFlag(ai, flag, 9, false, tick);
+                        return;
                     }
                 }
 
-                if (!connectTriesPerFlag.ContainsKey(flag))
-                    connectTriesPerFlag[flag] = 0;
-
-                if ((flag.LandPaths() == 0 || flag.FindNearestInventoryForSerf() == -1) && ++connectTriesPerFlag[flag] < 3)
+                foreach (var flag in flags)
                 {
-                    LinkFlag(ai, flag, 9, false, tick);
-                }
+                    bool finishedLinking = false;
 
-                bool finishedLinking = false;
-
-                if (flag.HasBuilding())
-                {
-                    var building = flag.GetBuilding();
-
-                    // don't link flags of foresters and farms more than necessary as they need space for their work
-                    if (building.BuildingType == Building.Type.Forester || building.BuildingType == Building.Type.Farm)
-                        finishedLinking = true;
-                }
-
-                // TODO: maybe check later if there are foresters or farms around and stop linking in the area then
-
-                // we also check if the link is good
-                if (!finishedLinking)
-                {
-                    DirectionCycleCW cycle = DirectionCycleCW.CreateDefault();
-                    List<Direction> pathes = new List<Direction>();
-
-                    foreach (var dir in cycle)
+                    if (flag.HasBuilding())
                     {
-                        if (flag.HasPath(dir))
-                        {
-                            pathes.Add(dir);
-                        }
+                        var building = flag.GetBuilding();
+
+                        // don't link flags of foresters and farms more than necessary as they need space for their work
+                        if (building.BuildingType == Building.Type.Forester || building.BuildingType == Building.Type.Farm)
+                            finishedLinking = true;
                     }
-                
-                    if (pathes.Count < 6)
+
+                    // TODO: maybe check later if there are foresters or farms around and stop linking in the area then
+
+                    // we also check if the link is good
+                    if (!finishedLinking)
                     {
-                        int shortestPath = int.MaxValue;
+                        DirectionCycleCW cycle = DirectionCycleCW.CreateDefault();
+                        List<Direction> pathes = new List<Direction>();
 
-                        foreach (var dir in pathes)
+                        foreach (var dir in cycle)
                         {
-                            int pathLength = (int)flag.GetRoad(dir).Length;
-
-                            if (pathLength < shortestPath)
-                                shortestPath = pathLength;
-
-                            if (shortestPath == 2)
-                                break;
-                        }
-
-                        if (shortestPath > 2 + pathes.Count * 2)
-                        {
-                            LinkFlag(ai, flag, 2 + pathes.Count * 2, true, tick);
-                        }
-                        else
-                        {
-                            var nearbyFlags = game.Map.FindInArea(flag.Position, 4, FindFlag, 2);
-
-                            foreach (var nearbyFlag in nearbyFlags)
+                            if (flag.HasPath(dir))
                             {
-                                if (Pathfinder.FindShortestRoad(game.Map, flag, game.GetFlagAtPos((uint)nearbyFlag), out uint cost) == null ||
-                                    cost >= 1500u)
+                                pathes.Add(dir);
+                            }
+                        }
+
+                        if (pathes.Count < 6)
+                        {
+                            int shortestPath = int.MaxValue;
+
+                            foreach (var dir in pathes)
+                            {
+                                int pathLength = (int)flag.GetRoad(dir).Length;
+
+                                if (pathLength < shortestPath)
+                                    shortestPath = pathLength;
+
+                                if (shortestPath == 2)
+                                    break;
+                            }
+
+                            if (shortestPath > 2 + pathes.Count * 2)
+                            {
+                                LinkFlag(ai, flag, 2 + pathes.Count * 2, true, tick);
+                                return;
+                            }
+                            else
+                            {
+                                var nearbyFlags = game.Map.FindInArea(flag.Position, 4, FindFlag, 2);
+
+                                if (nearbyFlags.Count > pathes.Count)
                                 {
-                                    LinkFlag(ai, flag, 4, true, tick);
+                                    LinkFlag(ai, game, flag, nearbyFlags, 4, true, tick);
+                                    return;
                                 }
                             }
                         }
                     }
                 }
             }
-
-            lock (linkingLock)
+            finally
             {
-                if (linkingCount <= 0)
+                lock (linkingLock)
                 {
-                    linkingCount = 0;
-                    Kill(ai);
+                    if (linkingCount < 0)
+                    {
+                        linkingCount = 0;
+                    }
                 }
+
+                Kill(ai);
             }
         }
 
@@ -269,6 +277,52 @@ namespace Freeserf.AIStates
                 Success = map.HasFlag(pos),
                 Data = pos
             };
+        }
+
+        void LinkFlag(AI ai, Game game, Flag flag, List<object> nearbyFlags, int maxLength, bool allowWater, int tick)
+        {
+            var state = this;
+
+            Action action = () =>
+            {
+                foreach (var nearbyFlag in nearbyFlags)
+                {
+                    if (Pathfinder.FindShortestRoad(game.Map, flag, game.GetFlagAtPos((uint)nearbyFlag), out uint cost) == null ||
+                        cost >= 1500u)
+                    {
+                        ++linkingCount;
+
+                        try
+                        {
+                            if (!ai.LinkFlag(flag, maxLength, allowWater))
+                            {
+                                lock (state.linkingFailedLock)
+                                {
+                                    state.linkingFailed[flag] = tick;
+                                }
+
+                                continue;
+                            }
+
+                            lock (state.linkingFailedLock)
+                            {
+                                state.linkingFailed.Remove(flag);
+                            }
+
+                            break;
+                        }
+                        finally
+                        {
+                            lock (linkingLock)
+                            {
+                                --linkingCount;
+                            }
+                        }
+                    }
+                }            
+            };
+
+            new Thread(new ParameterizedThreadStart(Link)).Start(action);
         }
 
         void LinkFlag(AI ai, Flag flag, int maxLength, bool allowWater, int tick)
@@ -284,6 +338,13 @@ namespace Freeserf.AIStates
                         lock (state.linkingFailedLock)
                         {
                             state.linkingFailed[flag] = tick;
+                        }
+                    }
+                    else
+                    {
+                        lock (state.linkingFailedLock)
+                        {
+                            state.linkingFailed.Remove(flag);
                         }
                     }
                 }
