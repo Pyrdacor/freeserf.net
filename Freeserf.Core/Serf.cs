@@ -775,13 +775,29 @@ namespace Freeserf
 
         void SetState(State newState, [CallerMemberName] string function = "", [CallerLineNumber] int lineNumber = 0)
         {
-            Log.Verbose.Write("serf", $"serf {Index} ({SerfTypeNames[(int)type]}): state {SerfStateNames[(int)SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+            try
+            {
+                Log.Verbose.Write("serf", $"serf {Index} ({SerfTypeNames[(int)type]}): state {SerfStateNames[(int)SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+            }
+            catch
+            {
+                Log.Verbose.Write("serf", $"Missing serf type name or serf state name: serf type name index = {(int)type}, serf state name index = {(int)SerfState}");
+            }
+
             SerfState = newState;
         }
 
         static void SetOtherState(Serf otherSerf, State newState, [CallerMemberName] string function = "", [CallerLineNumber] int lineNumber = 0)
         {
-            Log.Verbose.Write("serf", $"serf {otherSerf.Index} ({SerfTypeNames[(int)otherSerf.type]}): state {SerfStateNames[(int)otherSerf.SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+            try
+            {
+                Log.Verbose.Write("serf", $"serf {otherSerf.Index} ({SerfTypeNames[(int)otherSerf.type]}): state {SerfStateNames[(int)otherSerf.SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+            }
+            catch
+            {
+                Log.Verbose.Write("serf", $"Missing other serf type name or other serf state name: serf type name index = {(int)otherSerf.type}, serf state name index = {(int)otherSerf.SerfState}");
+            }
+
             otherSerf.SerfState = newState;
         }
 
