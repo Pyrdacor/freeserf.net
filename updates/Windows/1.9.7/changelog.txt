@@ -1,0 +1,185 @@
+Version 1.9.7:
+==============
+
+- Fixed exceptions / crashes
+- Improved AI performance
+- Improved AI disconnected flag linking
+
+
+Version 1.9.6:
+==============
+
+- Fixed exception
+- Added some debug info
+
+
+Version 1.9.5:
+==============
+
+- Fixed AI game loading bug
+- Fixed crashes associated with multi-threading
+- Fixed some other crashes
+- Fixed bugs with fights
+
+
+Version 1.9.4:
+==============
+
+- Fixed static AIs after game loading
+
+
+Version 1.9.3:
+==============
+
+- Lists are now scrollable by mouse dragging
+- In case of crashs the fullscreen mode is first disabled
+  to show the error message properly
+
+
+Version 1.9.2:
+==============
+
+- Fixed UI render bugs (e.g. slidebars, statistic gauges)
+- AIs will limit their serf to knight rate to avoid stagnation
+- Fixed wrong generic serf count
+- Minor bugfixes
+
+
+Version 1.9.1:
+==============
+
+- AIs should now also build a castle on large maps
+  in reasonable time
+  
+
+Version 1.9.0:
+==============
+
+- Patcher now shows a changelog
+- Changelog is part of the build
+- Patcher is now able to patch itself
+
+
+Patch 1.8.4:
+============
+
+- Added this changelog
+- Serfs are now promoted to knights automatically
+- Traffic deadlocks should now be resolved
+
+
+Patch 1.8.3:
+============
+
+- Improved render performance
+- Improved AI castle locations
+- Fixed panel bar color overlay bug
+- Adjusted AI gold smelter builds
+
+
+Patch 1.8.2:
+============
+
+- Fixed savegame issues
+- Fixed AI stop doing anything
+- Fixed crash in loading screen
+- Adjusted some AI build decisions
+
+
+Patch 1.8.1:
+============
+
+- Improved game quit dialog
+
+
+Version 1.8.0:
+==============
+
+- Fixed savegame issues
+- Improved error handling
+
+
+Patch 1.7.3:
+============
+
+- Fixed savegame issues
+
+
+Patch 1.7.2:
+============
+
+- Bugfix with removed flags
+
+
+Patch 1.7.1:
+============
+
+- Fixed invisible player value bars
+- Fixed player statistics display
+
+
+Version 1.7.0:
+==============
+
+- Fixed savegame issues
+- Made patcher finally work
+
+
+Version 1.6.0:
+==============
+
+- Added patcher
+- Fixed map click to tile transformation
+- The delete key can now be used to demolish objects
+
+
+Version 1.5.0:
+==============
+
+- Improved map click to tile transformation
+- Fixed text renderer crash with invalid characters in savegame names
+
+
+Version 1.4.0:
+==============
+
+- Fixed savegame issues and made savegames really work
+- Popup boxes now are in front of other UI elements
+- After game loading the players castle positions are correctly set
+- Added save/load status popups
+- Added first version of crash handler
+
+
+Version 1.3.0:
+==============
+
+- Fixed and extended saving/loading
+- AI values are now also saved/loaded
+- AI will now build stocks at better locations
+- Added virtual filesystems (will be used later)
+- Improved serf fight rendering
+- Improved serf and AI logic
+- Added rush affinity property for AI characters
+- Some bugfixes
+- Added AI attacking
+
+
+Version 1.2.0:
+==============
+
+- Fixed map click positions in even map sizes
+- Improved path finding performance
+
+
+Version 1.1.0:
+==============
+
+- Improved path finding performance
+- Improved exception handling
+
+
+Version 1.0.0:
+==============
+
+- First stable version
+
