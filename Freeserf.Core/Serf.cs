@@ -2639,7 +2639,17 @@ namespace Freeserf
                 Serf otherSerf = Game.GetSerfAtPos(newPos);
                 Direction otherDir = Direction.None;
 
-                if (otherSerf.IsWaiting(ref otherDir) &&
+                // Sometimes an idle serf blocks us. This should be avoided.
+                // TODO: Maybe check later why this even happens and look it this helps.
+                if (otherSerf.serfState == State.IdleOnPath ||
+                    otherSerf.serfState == State.WaitIdleOnPath)
+                {
+                    /* Change direction, not occupied. */
+                    map.SetSerfIndex(Position, 0);
+                    Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
+                    s.Walking.Dir = (int)dir.Reverse();
+                }
+                else if (otherSerf.IsWaiting(ref otherDir) &&
                     (otherDir == dir.Reverse() || otherDir == Direction.None) &&
                     otherSerf.SwitchWaiting(dir.Reverse()))
                 {
