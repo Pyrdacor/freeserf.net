@@ -56,9 +56,9 @@ namespace Freeserf.AIStates
             Building.Type.Lumberjack,
             Building.Type.Stonecutter,
             Building.Type.Forester,
-            Building.Type.Hut,
+            Building.Type.Fortress,
             Building.Type.Tower,
-            Building.Type.Fortress,            
+            Building.Type.Hut,
             Building.Type.ToolMaker,
             Building.Type.SteelSmelter,
             Building.Type.WeaponSmith,
@@ -394,13 +394,42 @@ namespace Freeserf.AIStates
                         return NeedBuilding(ai, game, player, type);
                     break;
                 case Building.Type.Hut:
+                case Building.Type.Tower:
+                case Building.Type.Fortress:
                     {
+                        // TODO: large military buildings should be placed near important buildings or near to an enemy to start fights (depending on AI character)
+
                         if (game.GetPossibleFreeKnightCount(player) == 0)
                             return CheckResult.NotNeeded;
-                        // TODO: decide if build hut, tower or fortress
+
+                        var numHuts = player.GetTotalBuildingCount(Building.Type.Hut);
+                        var numTowers = player.GetTotalBuildingCount(Building.Type.Tower);
+                        var numFortresses = player.GetTotalBuildingCount(Building.Type.Fortress);
+
+                        var percHut = ai.GetMilitaryBuildingPercentage(Building.Type.Hut);
+                        var percTower = ai.GetMilitaryBuildingPercentage(Building.Type.Tower);
+                        var percFortress = ai.GetMilitaryBuildingPercentage(Building.Type.Fortress);
+
+                        uint numHutsPerTower = 32u - (uint)Math.Ceiling(2.0 * (percTower + 50.0) / percHut); // 10-30
+                        uint numHutsPerFortress = 48u - (uint)Math.Ceiling(4.0 * (percFortress + 20.0) / percHut); // 16-46
+
+                        if (numHuts < numHutsPerTower + numTowers * numHutsPerTower)
+                        {
+                            if (type != Building.Type.Hut)
+                                return CheckResult.NotNeeded;
+                        }
+                        else if (numHuts < numHutsPerFortress + numFortresses * numHutsPerFortress)
+                        {
+                            if (type == Building.Type.Fortress)
+                                return CheckResult.NotNeeded;
+                        }
+
+                        if (!ai.CanBuildMilitaryBuilding(type))
+                            return CheckResult.NotNeeded;
+
                         int focus = Misc.Max(ai.MilitaryFocus, (ai.DefendFocus + 1) / 2, ai.ExpandFocus) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
 
-                        if (focus == 0 && player.GetTotalBuildingCount(Building.Type.Hut) == 0)
+                        if (focus == 0 && numHuts == 0)
                             focus = 1;
 
                         if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / 250 + (focus + 1) * ai.GameTime / (600 * Global.TICKS_PER_SEC) - 1 &&

@@ -309,6 +309,56 @@ namespace Freeserf
             return priority * 30;
         }
 
+        /// <summary>
+        /// Priority 2 means 60%, 1 means 30% and 0 means 10%.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public int GetMilitaryBuildingPercentage(Building.Type type)
+        {
+            int index = 0;
+
+            switch (type)
+            {
+                default:
+                    return 0;
+                case Building.Type.Hut:
+                    index = 0;
+                    break;
+                case Building.Type.Tower:
+                    index = 1;
+                    break;
+                case Building.Type.Fortress:
+                    index = 2;
+                    break;
+            }
+
+            if (militaryBuildingPriorities[index] == 0)
+                return 10;
+
+            return militaryBuildingPriorities[index] * 30;
+        }
+
+        public bool CanBuildMilitaryBuilding(Building.Type type)
+        {
+            if (!CanExpand)
+                return false;
+
+            switch (type)
+            {
+                default:
+                    return false;
+                case Building.Type.Hut:
+                    return true;
+                case Building.Type.Tower:
+                    return player.Game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= minPlanksForMilitaryBuildings[0] &&
+                        player.Game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= minStonesForMilitaryBuildings[0];
+                case Building.Type.Fortress:
+                    return player.Game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= minPlanksForMilitaryBuildings[1] &&
+                        player.Game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= minStonesForMilitaryBuildings[1];
+            }
+        }
+
         /* Military Focus
          * 
          * - Focuses on getting coal and iron
