@@ -2786,19 +2786,20 @@ namespace Freeserf
             if (joinPos)
                 Game.Map.SetSerfIndex(Position, (int)Index);
 
+            int slope = 0;
             Building building = Game.GetBuildingAtPos(Position);
 
             if (building == null)
             {
-                // TODO: This happened recently with a lumberjack. Fix this later instead of lost state workaround.
-                SetLostState();
-                return;
-            }
-
-            int slope = RoadBuildingSlope[(int)building.BuildingType];
-
-            if (!building.IsDone())
                 slope = 1;
+            }
+            else
+            {
+                slope = RoadBuildingSlope[(int)building.BuildingType];
+
+                if (!building.IsDone())
+                    slope = 1;
+            }
 
             s.EnteringBuilding.SlopeLength = (slope * Counter) >> 5;
             s.EnteringBuilding.FieldB = fieldB;
@@ -2808,11 +2809,20 @@ namespace Freeserf
            setting appropriate state. */
         void LeaveBuilding(bool joinPos)
         {
+            int slope = 0;
             Building building = Game.GetBuildingAtPos(Position);
-            int slope = 31 - RoadBuildingSlope[(int)building.BuildingType];
 
-            if (!building.IsDone())
+            if (building == null)
+            {
                 slope = 30;
+            }
+            else
+            {
+                slope = 31 - RoadBuildingSlope[(int)building.BuildingType];
+
+                if (!building.IsDone())
+                    slope = 30;
+            }
 
             if (joinPos)
                 Game.Map.SetSerfIndex(Position, 0);
@@ -4152,6 +4162,9 @@ namespace Freeserf
             {
                 Building building = Game.GetBuilding(s.Building.Index);
 
+                if (building == null)
+                    return;
+
                 if (s.Building.Mode < 0)
                 {
                     if (building.BuildProgress())
@@ -4303,6 +4316,9 @@ namespace Freeserf
 
             Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
 
+            if (flag == null)
+                return;
+
             if (!flag.HasEmptySlot())
             {
                 /* All resource slots at flag are occupied, wait */
@@ -4336,8 +4352,11 @@ namespace Freeserf
                 Counter = 0;
             }
 
-            uint objIndex = Game.Map.GetObjectIndex(Position);
-            Building building = Game.GetBuilding(objIndex);
+            Building building = Game.GetBuildingAtPos(Position);
+
+            if (building == null)
+                return;
+
             Inventory inventory = building.GetInventory();
 
             if (inventory.GetSerfQueueLength() > 0 ||
@@ -4362,6 +4381,9 @@ namespace Freeserf
         void HandleSerfDropResourceOutState()
         {
             Flag flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
+
+            if (flag == null)
+                return;
 
             if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Res - 1), s.MoveResourceOut.ResDest))
             {
