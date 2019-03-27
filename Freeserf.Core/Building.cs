@@ -689,20 +689,20 @@ namespace Freeserf
             return count;
         }
 
-        public void CancelTransportedResource(Resource.Type res)
+        public void CancelTransportedResource(Resource.Type resource)
         {
-            if (res == Resource.Type.Fish ||
-                res == Resource.Type.Meat ||
-                res == Resource.Type.Bread)
+            if (resource == Resource.Type.Fish ||
+                resource == Resource.Type.Meat ||
+                resource == Resource.Type.Bread)
             {
-                res = Resource.Type.GroupFood;
+                resource = Resource.Type.GroupFood;
             }
 
             int inStock = -1;
 
             for (int i = 0; i < MaxStock; ++i)
             {
-                if (stock[i].Type == res)
+                if (stock[i].Type == resource)
                 {
                     inStock = i;
                     break;
@@ -866,6 +866,25 @@ namespace Freeserf
         public uint GetRequestedInStock(int stockNumber)
         {
             return stock[stockNumber].Requested;
+        }
+
+        public uint GetRequested(Resource.Type resource)
+        {
+            int inStock = -1;
+
+            for (int i = 0; i < MaxStock; ++i)
+            {
+                if (stock[i].Type == resource)
+                {
+                    inStock = i;
+                    break;
+                }
+            }
+
+            if (inStock == -1)
+                return 0u;
+
+            return GetRequestedInStock(inStock);
         }
 
         public void SetPriorityInStock(int stockNumber, uint priority)

@@ -7351,7 +7351,8 @@ namespace Freeserf
             Counter = 0;
 
             Map map = Game.Map;
-            if (map.GetSerfIndex(Position) != Index && map.HasSerf(Position))
+
+            if (map.HasSerf(Position) && map.GetSerfIndex(Position) != Index)
             {
                 Animation = 82;
                 Counter = 0;

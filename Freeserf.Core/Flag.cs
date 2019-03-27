@@ -1586,7 +1586,24 @@ namespace Freeserf
                 if (!r || data.Dest == this)
                 {
                     /* Unable to deliver */
-                    Game.CancelTransportedResource(this.slot[slot].Type, this.slot[slot].Dest);
+                    bool cancel = false;
+
+                    if (this.slot[slot].Dest != 0)
+                    {
+                        var flag = Game.GetFlag(this.slot[slot].Dest);
+
+                        if (flag != null && flag.HasBuilding())
+                        {
+                            var building = flag.GetBuilding();
+
+                            if (building != null && building.GetRequested(this.slot[slot].Type) > 0)
+                                cancel = true;
+                        }
+                    }
+
+                    if (cancel)
+                        Game.CancelTransportedResource(this.slot[slot].Type, this.slot[slot].Dest);
+
                     this.slot[slot].Dest = 0u;
                     endPoint |= Misc.Bit(7);
                 }
