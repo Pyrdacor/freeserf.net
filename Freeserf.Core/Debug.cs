@@ -76,12 +76,42 @@ namespace Freeserf
             Game = game;
         }
 
+        public ExceptionFreeserf(Game game, Exception inner, [CallerLineNumber] int lineNumber = 0,
+            [CallerFilePath] string file = "")
+            : base(inner.Message, inner)
+        {
+            if (inner is ExceptionFreeserf)
+                System = (inner as ExceptionFreeserf).System;
+
+            Description = inner.Message;
+            SourceFile = file;
+            SourceLineNumber = lineNumber;
+            Game = game;
+        }
+
+        public ExceptionFreeserf(Game game, string system, Exception inner, [CallerLineNumber] int lineNumber = 0,
+            [CallerFilePath] string file = "")
+            : base(inner.Message, inner)
+        {
+            if (inner is ExceptionFreeserf)
+                System = (inner as ExceptionFreeserf).System;
+            else
+                System = system;
+
+            Description = inner.Message;
+            SourceFile = file;
+            SourceLineNumber = lineNumber;
+            Game = game;
+        }
+
         public override string ToString()
         {
             return Message;
         }
 
         public override string Message => System == null ? Description : "[" + System + "]" + Description;
+
+        public override string StackTrace => InnerException == null ? base.StackTrace : InnerException.StackTrace;
     }
 
     public static class Debug

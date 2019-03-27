@@ -572,7 +572,7 @@ namespace Freeserf
         {
             holder = true;
 
-            if (serfRequested && (serf.GetSerfType() >= Serf.Type.Knight0 || serf.GetSerfType() <= Serf.Type.Knight4))
+            if (serfRequested && serf.IsKnight())
             {
                 if (firstKnight == 0)
                     firstKnight = serf.Index;
@@ -759,17 +759,8 @@ namespace Freeserf
 
             /* Unlink knight from list. */
             Serf firstSerf = Game.GetSerf(firstKnight);
-            Serf defSerf = firstSerf.ExtractKnightFromList(knightIndex);
 
-            if (defSerf == null)
-                defSerf = firstSerf;
-
-            if (defSerf.Index == firstKnight)
-            {
-                firstKnight = 0;
-            }
-
-            return defSerf;
+            return firstSerf.ExtractKnightFromList(knightIndex, ref firstKnight);
         }
 
         public bool AddRequestedResource(Resource.Type res, bool fixPriority)

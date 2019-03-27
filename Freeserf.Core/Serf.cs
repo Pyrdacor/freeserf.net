@@ -1249,6 +1249,9 @@ namespace Freeserf
 
         public void CastleDeleted(MapPos castlePos, bool transporter)
         {
+            if (type == Type.None || Position == Global.BadMapPos) // TODO: There seem to be a null-serf in the castle. Maybe delete later?
+                return;
+
             if ((!transporter || GetSerfType() == Type.TransporterInventory) &&
                 Position == castlePos)
             {
@@ -1509,15 +1512,20 @@ namespace Freeserf
             return defSerf;
         }
 
-        public Serf ExtractKnightFromList(uint index, Serf lastKnight = null)
+        public Serf ExtractKnightFromList(uint index, ref uint firstKnight, Serf lastKnight = null)
         {
             if (Index == index)
             {
                 if (lastKnight != null)
                 {
                     lastKnight.s.Defending.NextKnight = s.Defending.NextKnight;
-                    s.Defending.NextKnight = 0;
                 }
+                else // this is the first knight
+                {
+                    firstKnight = s.Defending.NextKnight;
+                }
+
+                s.Defending.NextKnight = 0;
 
                 return this;
             }
@@ -1527,7 +1535,12 @@ namespace Freeserf
 
             var nextKnight = Game.GetSerf(s.Defending.NextKnight);
 
-            return nextKnight.ExtractKnightFromList(index, this);
+            return nextKnight.ExtractKnightFromList(index, ref firstKnight, this);
+        }
+
+        internal void SetPosition(uint position)
+        {
+            Position = position;
         }
 
         internal void InsertKnightBefore(Serf knight)
@@ -1646,242 +1659,249 @@ namespace Freeserf
 
         internal void Update()
         {
-            switch (SerfState)
+            try
             {
-                case State.Null: /* 0 */
-                    break;
-                case State.Walking:
-                    HandleSerfWalkingState();
-                    break;
-                case State.Transporting:
-                    HandleSerfTransportingState();
-                    break;
-                case State.IdleInStock:
-                    HandleSerfIdleInStockState();
-                    break;
-                case State.EnteringBuilding:
-                    HandleSerfEnteringBuildingState();
-                    break;
-                case State.LeavingBuilding: /* 5 */
-                    HandleSerfLeavingBuildingState();
-                    break;
-                case State.ReadyToEnter:
-                    HandleSerfReadyToEnterState();
-                    break;
-                case State.ReadyToLeave:
-                    HandleSerfReadyToLeaveState();
-                    break;
-                case State.Digging:
-                    HandleSerfDiggingState();
-                    break;
-                case State.Building:
-                    HandleSerfBuildingState();
-                    break;
-                case State.BuildingCastle: /* 10 */
-                    HandleSerfBuildingCastleState();
-                    break;
-                case State.MoveResourceOut:
-                    HandleSerfMoveResourceOutState();
-                    break;
-                case State.WaitForResourceOut:
-                    HandleSerfWaitForResourceOutState();
-                    break;
-                case State.DropResourceOut:
-                    HandleSerfDropResourceOutState();
-                    break;
-                case State.Delivering:
-                    HandleSerfDeliveringState();
-                    break;
-                case State.ReadyToLeaveInventory: /* 15 */
-                    HandleSerfReadyToLeaveInventoryState();
-                    break;
-                case State.FreeWalking:
-                    HandleSerfFreeWalkingState();
-                    break;
-                case State.Logging:
-                    HandleSerfLoggingState();
-                    break;
-                case State.PlanningLogging:
-                    HandleSerfPlanningLoggingState();
-                    break;
-                case State.PlanningPlanting:
-                    HandleSerfPlanningPlantingState();
-                    break;
-                case State.Planting: /* 20 */
-                    HandleSerfPlantingState();
-                    break;
-                case State.PlanningStoneCutting:
-                    HandleSerfPlanningStonecutting();
-                    break;
-                case State.StoneCutterFreeWalking:
-                    HandleStonecutterFreeWalking();
-                    break;
-                case State.StoneCutting:
-                    HandleSerfStonecuttingState();
-                    break;
-                case State.Sawing:
-                    HandleSerfSawingState();
-                    break;
-                case State.Lost: /* 25 */
-                    HandleSerfLostState();
-                    break;
-                case State.LostSailor:
-                    HandleLostSailor();
-                    break;
-                case State.FreeSailing:
-                    HandleFreeSailing();
-                    break;
-                case State.EscapeBuilding:
-                    HandleSerfEscapeBuildingState();
-                    break;
-                case State.Mining:
-                    HandleSerfMiningState();
-                    break;
-                case State.Smelting: /* 30 */
-                    HandleSerfSmeltingState();
-                    break;
-                case State.PlanningFishing:
-                    HandleSerfPlanningFishingState();
-                    break;
-                case State.Fishing:
-                    HandleSerfFishingState();
-                    break;
-                case State.PlanningFarming:
-                    HandleSerfPlanningFarmingState();
-                    break;
-                case State.Farming:
-                    HandleSerfFarmingState();
-                    break;
-                case State.Milling: /* 35 */
-                    HandleSerfMillingState();
-                    break;
-                case State.Baking:
-                    HandleSerfBakingState();
-                    break;
-                case State.PigFarming:
-                    HandleSerfPigfarmingState();
-                    break;
-                case State.Butchering:
-                    HandleSerfButcheringState();
-                    break;
-                case State.MakingWeapon:
-                    HandleSerfMakingWeaponState();
-                    break;
-                case State.MakingTool: /* 40 */
-                    HandleSerfMakingToolState();
-                    break;
-                case State.BuildingBoat:
-                    HandleSerfBuildingBoatState();
-                    break;
-                case State.LookingForGeoSpot:
-                    HandleSerfLookingForGeoSpotState();
-                    break;
-                case State.SamplingGeoSpot:
-                    HandleSerfSamplingGeoSpotState();
-                    break;
-                case State.KnightEngagingBuilding:
-                    HandleSerfKnightEngagingBuildingState();
-                    break;
-                case State.KnightPrepareAttacking: /* 45 */
-                    HandleSerfKnightPrepareAttacking();
-                    break;
-                case State.KnightLeaveForFight:
-                    HandleSerfKnightLeaveForFightState();
-                    break;
-                case State.KnightPrepareDefending:
-                    HandleSerfKnightPrepareDefendingState();
-                    break;
-                case State.KnightAttacking:
-                case State.KnightAttackingFree:
-                    HandleKnightAttacking();
-                    break;
-                case State.KnightDefending:
-                case State.KnightDefendingFree:
-                    /* The actual fight update is handled for the attacking knight. */
-                    break;
-                case State.KnightAttackingVictory: /* 50 */
-                    HandleSerfKnightAttackingVictoryState();
-                    break;
-                case State.KnightAttackingDefeat:
-                    HandleSerfKnightAttackingDefeatState();
-                    break;
-                case State.KnightOccupyEnemyBuilding:
-                    HandleKnightOccupyEnemyBuilding();
-                    break;
-                case State.KnightFreeWalking:
-                    HandleStateKnightFreeWalking();
-                    break;
-                case State.KnightEngageDefendingFree:
-                    HandleStateKnightEngageDefendingFree();
-                    break;
-                case State.KnightEngageAttackingFree:
-                    HandleStateKnightEngageAttackingFree();
-                    break;
-                case State.KnightEngageAttackingFreeJoin:
-                    HandleStateKnightEngageAttackingFreeJoin();
-                    break;
-                case State.KnightPrepareAttackingFree:
-                    HandleStateKnightPrepareAttackingFree();
-                    break;
-                case State.KnightPrepareDefendingFree:
-                    HandleStateKnightPrepareDefendingFree();
-                    break;
-                case State.KnightPrepareDefendingFreeWait:
-                    /* Nothing to do for this state. */
-                    break;
-                case State.KnightAttackingVictoryFree:
-                    HandleKnightAttackingVictoryFree();
-                    break;
-                case State.KnightDefendingVictoryFree:
-                    HandleKnightDefendingVictoryFree();
-                    break;
-                case State.KnightAttackingDefeatFree:
-                    HandleSerfKnightAttackingDefeatFreeState();
-                    break;
-                case State.KnightAttackingFreeWait:
-                    HandleKnightAttackingFreeWait();
-                    break;
-                case State.KnightLeaveForWalkToFight: /* 65 */
-                    HandleSerfStateKnightLeaveForWalkToFight();
-                    break;
-                case State.IdleOnPath:
-                    FixNonTransporterState();
-                    HandleSerfIdleOnPathState();
-                    break;
-                case State.WaitIdleOnPath:
-                    FixNonTransporterState();
-                    HandleSerfWaitIdleOnPathState();
-                    break;
-                case State.WakeAtFlag:
-                    FixNonTransporterState();
-                    HandleSerfWakeAtFlagState();
-                    break;
-                case State.WakeOnPath:
-                    FixNonTransporterState();
-                    HandleSerfWakeOnPathState();
-                    break;
-                case State.DefendingHut: /* 70 */
-                    HandleSerfDefendingHutState();
-                    break;
-                case State.DefendingTower:
-                    HandleSerfDefendingTowerState();
-                    break;
-                case State.DefendingFortress:
-                    HandleSerfDefendingFortressState();
-                    break;
-                case State.Scatter:
-                    HandleScatterState();
-                    break;
-                case State.FinishedBuilding:
-                    HandleSerfFinishedBuildingState();
-                    break;
-                case State.DefendingCastle: /* 75 */
-                    HandleSerfDefendingCastleState();
-                    break;
-                default:
-                    Log.Debug.Write("serf", $"Serf state {SerfState} isn't processed");
-                    SerfState = State.Null;
-                    break;
+                switch (SerfState)
+                {
+                    case State.Null: /* 0 */
+                        break;
+                    case State.Walking:
+                        HandleSerfWalkingState();
+                        break;
+                    case State.Transporting:
+                        HandleSerfTransportingState();
+                        break;
+                    case State.IdleInStock:
+                        HandleSerfIdleInStockState();
+                        break;
+                    case State.EnteringBuilding:
+                        HandleSerfEnteringBuildingState();
+                        break;
+                    case State.LeavingBuilding: /* 5 */
+                        HandleSerfLeavingBuildingState();
+                        break;
+                    case State.ReadyToEnter:
+                        HandleSerfReadyToEnterState();
+                        break;
+                    case State.ReadyToLeave:
+                        HandleSerfReadyToLeaveState();
+                        break;
+                    case State.Digging:
+                        HandleSerfDiggingState();
+                        break;
+                    case State.Building:
+                        HandleSerfBuildingState();
+                        break;
+                    case State.BuildingCastle: /* 10 */
+                        HandleSerfBuildingCastleState();
+                        break;
+                    case State.MoveResourceOut:
+                        HandleSerfMoveResourceOutState();
+                        break;
+                    case State.WaitForResourceOut:
+                        HandleSerfWaitForResourceOutState();
+                        break;
+                    case State.DropResourceOut:
+                        HandleSerfDropResourceOutState();
+                        break;
+                    case State.Delivering:
+                        HandleSerfDeliveringState();
+                        break;
+                    case State.ReadyToLeaveInventory: /* 15 */
+                        HandleSerfReadyToLeaveInventoryState();
+                        break;
+                    case State.FreeWalking:
+                        HandleSerfFreeWalkingState();
+                        break;
+                    case State.Logging:
+                        HandleSerfLoggingState();
+                        break;
+                    case State.PlanningLogging:
+                        HandleSerfPlanningLoggingState();
+                        break;
+                    case State.PlanningPlanting:
+                        HandleSerfPlanningPlantingState();
+                        break;
+                    case State.Planting: /* 20 */
+                        HandleSerfPlantingState();
+                        break;
+                    case State.PlanningStoneCutting:
+                        HandleSerfPlanningStonecutting();
+                        break;
+                    case State.StoneCutterFreeWalking:
+                        HandleStonecutterFreeWalking();
+                        break;
+                    case State.StoneCutting:
+                        HandleSerfStonecuttingState();
+                        break;
+                    case State.Sawing:
+                        HandleSerfSawingState();
+                        break;
+                    case State.Lost: /* 25 */
+                        HandleSerfLostState();
+                        break;
+                    case State.LostSailor:
+                        HandleLostSailor();
+                        break;
+                    case State.FreeSailing:
+                        HandleFreeSailing();
+                        break;
+                    case State.EscapeBuilding:
+                        HandleSerfEscapeBuildingState();
+                        break;
+                    case State.Mining:
+                        HandleSerfMiningState();
+                        break;
+                    case State.Smelting: /* 30 */
+                        HandleSerfSmeltingState();
+                        break;
+                    case State.PlanningFishing:
+                        HandleSerfPlanningFishingState();
+                        break;
+                    case State.Fishing:
+                        HandleSerfFishingState();
+                        break;
+                    case State.PlanningFarming:
+                        HandleSerfPlanningFarmingState();
+                        break;
+                    case State.Farming:
+                        HandleSerfFarmingState();
+                        break;
+                    case State.Milling: /* 35 */
+                        HandleSerfMillingState();
+                        break;
+                    case State.Baking:
+                        HandleSerfBakingState();
+                        break;
+                    case State.PigFarming:
+                        HandleSerfPigfarmingState();
+                        break;
+                    case State.Butchering:
+                        HandleSerfButcheringState();
+                        break;
+                    case State.MakingWeapon:
+                        HandleSerfMakingWeaponState();
+                        break;
+                    case State.MakingTool: /* 40 */
+                        HandleSerfMakingToolState();
+                        break;
+                    case State.BuildingBoat:
+                        HandleSerfBuildingBoatState();
+                        break;
+                    case State.LookingForGeoSpot:
+                        HandleSerfLookingForGeoSpotState();
+                        break;
+                    case State.SamplingGeoSpot:
+                        HandleSerfSamplingGeoSpotState();
+                        break;
+                    case State.KnightEngagingBuilding:
+                        HandleSerfKnightEngagingBuildingState();
+                        break;
+                    case State.KnightPrepareAttacking: /* 45 */
+                        HandleSerfKnightPrepareAttacking();
+                        break;
+                    case State.KnightLeaveForFight:
+                        HandleSerfKnightLeaveForFightState();
+                        break;
+                    case State.KnightPrepareDefending:
+                        HandleSerfKnightPrepareDefendingState();
+                        break;
+                    case State.KnightAttacking:
+                    case State.KnightAttackingFree:
+                        HandleKnightAttacking();
+                        break;
+                    case State.KnightDefending:
+                    case State.KnightDefendingFree:
+                        /* The actual fight update is handled for the attacking knight. */
+                        break;
+                    case State.KnightAttackingVictory: /* 50 */
+                        HandleSerfKnightAttackingVictoryState();
+                        break;
+                    case State.KnightAttackingDefeat:
+                        HandleSerfKnightAttackingDefeatState();
+                        break;
+                    case State.KnightOccupyEnemyBuilding:
+                        HandleKnightOccupyEnemyBuilding();
+                        break;
+                    case State.KnightFreeWalking:
+                        HandleStateKnightFreeWalking();
+                        break;
+                    case State.KnightEngageDefendingFree:
+                        HandleStateKnightEngageDefendingFree();
+                        break;
+                    case State.KnightEngageAttackingFree:
+                        HandleStateKnightEngageAttackingFree();
+                        break;
+                    case State.KnightEngageAttackingFreeJoin:
+                        HandleStateKnightEngageAttackingFreeJoin();
+                        break;
+                    case State.KnightPrepareAttackingFree:
+                        HandleStateKnightPrepareAttackingFree();
+                        break;
+                    case State.KnightPrepareDefendingFree:
+                        HandleStateKnightPrepareDefendingFree();
+                        break;
+                    case State.KnightPrepareDefendingFreeWait:
+                        /* Nothing to do for this state. */
+                        break;
+                    case State.KnightAttackingVictoryFree:
+                        HandleKnightAttackingVictoryFree();
+                        break;
+                    case State.KnightDefendingVictoryFree:
+                        HandleKnightDefendingVictoryFree();
+                        break;
+                    case State.KnightAttackingDefeatFree:
+                        HandleSerfKnightAttackingDefeatFreeState();
+                        break;
+                    case State.KnightAttackingFreeWait:
+                        HandleKnightAttackingFreeWait();
+                        break;
+                    case State.KnightLeaveForWalkToFight: /* 65 */
+                        HandleSerfStateKnightLeaveForWalkToFight();
+                        break;
+                    case State.IdleOnPath:
+                        FixNonTransporterState();
+                        HandleSerfIdleOnPathState();
+                        break;
+                    case State.WaitIdleOnPath:
+                        FixNonTransporterState();
+                        HandleSerfWaitIdleOnPathState();
+                        break;
+                    case State.WakeAtFlag:
+                        FixNonTransporterState();
+                        HandleSerfWakeAtFlagState();
+                        break;
+                    case State.WakeOnPath:
+                        FixNonTransporterState();
+                        HandleSerfWakeOnPathState();
+                        break;
+                    case State.DefendingHut: /* 70 */
+                        HandleSerfDefendingHutState();
+                        break;
+                    case State.DefendingTower:
+                        HandleSerfDefendingTowerState();
+                        break;
+                    case State.DefendingFortress:
+                        HandleSerfDefendingFortressState();
+                        break;
+                    case State.Scatter:
+                        HandleScatterState();
+                        break;
+                    case State.FinishedBuilding:
+                        HandleSerfFinishedBuildingState();
+                        break;
+                    case State.DefendingCastle: /* 75 */
+                        HandleSerfDefendingCastleState();
+                        break;
+                    default:
+                        Log.Debug.Write("serf", $"Serf state {SerfState} isn't processed");
+                        SerfState = State.Null;
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ExceptionFreeserf(Game, "serf", ex);
             }
         }
 
@@ -2767,6 +2787,14 @@ namespace Freeserf
                 Game.Map.SetSerfIndex(Position, (int)Index);
 
             Building building = Game.GetBuildingAtPos(Position);
+
+            if (building == null)
+            {
+                // TODO: This happened recently with a lumberjack. Fix this later instead of lost state workaround.
+                SetLostState();
+                return;
+            }
+
             int slope = RoadBuildingSlope[(int)building.BuildingType];
 
             if (!building.IsDone())
