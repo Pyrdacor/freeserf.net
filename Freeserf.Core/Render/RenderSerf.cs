@@ -893,6 +893,10 @@ namespace Freeserf.Render
                     else
                     {
                         int res = serf.GetDelivery();
+
+                        if (res < 0)
+                            return 0;
+
                         t += TransporterType[res];
                     }
                     break;
