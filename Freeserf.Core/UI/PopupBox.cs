@@ -2209,6 +2209,8 @@ namespace Freeserf.UI
             {
                 SetNumberText(16 + i * 32, 105, (uint)player.attackingKnights[i]);
             }
+
+            SetNumberText(64, 125, (uint)player.knightsAttacking);
         }
 
         // Translate resource amount to text
