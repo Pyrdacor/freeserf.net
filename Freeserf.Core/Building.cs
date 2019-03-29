@@ -21,6 +21,7 @@
  */
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Freeserf
@@ -508,6 +509,8 @@ namespace Freeserf
                     {
                         serf.CastleDeleted(Position, true);
                     }
+                    
+                    // TODO: player defeated? mission outro etc?
                 }
 
                 if (!constructing && IsMilitary())
@@ -522,14 +525,20 @@ namespace Freeserf
                 }
                 else
                 {
-                    Serf serf = Game.GetSerf(serfIndex);
+                    Serf serf = Game.GetSerfAtPos(Position);
 
-                    if (serf.GetSerfType() == Serf.Type.TransporterInventory)
+                    if (serf == null)
+                        serf = Game.GetPlayerSerfs(Game.GetPlayer(Player)).FirstOrDefault(s => s.Position == Position);
+
+                    if (serf != null)
                     {
-                        serf.SetSerfType(Serf.Type.Transporter);
-                    }
+                        if (serf.GetSerfType() == Serf.Type.TransporterInventory)
+                        {
+                            serf.SetSerfType(Serf.Type.Transporter);
+                        }
 
-                    serf.CastleDeleted(Position, false);
+                        serf.BuildingDeleted(Position, true);
+                    }
                 }
             }
 

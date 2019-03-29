@@ -1241,7 +1241,16 @@ namespace Freeserf
                     SetSerfType(Type.Dead);
                     Game.DeleteSerf(this);
                 }
+
                 return true;
+            }
+            else if ((type == Type.Builder && SerfState == State.Building) || (type == Type.Digger && SerfState == State.Digging))
+            {
+                SetLostState();
+            }
+            else
+            {
+                SetState(State.EscapeBuilding);
             }
 
             return false;
@@ -2792,6 +2801,7 @@ namespace Freeserf
             if (building == null)
             {
                 slope = 1;
+                SetLostState(); // try to enter a building that is no longer there
             }
             else
             {
@@ -5316,7 +5326,7 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                s.FreeWalking.NegDist2 += 1;
+                ++s.FreeWalking.NegDist2;
 
                 int newObject = -1;
 

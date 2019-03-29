@@ -226,7 +226,12 @@ namespace Freeserf
 
         public Serf GetSerfAtPos(MapPos pos)
         {
-            return serfs[map.GetSerfIndex(pos)];
+            var serf = serfs[map.GetSerfIndex(pos)];
+
+            if (serf != null && serf.Index == 0)
+                return null;
+
+            return serf;
         }
 
 
