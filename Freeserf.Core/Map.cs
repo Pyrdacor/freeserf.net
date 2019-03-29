@@ -1220,6 +1220,40 @@ namespace Freeserf
         }
 
         /// <summary>
+        /// Searches the spiral around the base position. Stops after first finding.
+        /// </summary>
+        /// <param name="basePos">Base position</param>
+        /// <param name="searchRange">Search distance</param>
+        /// <param name="searchFunc">Search function</param>
+        /// <param name="minDist">Minimum distance required</param>
+        /// <returns></returns>
+        public bool HasAnyInArea(MapPos basePos, int searchRange, Func<Map, MapPos, FindData> searchFunc, int minDist = 0)
+        {
+            if (searchRange <= 0)
+                return false;
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDist * minDist + minDist) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                MapPos pos = PosAddSpirally(basePos, (uint)i);
+
+                var data = searchFunc(this, pos);
+
+                if (data != null & data.Success)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Searches the spiral around the base position.
         /// 
         /// The distances can range from 0 to 9.

@@ -85,7 +85,9 @@ namespace Freeserf.AIStates
 
             if (pos != Global.BadMapPos && game.CanBuildBuilding(pos, type, player) && ai.CanLinkFlag(game.Map.MoveDownRight(pos)))
             {
-                builtPosition = pos;
+                // military buildings could not be built too close to others
+                if ((type != Building.Type.Hut && type != Building.Type.Tower && type != Building.Type.Fortress) || !game.Map.HasAnyInArea(pos, 3, FindMilitary, 1))
+                    builtPosition = pos;
             }
 
             lock (searchingLock)
@@ -395,7 +397,7 @@ namespace Freeserf.AIStates
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Castle, 1 + ai.DefendFocus);
 
                             if (spot == Global.BadMapPos)
-                                return FindSpotNearBorder(game, player, intelligence, 1 + Math.Min(2, (ai.MilitaryFocus + ai.ExpandFocus + ai.DefendFocus) / 2));
+                                spot = FindSpotNearBorder(game, player, intelligence, 1 + Math.Min(2, (ai.MilitaryFocus + ai.ExpandFocus + ai.DefendFocus) / 2));
 
                             return spot;
                         }
