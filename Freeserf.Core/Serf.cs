@@ -1916,7 +1916,7 @@ namespace Freeserf
 
         void FixNonTransporterState()
         {
-            if (type != Type.Transporter)
+            if (type != Type.Transporter && type != Type.Sailor)
             {
                 FindInventory();
             }
@@ -3013,7 +3013,15 @@ namespace Freeserf
             {
                 Map map = Game.Map;
                 Building building = Game.GetBuildingAtPos(map.MoveUpLeft(Position));
-                building.RequestedSerfReached(this); // TODO: null ref exception
+
+                if (building == null) // not exists anymore?
+                {
+                    // TODO: is this the right handling for this case?
+                    SetLostState();
+                    return;
+                }
+
+                building.RequestedSerfReached(this);
 
                 if (map.HasSerf(map.MoveUpLeft(Position)))
                 {
@@ -6411,8 +6419,9 @@ namespace Freeserf
                     else
                     {
                         Game.Map.SetSerfIndex(Position, 0);
-                        if (building.PigsCount() < 8 &&
-                            Game.RandomInt() < BreedingProbability[building.PigsCount() - 1])
+
+                        if (building.PigsCount() == 0 || (building.PigsCount() < 8 &&
+                            Game.RandomInt() < BreedingProbability[building.PigsCount() - 1]))
                         {
                             building.PlaceNewPig();
                         }

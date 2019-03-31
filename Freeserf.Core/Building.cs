@@ -472,7 +472,7 @@ namespace Freeserf
                 /* Let some serfs escape while the building is burning. */
                 uint escapingSerfs = 0;
 
-                foreach (Serf serf in Game.GetSerfsAtPos(Position))
+                foreach (Serf serf in Game.GetSerfsAtPos(Position).ToArray())
                 {
                     if (serf.BuildingDeleted(Position, escapingSerfs < 12))
                     {
@@ -505,7 +505,7 @@ namespace Freeserf
                 {
                     SetBurningCounter(8191);
 
-                    foreach (Serf serf in Game.GetSerfsAtPos(Position))
+                    foreach (Serf serf in Game.GetSerfsAtPos(Position).ToArray())
                     {
                         serf.CastleDeleted(Position, true);
                     }
