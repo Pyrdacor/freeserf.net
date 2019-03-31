@@ -33,7 +33,7 @@ namespace Freeserf.AIStates
     // TODO: Some buildings should never been placed too near to enemies like toolmaker, weaponsmith, stock, etc.
     //       Especially the toolmaker in the beginning is crucial. Smart players should never build non-military
     //       buildings at the border if an enemy is near (except for mines).
-    // TODO: Avoid building to much buildings near foresters/farms if possible.
+    // TODO: Avoid building too much buildings near foresters/farms if possible.
     class AIStateBuildBuilding : AIState
     {
         Building.Type type = Building.Type.None;
@@ -139,10 +139,25 @@ namespace Freeserf.AIStates
                 {
                     NextState = ai.CreateRandomDelayedState(AI.State.LinkBuilding, 0, (5 - (int)playerInfo.Intelligence / 9) * 1000, builtPosition);
 
-                    // If this was a toolmaker and we are in hard times we set planks for toolmaker to zero for now.
-                    // If a tool is needed, this setting is changed by the craft tool AI state.
+                    // If this was a toolmaker and we are in hard times we set planks to half for toolmaker.
+                    // Also we decide which tool to craft first.
                     if (type == Building.Type.ToolMaker && ai.HardTimes())
-                        player.SetPlanksToolmaker(0u);
+                    {
+                        player.SetPlanksToolmaker(ushort.MaxValue / 2);
+
+                        // With only one fisher and only a small lake, the scythe has prio.
+                        // Without a fisher we have no water at all and therefore the scythe is very important.
+                        if (player.GetTotalBuildingCount(Building.Type.Fisher) != 0 || CountFish(game.Map.FindInTerritory(player.Index, FindFish)) < 20)
+                        {
+                            player.SetFullToolPriority(Resource.Type.Scythe);
+                        }
+                        // With a fisher and enough fish, the pincer/hammer for weaponsmith has prio.
+                        // As the hammer might be consumed by another serf, we first craft the pincer.
+                        else
+                        {                            
+                            player.SetFullToolPriority(Resource.Type.Pincer);
+                        }
+                    }
                 }
 
                 Kill(ai);
@@ -445,9 +460,14 @@ namespace Freeserf.AIStates
                         if (spot != Global.BadMapPos)
                             return spot;
                         else if (ai.MilitaryFocus >= ai.SteelFocus)
-                            return FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 2 + ai.MilitaryFocus);
+                            spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 2 + ai.MilitaryFocus);
                         else
-                            return FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 2 + ai.SteelFocus);
+                            spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 2 + ai.SteelFocus);
+
+                        if (spot == Global.BadMapPos)
+                            spot = FindRandomSpot(game, player, true);
+
+                        return spot;
                     }
                 case Building.Type.Stock:
                     return FindSpotForStock(game, player, intelligence, 1 + ai.BuildingFocus);
@@ -471,7 +491,12 @@ namespace Freeserf.AIStates
                         if (spot != Global.BadMapPos)
                             return spot;
                         else
-                            return FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 2 + ai.MilitaryFocus);
+                            spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 2 + ai.MilitaryFocus);
+
+                        if (spot == Global.BadMapPos)
+                            spot = FindRandomSpot(game, player, true);
+
+                        return spot;
                     }
                 default:
                     return FindRandomSpot(game, player, true);

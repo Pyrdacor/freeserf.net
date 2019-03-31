@@ -391,6 +391,15 @@ namespace Freeserf
             return serfCount[(int)type];
         }
 
+        public uint GetTotalKnightCount()
+        {
+            return GetSerfCount(Serf.Type.Knight0) +
+                   GetSerfCount(Serf.Type.Knight1) +
+                   GetSerfCount(Serf.Type.Knight2) +
+                   GetSerfCount(Serf.Type.Knight3) +
+                   GetSerfCount(Serf.Type.Knight4);
+        }
+
         public int GetFlagPriority(Resource.Type resource)
         {
             if (resource <= Resource.Type.None || resource >= Resource.Type.GroupFood)
@@ -784,7 +793,7 @@ namespace Freeserf
             return totalAttackingKnights;
         }
 
-        public bool PrepareAttack(uint targetPosition)
+        public bool PrepareAttack(uint targetPosition, int maxKnights = -1)
         {
             Building building = Game.GetBuildingAtPos(targetPosition);
 
@@ -821,15 +830,16 @@ namespace Freeserf
                     return false;
                 }
 
-                int maxKnights = 0;
-
-                switch (building.BuildingType)
+                if (maxKnights == -1)
                 {
-                    case Building.Type.Hut: maxKnights = 3; break;
-                    case Building.Type.Tower: maxKnights = 6; break;
-                    case Building.Type.Fortress: maxKnights = 12; break;
-                    case Building.Type.Castle: maxKnights = 20; break;
-                    default: Debug.NotReached(); break;
+                    switch (building.BuildingType)
+                    {
+                        case Building.Type.Hut: maxKnights = 3; break;
+                        case Building.Type.Tower: maxKnights = 6; break;
+                        case Building.Type.Fortress: maxKnights = 12; break;
+                        case Building.Type.Castle: maxKnights = 20; break;
+                        default: Debug.NotReached(); break;
+                    }
                 }
 
                 int knights = KnightsAvailableForAttack(building.Position);
@@ -855,10 +865,9 @@ namespace Freeserf
 
             for (int i = 0; i < attackingBuildingCount; i++)
             {
-                /* TODO building index may not be valid any more(?). */
                 Building building = Game.GetBuilding(attackingBuildings[i]);
 
-                if (building.IsBurning() || map.GetOwner(building.Position) != Index)
+                if (building == null || building.IsBurning() || map.GetOwner(building.Position) != Index)
                 {
                     continue;
                 }
@@ -1209,6 +1218,12 @@ namespace Freeserf
             return serfCount;
         }
 
+        public void NotifyCraftedTool(Resource.Type tool)
+        {
+            if (AI != null)
+                AI.NotifyCraftedTool(tool);
+        }
+
         public void IncreaseResourceCount(Resource.Type type)
         {
             ++resourceCount[(int)type];
@@ -1347,6 +1362,16 @@ namespace Freeserf
             Dirty = true;
         }
 
+        public void SetFullToolPriority(Resource.Type tool)
+        {
+            // set all tool priorities to 0
+            for (int i = 0; i < 9; ++i)
+                SetToolPriority(i, ushort.MinValue);
+
+            // set the priority for the tool to 100%
+            SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
+        }
+
         public int[] GetFlagPriorities()
         {
             return flagPriorities;
@@ -1370,101 +1395,108 @@ namespace Freeserf
         /* Update player game state as part of the game progression. */
         public void Update()
 		{
-            ushort delta = (ushort)(Game.Tick - lastTick);
-            lastTick = Game.Tick;
-
-            if (totalLandArea > 0xffff0000)
-                totalLandArea = 0;
-            if (totalMilitaryScore > 0xffff0000)
-                totalMilitaryScore = 0;
-            if (totalBuildingScore > 0xffff0000)
-                totalBuildingScore = 0;
-
-            if (IsAi())
+            try
             {
-                /*if (player.field_1B2 != 0) player.field_1B2 -= 1;*/
-                /*if (player.field_1B0 != 0) player.field_1B0 -= 1;*/
-            }
+                ushort delta = (ushort)(Game.Tick - lastTick);
+                lastTick = Game.Tick;
 
-            if (CyclingKnight())
-            {
-                knightCycleCounter -= delta;
+                if (totalLandArea > 0xffff0000)
+                    totalLandArea = 0;
+                if (totalMilitaryScore > 0xffff0000)
+                    totalMilitaryScore = 0;
+                if (totalBuildingScore > 0xffff0000)
+                    totalBuildingScore = 0;
 
-                if (knightCycleCounter < 1)
+                if (IsAi())
                 {
-                    flags &= ~Misc.BitU(5);
-                    flags &= ~Misc.BitU(2);
+                    /*if (player.field_1B2 != 0) player.field_1B2 -= 1;*/
+                    /*if (player.field_1B0 != 0) player.field_1B0 -= 1;*/
                 }
-                else if (knightCycleCounter < 2048 && ReducedKnightLevel())
+
+                if (CyclingKnight())
                 {
-                    flags |= Misc.BitU(5);
-                    flags &= ~Misc.BitU(4);
+                    knightCycleCounter -= delta;
+
+                    if (knightCycleCounter < 1)
+                    {
+                        flags &= ~Misc.BitU(5);
+                        flags &= ~Misc.BitU(2);
+                    }
+                    else if (knightCycleCounter < 2048 && ReducedKnightLevel())
+                    {
+                        flags |= Misc.BitU(5);
+                        flags &= ~Misc.BitU(4);
+                    }
                 }
-            }
 
-            if (HasCastle())
-            {
-                reproductionCounter -= delta;
-
-                while (reproductionCounter < 0)
+                if (HasCastle())
                 {
-                    serfToKnightCounter = (serfToKnightCounter + serfToKnightRate) % ushort.MaxValue;
+                    reproductionCounter -= delta;
 
-                    if (serfToKnightCounter < serfToKnightRate)
+                    while (reproductionCounter < 0)
                     {
-                        ++knightsToSpawn;
+                        serfToKnightCounter = (serfToKnightCounter + serfToKnightRate) % ushort.MaxValue;
 
-                        if (knightsToSpawn > 2)
-                            knightsToSpawn = 2;
-                    }
-
-                    if (knightsToSpawn == 0)
-                    {
-                        /* Create unassigned serf */
-                        SpawnSerf(null, null, false);
-                    }
-                    else
-                    {
-                        /* Create knight serf */
-                        Pointer<Serf> serf = new Pointer<Serf>();
-                        Pointer<Inventory> inventory = new Pointer<Inventory>();
-
-                        if (SpawnSerf(serf, inventory, true))
+                        if (serfToKnightCounter < serfToKnightRate)
                         {
-                            if (inventory.Value.GetCountOf(Resource.Type.Sword) != 0 &&
-                                inventory.Value.GetCountOf(Resource.Type.Shield) != 0)
+                            ++knightsToSpawn;
+
+                            if (knightsToSpawn > 2)
+                                knightsToSpawn = 2;
+                        }
+
+                        if (knightsToSpawn == 0)
+                        {
+                            /* Create unassigned serf */
+                            SpawnSerf(null, null, false);
+                        }
+                        else
+                        {
+                            /* Create knight serf */
+                            Pointer<Serf> serf = new Pointer<Serf>();
+                            Pointer<Inventory> inventory = new Pointer<Inventory>();
+
+                            if (SpawnSerf(serf, inventory, true))
                             {
-                                --knightsToSpawn;
-                                inventory.Value.PromoteSerfToKnight(serf.Value);
+                                if (inventory.Value.GetCountOf(Resource.Type.Sword) != 0 &&
+                                    inventory.Value.GetCountOf(Resource.Type.Shield) != 0)
+                                {
+                                    --knightsToSpawn;
+                                    inventory.Value.PromoteSerfToKnight(serf.Value);
+                                }
                             }
                         }
+
+                        reproductionCounter += (int)reproductionReset;
                     }
 
-                    reproductionCounter += (int)reproductionReset;
+                    // update emergency program
+                    UpdateEmergencyProgram();
                 }
 
-                // update emergency program
-                UpdateEmergencyProgram();
-            }
+                /* Update timers */
+                List<int> timersToErase = new List<int>();
 
-            /* Update timers */
-            List<int> timersToErase = new List<int>();
-
-            for (int i = 0; i < timers.Count; ++i)
-            {
-                timers[i].Timeout -= delta;
-
-                if (timers[i].Timeout < 0)
+                for (int i = 0; i < timers.Count; ++i)
                 {
-                    /* Timer has expired. */
-                    /* TODO box (+ pos) timer */
-                    AddNotification(Message.Type.CallToLocation, timers[i].Pos, 0);
-                    timersToErase.Add(i);
-                }
-            }
+                    timers[i].Timeout -= delta;
 
-            for (int i = timersToErase.Count - 1; i >= 0; --i)
-                timers.RemoveAt(timersToErase[i]);
+                    if (timers[i].Timeout < 0)
+                    {
+                        /* Timer has expired. */
+                        /* TODO box (+ pos) timer */
+                        AddNotification(Message.Type.CallToLocation, timers[i].Pos, 0);
+                        timersToErase.Add(i);
+                    }
+                }
+
+                for (int i = timersToErase.Count - 1; i >= 0; --i)
+                    timers.RemoveAt(timersToErase[i]);
+            }
+            catch (Exception ex)
+            {
+                throw new ExceptionFreeserf(Game, "player", ex);
+            }
         }
 
         void UpdateEmergencyProgram()
@@ -1527,7 +1559,7 @@ namespace Freeserf
 
                     // If the emergency program gets activated we cancel all
                     // transported resources to non-essential buildings.
-                    foreach (var building in Game.GetPlayerBuildings(this))
+                    foreach (var building in Game.GetPlayerBuildings(this).ToArray())
                     {
                         if (building.IsDone())
                             continue;
@@ -1538,7 +1570,8 @@ namespace Freeserf
                         {
                             var flag = Game.GetFlag(building.GetFlagIndex());
 
-                            Game.FlagResetTransport(flag);
+                            if (flag != null)
+                                Game.FlagResetTransport(flag);
 
                             // Set priority for construction materials to 0
                             building.SetPriorityInStock(0, 0u);

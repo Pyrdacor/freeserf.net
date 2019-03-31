@@ -1782,7 +1782,7 @@ namespace Freeserf
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Hut);
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Tower);
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Fortress);
-            count -= (int)player.Game.GetPlayerBuildings(player).Count(b => b.IsMilitary() && !b.HasKnight());
+            count -= player.Game.GetPlayerBuildings(player).Count(b => b.IsMilitary(false) && !b.HasKnight());
 
             return Math.Max(0, count);
         }

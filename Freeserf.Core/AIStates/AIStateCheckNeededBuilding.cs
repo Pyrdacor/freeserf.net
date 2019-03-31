@@ -328,14 +328,15 @@ namespace Freeserf.AIStates
                             return CheckResult.Needed;
                         break;
                     case Building.Type.SteelSmelter:
-                        if (count == 0 && game.GetResourceAmountInInventories(player, Resource.Type.Coal) != 0 &&
-                            game.GetResourceAmountInInventories(player, Resource.Type.IronOre) != 0)
+                        if (count == 0 && 
+                            (game.GetResourceAmountInInventories(player, Resource.Type.Coal) != 0 || player.GetCompletedBuildingCount(Building.Type.CoalMine) != 0) &&
+                            (game.GetResourceAmountInInventories(player, Resource.Type.IronOre) != 0 || player.GetCompletedBuildingCount(Building.Type.IronMine) != 0))
                             return CheckResult.Needed;
                         break;
                     case Building.Type.WeaponSmith:
                         if (count == 0 && player.GetCompletedBuildingCount(Building.Type.ToolMaker) != 0 &&
-                            game.GetPossibleFreeKnightCount(player) == 0)
-                            return NeedBuilding(ai, game, player, type);
+                            game.GetPossibleFreeKnightCount(player) < 4)
+                            return CheckResult.Needed;
                         break;
                 }
 

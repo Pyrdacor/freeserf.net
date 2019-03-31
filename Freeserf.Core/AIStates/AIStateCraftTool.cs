@@ -143,12 +143,8 @@ namespace Freeserf.AIStates
             player.SetPlanksToolmaker(ushort.MaxValue);
             player.SetSteelToolmaker(ushort.MaxValue);
 
-            // set all tool priorities to 0
-            for (int i = 0; i < 9; ++i)
-                player.SetToolPriority(i, ushort.MinValue);
-
             // set the priority for the tool to 100%
-            player.SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
+            player.SetFullToolPriority(tool);
 
             if (++tries == 20) // don't block for too long
                 Kill(ai);

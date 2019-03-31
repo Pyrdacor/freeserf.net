@@ -233,26 +233,26 @@ namespace Freeserf.AIStates
                     default:
                     case AI.AttackTarget.Random:
                         // with random we won't check for secondary targets
-                        AttackRandom(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        AttackRandom(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         Kill(ai);
                         break;
                     case AI.AttackTarget.SmallMilitary:
-                        foundTarget = AttackSmallMilitary(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackSmallMilitary(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.FoodProduction:
-                        foundTarget = AttackFoodProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackFoodProduction(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.MaterialProduction:
-                        foundTarget = AttackMaterialProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackMaterialProduction(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Mines:
-                        foundTarget = AttackMines(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackMines(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.WeaponProduction:
-                        foundTarget = AttackWeaponProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackWeaponProduction(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Stocks:
-                        foundTarget = AttackStocks(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackStocks(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                 }
 
@@ -266,38 +266,38 @@ namespace Freeserf.AIStates
                 {
                     default:
                     case AI.AttackTarget.Random:
-                        AttackRandom(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        AttackRandom(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.SmallMilitary:
-                        foundTarget = AttackSmallMilitary(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackSmallMilitary(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.FoodProduction:
-                        foundTarget = AttackFoodProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackFoodProduction(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.MaterialProduction:
-                        foundTarget = AttackMaterialProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackMaterialProduction(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Mines:
-                        foundTarget = AttackMines(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackMines(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.WeaponProduction:
-                        foundTarget = AttackWeaponProduction(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackWeaponProduction(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                     case AI.AttackTarget.Stocks:
-                        foundTarget = AttackStocks(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                        foundTarget = AttackStocks(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
                         break;
                 }
 
                 if (!foundTarget)
-                    AttackRandom(game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
+                    AttackRandom(ai, game, player, (int)playerInfo.Intelligence, (uint)targetPlayerIndex);
             }
 
             Kill(ai);
         }
 
-        bool Attack(Game game, Player player, uint targetPosition)
+        bool Attack(AI ai, Game game, Player player, uint targetPosition)
         {
-            if (!player.PrepareAttack(targetPosition))
+            if (!player.PrepareAttack(targetPosition, 4 + 3 * Misc.Max(ai.Aggressivity, ai.ExpandFocus, ai.MilitaryFocus, ai.MilitarySkill + 1)))
                 return false;
 
             player.StartAttack();
@@ -305,7 +305,7 @@ namespace Freeserf.AIStates
             return true;
         }
 
-        bool AttackRandom(Game game, Player player, List<Building> possibleTargets)
+        bool AttackRandom(AI ai, Game game, Player player, List<Building> possibleTargets)
         {
             List<uint> bestTargets = new List<uint>();
             int bestBuildingScore = int.MinValue;
@@ -339,48 +339,48 @@ namespace Freeserf.AIStates
 
             uint targetPosition = bestTargets[game.RandomInt() % bestTargets.Count];
 
-            return Attack(game, player, targetPosition);
+            return Attack(ai, game, player, targetPosition);
         }
 
-        void AttackRandom(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        void AttackRandom(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             var targetPlayer = game.GetPlayer(targetPlayerIndex);
             var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(b => b.IsMilitary(true)).ToList();
 
-            AttackRandom(game, player, targetPlayerMilitaryBuildings);
+            AttackRandom(ai, game, player, targetPlayerMilitaryBuildings);
         }
 
-        bool AttackSmallMilitary(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        bool AttackSmallMilitary(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackFoodProduction(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        bool AttackFoodProduction(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackMaterialProduction(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        bool AttackMaterialProduction(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackMines(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        bool AttackMines(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackWeaponProduction(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        bool AttackWeaponProduction(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;
         }
 
-        bool AttackStocks(Game game, Player player, int intelligence, uint targetPlayerIndex)
+        bool AttackStocks(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             // TODO
             return false;

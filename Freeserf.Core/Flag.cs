@@ -831,102 +831,109 @@ namespace Freeserf
 
         public void Update()
         {
-            /* Count and store in bitfield which directions
-               have strictly more than 0,1,2,3 slots waiting. */
-            int[] resWaiting = new int[4] { 0, 0, 0, 0 };
-
-            for (int j = 0; j < FLAG_MAX_RES_COUNT; ++j)
+            try
             {
-                if (this.slot[j].Type != Resource.Type.None && this.slot[j].Dir != Direction.None)
+                /* Count and store in bitfield which directions
+                   have strictly more than 0,1,2,3 slots waiting. */
+                int[] resWaiting = new int[4] { 0, 0, 0, 0 };
+
+                for (int j = 0; j < FLAG_MAX_RES_COUNT; ++j)
                 {
-                    Direction resDir = slot[j].Dir;
-
-                    for (int k = 0; k < 4; k++)
+                    if (this.slot[j].Type != Resource.Type.None && this.slot[j].Dir != Direction.None)
                     {
-                        if (!Misc.BitTest(resWaiting[k], (int)resDir))
+                        Direction resDir = slot[j].Dir;
+
+                        for (int k = 0; k < 4; k++)
                         {
-                            resWaiting[k] |= Misc.Bit((int)resDir);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            /* Count of total resources waiting at flag */
-            int waitingCount = 0;
-
-            if (HasResources())
-            {
-                endPoint &= ~Misc.Bit(7);
-
-                for (int slot = 0; slot < FLAG_MAX_RES_COUNT; slot++)
-                {
-                    if (this.slot[slot].Type != Resource.Type.None)
-                    {
-                        ++waitingCount;
-
-                        /* Only schedule the slot if it has not already
-                         been scheduled for fetch. */
-                        int resDir = (int)this.slot[slot].Dir;
-
-                        if (resDir < 0)
-                        {
-                            if (this.slot[slot].Dest != 0)
+                            if (!Misc.BitTest(resWaiting[k], (int)resDir))
                             {
-                                /* Destination is known */
-                                ScheduleSlotToKnownDest(slot, resWaiting);
-                            }
-                            else
-                            {
-                                /* Destination is not known */
-                                ScheduleSlotToUnknownDest(slot);
+                                resWaiting[k] |= Misc.Bit((int)resDir);
+                                break;
                             }
                         }
                     }
                 }
-            }
 
-            /* Update transporter flags, decide if serf needs to be sent to road */
-            var cycle = DirectionCycleCCW.CreateDefault();
+                /* Count of total resources waiting at flag */
+                int waitingCount = 0;
 
-            foreach (Direction j in cycle)
-            {
-                if (HasPath(j))
+                if (HasResources())
                 {
-                    if (SerfRequested(j))
+                    endPoint &= ~Misc.Bit(7);
+
+                    for (int slot = 0; slot < FLAG_MAX_RES_COUNT; slot++)
                     {
-                        if (Misc.BitTest(resWaiting[2], (int)j))
+                        if (this.slot[slot].Type != Resource.Type.None)
                         {
+                            ++waitingCount;
+
+                            /* Only schedule the slot if it has not already
+                             been scheduled for fetch. */
+                            int resDir = (int)this.slot[slot].Dir;
+
+                            if (resDir < 0)
+                            {
+                                if (this.slot[slot].Dest != 0)
+                                {
+                                    /* Destination is known */
+                                    ScheduleSlotToKnownDest(slot, resWaiting);
+                                }
+                                else
+                                {
+                                    /* Destination is not known */
+                                    ScheduleSlotToUnknownDest(slot);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /* Update transporter flags, decide if serf needs to be sent to road */
+                var cycle = DirectionCycleCCW.CreateDefault();
+
+                foreach (Direction j in cycle)
+                {
+                    if (HasPath(j))
+                    {
+                        if (SerfRequested(j))
+                        {
+                            if (Misc.BitTest(resWaiting[2], (int)j))
+                            {
+                                if (waitingCount >= 7)
+                                {
+                                    transporter &= Misc.Bit((int)j);
+                                }
+                            }
+                            else if (FreeTransporterCount(j) != 0)
+                            {
+                                transporter |= Misc.Bit((int)j);
+                            }
+                        }
+                        else if (FreeTransporterCount(j) == 0 || Misc.BitTest(resWaiting[2], (int)j))
+                        {
+                            int maxTransporters = MaxTransporters[LengthCategory(j)];
+
+                            if (FreeTransporterCount(j) < (uint)maxTransporters && !SerfRequestFail())
+                            {
+                                if (!CallTransporter(j, IsWaterPath(j)))
+                                    transporter |= Misc.Bit(7);
+                            }
+
                             if (waitingCount >= 7)
                             {
                                 transporter &= Misc.Bit((int)j);
                             }
                         }
-                        else if (FreeTransporterCount(j) != 0)
+                        else
                         {
                             transporter |= Misc.Bit((int)j);
                         }
                     }
-                    else if (FreeTransporterCount(j) == 0 || Misc.BitTest(resWaiting[2], (int)j))
-                    {
-                        int maxTransporters = MaxTransporters[LengthCategory(j)];
-
-                        if (FreeTransporterCount(j) < (uint)maxTransporters && !SerfRequestFail()) 
-                        {
-                            if (!CallTransporter(j, IsWaterPath(j)))
-                                transporter |= Misc.Bit(7);
-                        }
-
-                        if (waitingCount >= 7)
-                        {
-                            transporter &= Misc.Bit((int)j);
-                        }
-                    }
-                    else
-                    {
-                        transporter |= Misc.Bit((int)j);
-                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new ExceptionFreeserf(Game, "flag", ex);
             }
         }
 

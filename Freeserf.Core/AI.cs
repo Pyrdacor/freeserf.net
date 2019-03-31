@@ -545,7 +545,7 @@ namespace Freeserf
                     MilitarySkill = 2;
                     MilitaryFocus = 2;
                     ExpandFocus = 2;
-                    DefendFocus = 2;
+                    DefendFocus = 1;
                     BuildingFocus = 2;
                     GoldFocus = 2;
                     SteelFocus = 2;
@@ -602,6 +602,58 @@ namespace Freeserf
         public void HandleEmptyMine(uint mineIndex)
         {
             PushState(CreateState(State.DestroyUselessBuildings, mineIndex));
+        }
+
+        public void NotifyCraftedTool(Resource.Type tool)
+        {
+            var currentState = states.Peek();
+
+            if (currentState != null && currentState is AIStates.AIStateCraftTool)
+            {
+                currentState.Kill(this);
+            }
+
+            if (HardTimes())
+            {
+                var game = player.Game;
+
+                // First we craft a scythe or pincer and hammer.
+                // After that we craft another axe and pick.
+
+                if (player.GetSerfCount(Serf.Type.WeaponSmith) == 0)
+                {
+                    if (tool != Resource.Type.Pincer && !game.HasAnyOfResource(player, Resource.Type.Pincer))
+                    {
+                        player.SetFullToolPriority(Resource.Type.Pincer);
+                        return;
+                    }
+                    else if (tool != Resource.Type.Hammer && !game.HasAnyOfResource(player, Resource.Type.Hammer))
+                    {
+                        player.SetFullToolPriority(Resource.Type.Hammer);
+                        return;
+                    }
+                }
+
+                if (tool != Resource.Type.Scythe && player.GetSerfCount(Serf.Type.Farmer) == 0 && !game.HasAnyOfResource(player, Resource.Type.Scythe))
+                {
+                    player.SetFullToolPriority(Resource.Type.Hammer);
+                    return;
+                }
+
+                if (tool != Resource.Type.Axe && player.GetSerfCount(Serf.Type.Lumberjack) < 2 && !game.HasAnyOfResource(player, Resource.Type.Axe))
+                {
+                    player.SetFullToolPriority(Resource.Type.Axe);
+                    return;
+                }
+
+                if (tool != Resource.Type.Pick && player.GetSerfCount(Serf.Type.Stonecutter) + player.GetSerfCount(Serf.Type.Miner) < 4 && !game.HasAnyOfResource(player, Resource.Type.Pick))
+                {
+                    player.SetFullToolPriority(Resource.Type.Pick);
+                    return;
+                }
+            }
+
+            player.ResetToolPriority();
         }
 
         static bool CheckLinkedBuildings(Building.Type type1, Building.Type type2)
@@ -1010,19 +1062,20 @@ namespace Freeserf
 
             int numMiners = (int)player.GetSerfCount(Serf.Type.Miner);
             int numPicks = game.GetResourceAmountInInventories(player, Resource.Type.Pick);
+            int numWeaponSmiths = (int)player.GetSerfCount(Serf.Type.WeaponSmith);
 
-            if (numMiners + numPicks > 2)
+            if (numMiners + numPicks > 2 && numWeaponSmiths > 0)
                 return false;
 
             bool hasCoalMines = player.GetTotalBuildingCount(Building.Type.CoalMine) != 0;
             bool hasIronMines = player.GetTotalBuildingCount(Building.Type.IronMine) != 0;
 
-            if (hasCoalMines && hasCoalMines && numMiners == 2)
+            if (hasCoalMines && hasIronMines && numMiners >= 2)
             {
                 bool hasFoodSource = player.GetTotalBuildingCount(Building.Type.Fisher) != 0 ||
                     player.GetSerfCount(Serf.Type.Farmer) != 0;
 
-                if (hasFoodSource)
+                if (hasFoodSource && numWeaponSmiths != 0)
                     return false;
             }
 

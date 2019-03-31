@@ -6674,6 +6674,8 @@ namespace Freeserf
                         /* Update resource stats. */
                         player.IncreaseResourceCount((Resource.Type)res);
 
+                        player.NotifyCraftedTool((Resource.Type)res);
+
                         return;
                     }
                     else

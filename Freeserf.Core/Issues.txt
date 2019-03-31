@@ -42,6 +42,8 @@ Flags / buildings / roads:
 - Stonecutters should not be placed near other stonecutters
 - Mines should not be built without miners/picks
 - Mine amount should be limited in relation to food sources. Saw games with dozens of mines but only one fisher. This should not happen.
+- Sometimes the AI tries very hard to build something in a non-linkable place and burns it down and rebuilds it forever (e.g. a fisher behind the pond).
+- Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have all).
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
@@ -55,9 +57,6 @@ Misc:
 - Hard time should be also possible in later game (e.g. after losing land). In this case miners could not be available for iron or coal because
   they are used for gold or stone mines. This must be considered then and maybe those mines should be demolished to free miners.
 - The check stone and gather stone radius of stonecutters should be equal so that stonecutters who won't gather anymore stone should be demolished immediately (this is crucial in hard times).
-- If hard times is disabled with iron and coal mine, the following time may take long until a normal game is possible. Maybe hard times should last
-  until there is a working weaponsmith and a second food source. If for instance the player only has a fisher and focuses on construction material or gold,
-  the rare fish is most of the time distributed to stone or gold mines and therefore no weapons or tools are created for some time. This is bad.
 
 Mining / finding minerals:
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.

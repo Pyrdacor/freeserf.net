@@ -35,10 +35,23 @@ namespace Freeserf.AIStates
         {
             // knight occupation setting 
             // TODO: should change if amount of knights change in relation to number of military buildings
-            int highKnightOccupationPreference = Misc.Max(ai.DefendFocus, ai.Aggressivity, (ai.MilitarySkill + 1) / 2, (ai.MilitaryFocus + 1) / 2);
+            int highKnightOccupationPreference = Misc.Max(ai.ExpandFocus, ai.DefendFocus, ai.Aggressivity, (ai.MilitarySkill + 1) / 2, (ai.MilitaryFocus + 1) / 2);
 
-            if (ai.ExpandFocus == 2 && ai.DefendFocus == 2 && ai.Aggressivity < 2)
-                highKnightOccupationPreference = 1;
+            if (highKnightOccupationPreference != 0)
+            {
+                int numFreeKnights = game.GetPossibleFreeKnightCount(player);
+
+                if (highKnightOccupationPreference == 2 && numFreeKnights < 5)
+                {
+                    highKnightOccupationPreference = 0;
+                }
+                else if (numFreeKnights < 10 - ai.Aggressivity + (ai.MilitarySkill + ai.DefendFocus + 1) / 2)
+                {
+                    --highKnightOccupationPreference;
+                }                
+            }
+
+            int defendingOrientation = Misc.Max(0, ai.DefendFocus - (ai.ExpandFocus + ai.Aggressivity + 1) / 2);
 
             if (highKnightOccupationPreference == 0 || ai.HardTimes())
             {
@@ -46,11 +59,11 @@ namespace Freeserf.AIStates
             }
             else if (highKnightOccupationPreference == 1)
             {
-                player.SetMediumKnightOccupation(ai.DefendFocus < 1);
+                player.SetMediumKnightOccupation(defendingOrientation < 1);
             }
             else if (highKnightOccupationPreference == 2)
             {
-                player.SetHighKnightOccupation(ai.DefendFocus < 2);
+                player.SetHighKnightOccupation(defendingOrientation < 2);
             }
 
             // castle knights
@@ -92,6 +105,15 @@ namespace Freeserf.AIStates
                 player.SetFoodIronmine(ushort.MaxValue);
                 player.SetFoodStonemine(ushort.MinValue);
             }
+            else if ((ai.GoldFocus >= ai.SteelFocus || ai.ConstructionMaterialFocus >= ai.SteelFocus) && player.GetTotalKnightCount() < 15 && game.GetPossibleFreeKnightCount(player) < 5)
+            {
+                // If gold or stone focus is higher than coal/iron focus and we don't have many knights yet and need some more,
+                // we will distribute the food to iron and coal mines a bit longer.
+                player.SetFoodCoalmine(ushort.MaxValue);
+                player.SetFoodGoldmine(ushort.MinValue);
+                player.SetFoodIronmine(ushort.MaxValue);
+                player.SetFoodStonemine(ushort.MinValue);
+            }
             else
             {
                 int focusSum = ai.GoldFocus + System.Math.Max(ai.SteelFocus, ai.MilitaryFocus) + ai.ConstructionMaterialFocus + 4;
@@ -112,17 +134,20 @@ namespace Freeserf.AIStates
             int numBoats = game.GetResourceAmountInInventories(player, Resource.Type.Boat);
             int numPlanks = game.GetResourceAmountInInventories(player, Resource.Type.Plank);
 
-            if (numPlanks < 10)
+            if (!ai.HardTimes()) // In hard times this is set directly when planning a tool.
             {
-                // with low planks we only give planks to constructions (the craft tool state may change that)
-                player.SetPlanksBoatbuilder(ushort.MinValue);
-                player.SetPlanksToolmaker(ushort.MinValue);
-                player.SetPlanksConstruction(ushort.MaxValue); // max
-            }
-            else
-            {
-                // otherwise use the defaults
-                player.ResetPlanksPriority();
+                if (numPlanks < 10)
+                {
+                    // with low planks we only give planks to constructions (the craft tool state may change that)
+                    player.SetPlanksBoatbuilder(ushort.MinValue);
+                    player.SetPlanksToolmaker(ushort.MinValue);
+                    player.SetPlanksConstruction(ushort.MaxValue); // max
+                }
+                else
+                {
+                    // otherwise use the defaults
+                    player.ResetPlanksPriority();
+                }
             }
 
             if (numBoats >= 100 || (numBoats >= 50 && numPlanks < 100) || (numBoats >= 10 && numPlanks < 30))
@@ -190,27 +215,15 @@ namespace Freeserf.AIStates
                 player.SetWheatPigfarm(65500u);
             }
 
-            // TODO: send strongest and knight cycling
+            // send strongest
+            if (ai.DefendFocus != 2 && (ai.MilitarySkill > 0 || ai.MilitaryFocus > ai.DefendFocus))
+                player.SetSendStrongest();
+            else
+                player.DropSendStrongest();
+
+            // TODO: knight cycling
 
             // Note: Toolmaker prios are handled by the CraftTool AI state.
-            // But if hard times are active we force a scythe or a pick.
-            if (ai.HardTimes())
-            {
-                // set all tool priorities to 0
-                for (int i = 0; i < 9; ++i)
-                    player.SetToolPriority(i, ushort.MinValue);
-
-                if (player.GetSerfCount(Serf.Type.Farmer) == 0 && !game.HasAnyOfResource(player, Resource.Type.Scythe))
-                {
-                    // set the priority for the scythe to 100%
-                    player.SetToolPriority(Resource.Type.Scythe - Resource.Type.Shovel, ushort.MaxValue);
-                }
-                else
-                {
-                    // set the priority for the pick to 100%
-                    player.SetToolPriority(Resource.Type.Pick - Resource.Type.Shovel, ushort.MaxValue);
-                }
-            }
 
             Kill(ai);
         }
