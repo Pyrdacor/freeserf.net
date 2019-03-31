@@ -3009,6 +3009,12 @@ namespace Freeserf
         {
             Inventory inventory = Game.GetInventory(s.IdleInStock.InvIndex);
 
+            if (inventory == null)
+            {
+                // TODO: should not happen but actually it does rarely (I guess when the building is burned down in the wrong moment)
+                return;
+            }
+
             if (inventory.GetSerfMode() == 0
                 || inventory.GetSerfMode() == Inventory.Mode.Stop /* in, stop */
                 || inventory.GetSerfQueueLength() >= 3)
@@ -3026,8 +3032,6 @@ namespace Freeserf
                         break;
                     case Type.Knight3:
                         inventory.KnightTraining(this, 500);
-                        break;
-                    case Type.Smelter: /* TODO ??? */
                         break;
                     default:
                         inventory.SerfIdleInStock(this);
