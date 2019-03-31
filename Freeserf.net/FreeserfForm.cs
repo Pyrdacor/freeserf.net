@@ -217,7 +217,6 @@ namespace Freeserf
                     FormBorderStyle = FormBorderStyle.None;
                     WindowState = FormWindowState.Maximized;
                     gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
-                    TopMost = true;
                     BringToFront();
                 }
                 else
@@ -226,7 +225,6 @@ namespace Freeserf
                     FormBorderStyle = FormBorderStyle.FixedDialog;
                     SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
                     gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
-                    TopMost = false;
                 }
             }
             catch (Exception ex)
