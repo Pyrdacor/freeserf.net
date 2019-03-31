@@ -950,6 +950,45 @@ namespace Freeserf
             }
         }
 
+        /// <summary>
+        /// This is used to resolve some traffic loops.
+        /// </summary>
+        public void PutBackToInventory(Inventory inventory)
+        {
+            if (SerfState == State.Walking)
+            {
+                if (s.Walking.Dir1 >= 0)
+                {
+                    if (s.Walking.Dir1 != 6)
+                    {
+                        Direction dir = (Direction)s.Walking.Dir1;
+                        Flag flag = Game.GetFlag(s.Walking.Dest);
+                        flag.CancelSerfRequest(dir);
+
+                        Direction otherDir = flag.GetOtherEndDir(dir);
+                        flag.GetOtherEndFlag(dir).CancelSerfRequest(otherDir);
+                    }
+                }
+                else if (s.Walking.Dir1 == -1)
+                {
+                    Flag flag = Game.GetFlag(s.Walking.Dest);
+                    Building building = flag.GetBuilding();
+                    building.RequestedSerfLost();
+                }
+            }
+            else if (SerfState == State.Transporting || SerfState == State.Delivering)
+            {
+                if (s.Walking.Res != Resource.Type.None)
+                {
+                    Resource.Type res = s.Walking.Res;
+                    uint dest = s.Walking.Dest;
+
+                    Game.CancelTransportedResource(res, dest);
+                    inventory.PushResource(res);
+                }
+            }
+        }
+
         public void AddToDefendingQueue(uint nextKnightIndex, bool pause)
         {
             SetState(State.DefendingCastle);
@@ -3085,7 +3124,9 @@ namespace Freeserf
             if ((!map.HasFlag(Position) && s.Walking.WaitCounter >= 10) ||
                 s.Walking.WaitCounter >= 50)
             {
+                s.Walking.WaitCounter = 0;
                 MapPos pos = Position;
+                List<Serf> loopSerfs = new List<Serf>() { this };
 
                 /* Follow the chain of serfs waiting for each other and
                    see if there is a loop. */
@@ -3099,13 +3140,29 @@ namespace Freeserf
                     }
                     else if (map.GetSerfIndex(pos) == Index)
                     {
+                        /* We found a loop, check if the loop is at an inventory */
+                        foreach (var loopSerf in loopSerfs)
+                        {
+                            if (Game.Map.HasFlag(loopSerf.Position))
+                            {
+                                var flag = Game.GetFlagAtPos(loopSerf.Position);
+
+                                if (flag.HasInventory() && flag.AcceptsSerfs())
+                                {
+                                    loopSerf.PutBackToInventory(flag.GetBuilding().GetInventory());
+                                    loopSerf.FindInventory();
+                                    return;
+                                }
+                            }
+                        }
+
                         /* We have found a loop, try a different direction. */
                         ChangeDirection(dir.Reverse(), false);
                         return;
                     }
 
                     /* Get next serf and follow the chain */
-                    Serf otherSerf = Game.GetSerfAtPos(Position);
+                    Serf otherSerf = Game.GetSerfAtPos(pos);
 
                     if (otherSerf.SerfState != State.Walking &&
                         otherSerf.SerfState != State.Transporting)
@@ -3120,11 +3177,11 @@ namespace Freeserf
                     }
 
                     dir = (Direction)(otherSerf.s.Walking.Dir + 6);
+                    loopSerfs.Add(otherSerf);
                 }
             }
 
             /* Stick to the same direction */
-            s.Walking.WaitCounter = 0;
             ChangeDirection((Direction)(s.Walking.Dir + 6), false);
         }
 

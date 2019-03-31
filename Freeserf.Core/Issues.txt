@@ -6,6 +6,7 @@
 - Sometimes borders remain from the last game (not deleted properly?)
 - In rare cases a flag seem to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
 - Saw a stonecutter building with the burning flames behind it.
+- Sometimes a serf is drawn that is inside the castle (leaving the castle).
 
 
 Non-working code:
@@ -19,6 +20,7 @@ Non-working code:
 - Dragging the minimap will reset the position in most cases
 - Building a road does not allow to end it at the riverside if it is a water path.
 - Click positions in water (no height) are a bit off (this already worked previously!).
+- Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 
 
 UI:
