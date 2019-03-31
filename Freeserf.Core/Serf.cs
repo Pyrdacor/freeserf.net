@@ -3348,7 +3348,9 @@ namespace Freeserf
 
                     /* 31590 */
                     if (s.Walking.Res != Resource.Type.None &&
-                      map.GetObjectIndex(Position) == s.Walking.Dest)
+                        map.GetObjectIndex(Position) == s.Walking.Dest &&
+                        (!Game.GetFlagAtPos(Position).HasInventory() ||
+                        Game.GetFlagAtPos(Position).AcceptsResources()))
                     {
                         /* At resource destination */
                         SetState(State.Delivering);

@@ -4417,22 +4417,22 @@ namespace Freeserf.UI
             switch (action)
             {
                 case Action.ResourceModeIn:
-                    inventory.SetResourceMode(Inventory.Mode.In);
+                    inventory.Game.SetInventoryResourceMode(inventory, Inventory.Mode.In);
                     break;
                 case Action.ResourceModeStop:
-                    inventory.SetResourceMode(Inventory.Mode.Stop);
+                    inventory.Game.SetInventoryResourceMode(inventory, Inventory.Mode.Stop);
                     break;
                 case Action.ResourceModeOut:
-                    inventory.SetResourceMode(Inventory.Mode.Out);
+                    inventory.Game.SetInventoryResourceMode(inventory, Inventory.Mode.Out);
                     break;
                 case Action.SerfModeIn:
-                    inventory.SetSerfMode(Inventory.Mode.In);
+                    inventory.Game.SetInventorySerfMode(inventory, Inventory.Mode.In);
                     break;
                 case Action.SerfModeStop:
-                    inventory.SetSerfMode(Inventory.Mode.Stop);
+                    inventory.Game.SetInventorySerfMode(inventory, Inventory.Mode.Stop);
                     break;
                 case Action.SerfModeOut:
-                    inventory.SetSerfMode(Inventory.Mode.Out);
+                    inventory.Game.SetInventorySerfMode(inventory, Inventory.Mode.Out);
                     break;
                 default:
                     return;
