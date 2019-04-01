@@ -7269,7 +7269,7 @@ namespace Freeserf
                                     Flag dest = Game.GetFlag(other.s.Walking.Dest);
                                     Building building = dest.GetBuilding();
 
-                                    if (!building.HasInventory())
+                                    if (building != null && !building.HasInventory())
                                     {
                                         building.RequestedKnightAttackingOnWalk();
                                     }

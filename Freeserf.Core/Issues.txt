@@ -18,9 +18,11 @@ Non-working code:
 - After game loading the game freezes for some time (few seconds) and then running normally
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
 - Dragging the minimap will reset the position in most cases
+- Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
 - Building a road does not allow to end it at the riverside if it is a water path.
 - Click positions in water (no height) are a bit off (this already worked previously!).
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
+- Sometimes no builder is send to construction sites
 
 
 UI:
@@ -44,6 +46,7 @@ Flags / buildings / roads:
 - Mine amount should be limited in relation to food sources. Saw games with dozens of mines but only one fisher. This should not happen.
 - Sometimes the AI tries very hard to build something in a non-linkable place and burns it down and rebuilds it forever (e.g. a fisher behind the pond).
 - Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have all).
+- Rarely captured buildings are not connected to own road system
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
