@@ -26,11 +26,6 @@ Non-working code:
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
 
 
-UI:
-
-- Savegame filename lengths must be limited to not exceed list width (especially in the ingame save menu).
-
-
 AI:
 
 Flags / buildings / roads:

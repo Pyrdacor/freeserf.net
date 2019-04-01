@@ -24,6 +24,7 @@ namespace Freeserf.UI
     internal class ListSavedFiles : ListBox<GameStore.SaveInfo>
     {
         GameStore saveGame = null;
+        Interface interf = null;
 
         public ListSavedFiles(Interface interf)
             : base(interf)
@@ -33,7 +34,19 @@ namespace Freeserf.UI
             foreach (var saveGame in saveGame.GetSavedGames())
                 items.Add(saveGame);
 
+            this.interf = interf;
+
             Init(interf);
+        }
+
+        public void Update()
+        {
+            items.Clear();
+
+            foreach (var saveGame in saveGame.GetSavedGames())
+                items.Add(saveGame);
+
+            Update(interf);
         }
 
         public string GetFolderPath()

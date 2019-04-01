@@ -32,7 +32,7 @@ namespace Freeserf.UI
         string savedText = "";
 
         public RandomInput(Interface interf)
-            : base(interf, true)
+            : base(interf, 9, true)
         {
             BackgroundColor = new Render.Color(0x23, 0x43, 0x00);
             BackgroundFocusColor = new Render.Color(0x23, 0x43, 0x00);

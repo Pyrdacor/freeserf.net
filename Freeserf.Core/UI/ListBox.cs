@@ -78,6 +78,26 @@ namespace Freeserf.UI
             }
         }
 
+        protected void Update(Interface interf)
+        {
+            int y = 3;
+
+            for (int i = 0; i < items.Count; ++i)
+            {
+                if (i == textEntries.Count)
+                {
+                    var textField = new TextField(interf, 1);
+
+                    AddChild(textField, 3, y, true);
+                    textEntries.Add(textField);
+                }
+
+                y += 9;
+            }
+
+            SetRedraw();
+        }
+
         public void SetSelectionHandler(Action<T> selectionHandler)
         {
             this.selectionHandler = selectionHandler;
@@ -145,13 +165,25 @@ namespace Freeserf.UI
                     textEntries[i].Displayed = y < (Height - 6);
                 }
 
-                textEntries[i].Text = items[i].ToString();
+                textEntries[i].Text = TrimText(items[i].ToString());
 
                 // TODO
                 //textEntries[i].Color = (i == selectedItem) ? Color.Black : colorText;
             }
 
             selectionBackground.Visible = Displayed && selectedItem != -1 && textEntries[selectedItem].Displayed;
+        }
+
+        string TrimText(string text)
+        {
+            int width = text.Length * 8;
+
+            if (width <= Width - 3)
+                return text;
+
+            int maxLength = (Width - 3) / 8;
+
+            return text.Substring(0, maxLength - 2) + "..";
         }
 
         protected override bool HandleClickLeft(int x, int y)

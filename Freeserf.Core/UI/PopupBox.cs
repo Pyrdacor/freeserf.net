@@ -429,6 +429,33 @@ namespace Freeserf.UI
             }
         }
 
+        static bool FileInputFilter(char key, TextInput textInput)
+        {
+            if (textInput.Text.Length + 1 > (textInput.Width - textInput.Padding.X) / 8)
+            {
+                return false;
+            }
+
+            if ((key >= '0' && key <= '9') ||
+                (key >= 'A' && key <= 'Z') ||
+                (key == 'Ä' || key == 'Ö' || key == 'Ü') ||
+                (key == 'ä' || key == 'ö' || key == 'ü') ||
+                (key == ' ' || key == '-'))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        static string TrimFileName(string text, int width)
+        {
+            if (text.Length * 8 <= width)
+                return text;
+
+            return text.Substring(0, width / 8);
+        }
+
         public PopupBox(Interface interf)
             : base
             (
@@ -443,7 +470,7 @@ namespace Freeserf.UI
             this.interf = interf;
             MiniMap = new MinimapGame(interf, interf.Game);
             fileList = new ListSavedFiles(interf);
-            fileField = new TextInput(interf);
+            fileField = new TextInput(interf, 8);
 
             CurrentTransportPriorityItem = 8;
             CurrentInventoryPriorityItem = 15;
@@ -452,17 +479,19 @@ namespace Freeserf.UI
 
             /* Initialize minimap */
             MiniMap.SetSize(128, 128);
-            AddChild(MiniMap, 8, 9, false);
+            AddChild(MiniMap, 8, 8, false);
 
-            fileList.SetSize(120, 100);
+            fileList.SetSize(124, 102);
             fileList.SetSelectionHandler((GameStore.SaveInfo item) =>
             {
-                fileField.Text = Path.GetFileNameWithoutExtension(item.Path);
+                fileField.Text = TrimFileName(Path.GetFileNameWithoutExtension(item.Path), fileField.Width - 3);
             });
-            AddChild(fileList, 12, 22, false);
+            AddChild(fileList, 10, 22, false);
 
-            fileField.SetSize(120, 10);
-            AddChild(fileField, 12, 124, false);
+            fileField.Padding = new Position(3, 1);
+            fileField.SetSize(124, 11);
+            fileField.SetFilter(FileInputFilter);
+            AddChild(fileField, 10, 125, false);
 
             flipButton = new Button(interf, 16, 16, Data.Resource.Icon, 61u, 1);
             flipButton.Clicked += FlipButton_Clicked;
@@ -692,6 +721,9 @@ namespace Freeserf.UI
             MiniMap.Displayed = box == Type.Map || box == Type.ResourceStatistics || box == Type.PlayerStatistics;
             fileList.Displayed = box == Type.LoadSave;
             fileField.Displayed = box == Type.LoadSave;
+
+            if (box == Type.LoadSave)
+                fileList.Update();
 
             SetBackground(BackgroundFromType());
 

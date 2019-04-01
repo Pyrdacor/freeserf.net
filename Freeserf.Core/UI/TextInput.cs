@@ -40,14 +40,16 @@ namespace Freeserf.UI
         Render.IColoredRect background = null;
         readonly List<TextField> textLines = new List<TextField>();
         readonly Interface interf = null;
+        int characterGapSize = 9;
         bool useSpecialDigits = false;
         
-        public TextInput(Interface interf, bool useSpecialDigits = false)
+        public TextInput(Interface interf, int characterGapSize = 9, bool useSpecialDigits = false)
             : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             background.Layer = Layer;
             this.interf = interf;
+            this.characterGapSize = characterGapSize;
             this.useSpecialDigits = useSpecialDigits;
         }
 
@@ -116,6 +118,12 @@ namespace Freeserf.UI
             }
         }
 
+        public Position Padding
+        {
+            get;
+            set;
+        } = new Position(0, 0);
+
         protected override void Layout()
         {
             base.Layout();
@@ -148,10 +156,10 @@ namespace Freeserf.UI
             else
                 background.Color = colorBackground;
 
-            int numMaxCharsPerLine = (Width < 8) ? 0 : 1 + (Width - 8) / 9;
+            int numMaxCharsPerLine = (Width - Padding.X < 8) ? 0 : 1 + (Width - Padding.X - 8) / characterGapSize;
             string str = text;
-            int cx = 0;
-            int cy = 0;
+            int cx = Padding.X;
+            int cy = Padding.Y;
 
             int textLineIndex = 0;
 
@@ -164,7 +172,7 @@ namespace Freeserf.UI
 
                 if (textLineIndex == textLines.Count)
                 {
-                    var newLine = new TextField(interf, 2, 9, useSpecialDigits);
+                    var newLine = new TextField(interf, 2, characterGapSize, useSpecialDigits);
 
                     textLines.Add(newLine);
                     AddChild(newLine, cx, cy);
@@ -180,7 +188,7 @@ namespace Freeserf.UI
 
                 ++textLineIndex;
 
-                cy += 9;
+                cy += characterGapSize;
             }
 
             // ensure that the other lines are not visible (they can be reused later by just setting Displayed to true)
