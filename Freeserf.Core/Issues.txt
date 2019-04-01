@@ -30,7 +30,6 @@ AI:
 
 Flags / buildings / roads:
 - Linking flags should also allow for merging paths
-- Sometimes a building is build in a spot where the flag could not be linked and burned down afterwards (multiple times). This was fixed but it seems that it does still occur.
 - AIs with much resources build so much buildings at a time that no one is finished in a reasonable time. Maybe limit the number of constructed buildings. This will also relax traffic a bit.
 - AIs that prefer farms seem to build unlimited (at least way too much) farms. (seems to be fixed)
 - First stock is build too early
@@ -141,6 +140,20 @@ TODO:
 - End game screens, Intro, Outro, etc
 	- AI players and other human players should be able to surrender
 	- Missions should have targets to reach to get the win (e.g. less than x enemy buildings left, etc)
+
+
+Really smart AIs should:
+
+- Consider nearby enemies or closest enemy direction
+- Consider mountains / water as natural defending shields
+- Consider waiting till humans have placed their castle to avoid being crushed by a nearby placed castle
+	- Either wait to build own castle
+	- Or wait to build buildings inside territory
+- Put more thoughts into
+	- Finding attack targets
+	- Adjusting settings
+	- Place buildings
+	- etc
 
 
 Exceptions:

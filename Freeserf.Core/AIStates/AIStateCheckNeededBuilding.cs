@@ -433,7 +433,9 @@ namespace Freeserf.AIStates
                         if (focus == 0 && numHuts == 0)
                             focus = 1;
 
-                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / 250 + (focus + 1) * ai.GameTime / (600 * Global.TICKS_PER_SEC) - 1 &&
+                        float gameTimeFactor = ai.GameTime / (20.0f * Global.TICKS_PER_MIN);
+
+                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / (225 - Math.Min(80, 5 + Misc.Round(gameTimeFactor * gameTimeFactor))) + (focus + 1) * ai.GameTime / (560 * Global.TICKS_PER_SEC) - 1 &&
                             ai.GameTime > (90 - intelligence - focus * 15) * Global.TICKS_PER_SEC)
                         {
                             return NeedBuilding(ai, game, player, type);
