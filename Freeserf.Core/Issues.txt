@@ -61,7 +61,7 @@ Mining / finding minerals:
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.
 - In hard times the search for mountains should be better (look specific for coal and iron spots).
 - Flags for geologists are too far away from mountains.
-- Looking for mineral spots and actually building mines should be two separate steps (there are already but at the moment the FindOre state also builds the mine).
+- Remove mines from AIStateBuildBuilding as AIStateFindMinerals handles them.
 - Sometimes there are way too many geologist out there. This also causes traffic. It seems that every single hammer is used to train a geologist.
 
 Finish attacking logic!
@@ -116,6 +116,7 @@ Missing stuff:
 - mine elevator/miner animation
 - ground analysis for local spectators?
 - possible builds for local spectators?
+- disable some features in multiplayer (e.g. game speed)
 
 
 Nice to have:
@@ -130,7 +131,6 @@ TODO:
 
 - Check/improve map position selection (clicks, minimap clicks, centering)
 - Finish AIs
-- Finish rendering of fighting serfs (additional serf stuff)
 - Finish rendering of all additional stuff for all buildings (only mine elevator drawing is not perfect yet)
 - Add more game options (like tutorial)
 - Improve/fix sound and add music/sound players for all operating systems
@@ -143,9 +143,9 @@ TODO:
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
 - Feature to record a game and replay/watch it (like watching an AIvsAI game)
-- Crash handler:
-	- Should try to continue without crashing
 - End game screens, Intro, Outro, etc
+	- AI players and other human players should be able to surrender
+	- Missions should have targets to reach to get the win (e.g. less than x enemy buildings left, etc)
 
 
 Exceptions:
