@@ -1,3 +1,44 @@
+Version 1.9.12:
+===============
+
+- Improved AI mine building
+- Fighting flashes are now displayed correctly
+- Inventory modes (in, stop, out) now work correctly
+
+
+Version 1.9.11:
+===============
+
+- Improved AI decisions in early game with low supplies
+- Improved AI tool making
+- Fixed some bugs
+- Fixed traffic loops near a stock or castle
+
+
+Version 1.9.10:
+===============
+
+- Fixed sailor behavior
+- Fixed several crashes
+- The game window is no longer blocking other windows in fullscreen mode
+
+
+Version 1.9.9:
+==============
+
+- When a building is demolished, the holder now returns back to the castle
+- AIs won't build military buildings too close to each other anymore
+- The amount of attacking knights is now displayed in the start attack popup
+
+
+Version 1.9.8:
+==============
+
+- Fixed many crashes
+- Crashes are better handled
+- AIs will now build larger military buildings
+
+
 Version 1.9.7:
 ==============
 
