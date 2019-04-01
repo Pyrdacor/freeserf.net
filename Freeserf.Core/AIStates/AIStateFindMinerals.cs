@@ -58,6 +58,23 @@ namespace Freeserf.AIStates
             Building.Type.StoneMine
         };
 
+        bool CanBuild(Game game, Player player)
+        {
+            int numPossibleMiners = (int)player.GetSerfCount(Serf.Type.Miner) + game.GetResourceAmountInInventories(player, Resource.Type.Pick);
+            int numMines = (int)player.GetTotalBuildingCount(Building.Type.GoldMine) + (int)player.GetTotalBuildingCount(Building.Type.IronMine) +
+                (int)player.GetTotalBuildingCount(Building.Type.CoalMine) + (int)player.GetTotalBuildingCount(Building.Type.StoneMine);
+
+            return numMines < numPossibleMiners;
+        }
+
+        bool CanBuildAtSpot(Game game, Player player, uint spot, int maxInArea = 1)
+        {
+            var mines = game.Map.FindInArea(spot, 4, FindMine, 1);
+            var mine = MineTypes[(int)mineralType - 1];
+
+            return mines.Count(m => game.GetBuilding((uint)m).BuildingType == mine) < maxInArea;
+        }
+
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             if (mineralType == Map.Minerals.None)
@@ -71,20 +88,22 @@ namespace Freeserf.AIStates
             var mineType = MineTypes[(int)mineralType - 1];
             var largeSpots = AI.GetMemorizedMineralSpots(mineralType, true).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index).ToList();
             var smallSpots = AI.GetMemorizedMineralSpots(mineralType, false).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index && !largeSpots.Contains(s)).ToList();
-            bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_SEC + playerInfo.Intelligence * 30 * Global.TICKS_PER_SEC) || ai.StupidDecision();
+            bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_MIN + playerInfo.Intelligence * 30 * Global.TICKS_PER_MIN) || ai.StupidDecision();
 
-            if (ai.HardTimes() && smallSpots.Count > 1 && ai.GameTime >= 10 * Global.TICKS_PER_MIN)
+            if (ai.HardTimes() && ((smallSpots.Count > 0 && ai.GameTime >= 60 * Global.TICKS_PER_MIN) || (smallSpots.Count > 3 && ai.GameTime >= 35 * Global.TICKS_PER_MIN)))
                 considerSmallSpots = true;
 
             while (true)
             {
+                bool canBuild = CanBuild(game, player);
+
                 // look for memorized large spot
-                if (largeSpots.Count > 0)
+                if (canBuild && largeSpots.Count > 0)
                 {
                     int index = game.GetRandom().Next() % largeSpots.Count;
                     spot = largeSpots[index];
 
-                    if (game.BuildBuilding(spot, mineType, player))
+                    if (CanBuildAtSpot(game, player, spot, 1 + (int)ai.GameTime / (60 * Global.TICKS_PER_MIN)) && game.BuildBuilding(spot, mineType, player))
                     {
                         Kill(ai);
                         break;
@@ -92,12 +111,12 @@ namespace Freeserf.AIStates
 
                     largeSpots.RemoveAt(index);
                 }
-                else if (considerSmallSpots && smallSpots.Count > 0)
+                else if (canBuild && considerSmallSpots && smallSpots.Count > 0)
                 {
                     int index = game.GetRandom().Next() % smallSpots.Count;
                     spot = smallSpots[index];
 
-                    if (game.BuildBuilding(spot, mineType, player))
+                    if (CanBuildAtSpot(game, player, spot, 1 + (int)ai.GameTime / (60 * Global.TICKS_PER_MIN)) && game.BuildBuilding(spot, mineType, player))
                     {
                         Kill(ai);
                         break;
@@ -105,7 +124,7 @@ namespace Freeserf.AIStates
 
                     smallSpots.RemoveAt(index);
                 }
-                else
+                else if (canBuild || largeSpots.Count < 6)
                 {
                     // no valid mineral spots found -> send geologists
                     var geologists = game.GetPlayerSerfs(player).Where(s => s.GetSerfType() == Serf.Type.Geologist).ToList();
@@ -202,6 +221,15 @@ namespace Freeserf.AIStates
             {
                 Success = map.HasFlag(pos),
                 Data = pos
+            };
+        }
+
+        Map.FindData FindMine(Map map, uint pos)
+        {
+            return new Map.FindData()
+            {
+                Success = map.HasBuilding(pos) && FindMountain(map, pos),
+                Data = map.GetObjectIndex(pos)
             };
         }
 

@@ -555,7 +555,7 @@ namespace Freeserf.AIStates
             {
                 var randomBuilding = buildings[game.RandomInt() % buildings.Count];
 
-                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, AIStateFindMinerals.MineTypes[(int)mineral], maxInArea))
+                if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 9, AIStateFindMinerals.MineTypes[(int)mineral - 1], maxInArea))
                 {
                     if (MineralsInArea(game.Map, randomBuilding.Position, 9, mineral, FindMineral, 1) > 0)
                     {

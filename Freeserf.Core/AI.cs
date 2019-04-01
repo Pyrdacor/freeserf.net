@@ -1064,6 +1064,11 @@ namespace Freeserf
             int numPicks = game.GetResourceAmountInInventories(player, Resource.Type.Pick);
             int numWeaponSmiths = (int)player.GetSerfCount(Serf.Type.WeaponSmith);
 
+            if (game.GetPossibleFreeKnightCount(player) >= 10 && numPicks > 0 &&
+                game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 12 &&
+                game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 8)
+                return false;
+
             if (numMiners + numPicks > 2 && numWeaponSmiths > 0)
                 return false;
 
