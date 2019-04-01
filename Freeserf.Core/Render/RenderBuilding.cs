@@ -1166,13 +1166,13 @@ namespace Freeserf.Render
 
                         var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
 
-                        additionalSprites[0].X = renderPosition.X + info.OffsetX - 6;
-                        additionalSprites[0].Y = renderPosition.Y + info.OffsetY - 39;
-                        additionalSprites[0].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
-                        additionalSprites[0].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
-                        additionalSprites[0].BaseLineOffset = 0; // the elevator should be hidden by the mine
-                        additionalSprites[0].Resize(info.Width, info.Height);
-                        additionalSprites[0].Visible = true;
+                        additionalSprites[1].X = renderPosition.X + info.OffsetX - 6;
+                        additionalSprites[1].Y = renderPosition.Y + info.OffsetY - 39;
+                        additionalSprites[1].TextureAtlasOffset = textureAtlasObjects.GetOffset(SpecialObjectOffset + spriteIndex);
+                        additionalSprites[1].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
+                        additionalSprites[1].BaseLineOffset = 0; // the elevator should be hidden by the mine
+                        additionalSprites[1].Resize(info.Width, info.Height);
+                        additionalSprites[1].Visible = true;
 
                         var pos = building.Position;
 

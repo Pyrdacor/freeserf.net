@@ -492,13 +492,15 @@ namespace Freeserf.Render
             }
             else*/
             {
-                if (map.HasSerf(pos) && serf.SerfState != Serf.State.IdleOnPath) // active serf
+                if (map.HasSerf(pos) && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf
                 {
                     if (serf.SerfState == Serf.State.Mining &&
-                        (serf.GetMiningSubstate() == 3 ||
-                        serf.GetMiningSubstate() == 4 ||
-                        serf.GetMiningSubstate() == 9 ||
-                        serf.GetMiningSubstate() == 10))
+                        (serf.GetMiningSubstate() == 0 ||
+                        serf.GetMiningSubstate() == 2 ||
+                        serf.GetMiningSubstate() == 5 ||
+                        serf.GetMiningSubstate() == 6 ||
+                        serf.GetMiningSubstate() == 7 ||
+                        serf.GetMiningSubstate() == 8))
                     {
                         sprite.Visible = false;
                         headSprite.Visible = false;
@@ -627,10 +629,20 @@ namespace Freeserf.Render
                 {
                     SetBaseLineOffset(12);
                 }
+                else if (serf.SerfState == Serf.State.Mining && serf.GetMiningSubstate() == 1)
+                {
+                    int baseLine = GetBuildingBaseLine(building, dataSource, map);
+
+                    if (baseLine != -1)
+                    {
+                        SetBaseLine(baseLine + 1);
+                    }
+                }
                 else
                 {
                     // adjust baseline when walking around a building
-                    if (map.HasBuilding(map.MoveLeft(pos)))
+                    if (map.HasBuilding(map.MoveLeft(pos)) ||
+                        (serf.SerfState == Serf.State.Mining && (serf.GetMiningSubstate() == 3 || serf.GetMiningSubstate() == 10)))
                     {
                         building = game.GetBuildingAtPos(map.MoveLeft(pos));
 

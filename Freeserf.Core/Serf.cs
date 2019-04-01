@@ -5900,7 +5900,7 @@ namespace Freeserf
 
                 switch (s.Mining.Substate)
                 {
-                    case 0:
+                    case 0: // Base state
                         {
                             /* There is a small chance that the miner will
                                not require food and skip to state 2. */
@@ -5918,7 +5918,7 @@ namespace Freeserf
                             Counter += 100 + (r & 0x1ff);
                             break;
                         }
-                    case 1:
+                    case 1: // Wait idle or initiate mining by consuming food
                         if (building.UseResourceInStock(0))
                         {
                             /* Eat the food. */
@@ -5932,36 +5932,39 @@ namespace Freeserf
                             map.SetSerfIndex(Position, (int)Index);
                             Animation = 98;
                             Counter += 256;
-                            if (Counter < 0) Counter = 255;
+
+                            if (Counter < 0)
+                                Counter = 255;
                         }
                         break;
-                    case 2:
+                    case 2: // Initiate mining without food
                         s.Mining.Substate = 3;
                         map.SetSerfIndex(Position, (int)Index);
                         Animation = 125;
                         Counter = CounterFromAnimation[Animation];
                         break;
-                    case 3:
+                    case 3: // Walk to elevator
                         s.Mining.Substate = 4;
                         building.StopActivity();
                         Animation = 126;
                         Counter = 304; /* TODO CounterFromAnimation[126] == 303 */
                         break;
-                    case 4:
+                    case 4: // Elevator moves down
                         {
                             building.StartPlayingSfx();
                             map.SetSerfIndex(Position, 0);
                             /* fall through */
                         }
                         goto case 5;
-                    case 5:
-                    case 6:
-                    case 7:
+                    case 5: // Underground mining
+                    case 6: // Underground mining
+                    case 7: // Underground mining
                         {
                             ++s.Mining.Substate;
 
                             /* Look for resource in ground. */
                             MapPos dest = map.PosAddSpirally(Position, (uint)(Game.RandomInt() >> 2) & 0x1f);
+
                             if ((map.GetObject(dest) == Map.Object.None ||
                                  map.GetObject(dest) > Map.Object.Castle) &&
                                 map.GetResourceType(dest) == s.Mining.Deposit &&
@@ -5978,20 +5981,20 @@ namespace Freeserf
                             Counter += 1000;
                             break;
                         }
-                    case 8:
+                    case 8: // Finished underground mining
                         map.SetSerfIndex(Position, (int)Index);
                         s.Mining.Substate = 9;
                         building.StopPlayingSfx();
                         Animation = 127;
                         Counter = CounterFromAnimation[Animation];
                         break;
-                    case 9:
+                    case 9: // Elevator comes up
                         s.Mining.Substate = 10;
                         building.IncreaseMining((int)s.Mining.Res);
                         Animation = 128;
                         Counter = 384; /* TODO CounterFromAnimation[128] == 383 */
                         break;
-                    case 10:
+                    case 10: // Move resource out or finish working
                         map.SetSerfIndex(Position, 0);
                         if (s.Mining.Res == 0)
                         {

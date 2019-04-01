@@ -107,7 +107,6 @@ Missing stuff:
 - multiplayer
 	- multiplayer should support coop mode (one player is played by two or more clients)
 - button to merge roads to a flag
-- mine elevator/miner animation
 - ground analysis for local spectators?
 - possible builds for local spectators?
 - disable some features in multiplayer (e.g. game speed)
@@ -125,7 +124,6 @@ TODO:
 
 - Check/improve map position selection (clicks, minimap clicks, centering)
 - Finish AIs
-- Finish rendering of all additional stuff for all buildings (only mine elevator drawing is not perfect yet)
 - Add more game options (like tutorial)
 - Improve/fix sound and add music/sound players for all operating systems
 - Look through all TODO code comments and resolve them
