@@ -207,11 +207,11 @@ namespace Freeserf.AIStates
             return FindMountain(map, pos, true);
         }
 
-        void FindNearbyMountain(Game game, ref uint pos)
+        void FindNearbyMountain(Game game, Player player, ref uint pos)
         {
             pos = game.Map.FindSpotNear(pos, 9, FindMountainWithFlag, game.GetRandom(), 1);
 
-            if (pos == Global.BadMapPos)
+            if (pos == Global.BadMapPos || game.Map.GetOwner(pos) != player.Index)
                 pos = game.Map.FindSpotNear(pos, 9, FindMountain, game.GetRandom(), 1);
         }
 
@@ -250,7 +250,7 @@ namespace Freeserf.AIStates
                 }
 
                 uint pos = building.Position;
-                FindNearbyMountain(game, ref pos);
+                FindNearbyMountain(game, player, ref pos);
 
                 if (pos != Global.BadMapPos)
                 {
