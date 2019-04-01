@@ -766,7 +766,7 @@ namespace Freeserf
 
             foreach (var flag in flags)
             {
-                if (Pathfinder.FindShortestPath(map, flagPos, (uint)flag, null, 15) != null)
+                if (Pathfinder.FindShortestPath(map, flagPos, (uint)flag, null, 15).Length != 0)
                     return true;
             }
 

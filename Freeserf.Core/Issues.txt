@@ -48,11 +48,6 @@ Misc:
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
-- In hard times the steel smelter should be built before the toolmaker
-- In hard times the toolmaker should be instructed directly to craft some tools (like first for weapon smith, then for another lumberjack and for another miner or a scythe for a farmer).
-	- Without fisher or with small lake, the scythe has prio
-	- With fisher, the pincer and hammer have prio
-	- After these another axe and another pick should follow
 - Hard time should be also possible in later game (e.g. after losing land). In this case miners could not be available for iron or coal because
   they are used for gold or stone mines. This must be considered then and maybe those mines should be demolished to free miners.
 - The check stone and gather stone radius of stonecutters should be equal so that stonecutters who won't gather anymore stone should be demolished immediately (this is crucial in hard times).
@@ -76,7 +71,7 @@ Performance:
 Logic:
 
 - If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
-- A transporter first walks to the last flag and then goes back to the beginning of the road to goto idle mode.
+- A transporter first walks to the last flag and then goes back to the beginning of the road to go to idle mode.
   - I think in original game the transporter went straight to idle mode when he was at the right location.
   - Is this maybe caused by wrong road building direction? This is often seen in AIs. Maybe the linking of roads is reversed there?!
 - Geologists give up too fast.
