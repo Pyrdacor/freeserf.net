@@ -233,6 +233,7 @@ namespace Freeserf.AIStates
             };
         }
 
+        // TODO: With many military buildings, this will take quiet a while. Needs improvement.
         bool SendGeologist(AI ai, Game game, Player player)
         {
             var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary());
@@ -242,7 +243,7 @@ namespace Freeserf.AIStates
             // search for mountains near military buildings
             foreach (var building in militaryBuildings)
             {
-                if (game.Map.FindSpotNear(building.Position, 4, FindMountain, game.GetRandom(), 1) != Global.BadMapPos)
+                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetRandom(), 1) != Global.BadMapPos)
                 {
                     possibleSpots.Add(game.Map.MoveDownRight(building.Position));
                     continue;
