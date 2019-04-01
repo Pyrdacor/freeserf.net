@@ -195,8 +195,8 @@ namespace Freeserf
                 if (value == emergencyProgramActive)
                     return;
 
-                if (value && emergencyProgramWasDeactivatedOnce)
-                    return; // can't be reactivated
+                if (value && !IsAi() && emergencyProgramWasDeactivatedOnce)
+                    return; // can't be reactivated for human players
 
                 if (value)
                 {
@@ -1557,25 +1557,28 @@ namespace Freeserf
                 {
                     EmergencyProgramActive = true;
 
-                    // If the emergency program gets activated we cancel all
-                    // transported resources to non-essential buildings.
-                    foreach (var building in Game.GetPlayerBuildings(this).ToArray())
+                    if (EmergencyProgramActive) // test if successful
                     {
-                        if (building.IsDone())
-                            continue;
-
-                        if (building.BuildingType != Building.Type.Lumberjack &&
-                            building.BuildingType != Building.Type.Sawmill &&
-                            building.BuildingType != Building.Type.Stonecutter)
+                        // If the emergency program gets activated we cancel all
+                        // transported resources to non-essential buildings.
+                        foreach (var building in Game.GetPlayerBuildings(this).ToArray())
                         {
-                            var flag = Game.GetFlag(building.GetFlagIndex());
+                            if (building.IsDone())
+                                continue;
 
-                            if (flag != null)
-                                Game.FlagResetTransport(flag);
+                            if (building.BuildingType != Building.Type.Lumberjack &&
+                                building.BuildingType != Building.Type.Sawmill &&
+                                building.BuildingType != Building.Type.Stonecutter)
+                            {
+                                var flag = Game.GetFlag(building.GetFlagIndex());
 
-                            // Set priority for construction materials to 0
-                            building.SetPriorityInStock(0, 0u);
-                            building.SetPriorityInStock(1, 0u);
+                                if (flag != null)
+                                    Game.FlagResetTransport(flag);
+
+                                // Set priority for construction materials to 0
+                                building.SetPriorityInStock(0, 0u);
+                                building.SetPriorityInStock(1, 0u);
+                            }
                         }
                     }
                 }
