@@ -465,7 +465,7 @@ namespace Freeserf.Render
             // in most cases even if their baseline is lower. So we add a small offset to the serf baseline.
             int baseLineOffset = 2;
 
-            if (parentSerf != null)
+            /*if (parentSerf != null)
             {
                 // this is the fighting enemy
                 int index = parentSerf.GetAttackingDefIndex();
@@ -490,7 +490,7 @@ namespace Freeserf.Render
                         baseLineOffset = parentRenderSerf.sprite.BaseLineOffset;
                 }
             }
-            else
+            else*/
             {
                 if (map.HasSerf(pos) && serf.SerfState != Serf.State.IdleOnPath) // active serf
                 {
@@ -519,15 +519,21 @@ namespace Freeserf.Render
                     x = renderPosition.X + animation.X;
                     y = renderPosition.Y + animation.Y;
 
+                    if (map.HasFlag(pos) && (serf.SerfState == Serf.State.KnightAttacking || serf.SerfState == Serf.State.KnightAttackingFree))
+                    {
+                        baseLineOffset += 3; // stay in front of resources
+                    }
+
                     // TODO: The defending serf is already drawn. What is the purpose of this?
                     // The only thing that is necessary is the fighting flash.
                     //DrawAdditionalSerf(game, tick, map, animation, renderPosition);
+                    DrawFightingFlash(game, tick, map, animation, renderPosition);
                 }
-                else if(fightingEnemy != null)
+                /*else if(fightingEnemy != null)
                 {
                     fightingEnemy.Delete();
                     fightingEnemy = null;
-                }
+                }*/
 
                 if (map.GetIdleSerf(pos) && serf.SerfState == Serf.State.IdleOnPath) // idle serf
                 {
@@ -539,8 +545,6 @@ namespace Freeserf.Render
             }
 
             head = (body == -1) ? -1 : GetHeadSprite(ref body);
-
-            // fights look very strange (at least the attacker)
 
             if (body >= 0)
             {
@@ -655,7 +659,65 @@ namespace Freeserf.Render
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
                     }
                 }
+
+                if (fightingFlash != null)
+                    fightingFlash.BaseLineOffset = 5 + sprite.Y + sprite.Height + sprite.BaseLineOffset - fightingFlash.Y - fightingFlash.Height;
             }
+        }
+
+        void DrawFightingFlash(Game game, int tick, Map map, Animation animation, Position renderPosition)
+        {
+            bool fightingFlashVisible = false;
+
+            // Draw extra objects for fight
+            if ((serf.SerfState == Serf.State.KnightAttacking || serf.SerfState == Serf.State.KnightAttackingFree) &&
+                animation.Sprite >= 0x80 && animation.Sprite < 0xc0)
+            {
+                int index = serf.GetAttackingDefIndex();
+
+                if (index != 0)
+                {
+                    Serf defSerf = game.GetSerf((uint)index);
+
+                    if (serf.Animation >= 146 && serf.Animation < 156)
+                    {
+                        if ((serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4) && serf.Counter < 32)
+                        {
+                            int anim = -1;
+
+                            if (serf.GetAttackingFieldD() == 0)
+                            {
+                                anim = serf.Animation - 147;
+                            }
+                            else
+                            {
+                                anim = defSerf.Animation - 147;
+                            }
+
+                            uint sprite = (uint)(197 + ((serf.Counter >> 3) ^ 3));
+
+                            if (fightingFlash == null)
+                            {
+                                fightingFlash = spriteFactory.Create(5, 5, 0, 0, false, false);
+                                fightingFlash.Layer = this.sprite.Layer;
+                            }
+
+                            var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, sprite);
+                            var offset = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs).GetOffset(5000u + sprite);
+
+                            fightingFlashVisible = true;
+                            fightingFlash.X = renderPosition.X + animation.X + FightingFlashOffsets[2 * anim] - 4;
+                            fightingFlash.Y = renderPosition.Y + animation.Y - FightingFlashOffsets[2 * anim + 1] - 2;
+                            fightingFlash.Resize(info.Width, info.Height);
+                            fightingFlash.TextureAtlasOffset = offset;
+                            fightingFlash.BaseLineOffset = 5 + this.sprite.Y + this.sprite.Height + this.sprite.BaseLineOffset - fightingFlash.Y - fightingFlash.Height;
+                        }
+                    }
+                }
+            }
+
+            if (fightingFlash != null)
+                fightingFlash.Visible = fightingFlashVisible;
         }
 
         void DrawAdditionalSerf(Game game, int tick, Map map, Animation animation, Position renderPosition)
