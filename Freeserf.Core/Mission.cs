@@ -372,6 +372,12 @@ namespace Freeserf
                 new Random("5471458635555317"),
                 new PlayerInfo.Preset(12, 40,  5, 20, new PlayerInfo.Pos(25, 46)),
                 new PlayerInfo.Preset(11, 40, 20, 20, new PlayerInfo.Pos(51, 42))
+            ),
+            new Mission(
+                "PYRDACOR",
+                new Random("5079726461636072"),
+                new PlayerInfo.Preset(12, 40,  0, 30, new PlayerInfo.Pos(54, 63)),
+                new PlayerInfo.Preset(11, 40, 18, 16, new PlayerInfo.Pos(55, 25))
             )
         };
 
