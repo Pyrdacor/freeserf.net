@@ -88,6 +88,7 @@ namespace Freeserf
         int[] flagPriorities = new int[26];
         uint[] serfCount = new uint[27];
         uint[] knightOccupation = new uint[4];
+        Dictionary<long, DateTime> lastNotificationTimes = new Dictionary<long, DateTime>();
 
         Color color = new Color()
         {
@@ -418,6 +419,10 @@ namespace Freeserf
             newMessage.Pos = pos;
             newMessage.Data = data;
 
+            long index = ((long)type) << 32 | pos;
+
+            lastNotificationTimes[index] = DateTime.Now;
+
             messages.Enqueue(newMessage);
 
             Dirty = true;
@@ -426,6 +431,28 @@ namespace Freeserf
         public bool HasNotification()
         {
             return messages.Count > 0;
+        }
+
+        public bool HasNotificationOfType(Message.Type type)
+        {
+            return messages.Any(m => m.MessageType == type);
+        }
+
+        public void ResetNotificationTime(Message.Type type, MapPos pos)
+        {
+            long index = ((long)type) << 32 | pos;
+
+            lastNotificationTimes[index] = DateTime.Now;
+        }
+
+        public DateTime GetMostRecentMessageTime(Message.Type type, uint position = Global.BadMapPos)
+        {
+            long index = ((long)type) << 32 | position;
+
+            if (!lastNotificationTimes.ContainsKey(index))
+                return DateTime.MinValue;
+
+            return lastNotificationTimes[index];
         }
 
         public Message PopNotification()
@@ -2219,6 +2246,8 @@ namespace Freeserf
 
             /* TODO */
         }
+
+        // TODO: add notifications to savegames?
 
         public void ReadFrom(SaveReaderText reader)
         {

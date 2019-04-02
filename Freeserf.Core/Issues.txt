@@ -1,10 +1,11 @@
-﻿Map Rendering:
+﻿Rendering:
 
 - Improve grid drawing in minimap?
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
 - Sometimes borders remain from the last game (not deleted properly?)
 - In rare cases a flag seem to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
+	- This is fixed but remains true for military building white flags
 - Saw a stonecutter building with the burning flames behind it.
 - Sometimes a serf is drawn that is inside the castle (leaving the castle).
 
@@ -24,6 +25,8 @@ Non-working code:
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 - Sometimes no builder is send to construction sites
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
+- When removing player 2 and player 3 moves to player 2 slot ingame the statistic graph color and color in notifications is wrong (magenta instead of red).
+  But ingame color, portrait color in menu, etc are correct.
 
 
 AI:
@@ -42,6 +45,7 @@ Flags / buildings / roads:
 - Sometimes the AI tries very hard to build something in a non-linkable place and burns it down and rebuilds it forever (e.g. a fisher behind the pond).
 - Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have all).
 - Rarely captured buildings are not connected to own road system
+- Positions for stocks are not so good any time. It should be far away from other stocks and near some production that needs to store goods in a stock (e.g. weapon, gold bars, tools, planks, food, etc).
 
 Misc:  
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.

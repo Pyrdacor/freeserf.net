@@ -6907,10 +6907,8 @@ namespace Freeserf
             if (Counter < 0)
             {
                 Map map = Game.Map;
-                Map.Object obj = map.GetObject(map.MoveUpLeft(Position));
 
-                if (obj >= Map.Object.SmallBuilding &&
-                    obj <= Map.Object.Castle)
+                if (map.HasBuilding(map.MoveUpLeft(Position)))
                 {
                     Building building = Game.GetBuilding(map.GetObjectIndex(map.MoveUpLeft(Position)));
 
@@ -6921,7 +6919,14 @@ namespace Freeserf
                     {
                         if (building.IsUnderAttack())
                         {
-                            Game.GetPlayer(building.Player).AddNotification(Message.Type.UnderAttack, building.Position, Player);
+                            var player = Game.GetPlayer(building.Player);
+
+                            var lastNotificationTime = player.GetMostRecentMessageTime(Message.Type.UnderAttack, building.Position);
+
+                            if ((DateTime.Now - lastNotificationTime).TotalSeconds > 45.0)
+                                player.AddNotification(Message.Type.UnderAttack, building.Position, Player);
+                            else
+                                player.ResetNotificationTime(Message.Type.UnderAttack, building.Position);
                         }
 
                         /* Change state of attacking knight */
