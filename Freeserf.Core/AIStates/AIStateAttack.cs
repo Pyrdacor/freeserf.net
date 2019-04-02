@@ -99,7 +99,7 @@ namespace Freeserf.AIStates
                 case AI.AttackPlayer.WorstProtected:
                     {
                         // Here more than one player could be selected. Just remove indices from the lists above.
-                        int minOccupation = 3;
+                        int minOccupation = 4;
                         List<int> playersToRemove = new List<int>(2);
 
                         for (int i = 0; i < players.Count; ++i)
@@ -180,7 +180,7 @@ namespace Freeserf.AIStates
                 case AI.AttackPlayer.WorstProtected:
                     if (players.Count != 0)
                     {
-                        int minOccupation = 3;
+                        int minOccupation = 4;
                         List<int> playersToRemove = new List<int>(2);
 
                         for (int i = 0; i < players.Count; ++i)
