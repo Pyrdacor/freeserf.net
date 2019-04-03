@@ -518,6 +518,7 @@ namespace Freeserf
                 for (int i = (int)index; i < players.Count - 1; ++i)
                 {
                     players[i] = players[i + 1];
+                    players[i].Color = PlayerInfo.PlayerColors[i]; // update color for the slot
                 }
 
                 players.RemoveAt(players.Count - 1);

@@ -25,8 +25,6 @@ Non-working code:
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 - Sometimes no builder is send to construction sites
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
-- When removing player 2 and player 3 moves to player 2 slot ingame the statistic graph color and color in notifications is wrong (magenta instead of red).
-  But ingame color, portrait color in menu, etc are correct.
 
 
 AI:
