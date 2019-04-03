@@ -122,6 +122,7 @@ Nice to have:
   This way a map can be played again or the RNG number can be memorized.
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
 - Custom games and AIvsAI should share the map size setting.
+- When switching player in AIvsAI (e.g. with key 'j') the open menu should be updated.
 
 
 TODO:

@@ -114,6 +114,9 @@ namespace Freeserf
 
             CloseGame();
 
+            if (newGame.GetPlayer(0).IsAi())
+                viewer.ChangeTo(Viewer.Type.LocalSpectator);
+
             lastSaveTime = DateTime.Now;
             currentGameSaveFile = path;
             SetCurrentGame(newGame);
