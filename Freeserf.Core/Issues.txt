@@ -23,7 +23,6 @@ Non-working code:
 - Building a road does not allow to end it at the riverside if it is a water path.
 - Click positions in water (no height) are a bit off (this already worked previously!).
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
-- Sometimes no builder is send to construction sites
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
 
 

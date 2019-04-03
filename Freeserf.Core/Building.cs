@@ -904,6 +904,11 @@ namespace Freeserf
                 return;
             }
 
+            if (resource == Resource.Type.None)
+            {
+                return;
+            }
+
             if (HasInventory())
             {
                 Game.GetInventory((uint)u.InvIndex).PushResource(resource);

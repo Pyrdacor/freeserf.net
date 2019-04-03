@@ -4515,11 +4515,43 @@ namespace Freeserf
             Counter = 0;
 
             Map map = Game.Map;
+
             if (map.HasSerf(Position) || map.HasSerf(map.MoveDownRight(Position)))
             {
                 Animation = 82;
                 Counter = 0;
                 return;
+            }
+
+            // Check if there is a serf that waits to approach the flag.
+            // If so, we wait inside.
+            var inventoryFlag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+
+            if (inventoryFlag != null)
+            {
+                var cycle = new DirectionCycleCW(Direction.Up, 5);
+
+                foreach (var dir in cycle)
+                {
+                    var pos = map.Move(inventoryFlag.Position, dir);
+
+                    if (map.HasSerf(pos))
+                    {
+                        var serf = Game.GetSerfAtPos(pos);
+                        Direction temp = Direction.None;
+
+                        if ((serf.SerfState == State.Walking || serf.SerfState == State.Transporting || serf.SerfState == State.KnightEngagingBuilding) &&
+                            serf.IsWaiting(ref temp))
+                        {
+                            if (!(serf.SerfState != State.Transporting && serf.s.Walking.Dest == inventoryFlag.Position && serf.s.Walking.Dir == (int)dir.Reverse()))
+                            {
+                                Animation = 82;
+                                Counter = 0;
+                                return;
+                            }
+                        }
+                    }
+                }
             }
 
             if (s.ReadyToLeaveInventory.Mode == -1)
