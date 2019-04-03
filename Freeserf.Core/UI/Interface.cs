@@ -637,7 +637,7 @@ namespace Freeserf.UI
 
         /* Build a single road segment. Return -1 on fail, 0 on successful
            construction, and 1 if this segment completed the path. */
-        public int BuildRoadSegment(Direction dir)
+        public int BuildRoadSegment(Direction dir, bool roadEndsThere)
         {
             if (!buildingRoad.Extendable)
             {
@@ -653,7 +653,7 @@ namespace Freeserf.UI
             MapPos dest = 0;
             bool water = false;
 
-            int r = Game.CanBuildRoad(buildingRoad, player, ref dest, ref water);
+            int r = Game.CanBuildRoad(buildingRoad, player, ref dest, ref water, roadEndsThere);
 
             if (r <= 0)
             {
@@ -664,7 +664,7 @@ namespace Freeserf.UI
             if (Game.Map.GetObject(dest) == Map.Object.Flag)
             {
                 /* Existing flag at destination, try to connect. */
-                if (!Game.BuildRoad(buildingRoad, player))
+                if (!Game.BuildRoad(buildingRoad, player, true))
                 {
                     BuildRoadEnd();
                     return -1;
@@ -721,10 +721,11 @@ namespace Freeserf.UI
         public int ExtendRoad(Road road)
         {
             Road oldRoad = buildingRoad;
+            int i = 0;
 
             foreach (Direction dir in road.Dirs.Reverse())
             {
-                int r = BuildRoadSegment(dir);
+                int r = BuildRoadSegment(dir, i == road.Length - 1);
 
                 if (r < 0)
                 {
@@ -736,6 +737,8 @@ namespace Freeserf.UI
                     buildingRoad.Invalidate();
                     return 1;
                 }
+
+                ++i;
             }
 
             return 0;

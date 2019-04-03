@@ -1981,7 +1981,7 @@ namespace Freeserf
 
         /* Return true if the road segment from pos in direction dir
            can be successfully constructed at the current time. */
-        public bool IsRoadSegmentValid(MapPos pos, Direction dir)
+        public bool IsRoadSegmentValid(MapPos pos, Direction dir, bool endThere = false)
         {
             MapPos otherPos = Move(pos, dir);
             Object obj = GetObject(otherPos);
@@ -1998,7 +1998,7 @@ namespace Freeserf
             }
 
             if (IsInWater(pos) != IsInWater(otherPos) &&
-                !(HasFlag(pos) || HasFlag(otherPos)))
+                !(endThere || HasFlag(pos) || HasFlag(otherPos)))
             {
                 return false;
             }

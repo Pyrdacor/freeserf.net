@@ -273,7 +273,7 @@ namespace Freeserf
         /// <param name="end"></param>
         /// <param name="buildingRoad"></param>
         /// <returns></returns>
-        public static Road FindShortestPath(Map map, MapPos start, MapPos end, Road buildingRoad = null, int maxLength = int.MaxValue)
+        public static Road FindShortestPath(Map map, MapPos start, MapPos end, Road buildingRoad = null, int maxLength = int.MaxValue, bool endThere = false)
         {
             if (maxLength < 1)
                 return new Road();
@@ -332,7 +332,7 @@ namespace Freeserf
                         continue; // exceeded max length / max cost
 
                     /* Check if neighbour is valid. */
-                    if (!map.IsRoadSegmentValid(node.Pos, d) ||
+                    if (!map.IsRoadSegmentValid(node.Pos, d, endThere && node.Pos == end) ||
                         (map.GetObject(newPos) == Map.Object.Flag && newPos != start))
                     {
                         continue;

@@ -809,7 +809,7 @@ namespace Freeserf
            resulting path is a water path.
            This will return success even if the destination does _not_ contain
            a flag, and therefore partial paths can be validated with this function. */
-        public int CanBuildRoad(Road road, Player player, ref MapPos dest, ref bool water)
+        public int CanBuildRoad(Road road, Player player, ref MapPos dest, ref bool water, bool endThere = false)
         {
             /* Follow along path to other flag. Test along the way
                whether the path is on ground or in water. */
@@ -829,7 +829,7 @@ namespace Freeserf
             {
                 ++i;
 
-                if (!map.IsRoadSegmentValid(pos, dir))
+                if (!map.IsRoadSegmentValid(pos, dir, endThere))
                 {
                     return -1;
                 }
@@ -914,7 +914,7 @@ namespace Freeserf
         }
 
         /* Construct a road specified by a source and a list of directions. */
-        public bool BuildRoad(Road road, Player player)
+        public bool BuildRoad(Road road, Player player, bool roadEndsThere = false)
         {
             if (road.Length == 0)
                 return false;
@@ -922,7 +922,7 @@ namespace Freeserf
             MapPos dest = 0;
             bool waterPath = false;
 
-            if (CanBuildRoad(road, player, ref dest, ref waterPath) == 0)
+            if (CanBuildRoad(road, player, ref dest, ref waterPath, roadEndsThere) == 0)
             {
                 return false;
             }
