@@ -186,7 +186,7 @@ namespace Freeserf
             int column = mappedX / RenderMap.TILE_WIDTH;
             int row = y / RenderMap.TILE_HEIGHT;
             int lastDist = int.MaxValue;
-            var pos = map.Pos((uint)column, 0u);
+            var pos = map.MoveUp(map.Pos((uint)column, 0u));
 
             pos = map.MoveDownN(pos, row);
             MapPos lastPos = pos;
