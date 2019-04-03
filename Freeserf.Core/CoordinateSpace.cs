@@ -182,7 +182,7 @@ namespace Freeserf
             while (x >= lwidth)
                 x -= lwidth;
 
-            int mappedX = x + (y * RenderMap.TILE_WIDTH) / (2 * RenderMap.TILE_HEIGHT);
+            int mappedX = (x + (y * RenderMap.TILE_WIDTH) / (2 * RenderMap.TILE_HEIGHT));// % lwidth;
             int column = mappedX / RenderMap.TILE_WIDTH;
             int row = y / RenderMap.TILE_HEIGHT;
             int lastDist = int.MaxValue;
@@ -206,15 +206,20 @@ namespace Freeserf
 
                     int xOff = x - mapPosition.X;
 
-                    if (xOff > lwidth / 2)
+                    if (xOff >= lwidth)
                         xOff -= lwidth;
-                    else if (xOff < -lwidth / 2)
+                    else if (xOff <= -lwidth)
                         xOff += lwidth;
 
-                    if (xOff > lwidth / 4)
+                    if (xOff >= lwidth / 2)
                         xOff -= lwidth / 2;
-                    else if (xOff < -lwidth / 4)
+                    else if (xOff <= -lwidth / 2)
                         xOff += lwidth / 2;
+
+                    if (xOff >= lwidth / 4)
+                        xOff -= lwidth / 4;
+                    else if (xOff <= -lwidth / 4)
+                        xOff += lwidth / 4;
 
                     bool moved = true;
 
@@ -229,6 +234,22 @@ namespace Freeserf
                     if (moved)
                     {
                         // TODO: as we moved to left or right, the height may lead to a wrong tile
+                        /*rowY = TileSpaceToMapSpace(lastPos).Y;
+
+                        if (rowY < y - RenderMap.TILE_HEIGHT / 2)
+                        {
+                            if (xOff < 0)
+                                lastPos = map.MoveUpLeft(lastPos);
+                            else
+                                lastPos = map.MoveUp(lastPos);
+                        }
+                        else if (rowY > y + RenderMap.TILE_HEIGHT / 2)
+                        {
+                            if (xOff < 0)
+                                lastPos = map.MoveDown(lastPos);
+                            else
+                                lastPos = map.MoveDownRight(lastPos);
+                        }*/
                     }
 
                     return lastPos;
