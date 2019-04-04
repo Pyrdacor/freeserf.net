@@ -5979,7 +5979,7 @@ namespace Freeserf
                         s.Mining.Substate = 4;
                         building.StopActivity();
                         Animation = 126;
-                        Counter = 304; /* TODO CounterFromAnimation[126] == 303 */
+                        Counter = CounterFromAnimation[Animation];
                         break;
                     case 4: // Elevator moves down
                         {
@@ -6024,7 +6024,7 @@ namespace Freeserf
                         s.Mining.Substate = 10;
                         building.IncreaseMining((int)s.Mining.Res);
                         Animation = 128;
-                        Counter = 384; /* TODO CounterFromAnimation[128] == 383 */
+                        Counter = CounterFromAnimation[Animation];
                         break;
                     case 10: // Move resource out or finish working
                         map.SetSerfIndex(Position, 0);
