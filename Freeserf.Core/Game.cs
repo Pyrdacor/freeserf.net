@@ -2929,7 +2929,7 @@ namespace Freeserf
 
             Flag flag = flags[map.GetObjectIndex(pos)];
 
-            if (flag.HasBuilding() && flag.GetBuilding().BuildingType != Building.Type.Castle)
+            if (flag.HasBuilding() && !flag.GetBuilding().IsBurning())
             {
                 throw new ExceptionFreeserf(this, "game", "Failed to demolish flag with building.");
             }
@@ -2985,8 +2985,7 @@ namespace Freeserf
         protected void SurrenderLand(MapPos pos)
         {
             /* Remove building. */
-            if (map.GetObject(pos) >= Map.Object.SmallBuilding &&
-                map.GetObject(pos) <= Map.Object.Castle)
+            if (map.HasBuilding(pos))
             {
                 DemolishBuilding(pos);
             }
