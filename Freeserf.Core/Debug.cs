@@ -96,7 +96,7 @@ namespace Freeserf
             if (inner is ExceptionFreeserf)
             {
                 System = (inner as ExceptionFreeserf).System;
-                Description = (innter as ExceptionFreeserf).Description;
+                Description = (inner as ExceptionFreeserf).Description;
             }
             else
             {
