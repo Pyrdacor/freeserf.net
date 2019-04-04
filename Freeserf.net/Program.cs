@@ -127,6 +127,8 @@ namespace Freeserf
         [STAThread]
         public static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             if (CheckForUpdates(args))
             {
                 return;
@@ -142,6 +144,18 @@ namespace Freeserf
             {
                 Log.Error.Write("main", "Exception: " + ex.Message);
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception)
+            {
+                Log.Error.Write("unhandled", "Exception: " + (e.ExceptionObject as Exception).Message);
+            }
+            else
+            {
+                Log.Error.Write("unhandled", "Unknown exception type");
             }
         }
     }
