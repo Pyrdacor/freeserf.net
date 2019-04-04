@@ -2929,7 +2929,7 @@ namespace Freeserf
 
             Flag flag = flags[map.GetObjectIndex(pos)];
 
-            if (flag.HasBuilding())
+            if (flag.HasBuilding() && flag.GetBuilding().BuildingType != Building.Type.Castle)
             {
                 throw new ExceptionFreeserf(this, "game", "Failed to demolish flag with building.");
             }
