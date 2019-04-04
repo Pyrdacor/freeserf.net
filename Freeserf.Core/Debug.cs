@@ -94,11 +94,16 @@ namespace Freeserf
             : base(inner.Message, inner)
         {
             if (inner is ExceptionFreeserf)
+            {
                 System = (inner as ExceptionFreeserf).System;
+                Description = (innter as ExceptionFreeserf).Description;
+            }
             else
+            {
                 System = system;
+                Description = inner.Message;
+            }
 
-            Description = inner.Message;
             SourceFile = file;
             SourceLineNumber = lineNumber;
             Game = game;
