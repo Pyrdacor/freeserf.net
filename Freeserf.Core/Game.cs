@@ -3019,6 +3019,10 @@ namespace Freeserf
             /* Remove flag. */
             if (map.GetObject(pos) == Map.Object.Flag)
             {
+                // Ensure that buildings are demolished before their flags
+                if (map.HasBuilding(map.MoveUpLeft(pos)))
+                    DemolishBuilding(map.MoveUpLeft(pos));
+
                 DemolishFlag(pos);
             }
         }

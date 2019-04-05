@@ -120,6 +120,7 @@ Nice to have:
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
 - Custom games and AIvsAI should share the map size setting.
 - When switching player in AIvsAI (e.g. with key 'j') the open menu should be updated.
+- Later avoid the tactic to demolish a hut when own knights lose and the opponent is capturing it.
 
 
 TODO:
