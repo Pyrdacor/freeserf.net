@@ -154,11 +154,11 @@ namespace Freeserf.Data
             /*sourceFactories.Add((string p) =>
             {
                 return new DataSourceCustom(path);
-            });
+            });*/
             sourceFactories.Add((string p) =>
             {
-                return new DataSourceDOS(path);
-            });*/
+                return new DataSourceDos(path);
+            });
             sourceFactories.Add((string p) =>
             {
                 return new DataSourceAmiga(path);
