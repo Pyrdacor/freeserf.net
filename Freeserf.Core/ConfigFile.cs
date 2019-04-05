@@ -121,7 +121,7 @@ namespace Freeserf
                     {
                         int pos = line.IndexOf('=');
                         string name = line.Substring(0, pos).Trim().ToLower();
-                        string val = line.Substring(pos + 1).Trim().ToLower();
+                        string val = line.Substring(pos + 1).Trim();
                         section[name] = val;
                     }
                 }
