@@ -9,6 +9,7 @@ namespace Freeserf
         public static class Game
         {
             public static int Options { get; set; } = 0x39;
+            public static string DataFile { get; set; } = "SPAE.PA";
         }
 
         public static class Audio
@@ -41,6 +42,7 @@ namespace Freeserf
                 // Game
                 if (int.TryParse(configFile.Value("game", "options", "57"), out int options))
                     Game.Options = options | 0x01; // bit 0 must be set always
+                Game.DataFile = configFile.Value("game", "datafile", "SPAE.PA");
 
 
                 // Audio
@@ -52,9 +54,9 @@ namespace Freeserf
 
 
                 // Video
-                if (int.TryParse(configFile.Value("video", "resolutionWidth", "1280"), out int resolutionWidth))
+                if (int.TryParse(configFile.Value("video", "resolutionwidth", "1280"), out int resolutionWidth))
                     Video.ResolutionWidth = resolutionWidth;
-                if (int.TryParse(configFile.Value("video", "resolutionHeight", "960"), out int resolutionHeight))
+                if (int.TryParse(configFile.Value("video", "resolutionheight", "960"), out int resolutionHeight))
                     Video.ResolutionHeight = resolutionHeight;
                 Video.Fullscreen = configFile.Value("video", "fullscreen", "0") == "1";
 
@@ -75,6 +77,7 @@ namespace Freeserf
 
                 // Game
                 configFile.SetValue("game", "options", Game.Options);
+                configFile.SetValue("game", "dataFile", Game.DataFile);
 
 
                 // Audio
@@ -84,8 +87,8 @@ namespace Freeserf
 
 
                 // Video
-                configFile.SetValue("video", "resolutionWidth", Video.ResolutionWidth);
-                configFile.SetValue("video", "resolutionHeight", Video.ResolutionHeight);
+                configFile.SetValue("video", "resolutionwidth", Video.ResolutionWidth);
+                configFile.SetValue("video", "resolutionheight", Video.ResolutionHeight);
                 configFile.SetValue("video", "fullscreen", Video.Fullscreen ? "1" : "0");
 
 
@@ -100,6 +103,7 @@ namespace Freeserf
         public static void SetDefaults()
         {
             Game.Options = 0x39;
+            Game.DataFile = "SPAE.PA";
 
             Audio.Music = true;
             Audio.Sound = true;

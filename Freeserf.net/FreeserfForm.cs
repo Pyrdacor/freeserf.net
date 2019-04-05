@@ -57,14 +57,17 @@ namespace Freeserf
                 UserConfig.Load(FileSystem.Paths.UserConfigPath);
 
                 // TODO: for now we just load DOS data (test path)
-                DataSourceDos dosData = new DataSourceDos(Path.Combine(Program.ExecutablePath, "SPAE.PA"));
+                var data = Data.Data.GetInstance();
+                string dataPath = Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
 
-                if (!dosData.Load())
+                if (!data.Load(dataPath))
                 {
-                    MessageBox.Show(this, "Error loading DOS data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Error loading data file \"{dataPath}\".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Close();
                     return;
                 }
+
+                var dataSource = data.GetDataSource();
 
                 // TODO: use the rest of the command line and maybe extend the command line
 
@@ -102,7 +105,7 @@ namespace Freeserf
 
                 SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
 
-                gameView = new GameView(dosData, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
 
                 gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);
