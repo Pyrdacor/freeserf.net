@@ -193,13 +193,20 @@ namespace Freeserf.UI
 
             // Now test if there are gui elements that handle
             // the event.
-            if (base.HandleEvent(e))
+            try
             {
-                // Ensure viewport enable reset
-                if (viewportEnabled)
-                    Viewport.Enabled = true;
+                if (base.HandleEvent(e))
+                {
+                    // Ensure viewport enable reset
+                    if (viewportEnabled)
+                        Viewport.Enabled = true;
 
-                return true; // handled
+                    return true; // handled
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ExceptionFreeserf(Game, ex);
             }
 
             // If not handled we check for viewport mouse interaction
@@ -217,8 +224,15 @@ namespace Freeserf.UI
                     if (e.Type == Event.Type.Drag)
                         delta = Gui.DeltaToGame(delta, RenderView);
 
-                    // pass game transformed mouse data to the viewport
-                    return Viewport.HandleEvent(Event.EventArgs.Transform(e, position.X, position.Y, delta.Width, delta.Height));
+                    try
+                    {
+                        // pass game transformed mouse data to the viewport
+                        return Viewport.HandleEvent(Event.EventArgs.Transform(e, position.X, position.Y, delta.Width, delta.Height));
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new ExceptionFreeserf(Game, ex);
+                    }
                 }
                 else
                 {
