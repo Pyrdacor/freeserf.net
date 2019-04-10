@@ -545,7 +545,7 @@ namespace Freeserf
             Map map = Game.Map;
             MapPos flagPos = map.MoveDownRight(Position);
 
-            if (map.Paths(flagPos) == 0 && map.GetObject(flagPos) == Map.Object.Flag)
+            if (map.GetOwner(flagPos) != Player && map.Paths(flagPos) == 0 && map.GetObject(flagPos) == Map.Object.Flag)
             {
                 Game.DemolishFlag(flagPos, player);
             }

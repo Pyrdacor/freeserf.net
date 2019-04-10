@@ -2972,8 +2972,12 @@ namespace Freeserf
 
                 /* Disconnect flag. */
                 Flag flag = flags[building.GetFlagIndex()];
-                flag.UnlinkBuilding();
-                FlagResetTransport(flag);
+
+                if (flag != null)
+                {
+                    flag.UnlinkBuilding();
+                    FlagResetTransport(flag);
+                }
 
                 return true;
             }
