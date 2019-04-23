@@ -8,8 +8,4 @@
     <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="nuget restore -verbosity detailed" />
-  </Target>
-
 </Project>
