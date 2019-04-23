@@ -1,0 +1,7 @@
+image: Visual Studio 2017
+
+environment:
+  WINDOWS: 1
+
+platform: Any CPU
+configuration: Release
