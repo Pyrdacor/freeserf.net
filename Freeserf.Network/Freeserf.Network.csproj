@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="nuget restore" />
+    <Exec Command="nuget restore -verbosity detailed" />
   </Target>
 
 </Project>
