@@ -5909,6 +5909,10 @@ namespace Freeserf
 
                 Game.AddSerfForDrawing(this, Position);
             }
+            else
+            {
+                SetLostState();
+            }
         }
 
         static readonly Resource.Type[] ResFromMineType = new Resource.Type[]

@@ -1346,7 +1346,7 @@ namespace Freeserf
 
                 if (buildingType != Building.Type.Castle)
                 {
-                    completedBuildingCount[(int)buildingType] -= 1;
+                    --completedBuildingCount[(int)buildingType];
                 }
                 else
                 {
