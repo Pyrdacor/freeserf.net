@@ -1,6 +1,7 @@
 # freeserf.net
 freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
 
+[![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net)
 
 ## Download the game
 
