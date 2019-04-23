@@ -388,7 +388,7 @@ namespace Freeserf.UI
                     else
                     {
                         /* Build new road segment */
-                        int r = interf.BuildRoadSegment(dir);
+                        int r = interf.BuildRoadSegment(dir, false);
 
                         if (r< 0)
                         {
