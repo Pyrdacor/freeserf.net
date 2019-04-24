@@ -20,7 +20,7 @@ deploy:
     draft: true
     overwrite: true
     prerelease: false
-    name: Freeserf.net-$(TRAVIS_TAG)
-    body: Release $(TRAVIS_TAG)
+    name: $(TRAVIS_TAG)
+    body: 'Release $(TRAVIS_TAG)'
     on:
         tags: true
