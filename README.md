@@ -7,16 +7,7 @@ freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 ## Download the game
 
-#### [v1.9 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.9.zip)
-#### [v1.8 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.8.zip)
-#### [v1.7 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.7.zip)
-#### [v1.6 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.6.zip)
-#### [v1.5 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.5.zip)
-#### [v1.4 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.4.zip)
-#### [v1.3 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.3.zip)
-#### [v1.2 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.2.zip)
-#### [v1.1 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.1.zip)
-#### [v1.0 for Windows](https://github.com/Pyrdacor/freeserf.net/raw/master/builds/Windows/Build%20v1.0.zip)
+#### [v1.9.20 for Windows](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.20/Freeserf.net.zip)
 
 Builds for other platforms will follow later.
 
