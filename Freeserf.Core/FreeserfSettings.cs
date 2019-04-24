@@ -21,6 +21,7 @@
  */
 
 using System;
+using System.IO;
 using System.Text;
 using Freeserf.Data;
 
@@ -98,5 +99,18 @@ namespace Freeserf
     public static class Settings
     {
         public static Encoding Encoding = Encoding.ASCII;
+    }
+
+    public static class EndianExtensions
+    {
+        public static UInt16 ReadUInt16BigEndian(this BinaryReader reader)
+        {
+            return Endian.Betoh(reader.ReadUInt16());
+        }
+
+        public static UInt32 ReadUInt32BigEndian(this BinaryReader reader)
+        {
+            return Endian.Betoh(reader.ReadUInt32());
+        }
     }
 }
