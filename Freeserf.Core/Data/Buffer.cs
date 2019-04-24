@@ -163,6 +163,11 @@ namespace Freeserf.Data
 
             data = new byte[newSize];
 
+            fixed (byte* pointer = data)
+            {
+                start = pointer;
+            }
+
             System.Buffer.BlockCopy(temp, 0, data, 0, Math.Min(temp.Length, data.Length));
 
             temp = null;
@@ -332,7 +337,7 @@ namespace Freeserf.Data
             data = new BufferStream(parent.data, start, length);
             owned = false;
             this.endianess = ChooseEndianess(endianess);
-            read = this.data.GetPointer();
+            read = data.GetPointer();
         }
 
         public Buffer(string path, Endianess endianess = Endianess.Default)
@@ -389,6 +394,11 @@ namespace Freeserf.Data
         public byte PeekByte()
         {
             return *read;
+        }
+
+        public byte PeekByte(uint offset)
+        {
+            return *(read + offset);
         }
 
         public Buffer Pop(uint size)
@@ -647,6 +657,8 @@ namespace Freeserf.Data
             {
                 data.Realloc(reserved);
             }
+
+            read = data.GetPointer();
 
             this.reserved = reserved;
         }
