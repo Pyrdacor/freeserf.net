@@ -58,11 +58,11 @@ namespace Freeserf
 
                 // TODO: for now we just load DOS data (test path)
                 var data = Data.Data.GetInstance();
-                string dataPath = Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
+                string dataPath = Program.ExecutablePath;// Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
 
                 if (!data.Load(dataPath))
                 {
-                    MessageBox.Show(this, $"Error loading data file \"{dataPath}\".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Error loading data from \"{dataPath}\".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Close();
                     return;
                 }
