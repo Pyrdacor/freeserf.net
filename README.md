@@ -7,13 +7,15 @@ freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 ## Download the game
 
-#### [v1.9.20 for Windows](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.20/Freeserf.net.zip)
+| Windows | Linux/Mono |
+| ---- | ---- |
+| [v1.9.20](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.20/Freeserf.net-Windows.zip "Windows v1.9.20") | [v1.9.20](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.20/Freeserf.net-Linux.tar.gz "Linux v1.9.20") |
 
 Builds for other platforms will follow later.
 
-Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. It is not included in the zip file. Amiga support is in progress.
+Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. It is not included in the zip file. Amiga support is in progress but doesn't work correctly yet.
 
-You have to install .NET Framework 4.6.1 to run the game. You can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
+You have to install .NET Framework 4.6.1 to run the game. For Windows you can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
 
 
 ## Patches
