@@ -9,14 +9,18 @@ stages:
     if: branch = master AND type = push AND os = linux
 
 before_deploy:
-  - tar -cvzf Freeserf.net.tar.gz Freeserf.net/bin/Release/Freeserf.net.exe
+  - tar -cvzf Freeserf.net-Linux.tar.gz Freeserf.net/bin/Release/Freeserf.net.exe
 
 deploy:
     provider: releases
-    api_key: "CP6qsCjIlyJrYsuHs4tzdrYUWOO83Jlx6/U0Gqtl/SicGmBaN1hrYUEk6RSL6D8j"
-    file: Freeserf.net.tar.gz
+    api_key:
+      secure: CP6qsCjIlyJrYsuHs4tzdrYUWOO83Jlx6/U0Gqtl/SicGmBaN1hrYUEk6RSL6D8j
+    file: Freeserf.net-Linux.tar.gz
     skip_cleanup: true
     draft: true
     overwrite: true
+    prerelease: false
+    name: Freeserf.net-$(TRAVIS_TAG)
+    body: Release $(TRAVIS_TAG)
     on:
         tags: true
