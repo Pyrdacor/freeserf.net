@@ -11,7 +11,7 @@ freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 Builds for other platforms will follow later.
 
-Note: For now you need the english DOS data file 'SPAE.PA' to run the game. It is not included in the zip file. Since patch 1.9.19 of the Windows version you may use different data files. You can specify the data filename inside the user config file `user.cfg` which is normally located in your roaming user app data path. E.g. `C:\Users\your_username\AppData\Roaming\freeserf.net\user.cfg`. DOS data files of other languages should work but amiga data files are not tested yet.
+Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. It is not included in the zip file. Amiga support is in progress.
 
 You have to install .NET Framework 4.6.1 to run the game. You can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
 
