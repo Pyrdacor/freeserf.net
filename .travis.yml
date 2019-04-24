@@ -1,2 +1,5 @@
 language: csharp
 solution: Freeserf.net.sln
+script:
+  - dotnet restore
+  - msbuild /p:Configuration=Release Freeserf.net.sln
