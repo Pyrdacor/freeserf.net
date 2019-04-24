@@ -17,3 +17,9 @@ artifacts:
 
 after_build:
   - 7z a Freeserf.net.zip %APPVEYOR_BUILD_FOLDER%\Freeserf.net\bin\Release\Freeserf.net.exe
+
+deploy:
+  - provider: Environment
+    name: freeserf.net github
+    on:
+      APPVEYOR_REPO_TAG: true
