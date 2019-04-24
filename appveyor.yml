@@ -12,17 +12,17 @@ install:
   - msbuild -t:restore
 
 artifacts:
-  - path: Freeserf.net-$(PLATFORM).zip
-    name: Freeserf.net-$(PLATFORM)
+  - path: Freeserf.net-Windows.zip
+    name: Freeserf.net-Windows
 
 after_build:
-  - 7z a Freeserf.net.zip %APPVEYOR_BUILD_FOLDER%\Freeserf.net\bin\Release\Freeserf.net.exe
+  - 7z a Freeserf.net-Windows.zip %APPVEYOR_BUILD_FOLDER%\Freeserf.net\bin\Release\Freeserf.net.exe
 
 test: off
 
 deploy:
   - provider: GitHub
-    name: freeserf.net_$(PLATFORM)_release
+    name: Freeserf.net-Windows
     tag: $(APPVEYOR_REPO_TAG_NAME)
     release: Freeserf.net-$(APPVEYOR_REPO_TAG_NAME)
     description: 'Release $(APPVEYOR_REPO_TAG_NAME)' 
