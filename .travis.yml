@@ -1,5 +1,22 @@
 language: csharp
 solution: Freeserf.net.sln
 script:
-  - dotnet restore
+  - nuget restore
   - msbuild /p:Configuration=Release Freeserf.net.sln
+
+stages:
+  - name: deploy
+    if: branch = master AND type = push AND os = linux
+
+before_deploy:
+  - tar -cvzf Freeserf.net.tar.gz Freeserf.net/bin/Release/Freeserf.net.exe
+
+deploy:
+    provider: releases
+    api_key: "CP6qsCjIlyJrYsuHs4tzdrYUWOO83Jlx6/U0Gqtl/SicGmBaN1hrYUEk6RSL6D8j"
+    file: Freeserf.net.tar.gz
+    skip_cleanup: true
+    draft: true
+    overwrite: true
+    on:
+        tags: true
