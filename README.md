@@ -17,6 +17,8 @@ Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stan
 
 You have to install .NET Framework 4.6.1 to run the game. For Windows you can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
 
+Since April 25, 2019 there is another project inside the solution which uses netcore2.1 and does no longer require .NET Framework nor WinForms. Moreover it uses the netstandard version of OpenTK.
+
 
 ## Patches
 
@@ -84,7 +86,7 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 The core is implemented as a .NET Standard 2.0 DLL. The renderer is also a .NET Standard 2.0 DLL and uses OpenTK for rendering. The sound engine is only implemented for Windows at the moment and uses the WinMM.dll with its WAVE and MIDI functionality.
 
-The main executable is a .NET Framework 4.6.1 project that depends on OpenTK and OpenTK.GLControl. It is easy to create another executable project with a different .NET version as the project only contains a Form, a GLControl and forwards input events.
+There are now two versions of the main executable. One (`Freeserf.net`) is a .NET Framework 4.6.1 project that depends on OpenTK and OpenTK.GLControl. The other one (`FreeserfNet`) is a netcore project that depends on OpenTK.NetStandard. It is easy to create another executable project with a different .NET version as the project only contains a basic OpenTK window and forwards input events.
 
 You can even implement your own renderer if you want. There are a bunch of interfaces in the Freeserf.Render namespace inside the core project that you can use for that.
 
