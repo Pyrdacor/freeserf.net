@@ -82,6 +82,7 @@ namespace Freeserf.UI
             //public int X, Y;
         }
 
+        object gameLock = new object();
         GameInitBox initBox;
 
         protected MapPos mapCursorPos = 0u;
@@ -250,34 +251,37 @@ namespace Freeserf.UI
 
         public void SetGame(Game game)
         {
-            if (Viewport != null)
+            lock (gameLock)
             {
-                Viewport.CleanUp();
-                DeleteChild(Viewport);
-                Viewport = null;
-            }
-
-            Game = game;
-            player = null;
-
-            if (Game != null)
-            {
-                if (game.Map == null)
+                if (Viewport != null)
                 {
-                    SetGame(null);
-                    Log.Debug.Write("game", "Internal error. Map is null.");
-                    return;
+                    Viewport.CleanUp();
+                    DeleteChild(Viewport);
+                    Viewport = null;
                 }
 
-                game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
+                Game = game;
+                player = null;
 
-                // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
-                Viewport = new Viewport(this, Game.Map);
-                Viewport.Displayed = true;
-                AddChild(Viewport, 0, 0);
+                if (Game != null)
+                {
+                    if (game.Map == null)
+                    {
+                        SetGame(null);
+                        Log.Debug.Write("game", "Internal error. Map is null.");
+                        return;
+                    }
+
+                    game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
+
+                    // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
+                    Viewport = new Viewport(this, Game.Map);
+                    Viewport.Displayed = true;
+                    AddChild(Viewport, 0, 0);
+                }
+
+                Layout();
             }
-
-            Layout();
         }
 
         public Player.Color GetPlayerColor(uint playerIndex)
@@ -879,71 +883,74 @@ namespace Freeserf.UI
                 return;
             }
 
-            if (this is RemoteInterface)
-                Game.UpdateVisuals();
-            else
-                Game.Update();
-
-            UpdateBuildingRoadSegments();
-
-            int tickDiff = (int)Game.ConstTick - (int)lastConstTick;
-            lastConstTick = Game.ConstTick;
-
-            /* Clear return arrow after a timeout */
-            if (returnTimeout < tickDiff)
+            lock (gameLock)
             {
-                msgFlags |= Misc.Bit(4);
-                msgFlags &= ~Misc.Bit(3);
-                returnTimeout = 0;
-            }
-            else
-            {
-                returnTimeout -= tickDiff;
-            }
+                if (this is RemoteInterface)
+                    Game.UpdateVisuals();
+                else
+                    Game.Update();
 
-            /* Handle newly enqueued messages */
-            if (player != null && player.HasMessage())
-            {
-                player.DropMessage();
+                UpdateBuildingRoadSegments();
 
-                while (player.HasNotification())
+                int tickDiff = (int)Game.ConstTick - (int)lastConstTick;
+                lastConstTick = Game.ConstTick;
+
+                /* Clear return arrow after a timeout */
+                if (returnTimeout < tickDiff)
                 {
-                    Message message = player.PeekNotification();
-
-                    if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
-                    {
-                        PlaySound(Audio.TypeSfx.Message);
-                        msgFlags |= Misc.Bit(0);
-                        break;
-                    }
-
-                    player.PopNotification();
+                    msgFlags |= Misc.Bit(4);
+                    msgFlags &= ~Misc.Bit(3);
+                    returnTimeout = 0;
                 }
-            }
-
-            if (player != null && Misc.BitTest(msgFlags, 1))
-            {
-                msgFlags &= ~Misc.Bit(1);
-
-                while (true)
+                else
                 {
-                    if (!player.HasNotification())
-                    {
-                        msgFlags &= ~Misc.Bit(0);
-                        break;
-                    }
-
-                    Message message = player.PeekNotification();
-
-                    if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
-                        break;
-
-                    player.PopNotification();
+                    returnTimeout -= tickDiff;
                 }
-            }
 
-            Viewport.Update();
-            SetRedraw();
+                /* Handle newly enqueued messages */
+                if (player != null && player.HasMessage())
+                {
+                    player.DropMessage();
+
+                    while (player.HasNotification())
+                    {
+                        Message message = player.PeekNotification();
+
+                        if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
+                        {
+                            PlaySound(Audio.TypeSfx.Message);
+                            msgFlags |= Misc.Bit(0);
+                            break;
+                        }
+
+                        player.PopNotification();
+                    }
+                }
+
+                if (player != null && Misc.BitTest(msgFlags, 1))
+                {
+                    msgFlags &= ~Misc.Bit(1);
+
+                    while (true)
+                    {
+                        if (!player.HasNotification())
+                        {
+                            msgFlags &= ~Misc.Bit(0);
+                            break;
+                        }
+
+                        Message message = player.PeekNotification();
+
+                        if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
+                            break;
+
+                        player.PopNotification();
+                    }
+                }
+
+                Viewport.Update();
+                SetRedraw();
+            }
         }
 
         void AddBuildingRoadSegment(MapPos pos, Direction dir)
