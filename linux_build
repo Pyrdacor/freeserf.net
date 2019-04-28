@@ -11,6 +11,3 @@ mkbundle -v --deps --simple Freeserf.net/bin/Release/Freeserf.net.exe -o serf/fr
 	--config /etc/mono/config \
 	--machine-config /etc/mono/4.5/machine.config
 
-
-#	-L Freeserf.Renderer.OpenTK/release \
-#	-L Freeserf.Network/release/ \
