@@ -22,6 +22,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Freeserf.FileSystem
 {
@@ -31,25 +32,59 @@ namespace Freeserf.FileSystem
         public static readonly string SaveGameFolder = "";
         public static readonly string GameDataFolder = "";
 
+
+        //https://docs.microsoft.com/en-us/dotnet/api/system.platformid?view=netframework-4.8
+        //https://stackoverflow.com/questions/5116977/how-to-check-the-os-version-at-runtime-e-g-windows-or-linux-without-using-a-con
+        static bool IsLinux()
+        {
+            int p = (int)Environment.OSVersion.Platform;
+            return (p == 4) || (p == 128);
+        }
+
+        static bool IsWindows()
+        {
+            int p = (int)Environment.OSVersion.Platform;
+            return p <= 3;
+        }
+
+        static bool IsOSX()
+        {
+            int p = (int)Environment.OSVersion.Platform;
+            return p == 6;
+        }
+
         static Paths()
         {
-#if WINDOWS
-            SaveGameFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Saved Games");
-            UserConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf.net", "user.cfg");
-#elif __APPLE__
-            SaveGameFolder = Environment.GetEnvironmentVariable("HOME");
-            SaveGameFolder += "/Library/Application Support";
-#else
-            SaveGameFolder = Environment.GetEnvironmentVariable("HOME");
-            SaveGameFolder += "/.local/share";
-#endif
+            Console.WriteLine();
 
-            SaveGameFolder += Path.DirectorySeparatorChar.ToString() +  "freeserf";
+            if (IsLinux())
+            {
+                SaveGameFolder = Environment.GetEnvironmentVariable("HOME");
+                SaveGameFolder += "/.local/share";
+            }
+            else if (IsWindows())
+            {                       
+                SaveGameFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Saved Games");
+                UserConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf.net", "user.cfg");
+            }
+            else if (IsOSX())
+            {                    
+                SaveGameFolder = Environment.GetEnvironmentVariable("HOME");
+                SaveGameFolder += "/Library/Application Support";
+            }
 
-#if !WINDOWS
-            UserConfigPath = SaveGameFolder + "/user.cfg";
-            SaveGameFolder += "/saves";
-#endif
+            if(SaveGameFolder == "")
+            {
+                throw new Exception("Unknown platform.");
+            }
+
+            SaveGameFolder += Path.DirectorySeparatorChar.ToString() + "freeserf";
+
+            if(!IsWindows())
+            {
+                UserConfigPath = SaveGameFolder + "/user.cfg";
+                SaveGameFolder += "/saves";
+            }
 
             GameDataFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         }
