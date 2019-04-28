@@ -2,8 +2,8 @@
 
 mkbundle -v --deps --simple Freeserf.net/bin/Release/Freeserf.net.exe -o serf/freeserf.net \
 	-L /usr/lib/mono/xbuild/Microsoft/Microsoft.NET.Build.Extensions/net461/lib/ \
-	-L packages/OpenTK.3.0.1/lib/net20/ \
-	-L packages/OpenTK.GLControl.3.0.1/lib/net20/ \
+	-L ~/.nuget/packages/opentk/3.0.1/lib/net20/ \
+	-L ~/.nuget/packages/opentk.glcontrol/3.0.1/lib/net20/ \
 	-L /usr/lib/mono/4.6.1-api/Facades/ \
 	-L Freeserf.Renderer.OpenTK/bin/Release/netstandard2.0/ \
     -L Freeserf.Network/bin/Release/netstandard2.0/ \
