@@ -19,7 +19,7 @@ stages:
     if: branch = master AND type = push AND os = linux
 
 before_deploy:
-  - tar -cvzf Freeserf.net-Linux.tar.gz Freeserf.net/bin/Release/Freeserf.net.exe changelog.txt
+  - tar -cvzf Freeserf.net-Linux.tar.gz freeserf.net changelog.txt
 
 deploy:
     provider: releases
