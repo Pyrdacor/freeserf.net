@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkbundle -v --deps --simple Freeserf.net/bin/Release/Freeserf.net.exe -o serf/freeserf.net \
+mkbundle -v --deps --simple Freeserf.net/bin/Release/Freeserf.net.exe -o freeserf.net \
 	-L /usr/lib/mono/xbuild/Microsoft/Microsoft.NET.Build.Extensions/net461/lib/ \
 	-L ~/.nuget/packages/opentk/3.0.1/lib/net20/ \
 	-L ~/.nuget/packages/opentk.glcontrol/3.0.1/lib/net20/ \
