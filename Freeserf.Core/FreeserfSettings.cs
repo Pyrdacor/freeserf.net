@@ -22,6 +22,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using Freeserf.Data;
 
@@ -51,14 +52,14 @@ namespace Freeserf
 
         public static T ByteSwap<T>(T x)
         {
-            if (TypeSize<T>.Size == 1)
+            if (Marshal.SizeOf<T>() == 1)
                 return x;
 
             var ul = (ulong)Convert.ChangeType(x, typeof(ulong));
 
             ul = SwapBytes(ul);
 
-            switch (TypeSize<T>.Size)
+            switch (Marshal.SizeOf<T>())
             {
                 case 2:
                     ul >>= 48;

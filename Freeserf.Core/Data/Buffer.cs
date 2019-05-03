@@ -23,24 +23,11 @@
 using System;
 using System.IO;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 
 namespace Freeserf.Data
 {
     using Endianess = Endian.Endianess;
-
-    internal static class TypeSize<T>
-    {
-        public readonly static uint Size;
-
-        static TypeSize()
-        {
-            var dm = new DynamicMethod("SizeOfType", typeof(int), new Type[] { });
-            ILGenerator il = dm.GetILGenerator();
-            il.Emit(OpCodes.Sizeof, typeof(T));
-            il.Emit(OpCodes.Ret);
-            Size = (uint)(int)dm.Invoke(null, null);
-        }
-    }
 
     unsafe public class BufferStream
     {
@@ -50,7 +37,7 @@ namespace Freeserf.Data
 
         public static BufferStream CreateFromValues<T>(T value, uint count)
         {
-            var size = TypeSize<T>.Size * count;
+            var size = (uint)Marshal.SizeOf<T>() * count;
 
             var stream = new BufferStream(size);
             stream.size = size;
@@ -58,20 +45,20 @@ namespace Freeserf.Data
 
             fixed (byte* pointer = stream.data)
             {
-                switch (TypeSize<T>.Size)
+                switch (Marshal.SizeOf<T>())
                 {
-                    case 0u:
+                    case 0:
                         break;
-                    case 1u:
+                    case 1:
                         Misc.CopyByte(pointer, (byte)v, count);
                         break;
-                    case 2u:
+                    case 2:
                         Misc.CopyWord(pointer, (ushort)v, count);
                         break;
-                    case 4u:
+                    case 4:
                         Misc.CopyDWord(pointer, (uint)v, count);
                         break;
-                    case 8u:
+                    case 8:
                         Misc.CopyQWord(pointer, (ulong)v, count);
                         break;
                 }
@@ -275,7 +262,7 @@ namespace Freeserf.Data
 
         public static Buffer CreateFromValues<T>(T value, uint count, Endianess endianess = Endianess.Default)
         {
-            var buffer = new Buffer(TypeSize<T>.Size * count, endianess);
+            var buffer = new Buffer((uint)Marshal.SizeOf<T>() * count, endianess);
 
             buffer.data = BufferStream.CreateFromValues(value, count);
 
@@ -456,7 +443,7 @@ namespace Freeserf.Data
 
         public T Pop<T>() where T : struct
         {
-            ulong val = PopInternal(TypeSize<T>.Size);
+            ulong val = PopInternal((uint)Marshal.SizeOf<T>());
 
             T value = (T)Convert.ChangeType(new TypeConverter(val), typeof(T));
 
@@ -634,7 +621,7 @@ namespace Freeserf.Data
 
         public void Push<T>(T value, uint count = 1)
         {
-            CheckSize(Size + (TypeSize<T>.Size * count));
+            CheckSize(Size + ((uint)Marshal.SizeOf<T>() * count));
 
             Push(CreateFromValues(value, count, endianess));
         }
