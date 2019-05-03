@@ -149,9 +149,9 @@ namespace Freeserf.Renderer.OpenTK
 
                     AddLayer(renderLayer);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // TODO: for now ignore but throw exception later
+                    throw new ExceptionFreeserf("render", $"Unable to create layer '{layer.ToString()}': {ex.Message}");
                 }
             }
 
