@@ -49,7 +49,7 @@ namespace Freeserf.Renderer.OpenTK
 
         protected static string GetFragmentShaderHeader()
         {
-            string header = $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor}0\n";
+            string header = $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor}\n";
 
             header += "\n";
             header += "#ifdef GL_ES\n";
@@ -66,7 +66,7 @@ namespace Freeserf.Renderer.OpenTK
 
         protected static string GetVertexShaderHeader()
         {
-            return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor}0\n\n";
+            return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor}\n\n";
         }
 
         protected static string GetInName(bool fragment)

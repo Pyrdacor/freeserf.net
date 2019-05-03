@@ -53,7 +53,7 @@ namespace Freeserf.Renderer.OpenTK
             {
                 var glslVersion = GL.GetString(StringName.ShadingLanguageVersion);
 
-                match = versionRegex.Match(openGLVersion);
+                match = versionRegex.Match(glslVersion);
 
                 if (match.Success && match.Index == 0 && match.Groups.Count >= 3)
                 {
