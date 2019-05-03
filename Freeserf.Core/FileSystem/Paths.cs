@@ -35,19 +35,19 @@ namespace Freeserf.FileSystem
 
         //https://docs.microsoft.com/en-us/dotnet/api/system.platformid?view=netframework-4.8
         //https://stackoverflow.com/questions/5116977/how-to-check-the-os-version-at-runtime-e-g-windows-or-linux-without-using-a-con
-        static bool IsLinux()
+        public static bool IsLinux()
         {
             int p = (int)Environment.OSVersion.Platform;
             return (p == 4) || (p == 128);
         }
 
-        static bool IsWindows()
+        public static bool IsWindows()
         {
             int p = (int)Environment.OSVersion.Platform;
             return p <= 3;
         }
 
-        static bool IsOSX()
+        public static bool IsOSX()
         {
             int p = (int)Environment.OSVersion.Platform;
             return p == 6;
@@ -55,8 +55,6 @@ namespace Freeserf.FileSystem
 
         static Paths()
         {
-            Console.WriteLine();
-
             if (IsLinux())
             {
                 SaveGameFolder = Environment.GetEnvironmentVariable("HOME");

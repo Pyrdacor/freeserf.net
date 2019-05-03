@@ -24,28 +24,35 @@ namespace Freeserf
             var assemblyPath = Assembly.GetEntryAssembly().Location;
             var assemblyDirectory = Path.GetDirectoryName(assemblyPath);
 
-            if (assemblyDirectory.EndsWith(@"\Debug") || assemblyDirectory.EndsWith(@"\Release"))
+            if (FileSystem.Paths.IsWindows())
             {
-                string projectFile = Path.GetFileNameWithoutExtension(assemblyPath) + ".csproj";
-
-                var root = new DirectoryInfo(assemblyDirectory);
-
-                while (root.Parent != null)
+                if (assemblyDirectory.EndsWith(@"\Debug") || assemblyDirectory.EndsWith(@"\Release"))
                 {
-                    if (File.Exists(Path.Combine(root.FullName, projectFile)))
-                        break;
+                    string projectFile = Path.GetFileNameWithoutExtension(assemblyPath) + ".csproj";
 
-                    root = root.Parent;
+                    var root = new DirectoryInfo(assemblyDirectory);
 
-                    if (root.Parent == null) // we could not find it (should not happen)
-                        ExecutablePath = assemblyDirectory;
+                    while (root.Parent != null)
+                    {
+                        if (File.Exists(Path.Combine(root.FullName, projectFile)))
+                            break;
+
+                        root = root.Parent;
+
+                        if (root.Parent == null) // we could not find it (should not happen)
+                            ExecutablePath = assemblyDirectory;
+                    }
+
+                    ExecutablePath = root.FullName;
                 }
-
-                ExecutablePath = root.FullName;
+                else
+                {
+                    ExecutablePath = assemblyDirectory;
+                }
             }
-            else
+            else if (string.IsNullOrWhiteSpace(ExecutablePath)) // this could be caused by mono mkbundle
             {
-                ExecutablePath = assemblyDirectory;
+                ExecutablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath ?? "");
             }
         }
 
