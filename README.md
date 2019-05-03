@@ -19,6 +19,8 @@ You have to install .NET Framework 4.6.1 to run the game. For Windows you can do
 
 Since April 25, 2019 there is another project inside the solution which uses netcore2.1 and does no longer require .NET Framework nor WinForms. Moreover it uses the netstandard version of OpenTK.
 
+Since May 4, 2019 the game is running on ubuntu.
+
 
 ## Patches
 
