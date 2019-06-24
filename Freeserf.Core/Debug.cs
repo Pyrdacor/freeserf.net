@@ -114,7 +114,7 @@ namespace Freeserf
             return Message;
         }
 
-        public override string Message => System == null ? Description : "[" + System + "]" + Description;
+        public override string Message => System == null ? Description : "[" + System + "] " + Description;
 
         public override string StackTrace => InnerException == null ? base.StackTrace : InnerException.StackTrace;
     }
