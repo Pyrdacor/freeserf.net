@@ -127,11 +127,11 @@ namespace Freeserf.Renderer.OpenTK.Audio
         {
             data.SetEndianess(Endian.Endianess.Big);
 
-            data.Pop(20); // songname
+            data.Skip(20); // songname
 
             for (int i = 1; i < 32; ++i) // samples 1-31
             {
-                data.Pop(22); // samplename
+                data.Skip(22); // samplename
 
                 samples.Add(new Sample()
                 {

@@ -388,6 +388,16 @@ namespace Freeserf.Data
             return *(read + offset);
         }
 
+        public void Skip(uint size)
+        {
+            uint offset = (uint)(read - Data);
+
+            if (offset + size > Size)
+                throw new IndexOutOfRangeException("Given size exceeds buffer size.");
+
+            read += size;
+        }
+
         public Buffer Pop(uint size)
         {
             uint offset = (uint)(read - Data);
