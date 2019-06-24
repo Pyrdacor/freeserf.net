@@ -1314,7 +1314,7 @@ namespace Freeserf.Data
             unsafe
             {
                 // it starts at 1080 or later
-                str = new string((char*)data.Data, 1080, (int)data.Size - 1080);
+                str = Encoding.ASCII.GetString(data.Data + 1080, (int)data.Size - 1080);
             }
 
             pos = str.IndexOf("M!K!");
