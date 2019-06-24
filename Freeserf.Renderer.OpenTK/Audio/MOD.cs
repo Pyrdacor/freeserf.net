@@ -58,7 +58,13 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
         class Pattern
         {
-            readonly Channel[] channels = new Channel[4];
+            readonly Channel[] channels = new Channel[4]
+            {
+                new Channel(),
+                new Channel(),
+                new Channel(),
+                new Channel()
+            };
 
             public void AddNote(int channel, Note note)
             {
@@ -148,14 +154,14 @@ namespace Freeserf.Renderer.OpenTK.Audio
             if (songLength > 128)
                 throw new ExceptionAudio("Invalid MOD format.");
 
-            data.Pop(1);
+            data.Skip(1);
 
             byte[] songPatterns = data.Pop(128).ReinterpretAsArray(128);
 
             if (data.Pop(4).ToString() != "M!K!")
                 throw new ExceptionAudio("Invalid MOD format.");
 
-            int numPatterns = songPatterns.Max();
+            int numPatterns = songPatterns.Max() + 1;
             List<Pattern> patterns = new List<Pattern>(numPatterns);
 
             for (int i = 0; i < numPatterns; ++i)
