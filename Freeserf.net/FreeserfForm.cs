@@ -56,7 +56,6 @@ namespace Freeserf
 
                 UserConfig.Load(FileSystem.Paths.UserConfigPath);
 
-                // TODO: for now we just load DOS data (test path)
                 var data = Data.Data.GetInstance();
                 string dataPath = Program.ExecutablePath;// Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
 

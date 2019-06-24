@@ -1111,9 +1111,17 @@ namespace Freeserf.Data
                     {
                         sprite = GetHudSprite(18);
                     }
+                    else if (index == 3) // this is not present in amiga data but this could be a fully transparent graphic as well
+                    {
+                        sprite = new Sprite(8u, 12u);
+                    }
                     else if (index == 4)
                     {
                         sprite = GetHudSprite(19);
+                    }
+                    else if (index == 5) // this is not present in amiga data but this could be a fully transparent graphic as well
+                    {
+                        sprite = new Sprite(8u, 10u);
                     }
                     else if (index == 6)
                     {
