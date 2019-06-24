@@ -1686,14 +1686,20 @@ namespace Freeserf.Data
                 return null;
             }
 
-            ushort shadow_offset = data.Pop<ushort>();
-            data.Pop<ushort>();
-            data.Pop<byte>();
-            data.Pop<byte>();
+            ushort shadowOffset = data.Pop<ushort>();
+            ushort bitplaneSize = data.Pop<ushort>();
+            byte width = data.Pop<byte>();
+            byte height = data.Pop<byte>();
             data.Pop<byte>();  // drop offset_y
             data.Pop<byte>();  // drop compression
 
-            Buffer shadow = data.GetTail(shadow_offset);
+            if (height == 0u)
+                return null;
+
+            if (width == 0u)
+                width = (byte)(bitplaneSize / height);
+
+            Buffer shadow = data.GetTail(shadowOffset);
             int shadowOffsetY = (sbyte)shadow.Pop<byte>();
             uint shadowHeight = shadow.Pop<byte>();
             int shadowOffsetX = (sbyte)shadow.Pop<byte>();
