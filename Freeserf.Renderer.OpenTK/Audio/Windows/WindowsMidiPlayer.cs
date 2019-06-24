@@ -262,10 +262,15 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         protected override Audio.ITrack CreateTrack(int trackID)
         {
+            var music = dataSource.GetMusic((uint)trackID);
+
+            if (music == null)
+                throw new ExceptionFreeserf("data", $"Error loading music track {trackID}");
+
             if (dataSource is DataSourceAmiga)
-                return new XMI(new MOD(dataSource.GetSound((uint)trackID))); // TODO: needs testing with amiga data
+                return new XMI(new MOD(music)); // TODO: needs testing with amiga data
             else
-                return new XMI(dataSource.GetMusic((uint)trackID));
+                return new XMI(music);
         }
 
         public override void Stop()
