@@ -268,10 +268,10 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             if (music == null)
                 throw new ExceptionFreeserf("data", $"Error loading music track {trackID}");
 
-            if (dataSource is DataSourceAmiga)
-                return new MOD(music); // TODO: needs testing with amiga data
-            else
+            if (dataSource is DataSourceDos)
                 return new XMI(music);
+
+            throw new ExceptionFreeserf("data", $"Only DOS data uses MIDI music");
         }
 
         public override void Stop()
