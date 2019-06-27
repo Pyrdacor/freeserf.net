@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Freeserf.Audio
 {
-    public class MOD : Audio.ITrack
+    public class MOD
     {
         class Sample
         {
@@ -27,7 +27,19 @@ namespace Freeserf.Audio
 
                 double factor = Math.Min(1.0, Volume / 64.0);
 
-                index %= Data.Length;
+                if (index >= Data.Length)
+                {
+                    if (RepeatLength > 0)
+                    {
+                        index -= Data.Length;
+                        index %= RepeatLength;
+                        index += RepeatPointOffset;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
 
                 return (short)Misc.Round(((sbyte)Data[index]) * 256.0 * factor);
             }
@@ -152,6 +164,12 @@ namespace Freeserf.Audio
 
             data.Skip(20); // songname
 
+            // add dummy sample 0
+            samples.Add(new Sample()
+            {
+                Length = 0
+            });
+
             for (int i = 1; i < 32; ++i) // samples 1-31
             {
                 data.Skip(22); // samplename
@@ -162,7 +180,7 @@ namespace Freeserf.Audio
                     FineTune = ConvertFineTune(data.Pop<byte>() & 0xf),
                     Volume = data.Pop<byte>(), // 0-64, change in dB = 20*log10(Volume/64)
                     RepeatPointOffset = data.Pop<UInt16>() * 2,
-                    RepeatLength = data.Pop<UInt16>() * 2
+                    RepeatLength = Math.Max(0, data.Pop<UInt16>() - 1) * 2
                 });
             }
 
@@ -203,7 +221,8 @@ namespace Freeserf.Audio
                 if (samples[i].Length > 0)
                 {
                     data.Skip(2); // ignore tracker word
-                    uint length = (uint)Math.Max(0, samples[i].Length - 2);
+                    samples[i].Length -= 2;
+                    uint length = (uint)samples[i].Length;
                     samples[i].SetData(data.Pop(length).ReinterpretAsArray(length));
                 }
             }
@@ -240,9 +259,15 @@ namespace Freeserf.Audio
 
         public short[] ConvertToWav()
         {
+            double[] finetuneTable = new double[16];
+
+            for (int t = 0; t < 16; t++)
+                finetuneTable[t] = Math.Pow(2.0, (t - 8) / 12.0 / 8.0);
+
             var waveData = new List<short>();
 
-            const double tickInterval = 20.0;
+            const double tickTime = 90.0;
+            const double ticksPerSecond = 1000.0 / tickTime;
             const double clockRate = 7093789.2; // Hz (PAL), NTSC would be 7159090.5 Hz
             const double halfClockRate = 0.5 * clockRate;
 
@@ -260,32 +285,32 @@ namespace Freeserf.Audio
                         var note = pattern.GetNextNote(i);
                         int sample = (note.SampleNumber == 0) ? activeSamples[i] : note.SampleNumber;
 
+                        if (sample < 0 || sample > 31)
+                            throw new ExceptionFreeserf($"Invalid sample number {sample} in MOD");
+
                         int pitchPeriod = (note.Period == 0) ? activePeriods[i] : note.Period;
 
+                        if (pitchPeriod == 0)
+                            pitchPeriod = 214;
+
                         double dataRatePerSecond = halfClockRate / pitchPeriod;
+                        double sampleRate = dataRatePerSecond * finetuneTable[samples[sample].FineTune + 8] / 8000.0; // playback with 8kHz
                         double currentSampleTime = (sample == activeSamples[i]) ? activeSampleTimes[i] : 0.0;
+                        int bytesPerTick = (int)Math.Round(dataRatePerSecond / ticksPerSecond);
 
-                        // a tick is 20 ms
-                        int bytesPerTick = (int)Math.Floor(dataRatePerSecond / 50.0);
-                        int currentTick = (int)Math.Floor(currentSampleTime / tickInterval);
-                        int startbyte = currentTick * bytesPerTick;
-
-                        int multiplier = Misc.Round(44100.0 / dataRatePerSecond);
-
-                        for (int n = 0; n < bytesPerTick; ++n)
+                        for (int b = 0; b < bytesPerTick; ++b)
                         {
-                            for (int m = 0; m < multiplier; ++m)
-                            {
-                                if (samples[sample].Length <= 2)
-                                    channelData[i].Add(0);
-                                else
-                                    channelData[i].Add(samples[sample].GetData(startbyte + n));
-                            }
+                            if (samples[sample].Length == 0 || samples[sample].Volume == 0)
+                                channelData[i].Add(0);
+                            else
+                                channelData[i].Add(samples[sample].GetData((int)Math.Floor(currentSampleTime)));
+
+                            activeSampleTimes[i] += sampleRate;
+                            currentSampleTime += sampleRate;
                         }
 
                         activeSamples[i] = sample;
                         activePeriods[i] = pitchPeriod;
-                        activeSampleTimes[i] += tickInterval; // milliseconds
                     }
                 }
             }
@@ -302,19 +327,10 @@ namespace Freeserf.Audio
 
             for (int index = 0; index < maxLength; ++index)
             {
-                for (int i = 0; i < 4; ++i)
-                {
-                    waveData.Add(channelData[i][index]);
-                }
+                waveData.Add((short)((channelData[0][index] + channelData[1][index] + channelData[2][index] + channelData[3][index]) / 4));
             }
 
             return waveData.ToArray();
-        }
-
-        public void Play(Audio.Player player)
-        {
-            // TODO
-            throw new NotImplementedException();
         }
     }
 }
