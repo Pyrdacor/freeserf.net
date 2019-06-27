@@ -877,7 +877,7 @@ namespace Freeserf.UI
                             return;
                         }
 
-                        if (!GameManager.Instance.LoadGame(path, interf.RenderView, interf.Viewer))
+                        if (!GameManager.Instance.LoadGame(path, interf.RenderView, interf.AudioInterface, interf.Viewer))
                         {
                             interf.OpenGameInit(GameType.Load);
 
@@ -920,7 +920,7 @@ namespace Freeserf.UI
                                 break;
                         }
 
-                        if (!GameManager.Instance.StartGame(mission, interf.RenderView))
+                        if (!GameManager.Instance.StartGame(mission, interf.RenderView, interf.AudioInterface))
                         {
                             return;
                         }

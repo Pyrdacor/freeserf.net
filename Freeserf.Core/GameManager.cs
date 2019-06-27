@@ -72,14 +72,14 @@ namespace Freeserf
             return currentGame;
         }
 
-        public bool StartRandomGame(Render.IRenderView renderView, bool aiPlayersOnly)
+        public bool StartRandomGame(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, bool aiPlayersOnly)
         {
-            return StartGame(new GameInfo(new Random(), aiPlayersOnly), renderView);
+            return StartGame(new GameInfo(new Random(), aiPlayersOnly), renderView, audioInterface);
         }
 
-        public bool StartGame(GameInfo gameInfo, Render.IRenderView renderView)
+        public bool StartGame(GameInfo gameInfo, Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
-            Game newGame = gameInfo.Instantiate(renderView);
+            Game newGame = gameInfo.Instantiate(renderView, audioInterface);
 
             if (newGame == null)
             {
@@ -103,9 +103,9 @@ namespace Freeserf
             SetCurrentGame(null);
         }
 
-        public bool LoadGame(string path, Render.IRenderView renderView, Viewer viewer)
+        public bool LoadGame(string path, Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
         {
-            Game newGame = new Game(renderView);
+            Game newGame = new Game(renderView, audioInterface);
 
             if (!GameStore.Instance.Load(path, newGame))
             {

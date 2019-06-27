@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
+using Freeserf.Audio;
 using Freeserf.Data;
 
 namespace Freeserf.Renderer.OpenTK.Audio.Windows
@@ -268,7 +269,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 throw new ExceptionFreeserf("data", $"Error loading music track {trackID}");
 
             if (dataSource is DataSourceAmiga)
-                return new XMI(new MOD(music)); // TODO: needs testing with amiga data
+                return new MOD(music); // TODO: needs testing with amiga data
             else
                 return new XMI(music);
         }

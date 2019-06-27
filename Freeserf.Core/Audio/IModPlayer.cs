@@ -1,22 +1,21 @@
-﻿namespace Freeserf.Renderer.OpenTK.Audio
+﻿namespace Freeserf.Audio
 {
-    internal interface IMidiPlayer
+    public interface IModPlayer
     {
         bool Available { get; }
         bool Enabled { get; set; }
         bool Paused { get; }
         bool Running { get; }
         bool Looped { get; }
-        XMI CurrentXMI { get; }
 
-        void Play(XMI xmi, bool looped);
+        void Play(MOD mod, bool looped);
         void Stop();
         void Pause();
         void Resume();
     }
 
-    internal interface IMidiPlayerFactory
+    public interface IModPlayerFactory
     {
-        IMidiPlayer GetMidiPlayer();
+        IModPlayer GetModPlayer();
     }
 }

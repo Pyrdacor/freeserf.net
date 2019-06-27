@@ -120,6 +120,7 @@ namespace Freeserf.UI
         ISprite cursorSprite = null;
 
         public IRenderView RenderView { get; } = null;
+        public Audio.IAudioInterface AudioInterface { get; } = null;
         public Viewport Viewport { get; private set; } = null;
         public PanelBar PanelBar { get; private set; } = null;
         public PopupBox PopupBox { get; private set; } = null;
@@ -133,10 +134,11 @@ namespace Freeserf.UI
         public string ServerGameName => initBox?.ServerGameName ?? "";
         public GameInfo ServerGameInfo => initBox?.ServerGameInfo;
 
-        public Interface(IRenderView renderView, Viewer viewer)
-            : base(renderView)
+        public Interface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
+            : base(renderView, audioInterface)
         {
             RenderView = renderView;
+            AudioInterface = audioInterface;
             Viewer = viewer; 
 
             TextRenderer = new TextRenderer(renderView);
@@ -378,7 +380,7 @@ namespace Freeserf.UI
         public void OpenGameInit(GameInitBox.GameType gameType = GameInitBox.GameType.Custom)
         {
             // the following code will start the intro mission that is played in the background while the GameInitBox is active
-            GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView);
+            GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView, AudioInterface);
 
             ClosePopup();
 
@@ -428,7 +430,7 @@ namespace Freeserf.UI
         {
             if (!player.HasNotification())
             {
-                PlaySound(Audio.TypeSfx.Click);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 return;
             }
             else if (!Misc.BitTest(msgFlags, 3))
@@ -466,7 +468,7 @@ namespace Freeserf.UI
 
             msgFlags |= Misc.Bit(1);
             returnTimeout = 60 * Global.TICKS_PER_SEC;
-            PlaySound(Audio.TypeSfx.Click);
+            PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
         }
 
         public void ReturnFromMessage()
@@ -485,7 +487,7 @@ namespace Freeserf.UI
                     ClosePopup();
                 }
 
-                PlaySound(Audio.TypeSfx.Click);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
             }
         }
 
@@ -773,7 +775,7 @@ namespace Freeserf.UI
 
             if (mapCursorType == CursorType.RemovableFlag)
             {
-                PlaySound(Audio.TypeSfx.Click);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 Game.DemolishFlag(mapCursorPos, player);
                 DetermineMapCursorType();
             }
@@ -789,13 +791,13 @@ namespace Freeserf.UI
                     /* TODO */
                 }
 
-                PlaySound(Audio.TypeSfx.Ahhh);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Ahhh);
                 Game.DemolishBuilding(mapCursorPos, player);
                 DetermineMapCursorType();
             }
             else
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
             }
 
             UpdateInterface();
@@ -809,7 +811,7 @@ namespace Freeserf.UI
 
             if (!Game.BuildFlag(mapCursorPos, player))
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
             }
 
@@ -824,11 +826,11 @@ namespace Freeserf.UI
 
             if (!Game.BuildBuilding(mapCursorPos, type, player))
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
             }
 
-            PlaySound(Audio.TypeSfx.Accepted);
+            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             ClosePopup();
 
             /* Move cursor to flag. */
@@ -844,11 +846,11 @@ namespace Freeserf.UI
 
             if (!Game.BuildCastle(mapCursorPos, player))
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
             }
 
-            PlaySound(Audio.TypeSfx.Accepted);
+            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             UpdateMapCursorPos(mapCursorPos);
         }
 
@@ -859,12 +861,12 @@ namespace Freeserf.UI
 
             if (!Game.BuildRoad(buildingRoad, player))
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 Game.DemolishFlag(mapCursorPos, player);
             }
             else
             {
-                PlaySound(Audio.TypeSfx.Accepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                 BuildRoadEnd();
             }
         }
@@ -918,7 +920,7 @@ namespace Freeserf.UI
 
                         if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
                         {
-                            PlaySound(Audio.TypeSfx.Message);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Message);
                             msgFlags |= Misc.Bit(0);
                             break;
                         }
@@ -1371,7 +1373,7 @@ namespace Freeserf.UI
                 /* Audio */
                 case 'S':
                     {
-                        Audio.Player audioPlayer = Audio?.GetSoundPlayer();
+                        Audio.Audio.Player audioPlayer = Audio?.GetSoundPlayer();
 
                         if (audioPlayer != null)
                         {
@@ -1382,7 +1384,7 @@ namespace Freeserf.UI
                     }
                 case 'M':
                     {
-                        Audio.Player audioPlayer = Audio?.GetMusicPlayer();
+                        Audio.Audio.Player audioPlayer = Audio?.GetMusicPlayer();
 
                         if (audioPlayer != null)
                         {
@@ -1448,8 +1450,8 @@ namespace Freeserf.UI
     {
         readonly Network.ILocalServer server = null;
 
-        public ServerInterface(IRenderView renderView, Viewer viewer, Network.ILocalServer server)
-            : base(renderView, viewer)
+        public ServerInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Network.ILocalServer server)
+            : base(renderView, audioInterface, viewer)
         {
             this.server = server;
         }
@@ -1473,8 +1475,8 @@ namespace Freeserf.UI
 
     internal class RemoteInterface : Interface
     {
-        public RemoteInterface(IRenderView renderView, Viewer viewer)
-            : base(renderView, viewer)
+        public RemoteInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
+            : base(renderView, audioInterface, viewer)
         {
 
         }

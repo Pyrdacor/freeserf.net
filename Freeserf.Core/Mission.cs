@@ -560,9 +560,9 @@ namespace Freeserf
             return (uint)PlayerInfo.Characters.Length;
         }
 
-        public Game Instantiate(Render.IRenderView renderView)
+        public Game Instantiate(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
-            Game game = new Game(renderView);
+            Game game = new Game(renderView, audioInterface);
 
             if (!game.Init(MapSize, RandomBase))
             {

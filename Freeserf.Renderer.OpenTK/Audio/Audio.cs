@@ -1,8 +1,9 @@
 ﻿using Freeserf.Data;
+using Freeserf.Audio;
 
 namespace Freeserf.Renderer.OpenTK.Audio
 {
-    public class Audio : Freeserf.Audio, Freeserf.Audio.IVolumeController
+    public class Audio : Freeserf.Audio.Audio, Freeserf.Audio.Audio.IVolumeController
     {
         Player musicPlayer = null;
         Player soundPlayer = null;
@@ -13,16 +14,18 @@ namespace Freeserf.Renderer.OpenTK.Audio
             {
                 IMidiPlayerFactory midiPlayerFactory;
                 IWavePlayerFactory wavePlayerFactory;
+                IModPlayerFactory modPlayerFactory;
 
 #if WINDOWS
                 midiPlayerFactory = new Windows.WindowsMidiPlayerFactory(dataSource);
                 wavePlayerFactory = new Windows.WindowsWavePlayerFactory(dataSource);
+                modPlayerFactory = new Windows.WindowsModPlayerFactory(dataSource);
 #else
                 throw new ExceptionAudio("Unsupported platform.");
                 // TODO: other platforms
 #endif
 
-                musicPlayer = midiPlayerFactory?.GetMidiPlayer() as Audio.Player;
+                musicPlayer = (dataSource is DataSourceDos) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
                 soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
             }
             catch
@@ -39,7 +42,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             Log.Info.Write("audio", "No audio device available. Sound is deactivated.");
         }
 
-        public override Audio.Player GetMusicPlayer()
+        public override Freeserf.Audio.Audio.Player GetMusicPlayer()
         {
             return musicPlayer;
         }
@@ -95,7 +98,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             this.dataSource = dataSource;
         }
 
-        public Freeserf.Audio GetAudio()
+        public Freeserf.Audio.Audio GetAudio()
         {
             if (audio == null)
                 audio = new Audio(dataSource);

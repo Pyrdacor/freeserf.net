@@ -21,6 +21,7 @@
  */
 
 using System;
+using Audio = Freeserf.Audio;
 
 namespace Freeserf.UI
 {
@@ -515,7 +516,7 @@ namespace Freeserf.UI
             {
                 case ButtonId.Map:
                 case ButtonId.MapStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -545,7 +546,7 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.Sett:
                 case ButtonId.SettStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -563,7 +564,7 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.Stats:
                 case ButtonId.StatsStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -581,7 +582,7 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.BuildRoad:
                 case ButtonId.BuildRoadStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (interf.IsBuildingRoad())
                     {
@@ -593,12 +594,12 @@ namespace Freeserf.UI
                     }
                     break;
                 case ButtonId.BuildFlag:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                     interf.BuildFlag();
                     break;
                 case ButtonId.BuildSmall:
                 case ButtonId.BuildSmallStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -616,7 +617,7 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.BuildLarge:
                 case ButtonId.BuildLargeStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -634,7 +635,7 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.BuildMine:
                 case ButtonId.BuildMineStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -674,19 +675,19 @@ namespace Freeserf.UI
 
                         if (!r)
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                             interf.UpdateMapCursorPos(interf.GetMapCursorPos());
                         }
                         else
                         {
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.UpdateMapCursorPos(interf.GetMapCursorPos());
                         }
                     }
                     break;
                 case ButtonId.GroundAnalysis:
                 case ButtonId.GroundAnalysisStarred:
-                    PlaySound(Audio.TypeSfx.Click);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
                     if (popup != null && popup.Displayed)
                     {
@@ -771,7 +772,7 @@ namespace Freeserf.UI
 
                 interf.GetPlayer().AddTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPos());
 
-                PlaySound(Audio.TypeSfx.Accepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             }
 
             return true;

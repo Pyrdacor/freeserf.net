@@ -28,51 +28,51 @@ namespace Freeserf
 
     public abstract class Viewer : GameManager.IHandler
     {
-        public static Viewer CreateLocalPlayer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public static Viewer CreateLocalPlayer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
         {
-            return new LocalPlayerViewer(renderView, previousViewer, gui);
+            return new LocalPlayerViewer(renderView, audioInterface, previousViewer, gui);
         }
 
         // Server must also receive events from clients (with the clients player index)
         // Server should have multiple interfaces
-        public static Viewer CreateServerPlayer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public static Viewer CreateServerPlayer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
         {
-            return new ServerViewer(renderView, previousViewer, gui);
+            return new ServerViewer(renderView, audioInterface, previousViewer, gui);
         }
 
         // Client must also receive events from server (with the other clients player index)
-        public static Viewer CreateClientPlayer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public static Viewer CreateClientPlayer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
         {
             throw new NotSupportedException("Not supported yet.");
         }
 
-        public static Viewer CreateLocalSpectator(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public static Viewer CreateLocalSpectator(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
         {
-            return new LocalSpectatorViewer(renderView, previousViewer, gui);
+            return new LocalSpectatorViewer(renderView, audioInterface, previousViewer, gui);
         }
 
-        public static Viewer CreateRemoteSpectator(Render.IRenderView renderView, Viewer previousViewer, bool resticted, Gui gui)
+        public static Viewer CreateRemoteSpectator(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, bool resticted, Gui gui)
         {
             throw new NotSupportedException("Not supported yet.");
         }
 
-        public static Viewer Create(Type type, Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public static Viewer Create(Type type, Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
         {
             switch (type)
             {
                 default:
                 case Type.LocalPlayer:
-                    return CreateLocalPlayer(renderView, previousViewer, gui);
+                    return CreateLocalPlayer(renderView, audioInterface, previousViewer, gui);
                 case Type.LocalSpectator:
-                    return CreateLocalSpectator(renderView, previousViewer, gui);
+                    return CreateLocalSpectator(renderView, audioInterface, previousViewer, gui);
                 case Type.Server:
-                    return CreateServerPlayer(renderView, previousViewer, gui);
+                    return CreateServerPlayer(renderView, audioInterface, previousViewer, gui);
                 case Type.Client:
-                    return CreateClientPlayer(renderView, previousViewer, gui);
+                    return CreateClientPlayer(renderView, audioInterface, previousViewer, gui);
                 case Type.RemoteSpectator:
-                    return CreateRemoteSpectator(renderView, previousViewer, false, gui);
+                    return CreateRemoteSpectator(renderView, audioInterface, previousViewer, false, gui);
                 case Type.RestrictedRemoteSpectator:
-                    return CreateRemoteSpectator(renderView, previousViewer, true, gui);
+                    return CreateRemoteSpectator(renderView, audioInterface, previousViewer, true, gui);
             }
         }
 
@@ -114,7 +114,7 @@ namespace Freeserf
             if (ViewerType == type)
                 return;
 
-            Gui.SetViewer(Create(type, MainInterface.RenderView, this, Gui));
+            Gui.SetViewer(Create(type, MainInterface.RenderView, MainInterface.AudioInterface, this, Gui));
         }
 
         public abstract bool SendEvent(Event.EventArgs args);
@@ -156,19 +156,19 @@ namespace Freeserf
 
         }
 
-        public LocalPlayerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public LocalPlayerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : this(renderView, previousViewer, gui, Type.LocalPlayer)
         {
             if (previousViewer == null)
             {
                 Init();
-                MainInterface = new Interface(renderView, this);
+                MainInterface = new Interface(renderView, audioInterface, this);
                 MainInterface.OpenGameInit();
             }
             else
             {
                 if (previousViewer.MainInterface.GetType() != typeof(Interface))
-                    MainInterface = new Interface(renderView, this);
+                    MainInterface = new Interface(renderView, audioInterface, this);
                 else
                     MainInterface = previousViewer.MainInterface;
 
@@ -189,19 +189,19 @@ namespace Freeserf
 
         }
 
-        public LocalSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public LocalSpectatorViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : this(renderView, previousViewer, gui, Type.LocalSpectator)
         {
             if (previousViewer == null)
             {
                 Init();
-                MainInterface = new Interface(renderView, this);
+                MainInterface = new Interface(renderView, audioInterface, this);
                 MainInterface.OpenGameInit();
             }
             else
             {
                 if (previousViewer.MainInterface.GetType() != typeof(Interface))
-                    MainInterface = new Interface(renderView, this);
+                    MainInterface = new Interface(renderView, audioInterface, this);
                 else
                     MainInterface = previousViewer.MainInterface;
 
@@ -237,7 +237,7 @@ namespace Freeserf
             var music = MainInterface.Audio?.GetMusicPlayer();
 
             if (music != null && music.Enabled)
-                music.PlayTrack((int)Audio.TypeMidi.Track0);
+                music.PlayTrack((int)Audio.Audio.TypeMidi.Track0);
 
             MainInterface.SetGame(game);
             MainInterface.SetPlayer(0);
@@ -248,7 +248,7 @@ namespace Freeserf
             MainInterface.SetGame(null);
 
             if (!(this is LocalPlayerViewer))
-                Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, this, Gui));
+                Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, MainInterface.AudioInterface, this, Gui));
                 
         }
     }
@@ -258,7 +258,7 @@ namespace Freeserf
         Network.ILocalServer server = null;
         internal override Interface MainInterface { get; }
 
-        public ServerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
+        public ServerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : base(renderView, previousViewer, gui, Type.Server)
         {
             // Note: It is ok if the only clients are spectators, but running a server without any connected client make no sense.
@@ -267,7 +267,7 @@ namespace Freeserf
             server = Network.Network.DefaultServerFactory.CreateLocal(previousViewer.MainInterface.ServerGameName, previousViewer.MainInterface.ServerGameInfo);
 
             Init();
-            MainInterface = new ServerInterface(renderView, this, server);
+            MainInterface = new ServerInterface(renderView, audioInterface, this, server);
         }
 
         public override void OnNewGame(Game game)
@@ -313,8 +313,8 @@ namespace Freeserf
     {
         public override Access AccessRights => Access.Player;
 
-        public ClientViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui)
-            : base(renderView, previousViewer, gui, Type.Client)
+        public ClientViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
+            : base(renderView, audioInterface, previousViewer, gui, Type.Client)
         {
 
         }
@@ -328,15 +328,15 @@ namespace Freeserf
         public override bool Ingame => MainInterface.Ingame;
         internal override Interface MainInterface { get; }
 
-        protected RemoteSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
+        protected RemoteSpectatorViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui, Type type)
             : base(renderView, gui, type)
         {
             Init();
-            MainInterface = new RemoteInterface(renderView, this);
+            MainInterface = new RemoteInterface(renderView, audioInterface, this);
         }
 
-        public RemoteSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, bool restricted)
-            : this(renderView, previousViewer, gui, restricted ? Type.RestrictedRemoteSpectator : Type.RemoteSpectator)
+        public RemoteSpectatorViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui, bool restricted)
+            : this(renderView, audioInterface, previousViewer, gui, restricted ? Type.RestrictedRemoteSpectator : Type.RemoteSpectator)
         {
 
         }
@@ -384,7 +384,7 @@ namespace Freeserf
             var music = MainInterface.Audio?.GetMusicPlayer();
 
             if (music != null && music.Enabled)
-                music.PlayTrack((int)Audio.TypeMidi.Track0);
+                music.PlayTrack((int)Audio.Audio.TypeMidi.Track0);
 
             MainInterface.SetGame(game);
             MainInterface.SetPlayer(0);
@@ -394,7 +394,7 @@ namespace Freeserf
         {
             MainInterface.SetGame(null);
 
-            Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, this, Gui));
+            Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, MainInterface.AudioInterface, this, Gui));
         }
     }
 }

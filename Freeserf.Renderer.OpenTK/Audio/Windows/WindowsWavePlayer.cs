@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
+using Freeserf.Audio;
 using Freeserf.Data;
 
 namespace Freeserf.Renderer.OpenTK.Audio.Windows
@@ -28,7 +29,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
     internal class WindowsWavePlayer : Audio.Player, Audio.IVolumeController, IWavePlayer, IDisposable
     {
         IntPtr handle = IntPtr.Zero;
-        DataSource dataSource = null;
+        protected DataSource dataSource = null;
         WinMMNatives.Wave wave = null;
 
         public WindowsWavePlayer(DataSource dataSource)
@@ -46,7 +47,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         }
 
-        class WaveTrack : Audio.ITrack
+        protected class WaveTrack : Audio.ITrack
         {
             short[] data = null;
 
@@ -55,7 +56,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
                 this.data = data;
             }
 
-            public void Play(Freeserf.Audio.Player player)
+            public void Play(Freeserf.Audio.Audio.Player player)
             {
                 if (player is WindowsWavePlayer)
                     (player as WindowsWavePlayer).Play(data);

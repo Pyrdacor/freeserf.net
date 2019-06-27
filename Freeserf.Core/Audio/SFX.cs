@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Freeserf.Renderer.OpenTK.Audio
+namespace Freeserf.Audio
 {
-    class SFX
+    public static class SFX
     {
         public static short[] ConvertToWav(Data.Buffer data, int level = 0, bool invert = false)
         {

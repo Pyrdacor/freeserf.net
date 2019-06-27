@@ -22,7 +22,7 @@
 
 using System.Collections.Generic;
 
-namespace Freeserf
+namespace Freeserf.Audio
 {
     public class ExceptionAudio : ExceptionFreeserf
     {

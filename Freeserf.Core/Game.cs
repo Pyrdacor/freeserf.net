@@ -24,6 +24,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Freeserf.Audio;
 
 namespace Freeserf
 {
@@ -58,6 +59,7 @@ namespace Freeserf
 
         // Rendering
         Render.IRenderView renderView = null;
+        Audio.IAudioInterface audioInterface = null;
         readonly Dictionary<Serf, Render.RenderSerf> renderSerfs = new Dictionary<Serf, Render.RenderSerf>();
         readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
         readonly ConcurrentDictionary<Flag, Render.RenderFlag> renderFlags = new ConcurrentDictionary<Flag, Render.RenderFlag>();
@@ -103,11 +105,12 @@ namespace Freeserf
         public uint MapGoldMoraleFactor => mapGoldMoraleFactor;
         public uint GoldTotal => goldTotal;
 
-        public Game(Render.IRenderView renderView)
+        public Game(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
             AI.ClearMemory();
 
             this.renderView = renderView;
+            this.audioInterface = audioInterface;
 
             random = new Random();
 
@@ -351,14 +354,14 @@ namespace Freeserf
 
             if (birdSoundCounter < 0)
             {
-                PlaySound(Audio.TypeSfx.BirdChirp0 + 4 * (RandomInt() & 0x3));
+                PlaySound(Audio.Audio.TypeSfx.BirdChirp0 + 4 * (RandomInt() & 0x3));
                 birdSoundCounter += 0xfff + RandomInt() & 0x3ff;
             }
         }
 
-        void PlaySound(Audio.TypeSfx type)
+        void PlaySound(Audio.Audio.TypeSfx type)
         {
-            var audio = renderView.AudioFactory.GetAudio();
+            var audio = audioInterface.AudioFactory.GetAudio();
             var player = audio?.GetSoundPlayer();
 
             if (player != null)
@@ -3655,7 +3658,7 @@ namespace Freeserf
                 if (!renderBuildings.ContainsKey(building))
                 {
                     var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings),
-                        renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource, renderView.AudioFactory.GetAudio());
+                        renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource, audioInterface.AudioFactory.GetAudio());
 
                     renderBuilding.Visible = true;
 
@@ -3684,7 +3687,7 @@ namespace Freeserf
                 return;
 
             var renderSerf = new Render.RenderSerf(serf, renderView.GetLayer(Layer.Serfs), renderView.SpriteFactory,
-                renderView.DataSource, renderView.AudioFactory.GetAudio());
+                renderView.DataSource, audioInterface.AudioFactory.GetAudio());
 
             renderSerf.Visible = true;
 

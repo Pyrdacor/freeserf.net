@@ -67,7 +67,7 @@ namespace Freeserf.UI
         protected bool focused = false;
         protected bool displayed = false;
         GuiObject parent = null;
-        public Audio Audio { get; } = null;
+        public Audio.Audio Audio { get; } = null;
 
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
@@ -152,15 +152,15 @@ namespace Freeserf.UI
         }
 
         protected GuiObject(Interface interf)
-            : this(interf.RenderView)
+            : this(interf.RenderView, interf.AudioInterface)
         {
 
         }
 
-        protected GuiObject(Render.IRenderView renderView)
+        protected GuiObject(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
             Layer = renderView.GetLayer(Freeserf.Layer.Gui);
-            Audio = renderView.AudioFactory.GetAudio();
+            Audio = audioInterface.AudioFactory.GetAudio();
         }
 
         protected internal virtual void UpdateParent()
@@ -303,9 +303,9 @@ namespace Freeserf.UI
             FocusedObject = null;
         }
 
-        public void PlaySound(Audio.TypeSfx sound)
+        public void PlaySound(Audio.Audio.TypeSfx sound)
         {
-            Audio.Player player = Audio?.GetSoundPlayer();
+            Audio.Audio.Player player = Audio?.GetSoundPlayer();
 
             if (player != null)
             {
@@ -401,7 +401,7 @@ namespace Freeserf.UI
         readonly Render.IRenderView renderView = null;
         Viewer viewer = null;
 
-        public Gui(Render.IRenderView renderView)
+        public Gui(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
             if (renderView.VirtualScreen.Size.Width > Global.MAX_VIRTUAL_SCREEN_WIDTH ||
                 renderView.VirtualScreen.Size.Height > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
@@ -413,7 +413,7 @@ namespace Freeserf.UI
 
             // At the beginning we start with a local player.
             // Depending on the chosen game mode the viewer may be changed.
-            SetViewer(Viewer.CreateLocalPlayer(renderView, null, this));
+            SetViewer(Viewer.CreateLocalPlayer(renderView, audioInterface, null, this));
 
             renderView.Click += RenderView_Click;
             renderView.DoubleClick += RenderView_DoubleClick;

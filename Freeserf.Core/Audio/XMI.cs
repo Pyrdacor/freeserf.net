@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Text;
 using Freeserf.Data;
 
-namespace Freeserf.Renderer.OpenTK.Audio
+namespace Freeserf.Audio
 {
-    internal class XMI : Audio.ITrack, IEnumerable<XMI.Event>
+    public class XMI : Audio.ITrack, IEnumerable<XMI.Event>
     {
         uint tempo = 500000;
         readonly List<Event> events = new List<Event>();
@@ -17,11 +17,6 @@ namespace Freeserf.Renderer.OpenTK.Audio
         public Event GetEvent(int index)
         {
             return events[index];
-        }
-
-        public XMI(MOD mod)
-        {
-            mod.FillXMIEvents(events);
         }
 
         public XMI(Data.Buffer data)

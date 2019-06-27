@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
+using Freeserf.Audio;
 using Freeserf.Data;
 using Freeserf.Event;
 using Freeserf.Render;
@@ -36,7 +37,7 @@ namespace Freeserf.Renderer.OpenTK
 
     public delegate bool FullscreenRequestHandler(bool fullscreen);
 
-    public class GameView : RenderLayerFactory, IRenderView
+    public class GameView : RenderLayerFactory, IRenderView, IAudioInterface
     {
         // these two lines are fore the background map at start
         int mapScrollTicks = 0;
@@ -155,7 +156,7 @@ namespace Freeserf.Renderer.OpenTK
                 }
             }
 
-            gui = new UI.Gui(this);
+            gui = new UI.Gui(this, this);
         }
 
         public void Close()

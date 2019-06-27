@@ -375,11 +375,11 @@ namespace Freeserf.UI
 
                         if (r < 0)
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
                         else
                         {
-                            PlaySound(Audio.TypeSfx.Click);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                         }
 
                         if (!interf.GetBuildingRoad().Valid)
@@ -392,15 +392,15 @@ namespace Freeserf.UI
 
                         if (r< 0)
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
                         else if (r == 0)
                         {
-                            PlaySound(Audio.TypeSfx.Click);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                         }
                         else
                         {
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                     }
                 }
@@ -408,7 +408,7 @@ namespace Freeserf.UI
             else
             {
                 interf.UpdateMapCursorPos(mapPos);
-                PlaySound(Audio.TypeSfx.Click);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
             }
 
             return true;
@@ -440,28 +440,28 @@ namespace Freeserf.UI
 
                         if (r < 0)
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
                         else if (r == 1)
                         {
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                         else
                         {
                             if (interf.Game.BuildFlag(interf.GetMapCursorPos(), player))
                             {
                                 interf.BuildRoad();
-                                PlaySound(Audio.TypeSfx.Accepted);
+                                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             }
                             else
                             {
-                                PlaySound(Audio.TypeSfx.Click);
+                                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                             }
                         }
                     }
                     else
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                 }
                 else
@@ -474,7 +474,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                 }
             }
@@ -543,12 +543,12 @@ namespace Freeserf.UI
                         /* TODO handle coop mode*/
                         if (player.PrepareAttack(mapPos))
                         {
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.OpenPopup(PopupBox.Type.StartAttack);
                         }
                         else
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
                     }
                 }

@@ -1,6 +1,6 @@
-﻿namespace Freeserf.Renderer.OpenTK.Audio
+﻿namespace Freeserf.Audio
 {
-    internal interface IWavePlayer
+    public interface IWavePlayer
     {
         bool Available { get; }
         bool Enabled { get; set; }
@@ -10,7 +10,7 @@
         void Stop();
     }
 
-    internal interface IWavePlayerFactory
+    public interface IWavePlayerFactory
     {
         IWavePlayer GetWavePlayer();
     }

@@ -551,7 +551,7 @@ namespace Freeserf.UI
         {
             if (interf.AccessRights != Viewer.Access.Player)
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 SetRedraw(); // redraw the slidebar
                 return;
             }
@@ -690,7 +690,7 @@ namespace Freeserf.UI
                     case Type.BuildingStats2:
                     case Type.BuildingStats3:
                     case Type.BuildingStats4:
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         return;
                     case Type.BuildingStock:
                     case Type.MineOutput:
@@ -2623,7 +2623,7 @@ namespace Freeserf.UI
             SetText(16, 63, "Volume");
 
             // Music
-            Audio.Player player = Audio?.GetMusicPlayer();
+            Audio.Audio.Player player = Audio?.GetMusicPlayer();
             SetButton(112, 19, (player != null && player.Enabled) ? 288u : 220u, Action.OptionsMusic);
 
             // Sfx
@@ -2635,7 +2635,7 @@ namespace Freeserf.UI
             SetButton(112, 59, 221u, Action.OptionsVolumePlus); /* Volume plus */
 
             float volume = 0.0f;
-            Audio.IVolumeController volumeController = Audio?.GetVolumeController();
+            Audio.Audio.IVolumeController volumeController = Audio?.GetVolumeController();
 
             if (volumeController != null)
             {
@@ -3382,7 +3382,7 @@ namespace Freeserf.UI
                 case Action.BuildFlag:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3393,7 +3393,7 @@ namespace Freeserf.UI
                 case Action.BuildBuilding:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3452,7 +3452,7 @@ namespace Freeserf.UI
                 case Action.DefaultFoodDistribution:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3462,7 +3462,7 @@ namespace Freeserf.UI
                 case Action.DefaultPlanksAndSteelDistribution:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3473,7 +3473,7 @@ namespace Freeserf.UI
                 case Action.DefaultCoalAndWheatDistribution:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3484,7 +3484,7 @@ namespace Freeserf.UI
                 case Action.DefaultToolmakerPriorities:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3494,7 +3494,7 @@ namespace Freeserf.UI
                 case Action.DefaultTransportPriorities:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3507,7 +3507,7 @@ namespace Freeserf.UI
                 case Action.TransportPriorityToTop:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3517,7 +3517,7 @@ namespace Freeserf.UI
                 case Action.TransportPriorityToBottom:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3527,7 +3527,7 @@ namespace Freeserf.UI
                 case Action.TransportPriorityUp:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3537,7 +3537,7 @@ namespace Freeserf.UI
                 case Action.TransportPriorityDown:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3573,7 +3573,7 @@ namespace Freeserf.UI
                     {
                         if (spectator)
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
                         else
                         {
@@ -3644,7 +3644,7 @@ namespace Freeserf.UI
                 case Action.TrainKnights:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3678,46 +3678,46 @@ namespace Freeserf.UI
                 case Action.SetCombatModeWeak:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
                         if (player.SendStrongest())
                         {
                             player.DropSendStrongest();
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                     }
                     break;
                 case Action.SetCombatModeStrong:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
                         if (!player.SendStrongest())
                         {
                             player.SetSendStrongest();
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                     }
                     break;
                 case Action.CycleKnights:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
                         player.CycleKnights();
-                        PlaySound(Audio.TypeSfx.Accepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                     }
                     break;
                 case Action.DecreaseCastleKnights:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3727,7 +3727,7 @@ namespace Freeserf.UI
                 case Action.IncreaseCastleKnights:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3737,7 +3737,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelClosestMinDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3747,7 +3747,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelClosestMinInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3757,7 +3757,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelClosestMaxDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3767,7 +3767,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelClosestMaxInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3777,7 +3777,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelCloseMinDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3787,7 +3787,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelCloseMinInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3797,7 +3797,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelCloseMaxDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3807,7 +3807,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelCloseMaxInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3817,7 +3817,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarMinDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3827,7 +3827,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarMinInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3837,7 +3837,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarMaxDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3847,7 +3847,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarMaxInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3857,7 +3857,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarthestMinDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3867,7 +3867,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarthestMinInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3877,7 +3877,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarthestMaxDec:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3887,7 +3887,7 @@ namespace Freeserf.UI
                 case Action.KnightLevelFarthestMaxInc:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3911,7 +3911,7 @@ namespace Freeserf.UI
                 case Action.SerfModeOut:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3939,7 +3939,7 @@ namespace Freeserf.UI
                 case Action.SendGeologist:
                     if (spectator)
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     else
                     {
@@ -3948,11 +3948,11 @@ namespace Freeserf.UI
 
                         if (!interf.Game.SendGeologist(flag))
                         {
-                            PlaySound(Audio.TypeSfx.NotAccepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
                         else
                         {
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.ClosePopup();
                         }
                     }
@@ -3962,7 +3962,7 @@ namespace Freeserf.UI
                     {
                         if (player.attackingBuildingCount > 0)
                         {
-                            PlaySound(Audio.TypeSfx.Accepted);
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             player.StartAttack();
                         }
 
@@ -3970,7 +3970,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        PlaySound(Audio.TypeSfx.NotAccepted);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     }
                     break;
                 case Action.AttackingSelectAll1:
@@ -4167,7 +4167,7 @@ namespace Freeserf.UI
 		{
             if (interf.AccessRights != Viewer.Access.Player)
             {
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
             }
 
@@ -4436,9 +4436,9 @@ namespace Freeserf.UI
             var player = interf.GetPlayer();
 
             if (player.PromoteSerfsToKnights(number) == 0)
-                PlaySound(Audio.TypeSfx.NotAccepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
             else
-                PlaySound(Audio.TypeSfx.Accepted);
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
         }
 
         void SetInventoryMode(Action action)
@@ -4470,7 +4470,7 @@ namespace Freeserf.UI
                     return;
             }
 
-            PlaySound(Audio.TypeSfx.Accepted);
+            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
         }
     }
 }

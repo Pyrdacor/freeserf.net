@@ -281,9 +281,9 @@ namespace Freeserf.Render
         static Position[] materialTextureOffsets = null;
         static Rect[] burningSpriteInfos = null;
 
-        Audio audio = null;
+        Audio.Audio audio = null;
 
-        public RenderBuilding(Building building, IRenderLayer renderLayer, IRenderLayer materialLayer, ISpriteFactory spriteFactory, DataSource dataSource, Audio audio)
+        public RenderBuilding(Building building, IRenderLayer renderLayer, IRenderLayer materialLayer, ISpriteFactory spriteFactory, DataSource dataSource, Audio.Audio audio)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.building = building;
@@ -822,7 +822,7 @@ namespace Freeserf.Render
                 !building.IsPlayingSfx())
             {
                 building.StartPlayingSfx();
-                PlaySound(Audio.TypeSfx.Burning);
+                PlaySound(Audio.Audio.TypeSfx.Burning);
             }
             // Stop playing sound effect if not on screen
             else if (!sprite.Visible && building.IsPlayingSfx())
@@ -922,7 +922,7 @@ namespace Freeserf.Render
             }
         }
 
-        void PlaySound(Audio.TypeSfx type)
+        void PlaySound(Audio.Audio.TypeSfx type)
         {
             audio?.GetSoundPlayer()?.PlayTrack((int)type);
         }
@@ -1046,7 +1046,7 @@ namespace Freeserf.Render
                         if (i == 0 || (i == 7 && !building.IsPlayingSfx()))
                         {
                             building.StartPlayingSfx();
-                            PlaySound(Audio.TypeSfx.GoldBoils);
+                            PlaySound(Audio.Audio.TypeSfx.GoldBoils);
                         }
                         else if (i != 7)
                         {
@@ -1087,7 +1087,7 @@ namespace Freeserf.Render
                             else if (!building.IsPlayingSfx())
                             {
                                 building.StartPlayingSfx();
-                                PlaySound(Audio.TypeSfx.MillGrinding);
+                                PlaySound(Audio.Audio.TypeSfx.MillGrinding);
                             }
 
                             spriteIndex += ((uint)tick >> 4) & 3u;
@@ -1110,7 +1110,7 @@ namespace Freeserf.Render
                         {
                             if ((random.Next() & 0x7f) < pigCount)
                             {
-                                PlaySound(Audio.TypeSfx.PigOink);
+                                PlaySound(Audio.Audio.TypeSfx.PigOink);
                             }
 
                             for (int p = 0; p < pigCount; ++p)
@@ -1178,7 +1178,7 @@ namespace Freeserf.Render
 
                         if ((((tick + (pos & 0xff)) >> 3) & 7) == 0 && random.Next() < 40000)
                         {
-                            PlaySound(Audio.TypeSfx.Elevator);
+                            PlaySound(Audio.Audio.TypeSfx.Elevator);
                         }
                     }
                     else
@@ -1195,7 +1195,7 @@ namespace Freeserf.Render
                         if (i == 0 || (i == 7 && !building.IsPlayingSfx()))
                         {
                             building.StartPlayingSfx();
-                            PlaySound(Audio.TypeSfx.GoldBoils);
+                            PlaySound(Audio.Audio.TypeSfx.GoldBoils);
                         }
                         else if (i != 7)
                         {
