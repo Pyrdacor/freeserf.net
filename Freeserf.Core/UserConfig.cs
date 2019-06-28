@@ -11,7 +11,7 @@ namespace Freeserf
             public static int Options { get; set; } = 0x39;
             public static Data.DataSourceMixed.DataUsage GraphicDataUsage { get; set; } = Data.DataSourceMixed.DataUsage.PreferDos;
             public static Data.DataSourceMixed.DataUsage SoundDataUsage { get; set; } = Data.DataSourceMixed.DataUsage.PreferDos;
-            public static Data.DataSourceMixed.DataUsage MusicDataUsage { get; set; } = Data.DataSourceMixed.DataUsage.PreferDos;
+            public static Data.DataSourceMixed.DataUsage MusicDataUsage { get; set; } = Data.DataSourceMixed.DataUsage.PreferAmiga;
             // TODO: language
         }
 
@@ -47,7 +47,7 @@ namespace Freeserf
                     Game.Options = options | 0x01; // bit 0 must be set always
                 Game.GraphicDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "graphic_data_usage", Data.DataSourceMixed.DataUsage.PreferDos);
                 Game.SoundDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "sound_data_usage", Data.DataSourceMixed.DataUsage.PreferDos);
-                Game.MusicDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "music_data_usage", Data.DataSourceMixed.DataUsage.PreferDos); // TODO: later use amiga as default
+                Game.MusicDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "music_data_usage", Data.DataSourceMixed.DataUsage.PreferAmiga);
 
 
                 // Audio
@@ -112,7 +112,7 @@ namespace Freeserf
             Game.Options = 0x39;
             Game.GraphicDataUsage = Data.DataSourceMixed.DataUsage.PreferDos;
             Game.SoundDataUsage = Data.DataSourceMixed.DataUsage.PreferDos;
-            Game.MusicDataUsage = Data.DataSourceMixed.DataUsage.PreferDos; // TODO: later use amiga as default
+            Game.MusicDataUsage = Data.DataSourceMixed.DataUsage.PreferAmiga;
 
             Audio.Music = true;
             Audio.Sound = true;
