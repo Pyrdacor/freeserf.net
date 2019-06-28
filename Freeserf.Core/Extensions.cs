@@ -55,6 +55,9 @@ namespace Freeserf
 
         public static T GetValue<T>(this string value)
         {
+            if (typeof(T).IsEnum)
+                return (T)Enum.Parse(typeof(T), value);
+
             return (T)Convert.ChangeType(value, typeof(T));
         }
     }
