@@ -27,19 +27,20 @@ namespace Freeserf.Audio
 
                 double factor = Math.Min(1.0, Volume / 64.0);
 
-                if (index >= Data.Length)
+                if ((RepeatPointOffset != 0 || RepeatLength != 0) && index >= /*Data.Length*/RepeatPointOffset + RepeatLength)
                 {
-                    if (RepeatLength > 0)
+                    //if (RepeatLength > 0)
                     {
                         index -= Data.Length;
                         index %= RepeatLength;
                         index += RepeatPointOffset;
                     }
-                    else
-                    {
-                        return 0;
-                    }
                 }
+                else if (index >= Data.Length)
+                {
+                    return 0;
+                }
+                //}
 
                 return (short)Misc.Round(((sbyte)Data[index]) * 256.0 * factor);
             }
@@ -165,10 +166,7 @@ namespace Freeserf.Audio
             data.Skip(20); // songname
 
             // add dummy sample 0
-            samples.Add(new Sample()
-            {
-                Length = 0
-            });
+            samples.Add(new Sample());
 
             for (int i = 1; i < 32; ++i) // samples 1-31
             {
@@ -222,8 +220,11 @@ namespace Freeserf.Audio
                 {
                     data.Skip(2); // ignore tracker word
                     samples[i].Length -= 2;
+
                     uint length = (uint)samples[i].Length;
-                    samples[i].SetData(data.Pop(length).ReinterpretAsArray(length));
+
+                    if (length > 0)
+                        samples[i].SetData(data.Pop(length).ReinterpretAsArray(length));
                 }
             }
 
@@ -266,22 +267,31 @@ namespace Freeserf.Audio
 
             var waveData = new List<short>();
 
-            const double tickTime = 90.0;
-            const double ticksPerSecond = 1000.0 / tickTime;
+            // Default values: 125 bpm, 6 ticks/division
+            // divisions / minute = (24*bpm) / (ticks/division)
+            // 500 divisions / minute -> 8.33 divisions / second -> 120ms per division
+            const double timePerDivision = 120.0 + 60.0; // TODO: with an offset of 60 it sounds better
             const double clockRate = 7093789.2; // Hz (PAL), NTSC would be 7159090.5 Hz
             const double halfClockRate = 0.5 * clockRate;
 
             int[] activeSamples = new int[4] { 0, 0, 0, 0 };
-            int[] activePeriods = new int[4] { 0, 0, 0, 0 };
+            int[] activePeriods = new int[4] { 214, 214, 214, 214 };
             double[] activeSampleTimes = new double[4] { 0.0, 0.0, 0.0, 0.0 };
             List<short>[] channelData = new List<short>[4] { new List<short>(), new List<short>(), new List<short>(), new List<short>() };
 
             foreach (var pattern in song)
             {
-                for (int r = 0; r < 64; ++r)
+                for (int i = 0; i < 4; ++i)
                 {
-                    for (int i = 0; i < 4; ++i)
+                    for (int r = 0; r < 48; ++r) // TODO: should be 64 but works a bit better with 48 (but not the whole time)
                     {
+                        if (r == 0)
+                        {
+                            activePeriods[i] = 214;
+                            activeSamples[i] = 0;
+                            activeSampleTimes[i] = 0.0;
+                        }
+
                         var note = pattern.GetNextNote(i);
                         int sample = (note.SampleNumber == 0) ? activeSamples[i] : note.SampleNumber;
 
@@ -289,21 +299,35 @@ namespace Freeserf.Audio
                             throw new ExceptionFreeserf($"Invalid sample number {sample} in MOD");
 
                         int pitchPeriod = (note.Period == 0) ? activePeriods[i] : note.Period;
-
-                        if (pitchPeriod == 0)
-                            pitchPeriod = 214;
-
                         double dataRatePerSecond = halfClockRate / pitchPeriod;
-                        double sampleRate = dataRatePerSecond * finetuneTable[samples[sample].FineTune + 8] / 8000.0; // playback with 8kHz
+                        double sampleRate = dataRatePerSecond * finetuneTable[samples[sample].FineTune + 8] / 44100.0; // playback with 44.1kHz
                         double currentSampleTime = (sample == activeSamples[i]) ? activeSampleTimes[i] : 0.0;
-                        int bytesPerTick = (int)Math.Round(dataRatePerSecond / ticksPerSecond);
+                        double bytesPerDivision = dataRatePerSecond * finetuneTable[samples[sample].FineTune + 8] / (1000.0 / timePerDivision);
 
-                        for (int b = 0; b < bytesPerTick; ++b)
+                        if (sample != activeSamples[i] || note.Period != 0)
                         {
+                            activeSampleTimes[i] = 0.0;
+                            currentSampleTime = 0.0;
+                        }
+
+                        if (note.SampleNumber != 0 && note.Period == 0 && currentSampleTime >= samples[note.SampleNumber].Length)
+                        {
+                            activeSampleTimes[i] = 0.0;
+                            currentSampleTime = 0.0;
+                        }
+
+                        double target = currentSampleTime + bytesPerDivision;
+
+                        while (currentSampleTime < target)
+                        {
+                            short data = 0;
+
                             if (samples[sample].Length == 0 || samples[sample].Volume == 0)
-                                channelData[i].Add(0);
+                                data = 0;
                             else
-                                channelData[i].Add(samples[sample].GetData((int)Math.Floor(currentSampleTime)));
+                                data = samples[sample].GetData((int)Math.Floor(currentSampleTime));
+
+                            channelData[i].Add(data);
 
                             activeSampleTimes[i] += sampleRate;
                             currentSampleTime += sampleRate;

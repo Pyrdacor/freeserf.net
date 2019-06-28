@@ -39,7 +39,9 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 #if WINDOWS
             var device = FindBestDevice();
 
-            if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device))
+            uint samplesPerSec = (this is WindowsModPlayer) ? 44100 : 8000u; // sfx uses 8kHz, mod uses 44.1kHz
+
+            if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device, samplesPerSec, 1))
                 throw new ExceptionAudio("Unable to create wave output.");
 
             Available = true;
@@ -109,7 +111,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         protected override Audio.ITrack CreateTrack(int trackID)
         {
-            int level = (dataSource is DataSourceDos) ? -32 : 0;
+            int level = DataSource.DosSounds(dataSource) ? -32 : 0;
 
             return new WaveTrack(SFX.ConvertToWav(dataSource.GetSound((uint)trackID), level));
         }
@@ -384,15 +386,15 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             [DllImport(LibraryName)]
             static extern int waveInGetErrorText(int mmrError, StringBuilder message, int sizeOfMessage);
 
-            internal static bool OpenPlaybackDevice(out IntPtr handle, uint deviceId)
+            internal static bool OpenPlaybackDevice(out IntPtr handle, uint deviceId, uint samplesPerSec, int numChannels)
             {
                 const int WAVE_FORMAT_PCM = 1;
 
                 WAVEFORMATEX format = new WAVEFORMATEX();
 
                 format.FormatTag = WAVE_FORMAT_PCM;
-                format.Channels = 1; // mono
-                format.SamplesPerSec = 8000; // sounds use 8 kHz
+                format.Channels = (ushort)numChannels;
+                format.SamplesPerSec = samplesPerSec;
                 format.BitsPerSample = 16;
                 format.BlockAlign = (ushort)(format.Channels * format.BitsPerSample / 8);
                 format.AvgBytesPerSec = format.SamplesPerSec * format.BlockAlign;
