@@ -37,8 +37,8 @@ namespace Freeserf
         public const int TICKS_PER_SEC = 1000 / TICK_LENGTH;
         public const int TICKS_PER_MIN = 60 * TICKS_PER_SEC;
 
-        public const int MAX_VIRTUAL_SCREEN_WIDTH = 1280;
-        public const int MAX_VIRTUAL_SCREEN_HEIGHT = 960;
+        public const int MAX_VIRTUAL_SCREEN_WIDTH = 1920;
+        public const int MAX_VIRTUAL_SCREEN_HEIGHT = 1440;
 
         public class InitInfo
         {

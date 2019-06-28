@@ -91,12 +91,39 @@ namespace Freeserf
                 if (initInfo.ScreenHeight < 480)
                     initInfo.ScreenHeight = 480;
 
+                float ratio = (float)initInfo.ScreenWidth / (float)initInfo.ScreenHeight;
+                bool reducedWidth = false;
+                bool reducedHeight = false;
+
                 var screen = Screen.FromHandle(Handle);
 
                 if (initInfo.ScreenWidth > screen.Bounds.Width)
+                {
                     initInfo.ScreenWidth = screen.Bounds.Width;
+                    reducedWidth = true;
+                }
+
                 if (initInfo.ScreenHeight > screen.Bounds.Height)
+                {
                     initInfo.ScreenHeight = screen.Bounds.Height;
+                    reducedHeight = true;
+                }
+
+                if (reducedHeight)
+                {
+                    initInfo.ScreenWidth = Misc.Round(initInfo.ScreenHeight * ratio);
+
+                    if (initInfo.ScreenWidth > screen.Bounds.Width)
+                    {
+                        initInfo.ScreenWidth = screen.Bounds.Width;
+                        reducedWidth = true;
+                    }
+                }
+
+                if (reducedWidth)
+                {
+                    initInfo.ScreenHeight = Misc.Round(initInfo.ScreenWidth / ratio);
+                }
 
                 UserConfig.Video.ResolutionWidth = initInfo.ScreenWidth;
                 UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
