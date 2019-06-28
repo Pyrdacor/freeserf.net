@@ -589,6 +589,39 @@ namespace Freeserf.Data
             loaded = false;
         }
 
+        public static bool DosGraphics(DataSource source)
+        {
+            if (source is DataSourceDos)
+                return true;
+
+            if (source is DataSourceMixed)
+                return (source as DataSourceMixed).UseDosGraphics;
+
+            return false;
+        }
+
+        public static bool DosSounds(DataSource source)
+        {
+            if (source is DataSourceDos)
+                return true;
+
+            if (source is DataSourceMixed)
+                return (source as DataSourceMixed).UseDosSounds;
+
+            return false;
+        }
+
+        public static bool DosMusic(DataSource source)
+        {
+            if (source is DataSourceDos)
+                return true;
+
+            if (source is DataSourceMixed)
+                return (source as DataSourceMixed).UseDosMusic;
+
+            return false;
+        }
+
         public abstract string Name { get; }
         public virtual string Path => path;
         public virtual bool IsLoaded => loaded;

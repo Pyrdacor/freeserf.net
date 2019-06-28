@@ -25,7 +25,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
                 // TODO: other platforms
 #endif
 
-                musicPlayer = (dataSource is DataSourceDos) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
+                musicPlayer = DataSource.DosMusic(dataSource) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
                 soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
             }
             catch

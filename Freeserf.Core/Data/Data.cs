@@ -145,25 +145,10 @@ namespace Freeserf.Data
         //
         // Return true if successful. Standard paths will be searched only if the
         // given path is an empty string.
-        public bool Load(string path)
+        public bool Load(string path, DataSourceMixed.DataUsage graphicDataUsage = DataSourceMixed.DataUsage.PreferDos,
+            DataSourceMixed.DataUsage soundDataUsage = DataSourceMixed.DataUsage.PreferDos,
+            DataSourceMixed.DataUsage musicDataUsage = DataSourceMixed.DataUsage.PreferAmiga)
         {
-            // If it is possible, prefer DOS game data.
-            List<Func<string, DataSource>> sourceFactories = new List<Func<string, DataSource>>();
-
-            // TODO
-            /*sourceFactories.Add((string p) =>
-            {
-                return new DataSourceCustom(path);
-            });*/
-            sourceFactories.Add((string p) =>
-            {
-                return new DataSourceDos(path);
-            });
-            sourceFactories.Add((string p) =>
-            {
-                return new DataSourceAmiga(path);
-            });
-
             List<string> searchPaths = new List<string>();
 
             if (string.IsNullOrWhiteSpace(path))
@@ -175,28 +160,23 @@ namespace Freeserf.Data
                 searchPaths.Add(path);
             }
 
-            // Use each data source to try to find the data files in the search paths.
-            foreach (var factory in sourceFactories)
+            foreach (var searchPath in searchPaths)
             {
-                foreach (var searchPath in searchPaths)
-                {
-                    DataSource source = factory(path);
+                var source = new DataSourceMixed(searchPath);
 
-                    if (source.Check())
+                if (source.Check())
+                {
+                    Log.Info.Write("data", $"Game data found in '{source.Path}'...");
+
+                    if (source.Load())
                     {
-                        Log.Info.Write("data", $"Game data found in '{source.Path}'...");
+                        source.GraphicDataUsage = graphicDataUsage;
+                        source.SoundDataUsage = soundDataUsage;
+                        source.MusicDataUsage = musicDataUsage;
 
-                        if (source.Load())
-                        {
-                            dataSource = source;
-                            break;
-                        }
+                        dataSource = source;
+                        break;
                     }
-                }
-
-                if (dataSource != null)
-                {
-                    break;
                 }
             }
 

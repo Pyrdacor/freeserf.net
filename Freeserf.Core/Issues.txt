@@ -24,6 +24,7 @@ Non-working code:
 - Click positions in water (no height) are a bit off (this already worked previously!).
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
+- Wrong sounds are played sometimes
 
 
 AI:

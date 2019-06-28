@@ -268,7 +268,7 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             if (music == null)
                 throw new ExceptionFreeserf("data", $"Error loading music track {trackID}");
 
-            if (dataSource is DataSourceDos)
+            if (DataSource.DosMusic(dataSource))
                 return new XMI(music);
 
             throw new ExceptionFreeserf("data", $"Only DOS data uses MIDI music");
