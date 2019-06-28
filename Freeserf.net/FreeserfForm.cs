@@ -59,7 +59,7 @@ namespace Freeserf
                 var data = Data.Data.GetInstance();
                 string dataPath = Program.ExecutablePath;// Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
 
-                if (!data.Load(dataPath))
+                if (!data.Load(dataPath, UserConfig.Game.GraphicDataUsage, UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
                 {
                     MessageBox.Show(this, $"Error loading data from \"{dataPath}\".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Close();

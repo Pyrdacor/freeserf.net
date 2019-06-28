@@ -54,7 +54,7 @@ namespace Freeserf
                 var data = Data.Data.GetInstance();
                 string dataPath = Program.ExecutablePath;// Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
 
-                if (!data.Load(dataPath))
+                if (!data.Load(dataPath, UserConfig.Game.GraphicDataUsage, UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
                 {
                     Console.WriteLine("Error: Error loading DOS data.");
                     Exit();
