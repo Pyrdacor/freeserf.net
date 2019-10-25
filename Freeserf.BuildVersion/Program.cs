@@ -24,13 +24,15 @@ namespace Freeserf.BuildVersion
 
             Console.WriteLine($"New version is {version}");
 
+            string targetPath = args[2].TrimEnd('/', '\\');
+
             foreach (var file in Directory.GetFiles(args[1]))
             {
                 Console.Write($"Replacing version in '{Path.GetFileName(file)}' ... ");
 
                 try
                 {
-                    ReplaceVersion(file, version, args[2]);
+                    ReplaceVersion(file, version, targetPath);
                 }
                 catch (Exception ex)
                 {
