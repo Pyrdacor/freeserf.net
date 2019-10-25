@@ -1,5 +1,10 @@
-# freeserf.net
-freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
+# Freeserf.net
+
+Freeserf.net is an authentic remake of the game **The Settlers I** from BlueByte.
+
+To avoid copyright issues I won't provide any copyrighted data from the original game like music or graphics. To play the game you will therefore need the original DOS or Amiga data files.
+
+Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
 
 | Windows | Linux/Mono |
 | ---- | ---- |
@@ -46,12 +51,14 @@ Thank you very much.
 
 ## Current State
 
+**Update 25.10.2019: Currently I am working on multiplayer support.**
+
 Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
 
 Things that are missing are some minor parts of AI logic and tutorial games. Serf fighting is not fully tested yet.
-Multiplayer support is prepared but not really implemented yet.
+Multiplayer support is prepared but not really implemented yet. But I'm working on this now.
 
-But the game is playable for most parts.
+The game is playable for most parts. If you find any bugs please report it in the [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues). You can also look for open issues there.
 
 ![Normal Game](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_1.png "Start a normal game")
 ![Mission](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_2.png "Start a mission")
@@ -61,18 +68,18 @@ But the game is playable for most parts.
 
 ## Roadmap
 
-### Phase 1: Porting (100%)
+### Phase 1: Porting (100%) - <span style="color:forestgreen">[Finished]</span>
 
 The first step is to port everything from C++ to C# and ensure that the game runs.
 There may be some quick&dirty implementations or things that could be done better.
 
-### Phase 2: Optimizing (85%)
+### Phase 2: Optimizing (85%) - <span style="color:seagreen">[Active]</span>
 
 This includes bug fixing and C#-specific optimizations.
 Moreover this includes performance and stability optimizations if needed.
 Also the plan is to make everything cross-plattform as much as possible.
 
-### Phase 3: Extending (10%)
+### Phase 3: Extending (10%) - <span style="color:lightseagreen">[Active]</span>
 
 This includes:
 
@@ -97,3 +104,5 @@ There are now two versions of the main executable. One (`Freeserf.net`) is a .NE
 You can even implement your own renderer if you want. There are a bunch of interfaces in the Freeserf.Render namespace inside the core project that you can use for that.
 
 At the moment the sound engine is part of the renderer. This will change in the future. But you can implement your own sound engine independent of the renderer already if you want.
+
+If you need help or want to help developing, just [contact me](trobt@web.de). You can also contact me via [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues) by adding a new issue and tag it as question.
