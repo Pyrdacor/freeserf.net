@@ -1,3 +1,25 @@
+Version 1.9.23:
+===============
+
+- Fixed click event bugs
+
+
+Version 1.9.22:
+===============
+
+- Made amiga music playing nearly correctly
+- Data can now be loaded from mixed sources (e.g. DOS graphics and Amiga music)
+- Prefered data source for graphics, sounds and music can be specified
+  inside the user config file
+- Increased max resolution to 1920x1440
+
+
+Version 1.9.21:
+===============
+
+- Fixed amiga data loading (at least game runs now with amiga data)
+
+
 Version 1.9.20:
 ===============
 
