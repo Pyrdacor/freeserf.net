@@ -9,13 +9,20 @@ namespace Freeserf.BuildVersion
     {
         const string VERSION_PLACEHOLDER = "{BUILD_VERSION}";
 
-        // Usage: Freeserf.BuildVersion <path_to_assembly_with_version> <template_directory_path> <target_path>
+        // Usage: Freeserf.BuildVersion <path_to_assembly_with_version> <template_directory_path> <target_path> <configuration_name>
         static void Main(string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length != 4)
             {
-                Console.WriteLine("Usage: Freeserf.BuildVersion <path_to_assembly_with_version> <template_directory_path> <target_path>");
+                Console.WriteLine("Usage: Freeserf.BuildVersion <path_to_assembly_with_version> <template_directory_path> <target_path> <configuration_name>");
                 Environment.Exit(1);
+                return;
+            }
+
+            if (args[3] != "Release")
+            {
+                Console.WriteLine("Skipping debug build version.");
+                Environment.Exit(0);
                 return;
             }
 
