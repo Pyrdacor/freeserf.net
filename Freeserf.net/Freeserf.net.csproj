@@ -122,6 +122,6 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == Release ( "$(SolutionDir)Freeserf.BuildVersion.exe" "$(TargetPath)" "$(SolutionDir)templates" "$(SolutionDir)\" )</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == Release ( "$(SolutionDir)env/Freeserf.BuildVersion.exe" "$(TargetPath)" "$(SolutionDir)templates" "$(SolutionDir)\" )</PostBuildEvent>
   </PropertyGroup>
 </Project>
