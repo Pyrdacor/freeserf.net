@@ -305,7 +305,6 @@ namespace Freeserf.UI
             interf.ClosePopup();
 
             var position = new Position(x, y);
-
             var mapPos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
 
             if (interf.IsBuildingRoad())
@@ -422,8 +421,11 @@ namespace Freeserf.UI
             if (button != Event.Button.Left)
                 return false;
 
-            var position = new Position(x, y);
+            // if clicked into the viewport, close notifications and other popups
+            interf.CloseMessage();
+            interf.ClosePopup();
 
+            var position = new Position(x, y);
             var mapPos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
             Player player = interf.GetPlayer();
 
@@ -480,9 +482,12 @@ namespace Freeserf.UI
             }
             else
             {
+                interf.UpdateMapCursorPos(mapPos);
+
                 if (map.GetObject(mapPos) == Map.Object.None ||
                     map.GetObject(mapPos) > Map.Object.Castle)
                 {
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                     return false;
                 }
 
@@ -494,12 +499,15 @@ namespace Freeserf.UI
                     }
 
                     player.tempIndex = map.GetObjectIndex(mapPos);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 }
                 else
                 { 
                     /* Building */
                     if (map.GetOwner(mapPos) == player.Index || interf.AccessRights != Viewer.Access.Player)
                     {
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
+
                         Building building = interf.Game.GetBuildingAtPos(mapPos);
 
                         if (building.BuildingType == Building.Type.Castle)

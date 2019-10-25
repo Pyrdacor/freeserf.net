@@ -56,7 +56,7 @@ namespace Freeserf
             state[2] = value;
         }
 
-        public Random( Random randomState)
+        public Random(Random randomState)
         {
             state[0] = randomState.state[0];
             state[1] = randomState.state[1];

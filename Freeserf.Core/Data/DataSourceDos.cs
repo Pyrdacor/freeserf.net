@@ -35,14 +35,14 @@ namespace Freeserf.Data
         {
             if (buffer.Size < 8)
             {
-                throw new ExceptionFreeserf("data", "Data is not TPWM archive");
+                throw new ExceptionFreeserf("data", "Data is not a TPWM archive");
             }
 
             Buffer id = buffer.Pop(4);
 
             if (id.ToString(4) != "TPWM")
             {
-                throw new ExceptionFreeserf("data", "Data is not TPWM archive");
+                throw new ExceptionFreeserf("data", "Data is not a TPWM archive");
             }
         }
 

@@ -508,8 +508,15 @@ namespace Freeserf
 
         void RenderControl_MouseClick(object sender, MouseEventArgs e)
         {
-            clickWaitTimer.Tag = e;
-            clickWaitTimer.Start();
+            if (e.Button == MouseButtons.Left)
+            {
+                clickWaitTimer.Tag = e;
+                clickWaitTimer.Start();
+            }
+            else
+            {
+                gameView?.NotifyClick(e.X, e.Y, ConvertMouseButton(e.Button));
+            }
         }
 
         void RenderControl_MouseDoubleClick(object sender, MouseEventArgs e)
