@@ -278,8 +278,8 @@ namespace Freeserf.Data
             return amigaOk || dosOk;
         }
 
-        public bool UseDosGraphics => dosOk && (GraphicDataUsage == DataUsage.ForceDos || GraphicDataUsage == DataUsage.PreferDos);
-        public bool UseDosSounds => dosOk && (SoundDataUsage == DataUsage.ForceDos || SoundDataUsage == DataUsage.PreferDos);
-        public bool UseDosMusic => dosOk && (MusicDataUsage == DataUsage.ForceDos || MusicDataUsage == DataUsage.PreferDos);
+        public bool UseDosGraphics => dosOk && (GraphicDataUsage == DataUsage.ForceDos || GraphicDataUsage == DataUsage.PreferDos || (!amigaOk && GraphicDataUsage == DataUsage.PreferAmiga));
+        public bool UseDosSounds => dosOk && (SoundDataUsage == DataUsage.ForceDos || SoundDataUsage == DataUsage.PreferDos || (!amigaOk && SoundDataUsage == DataUsage.PreferAmiga));
+        public bool UseDosMusic => dosOk && (MusicDataUsage == DataUsage.ForceDos || MusicDataUsage == DataUsage.PreferDos || (!amigaOk && MusicDataUsage == DataUsage.PreferAmiga));
     }
 }
