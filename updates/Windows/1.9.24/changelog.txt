@@ -1,3 +1,107 @@
+Version 1.9.24:
+===============
+
+- Fixed data loading bug
+
+
+Version 1.9.23:
+===============
+
+- Fixed click event bugs
+
+
+Version 1.9.22:
+===============
+
+- Made amiga music playing nearly correctly
+- Data can now be loaded from mixed sources (e.g. DOS graphics and Amiga music)
+- Prefered data source for graphics, sounds and music can be specified
+  inside the user config file
+- Increased max resolution to 1920x1440
+
+
+Version 1.9.21:
+===============
+
+- Fixed amiga data loading (at least game runs now with amiga data)
+
+
+Version 1.9.20:
+===============
+
+- After demolishing buildings, serfs won't get stucked anymore
+- Fixed some issues with flag handling after demolishing buildings
+- Crashes caused in user events will now also support the save game option
+
+
+Version 1.9.19:
+===============
+
+- When losing land, buildings are demolished before their flags
+- Data file can now be changed manually in user config
+- Now also amiga files could be used in theory (loading not tested yet)
+
+
+Version 1.9.18:
+===============
+
+- Unhandled exceptions should now be logged
+- Fixed wrong animation counter for miners
+- Fixed inner exception message
+- Flags of burning buildings can no be removed when losing land
+
+
+Version 1.9.17:
+===============
+
+- Serfs won't leave castle/stock if there are waiting serfs around
+- Fixed a crash
+
+
+Version 1.9.16:
+===============
+
+- Improved map click position detection
+- Fixed loading AI-only savegames
+- Fixed wrong player color when removing a player in GameInitBox
+
+
+Version 1.9.15:
+===============
+
+- Fixed non-attacking AIs when only 1 enemy exists
+- Adjusted AI attack chance a bit
+- Under attack notifications for the same building will only reoccur
+  after 45 seconds of not attacking it
+- Fixed flickering flags
+
+
+Version 1.9.14:
+===============
+
+- Finally fixed rendering of working miners and the mine elevator
+- Fixed a bug where AI orders geologists of other players
+- Improved AI performance
+
+
+Version 1.9.13:
+===============
+
+- Added a bonus mission 31
+- Improved AI military building rate in progressed game
+- AIs will no longer build buildings that could not be connected
+- Geologists are not send to flags that are too far away from mountains anymore
+- Emergency program will no longer cause abandoned construction sites
+
+
+Version 1.9.12:
+===============
+
+- Improved AI mine building
+- Fighting flashes are now displayed correctly
+- Inventory modes (in, stop, out) now work correctly
+
+
 Version 1.9.11:
 ===============
 

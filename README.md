@@ -14,7 +14,7 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 | Windows | Linux/Mono |
 | ---- | ---- |
-| [v1.9.23](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.23/Freeserf.net-Windows.zip "Windows v1.9.23") | [v1.9.23](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.23/Freeserf.net-Linux.tar.gz "Linux v1.9.23") |
+| [v1.9.24](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.24/Freeserf.net-Windows.zip "Windows v1.9.24") | [v1.9.24](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.24/Freeserf.net-Linux.tar.gz "Linux v1.9.24") |
 
 Builds for other platforms will follow later.
 

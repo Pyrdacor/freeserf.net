@@ -1,3 +1,9 @@
+Version 1.9.24:
+===============
+
+- Fixed data loading bug
+
+
 Version 1.9.23:
 ===============
 
