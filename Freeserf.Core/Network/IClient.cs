@@ -20,46 +20,40 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net;
 
 namespace Freeserf.Network
 {
-    public interface ILocalClient
+    public interface IClient
     {
         uint PlayerIndex { get; }
         Game Game { get; set; }
-        IRemoteServer Server { get; }
 
-        void SendKeepAlive();
+        void SendHeartbeat();
         void SendDisconnect();
-
-        void RequestPlayerStateUpdate(uint playerIndex);
-        void RequestMapStateUpdate();
-        void RequestGameStateUpdate();
     }
 
-    public interface IRemoteClient
+    public interface ILocalClient : IClient
     {
-        uint PlayerIndex { get; }
-        Game Game { get; set; }
+        IRemoteServer Server { get; }
+
+        byte RequestLobbyStateUpdate();
+        byte RequestPlayerStateUpdate(uint playerIndex);
+        byte RequestMapStateUpdate();
+        byte RequestGameStateUpdate();
+
+        bool JoinServer(string name, IPAddress ip);
+    }
+
+    public interface IRemoteClient : IClient, IRemote
+    {
         ILocalServer Server { get; }
 
-        void SendKeepAlive();
-        void SendDisconnect();
-
-        void SendPlayerStateUpdate(uint playerIndex);
-        void SendMapStateUpdate();
-        void SendGameStateUpdate();
-
-        event EventHandler RequestReceived;
-
-        void HandleRequest();
-        void Respond();
+        void SendPlayerStateUpdate(Player player);
     }
 
     public interface IClientFactory
     {
-        ILocalClient CreateLocal(uint playerIndex);
+        ILocalClient CreateLocal();
     }
 }

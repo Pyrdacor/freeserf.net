@@ -1457,12 +1457,13 @@ namespace Freeserf.UI
         {
             base.Update();
 
+            // TODO all to all
             foreach (var client in server.Clients)
             {
                 var player = Game.GetPlayer(client.PlayerIndex);
 
                 if (player.Dirty)
-                    client.SendPlayerStateUpdate(player.Index);
+                    client.SendPlayerStateUpdate(player);
             }
 
             for (uint i = 0; i < Game.GetPlayerCount(); ++i)

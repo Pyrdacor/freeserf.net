@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
     public class LocalClient : ILocalClient
     {
-        public LocalClient(uint playerIndex)
+        TcpClient client = null;
+        RemoteServer server = null;
+
+        public LocalClient()
         {
-            PlayerIndex = playerIndex;
+
         }
 
         public uint PlayerIndex
@@ -27,29 +32,67 @@ namespace Freeserf.Network
             get;
         }
 
-        public void RequestGameStateUpdate()
+        public bool JoinServer(string name, IPAddress ip)
         {
-            throw new NotImplementedException();
+            try
+            {
+                client = new TcpClient();
+                client.Connect(ip, Global.NetworkPort);
+
+                server = new RemoteServer(name, ip, client);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        public void RequestMapStateUpdate()
+        public byte RequestLobbyStateUpdate()
         {
-            throw new NotImplementedException();
+            byte messageIndex = Global.GetNextMessageIndex();
+
+            new RequestData(messageIndex, Request.LobbyData).Send(server);
+
+            return messageIndex;
         }
 
-        public void RequestPlayerStateUpdate(uint playerIndex)
+        public byte RequestGameStateUpdate()
         {
+            byte messageIndex = Global.GetNextMessageIndex();
+
             throw new NotImplementedException();
+
+            return messageIndex;
+        }
+
+        public byte RequestMapStateUpdate()
+        {
+            byte messageIndex = Global.GetNextMessageIndex();
+
+            throw new NotImplementedException();
+
+            return messageIndex;
+        }
+
+        public byte RequestPlayerStateUpdate(uint playerIndex)
+        {
+            byte messageIndex = Global.GetNextMessageIndex();
+
+            throw new NotImplementedException();
+
+            return messageIndex;
+        }
+
+        public void SendHeartbeat()
+        {
+            new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(server);
         }
 
         public void SendDisconnect()
         {
-            throw new NotImplementedException();
-        }
-
-        public void SendKeepAlive()
-        {
-            throw new NotImplementedException();
+            new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(server);
         }
     }
 
@@ -57,9 +100,11 @@ namespace Freeserf.Network
     {
         readonly TcpClient client = new TcpClient();
 
-        public RemoteClient(uint playerIndex)
+        public RemoteClient(uint playerIndex, ILocalServer server, TcpClient client)
         {
             PlayerIndex = playerIndex;
+            Server = server;
+            this.client = client;
         }
 
         public uint PlayerIndex
@@ -78,54 +123,32 @@ namespace Freeserf.Network
             get;
         }
 
-        public event EventHandler RequestReceived;
-
-        public void HandleRequest()
+        public IPAddress GetIP()
         {
             throw new NotImplementedException();
         }
 
-        public void Respond()
+        public void SendHeartbeat()
         {
-            throw new NotImplementedException();
+            new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(this);
         }
 
         public void SendDisconnect()
         {
-            throw new NotImplementedException();
+            new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(this);
         }
 
-        public void SendGameStateUpdate()
+        public void Send(byte[] rawData)
         {
-            throw new NotImplementedException();
-        }
-
-        public void SendKeepAlive()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SendMapStateUpdate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SendPlayerStateUpdate(uint playerIndex)
-        {
-            throw new NotImplementedException();
+            client.GetStream().Write(rawData, 0, rawData.Length);
         }
     }
 
     public class ClientFactory : IClientFactory
     {
-        public ILocalClient CreateLocal(uint playerIndex)
+        public ILocalClient CreateLocal()
         {
-            return new LocalClient(playerIndex);
-        }
-
-        public IRemoteClient CreateRemote(uint playerIndex)
-        {
-            return new RemoteClient(playerIndex);
+            return new LocalClient();
         }
     }
 }

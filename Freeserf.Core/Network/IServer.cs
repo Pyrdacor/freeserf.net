@@ -21,7 +21,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Net;
 
 namespace Freeserf.Network
 {
@@ -30,27 +30,34 @@ namespace Freeserf.Network
         public const int NetworkPort = 5067;
     }
 
-    public interface ILocalServer
+    public enum ServerState
+    {
+        Offline,
+        Lobby,
+        Loading,
+        Game,
+        Outro
+    }
+
+    public interface IServer
     {
         string Name { get; }
-        string HostName { get; }
+        IPAddress Ip { get; }
+        ServerState State { get; }
+    }
 
-        void Init();
+    public interface ILocalServer : IServer
+    {
+        void Init(bool useServerValues, bool useSameValues, string mapSeed);
         void Close();
 
         List<IRemoteClient> Clients { get; }
         bool AcceptClients { get; set; }
     }
 
-    public interface IRemoteServer
+    public interface IRemoteServer : IServer, IRemote
     {
-        string Name { get; }
-        string HostName { get; }
 
-        event EventHandler RequestReceived;
-
-        void HandleRequest();
-        void Respond();
     }
 
     public interface IServerFactory
