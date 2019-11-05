@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
+    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
