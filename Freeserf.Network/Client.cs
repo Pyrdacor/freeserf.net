@@ -112,12 +112,6 @@ namespace Freeserf.Network
             get;
         }
 
-        public Game Game
-        {
-            get;
-            set;
-        }
-
         public ILocalServer Server
         {
             get;
@@ -141,6 +135,21 @@ namespace Freeserf.Network
         public void Send(byte[] rawData)
         {
             client.GetStream().Write(rawData, 0, rawData.Length);
+        }
+
+        public void SendGameStateUpdate(Game game)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SendPlayerStateUpdate(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SendMapStateUpdate(Map map)
+        {
+            throw new NotImplementedException();
         }
     }
 

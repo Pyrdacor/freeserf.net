@@ -27,14 +27,14 @@ namespace Freeserf.Network
     public interface IClient
     {
         uint PlayerIndex { get; }
-        Game Game { get; set; }
-
+        
         void SendHeartbeat();
         void SendDisconnect();
     }
 
     public interface ILocalClient : IClient
     {
+        Game Game { get; set; }
         IRemoteServer Server { get; }
 
         byte RequestLobbyStateUpdate();
@@ -49,7 +49,9 @@ namespace Freeserf.Network
     {
         ILocalServer Server { get; }
 
+        void SendGameStateUpdate(Game game);
         void SendPlayerStateUpdate(Player player);
+        void SendMapStateUpdate(Map map);
     }
 
     public interface IClientFactory

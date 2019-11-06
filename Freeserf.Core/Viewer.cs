@@ -261,7 +261,7 @@ namespace Freeserf
         public ServerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : base(renderView, previousViewer, gui, Type.Server)
         {
-            // Note: It is ok if the only clients are spectators, but running a server without any connected client make no sense.
+            // Note: It is ok if the only clients are spectators, but running a server without any connected client makes no sense.
             // Note: All clients must be setup at game start. Clients can not join during the game.
             // Note: There may be more than 3 clients because of spectators!
             server = Network.Network.DefaultServerFactory.CreateLocal(previousViewer.MainInterface.ServerGameName, previousViewer.MainInterface.ServerGameInfo);
@@ -276,13 +276,11 @@ namespace Freeserf
 
             foreach (var client in server.Clients)
             {
-                client.Game = game;
-
-                client.SendGameStateUpdate();
-                client.SendMapStateUpdate();
+                client.SendGameStateUpdate(game);
+                client.SendMapStateUpdate(game.Map);
 
                 for (uint i = 0; i < game.GetPlayerCount(); ++i)
-                    client.SendPlayerStateUpdate(i);
+                    client.SendPlayerStateUpdate(game.GetPlayer(i));
             }
         }
 
@@ -302,7 +300,7 @@ namespace Freeserf
         {
             foreach (var client in server.Clients)
             {
-                client.SendKeepAlive();
+                client.SendHeartbeat();
             }
 
             base.Update();
