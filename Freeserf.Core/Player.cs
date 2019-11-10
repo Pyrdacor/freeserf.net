@@ -33,8 +33,7 @@ namespace Freeserf
     using dword = UInt32;
     using Notifications = Queue<Notification>;
     using PositionTimers = List<PositionTimer>;
-    using ListInventories = List<Inventory>;
-    using ResourceMap = Dictionary<Resource.Type, int>;
+    using ResourceMap = Dictionary<Resource.Type, uint>;
     using SerfMap = Dictionary<Serf.Type, int>;
 
     public class Player : GameObject, IData
@@ -54,15 +53,7 @@ namespace Freeserf
         readonly PositionTimers timers = new PositionTimers();
         readonly Dictionary<MapPos, GameTime> lastUnderAttackNotificationTimes = new Dictionary<MapPos, GameTime>();
         uint selectedBuildingIndex = 0;
-        int knightsToSpawn = 0;
-
-        int contSearchAfterNonOptimalFind = 7;
-        
-
-        int analysisGoldore = 0;
-        int analysisIronore = 0;
-        int analysisCoal = 0;
-        int analysisStone = 0;
+        int knightsToSpawn = 0;       
 
         int sendGenericDelay = 0;
         int sendKnightDelay = 0;        
@@ -981,7 +972,7 @@ namespace Freeserf
 
             foreach (Inventory loopInv in inventories)
             {
-                if (loopInv.GetSerfMode() == Inventory.Mode.In)
+                if (loopInv.SerfMode == Inventory.Mode.In)
                 {
                     if (wantKnight && (loopInv.GetCountOf(Resource.Type.Sword) == 0 ||
                                        loopInv.GetCountOf(Resource.Type.Shield) == 0))
@@ -1396,35 +1387,35 @@ namespace Freeserf
                 }
             }
 
-            int planks = Game.GetResourceAmountInInventories(this, Resource.Type.Plank);
-            int stones = Game.GetResourceAmountInInventories(this, Resource.Type.Stone);
+            uint planks = Game.GetResourceAmountInInventories(this, Resource.Type.Plank);
+            uint stones = Game.GetResourceAmountInInventories(this, Resource.Type.Stone);
 
-            int numPlanksNeeded = 0;
-            int numStonesNeeded = 0;
+            uint numPlanksNeeded = 0;
+            uint numStonesNeeded = 0;
 
             if (numLumberjacks == 0)
             {
                 var info = Building.ConstructionInfos[(int)Building.Type.Lumberjack];
-                numPlanksNeeded += (int)info.Planks;
-                numStonesNeeded += (int)info.Stones;
+                numPlanksNeeded += info.Planks;
+                numStonesNeeded += info.Stones;
             }
 
             if (numStoneCutters == 0)
             {
                 var info = Building.ConstructionInfos[(int)Building.Type.Stonecutter];
-                numPlanksNeeded += (int)info.Planks;
-                numStonesNeeded += (int)info.Stones;
+                numPlanksNeeded += info.Planks;
+                numStonesNeeded += info.Stones;
             }
 
             if (numSawMills == 0)
             {
                 var info = Building.ConstructionInfos[(int)Building.Type.Sawmill];
-                numPlanksNeeded += (int)info.Planks;
-                numStonesNeeded += (int)info.Stones;
+                numPlanksNeeded += info.Planks;
+                numStonesNeeded += info.Stones;
             }
 
-            int remainingPlanks = planks - numPlanksNeeded;
-            int remainingStones = stones - numStonesNeeded;
+            int remainingPlanks = (int)planks - (int)numPlanksNeeded;
+            int remainingStones = (int)stones - (int)numStonesNeeded;
 
             if (remainingPlanks <= 0 || remainingStones <= 0)
             {
@@ -2013,7 +2004,6 @@ namespace Freeserf
 
             reader.ReadWord();  // 390 // castleflag
             state.CastleInventoryIndex = reader.ReadWord(); // 392
-            contSearchAfterNonOptimalFind = reader.ReadWord(); // 394
             knightsToSpawn = reader.ReadWord(); // 396
             reader.ReadWord();  // 398
             reader.ReadWord();  // 400, player->field_110 = v16;
@@ -2040,11 +2030,6 @@ namespace Freeserf
             totalAttackingKnights = reader.ReadWord(); // 434
             buildingAttacked = reader.ReadWord(); // 436
             knightsAttacking = reader.ReadWord(); // 438
-
-            analysisGoldore = reader.ReadWord(); // 440
-            analysisIronore = reader.ReadWord(); // 442
-            analysisCoal = reader.ReadWord(); // 444
-            analysisStone = reader.ReadWord(); // 446
 
             settings.FoodStonemine = reader.ReadWord(); // 448
             settings.FoodCoalmine = reader.ReadWord(); // 450

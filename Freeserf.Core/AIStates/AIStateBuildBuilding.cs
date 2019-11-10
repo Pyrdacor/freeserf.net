@@ -791,7 +791,7 @@ namespace Freeserf.AIStates
 
                 foreach (var inventory in inventories)
                 {
-                    var inventoryBuilding = game.GetBuilding(inventory.GetBuildingIndex());
+                    var inventoryBuilding = game.GetBuilding(inventory.Building);
 
                     int dist = Pathfinder.FindShortestRoad(game.Map, game.GetFlag(inventoryBuilding.GetFlagIndex()), flag, out uint cost).Count;
 

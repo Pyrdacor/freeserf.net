@@ -60,9 +60,9 @@ namespace Freeserf.AIStates
 
         bool CanBuild(Game game, Player player)
         {
-            int numPossibleMiners = (int)player.GetSerfCount(Serf.Type.Miner) + game.GetResourceAmountInInventories(player, Resource.Type.Pick);
-            int numMines = (int)player.GetTotalBuildingCount(Building.Type.GoldMine) + (int)player.GetTotalBuildingCount(Building.Type.IronMine) +
-                (int)player.GetTotalBuildingCount(Building.Type.CoalMine) + (int)player.GetTotalBuildingCount(Building.Type.StoneMine);
+            uint numPossibleMiners = player.GetSerfCount(Serf.Type.Miner) + game.GetResourceAmountInInventories(player, Resource.Type.Pick);
+            uint numMines = player.GetTotalBuildingCount(Building.Type.GoldMine) + player.GetTotalBuildingCount(Building.Type.IronMine) +
+                player.GetTotalBuildingCount(Building.Type.CoalMine) + player.GetTotalBuildingCount(Building.Type.StoneMine);
 
             return numMines < numPossibleMiners;
         }

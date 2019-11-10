@@ -131,8 +131,8 @@ namespace Freeserf.AIStates
             }
 
             // plank distribution
-            int numBoats = game.GetResourceAmountInInventories(player, Resource.Type.Boat);
-            int numPlanks = game.GetResourceAmountInInventories(player, Resource.Type.Plank);
+            uint numBoats = game.GetResourceAmountInInventories(player, Resource.Type.Boat);
+            uint numPlanks = game.GetResourceAmountInInventories(player, Resource.Type.Plank);
 
             if (!ai.HardTimes()) // In hard times this is set directly when planning a tool.
             {

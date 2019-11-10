@@ -1063,8 +1063,8 @@ namespace Freeserf
 
             castle.SetInventory(inventory);
 
-            inventory.SetBuildingIndex(castle.Index);
-            inventory.SetFlagIndex(flag.Index);
+            inventory.Building = castle.Index;
+            inventory.Flag = flag.Index;
             inventory.Player = player.Index;
             inventory.ApplySuppliesPreset(player.InitialSupplies);
 
@@ -1144,9 +1144,9 @@ namespace Freeserf
 
         public void SetInventoryResourceMode(Inventory inventory, Inventory.Mode mode)
         {
-            Flag flag = flags[inventory.GetFlagIndex()];
+            Flag flag = flags[inventory.Flag];
 
-            inventory.SetResourceMode(mode);
+            inventory.ResourceMode = mode;
 
             if (mode > 0)
             {
@@ -1169,9 +1169,9 @@ namespace Freeserf
 
         public void SetInventorySerfMode(Inventory inventory, Inventory.Mode mode)
         {
-            Flag flag = flags[inventory.GetFlagIndex()];
+            Flag flag = flags[inventory.Flag];
 
-            inventory.SetSerfMode(mode);
+            inventory.SerfMode = mode;
 
             if (mode > 0)
             {
@@ -1754,7 +1754,7 @@ namespace Freeserf
         {
             int count = GetFreeKnightCount(player);
 
-            count += Math.Min(GetResourceAmountInInventories(player, Resource.Type.Sword), GetResourceAmountInInventories(player, Resource.Type.Shield));
+            count += (int)Math.Min(GetResourceAmountInInventories(player, Resource.Type.Sword), GetResourceAmountInInventories(player, Resource.Type.Shield));
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Hut);
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Tower);
             count -= (int)player.GetIncompleteBuildingCount(Building.Type.Fortress);
@@ -1835,13 +1835,13 @@ namespace Freeserf
             return inventoryWithResButNoGeneric;
         }
 
-        public int GetResourceAmountInInventories(Player player, Resource.Type type)
+        public uint GetResourceAmountInInventories(Player player, Resource.Type type)
         {
-            int amount = 0;
+            uint amount = 0;
 
             foreach (var inventory in GetPlayerInventories(player))
             {
-                amount += (int)inventory.GetCountOf(type);
+                amount += inventory.GetCountOf(type);
             }
 
             return amount;
@@ -2115,7 +2115,7 @@ namespace Freeserf
                     {
                         if (inventory.Player == player.Index && !inventory.IsQueueFull())
                         {
-                            Inventory.Mode resMode = inventory.GetResourceMode();
+                            Inventory.Mode resMode = inventory.ResourceMode;
 
                             if (resMode == Inventory.Mode.In || resMode == Inventory.Mode.Stop)
                             {
@@ -2171,7 +2171,7 @@ namespace Freeserf
 
                     for (int i = 0; i < n; ++i)
                     {
-                        Flag flag = this.flags[sourceInventories[i].GetFlagIndex()];
+                        Flag flag = this.flags[sourceInventories[i].Flag];
                         // Note: it seems that SearchDir was abused for indexing here but (Direction)i will not work with i >= 6.
                         // We added a general purpose tagged object for flags instead.
                         flag.Tag = i;

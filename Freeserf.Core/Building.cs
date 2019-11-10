@@ -1481,8 +1481,8 @@ namespace Freeserf
                                 return;
 
                             inventory.Player = Player;
-                            inventory.SetBuildingIndex(Index);
-                            inventory.SetFlagIndex(flag);
+                            inventory.Building = Index;
+                            inventory.Flag = flag;
 
                             u.InvIndex = (int)inventory.Index;
                             stock[0].Requested = 0xff;

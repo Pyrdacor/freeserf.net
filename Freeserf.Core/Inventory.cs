@@ -23,15 +23,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
+    using Serialize;
+    using word = UInt16;
+    using dword = UInt32;
     using SerfMap = Dictionary<Serf.Type, uint>;
-    using ResourceMap = Dictionary<Resource.Type, int>;
+    using ResourceMap = Dictionary<Resource.Type, uint>;
 
-    public class Inventory : GameObject, IDisposable
+    public class Inventory : GameObject, IDisposable, IData
     {
         public enum Mode
         {
@@ -40,97 +41,111 @@ namespace Freeserf
             Out = 3,   // 11
         }
 
-        class OutQueue
+        internal class OutQueue
         {
             public Resource.Type Type;
             public uint Dest;
         }
 
-        /* Index of flag connected to this inventory */
-        uint flag = 0;
-        /* Index of building containing this inventory */
-        uint building = 0;
-        /* Count of resources */
-        readonly ResourceMap resources = new ResourceMap();
-        /* Resources waiting to be moved out */
-        readonly OutQueue[] outQueue = new OutQueue[2]
-        {
-            new OutQueue(), new OutQueue()
-        };
-        /* Count of serfs waiting to move out */
-        uint serfsOut = 0;
-        /* Count of generic serfs */
-        uint genericCount = 0;
-        uint resourceDir = 0;
-        /* Indices to serfs of each type */
-        readonly SerfMap serfs = new SerfMap();
+        [Data]
+        private InventoryState state = new InventoryState();       
 
+        // Count of serfs waiting to move out
+        uint serfsOut = 0;
+        
         public Inventory(Game game, uint index)
             : base(game, index)
         {
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 2; ++i)
             {
-                outQueue[i].Type = Resource.Type.None;
-                outQueue[i].Dest = 0;
+                state.OutQueue[i].Type = Resource.Type.None;
+                state.OutQueue[i].Dest = 0;
             }
 
             foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
             {
-                serfs.Add(type, 0u);
+                state.Serfs.Add(type, 0u);
             }
 
-            for (var r = Resource.Type.Fish; r <= Resource.Type.Shield; ++r)
+            for (var resource = Resource.Type.Fish; resource <= Resource.Type.Shield; ++resource)
             {
-                resources.Add(r, 0);
+                state.Resources.Add(resource, 0);
             }
         }
 
-        /* Inventory owner */
-        public uint Player { get; internal set; } = 0;
+        public bool Dirty => state.Dirty;
 
-        public uint GetFlagIndex()
+        /// <summary>
+        /// Inventory owner
+        /// </summary>
+        public uint Player
         {
-            return flag;
+            get => state.Player;
+            internal set
+            {
+                if (state.Player != value)
+                {
+                    state.Player = (byte)value;
+                    state.Dirty = true;
+                }
+            }
         }
 
-        public void SetFlagIndex(uint flagIndex)
+        public uint Flag
         {
-            flag = flagIndex;
+            get => state.Flag;
+            set
+            {
+                if (state.Flag != value)
+                {
+                    state.Flag = (word)value;
+                    state.Dirty = true;
+                }
+            }
         }
 
-        public uint GetBuildingIndex()
+        public uint Building
         {
-            return building;
+            get => state.Building;
+            set
+            {
+                if (state.Building != value)
+                {
+                    state.Building = (word)value;
+                    state.Dirty = true;
+                }
+            }
         }
 
-        public void SetBuildingIndex(uint buildingIndex)
+        public Mode ResourceMode
         {
-            building = buildingIndex;
+            get => state.ResourceMode;
+            set
+            {
+                if (state.ResourceMode != value)
+                {
+                    state.ResourceMode = value;
+                    state.Dirty = true;
+                }
+            }
         }
 
-        public Mode GetResourceMode()
+        public Mode SerfMode
         {
-            return (Mode)(resourceDir & 3);
-        }
-
-        public void SetResourceMode(Mode mode)
-        {
-            resourceDir = (resourceDir & 0xFC) | (uint)mode;
-        }
-
-        public Mode GetSerfMode()
-        {
-            return (Mode)((resourceDir >> 2) & 3);
-        }
-
-        public void SetSerfMode(Mode mode)
-        {
-            resourceDir = (resourceDir & 0xF3) | ((uint)mode << 2);
+            get => state.SerfMode;
+            set
+            {
+                if (state.SerfMode != value)
+                {
+                    state.SerfMode = value;
+                    state.Dirty = true;
+                }
+            }
         }
 
         public bool HaveAnyOutMode()
         {
-            return (resourceDir & 0x0A) != 0;
+            return state.HaveAnyOutMode();
         }
 
         public uint GetSerfQueueLength()
@@ -147,31 +162,33 @@ namespace Freeserf
         {
             var serfType = serf.GetSerfType();
 
-            if (serfs[serfType] != serf.Index)
+            if (state.Serfs[serfType] != serf.Index)
             {
                 return false;
             }
 
-            serfs[serfType] = 0;
+            state.Serfs[serfType] = 0;
 
             if (serfType == Serf.Type.Generic)
             {
-                --genericCount;
+                --state.GenericCount;
             }
 
             ++serfsOut;
+
+            state.Dirty = true;
 
             return true;
         }
 
         public Serf CallOutSerf(Serf.Type type)
         {
-            if (serfs[type] == 0)
+            if (state.Serfs[type] == 0)
             {
                 return null;
             }
 
-            Serf serf = Game.GetSerf(serfs[type]);
+            Serf serf = Game.GetSerf(state.Serfs[type]);
 
             if (!CallOutSerf(serf))
             {
@@ -183,120 +200,127 @@ namespace Freeserf
 
         public bool CallInternal(Serf serf)
         {
-            if (serfs[serf.GetSerfType()] != serf.Index)
+            if (state.Serfs[serf.GetSerfType()] != serf.Index)
             {
                 return false;
             }
 
-            serfs[serf.GetSerfType()] = 0;
+            state.Serfs[serf.GetSerfType()] = 0;
+            state.Dirty = true;
 
             return true;
         }
 
         public Serf CallInternal(Serf.Type type)
         {
-            if (serfs[type] == 0)
+            if (state.Serfs[type] == 0)
             {
                 return null;
             }
 
-            Serf serf = Game.GetSerf(serfs[type]);
-            serfs[type] = 0;
+            Serf serf = Game.GetSerf(state.Serfs[type]);
+            state.Serfs[type] = 0;
+            state.Dirty = true;
 
             return serf;
         }
 
         public void SerfComeBack()
         {
-            ++genericCount;
+            ++state.GenericCount;
+            state.Dirty = true;
         }
 
         public uint FreeSerfCount()
         {
-            return genericCount;
+            return state.GenericCount;
         }
 
         public bool HaveSerf(Serf.Type type)
         {
-            return serfs[type] != 0;
+            return state.Serfs[type] != 0;
         }
 
         public uint GetCountOf(Resource.Type resource)
         {
-            return (uint)resources[resource];
+            return state.Resources[resource];
         }
 
         public ResourceMap GetAllResources()
         {
-            return resources;
+            return state.Resources;
         }
 
         public void PopResource(Resource.Type resource)
         {
-            --resources[resource];
+            --state.Resources[resource];
         }
 
         public void PushResource(Resource.Type resource)
         {
-            resources[resource] += (resources[resource] < 50000) ? 1 : 0;
+            state.Resources[resource] += (state.Resources[resource] < 50000) ? 1u : 0u;
         }
 
         public bool HasResourceInQueue()
         {
-            return (outQueue[0].Type != Resource.Type.None);
+            return (state.OutQueue[0].Type != Resource.Type.None);
         }
 
         public bool IsQueueFull()
         {
-            return (outQueue[1].Type != Resource.Type.None);
+            return (state.OutQueue[1].Type != Resource.Type.None);
         }
 
         public void GetResourceFromQueue(ref Resource.Type res, ref uint dest)
         {
-            res = outQueue[0].Type;
-            dest = outQueue[0].Dest;
+            res = state.OutQueue[0].Type;
+            dest = state.OutQueue[0].Dest;
 
-            outQueue[0].Type = outQueue[1].Type;
-            outQueue[0].Dest = outQueue[1].Dest;
+            state.OutQueue[0].Type = state.OutQueue[1].Type;
+            state.OutQueue[0].Dest = state.OutQueue[1].Dest;
 
-            outQueue[1].Type = Resource.Type.None;
-            outQueue[1].Dest = 0;
+            state.OutQueue[1].Type = Resource.Type.None;
+            state.OutQueue[1].Dest = 0;
+
+            state.Dirty = true;
         }
 
         public void ResetQueueForDest(Flag flag)
         {
-            if (outQueue[1].Type != Resource.Type.None && outQueue[1].Dest == flag.Index)
+            if (state.OutQueue[1].Type != Resource.Type.None && state.OutQueue[1].Dest == flag.Index)
             {
-                PushResource(outQueue[1].Type);
-                outQueue[1].Type = Resource.Type.None;
+                PushResource(state.OutQueue[1].Type);
+                state.OutQueue[1].Type = Resource.Type.None;
+                state.Dirty = true;
             }
 
-            if (outQueue[0].Type != Resource.Type.None && outQueue[0].Dest == flag.Index)
+            if (state.OutQueue[0].Type != Resource.Type.None && state.OutQueue[0].Dest == flag.Index)
             {
-                PushResource(outQueue[0].Type);
-                outQueue[0].Type = outQueue[1].Type;
-                outQueue[0].Dest = outQueue[1].Dest;
-                outQueue[1].Type = Resource.Type.None;
+                PushResource(state.OutQueue[0].Type);
+                state.OutQueue[0].Type = state.OutQueue[1].Type;
+                state.OutQueue[0].Dest = state.OutQueue[1].Dest;
+                state.OutQueue[1].Type = Resource.Type.None;
+                state.Dirty = true;
             }
         }
 
         public bool HasFood()
         {
-            return resources[Resource.Type.Fish] != 0 ||
-                   resources[Resource.Type.Meat] != 0 ||
-                   resources[Resource.Type.Bread] != 0;
+            return state.Resources[Resource.Type.Fish] != 0 ||
+                   state.Resources[Resource.Type.Meat] != 0 ||
+                   state.Resources[Resource.Type.Bread] != 0;
         }
 
-        /* Take resource from inventory and put in out queue.
-           The resource must be present.*/
+        // Take resource from inventory and put in out queue.
+        // The resource must be present.
         public void AddToQueue(Resource.Type type, uint dest)
         {
             if (type == Resource.Type.GroupFood)
             {
-                /* Select the food resource with highest amount available */
-                if (resources[Resource.Type.Meat] > resources[Resource.Type.Bread])
+                // Select the food resource with highest amount available
+                if (state.Resources[Resource.Type.Meat] > state.Resources[Resource.Type.Bread])
                 {
-                    if (resources[Resource.Type.Meat] > resources[Resource.Type.Fish])
+                    if (state.Resources[Resource.Type.Meat] > state.Resources[Resource.Type.Fish])
                     {
                         type = Resource.Type.Meat;
                     }
@@ -305,7 +329,7 @@ namespace Freeserf
                         type = Resource.Type.Fish;
                     }
                 }
-                else if (resources[Resource.Type.Bread] > resources[Resource.Type.Fish])
+                else if (state.Resources[Resource.Type.Bread] > state.Resources[Resource.Type.Fish])
                 {
                     type = Resource.Type.Bread;
                 }
@@ -315,23 +339,25 @@ namespace Freeserf
                 }
             }
 
-            if (resources[type] == 0)
+            if (state.Resources[type] == 0)
             {
-                throw new ExceptionFreeserf(Game, "inventory", "No resource with type.");
+                throw new ExceptionFreeserf(Game, "inventory", "No state.Resource with type.");
             }
 
-            --resources[type];
+            --state.Resources[type];
 
-            if (outQueue[0].Type == Resource.Type.None)
+            if (state.OutQueue[0].Type == Resource.Type.None)
             {
-                outQueue[0].Type = type;
-                outQueue[0].Dest = dest;
+                state.OutQueue[0].Type = type;
+                state.OutQueue[0].Dest = dest;
             }
             else
             {
-                outQueue[1].Type = type;
-                outQueue[1].Dest = dest;
+                state.OutQueue[1].Type = type;
+                state.OutQueue[1].Dest = dest;
             }
+
+            state.Dirty = true;
         }
 
         static readonly uint[,] SuppliesTemplates = new uint[5, 26]
@@ -348,11 +374,11 @@ namespace Freeserf
                 50, 10,  5, 10, 20, 20, 50,  10, 200, 200 }
         };
 
-        /* Create initial resources */
+        // Create initial resources
         public void ApplySuppliesPreset(uint supplies)
         {
-            IEnumerable<uint> template1 = null;
-            IEnumerable<uint> template2 = null;
+            IEnumerable<uint> template1;
+            IEnumerable<uint> template2;
 
             if (supplies < 10)
             {
@@ -387,7 +413,7 @@ namespace Freeserf
             var template1Array = template1.ToArray();
             var template2Array = template2.ToArray();
 
-            for (int i = 0; i < 26; i++)
+            for (int i = 0; i < 26; ++i)
             {
                 uint t1 = template1Array[i];
                 uint n = (template2Array[i] - t1) * supplies * 6554;
@@ -395,31 +421,35 @@ namespace Freeserf
                 if (n >= 0x8000)
                     ++t1;
 
-                resources[(Resource.Type)i] = (int)(t1 + (n >> 16));
+                state.Resources[(Resource.Type)i] = t1 + (n >> 16);
             }
+
+            state.Dirty = true;
         }
 
         public Serf CallTransporter(bool water)
         {
-            Serf serf = null;
+            Serf serf;
 
             if (water)
             {
-                if (serfs[Serf.Type.Sailor] != 0)
+                if (state.Serfs[Serf.Type.Sailor] != 0)
                 {
-                    serf = Game.GetSerf(serfs[Serf.Type.Sailor]);
-                    serfs[Serf.Type.Sailor] = 0;
+                    serf = Game.GetSerf(state.Serfs[Serf.Type.Sailor]);
+                    state.Serfs[Serf.Type.Sailor] = 0;
+                    state.Dirty = true;
                 }
                 else
                 {
-                    if ((serfs[Serf.Type.Generic] != 0) &&
-                        (resources[Resource.Type.Boat] > 0))
+                    if ((state.Serfs[Serf.Type.Generic] != 0) &&
+                        (state.Resources[Resource.Type.Boat] > 0))
                     {
-                        serf = Game.GetSerf(serfs[Serf.Type.Generic]);
-                        serfs[Serf.Type.Generic] = 0;
-                        --resources[Resource.Type.Boat];
+                        serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
+                        state.Serfs[Serf.Type.Generic] = 0;
+                        --state.Resources[Resource.Type.Boat];
                         serf.SetSerfType(Serf.Type.Sailor);
-                        --genericCount;
+                        --state.GenericCount;
+                        state.Dirty = true;
                     }
                     else
                     {
@@ -429,19 +459,21 @@ namespace Freeserf
             }
             else
             {
-                if (serfs[Serf.Type.Transporter] != 0)
+                if (state.Serfs[Serf.Type.Transporter] != 0)
                 {
-                    serf = Game.GetSerf(serfs[Serf.Type.Transporter]);
-                    serfs[Serf.Type.Transporter] = 0;
+                    serf = Game.GetSerf(state.Serfs[Serf.Type.Transporter]);
+                    state.Serfs[Serf.Type.Transporter] = 0;
+                    state.Dirty = true;
                 }
                 else
                 {
-                    if (serfs[Serf.Type.Generic] != 0)
+                    if (state.Serfs[Serf.Type.Generic] != 0)
                     {
-                        serf = Game.GetSerf(serfs[Serf.Type.Generic]);
-                        serfs[Serf.Type.Generic] = 0;
+                        serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
+                        state.Serfs[Serf.Type.Generic] = 0;
                         serf.SetSerfType(Serf.Type.Transporter);
-                        --genericCount;
+                        --state.GenericCount;
+                        state.Dirty = true;
                     }
                     else
                     {
@@ -463,18 +495,20 @@ namespace Freeserf
                 return false;
             }
 
-            if (resources[Resource.Type.Sword] == 0 ||
-                resources[Resource.Type.Shield] == 0)
+            if (state.Resources[Resource.Type.Sword] == 0 ||
+                state.Resources[Resource.Type.Shield] == 0)
             {
                 return false;
             }
 
             PopResource(Resource.Type.Sword);
             PopResource(Resource.Type.Shield);
-            --genericCount;
-            serfs[Serf.Type.Generic] = 0;
+            --state.GenericCount;
+            state.Serfs[Serf.Type.Generic] = 0;
 
             serf.SetSerfType(Serf.Type.Knight0);
+
+            state.Dirty = true;
 
             return true;
         }
@@ -488,12 +522,14 @@ namespace Freeserf
             {
                 serf.InitGeneric(this);
 
-                ++genericCount;
+                ++state.GenericCount;
 
-                if (serfs[Serf.Type.Generic] == 0)
+                if (state.Serfs[Serf.Type.Generic] == 0)
                 {
-                    serfs[Serf.Type.Generic] = serf.Index;
+                    state.Serfs[Serf.Type.Generic] = serf.Index;
                 }
+
+                state.Dirty = true;
             }
 
             return serf;
@@ -538,55 +574,57 @@ namespace Freeserf
                 return false;
             }
 
-            if (serfs[type] != 0)
+            if (state.Serfs[type] != 0)
             {
                 return false;
             }
 
             if ((ResourcesNeededForSpecializing[(int)type * 2] != Resource.Type.None)
-                && (resources[ResourcesNeededForSpecializing[(int)type * 2]] == 0))
+                && (state.Resources[ResourcesNeededForSpecializing[(int)type * 2]] == 0))
             {
                 return false;
             }
 
             if ((ResourcesNeededForSpecializing[(int)type * 2 + 1] != Resource.Type.None)
-                && (resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]] == 0))
+                && (state.Resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]] == 0))
             {
                 return false;
             }
 
-            if (serfs[Serf.Type.Generic] == serf.Index)
+            if (state.Serfs[Serf.Type.Generic] == serf.Index)
             {
-                serfs[Serf.Type.Generic] = 0;
+                state.Serfs[Serf.Type.Generic] = 0;
             }
 
-            --genericCount;
+            --state.GenericCount;
 
             if (ResourcesNeededForSpecializing[(int)type * 2] != Resource.Type.None)
             {
-                --resources[ResourcesNeededForSpecializing[(int)type * 2]];
+                --state.Resources[ResourcesNeededForSpecializing[(int)type * 2]];
             }
 
             if (ResourcesNeededForSpecializing[(int)type * 2 + 1] != Resource.Type.None)
             {
-                --resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]];
+                --state.Resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]];
             }
 
             serf.SetSerfType(type);
 
-            serfs[type] = serf.Index;
+            state.Serfs[type] = serf.Index;
+
+            state.Dirty = true;
 
             return true;
         }
 
         public Serf SpecializeFreeSerf(Serf.Type type)
         {
-            if (serfs[Serf.Type.Generic] == 0)
+            if (state.Serfs[Serf.Type.Generic] == 0)
             {
                 return null;
             }
 
-            Serf serf = Game.GetSerf(serfs[Serf.Type.Generic]);
+            Serf serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
 
             if (!SpecializeSerf(serf, type))
             {
@@ -598,16 +636,16 @@ namespace Freeserf
 
         public uint SerfPotentialCount(Serf.Type type)
         {
-            uint count = genericCount;
+            uint count = state.GenericCount;
 
             if (ResourcesNeededForSpecializing[(int)type * 2] != Resource.Type.None)
             {
-                count = Math.Min(count, (uint)resources[ResourcesNeededForSpecializing[(int)type * 2]]);
+                count = Math.Min(count, state.Resources[ResourcesNeededForSpecializing[(int)type * 2]]);
             }
 
             if (ResourcesNeededForSpecializing[(int)type * 2 + 1] != Resource.Type.None)
             {
-                count = Math.Min(count, (uint)resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]]);
+                count = Math.Min(count, state.Resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]]);
             }
 
             return count;
@@ -615,7 +653,8 @@ namespace Freeserf
 
         public void SerfIdleInStock(Serf serf)
         {
-            serfs[serf.GetSerfType()] = serf.Index;
+            state.Serfs[serf.GetSerfType()] = serf.Index;
+            state.Dirty = true;
         }
 
         public void KnightTraining(Serf serf, int p)
@@ -623,7 +662,10 @@ namespace Freeserf
             Serf.Type oldType = serf.GetSerfType();
 
             if (serf.TrainKnight(p))
-                serfs[oldType] = 0;
+            {
+                state.Serfs[oldType] = 0;
+                state.Dirty = true;
+            }
 
             SerfIdleInStock(serf);
         }
@@ -631,79 +673,83 @@ namespace Freeserf
         public void ReadFrom(SaveReaderBinary reader)
         {
             Player = reader.ReadByte();  // 0
-            resourceDir = reader.ReadByte();  // 1
-            flag = reader.ReadWord(); // 2
-            building = reader.ReadWord(); // 4
+            state.ResourceDir = reader.ReadByte();  // 1
+            state.Flag = reader.ReadWord(); // 2
+            state.Building = reader.ReadWord(); // 4
 
             for (int j = 0; j < 26; ++j)
             {
-                resources[(Resource.Type)j] = reader.ReadWord(); // 6 + 2*j
+                state.Resources[(Resource.Type)j] = reader.ReadWord(); // 6 + 2*j
             }
 
             for (int j = 0; j < 2; ++j)
             {
-                outQueue[j].Type = (Resource.Type)(reader.ReadByte() - 1); // 58 + j
+                state.OutQueue[j].Type = (Resource.Type)(reader.ReadByte() - 1); // 58 + j
             }
 
             for (int j = 0; j < 2; ++j)
             {
-                outQueue[j].Dest = reader.ReadWord(); // 60 + 2*j
+                state.OutQueue[j].Dest = reader.ReadWord(); // 60 + 2*j
             }
 
-            genericCount = reader.ReadWord(); // 64
+            state.GenericCount = reader.ReadWord(); // 64
 
             for (int j = 0; j < 27; ++j)
             {
-                serfs[(Serf.Type)j] = reader.ReadWord(); // 66 + 2*j
+                state.Serfs[(Serf.Type)j] = reader.ReadWord(); // 66 + 2*j
             }
+
+            state.Dirty = true;
         }
 
         public void ReadFrom(SaveReaderText reader)
         {
-            Player = reader.Value("player").ReadUInt();
-            resourceDir = reader.Value("res_dir").ReadUInt();
-            flag = reader.Value("flag").ReadUInt();
-            building = reader.Value("building").ReadUInt();
+            state.Player = (byte)reader.Value("player").ReadUInt();
+            state.ResourceDir = (byte)reader.Value("res_dir").ReadUInt();
+            state.Flag = (word)reader.Value("flag").ReadUInt();
+            state.Building = (word)reader.Value("building").ReadUInt();
 
             for (int i = 0; i < 2; ++i)
             {
-                outQueue[i].Type = (Resource.Type)reader.Value("queue.type")[i].ReadInt();
-                outQueue[i].Dest = reader.Value("queue.dest")[i].ReadUInt();
+                state.OutQueue[i].Type = (Resource.Type)reader.Value("queue.type")[i].ReadInt();
+                state.OutQueue[i].Dest = reader.Value("queue.dest")[i].ReadUInt();
             }
 
-            genericCount = reader.Value("generic_count").ReadUInt();
+            state.GenericCount = reader.Value("generic_count").ReadUInt();
 
             for (int i = 0; i < 26; ++i)
             {
-                resources[(Resource.Type)i] = reader.Value("resources")[i].ReadInt();
-                serfs[(Serf.Type)i] = reader.Value("serfs")[i].ReadUInt();
+                state.Resources[(Resource.Type)i] = reader.Value("resources")[i].ReadUInt();
+                state.Serfs[(Serf.Type)i] = reader.Value("serfs")[i].ReadUInt();
             }
 
-            serfs[(Serf.Type)26] = reader.Value("serfs")[26].ReadUInt();
+            state.Serfs[(Serf.Type)26] = reader.Value("serfs")[26].ReadUInt();
+
+            state.Dirty = true;
         }
 
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("player").Write(Player);
-            writer.Value("res_dir").Write(resourceDir);
-            writer.Value("flag").Write(flag);
-            writer.Value("building").Write(building);
+            writer.Value("player").Write(state.Player);
+            writer.Value("res_dir").Write(state.ResourceDir);
+            writer.Value("flag").Write(state.Flag);
+            writer.Value("building").Write(state.Building);
 
             for (int i = 0; i < 2; ++i)
             {
-                writer.Value("queue.type").Write((int)outQueue[i].Type);
-                writer.Value("queue.dest").Write(outQueue[i].Dest);
+                writer.Value("queue.type").Write((int)state.OutQueue[i].Type);
+                writer.Value("queue.dest").Write(state.OutQueue[i].Dest);
             }
 
-            writer.Value("generic_count").Write(genericCount);
+            writer.Value("generic_count").Write(state.GenericCount);
 
             for (int i = 0; i < 26; ++i)
             {
-                writer.Value("resources").Write(resources[(Resource.Type)i]);
-                writer.Value("serfs").Write(serfs[(Serf.Type)i]);
+                writer.Value("resources").Write(state.Resources[(Resource.Type)i]);
+                writer.Value("serfs").Write(state.Serfs[(Serf.Type)i]);
             }
 
-            writer.Value("serfs").Write(serfs[(Serf.Type)26]);
+            writer.Value("serfs").Write(state.Serfs[(Serf.Type)26]);
         }
 
 
@@ -717,17 +763,17 @@ namespace Freeserf
             {
                 if (disposing)
                 {
-                    for (int i = 0; i < 2 && outQueue[i].Type != Resource.Type.None; ++i)
+                    for (int i = 0; i < 2 && state.OutQueue[i].Type != Resource.Type.None; ++i)
                     {
-                        Resource.Type res = outQueue[i].Type;
-                        uint dest = outQueue[i].Dest;
+                        Resource.Type resource = state.OutQueue[i].Type;
+                        uint dest = state.OutQueue[i].Dest;
 
-                        Game.CancelTransportedResource(res, dest);
-                        Game.LoseResource(res);
+                        Game.CancelTransportedResource(resource, dest);
+                        Game.LoseResource(resource);
                     }
 
-                    Game.AddGoldTotal(-(int)resources[Resource.Type.GoldBar]);
-                    Game.AddGoldTotal(-(int)resources[Resource.Type.GoldOre]);
+                    Game.AddGoldTotal(-(int)state.Resources[Resource.Type.GoldBar]);
+                    Game.AddGoldTotal(-(int)state.Resources[Resource.Type.GoldOre]);
                 }
 
                 disposed = true;

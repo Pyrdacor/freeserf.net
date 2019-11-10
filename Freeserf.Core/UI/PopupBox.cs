@@ -28,7 +28,7 @@ using System.Linq;
 namespace Freeserf.UI
 {
     using Freeserf.Data;
-    using ResourceMap = Dictionary<Resource.Type, int>;
+    using ResourceMap = Dictionary<Resource.Type, uint>;
 
     // TODO: If stats should reflect the current state we have
     //       to redraw the stat popup from time to time.
@@ -3086,8 +3086,8 @@ namespace Freeserf.UI
             SetIcon(40, 89, 0x129); // serf direction box
 
             var inventory = building.GetInventory();
-            var resourceMode = inventory.GetResourceMode();
-            var serfMode = inventory.GetSerfMode();
+            var resourceMode = inventory.ResourceMode;
+            var serfMode = inventory.SerfMode;
 
             switch (resourceMode)
             {

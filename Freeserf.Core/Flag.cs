@@ -150,13 +150,13 @@ namespace Freeserf
 
             foreach (var inventory in Game.GetPlayerInventories(player).ToList())
             {
-                if (inventorySupportsResIn && inventory.GetResourceMode() != Inventory.Mode.In)
+                if (inventorySupportsResIn && inventory.ResourceMode != Inventory.Mode.In)
                     continue;
 
-                if (inventorySupportsResOut && inventory.GetResourceMode() == Inventory.Mode.Out)
+                if (inventorySupportsResOut && inventory.ResourceMode == Inventory.Mode.Out)
                     continue;
 
-                Pathfinder.FindShortestRoad(Game.Map, this, Game.GetFlag(inventory.GetFlagIndex()), out uint cost);
+                Pathfinder.FindShortestRoad(Game.Map, this, Game.GetFlag(inventory.Flag), out uint cost);
 
                 if (cost < bestCost)
                     bestCost = cost;
@@ -1692,7 +1692,7 @@ namespace Freeserf
             }
 
             Serf serf = data.Inventory.CallTransporter(water);
-            Flag destFlag = Game.GetFlag(inventory.GetFlagIndex());
+            Flag destFlag = Game.GetFlag(inventory.Flag);
 
             length[(int)dir] |= Misc.BitU(7);
             source2.length[(int)dir2] |= Misc.BitU(7);

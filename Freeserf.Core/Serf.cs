@@ -1006,7 +1006,7 @@ namespace Freeserf
             SetSerfType(Type.Generic);
             Player = inventory.Player;
 
-            Building building = Game.GetBuilding(inventory.GetBuildingIndex());
+            Building building = Game.GetBuilding(inventory.Building);
             Position = building.Position;
             tick = Game.Tick;
             SetState(State.IdleInStock);
@@ -3015,8 +3015,8 @@ namespace Freeserf
                 return;
             }
 
-            if (inventory.GetSerfMode() == 0
-                || inventory.GetSerfMode() == Inventory.Mode.Stop /* in, stop */
+            if (inventory.SerfMode == Inventory.Mode.In
+                || inventory.SerfMode == Inventory.Mode.Stop /* in, stop */
                 || inventory.GetSerfQueueLength() >= 3)
             {
                 switch (GetSerfType())
@@ -4370,7 +4370,7 @@ namespace Freeserf
             tick = Game.Tick;
 
             Inventory inventory = Game.GetInventory(s.BuildingCastle.InvIndex);
-            Building building = Game.GetBuilding(inventory.GetBuildingIndex());
+            Building building = Game.GetBuilding(inventory.Building);
 
             if (building.BuildProgress())
             {
