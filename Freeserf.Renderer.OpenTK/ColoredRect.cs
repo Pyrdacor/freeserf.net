@@ -1,7 +1,7 @@
 ﻿/*
  * ColoredRect.cs - Colored rectangle
  *
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -26,17 +26,17 @@ namespace Freeserf.Renderer.OpenTK
     public class ColoredRect : Node, IColoredRect
     {
         protected int drawIndex = -1;
-        Color color;
+        Render.Color color;
         byte displayLayer = 0;
 
-        public ColoredRect(int width, int height, Color color, byte displayLayer, Rect virtualScreen)
+        public ColoredRect(int width, int height, Render.Color color, byte displayLayer, Rect virtualScreen)
             : base(Shape.Rect, width, height, virtualScreen)
         {
             this.color = color;
             this.displayLayer = displayLayer;
         }
 
-        public Color Color
+        public Render.Color Color
         {
             get => color;
             set
@@ -116,7 +116,7 @@ namespace Freeserf.Renderer.OpenTK
             this.virtualScreen = virtualScreen;
         }
 
-        public IColoredRect Create(int width, int height, Color color, byte displayLayer)
+        public IColoredRect Create(int width, int height, Render.Color color, byte displayLayer)
         {
             return new ColoredRect(width, height, color, displayLayer, virtualScreen);
         }

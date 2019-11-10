@@ -23,154 +23,54 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf
 {
+    using Serialize;
     using MapPos = UInt32;
-    using Messages = Queue<Message>;
-    using PosTimers = List<PosTimer>;
+    using GameTime = UInt32;
+    using word = UInt16;    
+    using dword = UInt32;
+    using Notifications = Queue<Notification>;
+    using PositionTimers = List<PositionTimer>;
     using ListInventories = List<Inventory>;
     using ResourceMap = Dictionary<Resource.Type, int>;
     using SerfMap = Dictionary<Serf.Type, int>;
 
-    public class Message
+    public class Player : GameObject, IData
     {
-        public enum Type
-        {
-            None = 0,
-            UnderAttack = 1,
-            LoseFight = 2,
-            WinFight = 3,
-            MineEmpty = 4,
-            CallToLocation = 5,
-            KnightOccupied = 6,
-            NewStock = 7,
-            LostLand = 8,
-            LostBuildings = 9,
-            EmergencyActive = 10,
-            EmergencyNeutral = 11,
-            FoundGold = 12,
-            FoundIron = 13,
-            FoundCoal = 14,
-            FoundStone = 15,
-            CallToMenu = 16,
-            ThirtyMinutesSinceSave = 17,
-            OneHourSinceSave = 18,
-            CallToStock = 19
-        }
-
-        public Type MessageType { get; set; } = Type.None;
-        public MapPos Pos { get; set; } = 0;
-        public uint Data { get; set; } = 0;
-    }
-
-    class PosTimer
-    {
-        public int Timeout = 0;
-        public MapPos Pos = 0;
-    }
-
-    public class Player : GameObject
-    {
-        public struct Color
-        {
-            public byte Red;
-            public byte Green;
-            public byte Blue;
-        }
-
-        bool emergencyProgramActive = false;
-        bool emergencyProgramWasDeactivatedOnce = false;
-        int[] toolPriorities = new int[9];
-        uint[] resourceCount = new uint[26];
-        int[] flagPriorities = new int[26];
-        uint[] serfCount = new uint[27];
-        uint[] knightOccupation = new uint[4];
-        Dictionary<long, DateTime> lastNotificationTimes = new Dictionary<long, DateTime>();
-
-        Color color = new Color()
-        {
-            Red = 0, Green = 0, Blue = 0
-        };
-        uint face = uint.MaxValue;
-
-        //Bit 0: Has castle
-        //Bit 1: Send strongest knights
-        //Bit 2: Cycling knights is in progress
-        //Bit 3: Message/Notification in queue/active
-        //Bit 4: Knight level reduces due to knight cycling
-        //Bit 5: Knight cycling in phase 2 (new knights from inventory to buildings)
-        //Bit 6: Unused for now but reserved for remote player (multiplayer client)
-        //Bit 7: AI
-        uint flags = 0u;
-        //Bit 0: Allow military building at current pos
-        //Bit 1: Allow flag at current pos
-        //Bit 2: Player can spawn new serfs
-        //Bit 3-7: Unused
-        uint build = 0u;
-        uint[] completedBuildingCount = new uint[24];
-        uint[] incompleteBuildingCount = new uint[24];
-        int[] inventoryPriorities = new int[26];
+        // We only serialize the settings and the player state
+        [Data]
+        private PlayerSettings settings = new PlayerSettings();
+        [Data]
+        private PlayerState state = new PlayerState();
+        
         uint[] attackingBuildings = new uint[64];
 
-        Messages messages = new Messages();
-        PosTimers timers = new PosTimers();
-
-        int building = 0;
-        int castleInventory = 0;
-        int contSearchAfterNonOptimalFind = 7;
-        int knightsToSpawn = 0;
-        uint totalLandArea = 0;
-        uint totalBuildingScore = 0;
-        uint totalMilitaryScore = 0;
+        // Those are only saved locally
         ushort lastTick = 0;
+        bool notificationFlag = false;
+        readonly Notifications notifications = new Notifications();
+        readonly PositionTimers timers = new PositionTimers();
+        readonly Dictionary<MapPos, GameTime> lastUnderAttackNotificationTimes = new Dictionary<MapPos, GameTime>();
+        uint selectedBuildingIndex = 0;
+        int knightsToSpawn = 0;
 
-        int reproductionCounter = 0;
-        uint reproductionReset = 0;
-        int serfToKnightRate = 20000;
-        int serfToKnightCounter = 0x8000; /* Overflow is important */
+        int contSearchAfterNonOptimalFind = 7;
+        
+
         int analysisGoldore = 0;
         int analysisIronore = 0;
         int analysisCoal = 0;
         int analysisStone = 0;
 
-        uint foodStonemine = 0 ; /* Food delivery priority of food for mines. */
-        uint foodCoalmine = 0;
-        uint foodIronmine = 0;
-        uint foodGoldmine = 0;
-        uint planksConstruction = 0; /* Planks delivery priority. */
-        uint planksBoatbuilder = 0;
-        uint planksToolmaker = 0;
-        uint steelToolmaker = 0;
-        uint steelWeaponsmith = 0;
-        uint coalSteelsmelter = 0;
-        uint coalGoldsmelter = 0;
-        uint coalWeaponsmith = 0;
-        uint wheatPigfarm = 0;
-        uint wheatMill = 0;
-
-        /* +1 for every castle defeated,
-           -1 for own castle lost. */
-        int castleScore = 0;
         int sendGenericDelay = 0;
-        uint initialSupplies = 0;
-        int serfIndex = 0;
-        int knightCycleCounter = 0;
-        int sendKnightDelay = 0;
-        int militaryMaxGold = 0;
-
-        uint knightMorale = 0;
-        uint goldDeposited = 0;
-        uint castleKnightsWanted = 3;
-        uint castleKnights = 0;
-        uint aiIntelligence = 0;
+        int sendKnightDelay = 0;        
 
         uint[,] playerStatHistory = new uint[16,112];
         uint[,] resourceCountHistory = new uint[26,120];
 
-        // TODO(Digger): remove it to UI
+        // TODO: remove it to UI
         public int buildingAttacked = 0;
         public int knightsAttacking = 0;
         public int attackingBuildingCount = 0;
@@ -178,42 +78,7 @@ namespace Freeserf
         public int totalAttackingKnights = 0;
         public uint tempIndex = 0; // used by Game.BuildingRemovePlayerRefs and so on
 
-        public MapPos CastlePos { get; internal set; } = Global.BadMapPos;
         public AI AI { get; set; } = null;
-
-        // Used for multiplayer games to see if an update is necessary.
-        public bool Dirty
-        {
-            get;
-            private set;
-        }
-
-        public bool EmergencyProgramActive
-        {
-            get => emergencyProgramActive;
-            private set
-            {
-                if (value == emergencyProgramActive)
-                    return;
-
-                if (value && !IsAi() && emergencyProgramWasDeactivatedOnce)
-                    return; // can't be reactivated for human players
-
-                if (value)
-                {
-                    AddNotification(Message.Type.EmergencyActive, CastlePos, CastlePos);
-                }
-                else
-                {
-                    AddNotification(Message.Type.EmergencyNeutral, CastlePos, CastlePos);
-                }
-
-                emergencyProgramActive = value;
-
-                if (!value)
-                    emergencyProgramWasDeactivatedOnce = true;
-            }
-        }
 
         public Player(Game game, uint index)
             : base(game, index)
@@ -228,168 +93,158 @@ namespace Freeserf
             ResetFlagPriority();
             ResetInventoryPriority();
 
-            knightOccupation[0] = 0x10;
-            knightOccupation[1] = 0x21;
-            knightOccupation[2] = 0x32;
-            knightOccupation[3] = 0x43;
+            settings.KnightOccupation[0] = 0x10;
+            settings.KnightOccupation[1] = 0x21;
+            settings.KnightOccupation[2] = 0x32;
+            settings.KnightOccupation[3] = 0x43;
 
-            /* player.field_1b0 = 0; AI */
-            /* player.field_1b2 = 0; AI */
+            settings.SerfToKnightRate = 20000;
+            state.SerfToKnightCounter = 0x8000; /* Overflow is important */
+        }
 
-            /* TODO AI: Set array field_402 of length 25 to -1. */
-            /* TODO AI: Set array field_434 of length 280*2 to 0 */
-            /* TODO AI: Set array field_1bc of length 8 to -1 */
+        // Used for multiplayer games to see if an update is necessary.
+        public bool Dirty => settings.Dirty || state.Dirty;
+
+        public bool EmergencyProgramActive
+        {
+            get => state.EmergencyProgramActive;
+            private set
+            {
+                if (value == state.EmergencyProgramActive)
+                    return;
+
+                if (value && !state.IsAI && state.EmergencyProgramWasDeactivatedOnce)
+                    return; // can't be reactivated for human players
+
+                if (value)
+                {
+                    AddNotification(Notification.Type.EmergencyActive, state.CastlePosition, state.CastlePosition);
+                }
+                else
+                {
+                    AddNotification(Notification.Type.EmergencyNeutral, state.CastlePosition, state.CastlePosition);
+                }
+
+                state.EmergencyProgramActive = value;
+
+                if (!value)
+                    state.EmergencyProgramWasDeactivatedOnce = true;
+
+                state.Dirty = true;
+            }
         }
 
         // Initialize player values.
         //
         // Supplies and reproduction are usually limited to 0-40 in random map games.
-        //
-        // Args:
-        //     face: the face image that represents this player.
-        //           1-12 is AI, 13-14 is human player.
-        //     color: Color of player as palette color index.
-        //     supplies: Initial resource supplies at castle (0-50).
-        //     reproduction: How quickly new serfs spawn during the game (0-60).
-        //     intelligence: AI only (unused) (0-40).
         public void Init(uint intelligence, uint supplies, uint reproduction)
         {
-            flags = 0;
+            settings.Flags = PlayerSettingFlags.None;
+            state.Flags = PlayerStateFlags.None;
 
-            initialSupplies = supplies;
-            reproductionReset = (60 - reproduction) * 50;
-            aiIntelligence = (1300 * intelligence) + 13535;
-            reproductionCounter = (int)reproductionReset;
+            state.InitialSupplies = (byte)supplies;
+            state.ReproductionReset = (word)((60 - reproduction) * 50);
+            state.Intelligence = (byte)intelligence;
+            state.ReproductionCounter = state.ReproductionReset;
 
-            Dirty = true;
+            if (!Face.IsHuman())
+                state.IsAI = true;
+
+            settings.Dirty = true;
+            state.Dirty = true;
         }
 
         internal void ResetDirtyFlag()
         {
-            Dirty = false;
+            settings.Dirty = false;
+            state.Dirty = false;
         }
 
         public PlayerInfo GetPlayerInfo()
         {
-            uint supplies = initialSupplies;
-            uint reproduction = 60 - reproductionReset / 50;
-            uint intelligence = (aiIntelligence - 13535) / 1300;
+            uint reproduction = (dword)(60 - state.ReproductionReset / 50);
 
-            var info = new PlayerInfo(GetFace(), GetColor(), intelligence, supplies, reproduction);
+            var info = new PlayerInfo(state.Face, state.Color, state.Intelligence, state.InitialSupplies, reproduction);
 
-            if (HasCastle())
-                info.CastlePos = new PlayerInfo.Pos((int)Game.Map.PosColumn(CastlePos), (int)Game.Map.PosRow(CastlePos));
+            if (state.HasCastle)
+            {
+                info.CastlePosition = new PlayerInfo.Position(
+                    (int)Game.Map.PosColumn(state.CastlePosition),
+                    (int)Game.Map.PosRow(state.CastlePosition)
+                );
+            }
 
             return info;
         }
 
-        public void InitView(Color color, uint face)
+        public void InitView(Color color, PlayerFace face)
         {
-            this.face = face;
+            state.Face = face;            
+            state.Color = color;
+            state.IsAI = !face.IsHuman();
+        }
 
-            if (face < 12)
-            { 
-                /* AI player */
-                flags |= Misc.BitU(7);
+        public Color Color => state.Color;
+        public PlayerFace Face => state.Face;
+        /// <summary>
+        /// Whether player has built the initial castle.
+        /// </summary>
+        public bool HasCastle => state.HasCastle;
+        public MapPos CastlePosition
+        {
+            get => state.CastlePosition;
+            internal set
+            {
+                state.CastlePosition = value;
+                state.Dirty = true;
             }
-
-            if (IsAi())
-                InitAiValues(face);
-
-            this.color = color;
         }
-
-        public Color GetColor()
+        public bool CanSpawn => state.CanSpawn;
+        /// <summary>
+        /// Whether the strongest knight should be sent to fight.
+        /// </summary>
+        public bool SendStrongest
         {
-            return color;
+            get => settings.SendStrongest;
+            set
+            {
+                if (settings.SendStrongest != value)
+                {
+                    settings.SendStrongest = value;
+                    settings.Dirty = true;
+                }
+            }
         }
-
-        public uint GetFace()
+        /// <summary>
+        /// Whether cycling of knights is in progress.
+        /// </summary>
+        public bool CyclingKnights => state.CyclingKnightsInProgress;
+        /// <summary>
+        /// Whether a notification is queued for this player.
+        /// </summary>
+        public bool HasNotification => notificationFlag && notifications.Count > 0;
+        public void DropNotifications()
         {
-            return face;
+            notificationFlag = false;
         }
-
-        /* Whether player has built the initial castle. */
-        public bool HasCastle()
-        {
-            return (flags & 1) != 0;
-        }
-
-        /* Whether the strongest knight should be sent to fight. */
-        public bool SendStrongest()
-        {
-            return (flags & 2) != 0;
-        }
-
-        public void DropSendStrongest()
-        {
-            flags &= ~Misc.BitU(1);
-        }
-
-        public void SetSendStrongest()
-        {
-            flags |= Misc.BitU(1);
-        }
-
-        /* Whether cycling of knights is in progress. */
-        public bool CyclingKnight()
-        {
-            return (flags & 4) != 0;
-        }
-
-        /* Whether a message is queued for this player. */
-        public bool HasMessage()
-        {
-            return (flags & 8) != 0;
-        }
-
-        public void DropMessage()
-        {
-            flags &= ~Misc.BitU(3);
-        }
-
-        /* Whether the knight level of military buildings is temporarily
-        reduced bacause of cycling of the knights. */
-        public bool ReducedKnightLevel()
-        {
-            return (flags & 16) != 0;
-        }
-
-        /* Whether the cycling of knights is in the second phase. */
-        public bool CyclingKnightsInSecondPhase()
-        {
-            return (flags & 32) != 0;
-        }
-
-        /* Whether this player is a computer controlled opponent. */
-        public bool IsAi()
-        {
-            return (flags & 128) != 0;
-        }
-
-        /* Whether player is prohibited from building military
-           buildings at current position. */
-        public bool AllowMilitary()
-        {
-            return (build & 1) == 0;
-        }
-
-        /* Whether player is prohibited from building flag at
-           current position. */
-        public bool AllowFlag()
-        {
-            return (build & 2) == 0;
-        }
-
-        /* Whether player can spawn new serfs. */
-        public bool CanSpawn()
-        {
-            return (build & 4) != 0;
-        }
+        /// <summary>
+        /// Whether the knight level of military buildings is temporarily
+        /// reduced bacause of cycling of the knights.
+        /// </summary>
+        public bool ReducedKnightLevel => state.CyclingKnightsReducedLevel;
+        /// <summary>
+        /// Whether the cycling of knights is in the second phase.
+        /// </summary>
+        /// <returns></returns>
+        public bool CyclingKnightsInSecondPhase => state.CyclingKnightsSecondPhase;
+        /// <summary>
+        /// Whether this player is a computer controlled opponent.
+        /// </summary>
+        public bool IsAI => state.IsAI;
 
         public uint GetSerfCount(Serf.Type type)
         {
-            return serfCount[(int)type];
+            return state.SerfCounts[(int)type];
         }
 
         public uint GetTotalKnightCount()
@@ -406,328 +261,317 @@ namespace Freeserf
             if (resource <= Resource.Type.None || resource >= Resource.Type.GroupFood)
                 return 0;
 
-            return flagPriorities[(int)resource];
+            return settings.FlagPriorities[(int)resource];
         }
 
-        /* Enqueue a new notification message for player. */
-        public void AddNotification(Message.Type type, MapPos pos, uint data)
+        // Enqueue a new notification message for player.
+        public void AddNotification(Notification.Type type, MapPos position, uint data)
         {
-            flags |= Misc.BitU(3); /* Message in queue. */
+            notificationFlag = true;
 
-            Message newMessage = new Message();
-            newMessage.MessageType = type;
-            newMessage.Pos = pos;
-            newMessage.Data = data;
+            Notification notification = new Notification();
+            notification.NotificationType = type;
+            notification.Position = position;
+            notification.Data = data;
 
-            long index = ((long)type) << 32 | pos;
+            if (type == Notification.Type.UnderAttack)
+                lastUnderAttackNotificationTimes[position] = Game.GameTime;
 
-            lastNotificationTimes[index] = DateTime.Now;
-
-            messages.Enqueue(newMessage);
-
-            Dirty = true;
+            notifications.Enqueue(notification);
         }
 
-        public bool HasNotification()
+        public bool HasNotificationOfType(Notification.Type type)
         {
-            return messages.Count > 0;
+            return notifications.Any(m => m.NotificationType == type);
         }
 
-        public bool HasNotificationOfType(Message.Type type)
+        public void ResetUnderAttackNotificationTime(MapPos pos)
         {
-            return messages.Any(m => m.MessageType == type);
+            lastUnderAttackNotificationTimes[pos] = Game.GameTime;
         }
 
-        public void ResetNotificationTime(Message.Type type, MapPos pos)
+        public GameTime GetMostRecentUnderAttackNotificationTime(uint position = Constants.INVALID_MAPPOS)
         {
-            long index = ((long)type) << 32 | pos;
-
-            lastNotificationTimes[index] = DateTime.Now;
+            return lastUnderAttackNotificationTimes.ContainsKey(position)
+                ? lastUnderAttackNotificationTimes[position]
+                : 0;
         }
 
-        public DateTime GetMostRecentMessageTime(Message.Type type, uint position = Global.BadMapPos)
+        public Notification PopNotification()
         {
-            long index = ((long)type) << 32 | position;
-
-            if (!lastNotificationTimes.ContainsKey(index))
-                return DateTime.MinValue;
-
-            return lastNotificationTimes[index];
+            return notifications.Dequeue();
         }
 
-        public Message PopNotification()
+        public Notification PeekNotification()
         {
-            Dirty = true;
-
-            return messages.Dequeue();
+            return notifications.Peek();
         }
 
-        public Message PeekNotification()
+        public void AddPositionTimer(int timeout, MapPos position)
         {
-            return messages.Peek();
+            var timer = new PositionTimer();
+
+            timer.Timeout = timeout;
+            timer.Position = position;
+
+            timers.Add(timer);
         }
 
-        public void AddTimer(int timeout, MapPos pos)
-        {
-            PosTimer newTimer = new PosTimer();
-
-            newTimer.Timeout = timeout;
-            newTimer.Pos = pos;
-
-            timers.Add(newTimer);
-        }
-
-        /* Set defaults for food distribution priorities. */
+        /// <summary>
+        /// Set defaults for food distribution priorities.
+        /// </summary>
         public void ResetFoodPriority()
         {
-            foodStonemine = 13100;
-            foodCoalmine = 45850;
-            foodIronmine = 45850;
-            foodGoldmine = 65500;
+            settings.FoodStonemine = 13100;
+            settings.FoodCoalmine = 45850;
+            settings.FoodIronmine = 45850;
+            settings.FoodGoldmine = 65500;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for planks distribution priorities. */
+        /// <summary>
+        /// Set defaults for planks distribution priorities.
+        /// </summary>
         public void ResetPlanksPriority()
         {
-            planksConstruction = 65500;
-            planksBoatbuilder = 3275;
-            planksToolmaker = 19650;
+            settings.PlanksConstruction = 65500;
+            settings.PlanksBoatbuilder = 3275;
+            settings.PlanksToolmaker = 19650;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for steel distribution priorities. */
+        /// <summary>
+        /// Set defaults for steel distribution priorities.
+        /// </summary>
         public void ResetSteelPriority()
         {
-            steelToolmaker = 45850;
-            steelWeaponsmith = 65500;
+            settings.SteelToolmaker = 45850;
+            settings.SteelWeaponsmith = 65500;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for coal distribution priorities. */
+        /// <summary>
+        /// Set defaults for coal distribution priorities.
+        /// </summary>
         public void ResetCoalPriority()
         {
-            coalSteelsmelter = 32750;
-            coalGoldsmelter = 65500;
-            coalWeaponsmith = 52400;
+            settings.CoalSteelsmelter = 32750;
+            settings.CoalGoldsmelter = 65500;
+            settings.CoalWeaponsmith = 52400;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for wheat distribution priorities. */
+        /// <summary>
+        /// Set defaults for wheat distribution priorities.
+        /// </summary>
         public void ResetWheatPriority()
 		{
-            wheatPigfarm = 65500;
-            wheatMill = 32750;
+            settings.WheatPigfarm = 65500;
+            settings.WheatMill = 32750;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for tool production priorities. */
+        /// <summary>
+        /// Set defaults for tool production priorities.
+        /// </summary>
         public void ResetToolPriority()
 		{
-            toolPriorities[0] = 9825; /* SHOVEL */
-            toolPriorities[1] = 65500; /* HAMMER */
-            toolPriorities[2] = 13100; /* ROD */
-            toolPriorities[3] = 6550; /* CLEAVER */
-            toolPriorities[4] = 13100; /* SCYTHE */
-            toolPriorities[5] = 26200; /* AXE */
-            toolPriorities[6] = 32750; /* SAW */
-            toolPriorities[7] = 45850; /* PICK */
-            toolPriorities[8] = 6550; /* PINCER */
+            settings.ToolPriorities[0] = 9825;  // SHOVEL
+            settings.ToolPriorities[1] = 65500; // HAMMER
+            settings.ToolPriorities[2] = 13100; // ROD
+            settings.ToolPriorities[3] = 6550;  // CLEAVER
+            settings.ToolPriorities[4] = 13100; // SCYTHE
+            settings.ToolPriorities[5] = 26200; // AXE
+            settings.ToolPriorities[6] = 32750; // SAW
+            settings.ToolPriorities[7] = 45850; // PICK
+            settings.ToolPriorities[8] = 6550;  // PINCER
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for flag priorities. */
+        /// <summary>
+        /// Set defaults for flag priorities.
+        /// </summary>
         public void ResetFlagPriority()
 		{
-            flagPriorities[(int)Resource.Type.GoldOre] = 1;
-            flagPriorities[(int)Resource.Type.GoldBar] = 2;
-            flagPriorities[(int)Resource.Type.Wheat] = 3;
-            flagPriorities[(int)Resource.Type.Flour] = 4;
-            flagPriorities[(int)Resource.Type.Pig] = 5;
+            settings.FlagPriorities[(int)Resource.Type.GoldOre] = 1;
+            settings.FlagPriorities[(int)Resource.Type.GoldBar] = 2;
+            settings.FlagPriorities[(int)Resource.Type.Wheat] = 3;
+            settings.FlagPriorities[(int)Resource.Type.Flour] = 4;
+            settings.FlagPriorities[(int)Resource.Type.Pig] = 5;
 
-            flagPriorities[(int)Resource.Type.Boat] = 6;
-            flagPriorities[(int)Resource.Type.Pincer] = 7;
-            flagPriorities[(int)Resource.Type.Scythe] = 8;
-            flagPriorities[(int)Resource.Type.Rod] = 9;
-            flagPriorities[(int)Resource.Type.Cleaver] = 10;
+            settings.FlagPriorities[(int)Resource.Type.Boat] = 6;
+            settings.FlagPriorities[(int)Resource.Type.Pincer] = 7;
+            settings.FlagPriorities[(int)Resource.Type.Scythe] = 8;
+            settings.FlagPriorities[(int)Resource.Type.Rod] = 9;
+            settings.FlagPriorities[(int)Resource.Type.Cleaver] = 10;
 
-            flagPriorities[(int)Resource.Type.Saw] = 11;
-            flagPriorities[(int)Resource.Type.Axe] = 12;
-            flagPriorities[(int)Resource.Type.Pick] = 13;
-            flagPriorities[(int)Resource.Type.Shovel] = 14;
-            flagPriorities[(int)Resource.Type.Hammer] = 15;
+            settings.FlagPriorities[(int)Resource.Type.Saw] = 11;
+            settings.FlagPriorities[(int)Resource.Type.Axe] = 12;
+            settings.FlagPriorities[(int)Resource.Type.Pick] = 13;
+            settings.FlagPriorities[(int)Resource.Type.Shovel] = 14;
+            settings.FlagPriorities[(int)Resource.Type.Hammer] = 15;
 
-            flagPriorities[(int)Resource.Type.Shield] = 16;
-            flagPriorities[(int)Resource.Type.Sword] = 17;
-            flagPriorities[(int)Resource.Type.Bread] = 18;
-            flagPriorities[(int)Resource.Type.Meat] = 19;
-            flagPriorities[(int)Resource.Type.Fish] = 20;
+            settings.FlagPriorities[(int)Resource.Type.Shield] = 16;
+            settings.FlagPriorities[(int)Resource.Type.Sword] = 17;
+            settings.FlagPriorities[(int)Resource.Type.Bread] = 18;
+            settings.FlagPriorities[(int)Resource.Type.Meat] = 19;
+            settings.FlagPriorities[(int)Resource.Type.Fish] = 20;
 
-            flagPriorities[(int)Resource.Type.IronOre] = 21;
-            flagPriorities[(int)Resource.Type.Lumber] = 22;
-            flagPriorities[(int)Resource.Type.Coal] = 23;
-            flagPriorities[(int)Resource.Type.Steel] = 24;
-            flagPriorities[(int)Resource.Type.Stone] = 25;
-            flagPriorities[(int)Resource.Type.Plank] = 26;
+            settings.FlagPriorities[(int)Resource.Type.IronOre] = 21;
+            settings.FlagPriorities[(int)Resource.Type.Lumber] = 22;
+            settings.FlagPriorities[(int)Resource.Type.Coal] = 23;
+            settings.FlagPriorities[(int)Resource.Type.Steel] = 24;
+            settings.FlagPriorities[(int)Resource.Type.Stone] = 25;
+            settings.FlagPriorities[(int)Resource.Type.Plank] = 26;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        /* Set defaults for inventory priorities. */
+        /// <summary>
+        /// Set defaults for inventory priorities.
+        /// </summary>
         public void ResetInventoryPriority()
 		{
-            inventoryPriorities[(int)Resource.Type.Wheat] = 1;
-            inventoryPriorities[(int)Resource.Type.Flour] = 2;
-            inventoryPriorities[(int)Resource.Type.Pig] = 3;
-            inventoryPriorities[(int)Resource.Type.Bread] = 4;
-            inventoryPriorities[(int)Resource.Type.Fish] = 5;
+            settings.InventoryPriorities[(int)Resource.Type.Wheat] = 1;
+            settings.InventoryPriorities[(int)Resource.Type.Flour] = 2;
+            settings.InventoryPriorities[(int)Resource.Type.Pig] = 3;
+            settings.InventoryPriorities[(int)Resource.Type.Bread] = 4;
+            settings.InventoryPriorities[(int)Resource.Type.Fish] = 5;
 
-            inventoryPriorities[(int)Resource.Type.Meat] = 6;
-            inventoryPriorities[(int)Resource.Type.Lumber] = 7;
-            inventoryPriorities[(int)Resource.Type.Plank] = 8;
-            inventoryPriorities[(int)Resource.Type.Boat] = 9;
-            inventoryPriorities[(int)Resource.Type.Stone] = 10;
+            settings.InventoryPriorities[(int)Resource.Type.Meat] = 6;
+            settings.InventoryPriorities[(int)Resource.Type.Lumber] = 7;
+            settings.InventoryPriorities[(int)Resource.Type.Plank] = 8;
+            settings.InventoryPriorities[(int)Resource.Type.Boat] = 9;
+            settings.InventoryPriorities[(int)Resource.Type.Stone] = 10;
 
-            inventoryPriorities[(int)Resource.Type.Coal] = 11;
-            inventoryPriorities[(int)Resource.Type.IronOre] = 12;
-            inventoryPriorities[(int)Resource.Type.Steel] = 13;
-            inventoryPriorities[(int)Resource.Type.Shovel] = 14;
-            inventoryPriorities[(int)Resource.Type.Hammer] = 15;
+            settings.InventoryPriorities[(int)Resource.Type.Coal] = 11;
+            settings.InventoryPriorities[(int)Resource.Type.IronOre] = 12;
+            settings.InventoryPriorities[(int)Resource.Type.Steel] = 13;
+            settings.InventoryPriorities[(int)Resource.Type.Shovel] = 14;
+            settings.InventoryPriorities[(int)Resource.Type.Hammer] = 15;
 
-            inventoryPriorities[(int)Resource.Type.Rod] = 16;
-            inventoryPriorities[(int)Resource.Type.Cleaver] = 17;
-            inventoryPriorities[(int)Resource.Type.Scythe] = 18;
-            inventoryPriorities[(int)Resource.Type.Axe] = 19;
-            inventoryPriorities[(int)Resource.Type.Saw] = 20;
+            settings.InventoryPriorities[(int)Resource.Type.Rod] = 16;
+            settings.InventoryPriorities[(int)Resource.Type.Cleaver] = 17;
+            settings.InventoryPriorities[(int)Resource.Type.Scythe] = 18;
+            settings.InventoryPriorities[(int)Resource.Type.Axe] = 19;
+            settings.InventoryPriorities[(int)Resource.Type.Saw] = 20;
 
-            inventoryPriorities[(int)Resource.Type.Pick] = 21;
-            inventoryPriorities[(int)Resource.Type.Pincer] = 22;
-            inventoryPriorities[(int)Resource.Type.Shield] = 23;
-            inventoryPriorities[(int)Resource.Type.Sword] = 24;
-            inventoryPriorities[(int)Resource.Type.GoldOre] = 25;
-            inventoryPriorities[(int)Resource.Type.GoldBar] = 26;
+            settings.InventoryPriorities[(int)Resource.Type.Pick] = 21;
+            settings.InventoryPriorities[(int)Resource.Type.Pincer] = 22;
+            settings.InventoryPriorities[(int)Resource.Type.Shield] = 23;
+            settings.InventoryPriorities[(int)Resource.Type.Sword] = 24;
+            settings.InventoryPriorities[(int)Resource.Type.GoldOre] = 25;
+            settings.InventoryPriorities[(int)Resource.Type.GoldBar] = 26;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        public uint GetKnightOccupation(uint threatLevel)
+        public uint GetKnightOccupation(int threatLevel)
         {
-            return knightOccupation[(int)threatLevel];
+            return settings.KnightOccupation[threatLevel];
         }
 
         public void ChangeKnightOccupation(int index, bool adjustMax, int delta)
 		{
-            uint max = (knightOccupation[index] >> 4) & 0xf;
-            uint min = knightOccupation[index] & 0xf;
+            int max = (settings.KnightOccupation[index] >> 4) & 0xf;
+            int min = settings.KnightOccupation[index] & 0xf;
 
             if (adjustMax)
             {
-                max = (uint)Misc.Clamp((int)min, (int)max + delta, 4);
+                max = Misc.Clamp(min, max + delta, 4);
             }
             else
             {
-                min = (uint)Misc.Clamp(0, (int)min + delta, (int)max);
+                min = Misc.Clamp(0, min + delta, max);
             }
 
-            knightOccupation[index] = (max << 4) | min;
+            settings.KnightOccupation[index] = (byte)((max << 4) | min);
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void SetLowKnightOccupation()
         {
-            knightOccupation[0] = 0x00;
-            knightOccupation[1] = 0x00;
-            knightOccupation[2] = 0x00;
-            knightOccupation[3] = 0x00;
+            settings.KnightOccupation[0] = 0x00;
+            settings.KnightOccupation[1] = 0x00;
+            settings.KnightOccupation[2] = 0x00;
+            settings.KnightOccupation[3] = 0x00;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void SetMediumKnightOccupation(bool offensive)
         {
-            uint value = offensive ? 0x20u : 0x21u;
+            byte value = offensive ? (byte)0x20u : (byte)0x21u;
 
-            knightOccupation[0] = 0x00;
-            knightOccupation[1] = 0x00;
-            knightOccupation[2] = value;
-            knightOccupation[3] = value;
+            settings.KnightOccupation[0] = 0x00;
+            settings.KnightOccupation[1] = 0x00;
+            settings.KnightOccupation[2] = value;
+            settings.KnightOccupation[3] = value;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void SetHighKnightOccupation(bool offensive)
         {
-            uint value = offensive ? 0x40u : 0x42u;
+            byte value = offensive ? (byte)0x40u : (byte)0x42u;
 
-            knightOccupation[0] = 0x20;
-            knightOccupation[1] = 0x20;
-            knightOccupation[2] = value;
-            knightOccupation[3] = value;
+            settings.KnightOccupation[0] = 0x20;
+            settings.KnightOccupation[1] = 0x20;
+            settings.KnightOccupation[2] = value;
+            settings.KnightOccupation[3] = value;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void IncreaseCastleKnights()
         {
-            ++castleKnights;
+            ++state.CastleKnights;
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void DecreaseCastleKnights()
         {
-            --castleKnights;
+            --state.CastleKnights;
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
-        public uint GetCastleKnights()
-        {
-            return castleKnights;
-        }
+        public uint CastleKnights => state.CastleKnights;
 
-        public uint GetCastleKnightsWanted()
-        {
-            return castleKnightsWanted;
-        }
+        public uint CastleKnightsWanted => settings.CastleKnightsWanted;
 
         public void SetCastleKnightsWanted(uint amount)
         {
-            castleKnightsWanted = Misc.Clamp(1, amount, 99);
+            settings.CastleKnightsWanted = (byte)Misc.Clamp(1, amount, 99);
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void IncreaseCastleKnightsWanted()
 		{
-            castleKnightsWanted = Math.Min(castleKnightsWanted + 1, 99);
+            settings.CastleKnightsWanted = (byte)Math.Min(settings.CastleKnightsWanted + 1, 99);
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void DecreaseCastleKnightsWanted()
 		{
-            castleKnightsWanted = Math.Max(1, castleKnightsWanted - 1);
+            settings.CastleKnightsWanted = (byte)Math.Max(1, settings.CastleKnightsWanted - 1);
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
-        public uint GetKnightMorale()
-        {
-            return knightMorale;
-        }
+        public uint KnightMorale => state.KnightMorale;
 
-        public uint GetGoldDeposited()
-        {
-            return goldDeposited;
-        }
+        public uint GoldDeposited => state.GoldDeposited;
 
         /* Turn a number of serfs into knight for the given player. */
         public int PromoteSerfsToKnights(int number)
@@ -742,9 +586,9 @@ namespace Freeserf
                 if (serf.SerfState == Serf.State.IdleInStock &&
                     serf.GetSerfType() == Serf.Type.Generic)
                 {
-                    Inventory inv = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
+                    Inventory inventory = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
 
-                    if (inv.PromoteSerfToKnight(serf))
+                    if (inventory.PromoteSerfToKnight(serf))
                     {
                         ++promoted;
 
@@ -757,7 +601,7 @@ namespace Freeserf
             return promoted;
         }
 
-        public int KnightsAvailableForAttack(MapPos pos)
+        public int KnightsAvailableForAttack(MapPos position)
 		{
             /* Reset counters. */
             for (int i = 0; i < 4; ++i)
@@ -766,46 +610,46 @@ namespace Freeserf
             }
 
             int count = 0;
-            Map map = Game.Map;
+            var map = Game.Map;
 
             /* Iterate each shell around the position.*/
             for (int i = 0; i < 32; ++i)
             {
-                pos = map.MoveRight(pos);
+                position = map.MoveRight(position);
 
                 for (int j = 0; j < i + 1; ++j)
                 {
-                    count = AvailableKnightsAtPos(pos, count, i >> 3);
-                    pos = map.MoveDown(pos);
+                    count = AvailableKnightsAtPosition(position, count, i >> 3);
+                    position = map.MoveDown(position);
                 }
 
                 for (int j = 0; j < i + 1; ++j)
                 {
-                    count = AvailableKnightsAtPos(pos, count, i >> 3);
-                    pos = map.MoveLeft(pos);
+                    count = AvailableKnightsAtPosition(position, count, i >> 3);
+                    position = map.MoveLeft(position);
                 }
                 for (int j = 0; j < i + 1; ++j)
                 {
-                    count = AvailableKnightsAtPos(pos, count, i >> 3);
-                    pos = map.MoveUpLeft(pos);
-                }
-
-                for (int j = 0; j < i + 1; ++j)
-                {
-                    count = AvailableKnightsAtPos(pos, count, i >> 3);
-                    pos = map.MoveUp(pos);
+                    count = AvailableKnightsAtPosition(position, count, i >> 3);
+                    position = map.MoveUpLeft(position);
                 }
 
                 for (int j = 0; j < i + 1; ++j)
                 {
-                    count = AvailableKnightsAtPos(pos, count, i >> 3);
-                    pos = map.MoveRight(pos);
+                    count = AvailableKnightsAtPosition(position, count, i >> 3);
+                    position = map.MoveUp(position);
                 }
 
                 for (int j = 0; j < i + 1; ++j)
                 {
-                    count = AvailableKnightsAtPos(pos, count, i >> 3);
-                    pos = map.MoveDownRight(pos);
+                    count = AvailableKnightsAtPosition(position, count, i >> 3);
+                    position = map.MoveRight(position);
+                }
+
+                for (int j = 0; j < i + 1; ++j)
+                {
+                    count = AvailableKnightsAtPosition(position, count, i >> 3);
+                    position = map.MoveDownRight(position);
                 }
             }
 
@@ -910,7 +754,7 @@ namespace Freeserf
                         continue;
                 }
 
-                int[] minLevel = null;
+                int[] minLevel;
 
                 switch (building.BuildingType)
                 {
@@ -922,12 +766,12 @@ namespace Freeserf
 
                 uint state = building.GetThreatLevel();
                 uint knightsPresent = building.GetKnightCount();
-                int toSend = (int)knightsPresent - minLevel[knightOccupation[state] & 0xf];
+                int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[state] & 0xf];
 
                 for (int j = 0; j < toSend; ++j)
                 {
-                    /* Find most appropriate knight to send according to player settings. */
-                    var bestType = SendStrongest() ? Serf.Type.Knight0 : Serf.Type.Knight4;
+                    // Find most appropriate knight to send according to player settings.
+                    var bestType = SendStrongest ? Serf.Type.Knight0 : Serf.Type.Knight4;
                     uint bestIndex = 0;
 
                     uint knightIndex = building.GetFirstKnight();
@@ -936,7 +780,7 @@ namespace Freeserf
                     {
                         Serf knight = Game.GetSerf(knightIndex);
 
-                        if (SendStrongest())
+                        if (SendStrongest)
                         {
                             if (knight.GetSerfType() >= bestType)
                             {
@@ -973,21 +817,25 @@ namespace Freeserf
             }
         }
 
-        /* Begin cycling knights by sending knights from military buildings
-           to inventories. The knights can then be replaced by more experienced
-           knights. */
+        /// <summary>
+        /// Begin cycling knights by sending knights from military buildings
+        /// to inventories.The knights can then be replaced by more experienced
+        /// knights.
+        /// </summary>
         public void CycleKnights()
 		{
-            flags |= Misc.BitU(2) | Misc.BitU(4);
-            knightCycleCounter = 2400;
+            state.CyclingKnightsInProgress = true;
+            state.CyclingKnightsReducedLevel = true;
+            state.KnightCycleCounter = 2400;
+            state.Dirty = true;
         }
 
-        /* Create the initial serfs that occupies the castle. */
+        /// <summary>
+        /// Create the initial serfs that occupies the castle.
+        /// </summary>
         public void CreateInitialCastleSerfs(Building castle)
 		{
-            build |= Misc.BitU(2);
-
-            /* Spawn serf 4 */
+            // Spawn castle transporter serf
             Inventory inventory = castle.GetInventory();
             Serf serf = inventory.SpawnSerfGeneric();
 
@@ -1001,15 +849,15 @@ namespace Freeserf
 
             Game.Map.SetSerfIndex(serf.Position, (int)serf.Index);
 
-            Building building = Game.GetBuilding((uint)this.building);
+            Building building = Game.GetBuilding((uint)this.selectedBuildingIndex);
 
-            /* Spawn generic serfs */
+            // Spawn 3 generic serfs
             for (int i = 0; i < 5; i++)
             {
                 SpawnSerf(null, null, false);
             }
 
-            /* Spawn three knights */
+            // Spawn three knights
             for (int i = 0; i < 3; i++)
             {
                 serf = inventory.SpawnSerfGeneric();
@@ -1021,7 +869,7 @@ namespace Freeserf
                     building.SetFirstKnight(serf.Index);
             }
 
-            /* Spawn toolmaker */
+            // Spawn toolmaker
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1029,7 +877,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Toolmaker);
 
-            /* Spawn timberman */
+            // Spawn timberman
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1037,7 +885,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Lumberjack);
 
-            /* Spawn sawmiller */
+            // Spawn sawmiller
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1045,7 +893,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Sawmiller);
 
-            /* Spawn stonecutter */
+            // Spawn stonecutter
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1053,7 +901,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Stonecutter);
 
-            /* Spawn digger */
+            // Spawn digger
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1061,7 +909,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Digger);
 
-            /* Spawn builder */
+            // Spawn builder
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1069,7 +917,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Builder);
 
-            /* Spawn fisherman */
+            // Spawn fisherman
             serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -1077,7 +925,7 @@ namespace Freeserf
 
             inventory.SpecializeSerf(serf, Serf.Type.Fisher);
 
-            /* Spawn two geologists */
+            // Spawn two geologists
             for (int i = 0; i < 2; i++)
             {
                 serf = inventory.SpawnSerfGeneric();
@@ -1088,7 +936,7 @@ namespace Freeserf
                 inventory.SpecializeSerf(serf, Serf.Type.Geologist);
             }
 
-            /* Spawn two miners */
+            // Spawn two miners
             for (int i = 0; i < 2; i++)
             {
                 serf = inventory.SpawnSerfGeneric();
@@ -1109,7 +957,8 @@ namespace Freeserf
 
             serf.Player = Index;
 
-            ++serfCount[(int)Serf.Type.Generic];
+            ++state.SerfCounts[(int)Serf.Type.Generic];
+            state.Dirty = true;
 
             return serf;
         }
@@ -1118,7 +967,7 @@ namespace Freeserf
            The serf object and inventory are returned if non-NULL. */
         public bool SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
 		{
-            if (!CanSpawn())
+            if (!CanSpawn)
                 return false;
 
             var inventories = Game.GetPlayerInventories(this);
@@ -1207,9 +1056,9 @@ namespace Freeserf
 
         public int GetCyclingSerfType(Serf.Type type)
         {
-            if (CyclingKnightsInSecondPhase())
+            if (state.CyclingKnightsSecondPhase)
             {
-                return -((knightCycleCounter >> 8) + 1);
+                return -((state.KnightCycleCounter >> 8) + 1);
             }
 
             return (int)type;
@@ -1220,9 +1069,9 @@ namespace Freeserf
             if (type == Serf.Type.None || type == Serf.Type.Dead)
                 return;
 
-            ++serfCount[(int)type];
+            ++state.SerfCounts[(int)type];
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void DecreaseSerfCount(Serf.Type type)
@@ -1230,19 +1079,19 @@ namespace Freeserf
             if (type == Serf.Type.None || type == Serf.Type.Dead)
                 return;
 
-            if (serfCount[(int)type] == 0)
+            if (state.SerfCounts[(int)type] == 0)
             {
                 throw new ExceptionFreeserf(Game, "player", "Failed to decrease serf count");
             }
 
-            --serfCount[(int)type];
+            --state.SerfCounts[(int)type];
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public uint[] GetSerfCounts()
         {
-            return serfCount;
+            return state.SerfCounts;
         }
 
         public void NotifyCraftedTool(Resource.Type tool)
@@ -1253,16 +1102,16 @@ namespace Freeserf
 
         public void IncreaseResourceCount(Resource.Type type)
         {
-            ++resourceCount[(int)type];
+            ++state.ResourceCounts[(int)type];
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void DecreaseResourceCount(Resource.Type type)
         {
-            --resourceCount[(int)type];
+            --state.ResourceCounts[(int)type];
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void BuildingFounded(Building building)
@@ -1271,105 +1120,109 @@ namespace Freeserf
 
             if (building.BuildingType == Building.Type.Castle)
             {
-                flags |= Misc.BitU(0); /* Has castle */
-                build |= Misc.BitU(3);
-                totalBuildingScore += Building.BuildingGetScoreFromType(Building.Type.Castle);
-                castleInventory = (int)building.GetInventory().Index;
-                this.building = (int)building.Index;
+                state.HasCastle = true;
+                state.CanSpawn = true;
+                state.TotalBuildingScore += Building.BuildingGetScoreFromType(Building.Type.Castle);
+                state.CastleInventoryIndex = building.GetInventory().Index;
+                selectedBuildingIndex = building.Index;
                 CreateInitialCastleSerfs(building);
                 lastTick = Game.Tick;
             }
             else
             {
-                ++incompleteBuildingCount[(int)building.BuildingType];
+                ++state.IncompleteBuildingCount[(int)building.BuildingType];
             }
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void BuildingBuilt(Building building)
 		{
             Building.Type type = building.BuildingType;
 
-            totalBuildingScore += Building.BuildingGetScoreFromType(type);
-            ++completedBuildingCount[(int)type];
-            --incompleteBuildingCount[(int)type];
+            state.TotalBuildingScore += Building.BuildingGetScoreFromType(type);
+            ++state.CompletedBuildingCount[(int)type];
+            --state.IncompleteBuildingCount[(int)type];
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void BuildingCaptured(Building building)
 		{
             Player defPlayer = Game.GetPlayer(building.Player);
 
-            defPlayer.AddNotification(Message.Type.LoseFight, building.Position, Index);
-            AddNotification(Message.Type.WinFight, building.Position, Index);
+            defPlayer.AddNotification(Notification.Type.LoseFight, building.Position, Index);
+            AddNotification(Notification.Type.WinFight, building.Position, Index);
 
             if (building.BuildingType == Building.Type.Castle)
             {
-                ++castleScore;
+                ++state.CastleScore;
             }
             else
             {
                 var buildingType = building.BuildingType;
 
-                /* Update player scores. */
-                defPlayer.totalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
-                defPlayer.totalLandArea -= 7;
-                --defPlayer.completedBuildingCount[(int)buildingType];
+                // Update player scores.
+                defPlayer.state.TotalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
+                defPlayer.state.TotalLandArea -= 7;
+                --defPlayer.state.CompletedBuildingCount[(int)buildingType];
 
-                totalBuildingScore += Building.BuildingGetScoreFromType(buildingType);
-                totalLandArea += 7;
-                ++completedBuildingCount[(int)buildingType];
+                state.TotalBuildingScore += Building.BuildingGetScoreFromType(buildingType);
+                state.TotalLandArea += 7;
+                ++state.CompletedBuildingCount[(int)buildingType];
 
-                /* Change owner of building */
+                // Change owner of building
                 building.Player = Index;
 
-                if (IsAi())
-                {
-                    /* TODO AI */
-                }
+                defPlayer.state.Dirty = true;
             }
 
-            Dirty = true;
-            defPlayer.Dirty = true;
+            state.Dirty = true;            
         }
 
         public void BuildingDemolished(Building building)
 		{
             var buildingType = building.BuildingType;
 
-            /* Update player fields. */
+            // Update player fields.
             if (building.IsDone())
             {
-                totalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
+                state.TotalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
 
                 if (buildingType != Building.Type.Castle)
                 {
-                    --completedBuildingCount[(int)buildingType];
+                    --state.CompletedBuildingCount[(int)buildingType];
+
+                    if (!HasCastle && buildingType == Building.Type.Stock &&
+                        state.CompletedBuildingCount[(int)buildingType] == 0)
+                    {
+                        state.CanSpawn = false;
+                    }
                 }
                 else
                 {
-                    build &= ~Misc.BitU(3);
-                    --castleScore;
+                    if (state.CompletedBuildingCount[(int)Building.Type.Stock] == 0)
+                        state.CanSpawn = false;
+
+                    --state.CastleScore;
                 }
             }
             else
             {
-                --incompleteBuildingCount[(int)buildingType];
+                --state.IncompleteBuildingCount[(int)buildingType];
             }
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public uint GetCompletedBuildingCount(Building.Type type)
         {
-            return completedBuildingCount[(int)type];
+            return state.CompletedBuildingCount[(int)type];
         }
 
         public uint GetIncompleteBuildingCount(Building.Type type)
         {
-            return incompleteBuildingCount[(int)type];
+            return state.IncompleteBuildingCount[(int)type];
         }
 
         public uint GetTotalBuildingCount(Building.Type type)
@@ -1379,14 +1232,14 @@ namespace Freeserf
 
         public int GetToolPriority(int type)
         {
-            return toolPriorities[type];
+            return settings.ToolPriorities[type];
         }
 
         public void SetToolPriority(int type, int priority)
         {
-            toolPriorities[type] = priority;
+            settings.ToolPriorities[type] = (word)priority;
 
-            Dirty = true;
+            settings.Dirty = true;
         }
 
         public void SetFullToolPriority(Resource.Type tool)
@@ -1399,27 +1252,27 @@ namespace Freeserf
             SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
         }
 
-        public int[] GetFlagPriorities()
+        public byte[] GetFlagPriorities()
         {
-            return flagPriorities;
+            return settings.FlagPriorities;
         }
 
-        public int GetInventoryPriority(Resource.Type type)
+        public byte GetInventoryPriority(Resource.Type type)
         {
-            return inventoryPriorities[(int)type];
+            return settings.InventoryPriorities[(int)type];
         }
 
-        public int[] GetInventoryPriorities()
+        public byte[] GetInventoryPriorities()
         {
-            return inventoryPriorities;
+            return settings.InventoryPriorities;
         }
 
         public uint GetTotalMilitaryScore()
         {
-            return totalMilitaryScore;
+            return state.TotalMilitaryScore;
         }
 
-        /* Update player game state as part of the game progression. */
+        // Update player game state as part of the game progression.
         public void Update()
 		{
             try
@@ -1427,44 +1280,39 @@ namespace Freeserf
                 ushort delta = (ushort)(Game.Tick - lastTick);
                 lastTick = Game.Tick;
 
-                if (totalLandArea > 0xffff0000)
-                    totalLandArea = 0;
-                if (totalMilitaryScore > 0xffff0000)
-                    totalMilitaryScore = 0;
-                if (totalBuildingScore > 0xffff0000)
-                    totalBuildingScore = 0;
+                if (state.TotalLandArea > 0xffff0000)
+                    state.TotalLandArea = 0;
+                if (state.TotalMilitaryScore > 0xffff0000)
+                    state.TotalMilitaryScore = 0;
+                if (state.TotalBuildingScore > 0xffff0000)
+                    state.TotalBuildingScore = 0;
 
-                if (IsAi())
+                if (CyclingKnights)
                 {
-                    /*if (player.field_1B2 != 0) player.field_1B2 -= 1;*/
-                    /*if (player.field_1B0 != 0) player.field_1B0 -= 1;*/
-                }
+                    state.KnightCycleCounter -= delta;
 
-                if (CyclingKnight())
-                {
-                    knightCycleCounter -= delta;
-
-                    if (knightCycleCounter < 1)
+                    if (state.KnightCycleCounter < 1)
                     {
-                        flags &= ~Misc.BitU(5);
-                        flags &= ~Misc.BitU(2);
+                        state.CyclingKnightsReducedLevel = false;
+                        state.CyclingKnightsSecondPhase = false;
+                        state.CyclingKnightsInProgress = false;
                     }
-                    else if (knightCycleCounter < 2048 && ReducedKnightLevel())
+                    else if (state.KnightCycleCounter < 2048 && ReducedKnightLevel)
                     {
-                        flags |= Misc.BitU(5);
-                        flags &= ~Misc.BitU(4);
+                        state.CyclingKnightsReducedLevel = false;
+                        state.CyclingKnightsSecondPhase = true;
                     }
                 }
 
-                if (HasCastle())
+                if (HasCastle)
                 {
-                    reproductionCounter -= delta;
+                    state.ReproductionCounter -= delta;
 
-                    while (reproductionCounter < 0)
+                    while (state.ReproductionCounter < 0)
                     {
-                        serfToKnightCounter = (serfToKnightCounter + serfToKnightRate) % ushort.MaxValue;
+                        state.SerfToKnightCounter = (word)((state.SerfToKnightCounter + settings.SerfToKnightRate) % ushort.MaxValue);
 
-                        if (serfToKnightCounter < serfToKnightRate)
+                        if (state.SerfToKnightCounter < settings.SerfToKnightRate)
                         {
                             ++knightsToSpawn;
 
@@ -1474,12 +1322,12 @@ namespace Freeserf
 
                         if (knightsToSpawn == 0)
                         {
-                            /* Create unassigned serf */
+                            // Create unassigned serf
                             SpawnSerf(null, null, false);
                         }
                         else
                         {
-                            /* Create knight serf */
+                            // Create knight serf
                             Pointer<Serf> serf = new Pointer<Serf>();
                             Pointer<Inventory> inventory = new Pointer<Inventory>();
 
@@ -1494,14 +1342,14 @@ namespace Freeserf
                             }
                         }
 
-                        reproductionCounter += (int)reproductionReset;
+                        state.ReproductionCounter = (word)(state.ReproductionCounter + state.ReproductionReset); // may overflow but this is on purpose
                     }
 
-                    // update emergency program
+                    // Update emergency program
                     UpdateEmergencyProgram();
                 }
 
-                /* Update timers */
+                // Update timers
                 List<int> timersToErase = new List<int>();
 
                 for (int i = 0; i < timers.Count; ++i)
@@ -1510,9 +1358,9 @@ namespace Freeserf
 
                     if (timers[i].Timeout < 0)
                     {
-                        /* Timer has expired. */
-                        /* TODO box (+ pos) timer */
-                        AddNotification(Message.Type.CallToLocation, timers[i].Pos, 0);
+                        // Timer has expired.
+                        // TODO box (+ pos) timer
+                        AddNotification(Notification.Type.CallToLocation, timers[i].Position, 0);
                         timersToErase.Add(i);
                     }
                 }
@@ -1538,7 +1386,7 @@ namespace Freeserf
                 var stonecutters = Game.GetPlayerBuildings(this, Building.Type.Stonecutter);
                 var sawmills = Game.GetPlayerBuildings(this, Building.Type.Sawmill);
 
-                // check if all resources are delivered to the construction sites
+                // Check if all resources are delivered to the construction sites
                 if (lumberjacks.Any(l => l.IsDone() || l.HasAllConstructionMaterialsAtLocation()) &&
                     stonecutters.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()) &&
                     sawmills.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()))
@@ -1584,7 +1432,7 @@ namespace Freeserf
                 {
                     EmergencyProgramActive = true;
 
-                    if (EmergencyProgramActive) // test if successful
+                    if (EmergencyProgramActive) // Test if successful
                     {
                         // If the emergency program gets activated we cancel all
                         // transported resources to non-essential buildings.
@@ -1614,8 +1462,8 @@ namespace Freeserf
 
         public void UpdateStats(int resource)
 		{
-            resourceCountHistory[resource, Index] = resourceCount[resource];
-            resourceCount[resource] = 0;
+            resourceCountHistory[resource, Index] = state.ResourceCounts[resource];
+            state.ResourceCounts[resource] = 0;
         }
 
         // Stats
@@ -1624,22 +1472,22 @@ namespace Freeserf
             uint inventoryGold = 0;
             uint militaryGold = 0;
 
-            /* Sum gold collected in inventories */
+            // Sum gold collected in inventories
             foreach (Inventory inventory in Game.GetPlayerInventories(this))
             {
                 inventoryGold += inventory.GetCountOf(Resource.Type.GoldBar);
             }
 
-            /* Sum gold deposited in military buildings */
+            // Sum gold deposited in military buildings
             foreach (Building building in Game.GetPlayerBuildings(this))
             {
                 militaryGold += building.MilitaryGoldCount();
             }
 
             uint depot = inventoryGold + militaryGold;
-            goldDeposited = inventoryGold + militaryGold;
+            state.GoldDeposited = inventoryGold + militaryGold;
 
-            /* Calculate according to gold collected. */
+            // Calculate according to gold collected.
             uint totalGold = Game.GoldTotal;
 
             if (totalGold != 0)
@@ -1651,25 +1499,25 @@ namespace Freeserf
                 }
 
                 depot = Math.Min(depot, totalGold - 1);
-                knightMorale = 1024u + (Game.MapGoldMoraleFactor * depot) / totalGold;
+                state.KnightMorale = 1024u + (Game.MapGoldMoraleFactor * depot) / totalGold;
             }
             else
             {
-                knightMorale = 4096u;
+                state.KnightMorale = 4096u;
             }
 
-            /* Adjust based on castle score. */
-            if (castleScore < 0)
+            // Adjust based on castle score.
+            if (state.CastleScore < 0)
             {
-                knightMorale = Math.Max(1, knightMorale - 1023);
+                state.KnightMorale = Math.Max(1, state.KnightMorale - 1023);
             }
-            else if (castleScore > 0)
+            else if (state.CastleScore > 0)
             {
-                knightMorale = Math.Min((uint)(knightMorale + 1024 * castleScore), 0xffffu);
+                state.KnightMorale = Math.Min((uint)(state.KnightMorale + 1024 * state.CastleScore), 0xffffu);
             }
 
-            uint militaryScore = totalMilitaryScore;
-            uint morale = knightMorale >> 5;
+            uint militaryScore = state.TotalMilitaryScore;
+            uint morale = state.KnightMorale >> 5;
 
             while (militaryScore > 0xffff)
             {
@@ -1677,92 +1525,58 @@ namespace Freeserf
                 morale <<= 1;
             }
 
-            /* Calculate fractional score used by AI */
-            uint playerScore = (militaryScore * morale) >> 7;
-            uint enemyScore = Game.GetEnemyScore(this);
-
-            while (playerScore > 0xffff && enemyScore > 0xffff)
-            {
-                playerScore >>= 1;
-                enemyScore >>= 1;
-            }
-            /*
-              player_score >>= 1;
-              uint frac_score = 0;
-              if (player_score != 0 && enemy_score != 0) {
-                if (player_score > enemy_score) {
-                  frac_score = 0xffffffff;
-                } else {
-                  frac_score = (player_score * 0x10000) / enemy_score;
-                }
-              }
-            */
-            militaryMaxGold = 0;
+            state.MilitaryMaxGold = 0;
         }
 
         public uint GetLandArea()
         {
-            return totalLandArea;
+            return state.TotalLandArea;
         }
 
         public void IncreaseLandArea()
         {
-            ++totalLandArea;
+            ++state.TotalLandArea;
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void DecreaseLandArea()
         {
-            --totalLandArea;
+            --state.TotalLandArea;
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
-        public uint GetBuildingScore()
-        {
-            return totalBuildingScore;
-        }
+        public uint BuildingScore => state.TotalBuildingScore;
 
-        /* Calculate condensed score from military score and knight morale. */
-        public uint GetMilitaryScore()
-        {
-            return 2048u + (knightMorale >> 1) * (totalMilitaryScore << 6);
-        }
+        // Calculate condensed score from military score and knight morale.
+        public uint MilitaryScore => 2048u + (state.KnightMorale >> 1) * (state.TotalMilitaryScore << 6);
 
         public void IncreaseMilitaryScore(uint val)
         {
-            totalMilitaryScore += val;
+            state.TotalMilitaryScore += val;
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void DecreaseMilitaryScore(uint val)
         {
-            totalMilitaryScore -= val;
+            state.TotalMilitaryScore = (uint)Misc.Max(0, (int)state.TotalMilitaryScore - val);
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
         public void IncreaseMilitaryMaxGold(int val)
         {
-            militaryMaxGold += val;
+            state.MilitaryMaxGold = (uint)Misc.Max(0, (int)state.MilitaryMaxGold + val);
 
-            Dirty = true;
+            state.Dirty = true;
         }
 
-        public uint GetScore()
-        {
-            uint militaryScore = GetMilitaryScore();
+        public uint Score => state.TotalBuildingScore + ((state.TotalLandArea + MilitaryScore) >> 4);
 
-            return totalBuildingScore + ((totalLandArea + militaryScore) >> 4);
-        }
+        public uint InitialSupplies => state.InitialSupplies;
 
-        public uint GetInitialSupplies()
-        {
-            return initialSupplies;
-        }
-  
         public uint[] GetResourceCountHistory(Resource.Type type)
         {
             return resourceCountHistory.SliceRow((int)type).ToArray();
@@ -1784,7 +1598,7 @@ namespace Freeserf
 
             for (int j = 0; j < 26; ++j)
             {
-                /* Sum up resources of all inventories. */
+                // Sum up resources of all inventories.
                 resources[(Resource.Type)j] = Game.GetResourceAmountInInventories(this, (Resource.Type)j);
             }
 
@@ -1798,7 +1612,7 @@ namespace Freeserf
             foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
                 serfs.Add(type, 0);
 
-            /* Sum up all existing serfs. */
+            // Sum up all existing serfs.
             foreach (Serf serf in Game.GetPlayerSerfs(this))
             {
                 if (serf.SerfState == Serf.State.IdleInStock)
@@ -1817,7 +1631,7 @@ namespace Freeserf
             foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
                 serfs.Add(type, 0);
 
-            /* Sum up potential serfs of all inventories. */
+            // Sum up potential serfs of all inventories.
             foreach (Inventory inventory in Game.GetPlayerInventories(this))
             {
                 if (inventory.FreeSerfCount() > 0)
@@ -1833,239 +1647,237 @@ namespace Freeserf
         }
 
         // Settings
-        public int GetSerfToKnightRate()
+        public int SerfToKnightRate
         {
-            return serfToKnightRate;
-        }
-
-        public void SetSerfToKnightRate(int rate)
-        {
-            serfToKnightRate = rate;
-
-            Dirty = true;
+            get => settings.SerfToKnightRate;
+            set
+            {
+                if (settings.SerfToKnightRate != value)
+                {
+                    settings.SerfToKnightRate = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
 
         public uint GetFoodForBuilding(Building.Type buildingType)
         {
-            uint resource = 0;
-
             switch (buildingType)
             {
                 case Building.Type.StoneMine:
-                    resource = GetFoodStonemine();
-                    break;
+                    return FoodStonemine;
                 case Building.Type.CoalMine:
-                    resource = GetFoodCoalmine();
-                    break;
+                    return FoodCoalmine;
                 case Building.Type.IronMine:
-                    resource = GetFoodIronmine();
-                    break;
+                    return FoodIronmine;
                 case Building.Type.GoldMine:
-                    resource = GetFoodGoldmine();
-                    break;
+                    return FoodGoldmine;
                 default:
-                    break;
+                    return 0u;
             }
-
-            return resource;
         }
 
-        public uint GetFoodStonemine()
+        public uint FoodStonemine
         {
-            return foodStonemine;
+            get => settings.FoodStonemine;
+            set
+            {
+                if (settings.FoodStonemine != value)
+                {
+                    settings.FoodStonemine = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetFoodStonemine() { return FoodStonemine; }
 
-        public void SetFoodStonemine(uint val)
+        public uint FoodCoalmine
         {
-            foodStonemine = val;
-
-            Dirty = true;
+            get => settings.FoodCoalmine;
+            set
+            {
+                if (settings.FoodCoalmine != value)
+                {
+                    settings.FoodCoalmine = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetFoodCoalmine() { return FoodCoalmine; }
 
-        public uint GetFoodCoalmine()
+        public uint FoodIronmine
         {
-            return foodCoalmine;
+            get => settings.FoodIronmine;
+            set
+            {
+                if (settings.FoodIronmine != value)
+                {
+                    settings.FoodIronmine = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetFoodIronmine() { return FoodIronmine; }
 
-        public void SetFoodCoalmine(uint val)
+        public uint FoodGoldmine
         {
-            foodCoalmine = val;
-
-            Dirty = true;
+            get => settings.FoodGoldmine;
+            set
+            {
+                if (settings.FoodGoldmine != value)
+                {
+                    settings.FoodGoldmine = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetFoodGoldmine() { return FoodGoldmine; }
 
-        public uint GetFoodIronmine()
+        public uint PlanksConstruction
         {
-            return foodIronmine;
+            get => settings.PlanksConstruction;
+            set
+            {
+                if (settings.PlanksConstruction != value)
+                {
+                    settings.PlanksConstruction = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetPlanksConstruction() { return PlanksConstruction; }
 
-        public void SetFoodIronmine(uint val)
+        public uint PlanksBoatbuilder
         {
-            foodIronmine = val;
-
-            Dirty = true;
+            get => settings.PlanksBoatbuilder;
+            set
+            {
+                if (settings.PlanksBoatbuilder != value)
+                {
+                    settings.PlanksBoatbuilder = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetPlanksBoatbuilder() { return PlanksBoatbuilder; }
 
-        public uint GetFoodGoldmine()
+        public uint PlanksToolmaker
         {
-            return foodGoldmine;
+            get => settings.PlanksToolmaker;
+            set
+            {
+                if (settings.PlanksToolmaker != value)
+                {
+                    settings.PlanksToolmaker = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetPlanksToolmaker() { return PlanksToolmaker; }
 
-        public void SetFoodGoldmine(uint val)
+        public uint SteelToolmaker
         {
-            foodGoldmine = val;
-
-            Dirty = true;
+            get => settings.SteelToolmaker;
+            set
+            {
+                if (settings.SteelToolmaker != value)
+                {
+                    settings.SteelToolmaker = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetSteelToolmaker() { return SteelToolmaker; }
 
-        public uint GetPlanksConstruction()
+        public uint SteelWeaponsmith
         {
-            return planksConstruction;
+            get => settings.SteelWeaponsmith;
+            set
+            {
+                if (settings.SteelWeaponsmith != value)
+                {
+                    settings.SteelWeaponsmith = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetSteelWeaponsmith() { return SteelWeaponsmith; }
 
-        public void SetPlanksConstruction(uint val)
+        public uint CoalSteelsmelter
         {
-            planksConstruction = val;
-
-            Dirty = true;
+            get => settings.CoalSteelsmelter;
+            set
+            {
+                if (settings.CoalSteelsmelter != value)
+                {
+                    settings.CoalSteelsmelter = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetCoalSteelsmelter() { return CoalSteelsmelter; }
 
-        public uint GetPlanksBoatbuilder()
+        public uint CoalGoldsmelter
         {
-            return planksBoatbuilder;
+            get => settings.CoalGoldsmelter;
+            set
+            {
+                if (settings.CoalGoldsmelter != value)
+                {
+                    settings.CoalGoldsmelter = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetCoalGoldsmelter() { return CoalGoldsmelter; }
 
-        public void SetPlanksBoatbuilder(uint val)
+        public uint CoalWeaponsmith
         {
-            planksBoatbuilder = val;
-
-            Dirty = true;
+            get => settings.CoalWeaponsmith;
+            set
+            {
+                if (settings.CoalWeaponsmith != value)
+                {
+                    settings.CoalWeaponsmith = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetCoalWeaponsmith() { return CoalWeaponsmith; }
 
-        public uint GetPlanksToolmaker()
+        public uint WheatPigfarm
         {
-            return planksToolmaker;
+            get => settings.WheatPigfarm;
+            set
+            {
+                if (settings.WheatPigfarm != value)
+                {
+                    settings.WheatPigfarm = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
+        public uint GetWheatPigfarm() { return WheatPigfarm; }
 
-        public void SetPlanksToolmaker(uint val)
+        public uint WheatMill
         {
-            planksToolmaker = val;
-
-            Dirty = true;
+            get => settings.WheatMill;
+            set
+            {
+                if (settings.WheatMill != value)
+                {
+                    settings.WheatMill = (word)value;
+                    settings.Dirty = true;
+                }
+            }
         }
-
-        public uint GetSteelToolmaker()
-        {
-            return steelToolmaker;
-        }
-
-        public void SetSteelToolmaker(uint val)
-        {
-            steelToolmaker = val;
-
-            Dirty = true;
-        }
-
-        public uint GetSteelWeaponsmith()
-        {
-            return steelWeaponsmith;
-        }
-
-        public void SetSteelWeaponsmith(uint val)
-        {
-            steelWeaponsmith = val;
-
-            Dirty = true;
-        }
-
-        public uint GetCoalSteelsmelter()
-        {
-            return coalSteelsmelter;
-        }
-
-        public void SetCoalSteelsmelter(uint val)
-        {
-            coalSteelsmelter = val;
-
-            Dirty = true;
-        }
-
-        public uint GetCoalGoldsmelter()
-        {
-            return coalGoldsmelter;
-        }
-
-        public void SetCoalGoldsmelter(uint val)
-        {
-            coalGoldsmelter = val;
-
-            Dirty = true;
-        }
-
-        public uint GetCoalWeaponsmith()
-        {
-            return coalWeaponsmith;
-        }
-
-        public void SetCoalWeaponsmith(uint val)
-        {
-            coalWeaponsmith = val;
-
-            Dirty = true;
-        }
-
-        public uint GetWheatPigfarm()
-        {
-            return wheatPigfarm;
-        }
-
-        public void SetWheatPigfarm(uint val)
-        {
-            wheatPigfarm = val;
-
-            Dirty = true;
-        }
-
-        public uint GetWheatMill()
-        {
-            return wheatMill;
-        }
-
-        public void SetWheatMill(uint val)
-        {
-            wheatMill = val;
-
-            Dirty = true;
-        }
-
-        /* Initialize AI parameters. */
-        protected void InitAiValues(uint face)
-        {
-            // TODO
-            /*const int ai_values_0[] = { 13, 10, 16, 9, 10, 8, 6, 10, 12, 5, 8 };
-            const int ai_values_1[] = { 10000, 13000, 16000, 16000, 18000, 20000,
-                                  19000, 18000, 30000, 23000, 26000 };
-            const int ai_values_2[] = { 10000, 35000, 20000, 27000, 37000, 25000,
-                                  40000, 30000, 50000, 35000, 40000 };
-            const int ai_values_3[] = { 0, 36, 0, 31, 8, 480, 3, 16, 0, 193, 39 };
-            const int ai_values_4[] = { 0, 30000, 5000, 40000, 50000, 20000, 45000,
-                                  35000, 65000, 25000, 30000 };
-            const int ai_values_5[] = { 60000, 61000, 60000, 65400, 63000, 62000,
-                                  65000, 63000, 64000, 64000, 64000 };
-
-            ai_value_0 = ai_values_0[face_ - 1];
-            ai_value_1 = ai_values_1[face_ - 1];
-            ai_value_2 = ai_values_2[face_ - 1];
-            ai_value_3 = ai_values_3[face_ - 1];
-            ai_value_4 = ai_values_4[face_ - 1];
-            ai_value_5 = ai_values_5[face_ - 1];*/
-        }
+        public uint GetWheatMill() { return WheatMill; }
 
         static readonly int[] minLevelHut = new int[] { 1, 1, 2, 2, 3 };
         static readonly int[] minLevelTower = new int[] { 1, 2, 3, 4, 6 };
         static readonly int[] minLevelFortress = new int[] { 1, 3, 6, 9, 12 };
 
-        int AvailableKnightsAtPos(MapPos pos, int index, int dist)
+        int AvailableKnightsAtPosition(MapPos pos, int index, int dist)
         {
             Map map = Game.Map;
 
@@ -2095,7 +1907,7 @@ namespace Freeserf
                 return index;
             }
 
-            int[] minLevel = null;
+            int[] minLevel;
 
             switch (building.BuildingType)
             {
@@ -2112,7 +1924,7 @@ namespace Freeserf
 
             uint state = building.GetThreatLevel();
             uint knightsPresent = building.GetKnightCount();
-            int toSend = (int)knightsPresent - minLevel[knightOccupation[state] & 0xf];
+            int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[state] & 0xf];
 
             if (toSend > 0)
                 attackingKnights[dist] += toSend;
@@ -2128,50 +1940,63 @@ namespace Freeserf
             new Color { Red = 0xef, Green = 0xef, Blue = 0x8f}
         };
 
+        /// <summary>
+        /// Read legacy savegame.
+        /// </summary>
+        /// <param name="reader"></param>
         public void ReadFrom(SaveReaderBinary reader)
         {
             for (int j = 0; j < 9; ++j)
             {
-                toolPriorities[j] = reader.ReadWord(); // 0
+                settings.ToolPriorities[j] = reader.ReadWord(); // 0
             }
 
             for (int j = 0; j < 26; ++j)
             {
-                resourceCount[j] = reader.ReadByte(); // 18
+                state.ResourceCounts[j] = reader.ReadByte(); // 18
             }
 
             for (int j = 0; j < 26; ++j)
             {
-                flagPriorities[j] = reader.ReadByte(); // 44
+                settings.FlagPriorities[j] = reader.ReadByte(); // 44
             }
 
             for (int j = 0; j < 27; ++j)
             {
-                serfCount[j] = reader.ReadWord(); // 70
+                state.SerfCounts[j] = reader.ReadWord(); // 70
             }
 
             for (int j = 0; j < 4; ++j)
             {
-                knightOccupation[j] = reader.ReadByte(); // 124
+                settings.KnightOccupation[j] = reader.ReadByte(); // 124
             }
 
             Index = reader.ReadWord(); // 128
-            color = DefaultPlayerColors[Index];
-            flags = reader.ReadByte(); // 130
-            build = reader.ReadByte(); // 131
+            state.Color = DefaultPlayerColors[Index];
+            byte flags = reader.ReadByte(); // 130
+            byte buildFlags = reader.ReadByte(); // 131
+
+            state.HasCastle = (flags & 0x01) != 0;
+            settings.SendStrongest = (flags & 0x02) != 0;
+            state.CyclingKnightsInProgress = (flags & 0x04) != 0;
+            notificationFlag = (flags & 0x08) != 0;
+            state.CyclingKnightsReducedLevel = (flags & 0x10) != 0;
+            state.CyclingKnightsSecondPhase = (flags & 0x20) != 0;
+            state.IsAI = (flags & 0x80) != 0;
+            state.CanSpawn = (buildFlags & 0x04) != 0;
 
             for (int j = 0; j < 23; ++j)
             {
-                completedBuildingCount[j] = reader.ReadWord(); // 132
+                state.CompletedBuildingCount[j] = reader.ReadWord(); // 132
             }
             for (int j = 0; j < 23; ++j)
             {
-                incompleteBuildingCount[j] = reader.ReadWord(); // 178
+                state.IncompleteBuildingCount[j] = reader.ReadWord(); // 178
             }
 
             for (int j = 0; j < 26; ++j)
             {
-                inventoryPriorities[j] = reader.ReadByte(); // 224
+                settings.InventoryPriorities[j] = reader.ReadByte(); // 224
             }
 
             for (int j = 0; j < 64; ++j)
@@ -2184,10 +2009,10 @@ namespace Freeserf
             reader.ReadWord();  // 382 ???
             reader.ReadWord();  // 384 ???
             reader.ReadWord();  // 386 ???
-            building = reader.ReadWord(); // 388
+            selectedBuildingIndex = reader.ReadWord(); // 388
 
             reader.ReadWord();  // 390 // castleflag
-            castleInventory = reader.ReadWord(); // 392
+            state.CastleInventoryIndex = reader.ReadWord(); // 392
             contSearchAfterNonOptimalFind = reader.ReadWord(); // 394
             knightsToSpawn = reader.ReadWord(); // 396
             reader.ReadWord();  // 398
@@ -2195,15 +2020,15 @@ namespace Freeserf
             reader.ReadWord();  // 402 ???
             reader.ReadWord();  // 404 ???
 
-            totalBuildingScore = reader.ReadDWord(); // 406
-            totalMilitaryScore = reader.ReadDWord(); // 410
+            state.TotalBuildingScore = reader.ReadDWord(); // 406
+            state.TotalMilitaryScore = reader.ReadDWord(); // 410
 
             lastTick = reader.ReadWord(); // 414
 
-            reproductionCounter = reader.ReadWord(); // 416
-            reproductionReset = reader.ReadWord(); // 418
-            serfToKnightRate = reader.ReadWord(); // 420
-            serfToKnightCounter = reader.ReadWord(); // 422
+            state.ReproductionCounter = reader.ReadWord(); // 416
+            state.ReproductionReset = reader.ReadWord(); // 418
+            settings.SerfToKnightRate = reader.ReadWord(); // 420
+            state.SerfToKnightCounter = reader.ReadWord(); // 422
 
             attackingBuildingCount = reader.ReadWord(); // 424
 
@@ -2221,67 +2046,79 @@ namespace Freeserf
             analysisCoal = reader.ReadWord(); // 444
             analysisStone = reader.ReadWord(); // 446
 
-            foodStonemine = reader.ReadWord(); // 448
-            foodCoalmine = reader.ReadWord(); // 450
-            foodIronmine = reader.ReadWord(); // 452
-            foodGoldmine = reader.ReadWord(); // 454
+            settings.FoodStonemine = reader.ReadWord(); // 448
+            settings.FoodCoalmine = reader.ReadWord(); // 450
+            settings.FoodIronmine = reader.ReadWord(); // 452
+            settings.FoodGoldmine = reader.ReadWord(); // 454
 
-            planksConstruction = reader.ReadWord(); // 456
-            planksBoatbuilder = reader.ReadWord(); // 458
-            planksToolmaker = reader.ReadWord(); // 460
+            settings.PlanksConstruction = reader.ReadWord(); // 456
+            settings.PlanksBoatbuilder = reader.ReadWord(); // 458
+            settings.PlanksToolmaker = reader.ReadWord(); // 460
 
-            steelToolmaker = reader.ReadWord(); // 462
-            steelWeaponsmith = reader.ReadWord(); // 464
+            settings.SteelToolmaker = reader.ReadWord(); // 462
+            settings.SteelWeaponsmith = reader.ReadWord(); // 464
 
-            coalSteelsmelter = reader.ReadWord(); // 466
-            coalGoldsmelter = reader.ReadWord(); // 468
-            coalWeaponsmith = reader.ReadWord(); // 470
+            settings.CoalSteelsmelter = reader.ReadWord(); // 466
+            settings.CoalGoldsmelter = reader.ReadWord(); // 468
+            settings.CoalWeaponsmith = reader.ReadWord(); // 470
 
-            wheatPigfarm = reader.ReadWord(); // 472
-            wheatMill = reader.ReadWord(); // 474
+            settings.WheatPigfarm = reader.ReadWord(); // 472
+            settings.WheatMill = reader.ReadWord(); // 474
 
             reader.ReadWord(); // 476, currentett_6tem = reader.ReadWord();
 
-            castleScore = reader.ReadWord(); // 478
+            state.CastleScore = (sbyte)reader.ReadWord(); // 478
 
-            /* TODO */
+            state.Dirty = true;
+            settings.Dirty = true;
         }
 
-        // TODO: add notifications to savegames?
-
+        /// <summary>
+        /// Read savegames from freeserf project.
+        /// </summary>
         public void ReadFrom(SaveReaderText reader)
         {
-            flags = reader.Value("flags").ReadUInt();
-            build = reader.Value("build").ReadUInt();
-            color.Red = (byte)reader.Value("color")[0].ReadUInt();
-            color.Green = (byte)reader.Value("color")[1].ReadUInt();
-            color.Blue = (byte)reader.Value("color")[2].ReadUInt();
-            face = reader.Value("face").ReadUInt();
+            var flags = reader.Value("flags").ReadUInt();
+            var buildFlags = reader.Value("build").ReadUInt();
+
+            state.HasCastle = (flags & 0x01) != 0;
+            settings.SendStrongest = (flags & 0x02) != 0;
+            state.CyclingKnightsInProgress = (flags & 0x04) != 0;
+            notificationFlag = (flags & 0x08) != 0;
+            state.CyclingKnightsReducedLevel = (flags & 0x10) != 0;
+            state.CyclingKnightsSecondPhase = (flags & 0x20) != 0;
+            state.IsAI = (flags & 0x80) != 0;
+            state.CanSpawn = (buildFlags & 0x04) != 0;
+
+            Color.Red = (byte)reader.Value("color")[0].ReadUInt();
+            Color.Green = (byte)reader.Value("color")[1].ReadUInt();
+            Color.Blue = (byte)reader.Value("color")[2].ReadUInt();
+            state.Face = (PlayerFace)reader.Value("face").ReadUInt();
 
             for (int i = 0; i < 9; ++i)
             {
-                toolPriorities[i] = reader.Value("tool_prio")[i].ReadInt();
+                settings.ToolPriorities[i] = (word)reader.Value("tool_prio")[i].ReadInt();
             }
 
             for (int i = 0; i < 26; ++i)
             {
-                resourceCount[i] = reader.Value("resource_count")[i].ReadUInt();
-                flagPriorities[i] = reader.Value("flag_prio")[i].ReadInt();
-                serfCount[i] = reader.Value("serf_count")[i].ReadUInt();
-                inventoryPriorities[i] = reader.Value("inventory_prio")[i].ReadInt();
+                state.ResourceCounts[i] = reader.Value("resource_count")[i].ReadUInt();
+                settings.FlagPriorities[i] = (byte)reader.Value("flag_prio")[i].ReadInt();
+                state.SerfCounts[i] = reader.Value("serf_count")[i].ReadUInt();
+                settings.InventoryPriorities[i] = (byte)reader.Value("inventory_prio")[i].ReadInt();
             }
-            serfCount[26] = reader.Value("serf_count")[26].ReadUInt();
+            state.SerfCounts[26] = reader.Value("serf_count")[26].ReadUInt();
 
             for (int i = 0; i < 4; ++i)
             {
-                knightOccupation[i] = reader.Value("knight_occupation")[i].ReadUInt();
+                settings.KnightOccupation[i] = (byte)reader.Value("knight_occupation")[i].ReadUInt();
                 attackingKnights[i] = reader.Value("attacking_knights")[i].ReadInt();
             }
 
             for (int i = 0; i < 23; ++i)
             {
-                completedBuildingCount[i] = reader.Value("completed_building_count")[i].ReadUInt();
-                incompleteBuildingCount[i] = reader.Value("incomplete_building_count")[i].ReadUInt();
+                state.CompletedBuildingCount[i] = reader.Value("completed_building_count")[i].ReadUInt();
+                state.IncompleteBuildingCount[i] = reader.Value("incomplete_building_count")[i].ReadUInt();
             }
 
             for (int i = 0; i < 64; ++i)
@@ -2289,71 +2126,94 @@ namespace Freeserf
                 attackingBuildings[i] = reader.Value("attacking_buildings")[i].ReadUInt();
             }
 
-            initialSupplies = reader.Value("initial_supplies").ReadUInt();
+            state.InitialSupplies = (byte)reader.Value("initial_supplies").ReadUInt();
             knightsToSpawn = reader.Value("knights_to_spawn").ReadInt();
-            totalBuildingScore = reader.Value("total_building_score").ReadUInt();
-            totalMilitaryScore = reader.Value("total_military_score").ReadUInt();
-            lastTick = (ushort)reader.Value("last_tick").ReadUInt();
-            reproductionCounter = reader.Value("reproduction_counter").ReadInt();
-            reproductionReset = reader.Value("reproduction_reset").ReadUInt();
-            serfToKnightRate = reader.Value("serf_to_knight_rate").ReadInt();
-            serfToKnightCounter = (ushort)reader.Value("serf_to_knight_counter").ReadUInt();
+            state.TotalBuildingScore = reader.Value("total_building_score").ReadUInt();
+            state.TotalMilitaryScore = reader.Value("total_military_score").ReadUInt();
+            lastTick = (word)reader.Value("last_tick").ReadUInt();
+            state.ReproductionCounter = (word)reader.Value("reproduction_counter").ReadInt();
+            state.ReproductionReset = (word)reader.Value("reproduction_reset").ReadUInt();
+            settings.SerfToKnightRate = (word)reader.Value("serf_to_knight_rate").ReadInt();
+            state.SerfToKnightCounter = (word)reader.Value("serf_to_knight_counter").ReadUInt();
             attackingBuildingCount = reader.Value("attacking_building_count").ReadInt();
             totalAttackingKnights = reader.Value("total_attacking_knights").ReadInt();
             buildingAttacked = reader.Value("building_attacked").ReadInt();
             knightsAttacking = reader.Value("knights_attacking").ReadInt();
-            foodStonemine = reader.Value("food_stonemine").ReadUInt();
-            foodCoalmine = reader.Value("food_coalmine").ReadUInt();
-            foodIronmine = reader.Value("food_ironmine").ReadUInt();
-            foodGoldmine = reader.Value("food_goldmine").ReadUInt();
-            planksConstruction = reader.Value("planks_construction").ReadUInt();
-            planksBoatbuilder = reader.Value("planks_boatbuilder").ReadUInt();
-            planksToolmaker = reader.Value("planks_toolmaker").ReadUInt();
-            steelToolmaker = reader.Value("steel_toolmaker").ReadUInt();
-            steelWeaponsmith = reader.Value("steel_weaponsmith").ReadUInt();
-            coalSteelsmelter = reader.Value("coal_steelsmelter").ReadUInt();
-            coalGoldsmelter = reader.Value("coal_goldsmelter").ReadUInt();
-            coalWeaponsmith = reader.Value("coal_weaponsmith").ReadUInt();
-            wheatPigfarm = reader.Value("wheat_pigfarm").ReadUInt();
-            wheatMill = reader.Value("wheat_mill").ReadUInt();
-            castleScore = reader.Value("castle_score").ReadInt();
-            castleKnights = reader.Value("castle_knights").ReadUInt();
-            castleKnightsWanted = reader.Value("castle_knights_wanted").ReadUInt();
+            settings.FoodStonemine = (word)reader.Value("food_stonemine").ReadUInt();
+            settings.FoodCoalmine = (word)reader.Value("food_coalmine").ReadUInt();
+            settings.FoodIronmine = (word)reader.Value("food_ironmine").ReadUInt();
+            settings.FoodGoldmine = (word)reader.Value("food_goldmine").ReadUInt();
+            settings.PlanksConstruction = (word)reader.Value("planks_construction").ReadUInt();
+            settings.PlanksBoatbuilder = (word)reader.Value("planks_boatbuilder").ReadUInt();
+            settings.PlanksToolmaker = (word)reader.Value("planks_toolmaker").ReadUInt();
+            settings.SteelToolmaker = (word)reader.Value("steel_toolmaker").ReadUInt();
+            settings.SteelWeaponsmith = (word)reader.Value("steel_weaponsmith").ReadUInt();
+            settings.CoalSteelsmelter = (word)reader.Value("coal_steelsmelter").ReadUInt();
+            settings.CoalGoldsmelter = (word)reader.Value("coal_goldsmelter").ReadUInt();
+            settings.CoalWeaponsmith = (word)reader.Value("coal_weaponsmith").ReadUInt();
+            settings.WheatPigfarm = (word)reader.Value("wheat_pigfarm").ReadUInt();
+            settings.WheatMill = (word)reader.Value("wheat_mill").ReadUInt();
+            state.CastleScore = (sbyte)reader.Value("castle_score").ReadInt();
+            state.CastleKnights = (byte)reader.Value("castle_knights").ReadUInt();
+            settings.CastleKnightsWanted = (byte)reader.Value("castle_knights_wanted").ReadUInt();
         }
 
+        /// <summary>
+        /// Write savegames for freeserf project.
+        /// </summary>
         public void WriteTo(SaveWriterText writer)
         {
+            byte flags = 0;
+            byte buildFlags = 0;
+
+            if (state.HasCastle)
+                flags |= 0x01;
+            if (settings.SendStrongest)
+                flags |= 0x02;
+            if (state.CyclingKnightsInProgress)
+                flags  |= 0x04;
+            if (notificationFlag)
+                flags |= 0x08;
+            if (state.CyclingKnightsReducedLevel)
+                flags |= 0x10;
+            if (state.CyclingKnightsSecondPhase)
+                flags |= 0x20;
+            if (state.IsAI)
+                flags |= 0x80;
+            if (state.CanSpawn)
+                buildFlags |= 0x04;
+
             writer.Value("flags").Write(flags);
-            writer.Value("build").Write(build);
-            writer.Value("color").Write((uint)color.Red);
-            writer.Value("color").Write((uint)color.Green);
-            writer.Value("color").Write((uint)color.Blue);
-            writer.Value("face").Write(face);
+            writer.Value("build").Write(buildFlags);
+            writer.Value("color").Write((uint)Color.Red);
+            writer.Value("color").Write((uint)Color.Green);
+            writer.Value("color").Write((uint)Color.Blue);
+            writer.Value("face").Write((uint)Face);
 
             for (int i = 0; i < 9; ++i)
             {
-                writer.Value("tool_prio").Write(toolPriorities[i]);
+                writer.Value("tool_prio").Write(settings.ToolPriorities[i]);
             }
 
             for (int i = 0; i < 26; ++i)
             {
-                writer.Value("resource_count").Write(resourceCount[i]);
-                writer.Value("flag_prio").Write(flagPriorities[i]);
-                writer.Value("serf_count").Write(serfCount[i]);
-                writer.Value("inventory_prio").Write(inventoryPriorities[i]);
+                writer.Value("resource_count").Write(state.ResourceCounts[i]);
+                writer.Value("flag_prio").Write(settings.FlagPriorities[i]);
+                writer.Value("serf_count").Write(state.SerfCounts[i]);
+                writer.Value("inventory_prio").Write(settings.InventoryPriorities[i]);
             }
-            writer.Value("serf_count").Write(serfCount[26]);
+            writer.Value("serf_count").Write(state.SerfCounts[26]);
 
             for (int i = 0; i < 4; ++i)
             {
-                writer.Value("knight_occupation").Write(knightOccupation[i]);
+                writer.Value("knight_occupation").Write(settings.KnightOccupation[i]);
                 writer.Value("attacking_knights").Write(attackingKnights[i]);
             }
 
             for (int i = 0; i < 23; ++i)
             {
-                writer.Value("completed_building_count").Write(completedBuildingCount[i]);
-                writer.Value("incomplete_building_count").Write(incompleteBuildingCount[i]);
+                writer.Value("completed_building_count").Write(state.CompletedBuildingCount[i]);
+                writer.Value("incomplete_building_count").Write(state.IncompleteBuildingCount[i]);
             }
 
             for (int i = 0; i< 64; ++i)
@@ -2361,47 +2221,47 @@ namespace Freeserf
                 writer.Value("attacking_buildings").Write(attackingBuildings[i]);
             }
 
-            writer.Value("initial_supplies").Write(initialSupplies);
+            writer.Value("initial_supplies").Write(state.InitialSupplies);
             writer.Value("knights_to_spawn").Write(knightsToSpawn);
 
-            writer.Value("total_building_score").Write(totalBuildingScore);
-            writer.Value("total_military_score").Write(totalMilitaryScore);
+            writer.Value("total_building_score").Write(state.TotalBuildingScore);
+            writer.Value("total_military_score").Write(state.TotalMilitaryScore);
 
             writer.Value("last_tick").Write(lastTick);
 
-            writer.Value("reproduction_counter").Write(reproductionCounter);
-            writer.Value("reproduction_reset").Write(reproductionReset);
-            writer.Value("serf_to_knight_rate").Write(serfToKnightRate);
-            writer.Value("serf_to_knight_counter").Write(serfToKnightCounter);
+            writer.Value("reproduction_counter").Write(state.ReproductionCounter);
+            writer.Value("reproduction_reset").Write(state.ReproductionReset);
+            writer.Value("serf_to_knight_rate").Write(settings.SerfToKnightRate);
+            writer.Value("serf_to_knight_counter").Write(state.SerfToKnightCounter);
 
             writer.Value("attacking_building_count").Write(attackingBuildingCount);
             writer.Value("total_attacking_knights").Write(totalAttackingKnights);
             writer.Value("building_attacked").Write(buildingAttacked);
             writer.Value("knights_attacking").Write(knightsAttacking);
 
-            writer.Value("food_stonemine").Write(foodStonemine);
-            writer.Value("food_coalmine").Write(foodCoalmine);
-            writer.Value("food_ironmine").Write(foodIronmine);
-            writer.Value("food_goldmine").Write(foodGoldmine);
+            writer.Value("food_stonemine").Write(FoodStonemine);
+            writer.Value("food_coalmine").Write(FoodCoalmine);
+            writer.Value("food_ironmine").Write(FoodIronmine);
+            writer.Value("food_goldmine").Write(FoodGoldmine);
 
-            writer.Value("planks_construction").Write(planksConstruction);
-            writer.Value("planks_boatbuilder").Write(planksBoatbuilder);
-            writer.Value("planks_toolmaker").Write(planksToolmaker);
+            writer.Value("planks_construction").Write(PlanksConstruction);
+            writer.Value("planks_boatbuilder").Write(PlanksBoatbuilder);
+            writer.Value("planks_toolmaker").Write(PlanksToolmaker);
 
-            writer.Value("steel_toolmaker").Write(steelToolmaker);
-            writer.Value("steel_weaponsmith").Write(steelWeaponsmith);
+            writer.Value("steel_toolmaker").Write(SteelToolmaker);
+            writer.Value("steel_weaponsmith").Write(SteelWeaponsmith);
 
-            writer.Value("coal_steelsmelter").Write(coalSteelsmelter);
-            writer.Value("coal_goldsmelter").Write(coalGoldsmelter);
-            writer.Value("coal_weaponsmith").Write(coalWeaponsmith);
+            writer.Value("coal_steelsmelter").Write(CoalSteelsmelter);
+            writer.Value("coal_goldsmelter").Write(CoalGoldsmelter);
+            writer.Value("coal_weaponsmith").Write(CoalWeaponsmith);
 
-            writer.Value("wheat_pigfarm").Write(wheatPigfarm);
-            writer.Value("wheat_mill").Write(wheatMill);
+            writer.Value("wheat_pigfarm").Write(WheatPigfarm);
+            writer.Value("wheat_mill").Write(WheatMill);
 
-            writer.Value("castle_score").Write(castleScore);
+            writer.Value("castle_score").Write(state.CastleScore);
 
-            writer.Value("castle_knights").Write(castleKnights);
-            writer.Value("castle_knights_wanted").Write(castleKnightsWanted);
+            writer.Value("castle_knights").Write(state.CastleKnights);
+            writer.Value("castle_knights_wanted").Write(settings.CastleKnightsWanted);
         }
     }
 }

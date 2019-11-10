@@ -390,9 +390,9 @@ namespace Freeserf
                     {
                         var player = game.GetPlayer((uint)i);
 
-                        if (player.HasCastle())
+                        if (player.HasCastle)
                         {
-                            player.CastlePos = game.GetPlayerBuildings(player, Building.Type.Castle).First().Position;
+                            player.CastlePosition = game.GetPlayerBuildings(player, Building.Type.Castle).First().Position;
                         }
                     }
 

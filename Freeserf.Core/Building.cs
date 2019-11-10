@@ -227,7 +227,7 @@ namespace Freeserf
                         break;
                 }
 
-                Game.GetPlayer(Player).AddNotification(Message.Type.KnightOccupied, Position, militaryType);
+                Game.GetPlayer(Player).AddNotification(Notification.Type.KnightOccupied, Position, militaryType);
 
                 Flag flag = Game.GetFlagAtPos(Game.Map.MoveDownRight(Position));
                 flag.ClearFlags();
@@ -361,13 +361,13 @@ namespace Freeserf
                 /* Handle empty mine. */
                 Player player = Game.GetPlayer(Player);
 
-                if (player.IsAi())
+                if (player.IsAI)
                 {
                     if (player.AI != null)
                         player.AI.HandleEmptyMine(Index);
                 }
 
-                player.AddNotification(Message.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));
+                player.AddNotification(Notification.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));
             }
 
             progress = (progress << 1) & 0xffff;
@@ -964,7 +964,7 @@ namespace Freeserf
                 }
 
                 // TODO: For now we just add the resource back to the castle. Later we have to find the reason for this.
-                Game.GetBuildingAtPos(Game.GetPlayer(Player).CastlePos).GetInventory().PushResource(resource);
+                Game.GetBuildingAtPos(Game.GetPlayer(Player).CastlePosition).GetInventory().PushResource(resource);
                 return;
 
                 // TODO: This exception occurs from time to time.
@@ -1491,7 +1491,7 @@ namespace Freeserf
                             stock[1].Available = 0xff;
                             active = true;
 
-                            Game.GetPlayer(Player).AddNotification(Message.Type.NewStock, Position, 0);
+                            Game.GetPlayer(Player).AddNotification(Notification.Type.NewStock, Position, 0);
                         }
                         else
                         {
@@ -1808,7 +1808,7 @@ namespace Freeserf
             Player player = Game.GetPlayer(Player);
             Inventory inventory = Game.GetInventory((uint)u.InvIndex);
 
-            if (player.GetCastleKnights() == player.GetCastleKnightsWanted())
+            if (player.CastleKnights == player.CastleKnightsWanted)
             {
                 Serf bestKnight = null;
                 Serf lastKnight = null;
@@ -1850,7 +1850,7 @@ namespace Freeserf
                     lastKnight.SetSerfType(tmp);
                 }
             }
-            else if (player.GetCastleKnights() < player.GetCastleKnightsWanted())
+            else if (player.CastleKnights < player.CastleKnightsWanted)
             {
                 Serf.Type knightType = Serf.Type.None;
 
@@ -1954,9 +1954,9 @@ namespace Freeserf
         void UpdateMilitary()
         {
             Player player = Game.GetPlayer(Player);
-            uint maxOccupiedLevel = (player.GetKnightOccupation(threatLevel) >> 4) & 0xf;
+            uint maxOccupiedLevel = (player.GetKnightOccupation((int)threatLevel) >> 4) & 0xf;
 
-            if (player.ReducedKnightLevel())
+            if (player.ReducedKnightLevel)
                 maxOccupiedLevel += 5;
 
             if (maxOccupiedLevel > 9)

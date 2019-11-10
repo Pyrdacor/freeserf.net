@@ -111,9 +111,6 @@ namespace Freeserf.UI
 
         SpriteLocation[] mapCursorSprites = new SpriteLocation[7];
 
-        int waterInView;
-        int treesInView;
-
         int returnTimeout;
         int returnPos;
 
@@ -286,9 +283,9 @@ namespace Freeserf.UI
             }
         }
 
-        public Player.Color GetPlayerColor(uint playerIndex)
+        public Color GetPlayerColor(uint playerIndex)
         {
-            return Game.GetPlayer(playerIndex).GetColor();
+            return Game.GetPlayer(playerIndex).Color;
         }
 
         public int GetConfig()
@@ -428,7 +425,7 @@ namespace Freeserf.UI
         /* Open box for next message in the message queue */
         public void OpenMessage()
         {
-            if (!player.HasNotification())
+            if (!player.HasNotification)
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 return;
@@ -443,9 +440,9 @@ namespace Freeserf.UI
                 returnPos = (int)pos;
             }
 
-            Message message = player.PopNotification();
+            Notification notification = player.PopNotification();
 
-            if (message.MessageType == Message.Type.CallToMenu)
+            if (notification.NotificationType == Notification.Type.CallToMenu)
             {
                 /* TODO */
             }
@@ -456,14 +453,14 @@ namespace Freeserf.UI
                 AddChild(NotificationBox, 0, 0);
             }
 
-            NotificationBox.Show(message);
+            NotificationBox.Show(notification);
             Layout();
 
-            if (Misc.BitTest(0x8f3fe, (int)message.MessageType))
+            if (Misc.BitTest(0x8f3fe, (int)notification.NotificationType))
             {
                 /* Move screen to new position */
-                Viewport.MoveToMapPos(message.Pos, true);
-                UpdateMapCursorPos(message.Pos);
+                Viewport.MoveToMapPos(notification.Position, true);
+                UpdateMapCursorPos(notification.Position);
             }
 
             msgFlags |= Misc.Bit(1);
@@ -506,9 +503,9 @@ namespace Freeserf.UI
 
         public void GotoCastle()
         {
-            if (player != null && player.HasCastle())
+            if (player != null && player.HasCastle)
             {
-                GotoMapPos(player.CastlePos);
+                GotoMapPos(player.CastlePosition);
             }
         }
 
@@ -572,8 +569,8 @@ namespace Freeserf.UI
                 else
                     PanelBar.Displayed = false;
 
-                if (this.player.CastlePos != Global.BadMapPos)
-                    initPos = this.player.CastlePos;
+                if (this.player.CastlePosition != Global.BadMapPos)
+                    initPos = this.player.CastlePosition;
             }
             else
             {
@@ -910,15 +907,15 @@ namespace Freeserf.UI
                 }
 
                 /* Handle newly enqueued messages */
-                if (player != null && player.HasMessage())
+                if (player != null && player.HasNotification)
                 {
-                    player.DropMessage();
+                    player.DropNotifications();
 
-                    while (player.HasNotification())
+                    while (player.HasNotification)
                     {
-                        Message message = player.PeekNotification();
+                        Notification notification = player.PeekNotification();
 
-                        if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
+                        if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Message);
                             msgFlags |= Misc.Bit(0);
@@ -935,15 +932,15 @@ namespace Freeserf.UI
 
                     while (true)
                     {
-                        if (!player.HasNotification())
+                        if (!player.HasNotification)
                         {
                             msgFlags &= ~Misc.Bit(0);
                             break;
                         }
 
-                        Message message = player.PeekNotification();
+                        Notification notification = player.PeekNotification();
 
-                        if (Misc.BitTest(config, MsgCategory[(int)message.MessageType]))
+                        if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
                             break;
 
                         player.PopNotification();

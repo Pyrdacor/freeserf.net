@@ -131,8 +131,8 @@ namespace Freeserf.AIStates
                 // or by the adjust settings state then.
                 // We do this to avoid building the same tool
                 // multiple times in a row.
-                player.SetPlanksToolmaker(ushort.MinValue);
-                player.SetSteelToolmaker(ushort.MinValue);
+                player.PlanksToolmaker = ushort.MinValue;
+                player.SteelToolmaker = ushort.MinValue;
                 player.ResetToolPriority();
 
                 Kill(ai);
@@ -140,8 +140,8 @@ namespace Freeserf.AIStates
             }
 
             // give planks and steel to toolmaker
-            player.SetPlanksToolmaker(ushort.MaxValue);
-            player.SetSteelToolmaker(ushort.MaxValue);
+            player.PlanksToolmaker = ushort.MaxValue;
+            player.SteelToolmaker = ushort.MaxValue;
 
             // set the priority for the tool to 100%
             player.SetFullToolPriority(tool);

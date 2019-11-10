@@ -411,7 +411,7 @@ namespace Freeserf
 
             switch (playerInfo.Face)
             {
-                case 1: // Lady Amalie
+                case PlayerFace.LadyAmalie:
                     foodSourcePriorities[0] = 0; // fish
                     foodSourcePriorities[1] = 2; // bread
                     foodSourcePriorities[2] = 1; // meat
@@ -419,10 +419,10 @@ namespace Freeserf
                     PrioritizedPlayer = AttackPlayer.RandomAI;
                     SecondPrioritizedPlayer = AttackPlayer.Random;
                     break;
-                case 2: // Kumpy Onefinger
+                case PlayerFace.KumpyOnefinger:
                     GoldFocus = 2;
                     break;
-                case 3: // Balduin
+                case PlayerFace.Balduin:
                     DefendFocus = 2;
                     foodSourcePriorities[0] = 0; // fish
                     foodSourcePriorities[1] = 1; // bread
@@ -435,17 +435,17 @@ namespace Freeserf
                     minStonesForMilitaryBuildings[0] = 8; // tower
                     minStonesForMilitaryBuildings[1] = 12; // fortress
                     break;
-                case 4: // Frollin
+                case PlayerFace.Frollin:
                     Aggressivity = 1;
                     ExpandFocus = 2;
                     break;
-                case 5: // Kallina
+                case PlayerFace.Kallina:
                     Aggressivity = 1;
                     ExpandFocus = 1;
                     MilitarySkill = 2;
                     PrioritizedAttackTarget = AttackTarget.FoodProduction;
                     break;
-                case 6: // Rasparuk
+                case PlayerFace.Rasparuk:
                     Aggressivity = 1;
                     GoldFocus = 1;
                     SteelFocus = 1;
@@ -460,7 +460,7 @@ namespace Freeserf
                     PrioritizedAttackTarget = AttackTarget.SmallMilitary;
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     break;
-                case 7: // Count Aldaba
+                case PlayerFace.CountAldaba:
                     Aggressivity = 2;
                     MilitarySkill = 2;
                     MilitaryFocus = 1;
@@ -478,7 +478,7 @@ namespace Freeserf
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     break;
-                case 8: // King Rolph VII
+                case PlayerFace.KingRolph:
                     Aggressivity = 2;
                     MilitarySkill = 2;
                     MilitaryFocus = 2;
@@ -500,7 +500,7 @@ namespace Freeserf
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
-                case 9: // Homen Doublehorn
+                case PlayerFace.HomenDoublehorn:
                     Aggressivity = 2;
                     RushAffinity = 1;
                     MilitarySkill = 2;
@@ -525,7 +525,7 @@ namespace Freeserf
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
-                case 10: // Sollok the Joker
+                case PlayerFace.Sollok:
                     Aggressivity = 2;
                     RushAffinity = 2;
                     MilitarySkill = 2;
@@ -541,7 +541,7 @@ namespace Freeserf
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
-                case 11: // Enemy
+                case PlayerFace.Enemy:
                     Aggressivity = 2;
                     RushAffinity = 1;
                     MilitarySkill = 2;
@@ -1135,7 +1135,7 @@ namespace Freeserf
 
             if (states.Count == 0)
             {
-                if (!player.HasCastle())
+                if (!player.HasCastle)
                 {
                     PushState(CreateState(State.ChooseCastleLocation));
                 }
@@ -1179,7 +1179,7 @@ namespace Freeserf
             var supplies = reader.Value("supplies").ReadUInt();
             var intelligence = reader.Value("intelligence").ReadUInt();
             var reproduction = reader.Value("reproduction").ReadUInt();
-            var playerInfo = new PlayerInfo(character, PlayerInfo.PlayerColors[player.Index], intelligence, supplies, reproduction);
+            var playerInfo = new PlayerInfo((PlayerFace)character, PlayerInfo.PlayerColors[player.Index], intelligence, supplies, reproduction);
 
             var ai = new AI(player, playerInfo);
 

@@ -1,7 +1,7 @@
 ﻿/*
  * RenderLayer.cs - Render layer implementation
  *
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -30,7 +30,7 @@ namespace Freeserf.Renderer.OpenTK
     {
         public Layer Layer { get; } = Layer.None;
 
-        public Color ColorKey
+        public Render.Color ColorKey
         {
             get;
             set;
@@ -59,7 +59,7 @@ namespace Freeserf.Renderer.OpenTK
         readonly Texture texture = null;
         readonly int layerIndex = 0;
 
-        public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null)
+        public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Render.Color colorKey = null)
         {
             var shape = (layer == Layer.Landscape || layer == Layer.Waves) ? Shape.Triangle : Shape.Rect;
             bool masked = layer == Layer.Landscape || layer == Layer.Waves || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
@@ -169,7 +169,7 @@ namespace Freeserf.Renderer.OpenTK
             renderBufferColorRects.UpdatePosition(index, coloredRect, 0, PositionTransformation, SizeTransformation);
         }
 
-        public void UpdateColoredRectColor(int index, Color color)
+        public void UpdateColoredRectColor(int index, Render.Color color)
         {
             renderBufferColorRects.UpdateColor(index, color);
         }
@@ -194,7 +194,7 @@ namespace Freeserf.Renderer.OpenTK
 
     public class RenderLayerFactory : IRenderLayerFactory
     {
-        public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Color colorKey = null)
+        public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Render.Color colorKey = null)
         {
             if (!(texture is Texture))
                 throw new ExceptionFreeserf("render", "The given texture is not valid for this renderer.");

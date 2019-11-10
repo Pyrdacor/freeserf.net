@@ -45,7 +45,7 @@ namespace Freeserf.AIStates
                 {
                     players.Add(i);
 
-                    if (game.GetPlayer((uint)i).IsAi())
+                    if (game.GetPlayer((uint)i).IsAI)
                         aiPlayers.Add(i);
                     else
                         humanPlayers.Add(i);
@@ -90,7 +90,7 @@ namespace Freeserf.AIStates
                         {
                             var player = game.GetPlayer((uint)i);
 
-                            if (worst == null || worst.GetScore() > player.GetScore())
+                            if (worst == null || worst.Score > player.Score)
                                 worst = player;
                         }
 
@@ -104,7 +104,7 @@ namespace Freeserf.AIStates
 
                         for (int i = 0; i < players.Count; ++i)
                         {
-                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3u) >> 4) & 0x7);
+                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3) >> 4) & 0x7);
 
                             if (occupation < minOccupation)
                             {
@@ -170,7 +170,7 @@ namespace Freeserf.AIStates
                         {
                             var player = game.GetPlayer((uint)i);
 
-                            if (worst == null || worst.GetScore() > player.GetScore())
+                            if (worst == null || worst.Score > player.Score)
                                 worst = player;
                         }
 
@@ -185,7 +185,7 @@ namespace Freeserf.AIStates
 
                         for (int i = 0; i < players.Count; ++i)
                         {
-                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3u) >> 4) & 0x7);
+                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3) >> 4) & 0x7);
 
                             if (occupation < minOccupation)
                             {

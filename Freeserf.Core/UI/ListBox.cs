@@ -28,9 +28,9 @@ namespace Freeserf.UI
 {
     internal class ListBox<T> : GuiObject
     {
-        Color colorFocus = new Color(0x60, 0x70, 0x60);//new Color(0x00, 0x8b, 0x47);
-        Color colorText = Color.Green;
-        Color colorBackground = Color.Black;
+        Render.Color colorFocus = new Render.Color(0x60, 0x70, 0x60);//new Color(0x00, 0x8b, 0x47);
+        Render.Color colorText = Render.Color.Green;
+        Render.Color colorBackground = Render.Color.Black;
 
         int firstVisibleItem = 0;
         int selectedItem = -1;

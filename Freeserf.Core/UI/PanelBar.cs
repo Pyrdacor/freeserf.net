@@ -290,7 +290,7 @@ namespace Freeserf.UI
             Player player = interf.GetPlayer();
 
             /* Blinking message icon. */
-            DrawMessageNotify(player != null && player.HasNotification() && blinkTrigger && Enabled);
+            DrawMessageNotify(player != null && player.HasNotification && blinkTrigger && Enabled);
 
             /* Return arrow icon. */
             DrawReturnArrow(interf.GetMsgFlag(3) && Enabled);
@@ -320,7 +320,7 @@ namespace Freeserf.UI
 
         void DrawPlayerColor()
         {
-            var playerColor = interf.GetPlayer().GetColor();
+            var playerColor = interf.GetPlayer().Color;
 
             playerColorIndicator.DisplayLayer = 0;
             playerColorIndicator.X = TotalX - 1;
@@ -381,7 +381,7 @@ namespace Freeserf.UI
                     case Interface.CursorType.None:
                         SetButton(0, ButtonId.BuildInactive);
 
-                        if (interf.GetPlayer().HasCastle())
+                        if (interf.GetPlayer().HasCastle)
                         {
                             SetButton(1, ButtonId.DestroyInactive);
                         }
@@ -417,7 +417,7 @@ namespace Freeserf.UI
                         {
                             SetButton(0, ButtonId.BuildInactive);
 
-                            if (interf.GetPlayer().HasCastle())
+                            if (interf.GetPlayer().HasCastle)
                             {
                                 SetButton(1, ButtonId.DestroyInactive);
                             }
@@ -439,7 +439,7 @@ namespace Freeserf.UI
                     case Interface.CursorType.Clear:
                         SetButton(0, ButtonTypeFromBuildPossibility(buildPossibility));
 
-                        if (interf.GetPlayer() != null && interf.GetPlayer().HasCastle())
+                        if (interf.GetPlayer() != null && interf.GetPlayer().HasCastle)
                         {
                             SetButton(1, ButtonId.DestroyInactive);
                         }
@@ -770,7 +770,7 @@ namespace Freeserf.UI
                     timerLength = 60 * 60;
                 }
 
-                interf.GetPlayer().AddTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPos());
+                interf.GetPlayer().AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPos());
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             }

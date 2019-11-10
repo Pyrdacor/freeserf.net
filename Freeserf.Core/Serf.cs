@@ -2944,7 +2944,7 @@ namespace Freeserf
 
             if (attacker.Player != Game.Map.GetOwner(attacker.Position))
             {
-                landFactor = Game.GetPlayer(attacker.Player).GetKnightMorale();
+                landFactor = Game.GetPlayer(attacker.Player).KnightMorale;
             }
 
             uint morale = (0x400u * expFactor * landFactor) >> 16;
@@ -2955,7 +2955,7 @@ namespace Freeserf
 
             if (defender.Player != Game.Map.GetOwner(defender.Position))
             {
-                defLandFactor = Game.GetPlayer(defender.Player).GetKnightMorale();
+                defLandFactor = Game.GetPlayer(defender.Player).KnightMorale;
             }
 
             uint defMorale = (0x400u * defExpFactor * defLandFactor) >> 16;
@@ -6897,21 +6897,21 @@ namespace Freeserf
                         /* Create notification for found resource. */
                         if (showNotification)
                         {
-                            Message.Type messageType = Message.Type.None;
+                            Notification.Type messageType = Notification.Type.None;
 
                             switch (map.GetResourceType(Position))
                             {
                                 case Map.Minerals.Coal:
-                                    messageType = Message.Type.FoundCoal;
+                                    messageType = Notification.Type.FoundCoal;
                                     break;
                                 case Map.Minerals.Iron:
-                                    messageType = Message.Type.FoundIron;
+                                    messageType = Notification.Type.FoundIron;
                                     break;
                                 case Map.Minerals.Gold:
-                                    messageType = Message.Type.FoundGold;
+                                    messageType = Notification.Type.FoundGold;
                                     break;
                                 case Map.Minerals.Stone:
-                                    messageType = Message.Type.FoundStone;
+                                    messageType = Notification.Type.FoundStone;
                                     break;
                                 default:
                                     Debug.NotReached();
@@ -6957,12 +6957,12 @@ namespace Freeserf
                         {
                             var player = Game.GetPlayer(building.Player);
 
-                            var lastNotificationTime = player.GetMostRecentMessageTime(Message.Type.UnderAttack, building.Position);
+                            var lastNotificationTime = player.GetMostRecentUnderAttackNotificationTime(building.Position);
 
-                            if ((DateTime.Now - lastNotificationTime).TotalSeconds > 45.0)
-                                player.AddNotification(Message.Type.UnderAttack, building.Position, Player);
+                            if (Game.GameTime - lastNotificationTime > 45)
+                                player.AddNotification(Notification.Type.UnderAttack, building.Position, Player);
                             else
-                                player.ResetNotificationTime(Message.Type.UnderAttack, building.Position);
+                                player.ResetUnderAttackNotificationTime(building.Position);
                         }
 
                         /* Change state of attacking knight */

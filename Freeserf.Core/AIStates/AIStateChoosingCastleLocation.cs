@@ -177,7 +177,7 @@ namespace Freeserf.AIStates
             int numSmallSpots = 3;
             int keepDistanceToEnemies = 30 - (aggressivity / 2) * 10;
 
-            if (player.GetInitialSupplies() < 5)
+            if (player.InitialSupplies < 5)
             {
                 // we need coal and iron close enough when starting with low supplies
                 var minerals = map.FindInArea(pos, 9, FindMineral, 1).Select(m => (KeyValuePair<Map.Minerals, uint>)m);
@@ -224,7 +224,7 @@ namespace Freeserf.AIStates
                     if (waterCount > 8) // too much water
                         return -1;
 
-                    if (player.GetInitialSupplies() < 5)
+                    if (player.InitialSupplies < 5)
                     {
                         if (fishCount == 0 || stoneCount < 2 || treeCount < 5)
                             return -1;
@@ -232,7 +232,7 @@ namespace Freeserf.AIStates
 
                     numLargeSpots = 2; // the toolmaker can be build when we have expanded the land
 
-                    if (tries >= 80 && player.GetInitialSupplies() > 4)
+                    if (tries >= 80 && player.InitialSupplies > 4)
                         numLargeSpots = 1; // we need to expand the territory to build the sawmill
 
                     if (game.Map.Size < 5)
@@ -267,7 +267,7 @@ namespace Freeserf.AIStates
                 int ironCount = minerals.Where(m => m.Key == Map.Minerals.Iron).Select(m => (int)m.Value).Sum();
                 int coalCount = minerals.Where(m => m.Key == Map.Minerals.Coal).Select(m => (int)m.Value).Sum();
 
-                if (player.GetInitialSupplies() < 5)
+                if (player.InitialSupplies < 5)
                 {
                     if (treeCount < 8 || stoneCount < 4 || fishCount < 1 || ironCount == 0 || coalCount == 0)
                         return -1;
@@ -281,7 +281,7 @@ namespace Freeserf.AIStates
                 if (treeCount + stoneCount + Math.Max(halfMountainCount, stoneOreCount) < minConstructionCount)
                     return -1;
 
-                int minFishCount = foodFocus * 5 + (player.GetInitialSupplies() < 5 ? 1 : 0);
+                int minFishCount = foodFocus * 5 + (player.InitialSupplies < 5 ? 1 : 0);
 
                 if (fishCount < minFishCount)
                     return -1;
@@ -305,10 +305,10 @@ namespace Freeserf.AIStates
                 {
                     var enemy = game.GetPlayer(i);
 
-                    if (enemy == player || !enemy.HasCastle())
+                    if (enemy == player || !enemy.HasCastle)
                         continue;
 
-                    int dist = Math.Min(Math.Abs(game.Map.DistX(pos, enemy.CastlePos)), Math.Abs(game.Map.DistY(pos, enemy.CastlePos)));
+                    int dist = Math.Min(Math.Abs(game.Map.DistX(pos, enemy.CastlePosition)), Math.Abs(game.Map.DistY(pos, enemy.CastlePosition)));
 
                     if (dist < keepDistanceToEnemies)
                         return -1;

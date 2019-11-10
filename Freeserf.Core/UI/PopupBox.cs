@@ -563,44 +563,44 @@ namespace Freeserf.UI
             {
                 case Type.FoodDistribution:
                     if (index == 0) // stonemine food
-                        player.SetFoodStonemine(realAmount);
+                        player.FoodStonemine = realAmount;
                     else if (index == 1) // coalmine food
-                        player.SetFoodCoalmine(realAmount);
+                        player.FoodCoalmine = realAmount;
                     else if (index == 2) // ironmine food
-                        player.SetFoodIronmine(realAmount);
+                        player.FoodIronmine = realAmount;
                     else if (index == 3) // goldmine food
-                        player.SetFoodGoldmine(realAmount);
+                        player.FoodGoldmine = realAmount;
                     break;
                 case Type.PlanksAndSteelDistribution:
                     if (index == 0) // construction planks
-                        player.SetPlanksConstruction(realAmount);
+                        player.PlanksConstruction = realAmount;
                     else if (index == 1) // boatbuilder planks
-                        player.SetPlanksBoatbuilder(realAmount);
+                        player.PlanksBoatbuilder = realAmount;
                     else if (index == 2) // toolmaker planks
-                        player.SetPlanksToolmaker(realAmount);
+                        player.PlanksToolmaker = realAmount;
                     else if (index == 3) // toolmaker steel
-                        player.SetSteelToolmaker(realAmount);
+                        player.SteelToolmaker = realAmount;
                     else if (index == 4) // weaponsmith steel
-                        player.SetSteelWeaponsmith(realAmount);
+                        player.SteelWeaponsmith = realAmount;
                     break;
                 case Type.CoalAndWheatDistribution:
                     if (index == 0) // steelsmelter coal
-                        player.SetCoalSteelsmelter(realAmount);
+                        player.CoalSteelsmelter = realAmount;
                     else if (index == 1) // goldsmelter coal
-                        player.SetCoalGoldsmelter(realAmount);
+                        player.CoalGoldsmelter = realAmount;
                     else if (index == 2) // weaponsmith coal
-                        player.SetCoalWeaponsmith(realAmount);
+                        player.CoalWeaponsmith = realAmount;
                     else if (index == 3) // pigfarm wheat
-                        player.SetWheatPigfarm(realAmount);
+                        player.WheatPigfarm = realAmount;
                     else if (index == 4) // mill wheat
-                        player.SetWheatMill(realAmount);
+                        player.WheatMill = realAmount;
                     break;
                 case Type.ToolmakerPriorities:
                     player.SetToolPriority(index, (int)realAmount);
                     break;
                 case Type.KnightSettings:
                     if (index == 0) // serf to knight rate
-                        player.SetSerfToKnightRate((int)realAmount);
+                        player.SerfToKnightRate = (int)realAmount;
                     break;
                     // TODO ...
             }
@@ -1080,10 +1080,10 @@ namespace Freeserf.UI
 
 
         // Get the sprite number for a face
-        static uint GetPlayerFaceSprite(uint face)
+        static uint GetPlayerFaceSprite(PlayerFace face)
 		{
             if (face != 0)
-                return 0x10bu + face;
+                return 0x10bu + (uint)face;
 
             return 0x119u; /* sprite_face_none */
         }
@@ -1656,7 +1656,7 @@ namespace Freeserf.UI
             }
         }
 
-        void DrawPlayerStatisticChart(uint[] playerData, int index, Player.Color playerColor, byte[] chartData)
+        void DrawPlayerStatisticChart(uint[] playerData, int index, Color playerColor, byte[] chartData)
         {
             const int width = 112;
             const int height = 100;
@@ -1750,7 +1750,7 @@ namespace Freeserf.UI
 
                 if (player != null)
                 {
-                    DrawPlayerStatisticChart(player.GetPlayerStatHistory(currentPlayerStatisticsMode), index, player.GetColor(), chartData);
+                    DrawPlayerStatisticChart(player.GetPlayerStatHistory(currentPlayerStatisticsMode), index, player.Color, chartData);
                 }
             }
 
@@ -2458,8 +2458,8 @@ namespace Freeserf.UI
             {
                 int y = 14 + 32 * i;
 
-                SetText(72, y, levelTexts[(player.GetKnightOccupation((uint)(3 - i)) >> 4) & 0x7]);
-                SetText(72, y + 14, levelTexts[player.GetKnightOccupation((uint)(3 - i)) & 0x7]);
+                SetText(72, y, levelTexts[(player.GetKnightOccupation(3 - i) >> 4) & 0x7]);
+                SetText(72, y + 14, levelTexts[player.GetKnightOccupation(3 - i) & 0x7]);
             }
         }
 
@@ -2523,7 +2523,7 @@ namespace Freeserf.UI
              1, 96
         };
 
-        void DrawPopupResourceStairs(int[] order)
+        void DrawPopupResourceStairs(byte[] order)
 		{
             int count = ResourceStairLayout.Length / 2;
 
@@ -3140,7 +3140,7 @@ namespace Freeserf.UI
             SetIcon(104, 17, 29u); // knight
             slideBars[0].MoveTo(40, 21);
             slideBars[0].Displayed = Displayed;
-            slideBars[0].Fill = (int)player.GetSerfToKnightRate() / SlideBarFactor;
+            slideBars[0].Fill = player.SerfToKnightRate / SlideBarFactor;
 
             // manual knight conversion
             SetButton(24, 37, 300u, Action.TrainKnights);
@@ -3159,21 +3159,21 @@ namespace Freeserf.UI
             SetNumberText(104, 49, numConvertibleToKnights);
 
             // knight morale and gold deposit
-            SetText(56, 72, ((100 * player.GetKnightMorale()) / 0x1000).ToString() + "%");
-            SetText(56, 82, player.GetGoldDeposited().ToString());
+            SetText(56, 72, ((100 * player.KnightMorale) / 0x1000).ToString() + "%");
+            SetText(56, 82, player.GoldDeposited.ToString());
             SetIcon(32, 73, 304u); // scared knight
             SetIcon(96, 73, 303u); // angry knight
 
             // castle knights wanted
-            SetNumberText(56, 128, player.GetCastleKnightsWanted());
-            SetNumberText(56, 138, player.GetCastleKnights());
+            SetNumberText(56, 128, player.CastleKnightsWanted);
+            SetNumberText(56, 138, player.CastleKnights);
             SetButton(32, 129, 220u, Action.DecreaseCastleKnights); // minus
             SetButton(80, 129, 221u, Action.IncreaseCastleKnights); // plus
 
             // send strongest
             SetButton(24, 93, 302u, Action.SetCombatMode); // send strongest control
             // checkbox for send strongest
-            if (player.SendStrongest())
+            if (player.SendStrongest)
             {
                 SetButton(56, 93, 220u, Action.SetCombatModeWeak);
                 SetIcon(56, 109, 288u);
@@ -3208,7 +3208,7 @@ namespace Freeserf.UI
                 {
                     var player = interf.Game.GetPlayer((uint)i);
 
-                    SetButton(24 + (i % 2) * 64, 13 + (i / 2) * 72, GetPlayerFaceSprite(player.GetFace()), Action.JumpToPlayer1 + i);
+                    SetButton(24 + (i % 2) * 64, 13 + (i / 2) * 72, GetPlayerFaceSprite(player.Face), Action.JumpToPlayer1 + i);
                 }
                 else
                 {
@@ -3304,8 +3304,8 @@ namespace Freeserf.UI
         void MoveTransportItem(bool up, bool toEnd)
 		{
             var player = interf.GetPlayer();
-            int[] priorities;
-            int current = -1;
+            byte[] priorities;
+            int current;
 
             if (Box == Type.TransportPriorities)
             {
@@ -3353,10 +3353,10 @@ namespace Freeserf.UI
                 for (int i = 0; i < 26; ++i)
                 {
                     if (priorities[i] >= min && priorities[i] <= max)
-                        priorities[i] += delta;
+                        priorities[i] = (byte)(priorities[i] + delta);
                 }
 
-                priorities[current - 1] = nextValue;
+                priorities[current - 1] = (byte)nextValue;
             }
         }
 
@@ -3682,9 +3682,9 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        if (player.SendStrongest())
+                        if (player.SendStrongest)
                         {
-                            player.DropSendStrongest();
+                            player.SendStrongest = false;
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                     }
@@ -3696,9 +3696,9 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        if (!player.SendStrongest())
+                        if (!player.SendStrongest)
                         {
-                            player.SetSendStrongest();
+                            player.SendStrongest = true;
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                     }
@@ -4148,7 +4148,7 @@ namespace Freeserf.UI
                 case Action.JumpToPlayer3:
                 case Action.JumpToPlayer4:
                     {
-                        var castlePos = interf.Game.GetPlayer((uint)(action - Action.JumpToPlayer1)).CastlePos;
+                        var castlePos = interf.Game.GetPlayer((uint)(action - Action.JumpToPlayer1)).CastlePosition;
 
                         if (castlePos != Global.BadMapPos)
                             interf.Viewport.MoveToMapPos(castlePos, true);

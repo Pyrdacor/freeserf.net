@@ -29,10 +29,7 @@ using Freeserf.Audio;
 namespace Freeserf
 {
     using MapPos = UInt32;
-
-    using ListSerfs = List<Serf>;
-    using ListBuildings = List<Building>;
-    using ListInventories = List<Inventory>;
+    using GameTime = UInt32;
     using Flags = Collection<Flag>;
     using Inventories = Collection<Inventory>;
     using Buildings = Collection<Building>;
@@ -45,12 +42,6 @@ namespace Freeserf
     {
         public const int DEFAULT_GAME_SPEED = 2;
         public const int GAME_MAX_PLAYER_COUNT = 4;
-
-        Map map;
-
-        uint mapGoldMoraleFactor;
-        uint goldTotal;
-
         Players players;
         Flags flags;
         Inventories inventories;
@@ -59,7 +50,7 @@ namespace Freeserf
 
         // Rendering
         Render.IRenderView renderView = null;
-        Audio.IAudioInterface audioInterface = null;
+        IAudioInterface audioInterface = null;
         readonly Dictionary<Serf, Render.RenderSerf> renderSerfs = new Dictionary<Serf, Render.RenderSerf>();
         readonly Dictionary<Building, Render.RenderBuilding> renderBuildings = new Dictionary<Building, Render.RenderBuilding>();
         readonly ConcurrentDictionary<Flag, Render.RenderFlag> renderFlags = new ConcurrentDictionary<Flag, Render.RenderFlag>();
@@ -70,40 +61,29 @@ namespace Freeserf
 
         uint gameSpeedSave;
         uint gameSpeed;
-        ushort tick;
         uint lastTick;
-        uint constTick;
         uint gameStatsCounter;
         uint historyCounter;
         Random random;
         ushort flagSearchCounter;
 
-        ushort updateMapLastTick;
-        short updateMapCounter;
-        MapPos updateMapInitialPos;
         int tickDiff;
-        short updateMap16Loop;
         int[] playerHistoryIndex = new int[4];
         int[] playerHistoryCounter = new int[3];
         int resourceHistoryIndex;
-        ushort field340;
-        ushort field342;
-        Inventory field344;
         int gameType;
-        int tutorialLevel;
-        int missionLevel;
-        int mapPreserveBugs;
         int playerScoreLeader;
 
         int knightMoraleCounter;
         int inventoryScheduleCounter;
         int birdSoundCounter;
 
-        public Map Map => map;
-        public ushort Tick => tick;
-        public uint ConstTick => constTick;
-        public uint MapGoldMoraleFactor => mapGoldMoraleFactor;
-        public uint GoldTotal => goldTotal;
+        public Map Map { get; private set; }
+        public ushort Tick { get; private set; }
+        public uint ConstTick { get; private set; }
+        public uint MapGoldMoraleFactor { get; private set; }
+        public uint GoldTotal { get; private set; }
+        public GameTime GameTime { get; } = 0; // in seconds
 
         public Game(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
@@ -132,15 +112,10 @@ namespace Freeserf
             /* Initialize global lookup tables */
             gameSpeed = DEFAULT_GAME_SPEED;
 
-            updateMapLastTick = 0;
-            updateMapCounter = 0;
-            updateMap16Loop = 0;
-            updateMapInitialPos = 0;
-
             resourceHistoryIndex = 0;
 
-            tick = 0;
-            constTick = 0;
+            Tick = 0;
+            ConstTick = 0;
             tickDiff = 0;
 
             gameType = 0;
@@ -152,7 +127,7 @@ namespace Freeserf
             inventoryScheduleCounter = 0;
             birdSoundCounter = 0;
 
-            goldTotal = 0;
+            GoldTotal = 0;
         }
 
         public void Close()
@@ -189,29 +164,29 @@ namespace Freeserf
             renderBorderSegments.Clear();
 
             // close map (and delete render map)
-            map.Close();
+            Map.Close();
         }
 
         public void AddGoldTotal(int delta)
         {
             if (delta < 0)
             {
-                if ((int)goldTotal < -delta)
+                if ((int)GoldTotal < -delta)
                 {
                     throw new ExceptionFreeserf(this, "game", "Failed to decrease global gold counter.");
                 }
             }
 
-            goldTotal = (uint)((int)goldTotal + delta);
+            GoldTotal = (uint)((int)GoldTotal + delta);
         }
 
         public Building GetBuildingAtPos(MapPos pos)
         {
-            Map.Object mapObject = map.GetObject(pos);
+            Map.Object mapObject = Map.GetObject(pos);
 
             if (mapObject >= Map.Object.SmallBuilding && mapObject <= Map.Object.Castle)
             {
-                return buildings[map.GetObjectIndex(pos)];
+                return buildings[Map.GetObjectIndex(pos)];
             }
 
             return null;
@@ -219,17 +194,17 @@ namespace Freeserf
 
         public Flag GetFlagAtPos(MapPos pos)
         {
-            if (map.GetObject(pos) != Map.Object.Flag)
+            if (Map.GetObject(pos) != Map.Object.Flag)
             {
                 return null;
             }
 
-            return flags[map.GetObjectIndex(pos)];
+            return flags[Map.GetObjectIndex(pos)];
         }
 
         public Serf GetSerfAtPos(MapPos pos)
         {
-            var serf = serfs[map.GetSerfIndex(pos)];
+            var serf = serfs[Map.GetSerfIndex(pos)];
 
             if (serf != null && serf.Index == 0)
                 return null;
@@ -254,22 +229,22 @@ namespace Freeserf
             player.Init(intelligence, supplies, reproduction);
 
             /* Update map values dependent on player count */
-            mapGoldMoraleFactor = 10u * 1024u * (uint)players.Size;
+            MapGoldMoraleFactor = 10u * 1024u * (uint)players.Size;
 
             return player.Index;
         }
 
         public bool Init(uint mapSize, Random random)
         {
-            map = new Map(new MapGeometry(mapSize), renderView);
-            var generator = new ClassicMissionMapGenerator(map, random);
+            Map = new Map(new MapGeometry(mapSize), renderView);
+            var generator = new ClassicMissionMapGenerator(Map, random);
 
             generator.Init();
             generator.Generate();
 
-            map.AddChangeHandler(this);
-            map.InitTiles(generator);
-            goldTotal = map.GetGoldDeposit();
+            Map.AddChangeHandler(this);
+            Map.InitTiles(generator);
+            GoldTotal = Map.GetGoldDeposit();
 
             return true;
         }
@@ -278,24 +253,24 @@ namespace Freeserf
         public void Update()
         {
             /* Increment tick counters */
-            ++constTick;
+            ++ConstTick;
 
             /* Update tick counters based on game speed */
-            lastTick = tick;
+            lastTick = Tick;
 
-            tick += (ushort)gameSpeed;
+            Tick += (ushort)gameSpeed;
 
-            if (lastTick > tick) // ushort overflow
+            if (lastTick > Tick) // ushort overflow
             {
-                tickDiff = (int)tick + (int)ushort.MaxValue - (int)lastTick;
+                tickDiff = (int)Tick + (int)ushort.MaxValue - (int)lastTick;
             }
             else
             {
-                tickDiff = (int)(tick - lastTick);
+                tickDiff = (int)(Tick - lastTick);
             }
 
             ClearSerfRequestFailure();
-            map.Update(tick, random);
+            Map.Update(Tick, random);
 
             /* Update players */
             foreach (Player player in players)
@@ -324,12 +299,10 @@ namespace Freeserf
             /* AI related updates */
             foreach (var player in players)
             {
-                if (player.IsAi())
+                if (player.IsAI)
                 {
-                    if (player.AI == null)
-                        throw new ExceptionFreeserf(this, "game", "AI is not set for AI player.");
-
-                    player.AI.Update(this);
+                    if (player.AI != null)
+                        player.AI.Update(this);
                 }
             }
 
@@ -338,8 +311,8 @@ namespace Freeserf
 
         public void UpdateVisuals()
         {
-            if (map?.RenderMap != null)
-                map.RenderMap.UpdateWaves(tick);
+            if (Map?.RenderMap != null)
+                Map.RenderMap.UpdateWaves(Tick);
 
             UpdateRoads();
             UpdateBorders();
@@ -425,7 +398,7 @@ namespace Freeserf
                with the distance to the center. */
             for (uint i = 0; i < groundAnalysisRadius - 1; ++i)
             {
-                pos = map.MoveRight(pos);
+                pos = Map.MoveRight(pos);
 
                 var cycle = new DirectionCycleCW(Direction.Down, 6);
 
@@ -434,7 +407,7 @@ namespace Freeserf
                     for (uint j = 0; j < i + 1; ++j)
                     {
                         GetResourceEstimate(pos, groundAnalysisRadius - i, estimates);
-                        pos = map.Move(pos, d);
+                        pos = Map.Move(pos, d);
                     }
                 }
             }
@@ -462,8 +435,8 @@ namespace Freeserf
 
             for (uint i = 0; i < 12; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, 7u + i);
-                uint h = map.GetHeight(p);
+                MapPos p = Map.PosAddSpirally(pos, 7u + i);
+                uint h = Map.GetHeight(p);
 
                 if (hMin > h)
                     hMin = h;
@@ -474,11 +447,11 @@ namespace Freeserf
             /* Adjust for height of adjacent unleveled buildings */
             for (uint i = 0; i < 18; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, 19u + i);
+                MapPos p = Map.PosAddSpirally(pos, 19u + i);
 
-                if (map.GetObject(p) == Map.Object.LargeBuilding)
+                if (Map.GetObject(p) == Map.Object.LargeBuilding)
                 {
-                    Building building = buildings[map.GetObjectIndex(p)];
+                    Building building = buildings[Map.GetObjectIndex(p)];
 
                     if (building.IsLeveling())
                     { 
@@ -498,13 +471,13 @@ namespace Freeserf
                 return -1;
 
             /* Calculate "mean" height. Height of center is added twice. */
-            uint hMean = map.GetHeight(pos);
+            uint hMean = Map.GetHeight(pos);
 
             for (uint i = 0; i < 7; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, i);
+                MapPos p = Map.PosAddSpirally(pos, i);
 
-                hMean += map.GetHeight(p);
+                hMean += Map.GetHeight(p);
             }
 
             hMean >>= 3;
@@ -523,11 +496,11 @@ namespace Freeserf
             /* Check that no military buildings are nearby */
             for (uint i = 0; i < 1 + 6 + 12; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, i);
+                MapPos p = Map.PosAddSpirally(pos, i);
 
-                if (map.HasBuilding(p))
+                if (Map.HasBuilding(p))
                 {
-                    Building building = buildings[map.GetObjectIndex(p)];
+                    Building building = buildings[Map.GetObjectIndex(p)];
 
                     if (building.IsMilitary())
                     {
@@ -552,12 +525,12 @@ namespace Freeserf
 
             Map.Terrain[] types = new Map.Terrain[]
             {
-                map.TypeDown(pos),
-                map.TypeUp(pos),
-                map.TypeDown(map.MoveLeft(pos)),
-                map.TypeUp(map.MoveUpLeft(pos)),
-                map.TypeDown(map.MoveUpLeft(pos)),
-                map.TypeUp(map.MoveUp(pos))
+                Map.TypeDown(pos),
+                Map.TypeUp(pos),
+                Map.TypeDown(Map.MoveLeft(pos)),
+                Map.TypeUp(Map.MoveUpLeft(pos)),
+                Map.TypeDown(Map.MoveUpLeft(pos)),
+                Map.TypeUp(Map.MoveUp(pos))
             };
 
             for (int i = 0; i < 6; ++i)
@@ -582,8 +555,8 @@ namespace Freeserf
             /* Check that surroundings are passable by serfs. */
             for (uint i = 0; i < 6; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, 1 + i);
-                Map.Space s = Map.MapSpaceFromObject[(int)map.GetObject(p)];
+                MapPos p = Map.PosAddSpirally(pos, 1 + i);
+                Map.Space s = Map.MapSpaceFromObject[(int)Map.GetObject(p)];
 
                 if (s >= Map.Space.Semipassable)
                     return false;
@@ -592,21 +565,21 @@ namespace Freeserf
             /* Check that buildings in the second shell aren't large or castle. */
             for (uint i = 0; i < 12; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, 7u + i);
-                if (map.GetObject(p) >= Map.Object.LargeBuilding &&
-                    map.GetObject(p) <= Map.Object.Castle)
+                MapPos p = Map.PosAddSpirally(pos, 7u + i);
+                if (Map.GetObject(p) >= Map.Object.LargeBuilding &&
+                    Map.GetObject(p) <= Map.Object.Castle)
                 {
                     return false;
                 }
             }
 
             /* Check if center hexagon is not type grass. */
-            if (map.TypeUp(pos) != Map.Terrain.Grass1 ||
-                map.TypeDown(pos) != Map.Terrain.Grass1 ||
-                map.TypeDown(map.MoveLeft(pos)) != Map.Terrain.Grass1 ||
-                map.TypeUp(map.MoveUpLeft(pos)) != Map.Terrain.Grass1 ||
-                map.TypeDown(map.MoveUpLeft(pos)) != Map.Terrain.Grass1 ||
-                map.TypeUp(map.MoveUp(pos)) != Map.Terrain.Grass1)
+            if (Map.TypeUp(pos) != Map.Terrain.Grass1 ||
+                Map.TypeDown(pos) != Map.Terrain.Grass1 ||
+                Map.TypeDown(Map.MoveLeft(pos)) != Map.Terrain.Grass1 ||
+                Map.TypeUp(Map.MoveUpLeft(pos)) != Map.Terrain.Grass1 ||
+                Map.TypeDown(Map.MoveUpLeft(pos)) != Map.Terrain.Grass1 ||
+                Map.TypeUp(Map.MoveUp(pos)) != Map.Terrain.Grass1)
             {
                 return false;
             }
@@ -626,16 +599,16 @@ namespace Freeserf
                 return false;
 
             /* Check that space is clear */
-            if (Map.MapSpaceFromObject[(int)map.GetObject(pos)] != Map.Space.Open)
+            if (Map.MapSpaceFromObject[(int)Map.GetObject(pos)] != Map.Space.Open)
             {
                 return false;
             }
 
             /* Check that building flag is possible if it
                doesn't already exist. */
-            MapPos flagPos = map.MoveDownRight(pos);
+            MapPos flagPos = Map.MoveDownRight(pos);
 
-            if (!map.HasFlag(flagPos) && !CanBuildFlag(flagPos, player))
+            if (!Map.HasFlag(flagPos) && !CanBuildFlag(flagPos, player))
             {
                 return false;
             }
@@ -695,30 +668,30 @@ namespace Freeserf
         /* Checks whether a castle can be built by player at position. */
         public bool CanBuildCastle(MapPos pos, Player player)
         {
-            if (player.HasCastle())
+            if (player.HasCastle)
                 return false;
 
             /* Check owner of land around position */
             for (uint i = 0; i < 7; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, i);
+                MapPos p = Map.PosAddSpirally(pos, i);
 
-                if (map.HasOwner(p))
+                if (Map.HasOwner(p))
                     return false;
             }
 
             /* Check that land is clear at position */
-            if (Map.MapSpaceFromObject[(int)map.GetObject(pos)] != Map.Space.Open ||
-                map.Paths(pos) != 0)
+            if (Map.MapSpaceFromObject[(int)Map.GetObject(pos)] != Map.Space.Open ||
+                Map.Paths(pos) != 0)
             {
                 return false;
             }
 
-            MapPos flagPos = map.MoveDownRight(pos);
+            MapPos flagPos = Map.MoveDownRight(pos);
 
             /* Check that land is clear at position */
-            if (Map.MapSpaceFromObject[(int)map.GetObject(flagPos)] != Map.Space.Open ||
-                map.Paths(flagPos) != 0)
+            if (Map.MapSpaceFromObject[(int)Map.GetObject(flagPos)] != Map.Space.Open ||
+                Map.Paths(flagPos) != 0)
             {
                 return false;
             }
@@ -729,24 +702,24 @@ namespace Freeserf
         public bool CanBuildFlag(MapPos pos, Player player)
         {
             /* Check owner of land */
-            if (!map.HasOwner(pos) || map.GetOwner(pos) != player.Index)
+            if (!Map.HasOwner(pos) || Map.GetOwner(pos) != player.Index)
             {
                 return false;
             }
 
             /* Check that land is clear */
-            if (Map.MapSpaceFromObject[(int)map.GetObject(pos)] != Map.Space.Open)
+            if (Map.MapSpaceFromObject[(int)Map.GetObject(pos)] != Map.Space.Open)
             {
                 return false;
             }
 
             /* Check whether cursor is in water */
-            if (map.TypeUp(pos) <= Map.Terrain.Water3 &&
-                map.TypeDown(pos) <= Map.Terrain.Water3 &&
-                map.TypeDown(map.MoveLeft(pos)) <= Map.Terrain.Water3 &&
-                map.TypeUp(map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
-                map.TypeDown(map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
-                map.TypeUp(map.MoveUp(pos)) <= Map.Terrain.Water3)
+            if (Map.TypeUp(pos) <= Map.Terrain.Water3 &&
+                Map.TypeDown(pos) <= Map.Terrain.Water3 &&
+                Map.TypeDown(Map.MoveLeft(pos)) <= Map.Terrain.Water3 &&
+                Map.TypeUp(Map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
+                Map.TypeDown(Map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
+                Map.TypeUp(Map.MoveUp(pos)) <= Map.Terrain.Water3)
             {
                 return false;
             }
@@ -756,7 +729,7 @@ namespace Freeserf
 
             foreach (Direction d in cycle)
             {
-                if (map.GetObject(map.Move(pos, d)) == Map.Object.Flag)
+                if (Map.GetObject(Map.Move(pos, d)) == Map.Object.Flag)
                 {
                     return false;
                 }
@@ -775,33 +748,33 @@ namespace Freeserf
            demolished. */
         public bool CanPlayerBuild(MapPos pos, Player player)
         {
-            if (!player.HasCastle())
+            if (!player.HasCastle)
                 return false;
 
             /* Check owner of land around position */
             for (uint i = 0; i < 7; ++i)
             {
-                MapPos p = map.PosAddSpirally(pos, i);
+                MapPos p = Map.PosAddSpirally(pos, i);
 
-                if (!map.HasOwner(p) || map.GetOwner(p) != player.Index)
+                if (!Map.HasOwner(p) || Map.GetOwner(p) != player.Index)
                 {
                     return false;
                 }
             }
 
             /* Check whether cursor is in water */
-            if (map.TypeUp(pos) <= Map.Terrain.Water3 &&
-                map.TypeDown(pos) <= Map.Terrain.Water3 &&
-                map.TypeDown(map.MoveLeft(pos)) <= Map.Terrain.Water3 &&
-                map.TypeUp(map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
-                map.TypeDown(map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
-                map.TypeUp(map.MoveUp(pos)) <= Map.Terrain.Water3)
+            if (Map.TypeUp(pos) <= Map.Terrain.Water3 &&
+                Map.TypeDown(pos) <= Map.Terrain.Water3 &&
+                Map.TypeDown(Map.MoveLeft(pos)) <= Map.Terrain.Water3 &&
+                Map.TypeUp(Map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
+                Map.TypeDown(Map.MoveUpLeft(pos)) <= Map.Terrain.Water3 &&
+                Map.TypeUp(Map.MoveUp(pos)) <= Map.Terrain.Water3)
             {
                 return false;
             }
 
             /* Check that no paths are blocking. */
-            if (map.Paths(pos) != 0)
+            if (Map.Paths(pos) != 0)
                 return false;
 
             return true;
@@ -819,7 +792,7 @@ namespace Freeserf
             MapPos pos = road.Source;
             int test = 0;
 
-            if (!map.HasOwner(pos) || map.GetOwner(pos) != player.Index || !map.HasFlag(pos))
+            if (!Map.HasOwner(pos) || Map.GetOwner(pos) != player.Index || !Map.HasFlag(pos))
             {
                 return 0;
             }
@@ -832,12 +805,12 @@ namespace Freeserf
             {
                 ++i;
 
-                if (!map.IsRoadSegmentValid(pos, dir, endThere))
+                if (!Map.IsRoadSegmentValid(pos, dir, endThere))
                 {
                     return -1;
                 }
 
-                if (map.RoadSegmentInWater(pos, dir))
+                if (Map.RoadSegmentInWater(pos, dir))
                 {
                     test |= Misc.Bit(1);
                 }
@@ -846,11 +819,11 @@ namespace Freeserf
                     test |= Misc.Bit(0);
                 }
 
-                pos = map.Move(pos, dir);
+                pos = Map.Move(pos, dir);
 
                 /* Check that owner is correct, and that only the destination has a flag. */
-                if (!map.HasOwner(pos) || map.GetOwner(pos) != player.Index ||
-                    (map.HasFlag(pos) && i != dirCount))
+                if (!Map.HasOwner(pos) || Map.GetOwner(pos) != player.Index ||
+                    (Map.HasFlag(pos) && i != dirCount))
                 {
                     return 0;
                 }
@@ -879,17 +852,17 @@ namespace Freeserf
         /* Check whether flag can be demolished. */
         public bool CanDemolishFlag(MapPos pos, Player player)
         {
-            if (map.GetObject(pos) != Map.Object.Flag)
+            if (Map.GetObject(pos) != Map.Object.Flag)
                 return false;
 
-            Flag flag = flags[map.GetObjectIndex(pos)];
+            Flag flag = flags[Map.GetObjectIndex(pos)];
 
             if (flag.HasBuilding())
             {
                 return false;
             }
 
-            if (map.Paths(pos) == 0)
+            if (Map.Paths(pos) == 0)
                 return true;
 
             if (flag.GetOwner() != player.Index)
@@ -901,14 +874,14 @@ namespace Freeserf
         /* Check whether road can be demolished. */
         public bool CanDemolishRoad(MapPos pos, Player player)
         {
-            if (!map.HasOwner(pos) || map.GetOwner(pos) != player.Index)
+            if (!Map.HasOwner(pos) || Map.GetOwner(pos) != player.Index)
             {
                 return false;
             }
 
-            if (map.Paths(pos) == 0 ||
-                map.HasFlag(pos) ||
-                map.HasBuilding(pos))
+            if (Map.Paths(pos) == 0 ||
+                Map.HasFlag(pos) ||
+                Map.HasBuilding(pos))
             {
                 return false;
             }
@@ -930,7 +903,7 @@ namespace Freeserf
                 return false;
             }
 
-            if (!map.HasFlag(dest))
+            if (!Map.HasFlag(dest))
                 return false;
 
             Dirs dirs = road.Dirs;
@@ -938,7 +911,7 @@ namespace Freeserf
             Direction inDir = dirs.Peek().Reverse();
 
             /* Actually place road segments */
-            if (!map.PlaceRoadSegments(road))
+            if (!Map.PlaceRoadSegments(road))
                 return false;
 
             /* Connect flags */
@@ -965,9 +938,9 @@ namespace Freeserf
 
             flag.SetOwner(player.Index);
             flag.Position = pos;
-            map.SetObject(pos, Map.Object.Flag, (int)flag.Index);
+            Map.SetObject(pos, Map.Object.Flag, (int)flag.Index);
 
-            if (map.Paths(pos) != 0)
+            if (Map.Paths(pos) != 0)
             {
                 BuildFlagSplitPath(pos);
             }
@@ -995,7 +968,7 @@ namespace Freeserf
                 return false;
             }
 
-            var flagPos = map.MoveDownRight(pos);
+            var flagPos = Map.MoveDownRight(pos);
             Flag flag = GetFlagAtPos(flagPos);
 
             // TODO: Sometimes there is no flag but a path in only one direction. This should not happen.
@@ -1021,14 +994,14 @@ namespace Freeserf
 
             bool splitPath = false;
 
-            if (map.GetObject(flagPos) != Map.Object.Flag)
+            if (Map.GetObject(flagPos) != Map.Object.Flag)
             {
                 flag.SetOwner(player.Index);
-                splitPath = map.Paths(flagPos) != 0;
+                splitPath = Map.Paths(flagPos) != 0;
             }
             else
             {
-                flagIndex = map.GetObjectIndex(flagPos);
+                flagIndex = Map.GetObjectIndex(flagPos);
                 flag = flags[flagIndex];
             }
 
@@ -1038,17 +1011,17 @@ namespace Freeserf
 
             flag.ClearFlags();
 
-            map.ClearIdleSerf(pos);
+            Map.ClearIdleSerf(pos);
 
-            map.SetObject(pos, mapObject, (int)building.Index);
-            map.AddPath(pos, Direction.DownRight);
+            Map.SetObject(pos, mapObject, (int)building.Index);
+            Map.AddPath(pos, Direction.DownRight);
 
-            if (map.GetObject(flagPos) != Map.Object.Flag)
+            if (Map.GetObject(flagPos) != Map.Object.Flag)
             {
-                map.SetObject(flagPos, Map.Object.Flag, (int)flagIndex);
+                Map.SetObject(flagPos, Map.Object.Flag, (int)flagIndex);
             }
 
-            map.AddPath(flagPos, Direction.UpLeft);
+            Map.AddPath(flagPos, Direction.UpLeft);
 
             if (splitPath)
                 BuildFlagSplitPath(flagPos);
@@ -1093,13 +1066,13 @@ namespace Freeserf
             inventory.SetBuildingIndex(castle.Index);
             inventory.SetFlagIndex(flag.Index);
             inventory.Player = player.Index;
-            inventory.ApplySuppliesPreset(player.GetInitialSupplies());
+            inventory.ApplySuppliesPreset(player.InitialSupplies);
 
             AddGoldTotal((int)inventory.GetCountOf(Resource.Type.GoldBar));
             AddGoldTotal((int)inventory.GetCountOf(Resource.Type.GoldOre));
 
             castle.Position = pos;
-            flag.Position = map.MoveDownRight(pos);
+            flag.Position = Map.MoveDownRight(pos);
             castle.Player = player.Index;
             castle.StartBuilding(Building.Type.Castle);
 
@@ -1112,20 +1085,20 @@ namespace Freeserf
 
             /* Level land in hexagon below castle */
             uint h = (uint)GetLevelingHeight(pos);
-            map.SetHeight(pos, h);
+            Map.SetHeight(pos, h);
 
             var cycle = DirectionCycleCW.CreateDefault();
 
             foreach (Direction d in cycle)
             {
-                map.SetHeight(map.Move(pos, d), h);
+                Map.SetHeight(Map.Move(pos, d), h);
             }
 
-            map.SetObject(pos, Map.Object.Castle, (int)castle.Index);
-            map.AddPath(pos, Direction.DownRight);
+            Map.SetObject(pos, Map.Object.Castle, (int)castle.Index);
+            Map.AddPath(pos, Direction.DownRight);
 
-            map.SetObject(map.MoveDownRight(pos), Map.Object.Flag, (int)flag.Index);
-            map.AddPath(map.MoveDownRight(pos), Direction.UpLeft);
+            Map.SetObject(Map.MoveDownRight(pos), Map.Object.Flag, (int)flag.Index);
+            Map.AddPath(Map.MoveDownRight(pos), Direction.UpLeft);
 
             UpdateLandOwnership(pos);
 
@@ -1133,7 +1106,7 @@ namespace Freeserf
 
             castle.UpdateMilitaryFlagState();
 
-            player.CastlePos = pos;
+            player.CastlePosition = pos;
 
             return true;
         }
@@ -1158,7 +1131,7 @@ namespace Freeserf
         /* Demolish building at pos. */
         public bool DemolishBuilding(MapPos pos, Player player)
         {
-            Building building = buildings[map.GetObjectIndex(pos)];
+            Building building = buildings[Map.GetObjectIndex(pos)];
 
             if (building.Player != player.Index)
                 return false;
@@ -1287,9 +1260,9 @@ namespace Freeserf
                 for (int j = -(influenceRadius + calculateRadius);
                      j <= influenceRadius + calculateRadius; ++j)
                 {
-                    MapPos checkPos = map.PosAdd(pos, j, i);
+                    MapPos checkPos = Map.PosAdd(pos, j, i);
 
-                    if (map.HasBuilding(checkPos))
+                    if (Map.HasBuilding(checkPos))
                     { 
                         Building building = GetBuildingAtPos(checkPos);
                         int militaryType = -1;
@@ -1364,11 +1337,11 @@ namespace Freeserf
                         }
                     }
 
-                    MapPos checkPos = map.PosAdd(pos, j, i);
+                    MapPos checkPos = Map.PosAdd(pos, j, i);
                     int oldPlayer = -1;
 
-                    if (map.HasOwner(checkPos))
-                        oldPlayer = (int)map.GetOwner(checkPos);
+                    if (Map.HasOwner(checkPos))
+                        oldPlayer = (int)Map.GetOwner(checkPos);
 
                     if (oldPlayer >= 0 && playerIndex != oldPlayer)
                     {
@@ -1381,12 +1354,12 @@ namespace Freeserf
                         if (playerIndex != oldPlayer)
                         {
                             players[(uint)playerIndex].IncreaseLandArea();
-                            map.SetOwner(checkPos, (uint)playerIndex);
+                            Map.SetOwner(checkPos, (uint)playerIndex);
                         }
                     }
                     else
                     {
-                        map.DeleteOwner(checkPos);
+                        Map.DeleteOwner(checkPos);
                     }
                 }
             }
@@ -1396,7 +1369,7 @@ namespace Freeserf
             {
                 for (int j = -calculateRadius - 1; j <= calculateRadius; ++j)
                 {
-                    UpdateBorders(map.PosAdd(pos, j, i));
+                    UpdateBorders(Map.PosAdd(pos, j, i));
                 }
             }
 
@@ -1405,13 +1378,13 @@ namespace Freeserf
             {
                 for (int j = -25; j <= 25; ++j)
                 {
-                    MapPos checkPos = map.PosAdd(pos, i, j);
+                    MapPos checkPos = Map.PosAdd(pos, i, j);
 
-                    if (map.GetObject(checkPos) >= Map.Object.SmallBuilding &&
-                        map.GetObject(checkPos) <= Map.Object.Castle &&
-                        map.HasPath(checkPos, Direction.DownRight))
+                    if (Map.GetObject(checkPos) >= Map.Object.SmallBuilding &&
+                        Map.GetObject(checkPos) <= Map.Object.Castle &&
+                        Map.HasPath(checkPos, Direction.DownRight))
                     {
-                        Building building = buildings[map.GetObjectIndex(checkPos)];
+                        Building building = buildings[Map.GetObjectIndex(checkPos)];
 
                         if (building.IsDone() && building.IsMilitary())
                         {
@@ -1428,12 +1401,12 @@ namespace Freeserf
             {
                 long index = Render.RenderBorderSegment.CreateIndex(pos, (Direction)dir);
 
-                if (map.HasOwner(pos) != map.HasOwner(map.Move(pos, (Direction)dir)) ||
-                    map.GetOwner(pos) != map.GetOwner(map.Move(pos, (Direction)dir)))
+                if (Map.HasOwner(pos) != Map.HasOwner(Map.Move(pos, (Direction)dir)) ||
+                    Map.GetOwner(pos) != Map.GetOwner(Map.Move(pos, (Direction)dir)))
                 {
                     if (!renderBorderSegments.ContainsKey(index))
                     {
-                        renderBorderSegments.Add(index, new Render.RenderBorderSegment(map, pos, (Direction)dir,
+                        renderBorderSegments.Add(index, new Render.RenderBorderSegment(Map, pos, (Direction)dir,
                             renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource));
                     }
                 }
@@ -1469,10 +1442,10 @@ namespace Freeserf
                 /* Demolish nearby buildings. */
                 for (uint i = 0; i < 12; ++i)
                 {
-                    MapPos pos = map.PosAddSpirally(building.Position, 7u + i);
+                    MapPos pos = Map.PosAddSpirally(building.Position, 7u + i);
 
-                    if (map.GetObject(pos) >= Map.Object.SmallBuilding &&
-                        map.GetObject(pos) < Map.Object.Castle)
+                    if (Map.GetObject(pos) >= Map.Object.SmallBuilding &&
+                        Map.GetObject(pos) < Map.Object.Castle)
                     {
                         DemolishBuilding(pos);
                     }
@@ -1480,15 +1453,15 @@ namespace Freeserf
 
                 /* Change owner of land and remove roads and flags
                    except the flag associated with the building. */
-                map.SetOwner(building.Position, playerIndex);
+                Map.SetOwner(building.Position, playerIndex);
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
                 foreach (Direction d in cycle)
                 {
-                    MapPos pos = map.Move(building.Position, d);
+                    MapPos pos = Map.Move(building.Position, d);
 
-                    map.SetOwner(pos, playerIndex);
+                    Map.SetOwner(pos, playerIndex);
 
                     if (pos != flag.Position)
                     {
@@ -1509,7 +1482,7 @@ namespace Freeserf
                 {
                     if (flag.HasPath(d))
                     {
-                        DemolishRoad(map.Move(flag.Position, d));
+                        DemolishRoad(Map.Move(flag.Position, d));
                     }
                 }
 
@@ -1734,7 +1707,7 @@ namespace Freeserf
 
         internal void DeleteBuilding(Building building)
         {
-            map.SetObject(building.Position, Map.Object.None, 0);
+            Map.SetObject(building.Position, Map.Object.None, 0);
 
             renderBuildings[building].Delete();
             renderBuildings.Remove(building);
@@ -1774,7 +1747,7 @@ namespace Freeserf
 
         public int GetFreeKnightCount(Player player)
         {
-            return Math.Max(0, serfs.Count(s => s.Player == player.Index && s.IsKnight() && s.SerfState == Serf.State.IdleInStock) - ((int)player.GetCastleKnightsWanted() - (int)player.GetCastleKnights()));
+            return Math.Max(0, serfs.Count(s => s.Player == player.Index && s.IsKnight() && s.SerfState == Serf.State.IdleInStock) - ((int)player.CastleKnightsWanted - (int)player.CastleKnights));
         }
 
         public int GetPossibleFreeKnightCount(Player player)
@@ -1977,7 +1950,7 @@ namespace Freeserf
             foreach (Player player in players)
             {
                 landBefore[(int)player.Index] = player.GetLandArea();
-                buildingsBefore[(int)player.Index] = player.GetBuildingScore();
+                buildingsBefore[(int)player.Index] = player.BuildingScore;
             }
 
             /* Update land ownership */
@@ -1986,17 +1959,17 @@ namespace Freeserf
             /* Create notifications for lost land and buildings */
             foreach (Player player in players)
             {
-                if (buildingsBefore[(int)player.Index] > player.GetBuildingScore())
+                if (buildingsBefore[(int)player.Index] > player.BuildingScore)
                 {
-                    player.AddNotification(Message.Type.LostBuildings,
+                    player.AddNotification(Notification.Type.LostBuildings,
                                            building.Position,
                                            building.Player);
                 }
                 else if (landBefore[(int)player.Index] > player.GetLandArea())
                 {
-                    player.AddNotification(Message.Type.LostLand,
-                                            building.Position,
-                                            building.Player);
+                    player.AddNotification(Notification.Type.LostLand,
+                                           building.Position,
+                                           building.Player);
                 }
             }
         }
@@ -2238,7 +2211,7 @@ namespace Freeserf
         void UpdateMapObjects()
         {
             foreach (var renderObject in renderObjects)
-                renderObject.Value.Update(tick, map.RenderMap, renderObject.Key);
+                renderObject.Value.Update(Tick, Map.RenderMap, renderObject.Key);
         }
 
         void UpdateFlags()
@@ -2248,20 +2221,20 @@ namespace Freeserf
                 flag.Update();
 
                 if (flag.Index > 0u)
-                    renderFlags[flag].Update(tick, map.RenderMap, flag.Position);
+                    renderFlags[flag].Update(Tick, Map.RenderMap, flag.Position);
             }
         }
 
         void UpdateRoads()
         {
             foreach (var renderRoadSegment in renderRoadSegments.ToArray())
-                renderRoadSegment.Value.Update(map.RenderMap);
+                renderRoadSegment.Value.Update(Map.RenderMap);
         }
 
         void UpdateBorders()
         {
             foreach (var renderBorderSegment in renderBorderSegments.ToList())
-                renderBorderSegment.Value.Update(map.RenderMap);
+                renderBorderSegment.Value.Update(Map.RenderMap);
         }
 
         // This is called after loading a game.
@@ -2270,15 +2243,15 @@ namespace Freeserf
         // for all road segments.
         void PostLoadRoads()
         {
-            foreach (var pos in map.Geometry)
+            foreach (var pos in Map.Geometry)
             {
-                if (map.Paths(pos) != 0)
+                if (Map.Paths(pos) != 0)
                 {
                     var cycle = new DirectionCycleCW(Direction.Right, 3u);
 
                     foreach (Direction dir in cycle)
                     {
-                        if (map.HasPath(pos, dir))
+                        if (Map.HasPath(pos, dir))
                             AddRoadSegment(pos, dir);
                     }
                 }
@@ -2405,7 +2378,7 @@ namespace Freeserf
 
             for (int i = 0; i < buildingList.Count; ++i)
             {
-                buildingList[i].Update(tick);
+                buildingList[i].Update(Tick);
 
                 if (buildingList[i].Index > 0u)
                 {
@@ -2420,7 +2393,7 @@ namespace Freeserf
                     }
 
                     if (renderBuildings.ContainsKey(buildingList[i]))
-                        renderBuildings[buildingList[i]].Update(tick, map.RenderMap, buildingList[i].Position);
+                        renderBuildings[buildingList[i]].Update(Tick, Map.RenderMap, buildingList[i].Position);
                 }
             }
 
@@ -2446,7 +2419,7 @@ namespace Freeserf
 
                 if (serfList[i].Index > 0u && renderSerfs.ContainsKey(serfList[i]))
                 {
-                    renderSerfs[serfList[i]].Update(this, renderView.DataSource, tick, map, serfList[i].Position);
+                    renderSerfs[serfList[i]].Update(this, renderView.DataSource, Tick, Map, serfList[i].Position);
                 }
             }
         }
@@ -2563,7 +2536,7 @@ namespace Freeserf
                 /* Store building stats in history. */
                 foreach (Player player in players)
                 {
-                    values[player.Index] = player.GetBuildingScore();
+                    values[player.Index] = player.BuildingScore;
                 }
 
                 RecordPlayerHistory(updateLevel, 2, playerHistoryIndex, values);
@@ -2571,7 +2544,7 @@ namespace Freeserf
                 /* Store military stats in history. */
                 foreach (Player player in players)
                 {
-                    values[player.Index] = player.GetMilitaryScore();
+                    values[player.Index] = player.MilitaryScore;
                 }
 
                 RecordPlayerHistory(updateLevel, 3, playerHistoryIndex, values);
@@ -2584,7 +2557,7 @@ namespace Freeserf
                 /* Store condensed score of all aspects in history. */
                 foreach (Player player in players)
                 {
-                    values[player.Index] = player.GetScore();
+                    values[player.Index] = player.Score;
                 }
 
                 RecordPlayerHistory(updateLevel, 0, playerHistoryIndex, values);
@@ -2617,12 +2590,12 @@ namespace Freeserf
         /* Generate an estimate of the amount of resources in the ground at map pos.*/
         protected void GetResourceEstimate(MapPos pos, uint weight, uint[] estimates)
         {
-            if ((map.GetObject(pos) == Map.Object.None ||
-                map.GetObject(pos) >= Map.Object.Tree0) &&
-                map.GetResourceType(pos) != Map.Minerals.None)
+            if ((Map.GetObject(pos) == Map.Object.None ||
+                Map.GetObject(pos) >= Map.Object.Tree0) &&
+                Map.GetResourceType(pos) != Map.Minerals.None)
             {
-                uint value = weight * map.GetResourceAmount(pos);
-                estimates[(int)map.GetResourceType(pos)] += value;
+                uint value = weight * Map.GetResourceAmount(pos);
+                estimates[(int)Map.GetResourceType(pos)] += value;
             }
         }
 
@@ -2630,7 +2603,7 @@ namespace Freeserf
         {
             if (dir > Direction.Down)
             {
-                pos = map.Move(pos, dir);
+                pos = Map.Move(pos, dir);
                 dir = dir.Reverse();
             }
 
@@ -2639,22 +2612,22 @@ namespace Freeserf
             switch (dir)
             {
                 case Direction.Right:
-                    if (map.TypeDown(pos) <= Map.Terrain.Water3 &&
-                        map.TypeUp(map.MoveUp(pos)) <= Map.Terrain.Water3)
+                    if (Map.TypeDown(pos) <= Map.Terrain.Water3 &&
+                        Map.TypeUp(Map.MoveUp(pos)) <= Map.Terrain.Water3)
                     {
                         water = true;
                     }
                     break;
                 case Direction.DownRight:
-                    if (map.TypeUp(pos) <= Map.Terrain.Water3 &&
-                        map.TypeDown(pos) <= Map.Terrain.Water3)
+                    if (Map.TypeUp(pos) <= Map.Terrain.Water3 &&
+                        Map.TypeDown(pos) <= Map.Terrain.Water3)
                     {
                         water = true;
                     }
                     break;
                 case Direction.Down:
-                    if (map.TypeUp(pos) <= Map.Terrain.Water3 &&
-                        map.TypeDown(map.MoveLeft(pos)) <= Map.Terrain.Water3)
+                    if (Map.TypeUp(pos) <= Map.Terrain.Water3 &&
+                        Map.TypeDown(Map.MoveLeft(pos)) <= Map.Terrain.Water3)
                     {
                         water = true;
                     }
@@ -2719,16 +2692,16 @@ namespace Freeserf
 
             while (true)
             {
-                if (map.GetIdleSerf(pos))
+                if (Map.GetIdleSerf(pos))
                 {
                     PathSerfIdleToWaitState(pos);
                 }
 
-                if (map.HasSerf(pos))
+                if (Map.HasSerf(pos))
                 {
                     Serf serf = GetSerfAtPos(pos);
 
-                    if (!map.HasFlag(pos))
+                    if (!Map.HasFlag(pos))
                     {
                         serf.SetLostState();
                     }
@@ -2749,9 +2722,9 @@ namespace Freeserf
                     }
                 }
 
-                if (map.HasFlag(pos))
+                if (Map.HasFlag(pos))
                 {
-                    Flag flag = flags[map.GetObjectIndex(pos)];
+                    Flag flag = flags[Map.GetObjectIndex(pos)];
                     flag.DeletePath(inDir.Reverse());
                     break;
                 }
@@ -2759,7 +2732,7 @@ namespace Freeserf
                 RemoveRoadSegment(pos, dir);
 
                 inDir = dir;
-                dir = map.RemoveRoadSegment(ref pos, dir);
+                dir = Map.RemoveRoadSegment(ref pos, dir);
             }
         }
 
@@ -2770,7 +2743,7 @@ namespace Freeserf
                game.player[1]->flags |= BIT(4);
             */
 
-            if (!map.RemoveRoadBackrefs(pos))
+            if (!Map.RemoveRoadBackrefs(pos))
             {
                 /* TODO */
                 return false;
@@ -2782,7 +2755,7 @@ namespace Freeserf
 
             foreach (Direction d in cycle)
             {
-                if (map.HasPath(pos, d))
+                if (Map.HasPath(pos, d))
                 {
                     path1Dir = d;
                     break;
@@ -2793,7 +2766,7 @@ namespace Freeserf
 
             for (int d = (int)path1Dir + 1; d <= (int)Direction.Up; ++d)
             {
-                if (map.HasPath(pos, (Direction)d))
+                if (Map.HasPath(pos, (Direction)d))
                 {
                     path2Dir = (Direction)d;
                     break;
@@ -2802,7 +2775,7 @@ namespace Freeserf
 
             /* If last segment direction is UP LEFT it could
                be to a building and the real path is at UP. */
-            if (path2Dir == Direction.UpLeft && map.HasPath(pos, Direction.Up))
+            if (path2Dir == Direction.UpLeft && Map.HasPath(pos, Direction.Up))
             {
                 path2Dir = Direction.Up;
             }
@@ -2823,7 +2796,7 @@ namespace Freeserf
 
             for (; it != cycle.End(); ++it)
             {
-                if (map.HasPath(pos, it.Current))
+                if (Map.HasPath(pos, it.Current))
                 {
                     path1Dir = it.Current;
                     break;
@@ -2835,7 +2808,7 @@ namespace Freeserf
 
             for (; it != cycle.End(); ++it)
             {
-                if (map.HasPath(pos, it.Current))
+                if (Map.HasPath(pos, it.Current))
                 {
                     path2Dir = it.Current;
                     break;
@@ -2844,7 +2817,7 @@ namespace Freeserf
 
             /* If last segment direction is UP LEFT it could
                be to a building and the real path is at UP. */
-            if (path2Dir == Direction.UpLeft && map.HasPath(pos, Direction.Up))
+            if (path2Dir == Direction.UpLeft && Map.HasPath(pos, Direction.Up))
             {
                 path2Dir = Direction.Up;
             }
@@ -2883,7 +2856,7 @@ namespace Freeserf
                 selectedFlag.CancelSerfRequest(pathData.FlagDir);
             }
 
-            Flag flag = flags[map.GetObjectIndex(pos)];
+            Flag flag = flags[Map.GetObjectIndex(pos)];
 
             flag.RestorePathSerfInfo(path1Dir, path1Data);
             flag.RestorePathSerfInfo(path2Dir, path2Data);
@@ -2891,18 +2864,18 @@ namespace Freeserf
 
         protected bool MapTypesWithin(MapPos pos, Map.Terrain low, Map.Terrain high)
         {
-            if (map.TypeUp(pos) >= low &&
-                map.TypeUp(pos) <= high &&
-                map.TypeDown(pos) >= low &&
-                map.TypeDown(pos) <= high &&
-                map.TypeDown(map.MoveLeft(pos)) >= low &&
-                map.TypeDown(map.MoveLeft(pos)) <= high &&
-                map.TypeUp(map.MoveUpLeft(pos)) >= low &&
-                map.TypeUp(map.MoveUpLeft(pos)) <= high &&
-                map.TypeDown(map.MoveUpLeft(pos)) >= low &&
-                map.TypeDown(map.MoveUpLeft(pos)) <= high &&
-                map.TypeUp(map.MoveUp(pos)) >= low &&
-                map.TypeUp(map.MoveUp(pos)) <= high)
+            if (Map.TypeUp(pos) >= low &&
+                Map.TypeUp(pos) <= high &&
+                Map.TypeDown(pos) >= low &&
+                Map.TypeDown(pos) <= high &&
+                Map.TypeDown(Map.MoveLeft(pos)) >= low &&
+                Map.TypeDown(Map.MoveLeft(pos)) <= high &&
+                Map.TypeUp(Map.MoveUpLeft(pos)) >= low &&
+                Map.TypeUp(Map.MoveUpLeft(pos)) <= high &&
+                Map.TypeDown(Map.MoveUpLeft(pos)) >= low &&
+                Map.TypeDown(Map.MoveUpLeft(pos)) <= high &&
+                Map.TypeUp(Map.MoveUp(pos)) >= low &&
+                Map.TypeUp(Map.MoveUp(pos)) <= high)
             {
                 return true;
             }
@@ -2924,13 +2897,13 @@ namespace Freeserf
         protected bool DemolishFlag(MapPos pos)
         {
             /* Handle any serf at pos. */
-            if (map.HasSerf(pos))
+            if (Map.HasSerf(pos))
             {
                 Serf serf = GetSerfAtPos(pos);
                 serf.FlagDeleted(pos);
             }
 
-            Flag flag = flags[map.GetObjectIndex(pos)];
+            Flag flag = flags[Map.GetObjectIndex(pos)];
 
             if (flag.HasBuilding() && !flag.GetBuilding().IsBurning())
             {
@@ -2948,7 +2921,7 @@ namespace Freeserf
                 serf.PathMerged(flag);
             }
 
-            map.SetObject(pos, Map.Object.None, 0);
+            Map.SetObject(pos, Map.Object.None, 0);
 
             /* Remove resources from flag. */
             flag.RemoveAllResources();
@@ -2963,15 +2936,15 @@ namespace Freeserf
 
         protected bool DemolishBuilding(MapPos pos)
         {
-            Building building = buildings[map.GetObjectIndex(pos)];
+            Building building = buildings[Map.GetObjectIndex(pos)];
 
             if (building.BurnUp())
             {
                 BuildingRemovePlayerRefs(building);
 
                 /* Remove path to building. */
-                map.DeletePath(pos, Direction.DownRight);
-                map.DeletePath(map.MoveDownRight(pos), Direction.UpLeft);
+                Map.DeletePath(pos, Direction.DownRight);
+                Map.DeletePath(Map.MoveDownRight(pos), Direction.UpLeft);
 
                 /* Disconnect flag. */
                 Flag flag = flags[building.GetFlagIndex()];
@@ -2992,43 +2965,43 @@ namespace Freeserf
         protected void SurrenderLand(MapPos pos)
         {
             /* Remove building. */
-            if (map.HasBuilding(pos))
+            if (Map.HasBuilding(pos))
             {
                 DemolishBuilding(pos);
             }
 
-            if (!map.HasFlag(pos) && map.Paths(pos) != 0)
+            if (!Map.HasFlag(pos) && Map.Paths(pos) != 0)
             {
                 DemolishRoad(pos);
             }
 
-            bool removeRoads = map.HasFlag(pos);
+            bool removeRoads = Map.HasFlag(pos);
 
             /* Remove roads and building around pos. */
             var cycle = DirectionCycleCW.CreateDefault();
 
             foreach (Direction d in cycle)
             {
-                MapPos p = map.Move(pos, d);
+                MapPos p = Map.Move(pos, d);
 
-                if (map.GetObject(p) >= Map.Object.SmallBuilding &&
-                    map.GetObject(p) <= Map.Object.Castle)
+                if (Map.GetObject(p) >= Map.Object.SmallBuilding &&
+                    Map.GetObject(p) <= Map.Object.Castle)
                 {
                     DemolishBuilding(p);
                 }
 
-                if (removeRoads && (map.Paths(p) & Misc.Bit((int)d.Reverse())) != 0)
+                if (removeRoads && (Map.Paths(p) & Misc.Bit((int)d.Reverse())) != 0)
                 {
                     DemolishRoad(p);
                 }
             }
 
             /* Remove flag. */
-            if (map.GetObject(pos) == Map.Object.Flag)
+            if (Map.GetObject(pos) == Map.Object.Flag)
             {
                 // Ensure that buildings are demolished before their flags
-                if (map.HasBuilding(map.MoveUpLeft(pos)))
-                    DemolishBuilding(map.MoveUpLeft(pos));
+                if (Map.HasBuilding(Map.MoveUpLeft(pos)))
+                    DemolishBuilding(Map.MoveUpLeft(pos));
 
                 DemolishFlag(pos);
             }
@@ -3036,16 +3009,16 @@ namespace Freeserf
 
         protected void DemolishFlagAndRoads(MapPos pos)
         {
-            if (map.HasFlag(pos))
+            if (Map.HasFlag(pos))
             {
                 /* Remove roads around pos. */
                 var cycle = DirectionCycleCW.CreateDefault();
 
                 foreach (Direction d in cycle)
                 {
-                    MapPos p = map.Move(pos, d);
+                    MapPos p = Map.Move(pos, d);
 
-                    if ((map.Paths(p) & Misc.Bit((int)d.Reverse())) != 0)
+                    if ((Map.Paths(p) & Misc.Bit((int)d.Reverse())) != 0)
                     {
                         DemolishRoad(p);
                     }
@@ -3053,7 +3026,7 @@ namespace Freeserf
 
                 DemolishFlag(pos);
             }
-            else if (map.Paths(pos) != 0)
+            else if (Map.Paths(pos) != 0)
             {
                 DemolishRoad(pos);
             }
@@ -3070,7 +3043,7 @@ namespace Freeserf
             reader.Skip(74);
             gameType = reader.ReadWord(); // 74
             reader.Skip(2);  // 76
-            tick = reader.ReadWord(); // 78
+            Tick = reader.ReadWord(); // 78
             gameStatsCounter = 0;
             historyCounter = 0;
 
@@ -3119,10 +3092,10 @@ namespace Freeserf
                 throw new ExceptionFreeserf("game", "Invalid map size in file");
             }
 
-            map = new Map(new MapGeometry((uint)mapSize), renderView);
+            Map = new Map(new MapGeometry((uint)mapSize), renderView);
 
             reader.Skip(8);
-            mapGoldMoraleFactor= reader.ReadWord(); // 200
+            MapGoldMoraleFactor= reader.ReadWord(); // 200
             reader.Skip(2);
             playerScoreLeader = reader.ReadByte(); // 204
 
@@ -3145,9 +3118,9 @@ namespace Freeserf
             }
 
             /* Load map state from save game. */
-            uint tileCount = map.Columns * map.Rows;
+            uint tileCount = Map.Columns * Map.Rows;
             var mapReader = reader.Extract(8 * tileCount);
-            map.ReadFrom(mapReader);
+            Map.ReadFrom(mapReader);
 
             LoadSerfs(reader, maxSerfIndex);
             LoadFlags(reader, maxFlagIndex);
@@ -3157,14 +3130,14 @@ namespace Freeserf
             gameSpeed = 0;
             gameSpeedSave = DEFAULT_GAME_SPEED;
 
-            map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
+            Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
             InitLandOwnership();
             PostLoadRoads();
 
-            goldTotal = map.GetGoldDeposit();
+            GoldTotal = Map.GetGoldDeposit();
 
-            map.AddChangeHandler(this);
+            Map.AddChangeHandler(this);
         }
 
         public void ReadFrom(SaveReaderText reader)
@@ -3193,15 +3166,15 @@ namespace Freeserf
             }
 
             // Initialize remaining map dimensions.
-            map = new Map(new MapGeometry(size), renderView);
+            Map = new Map(new MapGeometry(size), renderView);
 
             foreach (var subreader in reader.GetSections("map"))
             {
-                map.ReadFrom(subreader);
+                Map.ReadFrom(subreader);
             }
 
             gameType = gameReader.Value("game_type").ReadInt();
-            tick = (ushort)gameReader.Value("tick").ReadUInt();
+            Tick = (ushort)gameReader.Value("tick").ReadUInt();
             gameStatsCounter = gameReader.Value("game_stats_counter").ReadUInt();
             historyCounter = gameReader.Value("history_counter").ReadUInt();
 
@@ -3219,10 +3192,10 @@ namespace Freeserf
             }
 
             resourceHistoryIndex = gameReader.Value("resource_history_index").ReadInt();
-            mapGoldMoraleFactor = gameReader.Value("map.gold_morale_factor").ReadUInt();
+            MapGoldMoraleFactor = gameReader.Value("map.gold_morale_factor").ReadUInt();
             playerScoreLeader = gameReader.Value("player_score_leader").ReadInt();
 
-            goldTotal = gameReader.Value("gold_deposit").ReadUInt();
+            GoldTotal = gameReader.Value("gold_deposit").ReadUInt();
 
             Map.UpdateState updateState = new Map.UpdateState();
 
@@ -3231,9 +3204,9 @@ namespace Freeserf
             updateState.Counter = gameReader.Value("update_state.counter").ReadInt();
             uint x = gameReader.Value("update_state.initial_pos")[0].ReadUInt();
             uint y = gameReader.Value("update_state.initial_pos")[1].ReadUInt();
-            updateState.InitialPos = map.Pos(x, y);
+            updateState.InitialPos = Map.Pos(x, y);
 
-            map.SetUpdateState(updateState);
+            Map.SetUpdateState(updateState);
 
             foreach (var subreader in reader.GetSections("player"))
             {
@@ -3274,7 +3247,7 @@ namespace Freeserf
                 if (serf.SerfState == Serf.State.IdleOnPath ||
                     serf.SerfState == Serf.State.WaitIdleOnPath)
                 {
-                    map.SetIdleSerf(serf.Position);
+                    Map.SetIdleSerf(serf.Position);
                 }
 
                 switch (serf.SerfState)
@@ -3301,13 +3274,13 @@ namespace Freeserf
                 if (building.Index == 0)
                     continue;
 
-                if (map.GetObject(building.Position) < Map.Object.SmallBuilding ||
-                    map.GetObject(building.Position) > Map.Object.Castle)
+                if (Map.GetObject(building.Position) < Map.Object.SmallBuilding ||
+                    Map.GetObject(building.Position) > Map.Object.Castle)
                 {
                     throw new ExceptionFreeserf("game", "Map data does not match building " + building.Index + " position.");
                 }
 
-                map.SetObjectIndex(building.Position, building.Index);
+                Map.SetObjectIndex(building.Position, building.Index);
 
                 OnObjectPlaced(building.Position);
             }
@@ -3318,12 +3291,12 @@ namespace Freeserf
                 if (flag.Index == 0)
                     continue;
 
-                if (map.GetObject(flag.Position) != Map.Object.Flag)
+                if (Map.GetObject(flag.Position) != Map.Object.Flag)
                 {
                     throw new ExceptionFreeserf("game", "Map data does not match flag " + flag.Index + " position.");
                 }
 
-                map.SetObjectIndex(flag.Position, flag.Index);
+                Map.SetObjectIndex(flag.Position, flag.Index);
 
                 OnObjectPlaced(flag.Position);
             }
@@ -3331,17 +3304,17 @@ namespace Freeserf
             gameSpeed = 0;
             gameSpeedSave = DEFAULT_GAME_SPEED;
 
-            map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
+            Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
             InitLandOwnership();
             PostLoadRoads();
 
-            map.AddChangeHandler(this);
+            Map.AddChangeHandler(this);
 
             // make map objects visible
-            foreach (var tile in map.Geometry)
+            foreach (var tile in Map.Geometry)
             {
-                if (map.GetObject(tile) != Map.Object.None && !map.HasFlag(tile) && !map.HasBuilding(tile))
+                if (Map.GetObject(tile) != Map.Object.None && !Map.HasFlag(tile) && !Map.HasBuilding(tile))
                     OnObjectPlaced(tile);
             }
 
@@ -3360,9 +3333,9 @@ namespace Freeserf
 
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("map.size").Write(map.Size);
+            writer.Value("map.size").Write(Map.Size);
             writer.Value("game_type").Write(gameType);
-            writer.Value("tick").Write(tick);
+            writer.Value("tick").Write(Tick);
             writer.Value("game_stats_counter").Write(gameStatsCounter);
             writer.Value("history_counter").Write(historyCounter);
             writer.Value("random").Write(random.ToString());
@@ -3383,18 +3356,18 @@ namespace Freeserf
             writer.Value("resource_history_index").Write(resourceHistoryIndex);
 
             writer.Value("max_next_index").Write(0); // max_next_index (we keep this to be compatible to freeserf save games)
-            writer.Value("map.gold_morale_factor").Write(mapGoldMoraleFactor);
+            writer.Value("map.gold_morale_factor").Write(MapGoldMoraleFactor);
             writer.Value("player_score_leader").Write(playerScoreLeader);
 
-            writer.Value("gold_deposit").Write(goldTotal);
+            writer.Value("gold_deposit").Write(GoldTotal);
 
-            var updateState = map.GetUpdateState();
+            var updateState = Map.GetUpdateState();
 
             writer.Value("update_state.remove_signs_counter").Write(updateState.RemoveSignsCounter);
             writer.Value("update_state.last_tick").Write(updateState.LastTick);
             writer.Value("update_state.counter").Write(updateState.Counter);
-            writer.Value("update_state.initial_pos").Write(map.PosColumn(updateState.InitialPos));
-            writer.Value("update_state.initial_pos").Write(map.PosRow(updateState.InitialPos));
+            writer.Value("update_state.initial_pos").Write(Map.PosColumn(updateState.InitialPos));
+            writer.Value("update_state.initial_pos").Write(Map.PosRow(updateState.InitialPos));
 
             foreach (var player in players)
             {
@@ -3436,14 +3409,14 @@ namespace Freeserf
                 serf.WriteTo(serfWriter);
             }
 
-            map.WriteTo(writer);
+            Map.WriteTo(writer);
 
             // store AI
             bool firstAI = true;
 
             foreach (var player in players)
             {
-                if (player.IsAi())
+                if (player.IsAI)
                 {
                     var aiWriter = writer.AddSection("player_ai", player.Index);
 
@@ -3519,11 +3492,11 @@ namespace Freeserf
             }
 
             // Set flag positions.
-            foreach (MapPos pos in map.Geometry)
+            foreach (MapPos pos in Map.Geometry)
             {
-                if (map.GetObject(pos) == Map.Object.Flag)
+                if (Map.GetObject(pos) == Map.Object.Flag)
                 {
-                    Flag flag = flags[map.GetObjectIndex(pos)];
+                    Flag flag = flags[Map.GetObjectIndex(pos)];
                     flag.Position = pos;
 
                     OnObjectPlaced(flag.Position);
@@ -3590,12 +3563,12 @@ namespace Freeserf
             // Update road segments
             for (int i = 0; i < 7; ++i)
             {
-                var checkPos = map.PosAddSpirally(pos, (uint)i);
+                var checkPos = Map.PosAddSpirally(pos, (uint)i);
                 var cycle = new DirectionCycleCW(Direction.Right, 3u);
 
                 foreach (var dir in cycle)
                 {
-                    if (map.HasPath(checkPos, dir))
+                    if (Map.HasPath(checkPos, dir))
                     {
                         long index = Render.RenderRoadSegment.CreateIndex(checkPos, dir);
 
@@ -3609,9 +3582,9 @@ namespace Freeserf
         public override void OnObjectChanged(MapPos pos)
         {
             // memorize mineral for AI
-            if (map.GetObject(pos) >= Map.Object.SignLargeGold && map.GetObject(pos) < Map.Object.SignEmpty)
+            if (Map.GetObject(pos) >= Map.Object.SignLargeGold && Map.GetObject(pos) < Map.Object.SignEmpty)
             {
-                int index = map.GetObject(pos) - Map.Object.SignLargeGold;
+                int index = Map.GetObject(pos) - Map.Object.SignLargeGold;
 
                 AI.MemorizeMineralSpot(pos, (Map.Minerals)(1 + index / 2), index % 2 == 0);
             }
@@ -3633,7 +3606,7 @@ namespace Freeserf
 
         public override void OnObjectPlaced(MapPos pos)
         {
-            var obj = map.GetObject(pos);
+            var obj = Map.GetObject(pos);
 
             // rendering
             if (obj == Map.Object.Flag)
@@ -3735,7 +3708,7 @@ namespace Freeserf
 
             if (dir > Direction.Down)
             {
-                RemoveRoadSegment(map.Move(pos, dir), dir.Reverse());
+                RemoveRoadSegment(Map.Move(pos, dir), dir.Reverse());
                 return;
             }
 

@@ -39,7 +39,7 @@ namespace Freeserf.UI
 
     struct NotificationView
     {
-        public NotificationView(Message.Type type, Decoration decoration, uint icon, string text)
+        public NotificationView(Notification.Type type, Decoration decoration, uint icon, string text)
         {
             Type = type;
             Decoration = decoration;
@@ -47,7 +47,7 @@ namespace Freeserf.UI
             Text = text;
         }
 
-        public Message.Type Type;
+        public Notification.Type Type;
         public Decoration Decoration;
         public uint Icon;
         public string Text;
@@ -55,86 +55,86 @@ namespace Freeserf.UI
 
     internal class NotificationBox : Box
     {
-        static readonly Dictionary<Message.Type, NotificationView> notificationViews = new Dictionary<Message.Type, NotificationView>(20)
+        static readonly Dictionary<Notification.Type, NotificationView> notificationViews = new Dictionary<Notification.Type, NotificationView>(20)
         {
-            { Message.Type.UnderAttack, new NotificationView(Message.Type.UnderAttack,
+            { Notification.Type.UnderAttack, new NotificationView(Notification.Type.UnderAttack,
                 Decoration.Opponent,
                 0,
                 "Your settlement\nis under attack") },
-            { Message.Type.LoseFight, new NotificationView(Message.Type.LoseFight,
+            { Notification.Type.LoseFight, new NotificationView(Notification.Type.LoseFight,
                 Decoration.Opponent,
                 0,
                 "Your knights\njust lost the\nfight") },
-            { Message.Type.WinFight, new NotificationView(Message.Type.WinFight,
+            { Notification.Type.WinFight, new NotificationView(Notification.Type.WinFight,
                 Decoration.Opponent,
                 0,
                 "You gained\na victory here") },
-            { Message.Type.MineEmpty, new NotificationView(Message.Type.MineEmpty,
+            { Notification.Type.MineEmpty, new NotificationView(Notification.Type.MineEmpty,
                 Decoration.Mine,
                 0,
                 "This mine hauls\nno more raw\nmaterials") },
-            { Message.Type.CallToLocation, new NotificationView(Message.Type.CallToLocation,
+            { Notification.Type.CallToLocation, new NotificationView(Notification.Type.CallToLocation,
                 Decoration.MapObject,
                 0x90,
                 "You wanted me\nto call you to\nthis location") },
-            { Message.Type.KnightOccupied, new NotificationView(Message.Type.KnightOccupied,
+            { Notification.Type.KnightOccupied, new NotificationView(Notification.Type.KnightOccupied,
                 Decoration.Building,
                 0,
                 "A knight has\noccupied this\nnew building") },
-            { Message.Type.NewStock, new NotificationView(Message.Type.NewStock,
+            { Notification.Type.NewStock, new NotificationView(Notification.Type.NewStock,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
                 "A new stock\nhas been built") },
-            { Message.Type.LostLand, new NotificationView(Message.Type.LostLand,
+            { Notification.Type.LostLand, new NotificationView(Notification.Type.LostLand,
                 Decoration.Opponent,
                 0,
                 "Because of this\nenemy building\nyou lost some\nland") },
-            { Message.Type.LostBuildings, new NotificationView(Message.Type.LostBuildings,
+            { Notification.Type.LostBuildings, new NotificationView(Notification.Type.LostBuildings,
                 Decoration.Opponent,
                 0,
                 "Because of this\nenemy building\nyou lost some\n" +
                 "land and\nsome buildings") },
-            { Message.Type.EmergencyActive, new NotificationView(Message.Type.EmergencyActive,
+            { Notification.Type.EmergencyActive, new NotificationView(Notification.Type.EmergencyActive,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingFrameSprite[(int)Building.Type.Stock],
                 "Emergency\nprogram\nactivated") },
-            { Message.Type.EmergencyNeutral, new NotificationView(Message.Type.EmergencyNeutral,
+            { Notification.Type.EmergencyNeutral, new NotificationView(Notification.Type.EmergencyNeutral,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Castle],
                 "Emergency\nprogram\nneutralized") },
-            { Message.Type.FoundGold, new NotificationView(Message.Type.FoundGold,
+            { Notification.Type.FoundGold, new NotificationView(Notification.Type.FoundGold,
                 Decoration.Icon,
                 0x2f,
                 "A geologist\nhas found gold") },
-            { Message.Type.FoundIron, new NotificationView(Message.Type.FoundIron,
+            { Notification.Type.FoundIron, new NotificationView(Notification.Type.FoundIron,
                 Decoration.Icon,
                 0x2c,
                 "A geologist\nhas found iron") },
-            { Message.Type.FoundCoal, new NotificationView(Message.Type.FoundCoal,
+            { Notification.Type.FoundCoal, new NotificationView(Notification.Type.FoundCoal,
                 Decoration.Icon,
                 0x2e,
                 "A geologist\nhas found coal") },
-            { Message.Type.FoundStone, new NotificationView(Message.Type.FoundStone,
+            { Notification.Type.FoundStone, new NotificationView(Notification.Type.FoundStone,
                 Decoration.Icon,
                 0x2b,
                 "A geologist\nhas found stone") },
-            { Message.Type.CallToMenu, new NotificationView(Message.Type.CallToMenu,
+            { Notification.Type.CallToMenu, new NotificationView(Notification.Type.CallToMenu,
                 Decoration.Menu,
                 0,
                 "You wanted me\nto call you\nto this menu") },
-            { Message.Type.ThirtyMinutesSinceSave, new NotificationView(Message.Type.ThirtyMinutesSinceSave,
+            { Notification.Type.ThirtyMinutesSinceSave, new NotificationView(Notification.Type.ThirtyMinutesSinceSave,
                 Decoration.Icon,
                 0x5d,
                 "30 min. passed\nsince the last\nsaving") },
-            { Message.Type.OneHourSinceSave, new NotificationView(Message.Type.OneHourSinceSave,
+            { Notification.Type.OneHourSinceSave, new NotificationView(Notification.Type.OneHourSinceSave,
                 Decoration.Icon,
                 0x5d,
                 "One hour passed\nsince the last\nsaving") },
-            { Message.Type.CallToStock, new NotificationView(Message.Type.CallToStock,
+            { Notification.Type.CallToStock, new NotificationView(Notification.Type.CallToStock,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
                 "You wanted me\nto call you\nto this stock") },
-            { Message.Type.None, new NotificationView(Message.Type.None, 0, 0, null) }
+            { Notification.Type.None, new NotificationView(Notification.Type.None, 0, 0, null) }
         };
 
         static readonly uint[] MapMenuSprite = new uint[]
@@ -144,7 +144,7 @@ namespace Freeserf.UI
         };
 
         Interface interf = null;
-        Message message = null;
+        Notification notification = null;
 
         // rendering
         Icon checkBox = null;
@@ -224,15 +224,15 @@ namespace Freeserf.UI
             return true;
         }
 
-        public void Show(Message message)
+        public void Show(Notification message)
         {
-            if (message.MessageType == Message.Type.None)
+            if (message.NotificationType == Notification.Type.None)
             {
                 Displayed = false;
                 return;
             }
 
-            this.message = message;
+            this.notification = message;
             Displayed = true;
             checkBox.Displayed = true;
         }
@@ -248,7 +248,7 @@ namespace Freeserf.UI
         {
             base.InternalDraw();
 
-            DrawNotification(notificationViews[message.MessageType]);
+            DrawNotification(notificationViews[notification.NotificationType]);
         }
 
         protected override bool HandleClickLeft(int x, int y)
@@ -274,8 +274,8 @@ namespace Freeserf.UI
             {
                 case Decoration.Opponent:
                     {
-                        var player = interf.Game.GetPlayer(message.Data);
-                        var color = player.GetColor();
+                        var player = interf.Game.GetPlayer(notification.Data);
+                        var color = player.Color;
                         playerFaceBackground.Color = new Render.Color()
                         {
                             R = color.Red,
@@ -283,7 +283,7 @@ namespace Freeserf.UI
                             B = color.Blue,
                             A = 255
                         };
-                        playerFace.SetSpriteIndex(GetPlayerFaceSprite(player.GetFace()));
+                        playerFace.SetSpriteIndex(GetPlayerFaceSprite(player.Face));
                         playerFaceBackground.X = TotalX + 48;
                         playerFaceBackground.Y = TotalY + 44;
                         playerFaceBackground.DisplayLayer = (byte)(BaseDisplayLayer + 2);
@@ -291,12 +291,12 @@ namespace Freeserf.UI
                     }
                     break;
                 case Decoration.Mine:
-                    spriteIndex = mapBuildingSprite[(int)Building.Type.StoneMine] + message.Data;
+                    spriteIndex = mapBuildingSprite[(int)Building.Type.StoneMine] + notification.Data;
                     showBuilding = Displayed;
                     break;
                 case Decoration.Building:
                     showBuilding = Displayed;
-                    switch (message.Data)
+                    switch (notification.Data)
                     {
                         case 0:
                             spriteIndex = mapBuildingSprite[(int)Building.Type.Hut];
@@ -323,13 +323,13 @@ namespace Freeserf.UI
                     break;
                 case Decoration.Menu:
                     showMenuIcon = Displayed;
-                    menuIcon.SetSpriteIndex(MapMenuSprite[(int)message.Data]);
+                    menuIcon.SetSpriteIndex(MapMenuSprite[(int)notification.Data]);
                     break;
                 default:
                     break;
             }
 
-            if (!UpdateBuildingSprite(view.Decoration, message.Data, spriteIndex))
+            if (!UpdateBuildingSprite(view.Decoration, notification.Data, spriteIndex))
                 showBuilding = false;
 
             building.Displayed = showBuilding;
@@ -374,10 +374,10 @@ namespace Freeserf.UI
             }
         }
 
-        static uint GetPlayerFaceSprite(uint face)
+        static uint GetPlayerFaceSprite(PlayerFace face)
         {
             if (face != 0u)
-                return 0x10b + face;
+                return 0x10b + (uint)face;
 
             return 0x119u; /* sprite_face_none */
         }

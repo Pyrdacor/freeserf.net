@@ -294,7 +294,7 @@ namespace Freeserf.AIStates
 
                         for (int d = 0; d < 5; ++d)
                         {
-                            spot = game.Map.MoveTowards(spot, player.CastlePos);
+                            spot = game.Map.MoveTowards(spot, player.CastlePosition);
 
                             if (game.BuildFlag(spot, player))
                             {

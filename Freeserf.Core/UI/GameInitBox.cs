@@ -856,7 +856,7 @@ namespace Freeserf.UI
                     customMission = new GameInfo(new Random(), false);
                     mission = customMission;
                     mission.RemoveAllPlayers();
-                    mission.AddPlayer(12u, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
+                    mission.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
                     randomInput.Displayed = true;
                     randomInput.SetRandom(customMission.RandomBase);
                     fileList.Displayed = false;
@@ -1101,7 +1101,7 @@ namespace Freeserf.UI
             return base.HandleKeyPressed(key, modifier);
         }
 
-        bool PlayerFaceAlreadyTaken(uint playerIndex, uint face)
+        bool PlayerFaceAlreadyTaken(uint playerIndex, PlayerFace face)
         {
             for (uint i = 0; i < playerIndex; ++i)
             {
@@ -1182,10 +1182,10 @@ namespace Freeserf.UI
 
                     do
                     {
-                        uint next = (player.Face + 1) % 11; // Note: Use 12 here to also allow the last enemy as a custom game player
+                        uint next = ((uint)player.Face + 1) % 11; // Note: Use 12 here to also allow the last enemy as a custom game player
                         next = Math.Max(1u, next);
 
-                        player.SetCharacter(next);
+                        player.SetCharacter((PlayerFace)next);
 
                         /* Check that face is not already in use by another player */
                         inUse = false;
@@ -1193,7 +1193,7 @@ namespace Freeserf.UI
                         for (uint i = 0; i < mission.PlayerCount; ++i)
                         {
                             if (playerIndex != i &&
-                                mission.GetPlayer(i).Face == next)
+                                mission.GetPlayer(i).Face == (PlayerFace)next)
                             {
                                 inUse = true;
                                 break;

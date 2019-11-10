@@ -143,7 +143,7 @@ namespace Freeserf.AIStates
                     // Also we decide which tool to craft first.
                     if (type == Building.Type.ToolMaker && ai.HardTimes())
                     {
-                        player.SetPlanksToolmaker(ushort.MaxValue / 2);
+                        player.PlanksToolmaker = ushort.MaxValue / 2;
 
                         // With only one fisher and only a small lake, the scythe has prio.
                         // Without a fisher we have no water at all and therefore the scythe is very important.
