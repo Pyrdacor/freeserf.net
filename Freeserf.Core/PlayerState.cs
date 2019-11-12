@@ -98,40 +98,285 @@ namespace Freeserf
     }
 
     [DataClass]
-    public class PlayerState : IData
+    internal class PlayerState : State
     {
-        [Ignore]
-        public bool Dirty
+        private PlayerStateFlags flags = PlayerStateFlags.None;
+        private PlayerFace face = PlayerFace.None;
+        private Color color = new Color();
+        private MapPos castlePosition = Constants.INVALID_MAPPOS;
+        private dword castleInventoryIndex = 0;
+        private sbyte castleScore = 0;
+        private byte castleKnights = 0;
+        private dword knightMorale = 0;
+        private dword goldDeposited = 0;
+        private byte initialSupplies = 0;
+        private byte intelligence = 0; // only for AI, otherwise ignored (maybe later for human player penalties?)
+        private word reproductionCounter = 0;
+        private word reproductionReset = 0;
+        private word serfToKnightCounter = 0;
+        private word knightCycleCounter = 0;
+        private dword totalLandArea= 0;
+        private dword totalBuildingScore = 0;
+        private dword totalMilitaryScore = 0;
+        private readonly DirtyArray<dword> serfCounts = new DirtyArray<dword>(Constants.NUM_SERF_TYPES);
+        private readonly DirtyArray<dword> resourceCounts = new DirtyArray<dword>(Constants.NUM_RESOURCE_TYPES);
+        private readonly DirtyArray<dword> completedBuildingCount = new DirtyArray<dword>(Constants.NUM_BUILDING_TYPES);
+        private readonly DirtyArray<dword> incompleteBuildingCount = new DirtyArray<dword>(Constants.NUM_BUILDING_TYPES);
+        private dword militaryMaxGold = 0;
+
+        public PlayerState()
         {
-            get;
-            internal set;
+            serfCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(SerfCounts)); };
+            resourceCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ResourceCounts)); };
+            completedBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(CompletedBuildingCount)); };
+            incompleteBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(IncompleteBuildingCount)); };
         }
 
-        public PlayerStateFlags Flags { get; set; } = PlayerStateFlags.None;
-        public PlayerFace Face { get; set; } = PlayerFace.None;
-        public Color Color { get; set; } = new Color();
-        public MapPos CastlePosition { get; set; } = Constants.INVALID_MAPPOS;
-        public dword CastleInventoryIndex { get; set; } = 0;
-        public sbyte CastleScore { get; set; } = 0;
-        public byte CastleKnights { get; set; } = 0;
-        public dword KnightMorale { get; set; } = 0;
-        public dword GoldDeposited { get; set; } = 0;
-        public byte InitialSupplies { get; set; } = 0;
-        public byte Intelligence { get; set; } = 0; // only for AI, otherwise ignored (maybe later for human player penalties?)
-        public word ReproductionCounter { get; set; } = 0;
-        public word ReproductionReset { get; set; } = 0;
-        public word SerfToKnightCounter { get; set; } = 0;
-        public word KnightCycleCounter { get; set; } = 0;
+        public override void ResetDirtyFlag()
+        {
+            lock (dirtyLock)
+            {
+                serfCounts.Dirty = false;
+                resourceCounts.Dirty = false;
+                completedBuildingCount.Dirty = false;
+                incompleteBuildingCount.Dirty = false;
 
-        public dword TotalLandArea { get; set; } = 0;
-        public dword TotalBuildingScore { get; set; } = 0;
-        public dword TotalMilitaryScore { get; set; } = 0;
+                ResetDirtyFlagUnlocked();
+            }          
+        }
 
-        public dword[] SerfCounts { get; set; } = new dword[Constants.NUM_SERF_TYPES];
-        public dword[] ResourceCounts { get; set; } = new dword[Constants.NUM_RESOURCE_TYPES];
-        public dword[] CompletedBuildingCount { get; set; } = new uint[Constants.NUM_BUILDING_TYPES];
-        public dword[] IncompleteBuildingCount { get; set; } = new uint[Constants.NUM_BUILDING_TYPES];
-        public dword MilitaryMaxGold { get; set; } = 0;        
+        public PlayerStateFlags Flags
+        {
+            get => flags;
+            set
+            {
+                if (flags != value)
+                {
+                    flags = value;
+                    MarkPropertyAsDirty(nameof(Flags));
+                }
+            }
+        }
+        public PlayerFace Face
+        {
+            get => face;
+            set
+            {
+                if (face != value)
+                {
+                    face = value;
+                    MarkPropertyAsDirty(nameof(Face));
+                }
+            }
+        }
+        public Color Color
+        {
+            get => color;
+            set
+            {
+                if (color != value)
+                {
+                    color = value;
+                    MarkPropertyAsDirty(nameof(Color));
+                }
+            }
+        }
+        public MapPos CastlePosition
+        {
+            get => castlePosition;
+            set
+            {
+                if (castlePosition != value)
+                {
+                    castlePosition = value;
+                    MarkPropertyAsDirty(nameof(CastlePosition));
+                }
+            }
+        }
+        public dword CastleInventoryIndex
+        {
+            get => castleInventoryIndex;
+            set
+            {
+                if (castleInventoryIndex != value)
+                {
+                    castleInventoryIndex = value;
+                    MarkPropertyAsDirty(nameof(CastleInventoryIndex));
+                }
+            }
+        }
+        public sbyte CastleScore
+        {
+            get => castleScore;
+            set
+            {
+                if (castleScore != value)
+                {
+                    castleScore = value;
+                    MarkPropertyAsDirty(nameof(CastleScore));
+                }
+            }
+        }
+        public byte CastleKnights
+        {
+            get => castleKnights;
+            set
+            {
+                if (castleKnights != value)
+                {
+                    castleKnights = value;
+                    MarkPropertyAsDirty(nameof(CastleKnights));
+                }
+            }
+        }
+        public dword KnightMorale
+        {
+            get => knightMorale;
+            set
+            {
+                if (knightMorale != value)
+                {
+                    knightMorale = value;
+                    MarkPropertyAsDirty(nameof(KnightMorale));
+                }
+            }
+        }
+        public dword GoldDeposited
+        {
+            get => goldDeposited;
+            set
+            {
+                if (goldDeposited != value)
+                {
+                    goldDeposited = value;
+                    MarkPropertyAsDirty(nameof(GoldDeposited));
+                }
+            }
+        }
+        public byte InitialSupplies
+        {
+            get => initialSupplies;
+            set
+            {
+                if (initialSupplies != value)
+                {
+                    initialSupplies = value;
+                    MarkPropertyAsDirty(nameof(InitialSupplies));
+                }
+            }
+        }
+        public byte Intelligence
+        {
+            get => intelligence;
+            set
+            {
+                if (intelligence != value)
+                {
+                    intelligence = value;
+                    MarkPropertyAsDirty(nameof(Intelligence));
+                }
+            }
+        }
+        public word ReproductionCounter
+        {
+            get => reproductionCounter;
+            set
+            {
+                if (reproductionCounter != value)
+                {
+                    reproductionCounter = value;
+                    MarkPropertyAsDirty(nameof(ReproductionCounter));
+                }
+            }
+        }
+        public word ReproductionReset
+        {
+            get => reproductionReset;
+            set
+            {
+                if (reproductionReset != value)
+                {
+                    reproductionReset = value;
+                    MarkPropertyAsDirty(nameof(ReproductionReset));
+                }
+            }
+        }
+        public word SerfToKnightCounter
+        {
+            get => serfToKnightCounter;
+            set
+            {
+                if (serfToKnightCounter != value)
+                {
+                    serfToKnightCounter = value;
+                    MarkPropertyAsDirty(nameof(SerfToKnightCounter));
+                }
+            }
+        }
+        public word KnightCycleCounter
+        {
+            get => knightCycleCounter;
+            set
+            {
+                if (knightCycleCounter != value)
+                {
+                    knightCycleCounter = value;
+                    MarkPropertyAsDirty(nameof(KnightCycleCounter));
+                }
+            }
+        }
+        public dword TotalLandArea
+        {
+            get => totalLandArea;
+            set
+            {
+                if (totalLandArea != value)
+                {
+                    totalLandArea = value;
+                    MarkPropertyAsDirty(nameof(TotalLandArea));
+                }
+            }
+        }
+        public dword TotalBuildingScore
+        {
+            get => totalBuildingScore;
+            set
+            {
+                if (totalBuildingScore != value)
+                {
+                    totalBuildingScore = value;
+                    MarkPropertyAsDirty(nameof(TotalBuildingScore));
+                }
+            }
+        }
+        public dword TotalMilitaryScore
+        {
+            get => totalMilitaryScore;
+            set
+            {
+                if (totalMilitaryScore != value)
+                {
+                    totalMilitaryScore = value;
+                    MarkPropertyAsDirty(nameof(TotalMilitaryScore));
+                }
+            }
+        }
+        public DirtyArray<dword> SerfCounts => serfCounts;
+        public DirtyArray<dword> ResourceCounts => resourceCounts;
+        public DirtyArray<dword> CompletedBuildingCount => completedBuildingCount;
+        public DirtyArray<dword> IncompleteBuildingCount => incompleteBuildingCount;
+        public dword MilitaryMaxGold
+        {
+            get => militaryMaxGold;
+            set
+            {
+                if (militaryMaxGold != value)
+                {
+                    militaryMaxGold = value;
+                    MarkPropertyAsDirty(nameof(MilitaryMaxGold));
+                }
+            }
+        }       
 
         [Ignore]
         public bool HasCastle

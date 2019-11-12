@@ -1,62 +1,136 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Freeserf
 {
     using Serialize;
     using word = UInt16;
     using dword = UInt32;
-    using SerfMap = Dictionary<Serf.Type, UInt32>;
-    using ResourceMap = Dictionary<Resource.Type, UInt32>;
+    using SerfMap = Serialize.DirtyMap<Serf.Type, UInt32>;
+    using ResourceMap = Serialize.DirtyMap<Resource.Type, UInt32>;
 
     [DataClass]
-    internal class InventoryState
+    internal class InventoryState : State
     {
-        [Ignore]
-        public bool Dirty
+        private byte player = 0;
+        private word flag = 0;
+        private word building = 0;
+        private dword genericCount = 0;
+        private readonly ResourceMap resources = new ResourceMap();
+        private readonly SerfMap serfs = new SerfMap();
+        private readonly DirtyArray<Inventory.OutQueue> outQueue = new DirtyArray<Inventory.OutQueue>
+        (
+            new Inventory.OutQueue(), new Inventory.OutQueue()
+        );
+        private byte resourceDir = 0;
+
+        public InventoryState()
         {
-            get;
-            internal set;
+            resources.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Resources)); };
+            serfs.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Serfs)); };
+            outQueue.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OutQueue)); };
         }
 
+        public override void ResetDirtyFlag()
+        {
+            lock (dirtyLock)
+            {
+                resources.Dirty = false;
+                serfs.Dirty = false;
+                outQueue.Dirty = false;
+
+                ResetDirtyFlagUnlocked();
+            }          
+        }
+        
         /// <summary>
         /// Owner of this inventory
         /// </summary>
-        public byte Player { get; set; } = 0;
+        public byte Player
+        {
+            get => player;
+            set
+            {
+                if (player != value)
+                {
+                    player = value;
+                    MarkPropertyAsDirty(nameof(Player));
+                }
+            }
+        }
         /// <summary>
         /// Index of flag connected to this inventory
         /// </summary>
-        public word Flag { get; set; } = 0;
-        /* Index of building containing this inventory */
+        public word Flag
+        {
+            get => flag;
+            set
+            {
+                if (flag != value)
+                {
+                    flag = value;
+                    MarkPropertyAsDirty(nameof(Flag));
+                }
+            }
+        }
         /// <summary>
         /// Index of building containing this inventory
         /// </summary>
-        public word Building { get; set; } = 0;
+        public word Building
+        {
+            get => building;
+            set
+            {
+                if (building != value)
+                {
+                    building = value;
+                    MarkPropertyAsDirty(nameof(Building));
+                }
+            }
+        }
         /// <summary>
         /// Count of generic serfs
         /// </summary>
-        public dword GenericCount { get; set; } = 0;
+        public dword GenericCount
+        {
+            get => genericCount;
+            set
+            {
+                if (genericCount != value)
+                {
+                    genericCount = value;
+                    MarkPropertyAsDirty(nameof(GenericCount));
+                }
+            }
+        }
         /// <summary>
         /// Count of resources
         /// </summary>
-        public ResourceMap Resources { get; } = new ResourceMap();
+        public ResourceMap Resources => resources;
         /// <summary>
         /// Indices to serfs of each type
         /// </summary>
-        public SerfMap Serfs { get; } = new SerfMap();
+        public SerfMap Serfs => serfs;
         /// <summary>
         /// Resources waiting to be moved out
         /// </summary>
-        public Inventory.OutQueue[] OutQueue { get; } = new Inventory.OutQueue[2]
-        {
-            new Inventory.OutQueue(), new Inventory.OutQueue()
-        };        
+        public DirtyArray<Inventory.OutQueue> OutQueue => outQueue;   
         /// <summary>
         /// Directions for resources and serfs
         /// Bit 0-1: Resource direction
         /// Bit 2-3: Serf direction
         /// </summary>
-        public byte ResourceDir { get; set; } = 0;
+        public byte ResourceDir
+        {
+            get => resourceDir;
+            set
+            {
+                if (resourceDir != value)
+                {
+                    resourceDir = value;
+                    MarkPropertyAsDirty(nameof(ResourceDir));
+                }
+            }
+        }
 
         [Ignore]
         public Inventory.Mode ResourceMode

@@ -28,11 +28,9 @@ namespace Freeserf
 {
     using Serialize;
     using word = UInt16;
-    using dword = UInt32;
-    using SerfMap = Dictionary<Serf.Type, uint>;
-    using ResourceMap = Dictionary<Resource.Type, uint>;
+    using ResourceMap = Serialize.DirtyMap<Resource.Type, uint>;
 
-    public class Inventory : GameObject, IDisposable, IData
+    public class Inventory : GameObject, IState, IDisposable
     {
         public enum Mode
         {
@@ -41,10 +39,25 @@ namespace Freeserf
             Out = 3,   // 11
         }
 
-        internal class OutQueue
+        internal class OutQueue : IComparable
         {
             public Resource.Type Type;
             public uint Dest;
+
+            public int CompareTo(object other)
+            {
+                if (other is OutQueue)
+                {
+                    var otherQueue = other as OutQueue;
+                    
+                    if (Type == otherQueue.Type)
+                        return Dest.CompareTo(otherQueue.Dest);
+
+                    return Type.CompareTo(otherQueue.Type);
+                }
+
+                return 1;
+            }
         }
 
         [Data]
@@ -81,66 +94,36 @@ namespace Freeserf
         public uint Player
         {
             get => state.Player;
-            internal set
-            {
-                if (state.Player != value)
-                {
-                    state.Player = (byte)value;
-                    state.Dirty = true;
-                }
-            }
+            internal set => state.Player = (byte)value;
         }
 
         public uint Flag
         {
             get => state.Flag;
-            set
-            {
-                if (state.Flag != value)
-                {
-                    state.Flag = (word)value;
-                    state.Dirty = true;
-                }
-            }
+            set => state.Flag = (word)value;
         }
 
         public uint Building
         {
             get => state.Building;
-            set
-            {
-                if (state.Building != value)
-                {
-                    state.Building = (word)value;
-                    state.Dirty = true;
-                }
-            }
+            set => state.Building = (word)value;
         }
 
         public Mode ResourceMode
         {
             get => state.ResourceMode;
-            set
-            {
-                if (state.ResourceMode != value)
-                {
-                    state.ResourceMode = value;
-                    state.Dirty = true;
-                }
-            }
+            set => state.ResourceMode = value;
         }
 
         public Mode SerfMode
         {
             get => state.SerfMode;
-            set
-            {
-                if (state.SerfMode != value)
-                {
-                    state.SerfMode = value;
-                    state.Dirty = true;
-                }
-            }
+            set => state.SerfMode = value;
+        }
+
+        public void ResetDirtyFlag()
+        {
+            state.ResetDirtyFlag();
         }
 
         public bool HaveAnyOutMode()
@@ -176,8 +159,6 @@ namespace Freeserf
 
             ++serfsOut;
 
-            state.Dirty = true;
-
             return true;
         }
 
@@ -206,7 +187,6 @@ namespace Freeserf
             }
 
             state.Serfs[serf.GetSerfType()] = 0;
-            state.Dirty = true;
 
             return true;
         }
@@ -220,7 +200,6 @@ namespace Freeserf
 
             Serf serf = Game.GetSerf(state.Serfs[type]);
             state.Serfs[type] = 0;
-            state.Dirty = true;
 
             return serf;
         }
@@ -228,7 +207,6 @@ namespace Freeserf
         public void SerfComeBack()
         {
             ++state.GenericCount;
-            state.Dirty = true;
         }
 
         public uint FreeSerfCount()
@@ -281,8 +259,6 @@ namespace Freeserf
 
             state.OutQueue[1].Type = Resource.Type.None;
             state.OutQueue[1].Dest = 0;
-
-            state.Dirty = true;
         }
 
         public void ResetQueueForDest(Flag flag)
@@ -291,7 +267,6 @@ namespace Freeserf
             {
                 PushResource(state.OutQueue[1].Type);
                 state.OutQueue[1].Type = Resource.Type.None;
-                state.Dirty = true;
             }
 
             if (state.OutQueue[0].Type != Resource.Type.None && state.OutQueue[0].Dest == flag.Index)
@@ -300,7 +275,6 @@ namespace Freeserf
                 state.OutQueue[0].Type = state.OutQueue[1].Type;
                 state.OutQueue[0].Dest = state.OutQueue[1].Dest;
                 state.OutQueue[1].Type = Resource.Type.None;
-                state.Dirty = true;
             }
         }
 
@@ -356,8 +330,6 @@ namespace Freeserf
                 state.OutQueue[1].Type = type;
                 state.OutQueue[1].Dest = dest;
             }
-
-            state.Dirty = true;
         }
 
         static readonly uint[,] SuppliesTemplates = new uint[5, 26]
@@ -423,8 +395,6 @@ namespace Freeserf
 
                 state.Resources[(Resource.Type)i] = t1 + (n >> 16);
             }
-
-            state.Dirty = true;
         }
 
         public Serf CallTransporter(bool water)
@@ -437,7 +407,6 @@ namespace Freeserf
                 {
                     serf = Game.GetSerf(state.Serfs[Serf.Type.Sailor]);
                     state.Serfs[Serf.Type.Sailor] = 0;
-                    state.Dirty = true;
                 }
                 else
                 {
@@ -449,7 +418,6 @@ namespace Freeserf
                         --state.Resources[Resource.Type.Boat];
                         serf.SetSerfType(Serf.Type.Sailor);
                         --state.GenericCount;
-                        state.Dirty = true;
                     }
                     else
                     {
@@ -463,7 +431,6 @@ namespace Freeserf
                 {
                     serf = Game.GetSerf(state.Serfs[Serf.Type.Transporter]);
                     state.Serfs[Serf.Type.Transporter] = 0;
-                    state.Dirty = true;
                 }
                 else
                 {
@@ -473,7 +440,6 @@ namespace Freeserf
                         state.Serfs[Serf.Type.Generic] = 0;
                         serf.SetSerfType(Serf.Type.Transporter);
                         --state.GenericCount;
-                        state.Dirty = true;
                     }
                     else
                     {
@@ -508,8 +474,6 @@ namespace Freeserf
 
             serf.SetSerfType(Serf.Type.Knight0);
 
-            state.Dirty = true;
-
             return true;
         }
 
@@ -528,8 +492,6 @@ namespace Freeserf
                 {
                     state.Serfs[Serf.Type.Generic] = serf.Index;
                 }
-
-                state.Dirty = true;
             }
 
             return serf;
@@ -612,8 +574,6 @@ namespace Freeserf
 
             state.Serfs[type] = serf.Index;
 
-            state.Dirty = true;
-
             return true;
         }
 
@@ -654,7 +614,6 @@ namespace Freeserf
         public void SerfIdleInStock(Serf serf)
         {
             state.Serfs[serf.GetSerfType()] = serf.Index;
-            state.Dirty = true;
         }
 
         public void KnightTraining(Serf serf, int p)
@@ -664,7 +623,6 @@ namespace Freeserf
             if (serf.TrainKnight(p))
             {
                 state.Serfs[oldType] = 0;
-                state.Dirty = true;
             }
 
             SerfIdleInStock(serf);
@@ -698,8 +656,6 @@ namespace Freeserf
             {
                 state.Serfs[(Serf.Type)j] = reader.ReadWord(); // 66 + 2*j
             }
-
-            state.Dirty = true;
         }
 
         public void ReadFrom(SaveReaderText reader)
@@ -724,8 +680,6 @@ namespace Freeserf
             }
 
             state.Serfs[(Serf.Type)26] = reader.Value("serfs")[26].ReadUInt();
-
-            state.Dirty = true;
         }
 
         public void WriteTo(SaveWriterText writer)

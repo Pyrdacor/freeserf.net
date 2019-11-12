@@ -36,7 +36,7 @@ namespace Freeserf
     using ResourceMap = Dictionary<Resource.Type, uint>;
     using SerfMap = Dictionary<Serf.Type, int>;
 
-    public class Player : GameObject, IData
+    public class Player : GameObject, IState
     {
         // We only serialize the settings and the player state
         [Data]
@@ -120,8 +120,6 @@ namespace Freeserf
 
                 if (!value)
                     state.EmergencyProgramWasDeactivatedOnce = true;
-
-                state.Dirty = true;
             }
         }
 
@@ -140,15 +138,12 @@ namespace Freeserf
 
             if (!Face.IsHuman())
                 state.IsAI = true;
-
-            settings.Dirty = true;
-            state.Dirty = true;
         }
 
-        internal void ResetDirtyFlag()
+        public void ResetDirtyFlag()
         {
-            settings.Dirty = false;
-            state.Dirty = false;
+            settings.ResetDirtyFlag();
+            state.ResetDirtyFlag();
         }
 
         public PlayerInfo GetPlayerInfo()
@@ -184,11 +179,7 @@ namespace Freeserf
         public MapPos CastlePosition
         {
             get => state.CastlePosition;
-            internal set
-            {
-                state.CastlePosition = value;
-                state.Dirty = true;
-            }
+            internal set => state.CastlePosition = value;
         }
         public bool CanSpawn => state.CanSpawn;
         /// <summary>
@@ -197,14 +188,7 @@ namespace Freeserf
         public bool SendStrongest
         {
             get => settings.SendStrongest;
-            set
-            {
-                if (settings.SendStrongest != value)
-                {
-                    settings.SendStrongest = value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.SendStrongest = value;
         }
         /// <summary>
         /// Whether cycling of knights is in progress.
@@ -317,8 +301,6 @@ namespace Freeserf
             settings.FoodCoalmine = 45850;
             settings.FoodIronmine = 45850;
             settings.FoodGoldmine = 65500;
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -329,8 +311,6 @@ namespace Freeserf
             settings.PlanksConstruction = 65500;
             settings.PlanksBoatbuilder = 3275;
             settings.PlanksToolmaker = 19650;
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -340,8 +320,6 @@ namespace Freeserf
         {
             settings.SteelToolmaker = 45850;
             settings.SteelWeaponsmith = 65500;
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -352,8 +330,6 @@ namespace Freeserf
             settings.CoalSteelsmelter = 32750;
             settings.CoalGoldsmelter = 65500;
             settings.CoalWeaponsmith = 52400;
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -363,8 +339,6 @@ namespace Freeserf
 		{
             settings.WheatPigfarm = 65500;
             settings.WheatMill = 32750;
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -381,8 +355,6 @@ namespace Freeserf
             settings.ToolPriorities[6] = 32750; // SAW
             settings.ToolPriorities[7] = 45850; // PICK
             settings.ToolPriorities[8] = 6550;  // PINCER
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -420,8 +392,6 @@ namespace Freeserf
             settings.FlagPriorities[(int)Resource.Type.Steel] = 24;
             settings.FlagPriorities[(int)Resource.Type.Stone] = 25;
             settings.FlagPriorities[(int)Resource.Type.Plank] = 26;
-
-            settings.Dirty = true;
         }
 
         /// <summary>
@@ -459,8 +429,6 @@ namespace Freeserf
             settings.InventoryPriorities[(int)Resource.Type.Sword] = 24;
             settings.InventoryPriorities[(int)Resource.Type.GoldOre] = 25;
             settings.InventoryPriorities[(int)Resource.Type.GoldBar] = 26;
-
-            settings.Dirty = true;
         }
 
         public uint GetKnightOccupation(int threatLevel)
@@ -483,8 +451,6 @@ namespace Freeserf
             }
 
             settings.KnightOccupation[index] = (byte)((max << 4) | min);
-
-            settings.Dirty = true;
         }
 
         public void SetLowKnightOccupation()
@@ -493,8 +459,6 @@ namespace Freeserf
             settings.KnightOccupation[1] = 0x00;
             settings.KnightOccupation[2] = 0x00;
             settings.KnightOccupation[3] = 0x00;
-
-            settings.Dirty = true;
         }
 
         public void SetMediumKnightOccupation(bool offensive)
@@ -505,8 +469,6 @@ namespace Freeserf
             settings.KnightOccupation[1] = 0x00;
             settings.KnightOccupation[2] = value;
             settings.KnightOccupation[3] = value;
-
-            settings.Dirty = true;
         }
 
         public void SetHighKnightOccupation(bool offensive)
@@ -517,22 +479,16 @@ namespace Freeserf
             settings.KnightOccupation[1] = 0x20;
             settings.KnightOccupation[2] = value;
             settings.KnightOccupation[3] = value;
-
-            settings.Dirty = true;
         }
 
         public void IncreaseCastleKnights()
         {
             ++state.CastleKnights;
-
-            state.Dirty = true;
         }
 
         public void DecreaseCastleKnights()
         {
             --state.CastleKnights;
-
-            state.Dirty = true;
         }
 
         public uint CastleKnights => state.CastleKnights;
@@ -542,22 +498,16 @@ namespace Freeserf
         public void SetCastleKnightsWanted(uint amount)
         {
             settings.CastleKnightsWanted = (byte)Misc.Clamp(1, amount, 99);
-
-            settings.Dirty = true;
         }
 
         public void IncreaseCastleKnightsWanted()
 		{
             settings.CastleKnightsWanted = (byte)Math.Min(settings.CastleKnightsWanted + 1, 99);
-
-            settings.Dirty = true;
         }
 
         public void DecreaseCastleKnightsWanted()
 		{
             settings.CastleKnightsWanted = (byte)Math.Max(1, settings.CastleKnightsWanted - 1);
-
-            settings.Dirty = true;
         }
 
         public uint KnightMorale => state.KnightMorale;
@@ -818,7 +768,6 @@ namespace Freeserf
             state.CyclingKnightsInProgress = true;
             state.CyclingKnightsReducedLevel = true;
             state.KnightCycleCounter = 2400;
-            state.Dirty = true;
         }
 
         /// <summary>
@@ -949,7 +898,6 @@ namespace Freeserf
             serf.Player = Index;
 
             ++state.SerfCounts[(int)Serf.Type.Generic];
-            state.Dirty = true;
 
             return serf;
         }
@@ -1061,8 +1009,6 @@ namespace Freeserf
                 return;
 
             ++state.SerfCounts[(int)type];
-
-            state.Dirty = true;
         }
 
         public void DecreaseSerfCount(Serf.Type type)
@@ -1076,11 +1022,9 @@ namespace Freeserf
             }
 
             --state.SerfCounts[(int)type];
-
-            state.Dirty = true;
         }
 
-        public uint[] GetSerfCounts()
+        public DirtyArray<uint> GetSerfCounts()
         {
             return state.SerfCounts;
         }
@@ -1094,15 +1038,11 @@ namespace Freeserf
         public void IncreaseResourceCount(Resource.Type type)
         {
             ++state.ResourceCounts[(int)type];
-
-            state.Dirty = true;
         }
 
         public void DecreaseResourceCount(Resource.Type type)
         {
             --state.ResourceCounts[(int)type];
-
-            state.Dirty = true;
         }
 
         public void BuildingFounded(Building building)
@@ -1123,8 +1063,6 @@ namespace Freeserf
             {
                 ++state.IncompleteBuildingCount[(int)building.BuildingType];
             }
-
-            state.Dirty = true;
         }
 
         public void BuildingBuilt(Building building)
@@ -1134,8 +1072,6 @@ namespace Freeserf
             state.TotalBuildingScore += Building.BuildingGetScoreFromType(type);
             ++state.CompletedBuildingCount[(int)type];
             --state.IncompleteBuildingCount[(int)type];
-
-            state.Dirty = true;
         }
 
         public void BuildingCaptured(Building building)
@@ -1164,11 +1100,7 @@ namespace Freeserf
 
                 // Change owner of building
                 building.Player = Index;
-
-                defPlayer.state.Dirty = true;
-            }
-
-            state.Dirty = true;            
+            }          
         }
 
         public void BuildingDemolished(Building building)
@@ -1202,8 +1134,6 @@ namespace Freeserf
             {
                 --state.IncompleteBuildingCount[(int)buildingType];
             }
-
-            state.Dirty = true;
         }
 
         public uint GetCompletedBuildingCount(Building.Type type)
@@ -1229,8 +1159,6 @@ namespace Freeserf
         public void SetToolPriority(int type, int priority)
         {
             settings.ToolPriorities[type] = (word)priority;
-
-            settings.Dirty = true;
         }
 
         public void SetFullToolPriority(Resource.Type tool)
@@ -1243,7 +1171,7 @@ namespace Freeserf
             SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
         }
 
-        public byte[] GetFlagPriorities()
+        public DirtyArray<byte> GetFlagPriorities()
         {
             return settings.FlagPriorities;
         }
@@ -1253,7 +1181,7 @@ namespace Freeserf
             return settings.InventoryPriorities[(int)type];
         }
 
-        public byte[] GetInventoryPriorities()
+        public DirtyArray<byte> GetInventoryPriorities()
         {
             return settings.InventoryPriorities;
         }
@@ -1527,15 +1455,11 @@ namespace Freeserf
         public void IncreaseLandArea()
         {
             ++state.TotalLandArea;
-
-            state.Dirty = true;
         }
 
         public void DecreaseLandArea()
         {
             --state.TotalLandArea;
-
-            state.Dirty = true;
         }
 
         public uint BuildingScore => state.TotalBuildingScore;
@@ -1546,22 +1470,16 @@ namespace Freeserf
         public void IncreaseMilitaryScore(uint val)
         {
             state.TotalMilitaryScore += val;
-
-            state.Dirty = true;
         }
 
         public void DecreaseMilitaryScore(uint val)
         {
             state.TotalMilitaryScore = (uint)Misc.Max(0, (int)state.TotalMilitaryScore - val);
-
-            state.Dirty = true;
         }
 
         public void IncreaseMilitaryMaxGold(int val)
         {
             state.MilitaryMaxGold = (uint)Misc.Max(0, (int)state.MilitaryMaxGold + val);
-
-            state.Dirty = true;
         }
 
         public uint Score => state.TotalBuildingScore + ((state.TotalLandArea + MilitaryScore) >> 4);
@@ -1641,14 +1559,7 @@ namespace Freeserf
         public int SerfToKnightRate
         {
             get => settings.SerfToKnightRate;
-            set
-            {
-                if (settings.SerfToKnightRate != value)
-                {
-                    settings.SerfToKnightRate = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.SerfToKnightRate = (word)value;
         }
 
         public uint GetFoodForBuilding(Building.Type buildingType)
@@ -1671,196 +1582,98 @@ namespace Freeserf
         public uint FoodStonemine
         {
             get => settings.FoodStonemine;
-            set
-            {
-                if (settings.FoodStonemine != value)
-                {
-                    settings.FoodStonemine = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.FoodStonemine = (word)value;
         }
         public uint GetFoodStonemine() { return FoodStonemine; }
 
         public uint FoodCoalmine
         {
             get => settings.FoodCoalmine;
-            set
-            {
-                if (settings.FoodCoalmine != value)
-                {
-                    settings.FoodCoalmine = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.FoodCoalmine = (word)value;
         }
         public uint GetFoodCoalmine() { return FoodCoalmine; }
 
         public uint FoodIronmine
         {
             get => settings.FoodIronmine;
-            set
-            {
-                if (settings.FoodIronmine != value)
-                {
-                    settings.FoodIronmine = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.FoodIronmine = (word)value;
         }
         public uint GetFoodIronmine() { return FoodIronmine; }
 
         public uint FoodGoldmine
         {
             get => settings.FoodGoldmine;
-            set
-            {
-                if (settings.FoodGoldmine != value)
-                {
-                    settings.FoodGoldmine = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.FoodGoldmine = (word)value;
         }
         public uint GetFoodGoldmine() { return FoodGoldmine; }
 
         public uint PlanksConstruction
         {
             get => settings.PlanksConstruction;
-            set
-            {
-                if (settings.PlanksConstruction != value)
-                {
-                    settings.PlanksConstruction = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.PlanksConstruction = (word)value;
         }
         public uint GetPlanksConstruction() { return PlanksConstruction; }
 
         public uint PlanksBoatbuilder
         {
             get => settings.PlanksBoatbuilder;
-            set
-            {
-                if (settings.PlanksBoatbuilder != value)
-                {
-                    settings.PlanksBoatbuilder = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.PlanksBoatbuilder = (word)value;
         }
         public uint GetPlanksBoatbuilder() { return PlanksBoatbuilder; }
 
         public uint PlanksToolmaker
         {
             get => settings.PlanksToolmaker;
-            set
-            {
-                if (settings.PlanksToolmaker != value)
-                {
-                    settings.PlanksToolmaker = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.PlanksToolmaker = (word)value;
         }
         public uint GetPlanksToolmaker() { return PlanksToolmaker; }
 
         public uint SteelToolmaker
         {
             get => settings.SteelToolmaker;
-            set
-            {
-                if (settings.SteelToolmaker != value)
-                {
-                    settings.SteelToolmaker = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.SteelToolmaker = (word)value;
         }
         public uint GetSteelToolmaker() { return SteelToolmaker; }
 
         public uint SteelWeaponsmith
         {
             get => settings.SteelWeaponsmith;
-            set
-            {
-                if (settings.SteelWeaponsmith != value)
-                {
-                    settings.SteelWeaponsmith = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.SteelWeaponsmith = (word)value;
         }
         public uint GetSteelWeaponsmith() { return SteelWeaponsmith; }
 
         public uint CoalSteelsmelter
         {
             get => settings.CoalSteelsmelter;
-            set
-            {
-                if (settings.CoalSteelsmelter != value)
-                {
-                    settings.CoalSteelsmelter = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.CoalSteelsmelter = (word)value;
         }
         public uint GetCoalSteelsmelter() { return CoalSteelsmelter; }
 
         public uint CoalGoldsmelter
         {
             get => settings.CoalGoldsmelter;
-            set
-            {
-                if (settings.CoalGoldsmelter != value)
-                {
-                    settings.CoalGoldsmelter = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.CoalGoldsmelter = (word)value;
         }
         public uint GetCoalGoldsmelter() { return CoalGoldsmelter; }
 
         public uint CoalWeaponsmith
         {
             get => settings.CoalWeaponsmith;
-            set
-            {
-                if (settings.CoalWeaponsmith != value)
-                {
-                    settings.CoalWeaponsmith = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.CoalWeaponsmith = (word)value;
         }
         public uint GetCoalWeaponsmith() { return CoalWeaponsmith; }
 
         public uint WheatPigfarm
         {
             get => settings.WheatPigfarm;
-            set
-            {
-                if (settings.WheatPigfarm != value)
-                {
-                    settings.WheatPigfarm = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.WheatPigfarm = (word)value;
         }
         public uint GetWheatPigfarm() { return WheatPigfarm; }
 
         public uint WheatMill
         {
             get => settings.WheatMill;
-            set
-            {
-                if (settings.WheatMill != value)
-                {
-                    settings.WheatMill = (word)value;
-                    settings.Dirty = true;
-                }
-            }
+            set => settings.WheatMill = (word)value;
         }
         public uint GetWheatMill() { return WheatMill; }
 
@@ -2053,9 +1866,6 @@ namespace Freeserf
             reader.ReadWord(); // 476, currentett_6tem = reader.ReadWord();
 
             state.CastleScore = (sbyte)reader.ReadWord(); // 478
-
-            state.Dirty = true;
-            settings.Dirty = true;
         }
 
         /// <summary>

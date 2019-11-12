@@ -6,16 +6,16 @@
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
  * freeserf.net is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU General private License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * freeserf.net is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU General private License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU General private License
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -25,10 +25,9 @@ namespace Freeserf
 {
     using Serialize;
     using word = UInt16;
-    using dword = UInt32;
 
     [Flags]
-    public enum PlayerSettingFlags : byte
+    internal enum PlayerSettingFlags : byte
     {
         None =                          0x00,
         /// <summary>
@@ -55,44 +54,269 @@ namespace Freeserf
     }
 
     [DataClass]
-    public class PlayerSettings : IData
+    internal class PlayerSettings : State
     {
-        [Ignore]
-        public bool Dirty
+        private PlayerSettingFlags flags = PlayerSettingFlags.None;
+        private DirtyArray<word> toolPriorities = new DirtyArray<word>(Constants.NUM_TOOL_TYPES);
+        private DirtyArray<byte> flagPriorities = new DirtyArray<byte>(Constants.NUM_RESOURCE_TYPES);
+        private DirtyArray<byte> inventoryPriorities = new DirtyArray<byte>(Constants.NUM_RESOURCE_TYPES);
+        private DirtyArray<byte> knightOccupation = new DirtyArray<byte>(Constants.NUM_TREATMENT_LEVEL_TYPES);
+        private word serfToKnightRate = 0;
+        private byte castleKnightsWanted = 3;
+        private word foodStonemine = 0;
+        private word foodCoalmine = 0;
+        private word foodIronmine = 0;
+        private word foodGoldmine = 0;
+        private word planksConstruction = 0;
+        private word planksBoatbuilder = 0;
+        private word planksToolmaker = 0;
+        private word steelToolmaker = 0;
+        private word steelWeaponsmith = 0;
+        private word coalSteelsmelter = 0;
+        private word coalGoldsmelter = 0;
+        private word coalWeaponsmith = 0;
+        private word wheatPigfarm = 0;
+        private word wheatMill = 0;
+
+        public PlayerSettings()
         {
-            get;
-            internal set;
+            toolPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ToolPriorities)); };
+            flagPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(FlagPriorities)); };
+            inventoryPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(InventoryPriorities)); };
+            knightOccupation.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(KnightOccupation)); };
         }
 
-        public PlayerSettingFlags Flags { get; set; } = PlayerSettingFlags.None;
+        public override void ResetDirtyFlag()
+        {
+            lock (dirtyLock)
+            {
+                toolPriorities.Dirty = false;
+                flagPriorities.Dirty = false;
+                inventoryPriorities.Dirty = false;
+                knightOccupation.Dirty = false;
+
+                ResetDirtyFlagUnlocked();
+            }          
+        }
+
+        public PlayerSettingFlags Flags
+        {
+            get => flags;
+            set
+            {
+                if (flags != value)
+                {
+                    flags = value;
+                    MarkPropertyAsDirty(nameof(Flags));
+                }
+            }
+        }
         /// <summary>
         /// 0 = minimum (0%), 65535 = maximum (100%)
         /// </summary>
-        public word[] ToolPriorities { get; set; } = new word[Constants.NUM_TOOL_TYPES];
-        public byte[] FlagPriorities { get; set; } = new byte[Constants.NUM_RESOURCE_TYPES];
-        public byte[] InventoryPriorities { get; set; } = new byte[Constants.NUM_RESOURCE_TYPES];
+        public DirtyArray<word> ToolPriorities => toolPriorities;
+        public DirtyArray<byte> FlagPriorities => flagPriorities;
+        public DirtyArray<byte> InventoryPriorities => inventoryPriorities;
         /// <summary>
         /// Lower 4 bits = min level, higher 4 bits = max level
         /// </summary>
-        public byte[] KnightOccupation { get; set; } = new byte[Constants.NUM_TREATMENT_LEVEL_TYPES];
-        public word SerfToKnightRate { get; set; } = 0;
-        /* +1 for every castle defeated,
-           -1 for own castle lost. */
-        public byte CastleKnightsWanted { get; set; } = 3;
-        public word FoodStonemine { get; set; } = 0; /* Food delivery priority of food for mines. */
-        public word FoodCoalmine { get; set; } = 0;
-        public word FoodIronmine { get; set; } = 0;
-        public word FoodGoldmine { get; set; } = 0;
-        public word PlanksConstruction { get; set; } = 0; /* Planks delivery priority. */
-        public word PlanksBoatbuilder { get; set; } = 0;
-        public word PlanksToolmaker { get; set; } = 0;
-        public word SteelToolmaker { get; set; } = 0;
-        public word SteelWeaponsmith { get; set; } = 0;
-        public word CoalSteelsmelter { get; set; } = 0;
-        public word CoalGoldsmelter { get; set; } = 0;
-        public word CoalWeaponsmith { get; set; } = 0;
-        public word WheatPigfarm { get; set; } = 0;
-        public word WheatMill { get; set; } = 0;
+        public DirtyArray<byte> KnightOccupation => knightOccupation;
+        public word SerfToKnightRate
+        {
+            get => serfToKnightRate;
+            set
+            {
+                if (serfToKnightRate != value)
+                {
+                    serfToKnightRate = value;
+                    MarkPropertyAsDirty(nameof(SerfToKnightRate));
+                }
+            }
+        }
+        // +1 for every castle defeated,
+        // -1 for own castle lost.
+        public byte CastleKnightsWanted
+        {
+            get => castleKnightsWanted;
+            set
+            {
+                if (castleKnightsWanted != value)
+                {
+                    castleKnightsWanted = value;
+                    MarkPropertyAsDirty(nameof(CastleKnightsWanted));
+                }
+            }
+        }
+        // Food delivery priority of food for mines.
+        public word FoodStonemine
+        {
+            get => foodStonemine;
+            set
+            {
+                if (foodStonemine != value)
+                {
+                    foodStonemine = value;
+                    MarkPropertyAsDirty(nameof(FoodStonemine));
+                }
+            }
+        }
+        public word FoodCoalmine
+        {
+            get => foodCoalmine;
+            set
+            {
+                if (foodCoalmine != value)
+                {
+                    foodCoalmine = value;
+                    MarkPropertyAsDirty(nameof(FoodCoalmine));
+                }
+            }
+        }
+        public word FoodIronmine
+        {
+            get => foodIronmine;
+            set
+            {
+                if (foodIronmine != value)
+                {
+                    foodIronmine = value;
+                    MarkPropertyAsDirty(nameof(FoodIronmine));
+                }
+            }
+        }
+        public word FoodGoldmine
+        {
+            get => foodGoldmine;
+            set
+            {
+                if (foodGoldmine != value)
+                {
+                    foodGoldmine = value;
+                    MarkPropertyAsDirty(nameof(FoodGoldmine));
+                }
+            }
+        }
+        // Planks delivery priority.
+        public word PlanksConstruction
+        {
+            get => planksConstruction;
+            set
+            {
+                if (planksConstruction != value)
+                {
+                    planksConstruction = value;
+                    MarkPropertyAsDirty(nameof(PlanksConstruction));
+                }
+            }
+        }
+        public word PlanksBoatbuilder
+        {
+            get => planksBoatbuilder;
+            set
+            {
+                if (planksBoatbuilder != value)
+                {
+                    planksBoatbuilder = value;
+                    MarkPropertyAsDirty(nameof(PlanksBoatbuilder));
+                }
+            }
+        }
+        public word PlanksToolmaker
+        {
+            get => planksToolmaker;
+            set
+            {
+                if (planksToolmaker != value)
+                {
+                    planksToolmaker = value;
+                    MarkPropertyAsDirty(nameof(PlanksToolmaker));
+                }
+            }
+        }
+        public word SteelToolmaker
+        {
+            get => steelToolmaker;
+            set
+            {
+                if (steelToolmaker != value)
+                {
+                    steelToolmaker = value;
+                    MarkPropertyAsDirty(nameof(SteelToolmaker));
+                }
+            }
+        }
+        public word SteelWeaponsmith
+        {
+            get => steelWeaponsmith;
+            set
+            {
+                if (steelWeaponsmith != value)
+                {
+                    steelWeaponsmith = value;
+                    MarkPropertyAsDirty(nameof(SteelWeaponsmith));
+                }
+            }
+        }
+        public word CoalSteelsmelter
+        {
+            get => coalSteelsmelter;
+            set
+            {
+                if (coalSteelsmelter != value)
+                {
+                    coalSteelsmelter = value;
+                    MarkPropertyAsDirty(nameof(CoalSteelsmelter));
+                }
+            }
+        }
+        public word CoalGoldsmelter
+        {
+            get => coalGoldsmelter;
+            set
+            {
+                if (coalGoldsmelter != value)
+                {
+                    coalGoldsmelter = value;
+                    MarkPropertyAsDirty(nameof(CoalGoldsmelter));
+                }
+            }
+        }
+        public word CoalWeaponsmith
+        {
+            get => coalWeaponsmith;
+            set
+            {
+                if (coalWeaponsmith != value)
+                {
+                    coalWeaponsmith = value;
+                    MarkPropertyAsDirty(nameof(CoalWeaponsmith));
+                }
+            }
+        }
+        public word WheatPigfarm
+        {
+            get => wheatPigfarm;
+            set
+            {
+                if (wheatPigfarm != value)
+                {
+                    wheatPigfarm = value;
+                    MarkPropertyAsDirty(nameof(WheatPigfarm));
+                }
+            }
+        }
+        public word WheatMill
+        {
+            get => wheatMill;
+            set
+            {
+                if (wheatMill != value)
+                {
+                    wheatMill = value;
+                    MarkPropertyAsDirty(nameof(WheatMill));
+                }
+            }
+        }
 
         [Ignore]
         public bool SendStrongest
