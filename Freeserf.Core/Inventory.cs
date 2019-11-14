@@ -631,7 +631,7 @@ namespace Freeserf
         public void ReadFrom(SaveReaderBinary reader)
         {
             Player = reader.ReadByte();  // 0
-            state.ResourceDir = reader.ReadByte();  // 1
+            state.ResourceDirection = reader.ReadByte();  // 1
             state.Flag = reader.ReadWord(); // 2
             state.Building = reader.ReadWord(); // 4
 
@@ -661,7 +661,7 @@ namespace Freeserf
         public void ReadFrom(SaveReaderText reader)
         {
             state.Player = (byte)reader.Value("player").ReadUInt();
-            state.ResourceDir = (byte)reader.Value("res_dir").ReadUInt();
+            state.ResourceDirection = (byte)reader.Value("res_dir").ReadUInt();
             state.Flag = (word)reader.Value("flag").ReadUInt();
             state.Building = (word)reader.Value("building").ReadUInt();
 
@@ -685,7 +685,7 @@ namespace Freeserf
         public void WriteTo(SaveWriterText writer)
         {
             writer.Value("player").Write(state.Player);
-            writer.Value("res_dir").Write(state.ResourceDir);
+            writer.Value("res_dir").Write(state.ResourceDirection);
             writer.Value("flag").Write(state.Flag);
             writer.Value("building").Write(state.Building);
 

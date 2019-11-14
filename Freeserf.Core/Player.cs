@@ -1364,7 +1364,7 @@ namespace Freeserf
                                 building.BuildingType != Building.Type.Sawmill &&
                                 building.BuildingType != Building.Type.Stonecutter)
                             {
-                                var flag = Game.GetFlag(building.GetFlagIndex());
+                                var flag = Game.GetFlag(building.FlagIndex);
 
                                 if (flag != null)
                                     Game.FlagResetTransport(flag);

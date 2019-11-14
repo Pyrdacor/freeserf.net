@@ -731,7 +731,7 @@ namespace Freeserf.Render
                     // Progress = 0: Leveling is active
                     // Progress = 1: Leveling is done (or not necessary)
                     // BitTest(Progress, 15) = true: Frame finished         [This means Progress >= 32768]
-                    // Progress = 0xffff: Building finished                 [This means Progress >= 65536]
+                    // Progress = 0xffff: Building finished                 [This means Progress == 65535]
 
                     var progress = building.GetProgress();
 

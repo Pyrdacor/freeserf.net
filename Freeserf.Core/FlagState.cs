@@ -186,33 +186,25 @@ namespace Freeserf
         private EndPointFlags endPointFlags = EndPointFlags.None;
         private TransporterFlags transporterFlags = TransporterFlags.None;
         private FlagBuildingFlags flagBuildingFlags = FlagBuildingFlags.None;
-        // Bit 0-3: Free transporter count (0-15)
-        // Bit 4-6: Length category
-        // Bit 7: Serf requested successfully
-        private DirtyArray<byte> flagPaths = new DirtyArray<byte>(6);
-        private DirtyArray<word> otherEndpoints = new DirtyArray<word>(6); // might be a flag index, building index or 0
-        // Bit 0-2: The scheduled slot (0-7) of the given path
-        // Bit 3-5: Direction from the other endpoint leading back to this flag
-        // Bit 6: Unused at the moment
-        // Bit 7: The direction has a resource pickup scheduled
-        private DirtyArray<byte> otherEndpointPaths = new DirtyArray<byte>(6);
-        private DirtyArray<ResourceSlot> slots = new DirtyArray<ResourceSlot>(Constants.FLAG_MAX_RES_COUNT);
 
         public FlagState()
         {
-            flagPaths.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(FlagPaths)); };
-            otherEndpoints.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OtherEndpoints)); };
-            otherEndpointPaths.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OtherEndpointPaths)); };
-            slots.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Slots)); };
+            FlagPaths.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(FlagPaths)); };
+            OtherEndpoints.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OtherEndpoints)); };
+            OtherEndpointPaths.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OtherEndpointPaths)); };
+            Slots.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Slots)); };
+
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+                Slots[i] = new ResourceSlot();
         }
 
         public override void ResetDirtyFlag()
         {
             lock (dirtyLock)
             {
-                flagPaths.Dirty = false;
-                otherEndpoints.Dirty = false;
-                otherEndpointPaths.Dirty = false;
+                FlagPaths.Dirty = false;
+                OtherEndpoints.Dirty = false;
+                OtherEndpointPaths.Dirty = false;
                 // incompleteBuildingCount.Dirty = false;
 
                 ResetDirtyFlagUnlocked();
@@ -303,10 +295,10 @@ namespace Freeserf
                 }
             }
         }
-        public DirtyArray<byte> FlagPaths => flagPaths;
-        public DirtyArray<word> OtherEndpoints => otherEndpoints;
-        public DirtyArray<byte> OtherEndpointPaths => otherEndpointPaths;
-        public DirtyArray<ResourceSlot> Slots => slots;
+        public DirtyArray<byte> FlagPaths { get; } = new DirtyArray<byte>(6);
+        public DirtyArray<word> OtherEndpoints { get; } = new DirtyArray<word>(6);
+        public DirtyArray<byte> OtherEndpointPaths { get; } = new DirtyArray<byte>(6);
+        public DirtyArray<ResourceSlot> Slots { get; } = new DirtyArray<ResourceSlot>(Constants.FLAG_MAX_RES_COUNT);
 
         [Ignore]
         public PathConnectionFlags PathConnectionFlags

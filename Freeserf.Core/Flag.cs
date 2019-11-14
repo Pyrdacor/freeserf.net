@@ -496,7 +496,7 @@ namespace Freeserf
         /// <param name="reader"></param>
         public void ReadFrom(SaveReaderBinary reader)
         {
-            state.Position = 0; /* Set correctly later. */
+            state.Position = 0; // Set correctly later. 
             state.SearchNumber = reader.ReadWord(); // 0
             state.SearchDirection = (Direction)reader.ReadByte(); // 2
             state.PathConnections = reader.ReadByte(); // 3
@@ -530,7 +530,7 @@ namespace Freeserf
             {
                 int offset = (int)reader.ReadDWord();
 
-                /* Other endpoint could be a building in direction up left. */
+                // Other endpoint could be a building in direction up left. 
                 if (j == Direction.UpLeft && HasBuilding())
                 {
                     OtherEndPoints[(int)j].Building = Game.CreateBuilding(offset / 18);
@@ -812,7 +812,7 @@ namespace Freeserf
             {
                 Building building = flag.GetBuilding();
 
-                destinationIndex.Value = (int)building.GetFlagIndex();
+                destinationIndex.Value = (int)building.FlagIndex;
 
                 return true;
             }
@@ -1456,7 +1456,7 @@ namespace Freeserf
                         throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
                     }
 
-                    state.Slots[slot].DestinationObjectIndex = (word)destBuilding.GetFlagIndex();
+                    state.Slots[slot].DestinationObjectIndex = (word)destBuilding.FlagIndex;
                     state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
 
                     return;

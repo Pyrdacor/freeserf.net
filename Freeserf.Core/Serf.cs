@@ -37,7 +37,7 @@ namespace Freeserf
 
     public class Serf : GameObject
     {
-        public enum Type
+        public enum Type : sbyte
         {
             None = -1,
             Transporter = 0,
@@ -73,7 +73,7 @@ namespace Freeserf
         /* The term FREE is used loosely in the following
          names to denote a state where the serf is not
          bound to a road or a flag. */
-        public enum State
+        public enum State : sbyte
         {
             Invalid = -1,
 

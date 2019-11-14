@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf.Serialize
 {
@@ -23,7 +24,7 @@ namespace Freeserf.Serialize
             get => array[index];
             set
             {
-                if (array[index].CompareTo(value) != 0)
+                if ((array[index] == null && value != null) || array[index].CompareTo(value) != 0)
                 {
                     array[index] = value;
 
@@ -60,7 +61,7 @@ namespace Freeserf.Serialize
 
         public IEnumerator<T> GetEnumerator()
         {
-            return (IEnumerator<T>)array.GetEnumerator();
+            return array.Cast<T>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

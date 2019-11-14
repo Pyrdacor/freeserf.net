@@ -15,28 +15,22 @@ namespace Freeserf
         private word flag = 0;
         private word building = 0;
         private dword genericCount = 0;
-        private readonly ResourceMap resources = new ResourceMap();
-        private readonly SerfMap serfs = new SerfMap();
-        private readonly DirtyArray<Inventory.OutQueue> outQueue = new DirtyArray<Inventory.OutQueue>
-        (
-            new Inventory.OutQueue(), new Inventory.OutQueue()
-        );
         private byte resourceDir = 0;
 
         public InventoryState()
         {
-            resources.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Resources)); };
-            serfs.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Serfs)); };
-            outQueue.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OutQueue)); };
+            Resources.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Resources)); };
+            Serfs.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Serfs)); };
+            OutQueue.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OutQueue)); };
         }
 
         public override void ResetDirtyFlag()
         {
             lock (dirtyLock)
             {
-                resources.Dirty = false;
-                serfs.Dirty = false;
-                outQueue.Dirty = false;
+                Resources.Dirty = false;
+                Serfs.Dirty = false;
+                OutQueue.Dirty = false;
 
                 ResetDirtyFlagUnlocked();
             }          
@@ -105,21 +99,24 @@ namespace Freeserf
         /// <summary>
         /// Count of resources
         /// </summary>
-        public ResourceMap Resources => resources;
+        public ResourceMap Resources { get; } = new ResourceMap();
         /// <summary>
         /// Indices to serfs of each type
         /// </summary>
-        public SerfMap Serfs => serfs;
+        public SerfMap Serfs { get; } = new SerfMap();
         /// <summary>
         /// Resources waiting to be moved out
         /// </summary>
-        public DirtyArray<Inventory.OutQueue> OutQueue => outQueue;   
+        public DirtyArray<Inventory.OutQueue> OutQueue { get; } = new DirtyArray<Inventory.OutQueue>
+        (
+            new Inventory.OutQueue(), new Inventory.OutQueue()
+        );
         /// <summary>
         /// Directions for resources and serfs
         /// Bit 0-1: Resource direction
         /// Bit 2-3: Serf direction
         /// </summary>
-        public byte ResourceDir
+        public byte ResourceDirection
         {
             get => resourceDir;
             set
@@ -127,7 +124,7 @@ namespace Freeserf
                 if (resourceDir != value)
                 {
                     resourceDir = value;
-                    MarkPropertyAsDirty(nameof(ResourceDir));
+                    MarkPropertyAsDirty(nameof(ResourceDirection));
                 }
             }
         }
@@ -135,19 +132,19 @@ namespace Freeserf
         [Ignore]
         public Inventory.Mode ResourceMode
         {
-            get => (Inventory.Mode)(ResourceDir & 0x03);
-            set => ResourceDir = (byte)((ResourceDir & 0xFC) | (byte)value);
+            get => (Inventory.Mode)(ResourceDirection & 0x03);
+            set => ResourceDirection = (byte)((ResourceDirection & 0xFC) | (byte)value);
         }
         [Ignore]
         public Inventory.Mode SerfMode
         {
-            get => (Inventory.Mode)((ResourceDir >> 2) & 0x03);
-            set => ResourceDir = (byte)((ResourceDir & 0xF3) | ((byte)value << 2));
+            get => (Inventory.Mode)((ResourceDirection >> 2) & 0x03);
+            set => ResourceDirection = (byte)((ResourceDirection & 0xF3) | ((byte)value << 2));
         }
 
         public bool HaveAnyOutMode()
         {
-            return (ResourceDir & 0x0A) != 0;
+            return (ResourceDirection & 0x0A) != 0;
         }
     }
 }

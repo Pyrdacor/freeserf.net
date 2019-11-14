@@ -22,15 +22,34 @@
 
 using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Freeserf
 {
+    using Serialize;
     using MapPos = UInt32;
+    using word = UInt16;
 
-    public class Building : GameObject
+    internal class ConstructionInfo
     {
-        public enum Type
+        public ConstructionInfo(Map.Object obj, uint planks, uint stones, uint phase1, uint phase2)
+        {
+            MapObject = obj;
+            Planks = planks;
+            Stones = stones;
+            Phase1 = phase1;
+            Phase2 = phase2;
+        }
+
+        public Map.Object MapObject;
+        public uint Planks;
+        public uint Stones;
+        public uint Phase1;
+        public uint Phase2;
+    }
+
+    public class Building : GameObject, IState
+    {
+        public enum Type : byte
         {
             None = 0,
             Fisher,
@@ -60,33 +79,46 @@ namespace Freeserf
         }
 
         // Max number of different types of resources accepted by buildings.
-        public const uint MaxStock = 3;
+        public const uint MaxStock = 2;
 
-        class Stock
+        [DataClass]
+        internal class Stock : IComparable
         {
             public Resource.Type Type;
-            public uint Priority;
-            public uint Available;
-            public uint Requested;
-            public uint Maximum;
-        }
+            public byte Priority;
+            public byte Available;
+            public byte Requested;
+            public byte Maximum;
 
-        internal class ConstructionInfo
-        {
-            public ConstructionInfo(Map.Object obj, uint planks, uint stones, uint phase1, uint phase2)
+            public int CompareTo(object other)
             {
-                MapObject = obj;
-                Planks = planks;
-                Stones = stones;
-                Phase1 = phase1;
-                Phase2 = phase2;
-            }
+                if (other is Stock)
+                {
+                    var otherStock = other as Stock;
 
-            public Map.Object MapObject;
-            public uint Planks;
-            public uint Stones;
-            public uint Phase1;
-            public uint Phase2;
+                    if (Type == otherStock.Type)
+                    {
+                        if (Priority == otherStock.Priority)
+                        {
+                            if (Available == otherStock.Available)
+                            {
+                                if (Requested == otherStock.Requested)
+                                    return Maximum.CompareTo(otherStock.Maximum);
+
+                                return Requested.CompareTo(otherStock.Requested);
+                            }
+
+                            return Available.CompareTo(otherStock.Available);
+                        }
+
+                        return Priority.CompareTo(otherStock.Priority);
+                    }
+
+                    return Type.CompareTo(otherStock.Type);
+                }
+
+                return 1;
+            }
         }
 
         internal static readonly ConstructionInfo[] ConstructionInfos = new ConstructionInfo[]
@@ -118,92 +150,72 @@ namespace Freeserf
             new ConstructionInfo(Map.Object.Castle,        0, 0,  256,  256),  // BUILDING_CASTLE
         };
 
-        /* Building under construction */
-        bool constructing = true; /* Initial: unfinished building */
-        /* Flags */
-        uint threatLevel = 0;
-        bool playingSfx = false;
-        bool serfRequestFailed = false;
-        bool serfRequested = false;
-        bool burning = false;
-        bool active = false;
-        bool holder = false;
-        /* Index of flag connected to this building */
-        uint flag = 0;
-        /* Stock of this building */
-        readonly Stock[] stock = new Stock[MaxStock];
-        uint firstKnight = 0;
+        [Data]
+        private BuildingState state = new BuildingState();
+
         int burningCounter = 0;
-        uint progress = 0;
-
-        [StructLayout(LayoutKind.Explicit, Pack = 1)]
-        public struct U
-        {
-            [FieldOffset(0)]
-            public int InvIndex;
-
-            [FieldOffset(0)]
-            public uint Tick; /* Used for burning building. */
-
-            [FieldOffset(0)]
-            public uint Level;
-        }
-
-        U u = new U();
-
-        /* Map position of building */
-        public MapPos Position { get; internal set; } = 0;
-
-        /* Type of building. */
-        public Type BuildingType { get; private set; } = Type.None;
-
-        /* Building owner */
-        public uint Player { get; internal set; } = 0;
 
         public Building(Game game, uint index)
             : base(game, index)
         {
-            for (int j = 0; j < MaxStock; ++j)
-            {
-                stock[j] = new Stock()
-                {
-                    Type = Resource.Type.None,
-                    Priority = 0,
-                    Available = 0,
-                    Requested = 0,
-                    Maximum = 0
-                };
-            }
+
         }
 
-        public uint GetFlagIndex()
+        public bool Dirty => state.Dirty;
+
+        /// <summary>
+        /// Map position of the building
+        /// </summary>
+        public MapPos Position
         {
-            return flag;
+            get => state.Position;
+            internal set => state.Position = value;
+        }
+
+        /// <summary>
+        /// Type of building
+        /// </summary>
+        public Type BuildingType => state.Type;
+
+        /// <summary>
+        /// Building owner
+        /// </summary>
+        public uint Player
+        {
+            get => state.Player;
+            internal set => state.Player = (byte)value;
+        }
+
+        public uint FlagIndex => state.Flag;
+
+        public void ResetDirtyFlag()
+        {
+            state.ResetDirtyFlag();
         }
 
         public void LinkFlag(uint flagIndex)
         {
-            flag = flagIndex;
+            state.Flag = (word)flagIndex;
         }
 
         public bool HasKnight()
         {
-            return firstKnight != 0;
+            return state.FirstKnight != 0;
         }
 
         public uint GetFirstKnight()
         {
-            return firstKnight;
+            return state.FirstKnight;
         }
 
-        public void SetFirstKnight(uint serf)
+        public void SetFirstKnight(uint knightIndex)
         {
-            firstKnight = serf;
+            state.FirstKnight = (word)knightIndex;
 
-            /* Test whether building is already occupied by knights */
-            if (!active)
+            // Test whether building is already occupied by knights
+            if (!state.Active)
             {
-                active = true;
+                state.Active = true;
 
                 uint militaryType = 0;
                 uint maxGold = uint.MaxValue;
@@ -254,53 +266,53 @@ namespace Freeserf
         public bool IsMilitary(bool includeCastle = true)
         {
             return (BuildingType == Type.Hut) ||
-                    (BuildingType == Type.Tower) ||
-                    (BuildingType == Type.Fortress) ||
-                    (BuildingType == Type.Castle && includeCastle);
+                   (BuildingType == Type.Tower) ||
+                   (BuildingType == Type.Fortress) ||
+                   (BuildingType == Type.Castle && includeCastle);
         }
 
-        /* Whether construction of the building is finished. */
+        // Whether construction of the building is finished.
         public bool IsDone()
         {
-            return !constructing;
+            return !state.Constructing;
         }
 
         public bool IsLeveling()
         {
-            return !IsDone() && progress == 0;
+            return !IsDone() && state.Progress == 0;
         }
 
         public void DoneLeveling()
         {
-            progress = 1;
-            holder = false;
-            firstKnight = 0;
+            state.Progress = 1;
+            state.Holder = false;
+            state.FirstKnight = 0;
         }
 
         public Map.Object StartBuilding(Type type)
         {
-            BuildingType = type;
-            Map.Object mapObject = ConstructionInfos[(int)type].MapObject;
-            progress = (mapObject == Map.Object.LargeBuilding) ? 0u : 1u;
+            state.Type = type;
+            var mapObject = ConstructionInfos[(int)type].MapObject;
+            state.Progress = (word)((mapObject == Map.Object.LargeBuilding) ? 0u : 1u);
 
             if (type == Type.Castle)
             {
-                active = true;
-                holder = true;
+                state.Active = true;
+                state.Holder = true;
 
-                stock[0].Available = 0xff;
-                stock[0].Requested = 0xff;
-                stock[1].Available = 0xff;
-                stock[1].Requested = 0xff;
+                state.Stock[0].Available = 0xff;
+                state.Stock[0].Requested = 0xff;
+                state.Stock[1].Available = 0xff;
+                state.Stock[1].Requested = 0xff;
             }
             else
             {
-                stock[0].Type = Resource.Type.Plank;
-                stock[0].Priority = 0;
-                stock[0].Maximum = ConstructionInfos[(int)type].Planks;
-                stock[1].Type = Resource.Type.Stone;
-                stock[1].Priority = 0;
-                stock[1].Maximum = ConstructionInfos[(int)type].Stones;
+                state.Stock[0].Type = Resource.Type.Plank;
+                state.Stock[0].Priority = 0;
+                state.Stock[0].Maximum = (byte)ConstructionInfos[(int)type].Planks;
+                state.Stock[1].Type = Resource.Type.Stone;
+                state.Stock[1].Priority = 0;
+                state.Stock[1].Maximum = (byte)ConstructionInfos[(int)type].Stones;
             }
 
             return mapObject;
@@ -308,57 +320,59 @@ namespace Freeserf
 
         public uint GetProgress()
         {
-            return progress;
+            return state.Progress;
         }
 
         public bool BuildProgress()
         {
-            bool frameFinished = Misc.BitTest(progress, 15);
+            bool frameFinished = Misc.BitTest(state.Progress, 15);
 
-            progress += (!frameFinished) ? ConstructionInfos[(int)BuildingType].Phase1 : ConstructionInfos[(int)BuildingType].Phase2;
+            var progress = state.Progress + ((!frameFinished) ? ConstructionInfos[(int)BuildingType].Phase1 : ConstructionInfos[(int)BuildingType].Phase2);
 
             if (progress <= 0xffff)
             {
+                state.Progress = (word)progress;
+
                 // Not finished yet
                 return false;
             }
 
-            progress = 0;
-            constructing = false; /* Building finished */
-            firstKnight = 0;
+            state.Progress = 0;
+            state.Constructing = false; // Building finished
+            state.FirstKnight = 0;
 
             if (BuildingType == Type.Castle)
             {
                 return true;
             }
 
-            holder = false;
+            state.Holder = false;
 
             if (IsMilitary())
             {
                 UpdateMilitaryFlagState();
             }
 
-            Flag flag = Game.GetFlag(GetFlagIndex());
+            Flag flag = Game.GetFlag(FlagIndex);
 
             StockInit(0, Resource.Type.None, 0);
             StockInit(1, Resource.Type.None, 0);
             flag.ClearFlags();
 
-            /* Update player fields. */
+            // Update player fields.
             Player player = Game.GetPlayer(Player);
             player.BuildingBuilt(this);
 
             return true;
         }
 
-        public void IncreaseMining(int res)
+        public void IncreaseMining(int resource)
         {
-            active = true;
+            state.Active = true;
 
-            if (progress == 0x8000)
+            if (state.Progress == 0x8000)
             {
-                /* Handle empty mine. */
+                // Handle empty mine.
                 Player player = Game.GetPlayer(Player);
 
                 if (player.IsAI)
@@ -370,67 +384,67 @@ namespace Freeserf
                 player.AddNotification(Notification.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));
             }
 
-            progress = (progress << 1) & 0xffff;
+            state.Progress = (word)((state.Progress << 1) & 0xffff);
 
-            if (res > 0)
+            if (resource > 0)
             {
-                ++progress;
+                ++state.Progress;
             }
         }
 
         public void SetUnderAttack()
         {
-            progress |= Misc.BitU(0);
+            state.Progress |= (word)Misc.BitU(0);
         }
 
         public bool IsUnderAttack()
         {
-            return Misc.BitTest(progress, 0);
+            return Misc.BitTest(state.Progress, 0);
         }
 
-        /* The threat level of the building. Higher values mean that
-           the building is closer to the enemy. */
+        // The threat level of the building. Higher values mean that
+        // the building is closer to the enemy.
         public uint GetThreatLevel()
         {
-            return threatLevel;
+            return state.ThreatLevel;
         }
 
-        /* Building is currently playing back a sound effect. */
+        // Building is currently playing back a sound effect.
         public bool IsPlayingSfx()
         {
-            return playingSfx;
+            return state.PlayingSfx;
         }
 
         public void StartPlayingSfx()
         {
-            playingSfx = true;
+            state.PlayingSfx = true;
         }
 
         public void StopPlayingSfx()
         {
-            playingSfx = false;
+            state.PlayingSfx = false;
         }
 
-        /* Building is active (specifics depend on building type). */
+        // Building is active (specifics depend on building type).
         public bool IsActive()
         {
-            return active;
+            return state.Active;
         }
 
         public void StartActivity()
         {
-            active = true;
+            state.Active = true;
         }
 
         public void StopActivity()
         {
-            active = false;
+            state.Active = false;
         }
 
-        /* Building is burning. */
+        // Building is burning.
         public bool IsBurning()
         {
-            return burning;
+            return state.Burning;
         }
 
         public bool BurnUp()
@@ -440,10 +454,10 @@ namespace Freeserf
                 return false;
             }
 
-            burning = true;
+            state.Burning = true;
 
-            /* Remove lost gold stock from total count. */
-            if (!constructing &&
+            // Remove lost gold stock from total count.
+            if (!state.Constructing &&
                 (BuildingType == Type.Hut ||
                  BuildingType == Type.Tower ||
                  BuildingType == Type.Fortress ||
@@ -454,22 +468,22 @@ namespace Freeserf
                 Game.AddGoldTotal(-goldStock);
             }
 
-            /* Update land owner ship if the building is military. */
-            if (!constructing && active && IsMilitary())
+            // Update land owner ship if the building is military.
+            if (!state.Constructing && state.Active && IsMilitary())
             {
                 Game.UpdateLandOwnership(Position);
             }
 
-            if (!constructing && (BuildingType == Type.Castle || BuildingType == Type.Stock))
+            if (!state.Constructing && (BuildingType == Type.Castle || BuildingType == Type.Stock))
             {
-                /* Cancel resources in the out queue and remove gold from map total. */
-                if (active)
+                // Cancel resources in the out queue and remove gold from map total.
+                if (state.Active)
                 {
-                    Game.DeleteInventory((uint)u.InvIndex);
-                    u.InvIndex = -1;
+                    Game.DeleteInventory(state.Inventory);
+                    state.Inventory = word.MaxValue;
                 }
 
-                /* Let some serfs escape while the building is burning. */
+                // Let some serfs escape while the building is burning.
                 uint escapingSerfs = 0;
 
                 foreach (Serf serf in Game.GetSerfsAtPos(Position).ToArray())
@@ -482,26 +496,26 @@ namespace Freeserf
             }
             else
             {
-                active = false;
+                state.Active = false;
             }
 
-            /* Remove stock from building. */
+            // Remove stock from building.
             RemoveStock();
 
             StopPlayingSfx();
 
-            uint serfIndex = firstKnight;
+            uint serfIndex = state.FirstKnight;
             burningCounter = 2047;
-            u.Tick = Game.Tick;
+            state.Tick = Game.Tick;
 
             Player player = Game.GetPlayer(Player);
             player.BuildingDemolished(this);
 
-            if (holder)
+            if (state.Holder)
             {
-                holder = false;
+                state.Holder = false;
 
-                if (!constructing && BuildingType == Type.Castle)
+                if (!state.Constructing && BuildingType == Type.Castle)
                 {
                     SetBurningCounter(8191);
 
@@ -513,7 +527,7 @@ namespace Freeserf
                     // TODO: player defeated? mission outro etc?
                 }
 
-                if (!constructing && IsMilitary())
+                if (!state.Constructing && IsMilitary())
                 {
                     while (serfIndex != 0)
                     {
@@ -553,23 +567,23 @@ namespace Freeserf
             return true;
         }
 
-        /* Building has an associated serf. */
+        // Building has an associated serf.
         public bool HasSerf()
         {
-            return holder;
+            return state.Holder;
         }
 
-        /* Building has succesfully requested a serf. */
+        // Building has succesfully requested a serf.
         public void SerfRequestGranted()
         {
-            serfRequested = true;
+            state.SerfRequested = true;
         }
 
         public void RequestedSerfLost()
         {
-            if (serfRequested)
+            if (state.SerfRequested)
             {
-                serfRequested = false;
+                state.SerfRequested = false;
             }
             else if (!HasInventory())
             {
@@ -579,84 +593,84 @@ namespace Freeserf
 
         public void RequestedSerfReached(Serf serf)
         {
-            holder = true;
+            state.Holder = true;
 
-            if (serfRequested && serf.IsKnight())
+            if (state.SerfRequested && serf.IsKnight())
             {
-                if (firstKnight == 0)
-                    firstKnight = serf.Index;
+                if (state.FirstKnight == 0)
+                    state.FirstKnight = (word)serf.Index;
             }
 
-            serfRequested = false;
+            state.SerfRequested = false;
         }
 
-        /* Building has requested a serf but none was available. */
+        // Building has requested a serf but none was available.
         public void ClearSerfRequestFailure()
         {
-            serfRequestFailed = false;
+            state.SerfRequestFailed = false;
         }
 
         public void KnightRequestGranted()
         {
-            ++stock[0].Requested;
-            serfRequested = false;
+            ++state.Stock[0].Requested;
+            state.SerfRequested = false;
         }
 
-        /* Building has inventory and the inventory pointer is valid. */
+        // Building has inventory and the inventory pointer is valid.
         public bool HasInventory()
         {
-            return stock[0].Requested == 0xff;
+            return state.Stock[0].Requested == 0xff;
         }
 
         public Inventory GetInventory()
         {
-            if (u.InvIndex == -1)
+            if (state.Inventory == word.MaxValue)
                 return null;
 
-            return Game.GetInventory((uint)u.InvIndex);
+            return Game.GetInventory(state.Inventory);
         }
 
         public void SetInventory(Inventory inventory)
         {
             if (inventory == null)
-                u.InvIndex = -1;
+                state.Inventory= word.MaxValue;
             else
-                u.InvIndex = (int)inventory.Index;
+                state.Inventory = (word)inventory.Index;
         }
 
         public uint GetLevel()
         {
-            return u.Level;
+            return state.Level;
         }
 
         public void SetLevel(uint level)
         {
-            u.Level = level;
+            state.Level = (word)level;
         }
 
         public uint GetTick()
         {
-            return u.Tick;
+            return state.Tick;
         }
 
         public void SetTick(uint tick)
         {
-            u.Tick = tick;
+            state.Tick = (word)tick;
         }
 
         public uint GetKnightCount()
         {
-            return stock[0].Available;
+            return state.Stock[0].Available;
         }
 
         public uint WaitingStone()
         {
-            return stock[1].Available; // Stone always in stock #1
+            return state.Stock[1].Available; // Stone always in stock #1
         }
 
         public uint WaitingPlanks()
         {
-            return stock[0].Available; // Planks always in stock #0
+            return state.Stock[0].Available; // Planks always in stock #0
         }
 
         public bool HasAllConstructionMaterials()
@@ -664,10 +678,10 @@ namespace Freeserf
             if (IsDone())
                 return true;
 
-            uint numPlanks = stock[0].Available + stock[0].Requested;
-            uint numStones = stock[1].Available + stock[1].Requested;
+            var numPlanks = state.Stock[0].Available + state.Stock[0].Requested;
+            var numStones = state.Stock[1].Available + state.Stock[1].Requested;
 
-            return numPlanks == stock[0].Maximum && numStones == stock[1].Maximum;
+            return numPlanks == state.Stock[0].Maximum && numStones == state.Stock[1].Maximum;
         }
 
         public bool HasAllConstructionMaterialsAtLocation()
@@ -675,7 +689,7 @@ namespace Freeserf
             if (IsDone())
                 return true;
 
-            return stock[0].Available == stock[0].Maximum && stock[1].Available == stock[1].Maximum;
+            return state.Stock[0].Available == state.Stock[0].Maximum && state.Stock[1].Available == state.Stock[1].Maximum;
         }
 
         public uint MilitaryGoldCount()
@@ -688,9 +702,9 @@ namespace Freeserf
             {
                 for (int j = 0; j < MaxStock; ++j)
                 {
-                    if (stock[j].Type == Resource.Type.GoldBar)
+                    if (state.Stock[j].Type == Resource.Type.GoldBar)
                     {
-                        count += stock[j].Available;
+                        count += state.Stock[j].Available;
                     }
                 }
             }
@@ -711,7 +725,7 @@ namespace Freeserf
 
             for (int i = 0; i < MaxStock; ++i)
             {
-                if (stock[i].Type == resource)
+                if (state.Stock[i].Type == resource)
                 {
                     inStock = i;
                     break;
@@ -720,12 +734,12 @@ namespace Freeserf
 
             if (inStock >= 0)
             {
-                if (stock[inStock].Requested == 0)
+                if (state.Stock[inStock].Requested == 0)
                 {
                     throw new ExceptionFreeserf(Game, "building", "Failed to cancel unrequested resource delivery.");
                 }
 
-                --stock[inStock].Requested;
+                --state.Stock[inStock].Requested;
             }
             else
             {
@@ -738,25 +752,25 @@ namespace Freeserf
 
         public Serf CallDefenderOut()
         {
-            /* Remove knight from stats of defending building */
+            // Remove knight from stats of defending building
             if (HasInventory())
             { 
-                /* Castle */
+                // Castle
                 Game.GetPlayer(Player).DecreaseCastleKnights();
             }
             else
             {
-                --stock[0].Available;
-                ++stock[0].Requested;
+                --state.Stock[0].Available;
+                ++state.Stock[0].Requested;
             }
 
-            /* The last knight in the list has to defend. */
-            Serf firstSerf = Game.GetSerf(firstKnight);
+            // The last knight in the list has to defend.
+            Serf firstSerf = Game.GetSerf(state.FirstKnight);
             Serf defSerf = firstSerf.ExtractLastKnightFromList();
 
-            if (defSerf.Index == firstKnight)
+            if (defSerf.Index == state.FirstKnight)
             {
-                firstKnight = 0;
+                state.FirstKnight = 0;
             }
 
             return defSerf;
@@ -764,35 +778,43 @@ namespace Freeserf
 
         public Serf CallAttackerOut(uint knightIndex)
         {
-            --stock[0].Available;
+            --state.Stock[0].Available;
 
-            /* Unlink knight from list. */
-            Serf firstSerf = Game.GetSerf(firstKnight);
+            // Unlink knight from list.
+            Serf firstSerf = Game.GetSerf(state.FirstKnight);
+            uint firstKnight = 0;
 
-            return firstSerf.ExtractKnightFromList(knightIndex, ref firstKnight);
+            var result = firstSerf.ExtractKnightFromList(knightIndex, ref firstKnight);
+
+            if (firstKnight != state.FirstKnight)
+            {
+                state.FirstKnight = (word)firstKnight;
+            }
+
+            return result;
         }
 
         public bool AddRequestedResource(Resource.Type res, bool fixPriority)
         {
             for (int j = 0; j < MaxStock; ++j)
             {
-                if (stock[j].Type == res)
+                if (state.Stock[j].Type == res)
                 {
                     if (fixPriority)
                     {
-                        uint prio = stock[j].Priority;
+                        byte priority = state.Stock[j].Priority;
 
-                        if ((prio & 1) == 0)
-                            prio = 0;
+                        if ((priority & 1) == 0)
+                            priority = 0;
 
-                        stock[j].Priority = prio >> 1;
+                        state.Stock[j].Priority = (byte)(priority >> 1);
                     }
                     else
                     {
-                        stock[j].Priority = 0;
+                        state.Stock[j].Priority = 0;
                     }
 
-                    ++stock[j].Requested;
+                    ++state.Stock[j].Requested;
 
                     return true;
                 }
@@ -803,37 +825,37 @@ namespace Freeserf
 
         public bool IsStockActive(int stockNumber)
         {
-            return stock[stockNumber].Type > 0;
+            return state.Stock[stockNumber].Type > 0;
         }
 
         public uint GetResourceCountInStock(int stockNumber)
         {
-            return stock[stockNumber].Available;
+            return state.Stock[stockNumber].Available;
         }
 
         public Resource.Type GetResourceTypeInStock(int stockNumber)
         {
-            return stock[stockNumber].Type;
+            return state.Stock[stockNumber].Type;
         }
 
         public void StockInit(uint stockNum, Resource.Type type, uint maximum)
         {
-            stock[stockNum].Type = type;
-            stock[stockNum].Priority = 0;
-            stock[stockNum].Maximum = maximum;
+            state.Stock[stockNum].Type = type;
+            state.Stock[stockNum].Priority = 0;
+            state.Stock[stockNum].Maximum = (byte)maximum;
         }
 
         public void RemoveStock()
         {
-            stock[0].Available = 0;
-            stock[0].Requested = 0;
-            stock[1].Available = 0;
-            stock[1].Requested = 0;
+            state.Stock[0].Available = 0;
+            state.Stock[0].Requested = 0;
+            state.Stock[1].Available = 0;
+            state.Stock[1].Requested = 0;
         }
 
         public int GetMaxPriorityForResource(Resource.Type resource, int minimum = 0)
         {
-            int maxPrio = -1;
+            int maxPriority = -1;
 
             // If the emergency program is active and this is no essential building
             // we give no priority to this building.
@@ -842,30 +864,30 @@ namespace Freeserf
             if (player.EmergencyProgramActive && (resource == Resource.Type.Plank || resource == Resource.Type.Stone) &&
                 BuildingType != Type.Lumberjack && BuildingType != Type.Sawmill && BuildingType != Type.Stonecutter)
             {
-                return maxPrio; // = -1
+                return maxPriority; // = -1
             }
 
             for (int i = 0; i < MaxStock; ++i)
             {
-                if (stock[i].Type == resource &&
-                    stock[i].Priority >= minimum &&
-                    stock[i].Priority > maxPrio)
+                if (state.Stock[i].Type == resource &&
+                    state.Stock[i].Priority >= minimum &&
+                    state.Stock[i].Priority > maxPriority)
                 {
-                    maxPrio = (int)stock[i].Priority;
+                    maxPriority = state.Stock[i].Priority;
                 }
             }
 
-            return maxPrio;
+            return maxPriority;
         }
 
         public uint GetMaximumInStock(int stockNumber)
         {
-            return stock[stockNumber].Maximum;
+            return state.Stock[stockNumber].Maximum;
         }
 
         public uint GetRequestedInStock(int stockNumber)
         {
-            return stock[stockNumber].Requested;
+            return state.Stock[stockNumber].Requested;
         }
 
         public uint GetRequested(Resource.Type resource)
@@ -874,7 +896,7 @@ namespace Freeserf
 
             for (int i = 0; i < MaxStock; ++i)
             {
-                if (stock[i].Type == resource)
+                if (state.Stock[i].Type == resource)
                 {
                     inStock = i;
                     break;
@@ -889,17 +911,17 @@ namespace Freeserf
 
         public void SetPriorityInStock(int stockNumber, uint priority)
         {
-            stock[stockNumber].Priority = priority;
+            state.Stock[stockNumber].Priority = (byte)priority;
         }
 
         public void SetInitialResourcesInStock(int stockNumber, uint count)
         {
-            stock[stockNumber].Available = count;
+            state.Stock[stockNumber].Available = (byte)count;
         }
 
         public void RequestedResourceDelivered(Resource.Type resource)
         {
-            if (burning)
+            if (state.Burning)
             {
                 return;
             }
@@ -911,7 +933,7 @@ namespace Freeserf
 
             if (HasInventory())
             {
-                Game.GetInventory((uint)u.InvIndex).PushResource(resource);
+                Game.GetInventory(state.Inventory).PushResource(resource);
             }
             else
             {
@@ -922,12 +944,12 @@ namespace Freeserf
                     resource = Resource.Type.GroupFood;
                 }
 
-                /* Add to building stock */
+                // Add to building stock
                 for (int i = 0; i < MaxStock; ++i)
                 {
-                    if (stock[i].Type == resource)
+                    if (state.Stock[i].Type == resource)
                     {
-                        if (stock[i].Requested == 0)
+                        if (state.Stock[i].Requested == 0)
                         {
                             // TODO: The exception occurs. Seen with GoldBar and Hut and Plank and CoalMine. There seems to be a bug.
                             if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone())
@@ -936,15 +958,15 @@ namespace Freeserf
                                 // But sometimes the resource might still delivered.
                                 // In this case we just add the delivered resource.
                                 // But not if the building does not need it anymore.
-                                if (stock[i].Maximum == 0)
+                                if (state.Stock[i].Maximum == 0)
                                 {
                                     Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
                                     // TODO: For now we ignore this bug as it won't hurt as much as an exception.
                                     //throw new ExceptionFreeserf("Delivered more resources than requested.");
                                 }
 
-                                ++stock[i].Available;
-                            }
+                                ++state.Stock[i].Available;
+                             }
                             else
                             {
                                 // TODO: This exception occurs from time to time. Maybe fixed now?
@@ -955,8 +977,8 @@ namespace Freeserf
                         }
                         else
                         {
-                            ++stock[i].Available;
-                            --stock[i].Requested;
+                            ++state.Stock[i].Available;
+                            --state.Stock[i].Requested;
                         }
 
                         return;
@@ -976,21 +998,21 @@ namespace Freeserf
 
         public void PlankUsedForBuild()
         {
-            --stock[0].Available;
-            --stock[0].Maximum;
+            --state.Stock[0].Available;
+            --state.Stock[0].Maximum;
         }
 
         public void StoneUsedForBuild()
         {
-            --stock[1].Available;
-            --stock[1].Maximum;
+            --state.Stock[1].Available;
+            --state.Stock[1].Maximum;
         }
 
         public bool UseResourceInStock(int stockNum)
         {
-            if (stock[stockNum].Available > 0)
+            if (state.Stock[stockNum].Available > 0)
             {
-                --stock[stockNum].Available;
+                --state.Stock[stockNum].Available;
                 return true;
             }
 
@@ -999,10 +1021,10 @@ namespace Freeserf
 
         public bool UseResourcesInStocks()
         {
-            if (stock[0].Available > 0 && stock[1].Available > 0)
+            if (state.Stock[0].Available > 0 && state.Stock[1].Available > 0)
             {
-                --stock[0].Available;
-                --stock[1].Available;
+                --state.Stock[0].Available;
+                --state.Stock[1].Available;
                 return true;
             }
 
@@ -1011,49 +1033,51 @@ namespace Freeserf
 
         public void DecreaseRequestedForStock(int stockNumber)
         {
-            --stock[stockNumber].Requested;
+            --state.Stock[stockNumber].Requested;
         }
 
         public uint PigsCount()
         {
-            return stock[1].Available;
+            return state.Stock[1].Available;
         }
 
         public void SendPigToButcher()
         {
-            --stock[1].Available;
+            --state.Stock[1].Available;
         }
 
         public void PlaceNewPig()
         {
-            ++stock[1].Available;
+            ++state.Stock[1].Available;
         }
 
         public void BoatClear()
         {
-            stock[1].Available = 0;
+            state.Stock[1].Available = 0;
         }
 
         public void BoatDo()
         {
-            ++stock[1].Available;
+            ++state.Stock[1].Available;
         }
 
         public void RequestedKnightArrived()
         {
-            ++stock[0].Available;
-            --stock[0].Requested;
+            ++state.Stock[0].Available;
+            --state.Stock[0].Requested;
         }
 
         public void RequestedKnightAttackingOnWalk()
         {
-            --stock[0].Requested;
+            --state.Stock[0].Requested;
         }
 
         public void RequestedKnightDefeatOnWalk()
         {
             if (!HasInventory())
-                --stock[0].Requested;
+            {
+                --state.Stock[0].Requested;
+            }
         }
 
         public bool IsEnoughPlaceForKnight()
@@ -1068,7 +1092,7 @@ namespace Freeserf
                 default: Debug.NotReached(); break;
             }
 
-            uint totalKnights = stock[0].Requested + stock[0].Available;
+            var totalKnights = state.Stock[0].Requested + state.Stock[0].Available;
 
             return totalKnights < maxCapacity;
         }
@@ -1077,10 +1101,10 @@ namespace Freeserf
         {
             if (IsEnoughPlaceForKnight())
             {
-                ++stock[0].Available;
-                Serf serf = Game.GetSerf(firstKnight);
+                ++state.Stock[0].Available;
+                Serf serf = Game.GetSerf(state.FirstKnight);
                 knight.InsertKnightBefore(serf);
-                firstKnight = knight.Index;
+                state.FirstKnight = (word)knight.Index;
 
                 return true;
             }
@@ -1092,12 +1116,12 @@ namespace Freeserf
         {
             if (!HasKnight())
             {
-                stock[0].Available = 0;
-                stock[0].Requested = 1;
+                state.Stock[0].Available = 0;
+                state.Stock[0].Requested = 1;
             }
             else
             {
-                ++stock[0].Requested;
+                ++state.Stock[0].Requested;
             }
         }
 
@@ -1134,7 +1158,7 @@ namespace Freeserf
 
                     if (map.HasOwner(checkPos) && map.GetOwner(checkPos) != Player)
                     {
-                        threatLevel = (uint)f;
+                        state.ThreatLevel = (byte)f;
                         return;
                     }
                 }
@@ -1143,10 +1167,10 @@ namespace Freeserf
 
         public void Update(uint tick)
         {
-            if (burning)
+            if (state.Burning)
             {
-                ushort delta = (ushort)(tick - u.Tick);
-                u.Tick = tick;
+                word delta = (word)(tick - state.Tick);
+                state.Tick = (word)tick;
 
                 if (burningCounter >= delta)
                 {
@@ -1168,129 +1192,129 @@ namespace Freeserf
             Position = Game.Map.PosFromSavedValue(reader.ReadDWord()); // 0
 
             byte v8 = reader.ReadByte(); // 4
-            BuildingType = (Type)((v8 >> 2) & 0x1f);
-            Player = v8 & 3u;
-            constructing = (v8 & 0x80) != 0;
+            state.Type = (Type)((v8 >> 2) & 0x1f);
+            state.Player = (byte)(v8 & 3u);
+            state.Constructing = (v8 & 0x80) != 0;
 
             v8 = reader.ReadByte(); // 5
-            threatLevel = v8 & 3u;
-            serfRequestFailed = (v8 & 4) != 0;
-            playingSfx = (v8 & 8) != 0;
-            active = (v8 & 16) != 0;
-            burning = (v8 & 32) != 0;
-            holder = (v8 & 64) != 0;
-            serfRequested = (v8 & 128) != 0;
+            state.ThreatLevel = (byte)(v8 & 3u);
+            state.SerfRequestFailed = (v8 & 4) != 0;
+            state.PlayingSfx = (v8 & 8) != 0;
+            state.Active = (v8 & 16) != 0;
+            state.Burning = (v8 & 32) != 0;
+            state.Holder = (v8 & 64) != 0;
+            state.SerfRequested = (v8 & 128) != 0;
 
-            flag = reader.ReadWord(); // 6
+            state.Flag = reader.ReadWord(); // 6
 
             for (int i = 0; i < 2; ++i)
             {
                 v8 = reader.ReadByte(); // 8, 9
-                stock[i].Type = Resource.Type.None;
-                stock[i].Available = 0;
-                stock[i].Requested = 0;
+                state.Stock[i].Type = Resource.Type.None;
+                state.Stock[i].Available = 0;
+                state.Stock[i].Requested = 0;
 
                 if (v8 != 0xff)
                 {
-                    stock[i].Available = (uint)(v8 >> 4) & 0xfu;
-                    stock[i].Requested = v8 & 0xfu;
+                    state.Stock[i].Available = (byte)((v8 >> 4) & 0xfu);
+                    state.Stock[i].Requested = (byte)(v8 & 0xfu);
                 }
             }
 
-            firstKnight = reader.ReadWord(); // 10
-            progress = reader.ReadWord(); // 12
+            state.FirstKnight = reader.ReadWord(); // 10
+            state.Progress = reader.ReadWord(); // 12
 
-            if (!burning && IsDone() &&
+            if (!state.Burning && IsDone() &&
                 (BuildingType == Type.Stock ||
                 BuildingType == Type.Castle))
             {
                 int offset = (int)reader.ReadDWord(); // 14
-                u.InvIndex = (int)Game.CreateInventory(offset / 120).Index;
-                stock[0].Requested = 0xff;
+                state.Inventory = (word)Game.CreateInventory(offset / 120).Index;
+                state.Stock[0].Requested = 0xff;
                 return;
             }
             else
             {
-                u.Level = reader.ReadWord(); // 14
+                state.Level = reader.ReadWord(); // 14
             }
 
             if (!IsDone())
             {
-                stock[0].Type = Resource.Type.Plank;
-                stock[0].Maximum = reader.ReadByte(); // 16
-                stock[1].Type = Resource.Type.Stone;
-                stock[1].Maximum = reader.ReadByte(); // 17
+                state.Stock[0].Type = Resource.Type.Plank;
+                state.Stock[0].Maximum = reader.ReadByte(); // 16
+                state.Stock[1].Type = Resource.Type.Stone;
+                state.Stock[1].Maximum = reader.ReadByte(); // 17
             }
-            else if (holder)
+            else if (state.Holder)
             {
                 switch (BuildingType)
                 {
                     case Type.Boatbuilder:
-                        stock[0].Type = Resource.Type.Plank;
-                        stock[0].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Plank;
+                        state.Stock[0].Maximum = 8;
                         break;
                     case Type.StoneMine:
                     case Type.CoalMine:
                     case Type.IronMine:
                     case Type.GoldMine:
-                        stock[0].Type = Resource.Type.GroupFood;
-                        stock[0].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.GroupFood;
+                        state.Stock[0].Maximum = 8;
                         break;
                     case Type.Hut:
-                        stock[1].Type = Resource.Type.GoldBar;
-                        stock[1].Maximum = 2;
+                        state.Stock[1].Type = Resource.Type.GoldBar;
+                        state.Stock[1].Maximum = 2;
                         break;
                     case Type.Tower:
-                        stock[1].Type = Resource.Type.GoldBar;
-                        stock[1].Maximum = 4;
+                        state.Stock[1].Type = Resource.Type.GoldBar;
+                        state.Stock[1].Maximum = 4;
                         break;
                     case Type.Fortress:
-                        stock[1].Type = Resource.Type.GoldBar;
-                        stock[1].Maximum = 8;
+                        state.Stock[1].Type = Resource.Type.GoldBar;
+                        state.Stock[1].Maximum = 8;
                         break;
                     case Type.Butcher:
-                        stock[0].Type = Resource.Type.Pig;
-                        stock[0].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Pig;
+                        state.Stock[0].Maximum = 8;
                         break;
                     case Type.PigFarm:
-                        stock[0].Type = Resource.Type.Wheat;
-                        stock[0].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Wheat;
+                        state.Stock[0].Maximum = 8;
                         break;
                     case Type.Mill:
-                        stock[0].Type = Resource.Type.Wheat;
-                        stock[0].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Wheat;
+                        state.Stock[0].Maximum = 8;
                         break;
                     case Type.Baker:
-                        stock[0].Type = Resource.Type.Flour;
-                        stock[0].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Flour;
+                        state.Stock[0].Maximum = 8;
                         break;
                     case Type.Sawmill:
-                        stock[1].Type = Resource.Type.Lumber;
-                        stock[1].Maximum = 8;
+                        state.Stock[1].Type = Resource.Type.Lumber;
+                        state.Stock[1].Maximum = 8;
                         break;
                     case Type.SteelSmelter:
-                        stock[0].Type = Resource.Type.Coal;
-                        stock[0].Maximum = 8;
-                        stock[1].Type = Resource.Type.IronOre;
-                        stock[1].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Coal;
+                        state.Stock[0].Maximum = 8;
+                        state.Stock[1].Type = Resource.Type.IronOre;
+                        state.Stock[1].Maximum = 8;
                         break;
                     case Type.ToolMaker:
-                        stock[0].Type = Resource.Type.Plank;
-                        stock[0].Maximum = 8;
-                        stock[1].Type = Resource.Type.Steel;
-                        stock[1].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Plank;
+                        state.Stock[0].Maximum = 8;
+                        state.Stock[1].Type = Resource.Type.Steel;
+                        state.Stock[1].Maximum = 8;
                         break;
                     case Type.WeaponSmith:
-                        stock[0].Type = Resource.Type.Coal;
-                        stock[0].Maximum = 8;
-                        stock[1].Type = Resource.Type.Steel;
-                        stock[1].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Coal;
+                        state.Stock[0].Maximum = 8;
+                        state.Stock[1].Type = Resource.Type.Steel;
+                        state.Stock[1].Maximum = 8;
                         break;
                     case Type.GoldSmelter:
-                        stock[0].Type = Resource.Type.Coal;
-                        stock[0].Maximum = 8;
-                        stock[1].Type = Resource.Type.GoldOre;
-                        stock[1].Maximum = 8;
+                        state.Stock[0].Type = Resource.Type.Coal;
+                        state.Stock[0].Maximum = 8;
+                        state.Stock[1].Type = Resource.Type.GoldOre;
+                        state.Stock[1].Maximum = 8;
                         break;
                     default:
                         break;
@@ -1302,139 +1326,138 @@ namespace Freeserf
         {
             uint x = reader.Value("pos")[0].ReadUInt();
             uint y = reader.Value("pos")[1].ReadUInt();
-            Position = Game.Map.Pos(x, y);
-            BuildingType = (Type)reader.Value("type").ReadInt();
+            state.Position = Game.Map.Pos(x, y);
+            state.Type = (Type)reader.Value("type").ReadInt();
 
             try
             {
-                Player = reader.Value("owner").ReadUInt();
-                constructing = reader.Value("constructing").ReadBool();
+                state.Player = (byte)reader.Value("owner").ReadUInt();
+                state.Constructing = reader.Value("constructing").ReadBool();
             }
             catch
             {
                 uint n = reader.Value("bld").ReadUInt();
-                Player = n & 3;
-                constructing = (n & 0x80) != 0;
+                state.Player = (byte)(n & 3);
+                state.Constructing = (n & 0x80) != 0;
             }
             try
             {
-                threatLevel = reader.Value("military_state").ReadUInt();
-                serfRequestFailed = reader.Value("serf_request_failed").ReadBool();
-                playingSfx = reader.Value("playing_sfx").ReadBool();
-                active = reader.Value("active").ReadBool();
-                burning = reader.Value("burning").ReadBool();
-                holder = reader.Value("holder").ReadBool();
-                serfRequested = reader.Value("serf_requested").ReadBool();
+                state.ThreatLevel = (byte)reader.Value("military_state").ReadUInt();
+                state.SerfRequestFailed = reader.Value("serf_request_failed").ReadBool();
+                state.PlayingSfx = reader.Value("playing_sfx").ReadBool();
+                state.Active = reader.Value("active").ReadBool();
+                state.Burning = reader.Value("burning").ReadBool();
+                state.Holder = reader.Value("holder").ReadBool();
+                state.SerfRequested = reader.Value("serf_requested").ReadBool();
             }
             catch
             {
                 uint n = reader.Value("serf").ReadUInt();
-                threatLevel = n & 3;
-                serfRequestFailed = (n & 4) != 0;
-                playingSfx = (n & 8) != 0;
-                active = (n & 16) != 0;
-                burning = (n & 32) != 0;
-                holder = (n & 64) != 0;
-                serfRequested = (n & 128) != 0;
+                state.ThreatLevel = (byte)(n & 3);
+                state.SerfRequestFailed = (n & 4) != 0;
+                state.PlayingSfx = (n & 8) != 0;
+                state.Active = (n & 16) != 0;
+                state.Burning = (n & 32) != 0;
+                state.Holder = (n & 64) != 0;
+                state.SerfRequested = (n & 128) != 0;
             }
 
-            flag = reader.Value("flag").ReadUInt();
+            state.Flag = (word)reader.Value("flag").ReadUInt();
 
-            stock[0].Type = (Resource.Type)reader.Value("stock[0].type").ReadInt();
-            stock[0].Priority = reader.Value("stock[0].prio").ReadUInt();
-            stock[0].Available = reader.Value("stock[0].available").ReadUInt();
-            stock[0].Requested = reader.Value("stock[0].requested").ReadUInt();
-            stock[0].Maximum = reader.Value("stock[0].maximum").ReadUInt();
+            state.Stock[0].Type = (Resource.Type)reader.Value("stock[0].type").ReadInt();
+            state.Stock[0].Priority = (byte)reader.Value("stock[0].prio").ReadUInt();
+            state.Stock[0].Available = (byte)reader.Value("stock[0].available").ReadUInt();
+            state.Stock[0].Requested = (byte)reader.Value("stock[0].requested").ReadUInt();
+            state.Stock[0].Maximum = (byte)reader.Value("stock[0].maximum").ReadUInt();
 
-            stock[1].Type = (Resource.Type)reader.Value("stock[1].type").ReadInt();
-            stock[1].Priority = reader.Value("stock[1].prio").ReadUInt();
-            stock[1].Available = reader.Value("stock[1].available").ReadUInt();
-            stock[1].Requested = reader.Value("stock[1].requested").ReadUInt();
-            stock[1].Maximum = reader.Value("stock[1].maximum").ReadUInt();
+            state.Stock[1].Type = (Resource.Type)reader.Value("stock[1].type").ReadInt();
+            state.Stock[1].Priority = (byte)reader.Value("stock[1].prio").ReadUInt();
+            state.Stock[1].Available = (byte)reader.Value("stock[1].available").ReadUInt();
+            state.Stock[1].Requested = (byte)reader.Value("stock[1].requested").ReadUInt();
+            state.Stock[1].Maximum = (byte)reader.Value("stock[1].maximum").ReadUInt();
 
-            firstKnight = reader.Value("serf_index").ReadUInt();
-            progress = reader.Value("progress").ReadUInt();
+            state.FirstKnight = (word)reader.Value("serf_index").ReadUInt();
+            state.Progress = (word)reader.Value("progress").ReadUInt();
 
-            /* Load various values that depend on the building type. */
-            /* TODO Check validity of pointers when loading. */
-            if (!burning && (IsDone() || BuildingType == Type.Castle))
+            // Load various values that depend on the building type.
+            if (!state.Burning && (IsDone() || BuildingType == Type.Castle))
             {
                 if (BuildingType == Type.Stock || BuildingType == Type.Castle)
                 {
-                    u.InvIndex = reader.Value("inventory").ReadInt();
-                    Game.CreateInventory((int)u.InvIndex);
+                    state.Inventory = (word)reader.Value("inventory").ReadInt();
+                    Game.CreateInventory(state.Inventory);
                 }
             }
-            else if (burning)
+            else if (state.Burning)
             {
-                u.Tick = reader.Value("tick").ReadUInt();
+                state.Tick = (word)reader.Value("tick").ReadUInt();
             }
             else
             {
-                u.Level = reader.Value("level").ReadUInt();
+                state.Level = (word)reader.Value("level").ReadUInt();
             }
         }
 
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("pos").Write(Game.Map.PosColumn(Position));
-            writer.Value("pos").Write(Game.Map.PosRow(Position));
-            writer.Value("type").Write((int)BuildingType);
+            writer.Value("pos").Write(Game.Map.PosColumn(state.Position));
+            writer.Value("pos").Write(Game.Map.PosRow(state.Position));
+            writer.Value("type").Write((int)state.Type);
             writer.Value("owner").Write(Player);
-            writer.Value("constructing").Write(constructing);
+            writer.Value("constructing").Write(state.Constructing);
 
-            writer.Value("military_state").Write(threatLevel);
-            writer.Value("playing_sfx").Write(playingSfx);
-            writer.Value("serf_request_failed").Write(serfRequestFailed);
-            writer.Value("serf_requested").Write(serfRequested);
-            writer.Value("burning").Write(burning);
-            writer.Value("active").Write(active);
-            writer.Value("holder").Write(holder);
+            writer.Value("military_state").Write((uint)state.ThreatLevel);
+            writer.Value("playing_sfx").Write(state.PlayingSfx);
+            writer.Value("serf_request_failed").Write(state.SerfRequestFailed);
+            writer.Value("serf_requested").Write(state.SerfRequested);
+            writer.Value("burning").Write(state.Burning);
+            writer.Value("active").Write(state.Active);
+            writer.Value("holder").Write(state.Holder);
 
-            writer.Value("flag").Write(flag);
+            writer.Value("flag").Write(state.Flag);
 
-            writer.Value("stock[0].type").Write((int)stock[0].Type);
-            writer.Value("stock[0].prio").Write(stock[0].Priority);
-            writer.Value("stock[0].available").Write(stock[0].Available);
-            writer.Value("stock[0].requested").Write(stock[0].Requested);
-            writer.Value("stock[0].maximum").Write(stock[0].Maximum);
+            writer.Value("stock[0].type").Write((int)state.Stock[0].Type);
+            writer.Value("stock[0].prio").Write((uint)state.Stock[0].Priority);
+            writer.Value("stock[0].available").Write((uint)state.Stock[0].Available);
+            writer.Value("stock[0].requested").Write((uint)state.Stock[0].Requested);
+            writer.Value("stock[0].maximum").Write((uint)state.Stock[0].Maximum);
 
-            writer.Value("stock[1].type").Write((int)stock[1].Type);
-            writer.Value("stock[1].prio").Write(stock[1].Priority);
-            writer.Value("stock[1].available").Write(stock[1].Available);
-            writer.Value("stock[1].requested").Write(stock[1].Requested);
-            writer.Value("stock[1].maximum").Write(stock[1].Maximum);
+            writer.Value("stock[1].type").Write((int)state.Stock[1].Type);
+            writer.Value("stock[1].prio").Write((uint)state.Stock[1].Priority);
+            writer.Value("stock[1].available").Write((uint)state.Stock[1].Available);
+            writer.Value("stock[1].requested").Write((uint)state.Stock[1].Requested);
+            writer.Value("stock[1].maximum").Write((uint)state.Stock[1].Maximum);
 
-            writer.Value("serf_index").Write(firstKnight);
-            writer.Value("progress").Write(progress);
+            writer.Value("serf_index").Write((uint)state.FirstKnight);
+            writer.Value("progress").Write((uint)state.Progress);
 
             if (!IsBurning() && (IsDone() || BuildingType == Type.Castle))
             {
                 if (BuildingType == Type.Stock ||
                     BuildingType == Type.Castle)
                 {
-                    writer.Value("inventory").Write(u.InvIndex);
+                    writer.Value("inventory").Write((uint)state.Inventory);
                 }
             }
             else if (IsBurning())
             {
-                writer.Value("tick").Write(u.Tick);
+                writer.Value("tick").Write((uint)state.Tick);
             }
             else
             {
-                writer.Value("level").Write(u.Level);
+                writer.Value("level").Write((uint)state.Level);
             }
         }
 
         void Update()
         {
-            if (!constructing)
+            if (!state.Constructing)
             {
                 RequestSerfIfNeeded();
 
                 Player player = Game.GetPlayer(Player);
-                uint totalResource1 = stock[0].Requested + stock[0].Available;
-                uint totalResource2 = stock[1].Requested + stock[1].Available;
+                uint totalResource1 = (uint)(state.Stock[0].Requested + state.Stock[0].Available);
+                uint totalResource2 = (uint)(state.Stock[1].Requested + state.Stock[1].Available);
                 int resource1Modifier = 8 + (int)totalResource1;
                 int resource2Modifier = 8 + (int)totalResource2;
                 Func<uint> GetPrioFuncResource1 = null;
@@ -1443,31 +1466,31 @@ namespace Freeserf
                 switch (BuildingType)
                 {
                     case Type.Boatbuilder:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetPlanksBoatbuilder; // Planks
                         }
                         break;
                     case Type.StoneMine:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetFoodStonemine; // Food
                         }
                         break;
                     case Type.CoalMine:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetFoodCoalmine; // Food
                         }
                         break;
                     case Type.IronMine:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetFoodIronmine; // Food
                         }
                         break;
                     case Type.GoldMine:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetFoodGoldmine; // Food
                         }
@@ -1482,30 +1505,30 @@ namespace Freeserf
 
                             inventory.Player = Player;
                             inventory.Building = Index;
-                            inventory.Flag = flag;
+                            inventory.Flag = state.Flag;
 
-                            u.InvIndex = (int)inventory.Index;
-                            stock[0].Requested = 0xff;
-                            stock[0].Available = 0xff;
-                            stock[1].Requested = 0xff;
-                            stock[1].Available = 0xff;
-                            active = true;
+                            state.Inventory = (word)inventory.Index;
+                            state.Stock[0].Requested = 0xff;
+                            state.Stock[0].Available = 0xff;
+                            state.Stock[1].Requested = 0xff;
+                            state.Stock[1].Available = 0xff;
+                            state.Active = true;
 
                             Game.GetPlayer(Player).AddNotification(Notification.Type.NewStock, Position, 0);
                         }
                         else
                         {
-                            if (!serfRequestFailed && !holder && !serfRequested)
+                            if (!state.SerfRequestFailed && !state.Holder && !state.SerfRequested)
                             {
                                 SendSerfToBuilding(Serf.Type.Transporter,
                                                    Resource.Type.None,
                                                    Resource.Type.None);
                             }
 
-                            Inventory inventory = Game.GetInventory((uint)u.InvIndex);
+                            Inventory inventory = Game.GetInventory(state.Inventory);
 
-                            if (holder &&
-                                !inventory.HaveAnyOutMode() && /* Not serf or res OUT mode */
+                            if (state.Holder &&
+                                !inventory.HaveAnyOutMode() && // Not serf or res OUT mode 
                                 inventory.FreeSerfCount() == 0)
                             {
                                 if (player.TickSendGenericDelay())
@@ -1516,7 +1539,7 @@ namespace Freeserf
                                 }
                             }
 
-                            /* TODO Following code looks like a hack */
+                            // TODO Following code looks like a hack
                             Map map = Game.Map;
                             MapPos flagPos = map.MoveDownRight(Position);
 
@@ -1537,7 +1560,7 @@ namespace Freeserf
                         UpdateMilitary();
                         break;
                     case Type.Butcher:
-                        if (holder)
+                        if (state.Holder)
                         {
                             // Meat
                             GetPrioFuncResource1 = () =>
@@ -1548,19 +1571,19 @@ namespace Freeserf
                         }
                         break;
                     case Type.PigFarm:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetWheatPigfarm; // Wheat
                         }
                         break;
                     case Type.Mill:
-                        if (holder)
+                        if (state.Holder)
                         {
                             GetPrioFuncResource1 = player.GetWheatMill; // Wheat
                         }
                         break;
                     case Type.Baker:
-                        if (holder)
+                        if (state.Holder)
                         {
                             // Flour
                             GetPrioFuncResource1 = () =>
@@ -1571,7 +1594,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.Sawmill:
-                        if (holder)
+                        if (state.Holder)
                         {
                             // Lumber
                             GetPrioFuncResource1 = () =>
@@ -1582,12 +1605,12 @@ namespace Freeserf
                         }
                         break;
                     case Type.SteelSmelter:
-                        if (holder)
+                        if (state.Holder)
                         {
-                            /* Request more coal */
+                            // Request more coal 
                             GetPrioFuncResource1 = player.GetCoalSteelsmelter;
 
-                            /* Request more iron ore */
+                            // Request more iron ore 
                             GetPrioFuncResource2 = () =>
                             {
                                 return 0xffu >> (int)totalResource2;
@@ -1596,32 +1619,32 @@ namespace Freeserf
                         }
                         break;
                     case Type.ToolMaker:
-                        if (holder)
+                        if (state.Holder)
                         {
-                            /* Request more planks. */
+                            // Request more planks. 
                             GetPrioFuncResource1 = player.GetPlanksToolmaker;
 
-                            /* Request more steel. */
+                            // Request more steel. 
                             GetPrioFuncResource2 = player.GetSteelToolmaker;
                         }
                         break;
                     case Type.WeaponSmith:
-                        if (holder)
+                        if (state.Holder)
                         {
-                            /* Request more coal. */
+                            // Request more coal. 
                             GetPrioFuncResource1 = player.GetCoalWeaponsmith;
 
-                            /* Request more steel. */
+                            // Request more steel. 
                             GetPrioFuncResource2 = player.GetSteelWeaponsmith;
                         }
                         break;
                     case Type.GoldSmelter:
-                        if (holder)
+                        if (state.Holder)
                         {
-                            /* Request more coal. */
+                            // Request more coal. 
                             GetPrioFuncResource1 = player.GetCoalGoldsmelter;
 
-                            /* Request more gold ore. */
+                            // Request more gold ore. 
                             GetPrioFuncResource2 = () =>
                             {
                                 return 0xffu >> (int)totalResource2;
@@ -1639,24 +1662,24 @@ namespace Freeserf
                 // Set priority for resource 1
                 if (GetPrioFuncResource1 != null)
                 {
-                    if (totalResource1 < stock[0].Maximum)
-                        stock[0].Priority = GetPrioFuncResource1() >> resource1Modifier;
+                    if (totalResource1 < state.Stock[0].Maximum)
+                        state.Stock[0].Priority = (byte)(GetPrioFuncResource1() >> resource1Modifier);
                     else
-                        stock[0].Priority = 0;
+                        state.Stock[0].Priority = 0;
                 }
 
                 // Set priority for resource 2
                 if (GetPrioFuncResource2 != null)
                 {
-                    if (totalResource2 < stock[1].Maximum)
-                        stock[1].Priority = GetPrioFuncResource2() >> resource2Modifier;
+                    if (totalResource2 < state.Stock[1].Maximum)
+                        state.Stock[1].Priority = (byte)(GetPrioFuncResource2() >> resource2Modifier);
                     else
-                        stock[1].Priority = 0;
+                        state.Stock[1].Priority = 0;
                 }
             }
             else
             { 
-                /* Unfinished */
+                // Unfinished
                 switch (BuildingType)
                 {
                     case Type.None:
@@ -1705,73 +1728,73 @@ namespace Freeserf
             if (player.EmergencyProgramActive && BuildingType != Type.Lumberjack &&
                 BuildingType != Type.Sawmill && BuildingType != Type.Stonecutter)
             {
-                if (!holder && serfRequested && !serfRequestFailed)
-                    serfRequested = false;
+                if (!state.Holder && state.SerfRequested && !state.SerfRequestFailed)
+                    state.SerfRequested = false;
 
-                stock[0].Requested = 0;
-                stock[1].Requested = 0;
+                state.Stock[0].Requested = 0;
+                state.Stock[1].Requested = 0;
 
                 return;
             }
 
-            /* Request builder serf */
-            if (!serfRequestFailed && !holder && !serfRequested)
+            // Request builder serf 
+            if (!state.SerfRequestFailed && !state.Holder && !state.SerfRequested)
             {
-                progress = 1;
-                serfRequestFailed = !SendSerfToBuilding(Serf.Type.Builder,
-                                                        Resource.Type.Hammer,
-                                                        Resource.Type.None);
+                state.Progress = 1;
+                state.SerfRequestFailed = !SendSerfToBuilding(Serf.Type.Builder,
+                                                              Resource.Type.Hammer,
+                                                              Resource.Type.None);
             }
 
-            /* Request planks */
-            uint totalPlanks = stock[0].Requested + stock[0].Available;
+            // Request planks
+            uint totalPlanks = (uint)(state.Stock[0].Requested + state.Stock[0].Available);
 
-            if (totalPlanks < stock[0].Maximum)
+            if (totalPlanks < state.Stock[0].Maximum)
             {
-                uint planksPrio = player.GetPlanksConstruction() >> (8 + (int)totalPlanks);
+                uint planksPriority = player.GetPlanksConstruction() >> (8 + (int)totalPlanks);
 
-                if (!holder)
-                    planksPrio >>= 2;
+                if (!state.Holder)
+                    planksPriority >>= 2;
 
-                stock[0].Priority = planksPrio & ~Misc.BitU(0);
-            }
-            else
-            {
-                stock[0].Priority = 0;
-            }
-
-            /* Request stone */
-            uint totalStone = stock[1].Requested + stock[1].Available;
-
-            if (totalStone < stock[1].Maximum)
-            {
-                uint stonePrio = 0xffu >> (int)totalStone;
-
-                if (!holder)
-                    stonePrio >>= 2;
-
-                stock[1].Priority = stonePrio & ~Misc.BitU(0);
+                state.Stock[0].Priority = (byte)(planksPriority & ~Misc.BitU(0));
             }
             else
             {
-                stock[1].Priority = 0;
+                state.Stock[0].Priority = 0;
+            }
+
+            // Request stone
+            uint totalStone = (uint)(state.Stock[1].Requested + state.Stock[1].Available);
+
+            if (totalStone < state.Stock[1].Maximum)
+            {
+                uint stonePriority = 0xffu >> (int)totalStone;
+
+                if (!state.Holder)
+                    stonePriority >>= 2;
+
+                state.Stock[1].Priority = (byte)(stonePriority & ~Misc.BitU(0));
+            }
+            else
+            {
+                state.Stock[1].Priority = 0;
             }
         }
 
         void UpdateUnfinishedAdvanced()
         {
-            if (progress > 0)
+            if (state.Progress > 0)
             {
                 UpdateUnfinished();
                 return;
             }
 
-            if (holder || serfRequested)
+            if (state.Holder || state.SerfRequested)
             {
                 return;
             }
 
-            /* Check whether building needs leveling */
+            // Check whether building needs leveling
             bool needLeveling = false;
             uint height = (uint)Game.GetLevelingHeight(Position);
 
@@ -1788,31 +1811,31 @@ namespace Freeserf
 
             if (!needLeveling)
             {
-                /* Already at the correct level, don't send digger */
-                progress = 1;
+                // Already at the correct level, don't send digger
+                state.Progress = 1;
                 UpdateUnfinished();
                 return;
             }
 
-            /* Request digger */
-            if (!serfRequestFailed)
+            // Request digger
+            if (!state.SerfRequestFailed)
             {
-                serfRequestFailed = !SendSerfToBuilding(Serf.Type.Digger,
-                                                        Resource.Type.Shovel,
-                                                        Resource.Type.None);
+                state.SerfRequestFailed = !SendSerfToBuilding(Serf.Type.Digger,
+                                                              Resource.Type.Shovel,
+                                                              Resource.Type.None);
             }
         }
 
         void UpdateCastle()
         {
             Player player = Game.GetPlayer(Player);
-            Inventory inventory = Game.GetInventory((uint)u.InvIndex);
+            Inventory inventory = Game.GetInventory(state.Inventory);
 
             if (player.CastleKnights == player.CastleKnightsWanted)
             {
                 Serf bestKnight = null;
                 Serf lastKnight = null;
-                uint nextSerfIndex = firstKnight;
+                uint nextSerfIndex = state.FirstKnight;
 
                 while (nextSerfIndex != 0)
                 {
@@ -1844,7 +1867,7 @@ namespace Freeserf
                         }
                     }
 
-                    /* Switch types */
+                    // Switch types
                     Serf.Type tmp = bestKnight.GetSerfType();
                     bestKnight.SetSerfType(lastKnight.GetSerfType());
                     lastKnight.SetSerfType(tmp);
@@ -1865,7 +1888,7 @@ namespace Freeserf
 
                 if (knightType < 0)
                 {
-                    /* None found */
+                    // None found
                     if (inventory.HasSerf(Serf.Type.Generic) &&
                         inventory.GetCountOf(Resource.Type.Sword) != 0 &&
                         inventory.GetCountOf(Resource.Type.Shield) != 0)
@@ -1873,8 +1896,8 @@ namespace Freeserf
                         Serf serf = inventory.SpecializeFreeSerf(Serf.Type.Knight0);
                         inventory.CallInternal(serf);
 
-                        serf.AddToDefendingQueue(firstKnight, false);
-                        firstKnight = serf.Index;
+                        serf.AddToDefendingQueue(state.FirstKnight, false);
+                        state.FirstKnight = (word)serf.Index;
                         player.IncreaseCastleKnights();
                     }
                     else
@@ -1889,10 +1912,10 @@ namespace Freeserf
                 }
                 else
                 {
-                    /* Prepend to knights list */
+                    // Prepend to knights list
                     Serf serf = inventory.CallInternal(knightType);
-                    serf.AddToDefendingQueue(firstKnight, true);
-                    firstKnight = serf.Index;
+                    serf.AddToDefendingQueue(state.FirstKnight, true);
+                    state.FirstKnight = (word)serf.Index;
                     player.IncreaseCastleKnights();
                 }
             }
@@ -1900,15 +1923,15 @@ namespace Freeserf
             {
                 player.DecreaseCastleKnights();
 
-                uint serfIndex = firstKnight;
+                uint serfIndex = state.FirstKnight;
                 Serf serf = Game.GetSerf(serfIndex);
-                firstKnight = serf.GetNextKnight();
+                state.FirstKnight = (word)serf.GetNextKnight();
 
-                serf.StayIdleInStock((uint)u.InvIndex);
+                serf.StayIdleInStock(state.Inventory);
             }
 
-            if (holder &&
-                !inventory.HaveAnyOutMode() && /* Not serf or res OUT mode */
+            if (state.Holder &&
+                !inventory.HaveAnyOutMode() && // Not serf or res OUT mode
                 inventory.FreeSerfCount() == 0)
             {
                 if (player.TickSendGenericDelay())
@@ -1954,7 +1977,7 @@ namespace Freeserf
         void UpdateMilitary()
         {
             Player player = Game.GetPlayer(Player);
-            uint maxOccupiedLevel = (player.GetKnightOccupation((int)threatLevel) >> 4) & 0xf;
+            uint maxOccupiedLevel = (player.GetKnightOccupation(state.ThreatLevel) >> 4) & 0xf;
 
             if (player.ReducedKnightLevel)
                 maxOccupiedLevel += 5;
@@ -1984,23 +2007,23 @@ namespace Freeserf
                     break;
             }
 
-            uint totalKnights = stock[0].Requested + stock[0].Available;
-            uint presentKnights = stock[0].Available;
+            uint totalKnights = (uint)(state.Stock[0].Requested + state.Stock[0].Available);
+            uint presentKnights = state.Stock[0].Available;
 
             if (totalKnights < neededOccupants)
             {
-                if (!serfRequestFailed)
+                if (!state.SerfRequestFailed)
                 {
-                    serfRequestFailed = !SendSerfToBuilding(Serf.Type.None,
-                                                            Resource.Type.None,
-                                                            Resource.Type.None);
+                    state.SerfRequestFailed = !SendSerfToBuilding(Serf.Type.None,
+                                                                  Resource.Type.None,
+                                                                  Resource.Type.None);
                 }
             }
             else if (neededOccupants < presentKnights && !Game.Map.HasSerf(Game.Map.MoveDownRight(Position)))
             {
-                /* Kick least trained knight out. */
+                // Kick least trained knight out.
                 Serf leavingSerf = null;
-                uint serfIndex = firstKnight;
+                uint serfIndex = state.FirstKnight;
 
                 while (serfIndex != 0)
                 {
@@ -2021,14 +2044,14 @@ namespace Freeserf
 
                 if (leavingSerf != null)
                 {
-                    /* Remove leaving serf from list. */
-                    if (leavingSerf.Index == firstKnight)
+                    // Remove leaving serf from list.
+                    if (leavingSerf.Index == state.FirstKnight)
                     {
-                        firstKnight = leavingSerf.GetNextKnight();
+                        state.FirstKnight = (word)leavingSerf.GetNextKnight();
                     }
                     else
                     {
-                        serfIndex = firstKnight;
+                        serfIndex = state.FirstKnight;
 
                         while (serfIndex != 0)
                         {
@@ -2044,27 +2067,27 @@ namespace Freeserf
                         }
                     }
 
-                    /* Update serf state. */
+                    // Update serf state.
                     leavingSerf.GoOutFromBuilding(0, 0, -2);
 
-                    stock[0].Available -= 1;
+                    state.Stock[0].Available -= 1;
                 }
             }
 
-            /* Request gold */
-            if (holder)
+            // Request gold
+            if (state.Holder)
             {
-                uint totalGold = stock[1].Requested + stock[1].Available;
+                uint totalGold = (uint)(state.Stock[1].Requested + state.Stock[1].Available);
 
                 player.IncreaseMilitaryMaxGold(maxGold);
 
                 if (totalGold < maxGold)
                 {
-                    stock[1].Priority = ((0xfeu >> (int)totalGold) + 1) & 0xfe;
+                    state.Stock[1].Priority = (byte)(((0xfeu >> (int)totalGold) + 1) & 0xfe);
                 }
                 else
                 {
-                    stock[1].Priority = 0;
+                    state.Stock[1].Priority = 0;
                 }
             }
         }
@@ -2114,22 +2137,22 @@ namespace Freeserf
 
         void RequestSerfIfNeeded()
         {
-            if (!serfRequestFailed && !holder && !serfRequested)
+            if (!state.SerfRequestFailed && !state.Holder && !state.SerfRequested)
             {
                 int type = (int)BuildingType;
 
                 if (Requests[type].SerfType != Serf.Type.None)
                 {
-                    serfRequestFailed = !SendSerfToBuilding(Requests[type].SerfType,
-                                                            Requests[type].ResType1,
-                                                            Requests[type].ResType2);
+                    state.SerfRequestFailed = !SendSerfToBuilding(Requests[type].SerfType,
+                                                                  Requests[type].ResType1,
+                                                                  Requests[type].ResType2);
                 }
             }
         }
 
-        bool SendSerfToBuilding(Serf.Type type, Resource.Type res1, Resource.Type res2)
+        bool SendSerfToBuilding(Serf.Type type, Resource.Type resource1, Resource.Type resource2)
         {
-            return Game.SendSerfToFlag(Game.GetFlag(flag), type, res1, res2);
+            return Game.SendSerfToFlag(Game.GetFlag(state.Flag), type, resource1, resource2);
         }
 
         static readonly uint[] BuildingScoreFromType = new uint[]
