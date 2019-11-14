@@ -22,7 +22,7 @@
 
 namespace Freeserf.Resource
 {
-    public enum Type
+    public enum Type : sbyte
     {
         MinValue = None,
         MaxValue = GroupFood,

@@ -1,5 +1,5 @@
 ﻿/*
- * PlayerSettings.cs - Player related functions
+ * PlayerSettings.cs - Player game-related settings
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *

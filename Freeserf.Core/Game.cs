@@ -1819,7 +1819,7 @@ namespace Freeserf
 
             foreach (var inventory in GetPlayerInventories(player))
             {
-                if (inventory.HaveSerf(serfType))
+                if (inventory.HasSerf(serfType))
                     return (int)inventory.Index;
 
                 if ((res1 == Resource.Type.None || inventory.GetCountOf(res1) > 0) &&
@@ -1827,7 +1827,7 @@ namespace Freeserf
                 {
                     inventoryWithResButNoGeneric = 0xffff + (int)inventory.Index;
 
-                    if (inventory.HaveSerf(Serf.Type.Generic))
+                    if (inventory.HasSerf(Serf.Type.Generic))
                         return (int)inventory.Index;
                 }
             }
@@ -1860,7 +1860,7 @@ namespace Freeserf
             {
                 if (flag.HasResources())
                 {
-                    for (int i = 0; i < Flag.FLAG_MAX_RES_COUNT; ++i)
+                    for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
                     {
                         if (flag.GetResourceAtSlot(i) == type)
                             ++count;
@@ -1891,7 +1891,7 @@ namespace Freeserf
             {
                 if (flag.HasResources())
                 {
-                    for (int i = 0; i < Flag.FLAG_MAX_RES_COUNT; ++i)
+                    for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
                     {
                         if (flag.GetResourceAtSlot(i) == type)
                             return true;
@@ -2172,7 +2172,7 @@ namespace Freeserf
                     for (int i = 0; i < n; ++i)
                     {
                         Flag flag = this.flags[sourceInventories[i].Flag];
-                        // Note: it seems that SearchDir was abused for indexing here but (Direction)i will not work with i >= 6.
+                        // Note: it seems that SearchDirection was abused for indexing here but (Direction)i will not work with i >= 6.
                         // We added a general purpose tagged object for flags instead.
                         flag.Tag = i;
                         search.AddSource(flag);
@@ -2289,7 +2289,7 @@ namespace Freeserf
 
                 for (int i = 4; i >= -type - 1; --i)
                 {
-                    if (inventory.HaveSerf(Serf.Type.Knight0 + i))
+                    if (inventory.HasSerf(Serf.Type.Knight0 + i))
                     {
                         knightType = i;
                         break;
@@ -2310,7 +2310,7 @@ namespace Freeserf
                 else if (type == -1)
                 {
                     /* See if a knight can be created here. */
-                    if (inventory.HaveSerf(Serf.Type.Generic) &&
+                    if (inventory.HasSerf(Serf.Type.Generic) &&
                         inventory.GetCountOf(Resource.Type.Sword) > 0 &&
                         inventory.GetCountOf(Resource.Type.Shield) > 0)
                     {
@@ -2321,7 +2321,7 @@ namespace Freeserf
             }
             else
             {
-                if (inventory.HaveSerf((Serf.Type)type))
+                if (inventory.HasSerf((Serf.Type)type))
                 {
                     if (type != (int)Serf.Type.Generic || inventory.FreeSerfCount() > 4)
                     {
@@ -2352,7 +2352,7 @@ namespace Freeserf
                 else
                 {
                     if (sendData.Inventory == null &&
-                        inventory.HaveSerf(Serf.Type.Generic) &&
+                        inventory.HasSerf(Serf.Type.Generic) &&
                         (sendData.Resource1 == Resource.Type.None || inventory.GetCountOf(sendData.Resource1) > 0) &&
                         (sendData.Resource2 == Resource.Type.None || inventory.GetCountOf(sendData.Resource2) > 0))
                     {
@@ -2835,7 +2835,7 @@ namespace Freeserf
             Flag.FillPathSerfInfo(this, pos, path2Dir, path2Data);
 
             Flag flag2 = flags[(uint)path2Data.FlagIndex];
-            Direction dir2 = path2Data.FlagDir;
+            Direction dir2 = path2Data.FlagDirection;
 
             int select = -1;
 
@@ -2843,8 +2843,8 @@ namespace Freeserf
             {
                 foreach (Serf serf in serfs)
                 {
-                    if (serf.PathSplited((uint)path1Data.FlagIndex, path1Data.FlagDir,
-                                         (uint)path2Data.FlagIndex, path2Data.FlagDir,
+                    if (serf.PathSplited((uint)path1Data.FlagIndex, path1Data.FlagDirection,
+                                         (uint)path2Data.FlagIndex, path2Data.FlagDirection,
                                          ref select))
                     {
                         break;
@@ -2853,7 +2853,7 @@ namespace Freeserf
 
                 SerfPathInfo pathData = (select == 0) ? path2Data : path1Data;
                 Flag selectedFlag = flags[(uint)pathData.FlagIndex];
-                selectedFlag.CancelSerfRequest(pathData.FlagDir);
+                selectedFlag.CancelSerfRequest(pathData.FlagDirection);
             }
 
             Flag flag = flags[Map.GetObjectIndex(pos)];

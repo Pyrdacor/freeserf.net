@@ -908,7 +908,7 @@ namespace Freeserf
                         Flag flag = Game.GetFlag(s.Walking.Dest);
                         flag.CancelSerfRequest(dir);
 
-                        Direction otherDir = flag.GetOtherEndDir(dir);
+                        Direction otherDir = flag.GetOtherEndDirection(dir);
                         flag.GetOtherEndFlag(dir).CancelSerfRequest(otherDir);
                     }
                 }
@@ -965,7 +965,7 @@ namespace Freeserf
                         Flag flag = Game.GetFlag(s.Walking.Dest);
                         flag.CancelSerfRequest(dir);
 
-                        Direction otherDir = flag.GetOtherEndDir(dir);
+                        Direction otherDir = flag.GetOtherEndDirection(dir);
                         flag.GetOtherEndFlag(dir).CancelSerfRequest(otherDir);
                     }
                 }
@@ -2997,8 +2997,8 @@ namespace Freeserf
 
             if (flag == dest)
             {
-                Log.Verbose.Write("serf", " dest found: " + dest.SearchDir);
-                serf.ChangeDirection(dest.SearchDir, false);
+                Log.Verbose.Write("serf", " dest found: " + dest.SearchDirection);
+                serf.ChangeDirection(dest.SearchDirection, false);
                 return true;
             }
 
@@ -3099,7 +3099,7 @@ namespace Freeserf
                     throw new ExceptionFreeserf(Game, "serf", "Path has no other end flag in selected dir.");
                 }
 
-                Direction otherDir = flag.GetOtherEndDir(dir);
+                Direction otherDir = flag.GetOtherEndDirection(dir);
 
                 /* Increment transport serf count */
                 flag.CompleteSerfRequest(dir);
@@ -3245,7 +3245,7 @@ namespace Freeserf
                             if (!src.IsWaterPath(i))
                             {
                                 Flag otherFlag = src.GetOtherEndFlag(i);
-                                otherFlag.SearchDir = i;
+                                otherFlag.SearchDirection = i;
                                 search.AddSource(otherFlag);
                             }
                         }
@@ -3305,7 +3305,7 @@ namespace Freeserf
                     Direction d = (Direction)s.Walking.Dir1;
 
                     flag.CancelSerfRequest(d);
-                    flag.GetOtherEndFlag(d).CancelSerfRequest(flag.GetOtherEndDir(d));
+                    flag.GetOtherEndFlag(d).CancelSerfRequest(flag.GetOtherEndDirection(d));
                 }
 
                 s.Walking.Dir1 = -2;
@@ -3405,7 +3405,7 @@ namespace Freeserf
                     Flag flag = Game.GetFlagAtPos(map.Move(Position, dir));
                     Direction revDir = dir.Reverse();
                     Flag otherFlag = flag.GetOtherEndFlag(revDir);
-                    Direction otherDir = flag.GetOtherEndDir(revDir);
+                    Direction otherDir = flag.GetOtherEndDirection(revDir);
 
                     if (flag.IsScheduled(revDir))
                     {
@@ -7609,7 +7609,7 @@ namespace Freeserf
             else
             {
                 Flag otherFlag = flag.GetOtherEndFlag(revDir);
-                Direction otherDir = flag.GetOtherEndDir((Direction)revDir);
+                Direction otherDir = flag.GetOtherEndDirection((Direction)revDir);
 
                 if (otherFlag != null && otherFlag.IsScheduled(otherDir))
                 {

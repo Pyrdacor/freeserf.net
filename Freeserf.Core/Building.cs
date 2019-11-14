@@ -1856,7 +1856,7 @@ namespace Freeserf
 
                 for (int t = (int)Serf.Type.Knight4; t >= (int)Serf.Type.Knight0; --t)
                 {
-                    if (inventory.HaveSerf((Serf.Type)t))
+                    if (inventory.HasSerf((Serf.Type)t))
                     {
                         knightType = (Serf.Type)t;
                         break;
@@ -1866,7 +1866,7 @@ namespace Freeserf
                 if (knightType < 0)
                 {
                     /* None found */
-                    if (inventory.HaveSerf(Serf.Type.Generic) &&
+                    if (inventory.HasSerf(Serf.Type.Generic) &&
                         inventory.GetCountOf(Resource.Type.Sword) != 0 &&
                         inventory.GetCountOf(Resource.Type.Shield) != 0)
                     {

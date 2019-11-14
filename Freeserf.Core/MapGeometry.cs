@@ -54,7 +54,7 @@ namespace Freeserf
     // Non-standard directions:
     // UP_RIGHT: C to B
     // DOWN_LEFT: B to C
-    public enum Direction
+    public enum Direction : sbyte
     {
         None = -1,
 

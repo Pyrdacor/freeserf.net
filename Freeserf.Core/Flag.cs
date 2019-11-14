@@ -23,68 +23,50 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
 
 namespace Freeserf
 {
+    using Serialize;
     using MapPos = UInt32;
-    using ListSerfs = List<Serf>;
+    using word = UInt16;    
 
     public class SerfPathInfo
     {
         public int PathLength;
         public int SerfCount;
         public int FlagIndex;
-        public Direction FlagDir;
+        public Direction FlagDirection;
         public int[] Serfs; // int[16]
     }
 
     public class Flag : GameObject
     {
-        class ResourceSlot
+        internal class ResourceSlot : IComparable
         {
             public Resource.Type Type;
-            public Direction Dir;
-            public uint Dest;
+            public Direction Direction;
+            public word DestinationObjectIndex;
+
+            public int CompareTo(object other)
+            {
+                if (other is ResourceSlot)
+                {
+                    var otherSlot = other as ResourceSlot;
+                    
+                    if (Type == otherSlot.Type)
+                    {
+                        if (Direction == otherSlot.Direction)
+                            return DestinationObjectIndex.CompareTo(otherSlot.DestinationObjectIndex);
+                        else
+                            return Direction.CompareTo(otherSlot.Direction);
+                    }
+
+                    return Type.CompareTo(otherSlot.Type);
+                }
+
+                return 1;
+            }
         }
-
-        public const int FLAG_MAX_RES_COUNT = 8;
-        static readonly int[] MaxTransporters = new[] { 1, 2, 3, 4, 6, 8, 11, 15 };
-
-        public MapPos Position { get; internal set; }
-        public Direction SearchDir { get; set; }
-        public int SearchNum { get; internal set; }
-        public object Tag { get; set; } = null; // General purpose tagged object (used in Game.UpdateInventories)
-
-        // Bit 0: Has connected road right
-        // Bit 1: Has connected road down right
-        // Bit 2: Has connected road down
-        // Bit 3: Has connected road left
-        // Bit 4: Has connected road up left
-        // Bit 5: Has connected road up
-        // Bit 6-7: Owner Index (0-3)
-        int pathCon;
-        // Bit 0: Is land road right (otherwise water)
-        // Bit 1: Is land road down right (otherwise water)
-        // Bit 2: Is land road down (otherwise water)
-        // Bit 3: Is land road left (otherwise water)
-        // Bit 4: Is land road up left (otherwise water)
-        // Bit 5: Is land road up (otherwise water)
-        // Bit 6: Has connected building
-        // Bit 7: Has unscheduled resources
-        int endPoint;
-        ResourceSlot[] slot = new ResourceSlot[FLAG_MAX_RES_COUNT];
-        // Bit 0: Has transporter at road right
-        // Bit 1: Has transporter at  road down right
-        // Bit 2: Has transporter at  road down
-        // Bit 3: Has transporter at  road left
-        // Bit 4: Has transporter at  road up left
-        // Bit 5: Has transporter at  road up
-        // Bit 6: Unused?
-        // Bit 7: Serf request failed
-        int transporter;
-        uint[] length = new uint[6];
 
         internal struct OtherEndpoint
         {
@@ -95,52 +77,62 @@ namespace Freeserf
             public Road Road { get; set; }
         }
 
-        int[] otherEndDir = new int[6];
+        internal struct OtherEndpointPath
+        {
+            public byte ScheduledResourceSlotIndex;
+            public Direction LeadingBackDirection;
+            public bool ResourcePickupScheduled;
+        }
+
+        internal struct FlagPath
+        {
+            public byte FreeTransporters;
+            public byte LengthCategory;
+            public bool SerfRequested;
+        }
+
+        static readonly int[] MaxTransporters = new[] { 1, 2, 3, 4, 6, 8, 11, 15 };
+
+        [Data]
+        private FlagState state = new FlagState();
+        public object Tag { get; set; } = null; // General purpose tagged object (used in Game.UpdateInventories)
 
         internal OtherEndpoint[] OtherEndPoints { get; } = new OtherEndpoint[6];
-
-        // Bit 0-5: Unused?
-        // Bit 6: Flag has an associated inventory building
-        // Bit 7: Associated invertory building accepts serfs
-        uint buildingFlags;
-        // Bit 0-6: Unused?
-        // Bit 7: Associated invertory building accepts resources
-        uint buildingFlags2;
 
         public Flag(Game game, uint index)
             : base(game, index)
         {
-            Position = 0u;
-            SearchNum = 0;
-            SearchDir = Direction.Right;
-            pathCon = 0;
-            endPoint = 0;
-            transporter = 0;
-
-            for (int j = 0; j < FLAG_MAX_RES_COUNT; ++j)
-            {
-                slot[j] = new ResourceSlot()
-                {
-                    Type = Resource.Type.None,
-                    Dest = 0u,
-                    Dir = Direction.None
-                };
-            }
-
-            buildingFlags = 0u;
-            buildingFlags2 = 0u;
+            state.Position = 0u;
+            state.SearchNumber = 0;
+            state.SearchDirection = Direction.Right;
+            state.PathConnections = 0;
+            state.EndPointFlags = EndPointFlags.None;
+            state.TransporterFlags = TransporterFlags.None;
+            state.FlagBuildingFlags = FlagBuildingFlags.None;
 
             var cycle = DirectionCycleCW.CreateDefault();
 
             foreach (Direction dir in cycle)
             {
-                int i = (int)dir;
-
-                length[i] = 0u;
-                otherEndDir[i] = 0;
-                OtherEndPoints[i].Flag = null;
-                OtherEndPoints[i].Road = null;
+                OtherEndPoints[(int)dir].Object = null;
+                OtherEndPoints[(int)dir].Road = null;
             }
+        }
+
+        internal MapPos Position
+        {
+            get => state.Position;
+            set => state.Position = (word)value;
+        }
+        internal uint SearchNumber
+        {
+            get => state.SearchNumber;
+            set => state.SearchNumber = (word)value;
+        }
+        internal Direction SearchDirection
+        {
+            get => state.SearchDirection;
+            set => state.SearchDirection = value;
         }
 
         public uint GetCostToNearestInventory(bool inventorySupportsResIn, bool inventorySupportsResOut)
@@ -176,254 +168,252 @@ namespace Freeserf
             return false;
         }
 
-        /* Bitmap of all directions with outgoing paths. */
-        public int Paths()
+        /// <summary>
+        /// Bitmap of all directions with outgoing paths.
+        /// </summary>
+        public PathConnectionFlags Paths()
         {
-            return pathCon & 0x3f;
+            return state.PathConnectionFlags;
         }
 
-        public void AddPath(Direction dir, bool water)
+        public void AddPath(Direction direction, bool water)
         {
-            int bit = Misc.Bit((int)dir);
-
-            pathCon |= bit;
+            state.PathConnectionFlags |= direction.ToPathConnectionFlag();
 
             if (water)
             {
-                endPoint &= ~bit;
+                state.EndPointFlags &= ~direction.ToEndPointFlag();
             }
             else
             {
-                endPoint |= bit;
+                state.EndPointFlags |= direction.ToEndPointFlag();
             }
 
-            transporter &= ~bit;
+            state.TransporterFlags &= ~direction.ToTransporterFlag();
         }
 
-        public void DeletePath(Direction dir)
+        public void DeletePath(Direction direction)
         {
-            int bit = Misc.Bit((int)dir);
+            state.PathConnectionFlags &= ~direction.ToPathConnectionFlag();
+            state.EndPointFlags &= ~direction.ToEndPointFlag();
+            state.TransporterFlags &= ~direction.ToTransporterFlag();
 
-            pathCon &= ~bit;
-            endPoint &= ~bit;
-            transporter &= ~bit;
-
-            if (SerfRequested(dir))
+            if (SerfRequested(direction))
             {
-                CancelSerfRequest(dir);
+                CancelSerfRequest(direction);
 
-                uint dest = Game.Map.GetObjectIndex(Position);
+                var destination = Game.Map.GetObjectIndex(state.Position);
 
-                foreach (Serf serf in Game.GetSerfsRelatedTo(dest, dir))
+                foreach (Serf serf in Game.GetSerfsRelatedTo(destination, direction))
                 {
-                    serf.PathDeleted(dest, dir);
+                    serf.PathDeleted(destination, direction);
                 }
             }
 
-            otherEndDir[(int)dir] &= 0x78;
-            OtherEndPoints[(int)dir].Flag = null;
-            OtherEndPoints[(int)dir].Road = null;
+            state.OtherEndpointPaths[(int)direction] &= 0x78;
+            OtherEndPoints[(int)direction].Flag = null;
+            OtherEndPoints[(int)direction].Road = null;
 
-            /* Mark resource path for recalculation if they would
-            have followed the removed path. */
-            InvalidateResourcePath(dir);
+            // Mark resource path for recalculation if they would
+            // have followed the removed path.
+            InvalidateResourcePath(direction);
         }
 
-        /* Whether a path exists in a given direction. */
-        public bool HasPath(Direction dir)
+        // Whether a path exists in a given direction.
+        public bool HasPath(Direction direction)
         {
-            return (pathCon & (1 << ((int)dir))) != 0;
+            return state.PathConnectionFlags.HasFlag(direction.ToPathConnectionFlag());
         }
 
-        public void PrioritizePickup(Direction dir, Player player)
+        public void PrioritizePickup(Direction direction, Player player)
         {
-            int resNext = -1;
-            int resPrio = -1;
+            int resourceNext = -1;
+            int resourcePriority = -1;
 
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                if (slot[i].Type != Resource.Type.None)
+                if (state.Slots[i].Type != Resource.Type.None)
                 {
-                    /* Use flag_prio to prioritize resource pickup. */
-                    Direction resDir = slot[i].Dir;
-                    Resource.Type resType = slot[i].Type;
-                    var flagPrio = player.GetFlagPriority(resType);
+                    // Use flag_prio to prioritize resource pickup.
+                    var resourceDirection = state.Slots[i].Direction;
+                    var resourceType = state.Slots[i].Type;
+                    var flagPriority = player.GetFlagPriority(resourceType);
 
-                    if (resDir == dir && flagPrio > resPrio)
+                    if (resourceDirection == direction && flagPriority > resourcePriority)
                     {
-                        resNext = i;
-                        resPrio = flagPrio;
+                        resourceNext = i;
+                        resourcePriority = flagPriority;
                     }
                 }
             }
 
-            otherEndDir[(int)dir] &= 0x78;
+            state.OtherEndpointPaths[(int)direction] &= 0x78;
 
-            if (resNext > -1)
-                otherEndDir[(int)dir] |= Misc.Bit(7) | resNext;
+            if (resourceNext > -1)
+                state.ScheduleOtherEndpoint(direction, (byte)resourceNext);
         }
 
-        /* Owner of this flag. */
+        // Owner of this flag.
         public uint GetOwner()
         {
-            return (uint)(pathCon >> 6) & 3u;
+            return state.OwnerIndex;
         }
 
         public void SetOwner(uint owner)
         {
-            pathCon = (int)((owner << 6) | ((uint)pathCon & 0x3fu));
+            state.OwnerIndex = (byte)owner;
         }
 
-        /* Bitmap showing whether the outgoing paths are land paths. */
+        // Bitmap showing whether the outgoing paths are land paths.
         public int LandPaths()
         {
-            return endPoint & 0x3f;
+            return (int)state.EndPointFlags & 0x3f;
         }
 
-        /* Whether the path in the given direction is a water path. */
-        public bool IsWaterPath(Direction dir)
+        // Whether the path in the given direction is a water path.
+        public bool IsWaterPath(Direction direction)
         {
-            return (endPoint & (1 << ((int)dir))) == 0;
+            return !state.EndPointFlags.HasFlag(direction.ToEndPointFlag());
         }
 
-        /* Whether a building is connected to this flag. If so, the pointer to
-        the other endpoint is a valid building pointer. (Always at UP LEFT direction). */
+        // Whether a building is connected to this flag. If so, the pointer to
+        // the other endpoint is a valid building pointer. (Always at UP LEFT direction).
         public bool HasBuilding()
         {
-            return ((endPoint >> 6) & 1) != 0;
+            return state.EndPointFlags.HasFlag(EndPointFlags.HasConnectedBuilding);
         }
 
-        /* Whether resources exist that are not yet scheduled. */
+        // Whether resources exist that are not yet scheduled.
         public bool HasResources()
         {
-            return ((endPoint >> 7) & 1) != 0;
+            return state.EndPointFlags.HasFlag(EndPointFlags.HasUnscheduledResources);
         }
 
-        /* Bitmap showing whether the outgoing paths have transporters
-        servicing them. */
+        // Bitmap showing whether the outgoing paths have transporters
+        // servicing them.
         public int Transporters()
         {
-            return transporter & 0x3f;
+            return (int)state.TransporterFlags & 0x3f;
         }
 
-        /* Whether the path in the given direction has a transporter
-        serving it. */
-        public bool HasTransporter(Direction dir)
+        // Whether the path in the given direction has a transporter
+        // serving it.
+        public bool HasTransporter(Direction direction)
         {
-            return (transporter & (1 << ((int)dir))) != 0;
+            return state.TransporterFlags.HasFlag(direction.ToTransporterFlag());
         }
 
-        /* Whether this flag has tried to request a transporter without success. */
+        // Whether this flag has tried to request a transporter without success.
         public bool SerfRequestFail()
         {
-            return ((transporter >> 7) & 1) != 0;
+            return state.TransporterFlags.HasFlag(TransporterFlags.SerfRequestFailed);
         }
 
         public void SerfRequestClear()
         {
-            transporter &= ~Misc.Bit(7);
+            state.TransporterFlags &= ~TransporterFlags.SerfRequestFailed;
         }
 
-        /* Current number of transporters on path. */
-        public uint FreeTransporterCount(Direction dir)
+        // Current number of transporters on path.
+        public uint FreeTransporterCount(Direction direction)
         {
-            return length[(int)dir] & 0xfu;
+            return state.FlagPaths[(int)direction] & 0xfu;
         }
 
-        public void TransporterToServe(Direction dir)
+        public void TransporterToServe(Direction direction)
         {
-            --length[(int)dir];
+            --state.FlagPaths[(int)direction];
         }
 
-        /* Length category of path determining max number of transporters. */
-        public uint LengthCategory(Direction dir)
+        // Length category of path determining max number of transporters.
+        public uint LengthCategory(Direction direction)
         {
-            return (length[(int)dir] >> 4) & 7u;
+            return (uint)(state.FlagPaths[(int)direction] >> 4) & 7u;
         }
 
-        /* Whether a transporter serf was successfully requested for this path. */
-        public bool SerfRequested(Direction dir)
+        // Whether a transporter serf was successfully requested for this path.
+        public bool SerfRequested(Direction direction)
         {
-            return ((length[(int)dir] >> 7) & 1) != 0;
+            return state.GetFlagPath(direction).SerfRequested;
         }
 
-        public void CancelSerfRequest(Direction dir)
+        public void CancelSerfRequest(Direction direction)
         {
-            length[(int)dir] &= ~Misc.BitU(7);
+            state.SetSerfRequested(direction, false);
         }
 
-        public void CompleteSerfRequest(Direction dir)
+        public void CompleteSerfRequest(Direction direction)
         {
-            length[(int)dir] &= ~Misc.BitU(7);
-            ++length[(int)dir];
+            state.SetSerfRequested(direction, false);
+            state.IncreaseFreeTransporters(direction);
         }
 
-        /* The slot that is scheduled for pickup by the given path. */
-        public uint ScheduledSlot(Direction dir)
+        // The slot that is scheduled for pickup by the given path.
+        public uint ScheduledSlot(Direction direction)
         {
-            return (uint)otherEndDir[(int)dir] & 7u;
+            return state.GetOtherEndpointPath(direction).ScheduledResourceSlotIndex;
         }
 
-        /* The direction from the other endpoint leading back to this flag. */
-        public Direction GetOtherEndDir(Direction dir)
+        // The direction from the other endpoint leading back to this flag.
+        public Direction GetOtherEndDirection(Direction direction)
         {
-            return (Direction)((otherEndDir[(int)dir] >> 3) & 7);
+            return state.GetOtherEndpointPath(direction).LeadingBackDirection;
         }
 
-        public Flag GetOtherEndFlag(Direction dir)
+        public Flag GetOtherEndFlag(Direction direction)
         {
-            return OtherEndPoints[(int)dir].Flag;
+            return OtherEndPoints[(int)direction].Flag;
         }
 
-        public Road GetRoad(Direction dir)
+        public Road GetRoad(Direction direction)
         {
-            return OtherEndPoints[(int)dir].Road;
+            return OtherEndPoints[(int)direction].Road;
         }
 
-        /* Whether the given direction has a resource pickup scheduled. */
-        public bool IsScheduled(Direction dir)
+        // Whether the given direction has a resource pickup scheduled.
+        public bool IsScheduled(Direction direction)
         {
-            return ((otherEndDir[(int)dir] >> 7) & 1) != 0;
+            return state.GetOtherEndpointPath(direction).ResourcePickupScheduled;
         }
 
-        public bool PickUpResource(uint fromSlot, ref Resource.Type res, ref uint dest)
+        public bool PickUpResource(uint fromSlot, ref Resource.Type resource, ref uint destination)
         {
-            if (fromSlot >= FLAG_MAX_RES_COUNT)
+            if (fromSlot >= Constants.FLAG_MAX_RES_COUNT)
             {
                 throw new ExceptionFreeserf(Game, "flag", "Wrong flag slot index.");
             }
 
-            if (slot[fromSlot].Type == Resource.Type.None)
+            if (state.Slots[fromSlot].Type == Resource.Type.None)
             {
                 return false;
             }
 
-            res = slot[fromSlot].Type;
-            dest = slot[fromSlot].Dest;
-            slot[fromSlot].Type = Resource.Type.None;
-            slot[fromSlot].Dest = 0u;
-            slot[fromSlot].Dir = Direction.None;
+            resource = state.Slots[fromSlot].Type;
+            destination = state.Slots[fromSlot].DestinationObjectIndex;
+            state.Slots[fromSlot].Type = Resource.Type.None;
+            state.Slots[fromSlot].DestinationObjectIndex = 0;
+            state.Slots[fromSlot].Direction = Direction.None;
 
             FixScheduled();
 
             return true;
         }
 
-        public bool DropResource(Resource.Type res, uint dest)
+        public bool DropResource(Resource.Type resource, uint destination)
         {
-            if (res < Resource.Type.MinValue || res > Resource.Type.MaxValue)
+            if (resource < Resource.Type.MinValue || resource > Resource.Type.MaxValue)
             {
                 throw new ExceptionFreeserf(Game, "flag", "Wrong resource type.");
             }
 
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                if (slot[i].Type == Resource.Type.None)
+                if (state.Slots[i].Type == Resource.Type.None)
                 {
-                    slot[i].Type = res;
-                    slot[i].Dest = dest;
-                    slot[i].Dir = Direction.None;
-                    endPoint |= Misc.Bit(7);
+                    state.Slots[i].Type = resource;
+                    state.Slots[i].DestinationObjectIndex = (word)destination;
+                    state.Slots[i].Direction = Direction.None;
+                    state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
 
                     return true;
                 }
@@ -434,18 +424,18 @@ namespace Freeserf
 
         public bool HasEmptySlot()
         {
-            return slot.Any(s => s.Type == Resource.Type.None);
+            return state.Slots.Any(s => s.Type == Resource.Type.None);
         }
 
         public void RemoveAllResources()
         {
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                var res = slot[i].Type;
+                var res = state.Slots[i].Type;
 
                 if (res != Resource.Type.None)
                 {
-                    Game.CancelTransportedResource(res, slot[i].Dest);
+                    Game.CancelTransportedResource(res, state.Slots[i].DestinationObjectIndex);
                     Game.LoseResource(res);
                 }
             }
@@ -453,75 +443,84 @@ namespace Freeserf
 
         public Resource.Type GetResourceAtSlot(int slot)
         {
-            return this.slot[slot].Type;
+            return this.state.Slots[slot].Type;
         }
 
-        /* Whether this flag has an inventory building. */
+        // Whether this flag has an inventory building.
         public bool HasInventory()
         {
-            return Misc.BitTest(buildingFlags, 6);
+            return state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.HasInventory);
         }
   
-        /* Whether this inventory accepts resources. */
+        // Whether this inventory accepts resources.
         public bool AcceptsResources()
         {
-            return Misc.BitTest(buildingFlags2, 7);
+            return state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.InventoryAcceptsResources);
         }
 
-        /* Whether this inventory accepts serfs. */
+        // Whether this inventory accepts serfs.
         public bool AcceptsSerfs()
         {
-            return Misc.BitTest(buildingFlags, 7);
+            return state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.InventoryAcceptsSerfs);
         }
 
         public void SetHasInventory()
         {
-            buildingFlags |= Misc.BitU(6);
+            state.FlagBuildingFlags |= FlagBuildingFlags.HasInventory;
         }
 
         public void SetAcceptsResources(bool accepts)
         {
-            Misc.SetBit(ref buildingFlags2, 7, accepts);
+            if (accepts)
+                state.FlagBuildingFlags |= FlagBuildingFlags.InventoryAcceptsResources;
+            else
+                state.FlagBuildingFlags &= ~FlagBuildingFlags.InventoryAcceptsResources;
         }
 
         public void SetAcceptsSerfs(bool accepts)
         {
-            Misc.SetBit(ref buildingFlags, 7, accepts);
+            if (accepts)
+                state.FlagBuildingFlags |= FlagBuildingFlags.InventoryAcceptsSerfs;
+            else
+                state.FlagBuildingFlags &= ~FlagBuildingFlags.InventoryAcceptsSerfs;
         }
 
         public void ClearFlags()
         {
-            buildingFlags = 0u;
-            buildingFlags2 = 0u;
+            state.FlagBuildingFlags = FlagBuildingFlags.None;
         }
 
+        /// <summary>
+        /// Read legacy savegame.
+        /// </summary>
+        /// <param name="reader"></param>
         public void ReadFrom(SaveReaderBinary reader)
         {
-            Position = 0; /* Set correctly later. */
-            SearchNum = reader.ReadWord(); // 0
-            SearchDir = (Direction)reader.ReadByte(); // 2
-            pathCon = reader.ReadByte(); // 3
-            endPoint = reader.ReadByte(); // 4
-            transporter = reader.ReadByte(); // 5
+            state.Position = 0; /* Set correctly later. */
+            state.SearchNumber = reader.ReadWord(); // 0
+            state.SearchDirection = (Direction)reader.ReadByte(); // 2
+            state.PathConnections = reader.ReadByte(); // 3
+            state.EndPointFlags = (EndPointFlags)reader.ReadByte(); // 4
+            state.TransporterFlags = (TransporterFlags)reader.ReadByte(); // 5
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction j in cycle)
+            foreach (var direction in cycle)
             {
-                length[(int)j] = reader.ReadByte(); // 6 + j
+                state.FlagPaths[(int)direction] = reader.ReadByte(); // 6 + direction
             }
 
             for (int j = 0; j < 8; ++j)
             {
                 byte val = reader.ReadByte(); // 12 + j
 
-                slot[j].Type = (Resource.Type)((val & 0x1f) - 1);
-                slot[j].Dir = (Direction)(((val >> 5) & 7) - 1);
+                state.Slots[j].Type = (Resource.Type)((val & 0x1f) - 1);
+                state.Slots[j].Direction = (Direction)(((val >> 5) & 7) - 1);
             }
 
             for (int j = 0; j < 8; ++j)
             {
-                slot[j].Dest = reader.ReadWord(); // 20 + j*2
+                state.Slots[j].DestinationObjectIndex = reader.ReadWord(); // 20 + j*2
             }
 
             // base + 36
@@ -535,7 +534,7 @@ namespace Freeserf
                 if (j == Direction.UpLeft && HasBuilding())
                 {
                     OtherEndPoints[(int)j].Building = Game.CreateBuilding(offset / 18);
-                    OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, Position, j);
+                    OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, j);
                 }
                 else
                 {
@@ -547,7 +546,7 @@ namespace Freeserf
                     else
                     {
                         OtherEndPoints[(int)j].Flag = Game.CreateFlag(offset / 70);
-                        OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, Position, j);
+                        OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, j);
                     }
                 }
             }
@@ -555,54 +554,70 @@ namespace Freeserf
             // base + 60
             cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction j in cycle)
+            foreach (Direction direction in cycle)
             {
-                otherEndDir[(int)j] = reader.ReadByte();
+                state.OtherEndpointPaths[(int)direction] = reader.ReadByte();
             }
 
-            buildingFlags = reader.ReadByte(); // 66
+            // Bit 0-5: Unused?
+            // Bit 6: Flag has an associated inventory building
+            // Bit 7: Associated invertory building accepts serfs
+            byte buildingFlags = reader.ReadByte(); // 66
 
-            byte prio = reader.ReadByte(); // 67
+            byte priority = reader.ReadByte(); // 67
 
             if (HasBuilding())
             {
-                OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(0, prio);
+                OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(0, priority);
             }
 
-            buildingFlags2 = reader.ReadByte(); // 68
+            // Bit 0-6: Unused?
+            // Bit 7: Associated invertory building accepts resources
+            byte buildingFlags2 = reader.ReadByte(); // 68
 
-            prio = reader.ReadByte(); // 69
+            priority = reader.ReadByte(); // 69
 
             if (HasBuilding())
             {
-                OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(1, prio);
+                OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(1, priority);
             }
+
+            state.FlagBuildingFlags = FlagBuildingFlags.None;
+            if ((buildingFlags & 0x40) != 0)
+                state.FlagBuildingFlags |= FlagBuildingFlags.HasInventory;
+            if ((buildingFlags & 0x80) != 0)
+                state.FlagBuildingFlags |= FlagBuildingFlags.InventoryAcceptsSerfs;
+            if ((buildingFlags2 & 0x80) != 0)
+                state.FlagBuildingFlags |= FlagBuildingFlags.InventoryAcceptsResources;
         }
 
+        /// <summary>
+        /// Read savegames from freeserf project.
+        /// </summary>
         public void ReadFrom(SaveReaderText reader)
         {
             uint x = 0;
             uint y = 0;
             x = reader.Value("pos")[0].ReadUInt();
             y = reader.Value("pos")[1].ReadUInt();
-            Position = Game.Map.Pos(x, y);
-            SearchNum = reader.Value("search_num").ReadInt();
-            SearchDir = reader.Value("search_dir").ReadDirection();
-            pathCon = reader.Value("path_con").ReadInt();
-            endPoint = reader.Value("endpoints").ReadInt();
-            transporter = reader.Value("transporter").ReadInt();
+            state.Position = Game.Map.Pos(x, y);
+            state.SearchNumber = (word)reader.Value("search_num").ReadInt();
+            state.SearchDirection = reader.Value("search_dir").ReadDirection();
+            state.PathConnections = (byte)reader.Value("path_con").ReadInt();
+            state.EndPointFlags = (EndPointFlags)reader.Value("endpoints").ReadInt();
+            state.TransporterFlags = (TransporterFlags)reader.Value("transporter").ReadInt();
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction i in cycle)
+            foreach (Direction direction in cycle)
             {
-                length[(int)i] = reader.Value("length")[(int)i].ReadUInt();
-                int objectIndex = reader.Value("other_endpoint")[(int)i].ReadInt();
+                state.FlagPaths[(int)direction] = (byte)reader.Value("length")[(int)direction].ReadUInt();
+                int objectIndex = reader.Value("other_endpoint")[(int)direction].ReadInt();
 
-                if (i == Direction.UpLeft && HasBuilding())
+                if (direction == Direction.UpLeft && HasBuilding())
                 {
-                    OtherEndPoints[(int)i].Building = Game.CreateBuilding(objectIndex);
-                    OtherEndPoints[(int)i].Road = Road.CreateRoadFromMapPath(Game.Map, Position, i);
+                    OtherEndPoints[(int)direction].Building = Game.CreateBuilding(objectIndex);
+                    OtherEndPoints[(int)direction].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
                 }
                 else
                 {
@@ -613,49 +628,62 @@ namespace Freeserf
                         otherFlag = Game.CreateFlag(objectIndex);
                     }
 
-                    OtherEndPoints[(int)i].Flag = otherFlag;
-                    OtherEndPoints[(int)i].Road = otherFlag == null ? null : Road.CreateRoadFromMapPath(Game.Map, Position, i);
+                    OtherEndPoints[(int)direction].Flag = otherFlag;
+                    OtherEndPoints[(int)direction].Road = otherFlag == null
+                        ? null
+                        : Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
                 }
 
-                otherEndDir[(int)i] = reader.Value("other_end_dir")[(int)i].ReadInt();
+                state.OtherEndpointPaths[(int)direction] = (byte)reader.Value("other_end_dir")[(int)direction].ReadInt();
             }
 
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                slot[i].Type = reader.Value("slot.type")[i].ReadResource();
-                slot[i].Dir = reader.Value("slot.dir")[i].ReadDirection();
-                slot[i].Dest = reader.Value("slot.dest")[i].ReadUInt();
+                state.Slots[i].Type = reader.Value("slot.type")[i].ReadResource();
+                state.Slots[i].Direction = reader.Value("slot.dir")[i].ReadDirection();
+                state.Slots[i].DestinationObjectIndex = (word)reader.Value("slot.dest")[i].ReadUInt();
             }
 
-            buildingFlags = reader.Value("bld_flags").ReadUInt();
-            buildingFlags2 = reader.Value("bld2_flags").ReadUInt();
+            uint buildingFlags = reader.Value("bld_flags").ReadUInt();
+            uint buildingFlags2 = reader.Value("bld2_flags").ReadUInt();
+
+            state.FlagBuildingFlags = FlagBuildingFlags.None;
+            if ((buildingFlags & 0x40) != 0)
+                state.FlagBuildingFlags |= FlagBuildingFlags.HasInventory;
+            if ((buildingFlags & 0x80) != 0)
+                state.FlagBuildingFlags |= FlagBuildingFlags.InventoryAcceptsSerfs;
+            if ((buildingFlags2 & 0x80) != 0)
+                state.FlagBuildingFlags |= FlagBuildingFlags.InventoryAcceptsResources;
         }
 
+        /// <summary>
+        /// Write savegames for freeserf project.
+        /// </summary>
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("pos").Write(Game.Map.PosColumn(Position));
-            writer.Value("pos").Write(Game.Map.PosRow(Position));
-            writer.Value("search_num").Write(SearchNum);
-            writer.Value("search_dir").Write((int)SearchDir);
-            writer.Value("path_con").Write(pathCon);
-            writer.Value("endpoints").Write(endPoint);
-            writer.Value("transporter").Write(transporter);
+            writer.Value("pos").Write(Game.Map.PosColumn(state.Position));
+            writer.Value("pos").Write(Game.Map.PosRow(state.Position));
+            writer.Value("search_num").Write(state.SearchNumber);
+            writer.Value("search_dir").Write((int)state.SearchDirection);
+            writer.Value("path_con").Write((int)state.PathConnections);
+            writer.Value("endpoints").Write((int)state.EndPointFlags);
+            writer.Value("transporter").Write((int)state.TransporterFlags);
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (Direction direction in cycle)
             {
-                writer.Value("length").Write(length[(int)d]);
+                writer.Value("length").Write((uint)state.FlagPaths[(int)direction]);
 
-                if (d == Direction.UpLeft && HasBuilding())
+                if (direction == Direction.UpLeft && HasBuilding())
                 {
-                    writer.Value("other_endpoint").Write(OtherEndPoints[(int)d].Building.Index);
+                    writer.Value("other_endpoint").Write(OtherEndPoints[(int)direction].Building.Index);
                 }
                 else
                 {
-                    if (HasPath(d))
+                    if (HasPath(direction))
                     {
-                        writer.Value("other_endpoint").Write(OtherEndPoints[(int)d].Flag.Index);
+                        writer.Value("other_endpoint").Write(OtherEndPoints[(int)direction].Flag.Index);
                     }
                     else
                     {
@@ -663,15 +691,25 @@ namespace Freeserf
                     }
                 }
 
-                writer.Value("other_end_dir").Write(otherEndDir[(int)d]);
+                writer.Value("other_end_dir").Write((int)state.OtherEndpointPaths[(int)direction]);
             }
 
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                writer.Value("slot.type").Write((int)slot[i].Type);
-                writer.Value("slot.dir").Write((int)slot[i].Dir);
-                writer.Value("slot.dest").Write(slot[i].Dest);
+                writer.Value("slot.type").Write((int)state.Slots[i].Type);
+                writer.Value("slot.dir").Write((int)state.Slots[i].Direction);
+                writer.Value("slot.dest").Write((uint)state.Slots[i].DestinationObjectIndex);
             }
+
+            byte buildingFlags = 0;
+            byte buildingFlags2 = 0;
+
+            if (state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.HasInventory))
+                buildingFlags |= 0x40;
+            if (state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.InventoryAcceptsSerfs))
+                buildingFlags |= 0x80;
+            if (state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.InventoryAcceptsResources))
+                buildingFlags2 |= 0x80;
 
             writer.Value("bld_flags").Write(buildingFlags);
             writer.Value("bld2_flags").Write(buildingFlags2);
@@ -679,20 +717,20 @@ namespace Freeserf
 
         public void ResetTransport(Flag other)
         {
-            for (int slot = 0; slot < FLAG_MAX_RES_COUNT; ++slot)
+            for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; ++slot)
             {
-                if (other.slot[slot].Type != Resource.Type.None &&
-                    other.slot[slot].Dest == Index)
+                if (other.state.Slots[slot].Type != Resource.Type.None &&
+                    other.state.Slots[slot].DestinationObjectIndex == Index)
                 {
-                    other.slot[slot].Dest = 0;
-                    other.endPoint |= Misc.Bit(7);
+                    other.state.Slots[slot].DestinationObjectIndex = 0;
+                    other.state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
 
-                    if (other.slot[slot].Dir != Direction.None)
+                    if (other.state.Slots[slot].Direction != Direction.None)
                     {
-                        Direction dir = other.slot[slot].Dir;
-                        Player player = Game.GetPlayer(other.GetOwner());
+                        Direction direction = other.state.Slots[slot].Direction;
+                        Player otherPlayer = Game.GetPlayer(other.GetOwner());
 
-                        other.PrioritizePickup(dir, player);
+                        other.PrioritizePickup(direction, otherPlayer);
                     }
                 }
             }
@@ -700,13 +738,13 @@ namespace Freeserf
 
         public void ResetDestinationOfStolenResources()
         {
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                if (slot[i].Type != Resource.Type.None)
+                if (state.Slots[i].Type != Resource.Type.None)
                 {
-                    Resource.Type res = slot[i].Type;
-                    Game.CancelTransportedResource(res, slot[i].Dest);
-                    slot[i].Dest = 0;
+                    Resource.Type res = state.Slots[i].Type;
+                    Game.CancelTransportedResource(res, state.Slots[i].DestinationObjectIndex);
+                    state.Slots[i].DestinationObjectIndex = 0;
                 }
             }
         }
@@ -715,14 +753,14 @@ namespace Freeserf
         {
             OtherEndPoints[(int)Direction.UpLeft].Building = building;
             OtherEndPoints[(int)Direction.UpLeft].Road = Road.CreateBuildingRoad(Game.Map.MoveDownRight(building.Position));
-            endPoint |= Misc.Bit(6);
+            state.EndPointFlags |= EndPointFlags.HasConnectedBuilding;
         }
 
         public void UnlinkBuilding()
         {
             OtherEndPoints[(int)Direction.UpLeft].Building = null;
             OtherEndPoints[(int)Direction.UpLeft].Road = null;
-            endPoint &= ~Misc.Bit(6);
+            state.EndPointFlags &= ~EndPointFlags.HasConnectedBuilding;
             ClearFlags();
         }
 
@@ -731,14 +769,14 @@ namespace Freeserf
             return OtherEndPoints[(int)Direction.UpLeft].Building;
         }
 
-        public void InvalidateResourcePath(Direction dir)
+        public void InvalidateResourcePath(Direction direction)
         {
-            for (int i = 0; i < FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                if (slot[i].Type != Resource.Type.None && slot[i].Dir == dir)
+                if (state.Slots[i].Type != Resource.Type.None && state.Slots[i].Direction == direction)
                 {
-                    slot[i].Dir = Direction.None;
-                    endPoint |= Misc.Bit(7);
+                    state.Slots[i].Direction = Direction.None;
+                    state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
                 }
             }
         }
@@ -755,11 +793,11 @@ namespace Freeserf
 
         static bool FindNearestInventorySearchCB(Flag flag, object data)
         {
-            FlagPointerHelper dest = data as FlagPointerHelper;
+            FlagPointerHelper destination = data as FlagPointerHelper;
 
             if (flag.AcceptsResources())
             {
-                dest.Value = flag;
+                destination.Value = flag;
                 return true;
             }
 
@@ -768,13 +806,13 @@ namespace Freeserf
 
         static bool FlagSearchInventorySearchCB(Flag flag, object data)
         {
-            IntPointerHelper destIndex = data as IntPointerHelper;
+            IntPointerHelper destinationIndex = data as IntPointerHelper;
 
             if (flag.AcceptsSerfs())
             {
                 Building building = flag.GetBuilding();
 
-                destIndex.Value = (int)building.GetFlagIndex();
+                destinationIndex.Value = (int)building.GetFlagIndex();
 
                 return true;
             }
@@ -784,103 +822,104 @@ namespace Freeserf
 
         public int FindNearestInventoryForResource()
         {
-            FlagPointerHelper dest = new FlagPointerHelper()
+            FlagPointerHelper destination = new FlagPointerHelper()
             {
                 Value = null
             };
 
-            FlagSearch.Single(this, FindNearestInventorySearchCB, false, true, dest);
+            FlagSearch.Single(this, FindNearestInventorySearchCB, false, true, destination);
 
-            if (dest.Value != null)
-                return (int)dest.Value.Index;
+            if (destination.Value != null)
+                return (int)destination.Value.Index;
 
             return -1;
         }
 
         public int FindNearestInventoryForSerf()
         {
-            IntPointerHelper destIndex = new IntPointerHelper()
+            IntPointerHelper destinationIndex = new IntPointerHelper()
             {
                 Value = -1
             };
 
-            FlagSearch.Single(this, FlagSearchInventorySearchCB, true, false, destIndex);
+            FlagSearch.Single(this, FlagSearchInventorySearchCB, true, false, destinationIndex);
 
-            return destIndex.Value;
+            return destinationIndex.Value;
         }
 
-        public void LinkWithFlag(Flag destFlag, bool waterPath, Direction inDir, Direction outDir, Road road)
+        public void LinkWithFlag(Flag destinationFlag, bool waterPath,
+            Direction inDirection, Direction outDirection, Road road)
         {
-            destFlag.AddPath(inDir, waterPath);
-            AddPath(outDir, waterPath);
+            destinationFlag.AddPath(inDirection, waterPath);
+            AddPath(outDirection, waterPath);
 
-            destFlag.otherEndDir[(int)inDir] = (destFlag.otherEndDir[(int)inDir] & 0xc7) | ((int)outDir << 3);
-            otherEndDir[(int)outDir] = (otherEndDir[(int)outDir] & 0xc7) | ((int)inDir << 3);
+            destinationFlag.state.SetOtherEndpointDirection(inDirection, outDirection);
+            this.state.SetOtherEndpointDirection(outDirection, inDirection);
 
-            uint len = GetRoadLengthValue(road.Length);
+            uint roadLength = GetRoadLengthValue(road.Length);
 
-            destFlag.length[(int)inDir] = len << 4;
-            this.length[(int)outDir] = len << 4;
+            destinationFlag.state.ResetRoadLength(inDirection, (byte)roadLength);
+            this.state.ResetRoadLength(outDirection, (byte)roadLength);
 
-            destFlag.OtherEndPoints[(int)inDir].Flag = this;
-            OtherEndPoints[(int)outDir].Flag = destFlag;
+            destinationFlag.OtherEndPoints[(int)inDirection].Flag = this;
+            OtherEndPoints[(int)outDirection].Flag = destinationFlag;
 
-            destFlag.OtherEndPoints[(int)inDir].Road = road.Reverse(Game.Map);
-            OtherEndPoints[(int)outDir].Road = road;
+            destinationFlag.OtherEndPoints[(int)inDirection].Road = road.Reverse(Game.Map);
+            OtherEndPoints[(int)outDirection].Road = road;
         }
 
         public void Update()
         {
             try
             {
-                /* Count and store in bitfield which directions
-                   have strictly more than 0,1,2,3 slots waiting. */
-                int[] resWaiting = new int[4] { 0, 0, 0, 0 };
+                // Count and store in bitfield which directions
+                // have strictly more than 0,1,2,3 slots waiting.
+                var resourcesWaiting = new int[4] { 0, 0, 0, 0 };
 
-                for (int j = 0; j < FLAG_MAX_RES_COUNT; ++j)
+                for (int j = 0; j < Constants.FLAG_MAX_RES_COUNT; ++j)
                 {
-                    if (this.slot[j].Type != Resource.Type.None && this.slot[j].Dir != Direction.None)
+                    if (this.state.Slots[j].Type != Resource.Type.None && this.state.Slots[j].Direction != Direction.None)
                     {
-                        Direction resDir = slot[j].Dir;
+                        var resourceDirection = state.Slots[j].Direction;
 
-                        for (int k = 0; k < 4; k++)
+                        for (int k = 0; k < 4; ++k)
                         {
-                            if (!Misc.BitTest(resWaiting[k], (int)resDir))
+                            if (!Misc.BitTest(resourcesWaiting[k], (int)resourceDirection))
                             {
-                                resWaiting[k] |= Misc.Bit((int)resDir);
+                                resourcesWaiting[k] |= Misc.Bit((int)resourceDirection);
                                 break;
                             }
                         }
                     }
                 }
 
-                /* Count of total resources waiting at flag */
+                // Count of total resources waiting at flag
                 int waitingCount = 0;
 
                 if (HasResources())
                 {
-                    endPoint &= ~Misc.Bit(7);
+                    state.EndPointFlags &= ~EndPointFlags.HasUnscheduledResources;
 
-                    for (int slot = 0; slot < FLAG_MAX_RES_COUNT; slot++)
+                    for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; slot++)
                     {
-                        if (this.slot[slot].Type != Resource.Type.None)
+                        if (this.state.Slots[slot].Type != Resource.Type.None)
                         {
                             ++waitingCount;
 
-                            /* Only schedule the slot if it has not already
-                             been scheduled for fetch. */
-                            int resDir = (int)this.slot[slot].Dir;
+                            // Only schedule the slot if it has not already
+                            // been scheduled for fetch.
+                            int resourceDirection = (int)this.state.Slots[slot].Direction;
 
-                            if (resDir < 0)
+                            if (resourceDirection < 0)
                             {
-                                if (this.slot[slot].Dest != 0)
+                                if (this.state.Slots[slot].DestinationObjectIndex != 0)
                                 {
-                                    /* Destination is known */
-                                    ScheduleSlotToKnownDest(slot, resWaiting);
+                                    // Destination is known
+                                    ScheduleSlotToKnownDestination(slot, resourcesWaiting);
                                 }
                                 else
                                 {
-                                    /* Destination is not known */
+                                    // Destination is not known
                                     ScheduleSlotToUnknownDest(slot);
                                 }
                             }
@@ -888,45 +927,45 @@ namespace Freeserf
                     }
                 }
 
-                /* Update transporter flags, decide if serf needs to be sent to road */
+                // Update transporter flags, decide if serf needs to be sent to road
                 var cycle = DirectionCycleCCW.CreateDefault();
 
-                foreach (Direction j in cycle)
+                foreach (Direction direction in cycle)
                 {
-                    if (HasPath(j))
+                    if (HasPath(direction))
                     {
-                        if (SerfRequested(j))
+                        if (SerfRequested(direction))
                         {
-                            if (Misc.BitTest(resWaiting[2], (int)j))
+                            if (Misc.BitTest(resourcesWaiting[2], (int)direction))
                             {
                                 if (waitingCount >= 7)
                                 {
-                                    transporter &= Misc.Bit((int)j);
+                                    state.TransporterFlags &= direction.ToTransporterFlag();
                                 }
                             }
-                            else if (FreeTransporterCount(j) != 0)
+                            else if (FreeTransporterCount(direction) != 0)
                             {
-                                transporter |= Misc.Bit((int)j);
+                                state.TransporterFlags |= direction.ToTransporterFlag();
                             }
                         }
-                        else if (FreeTransporterCount(j) == 0 || Misc.BitTest(resWaiting[2], (int)j))
+                        else if (FreeTransporterCount(direction) == 0 || Misc.BitTest(resourcesWaiting[2], (int)direction))
                         {
-                            int maxTransporters = MaxTransporters[LengthCategory(j)];
+                            int maxTransporters = MaxTransporters[LengthCategory(direction)];
 
-                            if (FreeTransporterCount(j) < (uint)maxTransporters && !SerfRequestFail())
+                            if (FreeTransporterCount(direction) < (uint)maxTransporters && !SerfRequestFail())
                             {
-                                if (!CallTransporter(j, IsWaterPath(j)))
-                                    transporter |= Misc.Bit(7);
+                                if (!CallTransporter(direction, IsWaterPath(direction)))
+                                    state.TransporterFlags |= TransporterFlags.SerfRequestFailed;
                             }
 
                             if (waitingCount >= 7)
                             {
-                                transporter &= Misc.Bit((int)j);
+                                state.TransporterFlags &= direction.ToTransporterFlag();
                             }
                         }
                         else
                         {
-                            transporter |= Misc.Bit((int)j);
+                            state.TransporterFlags |= direction.ToTransporterFlag();
                         }
                     }
                 }
@@ -937,53 +976,49 @@ namespace Freeserf
             }
         }
 
-        /* Get road length category value for real length.
-           Determines number of serfs servicing the path segment.(?) */
-        public static uint GetRoadLengthValue(uint length)
+        // Get road length category value for real length.
+        // Determines number of serfs servicing the path segment.
+        public static uint GetRoadLengthValue(uint roadLength)
         {
-            if (length >= 24) return 7;
-            else if (length >= 18) return 6;
-            else if (length >= 13) return 5;
-            else if (length >= 10) return 4;
-            else if (length >= 7) return 3;
-            else if (length >= 6) return 2;
-            else if (length >= 4) return 1;
+            if (roadLength >= 24) return 7;
+            else if (roadLength >= 18) return 6;
+            else if (roadLength >= 13) return 5;
+            else if (roadLength >= 10) return 4;
+            else if (roadLength >= 7) return 3;
+            else if (roadLength >= 6) return 2;
+            else if (roadLength >= 4) return 1;
             return 0;
         }
 
-        public void RestorePathSerfInfo(Direction dir, SerfPathInfo data)
+        public void RestorePathSerfInfo(Direction direction, SerfPathInfo data)
         {
-            int[] maxPathSerfs = new[] { 1, 2, 3, 4, 6, 8, 11, 15 };
+            var maxPathSerfs = new int[] { 1, 2, 3, 4, 6, 8, 11, 15 };
+            var otherFlag = Game.GetFlag((uint)data.FlagIndex);
+            var otherDirection = data.FlagDirection;
 
-            Flag otherFlag = Game.GetFlag((uint)data.FlagIndex);
-            Direction otherDir = data.FlagDir;
+            AddPath(direction, otherFlag.IsWaterPath(otherDirection));
 
-            AddPath(dir, otherFlag.IsWaterPath(otherDir));
+            otherFlag.state.TransporterFlags &= ~otherDirection.ToTransporterFlag();
 
-            otherFlag.transporter &= ~Misc.Bit((int)otherDir);
+            uint roadLength = Flag.GetRoadLengthValue((uint)data.PathLength);
 
-            uint len = Flag.GetRoadLengthValue((uint)data.PathLength);
+            this.state.ResetRoadLength(direction, (byte)roadLength);
+            otherFlag.state.SetRoadLength(otherDirection, (byte)roadLength);
 
-            length[(int)dir] = len << 4;
-            otherFlag.length[(int)otherDir] = (0x80 & otherFlag.length[(int)otherDir]) | (len << 4);
+            this.state.SetSerfRequested(direction, otherFlag.SerfRequested(otherDirection));
 
-            if (otherFlag.SerfRequested(otherDir))
-            {
-                length[(int)dir] |= Misc.BitU(7);
-            }
+            this.state.SetOtherEndpointDirection(direction, otherDirection);
+            otherFlag.state.SetOtherEndpointDirection(otherDirection, direction);
 
-            otherEndDir[(int)dir] = (otherEndDir[(int)dir] & 0xc7) | ((int)otherDir << 3);
-            otherFlag.otherEndDir[(int)otherDir] = (otherFlag.otherEndDir[(int)otherDir] & 0xc7) | ((int)dir << 3);
+            OtherEndPoints[(int)direction].Flag = otherFlag;
+            otherFlag.OtherEndPoints[(int)otherDirection].Flag = this;
 
-            OtherEndPoints[(int)dir].Flag = otherFlag;
-            otherFlag.OtherEndPoints[(int)otherDir].Flag = this;
+            OtherEndPoints[(int)direction].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
+            otherFlag.OtherEndPoints[(int)otherDirection].Road = OtherEndPoints[(int)direction].Road.Reverse(Game.Map);
 
-            OtherEndPoints[(int)dir].Road = Road.CreateRoadFromMapPath(Game.Map, Position, dir);
-            otherFlag.OtherEndPoints[(int)otherDir].Road = OtherEndPoints[(int)dir].Road.Reverse(Game.Map);
+            int maxSerfs = maxPathSerfs[roadLength];
 
-            int maxSerfs = maxPathSerfs[len];
-
-            if (SerfRequested(dir))
+            if (SerfRequested(direction))
                 --maxSerfs;
 
             if (data.SerfCount > maxSerfs)
@@ -995,49 +1030,49 @@ namespace Freeserf
                 }
             }
 
-            int min = Math.Min(data.SerfCount, maxSerfs);
+            int minSerfs = Math.Min(data.SerfCount, maxSerfs);
 
-            if (min > 0)
+            if (minSerfs > 0)
             {
-                /* There are still transporters on the paths. */
-                transporter |= Misc.Bit((int)dir);
-                otherFlag.transporter |= Misc.Bit((int)otherDir);
+                // There are still transporters on the paths.
+                this.state.TransporterFlags |= direction.ToTransporterFlag();
+                otherFlag.state.TransporterFlags |= otherDirection.ToTransporterFlag();
 
-                length[(int)dir] |= (uint)min;
-                otherFlag.length[(int)otherDir] |= (uint)min;
+                this.state.SetFreeTransporters(direction, (byte)minSerfs);
+                otherFlag.state.SetFreeTransporters(otherDirection, (byte)minSerfs);
             }
         }
 
         public void ClearSearchId()
         {
-            SearchNum = 0;
+            state.SearchNumber = 0;
         }
 
         public bool CanDemolish()
         {
             int connected = 0;
-            object otherEnd = null;
+            object otherEndObject = null;
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (Direction direction in cycle)
             {
-                if (HasPath(d))
+                if (HasPath(direction))
                 {
-                    if (IsWaterPath(d))
+                    if (IsWaterPath(direction))
                         return false;
 
                     ++connected;
 
-                    if (otherEnd != null)
+                    if (otherEndObject != null)
                     {
-                        if (OtherEndPoints[(int)d].Object == otherEnd)
+                        if (OtherEndPoints[(int)direction].Object == otherEndObject)
                         {
                             return false;
                         }
                     }
                     else
                     {
-                        otherEnd = OtherEndPoints[(int)d].Object;
+                        otherEndObject = OtherEndPoints[(int)direction].Object;
                     }
                 }
             }
@@ -1048,107 +1083,105 @@ namespace Freeserf
             return false;
         }
 
-        public void MergePaths(MapPos pos)
+        public void MergePaths(MapPos position)
         {
             Map map = Game.Map;
 
-            if (map.Paths(pos) == 0)
+            if (map.Paths(position) == 0)
             {
                 return;
             }
 
-            Direction path1Dir = Direction.Right;
-            Direction path2Dir = Direction.Right;
+            var path1Direction = Direction.Right;
+            var path2Direction = Direction.Right;
 
-            /* Find first direction */
+            // Find first direction
             var cycleCW = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycleCW)
+            foreach (Direction direction in cycleCW)
             {
-                if (map.HasPath(pos, d))
+                if (map.HasPath(position, direction))
                 {
-                    path1Dir = d;
+                    path1Direction = direction;
                     break;
                 }
             }
 
-            /* Find second direction */
+            // Find second direction
             var cycleCCW = DirectionCycleCCW.CreateDefault();
 
-            foreach (Direction d in cycleCCW)
+            foreach (Direction direction in cycleCCW)
             {
-                if (map.HasPath(pos, d))
+                if (map.HasPath(position, direction))
                 {
-                    path2Dir = d;
+                    path2Direction = direction;
                     break;
                 }
             }
 
-            SerfPathInfo path1Data = new SerfPathInfo();
-            SerfPathInfo path2Data = new SerfPathInfo();
+            var path1Data = new SerfPathInfo();
+            var path2Data = new SerfPathInfo();
 
             path1Data.Serfs = new int[16];
             path2Data.Serfs = new int[16];
 
-            FillPathSerfInfo(Game, pos, path1Dir, path1Data);
-            FillPathSerfInfo(Game, pos, path2Dir, path2Data);
+            FillPathSerfInfo(Game, position, path1Direction, path1Data);
+            FillPathSerfInfo(Game, position, path2Direction, path2Data);
 
             Flag flag1 = Game.GetFlag((uint)path1Data.FlagIndex);
             Flag flag2 = Game.GetFlag((uint)path2Data.FlagIndex);
-            Direction dir1 = path1Data.FlagDir;
-            Direction dir2 = path2Data.FlagDir;
+            Direction direction1 = path1Data.FlagDirection;
+            Direction direction2 = path2Data.FlagDirection;
 
-            flag1.otherEndDir[(int)dir1] = (flag1.otherEndDir[(int)dir1] & 0xc7) | ((int)dir2 << 3);
-            flag2.otherEndDir[(int)dir2] = (flag2.otherEndDir[(int)dir2] & 0xc7) | ((int)dir1 << 3);
+            flag1.state.SetOtherEndpointDirection(direction1, direction2);
+            flag2.state.SetOtherEndpointDirection(direction2, direction1);
 
-            flag1.OtherEndPoints[(int)dir1].Flag = flag2;
-            flag2.OtherEndPoints[(int)dir2].Flag = flag1;
+            flag1.OtherEndPoints[(int)direction1].Flag = flag2;
+            flag2.OtherEndPoints[(int)direction2].Flag = flag1;
 
-            flag1.OtherEndPoints[(int)dir1].Road.Extend(Game.Map, OtherEndPoints[(int)path1Dir].Road);
-            flag2.OtherEndPoints[(int)dir2].Road.Extend(Game.Map, OtherEndPoints[(int)path2Dir].Road);
+            flag1.OtherEndPoints[(int)direction1].Road.Extend(Game.Map, OtherEndPoints[(int)path1Direction].Road);
+            flag2.OtherEndPoints[(int)direction2].Road.Extend(Game.Map, OtherEndPoints[(int)path2Direction].Road);
 
-            flag1.transporter &= ~Misc.Bit((int)dir1);
-            flag2.transporter &= ~Misc.Bit((int)dir2);
+            flag1.state.TransporterFlags &= ~direction1.ToTransporterFlag();
+            flag2.state.TransporterFlags &= ~direction2.ToTransporterFlag();
 
-            uint len = Flag.GetRoadLengthValue((uint)(path1Data.PathLength + path2Data.PathLength));
-            flag1.length[(int)dir1] = len << 4;
-            flag2.length[(int)dir2] = len << 4;
+            uint roadLength = Flag.GetRoadLengthValue((uint)(path1Data.PathLength + path2Data.PathLength));
+            flag1.state.ResetRoadLength(direction1, (byte)roadLength);
+            flag2.state.ResetRoadLength(direction2, (byte)roadLength);
 
-            int maxSerfs = MaxTransporters[flag1.LengthCategory(dir1)];
+            int maxSerfs = MaxTransporters[flag1.LengthCategory(direction1)];
             int serfCount = path1Data.SerfCount + path2Data.SerfCount;
 
             if (serfCount > 0)
             {
-                flag1.transporter |= Misc.Bit((int)dir1);
-                flag2.transporter |= Misc.Bit((int)dir2);
+                flag1.state.TransporterFlags |= direction1.ToTransporterFlag();
+                flag2.state.TransporterFlags |= direction2.ToTransporterFlag();
 
                 if (serfCount > maxSerfs)
                 {
-                    /* TODO 59B8B */
+                    // TODO 59B8B
                 }
 
-                flag1.length[(int)dir1] += (uint)serfCount;
-                flag2.length[(int)dir2] += (uint)serfCount;
+                flag1.state.IncreaseFreeTransporters(direction1, (byte)serfCount);
+                flag2.state.IncreaseFreeTransporters(direction2, (byte)serfCount);
             }
 
-            /* Update serfs with reference to this flag. */
-            var serfs = Game.GetSerfsRelatedTo(flag1.Index, dir1);
-            var serfs2 = Game.GetSerfsRelatedTo(flag2.Index, dir2);
-
-            serfs.AddRange(serfs2);
+            // Update serfs with reference to this flag.
+            var serfs = Game.GetSerfsRelatedTo(flag1.Index, direction1);
+            serfs.AddRange(Game.GetSerfsRelatedTo(flag2.Index, direction2));
 
             foreach (Serf serf in serfs)
             {
-                serf.PathMerged2(flag1.Index, dir1, flag2.Index, dir2);
+                serf.PathMerged2(flag1.Index, direction1, flag2.Index, direction2);
             }
         }
 
-        /* Find a transporter at pos and change it to state. */
-        static int ChangeTransporterStateAtPos(Game game, MapPos pos, Serf.State state)
+        // Find a transporter at position and change it to state.
+        static int ChangeTransporterStateAtPos(Game game, MapPos position, Serf.State state)
         {
-            foreach (Serf serf in game.GetSerfsAtPos(pos))
+            foreach (Serf serf in game.GetSerfsAtPos(position))
             {
-                if (serf.ChangeTransporterStateAtPos(pos, state))
+                if (serf.ChangeTransporterStateAtPos(position, state))
                 {
                     return (int)serf.Index;
                 }
@@ -1157,39 +1190,40 @@ namespace Freeserf
             return -1;
         }
 
-        static int WakeTransporterAtFlag(Game game, MapPos pos)
+        static int WakeTransporterAtFlag(Game game, MapPos position)
         {
-            return ChangeTransporterStateAtPos(game, pos, Serf.State.WakeAtFlag);
+            return ChangeTransporterStateAtPos(game, position, Serf.State.WakeAtFlag);
         }
 
-        static int WakeTransporterOnPath(Game game, MapPos pos)
+        static int WakeTransporterOnPath(Game game, MapPos position)
         {
-            return ChangeTransporterStateAtPos(game, pos, Serf.State.WakeOnPath);
+            return ChangeTransporterStateAtPos(game, position, Serf.State.WakeOnPath);
         }
 
-        public static void FillPathSerfInfo(Game game, MapPos pos, Direction dir, SerfPathInfo data)
+        public static void FillPathSerfInfo(Game game, MapPos position,
+            Direction direction, SerfPathInfo data)
         {
             Map map = game.Map;
 
-            if (map.GetIdleSerf(pos))
-                WakeTransporterAtFlag(game, pos);
+            if (map.GetIdleSerf(position))
+                WakeTransporterAtFlag(game, position);
 
             int serfCounter = 0;
             int pathLength = 0;
 
-            /* Handle first position. */
-            if (map.HasSerf(pos))
+            // Handle first position.
+            if (map.HasSerf(position))
             {
-                Serf serf = game.GetSerfAtPos(pos);
+                Serf serf = game.GetSerfAtPos(position);
 
                 if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                 {
-                    int d = serf.GetWalkingDir();
+                    int walkingDirection = serf.GetWalkingDir();
 
-                    if (d < 0)
-                        d += 6;
+                    if (walkingDirection < 0)
+                        walkingDirection += 6;
 
-                    if ((int)dir == d)
+                    if ((int)direction == walkingDirection)
                     {
                         serf.SetWalkingWaitCounter(0);
                         data.Serfs[serfCounter++] = (int)serf.Index;
@@ -1197,44 +1231,44 @@ namespace Freeserf
                 }
             }
 
-            /* Trace along the path to the flag at the other end. */
+            // Trace along the path to the flag at the other end.
             int paths = 0;
 
             while (true)
             {
                 ++pathLength;
-                pos = map.Move(pos, dir);
-                paths = (int)map.Paths(pos);
-                paths &= ~Misc.Bit((int)dir.Reverse());
+                position = map.Move(position, direction);
+                paths = (int)map.Paths(position);
+                paths &= ~Misc.Bit((int)direction.Reverse());
 
-                if (map.HasFlag(pos))
+                if (map.HasFlag(position))
                     break;
 
-                /* Find out which direction the path follows. */
+                // Find out which direction the path follows.
                 var cycle = DirectionCycleCW.CreateDefault();
 
                 foreach (Direction d in cycle)
                 {
                     if (Misc.BitTest(paths, (int)d))
                     {
-                        dir = d;
+                        direction = d;
                         break;
                     }
                 }
 
-                /* Check if there is a transporter waiting here. */
-                if (map.GetIdleSerf(pos))
+                // Check if there is a transporter waiting here.
+                if (map.GetIdleSerf(position))
                 {
-                    int index = WakeTransporterOnPath(game, pos);
+                    int index = WakeTransporterOnPath(game, position);
 
                     if (index >= 0)
                         data.Serfs[serfCounter++] = index;
                 }
 
-                /* Check if there is a serf occupying this space. */
-                if (map.HasSerf(pos))
+                // Check if there is a serf occupying this space.
+                if (map.HasSerf(position))
                 {
-                    Serf serf = game.GetSerfAtPos(pos);
+                    Serf serf = game.GetSerfAtPos(position);
 
                     if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                     {
@@ -1244,19 +1278,21 @@ namespace Freeserf
                 }
             }
 
-            /* Handle last position. */
-            if (map.HasSerf(pos))
+            // Handle last position.
+            if (map.HasSerf(position))
             {
-                Serf serf = game.GetSerfAtPos(pos);
+                Serf serf = game.GetSerfAtPos(position);
 
-                if ((serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1) || serf.SerfState == Serf.State.Delivering)
+                if ((serf.SerfState == Serf.State.Transporting &&
+                        serf.GetWalkingWaitCounter() != -1) ||
+                    serf.SerfState == Serf.State.Delivering)
                 {
-                    int d = serf.GetWalkingDir();
+                    int walkingDirection = serf.GetWalkingDir();
 
-                    if (d < 0)
-                        d += 6;
+                    if (walkingDirection < 0)
+                        walkingDirection += 6;
 
-                    if (d == (int)dir.Reverse())
+                    if (walkingDirection == (int)direction.Reverse())
                     {
                         serf.SetWalkingWaitCounter(0);
                         data.Serfs[serfCounter++] = (int)serf.Index;
@@ -1264,76 +1300,82 @@ namespace Freeserf
                 }
             }
 
-            /* Fill the rest of the struct. */
+            // Fill the rest of the struct.
             data.PathLength = pathLength;
             data.SerfCount = serfCounter;
-            data.FlagIndex = (int)map.GetObjectIndex(pos);
-            data.FlagDir = dir.Reverse();
+            data.FlagIndex = (int)map.GetObjectIndex(position);
+            data.FlagDirection = direction.Reverse();
         }
 
         void FixScheduled()
         {
-            bool anyResources = slot.Any(s => s.Type != Resource.Type.None);
+            bool anyResources = state.Slots.Any(s => s.Type != Resource.Type.None);
 
-            Misc.SetBit(ref endPoint, 7, anyResources);
+            if (anyResources)
+                state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
+            else
+                state.EndPointFlags &= ~EndPointFlags.HasUnscheduledResources;
         }
 
-        class ScheduleUnknownDestData
+        class ScheduleUnknownDestinationData
         {
             public Resource.Type Resource;
-            public int MaxPrio;
+            public int MaxPriority;
             public Flag Flag;
         }
 
-        static bool ScheduleUnknownDestCB(Flag flag, object data)
+        static bool ScheduleUnknownDestinationCallback(Flag flag, object data)
         {
-            var destData = data as ScheduleUnknownDestData;
+            var destinationData = data as ScheduleUnknownDestinationData;
 
             if (flag.HasBuilding())
             {
-                Building building = flag.GetBuilding();
+                var building = flag.GetBuilding();
+                int buildingPriority = building.GetMaxPriorityForResource(destinationData.Resource);
 
-                int buildPrio = building.GetMaxPriorityForResource(destData.Resource);
-
-                if (buildPrio > destData.MaxPrio)
+                if (buildingPriority > destinationData.MaxPriority)
                 {
-                    destData.MaxPrio = buildPrio;
-                    destData.Flag = flag;
+                    destinationData.MaxPriority = buildingPriority;
+                    destinationData.Flag = flag;
                 }
 
-                if (destData.MaxPrio > 204)
+                if (destinationData.MaxPriority > 204)
                     return true;
             }
 
             return false;
         }
 
-        public bool ScheduleKnownDestCB(Flag src, Flag dest, int slot)
+        public bool ScheduleKnownDestinationCallback(
+            Flag source,
+            Flag destination,
+            int slot
+        )
         {
-            if (this == dest)
+            if (this == destination)
             {
-                /* Destination found */
-                if ((int)SearchDir != 6)
+                // Destination found
+                if ((int)state.SearchDirection != 6)
                 {
-                    if (!src.IsScheduled(SearchDir))
+                    if (!source.IsScheduled(state.SearchDirection))
                     {
-                        /* Item is requesting to be fetched */
-                        src.otherEndDir[(int)SearchDir] = Misc.Bit(7) | (src.otherEndDir[(int)SearchDir] & 0x78) | slot;
+                        // Item is requesting to be fetched
+                        state.ScheduleOtherEndpoint(state.SearchDirection, (byte)slot);
                     }
                     else
                     {
-                        Player player = Game.GetPlayer(GetOwner());
-                        int otherDir = src.otherEndDir[(int)SearchDir];
-                        int prioOld = player.GetFlagPriority(src.slot[otherDir & 7].Type);
-                        int prioNew = player.GetFlagPriority(src.slot[slot].Type);
+                        var player = Game.GetPlayer(GetOwner());
+                        var otherSlot = state.GetOtherEndpointPath(state.SearchDirection).ScheduledResourceSlotIndex;
+                        int priorityOld = player.GetFlagPriority(source.state.Slots[otherSlot].Type);
+                        int priorityNew = player.GetFlagPriority(source.state.Slots[slot].Type);
 
-                        if (prioNew > prioOld)
+                        if (priorityNew > priorityOld)
                         {
-                            /* This item has the highest priority now */
-                            src.otherEndDir[(int)SearchDir] = (src.otherEndDir[(int)SearchDir] & 0xf8) | slot;
+                            // This item has the highest priority now
+                            source.state.SetOtherEndpointSlot(state.SearchDirection, (byte)slot);
                         }
 
-                        src.slot[slot].Dir = SearchDir;
+                        source.state.Slots[slot].Direction = state.SearchDirection;
                     }
                 }
 
@@ -1343,10 +1385,10 @@ namespace Freeserf
             return false;
         }
 
-        /* Resources which should be routed directly to
-           buildings requesting them. Resources not listed
-           here will simply be moved to an inventory. */
-        static readonly int[] routable = new int[]
+        // Resources which should be routed directly to
+        // buildings requesting them. Resources not listed
+        // here will simply be moved to an inventory.
+        static readonly int[] routableResources = new int[]
         {
                 1,  // RESOURCE_FISH
                 1,  // RESOURCE_PIG
@@ -1379,141 +1421,142 @@ namespace Freeserf
 
         void ScheduleSlotToUnknownDest(int slot)
         {
-            Resource.Type res = this.slot[slot].Type;
+            var resource = this.state.Slots[slot].Type;
 
-            if (routable[(int)res] != 0)
+            if (routableResources[(int)resource] != 0)
             {
                 FlagSearch search = new FlagSearch(Game);
 
                 search.AddSource(this);
 
-                /* Handle food as one resource group */
-                if (res == Resource.Type.Meat ||
-                    res == Resource.Type.Fish ||
-                    res == Resource.Type.Bread)
+                // Handle food as one resource group
+                if (resource == Resource.Type.Meat ||
+                    resource == Resource.Type.Fish ||
+                    resource == Resource.Type.Bread)
                 {
-                    res = Resource.Type.GroupFood;
+                    resource = Resource.Type.GroupFood;
                 }
 
-                ScheduleUnknownDestData data = new ScheduleUnknownDestData()
+                var data = new ScheduleUnknownDestinationData()
                 {
-                    Resource = res,
+                    Resource = resource,
                     Flag = null,
-                    MaxPrio = 0
+                    MaxPriority = 0
                 };
 
-                search.Execute(ScheduleUnknownDestCB, false, true, data);
+                search.Execute(ScheduleUnknownDestinationCallback, false, true, data);
 
                 if (data.Flag != null)
                 {
                     Log.Verbose.Write("game", $"dest for flag {Index} res {slot} found: flag {data.Flag.Index}");
-                    Building destBuilding = data.Flag.OtherEndPoints[(int)Direction.UpLeft].Building;
+                    var destBuilding = data.Flag.OtherEndPoints[(int)Direction.UpLeft].Building;
 
-                    if (!destBuilding.AddRequestedResource(res, true))
+                    if (!destBuilding.AddRequestedResource(resource, true))
                     {
                         throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
                     }
 
-                    this.slot[slot].Dest = destBuilding.GetFlagIndex();
-                    endPoint |= Misc.Bit(7);
+                    state.Slots[slot].DestinationObjectIndex = (word)destBuilding.GetFlagIndex();
+                    state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
 
                     return;
                 }
             }
 
-            /* Either this resource cannot be routed to a destination
-               other than an inventory or such destination could not be
-               found. Send to inventory instead. */
-            int r = FindNearestInventoryForResource();
+            // Either this resource cannot be routed to a destination
+            // other than an inventory or such destination could not be
+            // found. Send to inventory instead.
+            int result = FindNearestInventoryForResource();
 
-            if (r < 0 || r == Index)
+            if (result < 0 || result == Index)
             {
-                /* No path to inventory was found, or
-                   resource is already at destination.
-                   In the latter case we need to move it
-                   forth and back once before it can be delivered. */
+                // No path to inventory was found, or
+                // resource is already at destination.
+                // In the latter case we need to move it
+                // forth and back once before it can be delivered.
                 if (Transporters() == 0)
                 {
-                    endPoint |= Misc.Bit(7);
+                    state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
                 }
                 else
                 {
-                    Direction dir = Direction.None;
+                    var direction = Direction.None;
                     var cycle = DirectionCycleCCW.CreateDefault();
 
-                    foreach (Direction d in cycle)
+                    foreach (Direction checkDirection in cycle)
                     {
-                        if (HasTransporter(d))
+                        if (HasTransporter(checkDirection))
                         {
-                            dir = d;
+                            direction = checkDirection;
                             break;
                         }
                     }
 
-                    if ((dir < Direction.Right) || (dir > Direction.Up))
+                    if (direction < Direction.Right || direction > Direction.Up)
                     {
                         throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
                     }
 
-                    if (!IsScheduled(dir))
+                    if (!IsScheduled(direction))
                     {
-                        otherEndDir[(int)dir] = Misc.Bit(7) | (otherEndDir[(int)dir] & 0x38) | slot;
+                        state.ScheduleOtherEndpoint(direction, (byte)slot);
                     }
 
-                    this.slot[slot].Dir = dir;
+                    state.Slots[slot].Direction = direction;
                 }
             }
             else
             {
-                this.slot[slot].Dest = (MapPos)r;
-                endPoint |= Misc.Bit(7);
+                state.Slots[slot].DestinationObjectIndex = (word)result;
+                state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
             }
         }
 
-        class ScheduleKnownDestData
+        class ScheduleKnownDestinationData
         {
             public Flag Source;
-            public Flag Dest;
+            public Flag Destination;
             public int Slot;
         }
 
-        static bool ScheduleKnownDestCB(Flag flag, object data)
+        static bool ScheduleKnownDestinationCallback(Flag flag, object data)
         {
-            var destData = data as ScheduleKnownDestData;
+            var destData = data as ScheduleKnownDestinationData;
 
-            return flag.ScheduleKnownDestCB(destData.Source, destData.Dest, destData.Slot);
+            return flag.ScheduleKnownDestinationCallback(
+                destData.Source, destData.Destination, destData.Slot);
         }
 
-        // resWaiting = int[4]
-        void ScheduleSlotToKnownDest(int slot, int[] resWaiting)
+        // resourcesWaiting = int[4]
+        void ScheduleSlotToKnownDestination(int slot, int[] resourcesWaiting)
         {
-            FlagSearch search = new FlagSearch(Game);
+            var search = new FlagSearch(Game);
 
-            SearchNum = search.ID;
-            SearchDir = Direction.None;
-            int tr = Transporters();
+            state.SearchNumber = (word)search.ID;
+            state.SearchDirection = Direction.None;
+            int transporters = Transporters();
             int sources = 0;
 
-            /* Directions where transporters are idle (zero slots waiting) */
-            int flags = (resWaiting[0] ^ 0x3f) & transporter;
+            // Directions where transporters are idle (zero slots waiting)
+            int flags = (resourcesWaiting[0] ^ 0x3f) & (int)state.TransporterFlags;
 
             if (flags != 0)
             {
                 var cycle = DirectionCycleCCW.CreateDefault();
 
-                foreach (Direction k in cycle)
+                foreach (Direction direction in cycle)
                 {
-                    int i = (int)k;
+                    int i = (int)direction;
 
                     if (Misc.BitTest(flags, i))
                     {
-                        tr &= ~Misc.Bit(i);
+                        transporters &= ~Misc.Bit(i);
 
                         Flag otherFlag = OtherEndPoints[i].Flag;
 
-                        if (otherFlag.SearchNum != search.ID)
+                        if (otherFlag.state.SearchNumber != search.ID)
                         {
-                            otherFlag.SearchDir = k;
+                            otherFlag.state.SearchDirection = direction;
                             search.AddSource(otherFlag);
                             ++sources;
                         }
@@ -1521,27 +1564,27 @@ namespace Freeserf
                 }
             }
 
-            if (tr != 0)
+            if (transporters != 0)
             {
                 for (int j = 0; j < 3; ++j)
                 {
-                    flags = resWaiting[j] ^ resWaiting[j + 1];
+                    flags = resourcesWaiting[j] ^ resourcesWaiting[j + 1];
 
                     var cycle = DirectionCycleCCW.CreateDefault();
 
-                    foreach (Direction k in cycle)
+                    foreach (Direction direction in cycle)
                     {
-                        int i = (int)k;
+                        int i = (int)direction;
 
                         if (Misc.BitTest(flags, i))
                         {
-                            tr &= ~Misc.Bit(i);
+                            transporters &= ~Misc.Bit(i);
 
                             Flag otherFlag = OtherEndPoints[i].Flag;
 
-                            if (otherFlag.SearchNum != search.ID)
+                            if (otherFlag.state.SearchNumber != search.ID)
                             {
-                                otherFlag.SearchDir = k;
+                                otherFlag.state.SearchDirection = direction;
                                 search.AddSource(otherFlag);
                                 ++sources;
                             }
@@ -1549,25 +1592,25 @@ namespace Freeserf
                     }
                 }
 
-                if (tr != 0)
+                if (transporters != 0)
                 {
-                    flags = resWaiting[3];
+                    flags = resourcesWaiting[3];
 
                     var cycle = DirectionCycleCCW.CreateDefault();
 
-                    foreach (Direction k in cycle)
+                    foreach (Direction direction in cycle)
                     {
-                        int i = (int)k;
+                        int i = (int)direction;
 
                         if (Misc.BitTest(flags, i))
                         {
-                            tr &= ~Misc.Bit(i);
+                            transporters &= ~Misc.Bit(i);
 
                             Flag otherFlag = OtherEndPoints[i].Flag;
 
-                            if (otherFlag.SearchNum != search.ID)
+                            if (otherFlag.state.SearchNumber != search.ID)
                             {
-                                otherFlag.SearchDir = k;
+                                otherFlag.state.SearchDirection = direction;
                                 search.AddSource(otherFlag);
                                 ++sources;
                             }
@@ -1581,43 +1624,46 @@ namespace Freeserf
 
             if (sources > 0)
             {
-                ScheduleKnownDestData data = new ScheduleKnownDestData()
+                var data = new ScheduleKnownDestinationData()
                 {
                     Source = this,
-                    Dest = Game.GetFlag(this.slot[slot].Dest),
+                    Destination = Game.GetFlag(state.Slots[slot].DestinationObjectIndex),
                     Slot = slot
                 };
 
-                bool r = search.Execute(ScheduleKnownDestCB, false, true, data);
+                bool result = search.Execute(ScheduleKnownDestinationCallback, false, true, data);
 
-                if (!r || data.Dest == this)
+                if (!result || data.Destination == this)
                 {
-                    /* Unable to deliver */
+                    // Unable to deliver
                     bool cancel = false;
 
-                    if (this.slot[slot].Dest != 0)
+                    if (state.Slots[slot].DestinationObjectIndex != 0)
                     {
-                        var flag = Game.GetFlag(this.slot[slot].Dest);
+                        var flag = Game.GetFlag(state.Slots[slot].DestinationObjectIndex);
 
                         if (flag != null && flag.HasBuilding())
                         {
                             var building = flag.GetBuilding();
 
-                            if (building != null && building.GetRequested(this.slot[slot].Type) > 0)
+                            if (building != null && building.GetRequested(state.Slots[slot].Type) > 0)
                                 cancel = true;
                         }
                     }
 
                     if (cancel)
-                        Game.CancelTransportedResource(this.slot[slot].Type, this.slot[slot].Dest);
+                    {
+                        Game.CancelTransportedResource(state.Slots[slot].Type,
+                            state.Slots[slot].DestinationObjectIndex);
+                    }
 
-                    this.slot[slot].Dest = 0u;
-                    endPoint |= Misc.Bit(7);
+                    state.Slots[slot].DestinationObjectIndex = 0;
+                    state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
                 }
             }
             else
             {
-                endPoint |= Misc.Bit(7);
+                state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
             }
         }
 
@@ -1633,13 +1679,13 @@ namespace Freeserf
 
             if (flag.HasInventory())
             {
-                /* Inventory reached */
-                Building building = flag.GetBuilding();
-                Inventory inventory = building.GetInventory();
+                // Inventory reached
+                var building = flag.GetBuilding();
+                var inventory = building.GetInventory();
 
                 if (!roadData.Water)
                 {
-                    if (inventory.HaveSerf(Serf.Type.Transporter))
+                    if (inventory.HasSerf(Serf.Type.Transporter))
                     {
                         roadData.Inventory = inventory;
                         return true;
@@ -1647,14 +1693,14 @@ namespace Freeserf
                 }
                 else
                 {
-                    if (inventory.HaveSerf(Serf.Type.Sailor))
+                    if (inventory.HasSerf(Serf.Type.Sailor))
                     {
                         roadData.Inventory = inventory;
                         return true;
                     }
                 }
 
-                if (roadData.Inventory == null && inventory.HaveSerf(Serf.Type.Generic) &&
+                if (roadData.Inventory == null && inventory.HasSerf(Serf.Type.Generic) &&
                     (!roadData.Water || inventory.GetCountOf(Resource.Type.Boat) > 0))
                 {
                     roadData.Inventory = inventory;
@@ -1664,19 +1710,19 @@ namespace Freeserf
             return false;
         }
 
-        bool CallTransporter(Direction dir, bool water)
+        bool CallTransporter(Direction direction, bool water)
         {
-            Flag source2 = OtherEndPoints[(int)dir].Flag;
-            Direction dir2 = GetOtherEndDir(dir);
+            Flag source = OtherEndPoints[(int)direction].Flag;
+            Direction sourceDirection = GetOtherEndDirection(direction);
 
-            SearchDir = Direction.Right;
-            source2.SearchDir = Direction.DownRight;
+            state.SearchDirection = Direction.Right;
+            source.state.SearchDirection = Direction.DownRight;
 
-            FlagSearch search = new FlagSearch(Game);
+            var search = new FlagSearch(Game);
             search.AddSource(this);
-            search.AddSource(source2);
+            search.AddSource(source);
 
-            SendSerfToRoadData data = new SendSerfToRoadData()
+            var data = new SendSerfToRoadData()
             {
                 Inventory = null,
                 Water = water
@@ -1684,28 +1730,28 @@ namespace Freeserf
 
             search.Execute(SendSerfToRoadSearchCB, true, false, data);
 
-            Inventory inventory = data.Inventory;
+            var inventory = data.Inventory;
 
             if (inventory == null)
             {
                 return false;
             }
 
-            Serf serf = data.Inventory.CallTransporter(water);
-            Flag destFlag = Game.GetFlag(inventory.Flag);
+            var serf = data.Inventory.CallTransporter(water);
+            var destinationFlag = Game.GetFlag(inventory.Flag);
 
-            length[(int)dir] |= Misc.BitU(7);
-            source2.length[(int)dir2] |= Misc.BitU(7);
+            this.state.SetSerfRequested(direction, true);
+            source.state.SetSerfRequested(sourceDirection, true);
 
-            Flag source = this;
+            var sourceFlag = this;
 
-            if (destFlag.SearchDir == source2.SearchDir)
+            if (destinationFlag.state.SearchDirection == source.state.SearchDirection)
             {
-                source = source2;
-                dir = dir2;
+                sourceFlag = source;
+                direction = sourceDirection;
             }
 
-            serf.GoOutFromInventory(inventory.Index, source.Index, (int)dir);
+            serf.GoOutFromInventory(inventory.Index, sourceFlag.Index, (int)direction);
 
             return true;
         }
@@ -1732,7 +1778,7 @@ namespace Freeserf
         public void AddSource(Flag flag)
         {
             queue.Enqueue(flag);
-            flag.SearchNum = id;
+            flag.SearchNumber = (uint)id;
         }
 
         public bool Execute(FlagSearchFunc callback, bool land, bool transporter, object data)
@@ -1743,43 +1789,44 @@ namespace Freeserf
 
                 if (callback(flag, data))
                 {
-                    /* Clean up */
+                    // Clean up
                     queue.Clear();
                     return true;
                 }
 
                 var cycle = DirectionCycleCCW.CreateDefault();
 
-                foreach (Direction dir in cycle)
+                foreach (Direction direction in cycle)
                 {
-                    var otherFlag = flag.OtherEndPoints[(int)dir].Flag;
+                    var otherFlag = flag.OtherEndPoints[(int)direction].Flag;
 
                     if (otherFlag == null)
                         continue;
 
-                    if ((!land || !flag.IsWaterPath(dir)) &&
-                        (!transporter || flag.HasTransporter(dir)) &&
-                        otherFlag.SearchNum != id)
+                    if ((!land || !flag.IsWaterPath(direction)) &&
+                        (!transporter || flag.HasTransporter(direction)) &&
+                        otherFlag.SearchNumber != id)
                     {
-                        otherFlag.SearchNum = id;
-                        otherFlag.SearchDir = flag.SearchDir;
+                        otherFlag.SearchNumber = (uint)id;
+                        otherFlag.SearchDirection = flag.SearchDirection;
                         otherFlag.Tag = flag.Tag;
                         queue.Enqueue(otherFlag);
                     }
                 }
             }
 
-            /* Clean up */
+            // Clean up
             queue.Clear();
 
             return false;
         }
 
-        public static bool Single(Flag src, FlagSearchFunc callback, bool land, bool transporter, object data)
+        public static bool Single(Flag source,
+            FlagSearchFunc callback, bool land, bool transporter, object data)
         {
-            FlagSearch search = new FlagSearch(src.Game);
+            var search = new FlagSearch(source.Game);
 
-            search.AddSource(src);
+            search.AddSource(source);
 
             return search.Execute(callback, land, transporter, data);
         }

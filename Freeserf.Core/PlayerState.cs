@@ -1,5 +1,5 @@
 ﻿/*
- * PlayerState.cs - Player related functions
+ * PlayerState.cs - Player state
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *

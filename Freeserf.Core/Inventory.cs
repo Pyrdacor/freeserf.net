@@ -214,7 +214,7 @@ namespace Freeserf
             return state.GenericCount;
         }
 
-        public bool HaveSerf(Serf.Type type)
+        public bool HasSerf(Serf.Type type)
         {
             return state.Serfs[type] != 0;
         }
