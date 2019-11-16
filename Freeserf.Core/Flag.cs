@@ -1,8 +1,8 @@
 ﻿/*
  * Flag.cs - Flag related functions.
  *
- * Copyright (C) 2013  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -39,11 +39,11 @@ namespace Freeserf
         public int[] Serfs; // int[16]
     }
 
-    public class Flag : GameObject
+    public class Flag : GameObject, IState
     {
         internal class ResourceSlot : IComparable
         {
-            public Resource.Type Type;
+            public Resource.Type Type = Resource.Type.None;
             public Direction Direction;
             public word DestinationObjectIndex;
 
@@ -112,12 +112,14 @@ namespace Freeserf
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction dir in cycle)
+            foreach (var direction in cycle)
             {
-                OtherEndPoints[(int)dir].Object = null;
-                OtherEndPoints[(int)dir].Road = null;
+                OtherEndPoints[(int)direction].Object = null;
+                OtherEndPoints[(int)direction].Road = null;
             }
         }
+
+        public bool Dirty => state.Dirty;
 
         internal MapPos Position
         {
@@ -133,6 +135,11 @@ namespace Freeserf
         {
             get => state.SearchDirection;
             set => state.SearchDirection = value;
+        }
+
+        public void ResetDirtyFlag()
+        {
+            state.ResetDirtyFlag();
         }
 
         public uint GetCostToNearestInventory(bool inventorySupportsResIn, bool inventorySupportsResOut)
@@ -424,26 +431,26 @@ namespace Freeserf
 
         public bool HasEmptySlot()
         {
-            return state.Slots.Any(s => s.Type == Resource.Type.None);
+            return state.Slots.Any(slot => slot.Type == Resource.Type.None);
         }
 
         public void RemoveAllResources()
         {
             for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
             {
-                var res = state.Slots[i].Type;
+                var resource = state.Slots[i].Type;
 
-                if (res != Resource.Type.None)
+                if (resource != Resource.Type.None)
                 {
-                    Game.CancelTransportedResource(res, state.Slots[i].DestinationObjectIndex);
-                    Game.LoseResource(res);
+                    Game.CancelTransportedResource(resource, state.Slots[i].DestinationObjectIndex);
+                    Game.LoseResource(resource);
                 }
             }
         }
 
         public Resource.Type GetResourceAtSlot(int slot)
         {
-            return this.state.Slots[slot].Type;
+            return state.Slots[slot].Type;
         }
 
         // Whether this flag has an inventory building.
@@ -512,10 +519,10 @@ namespace Freeserf
 
             for (int j = 0; j < 8; ++j)
             {
-                byte val = reader.ReadByte(); // 12 + j
+                byte value = reader.ReadByte(); // 12 + j
 
-                state.Slots[j].Type = (Resource.Type)((val & 0x1f) - 1);
-                state.Slots[j].Direction = (Direction)(((val >> 5) & 7) - 1);
+                state.Slots[j].Type = (Resource.Type)((value & 0x1f) - 1);
+                state.Slots[j].Direction = (Direction)(((value >> 5) & 7) - 1);
             }
 
             for (int j = 0; j < 8; ++j)
@@ -554,7 +561,7 @@ namespace Freeserf
             // base + 60
             cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction direction in cycle)
+            foreach (var direction in cycle)
             {
                 state.OtherEndpointPaths[(int)direction] = reader.ReadByte();
             }
@@ -600,7 +607,7 @@ namespace Freeserf
             uint y = 0;
             x = reader.Value("pos")[0].ReadUInt();
             y = reader.Value("pos")[1].ReadUInt();
-            state.Position = Game.Map.Pos(x, y);
+            state.Position = Game.Map.Position(x, y);
             state.SearchNumber = (word)reader.Value("search_num").ReadInt();
             state.SearchDirection = reader.Value("search_dir").ReadDirection();
             state.PathConnections = (byte)reader.Value("path_con").ReadInt();
@@ -609,7 +616,7 @@ namespace Freeserf
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction direction in cycle)
+            foreach (var direction in cycle)
             {
                 state.FlagPaths[(int)direction] = (byte)reader.Value("length")[(int)direction].ReadUInt();
                 int objectIndex = reader.Value("other_endpoint")[(int)direction].ReadInt();
@@ -661,8 +668,8 @@ namespace Freeserf
         /// </summary>
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("pos").Write(Game.Map.PosColumn(state.Position));
-            writer.Value("pos").Write(Game.Map.PosRow(state.Position));
+            writer.Value("pos").Write(Game.Map.PositionColumn(state.Position));
+            writer.Value("pos").Write(Game.Map.PositionRow(state.Position));
             writer.Value("search_num").Write(state.SearchNumber);
             writer.Value("search_dir").Write((int)state.SearchDirection);
             writer.Value("path_con").Write((int)state.PathConnections);
@@ -671,7 +678,7 @@ namespace Freeserf
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction direction in cycle)
+            foreach (var direction in cycle)
             {
                 writer.Value("length").Write((uint)state.FlagPaths[(int)direction]);
 
@@ -727,8 +734,8 @@ namespace Freeserf
 
                     if (other.state.Slots[slot].Direction != Direction.None)
                     {
-                        Direction direction = other.state.Slots[slot].Direction;
-                        Player otherPlayer = Game.GetPlayer(other.GetOwner());
+                        var direction = other.state.Slots[slot].Direction;
+                        var otherPlayer = Game.GetPlayer(other.GetOwner());
 
                         other.PrioritizePickup(direction, otherPlayer);
                     }
@@ -742,8 +749,8 @@ namespace Freeserf
             {
                 if (state.Slots[i].Type != Resource.Type.None)
                 {
-                    Resource.Type res = state.Slots[i].Type;
-                    Game.CancelTransportedResource(res, state.Slots[i].DestinationObjectIndex);
+                    var resource = state.Slots[i].Type;
+                    Game.CancelTransportedResource(resource, state.Slots[i].DestinationObjectIndex);
                     state.Slots[i].DestinationObjectIndex = 0;
                 }
             }
@@ -793,7 +800,7 @@ namespace Freeserf
 
         static bool FindNearestInventorySearchCB(Flag flag, object data)
         {
-            FlagPointerHelper destination = data as FlagPointerHelper;
+            var destination = data as FlagPointerHelper;
 
             if (flag.AcceptsResources())
             {
@@ -806,11 +813,11 @@ namespace Freeserf
 
         static bool FlagSearchInventorySearchCB(Flag flag, object data)
         {
-            IntPointerHelper destinationIndex = data as IntPointerHelper;
+            var destinationIndex = data as IntPointerHelper;
 
             if (flag.AcceptsSerfs())
             {
-                Building building = flag.GetBuilding();
+                var building = flag.GetBuilding();
 
                 destinationIndex.Value = (int)building.FlagIndex;
 
@@ -822,7 +829,7 @@ namespace Freeserf
 
         public int FindNearestInventoryForResource()
         {
-            FlagPointerHelper destination = new FlagPointerHelper()
+            var destination = new FlagPointerHelper()
             {
                 Value = null
             };
@@ -837,7 +844,7 @@ namespace Freeserf
 
         public int FindNearestInventoryForSerf()
         {
-            IntPointerHelper destinationIndex = new IntPointerHelper()
+            var destinationIndex = new IntPointerHelper()
             {
                 Value = -1
             };
@@ -878,7 +885,7 @@ namespace Freeserf
 
                 for (int j = 0; j < Constants.FLAG_MAX_RES_COUNT; ++j)
                 {
-                    if (this.state.Slots[j].Type != Resource.Type.None && this.state.Slots[j].Direction != Direction.None)
+                    if (state.Slots[j].Type != Resource.Type.None && state.Slots[j].Direction != Direction.None)
                     {
                         var resourceDirection = state.Slots[j].Direction;
 
@@ -902,17 +909,17 @@ namespace Freeserf
 
                     for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; slot++)
                     {
-                        if (this.state.Slots[slot].Type != Resource.Type.None)
+                        if (state.Slots[slot].Type != Resource.Type.None)
                         {
                             ++waitingCount;
 
                             // Only schedule the slot if it has not already
                             // been scheduled for fetch.
-                            int resourceDirection = (int)this.state.Slots[slot].Direction;
+                            int resourceDirection = (int)state.Slots[slot].Direction;
 
                             if (resourceDirection < 0)
                             {
-                                if (this.state.Slots[slot].DestinationObjectIndex != 0)
+                                if (state.Slots[slot].DestinationObjectIndex != 0)
                                 {
                                     // Destination is known
                                     ScheduleSlotToKnownDestination(slot, resourcesWaiting);
@@ -930,7 +937,7 @@ namespace Freeserf
                 // Update transporter flags, decide if serf needs to be sent to road
                 var cycle = DirectionCycleCCW.CreateDefault();
 
-                foreach (Direction direction in cycle)
+                foreach (var direction in cycle)
                 {
                     if (HasPath(direction))
                     {
@@ -1025,7 +1032,7 @@ namespace Freeserf
             {
                 for (int i = 0; i < data.SerfCount - maxSerfs; ++i)
                 {
-                    Serf serf = Game.GetSerf((uint)data.Serfs[i]);
+                    var serf = Game.GetSerf((uint)data.Serfs[i]);
                     serf.RestorePathSerfInfo();
                 }
             }
@@ -1054,7 +1061,7 @@ namespace Freeserf
             object otherEndObject = null;
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction direction in cycle)
+            foreach (var direction in cycle)
             {
                 if (HasPath(direction))
                 {
@@ -1085,7 +1092,7 @@ namespace Freeserf
 
         public void MergePaths(MapPos position)
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (map.Paths(position) == 0)
             {
@@ -1098,7 +1105,7 @@ namespace Freeserf
             // Find first direction
             var cycleCW = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction direction in cycleCW)
+            foreach (var direction in cycleCW)
             {
                 if (map.HasPath(position, direction))
                 {
@@ -1110,7 +1117,7 @@ namespace Freeserf
             // Find second direction
             var cycleCCW = DirectionCycleCCW.CreateDefault();
 
-            foreach (Direction direction in cycleCCW)
+            foreach (var direction in cycleCCW)
             {
                 if (map.HasPath(position, direction))
                 {
@@ -1170,7 +1177,7 @@ namespace Freeserf
             var serfs = Game.GetSerfsRelatedTo(flag1.Index, direction1);
             serfs.AddRange(Game.GetSerfsRelatedTo(flag2.Index, direction2));
 
-            foreach (Serf serf in serfs)
+            foreach (var serf in serfs)
             {
                 serf.PathMerged2(flag1.Index, direction1, flag2.Index, direction2);
             }
@@ -1179,9 +1186,9 @@ namespace Freeserf
         // Find a transporter at position and change it to state.
         static int ChangeTransporterStateAtPos(Game game, MapPos position, Serf.State state)
         {
-            foreach (Serf serf in game.GetSerfsAtPos(position))
+            foreach (var serf in game.GetSerfsAtPos(position))
             {
-                if (serf.ChangeTransporterStateAtPos(position, state))
+                if (serf.ChangeTransporterStateAtPosition(position, state))
                 {
                     return (int)serf.Index;
                 }
@@ -1203,7 +1210,7 @@ namespace Freeserf
         public static void FillPathSerfInfo(Game game, MapPos position,
             Direction direction, SerfPathInfo data)
         {
-            Map map = game.Map;
+            var map = game.Map;
 
             if (map.GetIdleSerf(position))
                 WakeTransporterAtFlag(game, position);
@@ -1214,11 +1221,11 @@ namespace Freeserf
             // Handle first position.
             if (map.HasSerf(position))
             {
-                Serf serf = game.GetSerfAtPos(position);
+                var serf = game.GetSerfAtPos(position);
 
                 if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                 {
-                    int walkingDirection = serf.GetWalkingDir();
+                    int walkingDirection = serf.GetWalkingDirection();
 
                     if (walkingDirection < 0)
                         walkingDirection += 6;
@@ -1247,11 +1254,11 @@ namespace Freeserf
                 // Find out which direction the path follows.
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var checkDirection in cycle)
                 {
-                    if (Misc.BitTest(paths, (int)d))
+                    if (Misc.BitTest(paths, (int)checkDirection))
                     {
-                        direction = d;
+                        direction = checkDirection;
                         break;
                     }
                 }
@@ -1268,7 +1275,7 @@ namespace Freeserf
                 // Check if there is a serf occupying this space.
                 if (map.HasSerf(position))
                 {
-                    Serf serf = game.GetSerfAtPos(position);
+                    var serf = game.GetSerfAtPos(position);
 
                     if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                     {
@@ -1281,13 +1288,13 @@ namespace Freeserf
             // Handle last position.
             if (map.HasSerf(position))
             {
-                Serf serf = game.GetSerfAtPos(position);
+                var serf = game.GetSerfAtPos(position);
 
                 if ((serf.SerfState == Serf.State.Transporting &&
-                        serf.GetWalkingWaitCounter() != -1) ||
+                    serf.GetWalkingWaitCounter() != -1) ||
                     serf.SerfState == Serf.State.Delivering)
                 {
-                    int walkingDirection = serf.GetWalkingDir();
+                    int walkingDirection = serf.GetWalkingDirection();
 
                     if (walkingDirection < 0)
                         walkingDirection += 6;
@@ -1309,7 +1316,7 @@ namespace Freeserf
 
         void FixScheduled()
         {
-            bool anyResources = state.Slots.Any(s => s.Type != Resource.Type.None);
+            bool anyResources = state.Slots.Any(slot => slot.Type != Resource.Type.None);
 
             if (anyResources)
                 state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
@@ -1425,7 +1432,7 @@ namespace Freeserf
 
             if (routableResources[(int)resource] != 0)
             {
-                FlagSearch search = new FlagSearch(Game);
+                var search = new FlagSearch(Game);
 
                 search.AddSource(this);
 
@@ -1483,7 +1490,7 @@ namespace Freeserf
                     var direction = Direction.None;
                     var cycle = DirectionCycleCCW.CreateDefault();
 
-                    foreach (Direction checkDirection in cycle)
+                    foreach (var checkDirection in cycle)
                     {
                         if (HasTransporter(checkDirection))
                         {
@@ -1544,15 +1551,15 @@ namespace Freeserf
             {
                 var cycle = DirectionCycleCCW.CreateDefault();
 
-                foreach (Direction direction in cycle)
+                foreach (var direction in cycle)
                 {
-                    int i = (int)direction;
+                    int directionIndex = (int)direction;
 
-                    if (Misc.BitTest(flags, i))
+                    if (Misc.BitTest(flags, directionIndex))
                     {
-                        transporters &= ~Misc.Bit(i);
+                        transporters &= ~Misc.Bit(directionIndex);
 
-                        Flag otherFlag = OtherEndPoints[i].Flag;
+                        var otherFlag = OtherEndPoints[directionIndex].Flag;
 
                         if (otherFlag.state.SearchNumber != search.ID)
                         {
@@ -1572,15 +1579,15 @@ namespace Freeserf
 
                     var cycle = DirectionCycleCCW.CreateDefault();
 
-                    foreach (Direction direction in cycle)
+                    foreach (var direction in cycle)
                     {
-                        int i = (int)direction;
+                        int directionIndex = (int)direction;
 
-                        if (Misc.BitTest(flags, i))
+                        if (Misc.BitTest(flags, directionIndex))
                         {
-                            transporters &= ~Misc.Bit(i);
+                            transporters &= ~Misc.Bit(directionIndex);
 
-                            Flag otherFlag = OtherEndPoints[i].Flag;
+                            var otherFlag = OtherEndPoints[directionIndex].Flag;
 
                             if (otherFlag.state.SearchNumber != search.ID)
                             {
@@ -1598,15 +1605,15 @@ namespace Freeserf
 
                     var cycle = DirectionCycleCCW.CreateDefault();
 
-                    foreach (Direction direction in cycle)
+                    foreach (var direction in cycle)
                     {
-                        int i = (int)direction;
+                        int directionIndex = (int)direction;
 
-                        if (Misc.BitTest(flags, i))
+                        if (Misc.BitTest(flags, directionIndex))
                         {
-                            transporters &= ~Misc.Bit(i);
+                            transporters &= ~Misc.Bit(directionIndex);
 
-                            Flag otherFlag = OtherEndPoints[i].Flag;
+                            var otherFlag = OtherEndPoints[directionIndex].Flag;
 
                             if (otherFlag.state.SearchNumber != search.ID)
                             {
@@ -1712,15 +1719,15 @@ namespace Freeserf
 
         bool CallTransporter(Direction direction, bool water)
         {
-            Flag source = OtherEndPoints[(int)direction].Flag;
-            Direction sourceDirection = GetOtherEndDirection(direction);
+            var sourceFlag = OtherEndPoints[(int)direction].Flag;
+            var sourceDirection = GetOtherEndDirection(direction);
 
             state.SearchDirection = Direction.Right;
-            source.state.SearchDirection = Direction.DownRight;
+            sourceFlag.state.SearchDirection = Direction.DownRight;
 
             var search = new FlagSearch(Game);
             search.AddSource(this);
-            search.AddSource(source);
+            search.AddSource(sourceFlag);
 
             var data = new SendSerfToRoadData()
             {
@@ -1741,17 +1748,17 @@ namespace Freeserf
             var destinationFlag = Game.GetFlag(inventory.Flag);
 
             this.state.SetSerfRequested(direction, true);
-            source.state.SetSerfRequested(sourceDirection, true);
+            sourceFlag.state.SetSerfRequested(sourceDirection, true);
 
-            var sourceFlag = this;
+            var inventoryFlag = this;
 
-            if (destinationFlag.state.SearchDirection == source.state.SearchDirection)
+            if (destinationFlag.state.SearchDirection == sourceFlag.state.SearchDirection)
             {
-                sourceFlag = source;
+                inventoryFlag = sourceFlag;
                 direction = sourceDirection;
             }
 
-            serf.GoOutFromInventory(inventory.Index, sourceFlag.Index, (int)direction);
+            serf.GoOutFromInventory(inventory.Index, inventoryFlag.Index, (int)direction);
 
             return true;
         }
@@ -1796,7 +1803,7 @@ namespace Freeserf
 
                 var cycle = DirectionCycleCCW.CreateDefault();
 
-                foreach (Direction direction in cycle)
+                foreach (var direction in cycle)
                 {
                     var otherFlag = flag.OtherEndPoints[(int)direction].Flag;
 

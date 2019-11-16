@@ -48,7 +48,7 @@ namespace Freeserf
         private MapPos position = Constants.INVALID_MAPPOS;
         private word flag = 0;
         private byte player = 0;
-        private BuildingStateFlags flags = BuildingStateFlags.None;
+        private BuildingStateFlags flags = BuildingStateFlags.Constructing; // new buildings are unfinished
         private byte threatLevel = 0;
         private word progress = 0;
         private word firstKnight = 0;

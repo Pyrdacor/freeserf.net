@@ -450,11 +450,11 @@ namespace Freeserf.Render
             bgSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, color);
             var bgCompoundSprite = new Sprite(320u, 184u);
 
-            for (int r = 0; r < 23; ++r) // 23 rows with 8 pixels each = 184 pixels
+            for (int row = 0; row < 23; ++row) // 23 rows with 8 pixels each = 184 pixels
             {
-                for (int c = 0; c < 8; ++c) // 8 columns with 40 pixels each = 320 pixels
+                for (int column = 0; column < 8; ++column) // 8 columns with 40 pixels each = 320 pixels
                 {
-                    bgCompoundSprite.Add(c * 40, r * 8, bgSprites[r % 5]);
+                    bgCompoundSprite.Add(column * 40, row * 8, bgSprites[row % 5]);
                 }
             }
 
@@ -467,11 +467,11 @@ namespace Freeserf.Render
             sprite = data.GetSprite(Data.Resource.Icon, 314u, color);
 
             // 9 rows, 8 columns with 16x16 pixels = 128x144
-            for (int r = 0; r < 9; ++r)
+            for (int row = 0; row < 9; ++row)
             {
-                for (int c = 0; c < 8; ++c)
+                for (int column = 0; column < 8; ++column)
                 {
-                    bgCompoundSprite.Add(c * 16, r * 16, sprite);
+                    bgCompoundSprite.Add(column * 16, row * 16, sprite);
                 }
             }
 
@@ -490,11 +490,11 @@ namespace Freeserf.Render
                 sprite = data.GetSprite(Data.Resource.Icon, (uint)popupBackground, color);
 
                 // 9 rows, 8 columns with 16x16 pixels = 128x144
-                for (int r = 0; r < 9; ++r)
+                for (int row = 0; row < 9; ++row)
                 {
-                    for (int c = 0; c < 8; ++c)
+                    for (int column = 0; column < 8; ++column)
                     {
-                        bgCompoundSprite.Add(c * 16, r * 16, sprite);
+                        bgCompoundSprite.Add(column * 16, row * 16, sprite);
                     }
                 }
 

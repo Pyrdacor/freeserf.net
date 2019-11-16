@@ -2,7 +2,7 @@
  * Map.cs - Map data and map update functions
  *
  * Copyright (C) 2013-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -24,7 +24,7 @@
   rows and columns, except that the grid is actually sheared like this:
   http://mathworld.wolfram.com/Polyrhomb.html
   This is the foundational 2D grid for the map, where each vertex can be
-  identified by an integer col and row (commonly encoded as MapPos).
+  identified by an integer column and row (commonly encoded as MapPos).
 
   Each tile has the shape of a rhombus:
      A ______ B
@@ -36,7 +36,7 @@
   "down" (a,b,d). A serf can move on the perimeter of any of these
   triangles. Each vertex has various properties associated with it,
   among others a height value which means that the 3D landscape is
-  defined by these points in (col, row, height)-space.
+  defined by these points in (column, row, height)-space.
 
   Map elevation and type
   ----------------------
@@ -72,20 +72,17 @@ using Freeserf.Data;
 namespace Freeserf
 {
     using MapPos = UInt32;
-    using Dirs = Stack<Direction>;
+    using Directions = Stack<Direction>;
     using ChangeHandlers = List<Map.Handler>;
     using System.Collections;
 
     public class Road
     {
-        MapPos begin = 0u;
-        Dirs dirs = new Dirs();
-
         const uint MaxLength = 256;
 
         public Road()
         {
-            begin = Global.BadMapPos;
+            Source = Constants.INVALID_MAPPOS;
         }
 
         public static Road CreateBuildingRoad(MapPos flagPosition)
@@ -105,31 +102,31 @@ namespace Freeserf
                 throw new ExceptionFreeserf("map", "Invalid map path.");
 
             var road = new Road();
-            var pos = start;
-            var dir = startDirection;
+            var position = start;
+            var direction = startDirection;
 
             road.Start(start);
 
             do
             {
-                road.Cost += Pathfinder.ActualCost(map, pos, dir);
-                road.Extend(dir);
-                pos = map.Move(pos, dir);
+                road.Cost += Pathfinder.ActualCost(map, position, direction);
+                road.Extend(direction);
+                position = map.Move(position, direction);
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (var d in cycle)
+                foreach (var nextDirection in cycle)
                 {
-                    if (d != dir.Reverse() && map.HasPath(pos, d))
+                    if (nextDirection != direction.Reverse() && map.HasPath(position, nextDirection))
                     {
-                        dir = d;
+                        direction = nextDirection;
                         break;
                     }
                 }
             }
-            while (!map.HasFlag(pos) && !map.HasBuilding(pos));
+            while (!map.HasFlag(position) && !map.HasBuilding(position));
 
-            if (map.HasBuilding(pos) || map.HasBuilding(start))
+            if (map.HasBuilding(position) || map.HasBuilding(start))
                 road.Cost = 0;
 
             return road;
@@ -141,54 +138,54 @@ namespace Freeserf
 
             road.Start(GetEnd(map));
 
-            var dirs = Dirs.ToList();
+            var directions = Directions.ToList();
 
-            for (int i = dirs.Count - 1; i >= 0; --i)
-                road.Extend(dirs[i].Reverse());
+            for (int i = directions.Count - 1; i >= 0; --i)
+                road.Extend(directions[i].Reverse());
 
             road.Cost = Cost;
 
             return road;
         }
 
-        public bool Valid => begin != Global.BadMapPos;
-        public MapPos Source => begin;
-        public Dirs Dirs => dirs;
-        public uint Length => (uint)dirs.Count;
-        public Direction Last => dirs.Peek();
+        public bool Valid => Source != Constants.INVALID_MAPPOS;
+        public MapPos Source { get; private set; } = 0u;
+        public Directions Directions { get; } = new Directions();
+        public uint Length => (uint)Directions.Count;
+        public Direction Last => Directions.Peek();
         public bool Extendable => Length < MaxLength;
         public uint Cost { get; internal set; } = 0;
 
         public void Invalidate()
         {
-            begin = Global.BadMapPos;
-            dirs.Clear();
+            Source = Constants.INVALID_MAPPOS;
+            Directions.Clear();
             Cost = 0;
         }
 
         public void Start(MapPos start)
         {
-            begin = start;
+            Source = start;
             Cost = 0;
         }
         
-        public bool IsValidExtension(Map map, Direction dir)
+        public bool IsValidExtension(Map map, Direction direction)
         {
-            if (IsUndo(dir))
+            if (IsUndo(direction))
             {
                 return false;
             }
 
-            /* Check that road does not cross itself. */
-            MapPos extendedEnd = map.Move(GetEnd(map), dir);
-            MapPos pos = begin;
+            // Check that road does not cross itself. 
+            var extendedEnd = map.Move(GetEnd(map), direction);
+            var position = Source;
             bool valid = true;
 
-            foreach (var d in dirs.Reverse())
+            foreach (var nextDirection in Directions.Reverse())
             {
-                pos = map.Move(pos, d);
+                position = map.Move(position, nextDirection);
 
-                if (pos == extendedEnd)
+                if (position == extendedEnd)
                 {
                     valid = false;
                     break;
@@ -198,53 +195,53 @@ namespace Freeserf
             return valid;
         }
 
-        public bool IsUndo(Direction dir)
+        public bool IsUndo(Direction direction)
         {
-            return Length > 0 && Last == dir.Reverse();
+            return Length > 0 && Last == direction.Reverse();
         }
 
-        public bool Extend(Direction dir)
+        public bool Extend(Direction direction)
         {
-            if (begin == Global.BadMapPos)
+            if (Source == Constants.INVALID_MAPPOS)
             {
                 return false;
             }
 
-            dirs.Push(dir);
+            Directions.Push(direction);
 
             return true;
         }
 
         public bool Extend(Map map, Road road)
         {
-            if (begin == Global.BadMapPos || road == null || !road.Valid)
+            if (Source == Constants.INVALID_MAPPOS || road == null || !road.Valid)
             {
                 return false;
             }
 
-            if (GetEnd(map) != road.begin)
+            if (GetEnd(map) != road.Source)
             {
                 return false;
             }
 
-            foreach (var dir in road.Dirs)
-                dirs.Push(dir);
+            foreach (var direction in road.Directions)
+                Directions.Push(direction);
 
             return true;
         }
 
         public bool Undo()
         {
-            if (begin == Global.BadMapPos)
+            if (Source == Constants.INVALID_MAPPOS)
             {
                 return false;
             }
 
-            dirs.Pop();
+            Directions.Pop();
 
             if (Length == 0)
             {
-                begin = Global.BadMapPos;
+                Source = Constants.INVALID_MAPPOS;
             }
 
             return true;
@@ -252,41 +249,41 @@ namespace Freeserf
 
         public MapPos GetEnd(Map map)
         {
-            MapPos result = begin;
+            var result = Source;
 
-            foreach (var dir in dirs.Reverse())
+            foreach (var direction in Directions.Reverse())
             {
-                result = map.Move(result, dir);
+                result = map.Move(result, direction);
             }
 
             return result;
         }
 
-        public bool HasPos(Map map, MapPos pos)
+        public bool HasPos(Map map, MapPos position)
         {
-            MapPos result = begin;
+            var result = Source;
 
-            foreach (var dir in dirs.Reverse())
+            foreach (var direction in Directions.Reverse())
             {
-                if (result == pos)
+                if (result == position)
                 {
                     return true;
                 }
 
-                result = map.Move(result, dir);
+                result = map.Move(result, direction);
             }
 
-            return result == pos;
+            return result == position;
         }
 
         public bool IsWaterPath(Map map)
         {
-            if (!Valid || Dirs.Count == 0)
+            if (!Valid || Directions.Count == 0)
                 return false;
 
-            var secondPos = map.Move(begin, Dirs.Peek());
+            var secondPosition = map.Move(Source, Directions.Peek());
 
-            return map.IsInWater(secondPos);
+            return map.IsInWater(secondPosition);
         }
     }
 
@@ -304,49 +301,49 @@ namespace Freeserf
 
             Tree0 = 8,
             Tree1,
-            Tree2, /* 10 */
+            Tree2, // 10 
             Tree3,
             Tree4,
             Tree5,
             Tree6,
-            Tree7, /* 15 */
+            Tree7, // 15 
 
             Pine0,
             Pine1,
             Pine2,
             Pine3,
-            Pine4, /* 20 */
+            Pine4, // 20 
             Pine5,
             Pine6,
             Pine7,
 
             Palm0,
-            Palm1, /* 25 */
+            Palm1, // 25 
             Palm2,
             Palm3,
 
             WaterTree0,
             WaterTree1,
-            WaterTree2, /* 30 */
+            WaterTree2, // 30 
             WaterTree3,
 
             Stone0 = 72,
             Stone1,
             Stone2,
-            Stone3, /* 75 */
+            Stone3, // 75 
             Stone4,
             Stone5,
             Stone6,
             Stone7,
 
-            Sandstone0, /* 80 */
+            Sandstone0, // 80 
             Sandstone1,
 
             Cross,
             Stub,
 
             Stone,
-            Sandstone3, /* 85 */
+            Sandstone3, // 85 
 
             Cadaver0,
             Cadaver1,
@@ -354,50 +351,50 @@ namespace Freeserf
             WaterStone0,
             WaterStone1,
 
-            Cactus0, /* 90 */
+            Cactus0, // 90 
             Cactus1,
 
             DeadTree,
 
             FelledPine0,
             FelledPine1,
-            FelledPine2, /* 95 */
+            FelledPine2, // 95 
             FelledPine3,
             FelledPine4,
 
             FelledTree0,
             FelledTree1,
-            FelledTree2, /* 100 */
+            FelledTree2, // 100 
             FelledTree3,
             FelledTree4,
 
             NewPine,
             NewTree,
 
-            Seeds0, /* 105 */
+            Seeds0, // 105 
             Seeds1,
             Seeds2,
             Seeds3,
             Seeds4,
-            Seeds5, /* 110 */
+            Seeds5, // 110 
             FieldExpired,
 
             SignLargeGold,
             SignSmallGold,
             SignLargeIron,
-            SignSmallIron, /* 115 */
+            SignSmallIron, // 115 
             SignLargeCoal,
             SignSmallCoal,
             SignLargeStone,
             SignSmallStone,
 
-            SignEmpty, /* 120 */
+            SignEmpty, // 120 
 
             Field0,
             Field1,
             Field2,
             Field3,
-            Field4, /* 125 */
+            Field4, // 125 
             Field5,
             Object127
         }
@@ -504,7 +501,7 @@ namespace Freeserf
         };
         static bool SpiralPatternInitialized = false;
 
-        /* Initialize the global spiral_pattern. */
+        // Initialize the global spiral_pattern. 
         static void InitSpiralPattern()
         {
             if (SpiralPatternInitialized)
@@ -548,12 +545,12 @@ namespace Freeserf
 
         public abstract class Handler
         {
-            public abstract void OnHeightChanged(MapPos pos);
-            public abstract void OnObjectChanged(MapPos pos);
-            public abstract void OnObjectPlaced(MapPos pos);
-            public abstract void OnObjectExchanged(MapPos pos, Map.Object oldObject, Map.Object newObject);
-            public abstract void OnRoadSegmentPlaced(MapPos pos, Direction dir);
-            public abstract void OnRoadSegmentDeleted(MapPos pos, Direction dir);
+            public abstract void OnHeightChanged(MapPos position);
+            public abstract void OnObjectChanged(MapPos position);
+            public abstract void OnObjectPlaced(MapPos position);
+            public abstract void OnObjectExchanged(MapPos position, Map.Object oldObject, Map.Object newObject);
+            public abstract void OnRoadSegmentPlaced(MapPos position, Direction direction);
+            public abstract void OnRoadSegmentDeleted(MapPos position, Direction direction);
         }
 
         public class LandscapeTile : IEquatable<LandscapeTile>
@@ -615,7 +612,7 @@ namespace Freeserf
             public int RemoveSignsCounter = 0;
             public ushort LastTick = 0;
             public int Counter = 0;
-            public MapPos InitialPos = 0;
+            public MapPos InitialPosition = 0;
 
             public bool Equals(UpdateState other)
             {
@@ -627,7 +624,7 @@ namespace Freeserf
                 return self.RemoveSignsCounter == other.RemoveSignsCounter &&
                     self.LastTick == other.LastTick &&
                     self.Counter == other.Counter &&
-                    self.InitialPos == other.InitialPos;
+                    self.InitialPosition == other.InitialPosition;
             }
 
             public static bool operator !=(UpdateState self, UpdateState other)
@@ -649,7 +646,7 @@ namespace Freeserf
                     hash = hash * 23 + RemoveSignsCounter.GetHashCode();
                     hash = hash * 23 + LastTick.GetHashCode();
                     hash = hash * 23 + Counter.GetHashCode();
-                    hash = hash * 23 + InitialPos.GetHashCode();
+                    hash = hash * 23 + InitialPosition.GetHashCode();
 
                     return hash;
                 }
@@ -716,7 +713,7 @@ namespace Freeserf
         Render.IRenderView renderView = null;
         internal Render.RenderMap RenderMap { get; private set; } = null;
 
-        /* Callback for map height changes */
+        // Callback for map height changes 
         ChangeHandlers changeHandlers = new ChangeHandlers();
 
         public Map(MapGeometry geometry, Render.IRenderView renderView)
@@ -744,7 +741,7 @@ namespace Freeserf
             updateState.LastTick = 0;
             updateState.Counter = 0;
             updateState.RemoveSignsCounter = 0;
-            updateState.InitialPos = 0;
+            updateState.InitialPosition = 0;
 
             regions = (ushort)((geometry.Columns >> 5) * (geometry.Rows >> 5));
 
@@ -802,212 +799,228 @@ namespace Freeserf
             RenderMap?.ScrollTo(x, y);
         }
 
-        public void CenterMapPos(MapPos pos)
+        public void CenterMapPos(MapPos position)
         {
-            RenderMap?.CenterMapPos(pos);
+            RenderMap?.CenterMapPos(position);
         }
 
-        // Extract col and row from MapPos
-        public MapPos PosColumn(MapPos pos)
+        // Extract column and row from MapPos
+        public MapPos PositionColumn(MapPos position)
         {
-            return Geometry.PosColumn(pos);
+            return Geometry.PositionColumn(position);
         }
 
-        public MapPos PosRow(MapPos pos)
+        public MapPos PositionRow(MapPos position)
         {
-            return Geometry.PosRow(pos);
+            return Geometry.PositionRow(position);
         }
 
-        // Translate col, row coordinate to MapPos value. */
-        public MapPos Pos(uint x, uint y)
+        // Translate column, row coordinate to MapPos value. */
+        public MapPos Position(uint x, uint y)
         {
-            return Geometry.Pos(x, y);
+            return Geometry.Position(x, y);
         }
 
         // Addition of two map positions.
-        public MapPos PosAdd(MapPos pos, int x, int y)
+        public MapPos PositionAdd(MapPos position, int x, int y)
         {
-            return Geometry.PosAdd(pos, x, y);
+            return Geometry.PositionAdd(position, x, y);
         }
 
-        public MapPos PosAdd(MapPos pos, MapPos off)
+        public MapPos PositionAdd(MapPos position, MapPos offset)
         {
-            return Geometry.PosAdd(pos, off);
+            return Geometry.PositionAdd(position, offset);
         }
 
-        public MapPos PosAddSpirally(MapPos pos, uint off)
+        public MapPos PositionAddSpirally(MapPos position, uint offset)
         {
-            return PosAdd(pos, spiralPosPattern[off]);
+            return PositionAdd(position, spiralPosPattern[offset]);
         }
 
         // Shortest distance between map positions.
-        public int DistX(MapPos pos1, MapPos pos2)
+        public int DistanceX(MapPos position1, MapPos position2)
         {
-            return Geometry.DistX(pos1, pos2);
+            return Geometry.DistanceX(position1, position2);
         }
 
-        public int DistY(MapPos pos1, MapPos pos2)
+        public int DistanceY(MapPos position1, MapPos position2)
         {
-            return Geometry.DistY(pos1, pos2);
+            return Geometry.DistanceY(position1, position2);
         }
 
-        public int Dist(MapPos pos1, MapPos pos2)
+        public int Distance(MapPos position1, MapPos position2)
         {
-            int distColumn = DistX(pos1, pos2);
-            int distRow = DistY(pos1, pos2);
+            int distanceColumn = DistanceX(position1, position2);
+            int distanceRow = DistanceY(position1, position2);
 
-            if ((distColumn > 0 && distRow > 0) || (distColumn < 0 && distRow < 0))
+            if ((distanceColumn > 0 && distanceRow > 0) || (distanceColumn < 0 && distanceRow < 0))
             {
-                return Math.Max(Math.Abs(distColumn), Math.Abs(distRow));
+                return Math.Max(Math.Abs(distanceColumn), Math.Abs(distanceRow));
             }
             else
             {
-                return Math.Abs(distColumn) + Math.Abs(distRow);
+                return Math.Abs(distanceColumn) + Math.Abs(distanceRow);
             }
         }
 
-        // Get random position
-        public MapPos GetRandomCoord(Random random)
+        /// <summary>
+        /// Get random position
+        /// </summary>
+        /// <param name="random"></param>
+        /// <returns></returns>
+        public MapPos GetRandomCoordinate(Random random)
         {
             uint column = 0;
             uint row = 0;
 
-            GetRandomCoord(ref column, ref row, random);
+            GetRandomCoordinate(ref column, ref row, random);
 
-            return Pos(column, row);
+            return Position(column, row);
         }
 
-        public void GetRandomCoord(ref uint column, ref uint row, Random random)
+        /// <summary>
+        /// Get random position
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        /// <param name="random"></param>
+        public void GetRandomCoordinate(ref uint column, ref uint row, Random random)
         {
-            uint c = random.Next() & Geometry.ColumnMask;
-            uint r = random.Next() & Geometry.RowMask;
+            uint randomColumn = random.Next() & Geometry.ColumnMask;
+            uint randomRow = random.Next() & Geometry.RowMask;
 
-            column = c;
-            row = r;
+            column = randomColumn;
+            row = randomRow;
         }
 
-        // Movement of map position according to directions.
-        public MapPos Move(MapPos pos, Direction dir)
+        // 
+        /// <summary>
+        /// Movement of map position according to directions.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        public MapPos Move(MapPos position, Direction direction)
         {
-            return Geometry.Move(pos, dir);
+            return Geometry.Move(position, direction);
         }
 
-        public MapPos MoveRight(MapPos pos)
+        public MapPos MoveRight(MapPos position)
         {
-            return Geometry.MoveRight(pos);
+            return Geometry.MoveRight(position);
         }
 
-        public MapPos MoveDownRight(MapPos pos)
+        public MapPos MoveDownRight(MapPos position)
         {
-            return Geometry.MoveDownRight(pos);
+            return Geometry.MoveDownRight(position);
         }
 
-        public MapPos MoveDown(MapPos pos)
+        public MapPos MoveDown(MapPos position)
         {
-            return Geometry.MoveDown(pos);
+            return Geometry.MoveDown(position);
         }
 
-        public MapPos MoveLeft(MapPos pos)
+        public MapPos MoveLeft(MapPos position)
         {
-            return Geometry.MoveLeft(pos);
+            return Geometry.MoveLeft(position);
         }
 
-        public MapPos MoveUpLeft(MapPos pos)
+        public MapPos MoveUpLeft(MapPos position)
         {
-            return Geometry.MoveUpLeft(pos);
+            return Geometry.MoveUpLeft(position);
         }
 
-        public MapPos MoveUp(MapPos pos)
+        public MapPos MoveUp(MapPos position)
         {
-            return Geometry.MoveUp(pos);
+            return Geometry.MoveUp(position);
         }
 
-        public MapPos MoveRightN(MapPos pos, int n)
+        public MapPos MoveRightN(MapPos position, int count)
         {
-            return Geometry.MoveRightN(pos, n);
+            return Geometry.MoveRightN(position, count);
         }
 
-        public MapPos MoveDownN(MapPos pos, int n)
+        public MapPos MoveDownN(MapPos position, int count)
         {
-            return Geometry.MoveDownN(pos, n);
+            return Geometry.MoveDownN(position, count);
         }
 
-        /* Extractors for map data. */
-        public uint Paths(MapPos pos)
+        // Extractors for map data. 
+        public uint Paths(MapPos position)
         {
-            return (uint)(gameTiles[(int)pos].Paths & 0x3f);
+            return (uint)(gameTiles[(int)position].Paths & 0x3f);
         }
 
-        public bool HasPath(MapPos pos, Direction dir)
+        public bool HasPath(MapPos position, Direction direction)
         {
-            return Misc.BitTest(gameTiles[(int)pos].Paths, (int)dir);
+            return Misc.BitTest(gameTiles[(int)position].Paths, (int)direction);
         }
 
-        public void AddPath(MapPos pos, Direction dir)
+        public void AddPath(MapPos position, Direction direction)
         {
-            gameTiles[(int)pos].Paths |= (byte)Misc.BitU((int)dir);
+            gameTiles[(int)position].Paths |= (byte)Misc.BitU((int)direction);
 
             foreach (var handler in changeHandlers)
-                handler.OnRoadSegmentPlaced(pos, dir);
+                handler.OnRoadSegmentPlaced(position, direction);
         }
 
-        public void DeletePath(MapPos pos, Direction dir)
+        public void DeletePath(MapPos position, Direction direction)
         {
-            gameTiles[(int)pos].Paths &= (byte)~Misc.BitU((int)dir);
+            gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction);
 
             foreach (var handler in changeHandlers)
-                handler.OnRoadSegmentDeleted(pos, dir);
+                handler.OnRoadSegmentDeleted(position, direction);
         }
 
-        public bool HasOwner(MapPos pos)
+        public bool HasOwner(MapPos position)
         {
-            return gameTiles[(int)pos].Owner != 0;
+            return gameTiles[(int)position].Owner != 0;
         }
 
-        public uint GetOwner(MapPos pos)
+        public uint GetOwner(MapPos position)
         {
-            return gameTiles[(int)pos].Owner - 1;
+            return gameTiles[(int)position].Owner - 1;
         }
 
-        public void SetOwner(MapPos pos, uint owner)
+        public void SetOwner(MapPos position, uint owner)
         {
-            gameTiles[(int)pos].Owner = owner + 1;
+            gameTiles[(int)position].Owner = owner + 1;
         }
 
-        public void DeleteOwner(MapPos pos)
+        public void DeleteOwner(MapPos position)
         {
-            gameTiles[(int)pos].Owner = 0u;
+            gameTiles[(int)position].Owner = 0u;
         }
 
-        public uint GetHeight(MapPos pos)
+        public uint GetHeight(MapPos position)
         {
-            return landscapeTiles[(int)pos].Height;
+            return landscapeTiles[(int)position].Height;
         }
 
-        public Terrain TypeUp(MapPos pos)
+        public Terrain TypeUp(MapPos position)
         {
-            return landscapeTiles[(int)pos].TypeUp;
+            return landscapeTiles[(int)position].TypeUp;
         }
 
-        public Terrain TypeDown(MapPos pos)
+        public Terrain TypeDown(MapPos position)
         {
-            return landscapeTiles[(int)pos].TypeDown;
+            return landscapeTiles[(int)position].TypeDown;
         }
 
-        public bool TypesWithin(MapPos pos, Terrain low, Terrain high)
+        public bool TypesWithin(MapPos position, Terrain low, Terrain high)
         {
-            return  TypeUp(pos) >= low &&
-                    TypeUp(pos) <= high &&
-                    TypeDown(pos) >= low &&
-                    TypeDown(pos) <= high &&
-                    TypeDown(MoveLeft(pos)) >= low &&
-                    TypeDown(MoveLeft(pos)) <= high &&
-                    TypeUp(MoveUpLeft(pos)) >= low &&
-                    TypeUp(MoveUpLeft(pos)) <= high &&
-                    TypeDown(MoveUpLeft(pos)) >= low &&
-                    TypeDown(MoveUpLeft(pos)) <= high &&
-                    TypeUp(MoveUp(pos)) >= low &&
-                    TypeUp(MoveUp(pos)) <= high;
+            return  TypeUp(position) >= low &&
+                    TypeUp(position) <= high &&
+                    TypeDown(position) >= low &&
+                    TypeDown(position) <= high &&
+                    TypeDown(MoveLeft(position)) >= low &&
+                    TypeDown(MoveLeft(position)) <= high &&
+                    TypeUp(MoveUpLeft(position)) >= low &&
+                    TypeUp(MoveUpLeft(position)) <= high &&
+                    TypeDown(MoveUpLeft(position)) >= low &&
+                    TypeDown(MoveUpLeft(position)) <= high &&
+                    TypeUp(MoveUp(position)) >= low &&
+                    TypeUp(MoveUp(position)) <= high;
         }
 
         public class FindData
@@ -1026,11 +1039,11 @@ namespace Freeserf
         {
             List<object> findings = new List<object>();
 
-            foreach (var pos in Geometry)
+            foreach (var position in Geometry)
             {
-                if (GetOwner(pos) == owner)
+                if (GetOwner(position) == owner)
                 {
-                    var data = searchFunc(this, pos);
+                    var data = searchFunc(this, position);
 
                     if (data != null & data.Success)
                         findings.Add(data.Data);
@@ -1048,11 +1061,11 @@ namespace Freeserf
         /// <returns></returns>
         public object FindFirstInTerritory(uint owner, Func<Map, MapPos, FindData> searchFunc)
         {
-            foreach (var pos in Geometry)
+            foreach (var position in Geometry)
             {
-                if (GetOwner(pos) == owner)
+                if (GetOwner(position) == owner)
                 {
-                    var data = searchFunc(this, pos);
+                    var data = searchFunc(this, position);
 
                     if (data != null & data.Success)
                         return data.Data;
@@ -1064,16 +1077,16 @@ namespace Freeserf
 
         public MapPos MoveTowards(MapPos origin, MapPos destination)
         {
-            int distX = DistX(origin, destination);
-            int distY = DistY(origin, destination);
+            int distanceX = DistanceX(origin, destination);
+            int distanceY = DistanceY(origin, destination);
 
-            if (distX < 0) // origin right of destination
+            if (distanceX < 0) // origin right of destination
             {
-                if (distY > 0)
+                if (distanceY > 0)
                 {
                     return MoveDown(MoveLeft(origin));
                 }
-                else if (distY < 0)
+                else if (distanceY < 0)
                 {
                     return MoveUpLeft(origin);
                 }
@@ -1082,13 +1095,13 @@ namespace Freeserf
                     return MoveLeft(origin);
                 }
             }
-            else if (distX > 0) // origin left of destination
+            else if (distanceX > 0) // origin left of destination
             {
-                if (distY > 0)
+                if (distanceY > 0)
                 {
                     return MoveDownRight(origin);
                 }
-                else if (distY < 0)
+                else if (distanceY < 0)
                 {
                     return MoveUp(MoveRight(origin));
                 }
@@ -1099,11 +1112,11 @@ namespace Freeserf
             }
             else
             {
-                if (distY > 0)
+                if (distanceY > 0)
                 {
                     return MoveDown(origin);
                 }
-                else if (distY < 0)
+                else if (distanceY < 0)
                 {
                     return MoveUp(origin);
                 }
@@ -1112,122 +1125,122 @@ namespace Freeserf
             return origin;
         }
 
-        public MapPos FindFarthestTerritorySpotTowards(uint basePosition, Func<Map, MapPos, bool> targetSearchFunc, int minDist = 1)
+        public MapPos FindFarthestTerritorySpotTowards(uint basePosition, Func<Map, MapPos, bool> targetSearchFunc, int minDistance = 1)
         {
             uint owner = GetOwner(basePosition);
-            uint minSum = (uint)(minDist * minDist + minDist) / 2;
+            uint minSum = (uint)(minDistance * minDistance + minDistance) / 2;
             uint spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
 
             for (uint i = spiralOffset; i < 295; ++i)
             {
-                MapPos pos = PosAddSpirally(basePosition, i);
+                var position = PositionAddSpirally(basePosition, i);
 
-                if (targetSearchFunc(this, pos))
+                if (targetSearchFunc(this, position))
                 {
-                    if (GetOwner(pos) == owner)
-                        return pos;
+                    if (GetOwner(position) == owner)
+                        return position;
                     else
                     {
-                        int tries = 0;
-                        uint testPos = pos;
-                        uint lastTestPos;
+                        int numTries = 0;
+                        uint checkPosition = position;
+                        uint lastCheckPosition;
 
                         do
                         {
-                            lastTestPos = testPos;
-                            testPos = MoveTowards(testPos, basePosition);
-                        } while (GetOwner(testPos) != owner && testPos != lastTestPos && ++tries < 10);
+                            lastCheckPosition = checkPosition;
+                            checkPosition = MoveTowards(checkPosition, basePosition);
+                        } while (GetOwner(checkPosition) != owner && checkPosition != lastCheckPosition && ++numTries < 10);
 
-                        if (GetOwner(pos) == owner)
-                            return pos;
+                        if (GetOwner(position) == owner)
+                            return position;
                     }
                 }
             }
 
-            return Global.BadMapPos;
+            return Constants.INVALID_MAPPOS;
         }
 
-        public MapPos FindNearest(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, int minDist)
+        public MapPos FindNearest(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc, int minDistance)
         {
             if (searchRange <= 0)
-                return Global.BadMapPos;
+                return Constants.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
 
-            int minSum = (minDist * minDist + minDist) / 2;
+            int minSum = (minDistance * minDistance + minDistance) / 2;
             int sum = (searchRange * searchRange + searchRange) / 2;
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
 
             for (int i = spiralOffset; i < spiralNum; ++i)
             {
-                MapPos pos = PosAddSpirally(basePos, (uint)i);
+                var position = PositionAddSpirally(basePosition, (uint)i);
 
                 // as the spiral goes from inner to outer, the first found position is the nearest one
-                if (searchFunc(this, pos))
-                    return pos;
+                if (searchFunc(this, position))
+                    return position;
             }
 
-            return Global.BadMapPos;
+            return Constants.INVALID_MAPPOS;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="basePos"></param>
+        /// <param name="basePosition"></param>
         /// <param name="searchRange"></param>
         /// <param name="searchFunc"></param>
         /// <param name="rateFunc">The lower the value, the better the position. Zero is the best value.</param>
-        /// <param name="minDist"></param>
+        /// <param name="minDistance"></param>
         /// <returns></returns>
-        public MapPos FindBest(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, int> rateFunc, int minDist)
+        public MapPos FindBest(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, int> rateFunc, int minDistance)
         {
             if (searchRange <= 0)
-                return Global.BadMapPos;
+                return Constants.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
 
-            int minSum = (minDist * minDist + minDist) / 2;
+            int minSum = (minDistance * minDistance + minDistance) / 2;
             int sum = (searchRange * searchRange + searchRange) / 2;
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
 
-            MapPos bestPos = Global.BadMapPos;
+            var bestPosition = Constants.INVALID_MAPPOS;
             int bestValue = int.MaxValue;
 
             for (int i = spiralOffset; i < spiralNum; ++i)
             {
-                MapPos pos = PosAddSpirally(basePos, (uint)i);
+                var position = PositionAddSpirally(basePosition, (uint)i);
 
-                if (searchFunc(this, pos))
+                if (searchFunc(this, position))
                 {
-                    int rating = rateFunc(this, pos);
+                    int rating = rateFunc(this, position);
 
                     if (rating == 0)
-                        return pos;
+                        return position;
 
                     if (rating < bestValue)
                     {
-                        bestPos = pos;
+                        bestPosition = position;
                         bestValue = rating;
                     }
                 }
             }
 
-            return bestPos;
+            return bestPosition;
         }
 
         /// <summary>
         /// Searches the spiral around the base position. Stops after first finding.
         /// </summary>
-        /// <param name="basePos">Base position</param>
+        /// <param name="basePosition">Base position</param>
         /// <param name="searchRange">Search distance</param>
         /// <param name="searchFunc">Search function</param>
-        /// <param name="minDist">Minimum distance required</param>
+        /// <param name="minDistance">Minimum distance required</param>
         /// <returns></returns>
-        public bool HasAnyInArea(MapPos basePos, int searchRange, Func<Map, MapPos, FindData> searchFunc, int minDist = 0)
+        public bool HasAnyInArea(MapPos basePosition, int searchRange, Func<Map, MapPos, FindData> searchFunc, int minDistance = 0)
         {
             if (searchRange <= 0)
                 return false;
@@ -1235,16 +1248,15 @@ namespace Freeserf
             if (searchRange > 9)
                 searchRange = 9;
 
-            int minSum = (minDist * minDist + minDist) / 2;
+            int minSum = (minDistance * minDistance + minDistance) / 2;
             int sum = (searchRange * searchRange + searchRange) / 2;
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
 
             for (int i = spiralOffset; i < spiralNum; ++i)
             {
-                MapPos pos = PosAddSpirally(basePos, (uint)i);
-
-                var data = searchFunc(this, pos);
+                var position = PositionAddSpirally(basePosition, (uint)i);
+                var data = searchFunc(this, position);
 
                 if (data != null & data.Success)
                     return true;
@@ -1258,12 +1270,13 @@ namespace Freeserf
         /// 
         /// The distances can range from 0 to 9.
         /// </summary>
-        /// <param name="basePos">Base position</param>
+        /// <param name="basePosition">Base position</param>
         /// <param name="searchRange">Search distance</param>
         /// <param name="searchFunc">Search function</param>
-        /// <param name="minDist">Minimum distance required</param>
+        /// <param name="minDistance">Minimum distance required</param>
         /// <returns></returns>
-        public List<object> FindInArea(MapPos basePos, int searchRange, Func<Map, MapPos, FindData> searchFunc, int minDist = 0)
+        public List<object> FindInArea(MapPos basePosition, int searchRange,
+            Func<Map, MapPos, FindData> searchFunc, int minDistance = 0)
         {
             if (searchRange <= 0)
                 return new List<object>();
@@ -1273,16 +1286,15 @@ namespace Freeserf
             if (searchRange > 9)
                 searchRange = 9;
 
-            int minSum = (minDist * minDist + minDist) / 2;
+            int minSum = (minDistance * minDistance + minDistance) / 2;
             int sum = (searchRange * searchRange + searchRange) / 2;
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
 
             for (int i = spiralOffset; i < spiralNum; ++i)
             {
-                MapPos pos = PosAddSpirally(basePos, (uint)i);
-
-                var data = searchFunc(this, pos);
+                var position = PositionAddSpirally(basePosition, (uint)i);
+                var data = searchFunc(this, position);
 
                 if (data != null & data.Success)
                     findings.Add(data.Data);
@@ -1291,33 +1303,33 @@ namespace Freeserf
             return findings;
         }
 
-        public MapPos FindSpotNear(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, int> rateFunc, int minDist = 0)
+        public MapPos FindSpotNear(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc,
+            Func<Map, MapPos, int> rateFunc, int minDistance = 0)
         {
             if (searchRange <= 0)
-                return Global.BadMapPos;
+                return Constants.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
 
-            int minSum = (minDist * minDist + minDist) / 2;
+            int minSum = (minDistance * minDistance + minDistance) / 2;
             int sum = (searchRange * searchRange + searchRange) / 2;
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
-
-            List<MapPos> spots = new List<MapPos>();
+            var spots = new List<MapPos>();
 
             for (int i = spiralOffset; i < spiralNum; ++i)
             {
-                MapPos pos = PosAddSpirally(basePos, (uint)i);
+                var position = PositionAddSpirally(basePosition, (uint)i);
 
-                if (searchFunc(this, pos))
-                    spots.Add(pos);
+                if (searchFunc(this, position))
+                    spots.Add(position);
             }
 
             if (spots.Count == 0)
-                return Global.BadMapPos;
+                return Constants.INVALID_MAPPOS;
 
-            MapPos bestSpot = Global.BadMapPos;
+            var bestSpot = Constants.INVALID_MAPPOS;
             int bestRating = int.MaxValue;
 
             foreach (var spot in spots)
@@ -1331,124 +1343,132 @@ namespace Freeserf
                 }
             }
 
-            if (bestSpot == Global.BadMapPos) // all spots have worst rating -> return the first one
+            if (bestSpot == Constants.INVALID_MAPPOS) // all spots have worst rating -> return the first one
                 return spots[0];
 
             return bestSpot;
         }
 
-        public MapPos FindSpotNear(MapPos basePos, int searchRange, Func<Map, MapPos, bool> searchFunc, Random random, int minDist = 0)
+        public MapPos FindSpotNear(MapPos basePosition, int searchRange,
+            Func<Map, MapPos, bool> searchFunc, Random random, int minDistance = 0)
         {
             if (searchRange <= 0)
-                return Global.BadMapPos;
+                return Constants.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
 
-            int minSum = (minDist * minDist + minDist) / 2;
+            int minSum = (minDistance * minDistance + minDistance) / 2;
             int sum = (searchRange * searchRange + searchRange) / 2;
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
-
-            List<MapPos> spots = new List<MapPos>();
+            var spots = new List<MapPos>();
 
             for (int i = spiralOffset; i < spiralNum; ++i)
             {
-                MapPos pos = PosAddSpirally(basePos, (uint)i);
+                var position = PositionAddSpirally(basePosition, (uint)i);
 
-                if (searchFunc(this, pos))
-                    spots.Add(pos);
+                if (searchFunc(this, position))
+                    spots.Add(position);
             }
 
             if (spots.Count == 0)
-                return Global.BadMapPos;
+                return Constants.INVALID_MAPPOS;
 
             return spots[random.Next() % spots.Count];
         }
 
-        public Object GetObject(MapPos pos)
+        public Object GetObject(MapPos position)
         {
-            return landscapeTiles[(int)pos].Object;
+            return landscapeTiles[(int)position].Object;
         }
 
-        public bool GetIdleSerf(MapPos pos)
+        public bool GetIdleSerf(MapPos position)
         {
-            return gameTiles[(int)pos].IdleSerf;
+            return gameTiles[(int)position].IdleSerf;
         }
 
-        public void SetIdleSerf(MapPos pos)
+        public void SetIdleSerf(MapPos position)
         {
-            gameTiles[(int)pos].IdleSerf = true;
+            gameTiles[(int)position].IdleSerf = true;
         }
 
-        public void ClearIdleSerf(MapPos pos)
+        public void ClearIdleSerf(MapPos position)
         {
-            gameTiles[(int)pos].IdleSerf = false;
+            gameTiles[(int)position].IdleSerf = false;
         }
 
-        public uint GetObjectIndex(MapPos pos)
+        public uint GetObjectIndex(MapPos position)
         {
-            return gameTiles[(int)pos].ObjectIndex;
+            return gameTiles[(int)position].ObjectIndex;
         }
 
-        public void SetObjectIndex(MapPos pos, uint index)
+        public void SetObjectIndex(MapPos position, uint index)
         {
-            gameTiles[(int)pos].ObjectIndex = index;
+            gameTiles[(int)position].ObjectIndex = index;
         }
 
-        public Minerals GetResourceType(MapPos pos)
+        public Minerals GetResourceType(MapPos position)
         {
-            return landscapeTiles[(int)pos].Mineral;
+            return landscapeTiles[(int)position].Mineral;
         }
 
-        public uint GetResourceAmount(MapPos pos)
+        public uint GetResourceAmount(MapPos position)
         {
-            return (uint)landscapeTiles[(int)pos].ResourceAmount;
+            return (uint)landscapeTiles[(int)position].ResourceAmount;
         }
 
-        public uint GetResourceFish(MapPos pos)
+        public uint GetResourceFish(MapPos position)
         {
-            return GetResourceAmount(pos);
+            return GetResourceAmount(position);
         }
 
-        public uint GetSerfIndex(MapPos pos)
+        public uint GetSerfIndex(MapPos position)
         {
-            return gameTiles[(int)pos].Serf;
+            return gameTiles[(int)position].Serf;
         }
 
-        public bool HasSerf(MapPos pos)
+        public bool HasSerf(MapPos position)
         {
-            return gameTiles[(int)pos].Serf != 0;
+            return gameTiles[(int)position].Serf != 0;
         }
 
-        public bool HasFlag(MapPos pos)
+        public bool HasFlag(MapPos position)
         {
-            return (GetObject(pos) == Object.Flag);
+            return (GetObject(position) == Object.Flag);
         }
 
-        public bool HasBuilding(MapPos pos)
+        public bool HasBuilding(MapPos position)
         {
-            return (GetObject(pos) >= Object.SmallBuilding &&
-                    GetObject(pos) <= Object.Castle);
+            return (GetObject(position) >= Object.SmallBuilding &&
+                    GetObject(position) <= Object.Castle);
         }
 
-        /* Whether any of the two up/down tiles at this pos are water. */
-        public bool IsWaterTile(MapPos pos)
+        /// <summary>
+        /// Whether any of the two up/down tiles at this position are water.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public bool IsWaterTile(MapPos position)
         {
-            return (TypeDown(pos) <= Terrain.Water3 &&
-                    TypeUp(pos) <= Terrain.Water3);
+            return (TypeDown(position) <= Terrain.Water3 &&
+                    TypeUp(position) <= Terrain.Water3);
         }
 
-        /* Whether the position is completely surrounded by water. */
-        public bool IsInWater(MapPos pos)
+        /// <summary>
+        /// Whether the position is completely surrounded by water.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public bool IsInWater(MapPos position)
         {
-            return (IsWaterTile(pos) &&
-                    IsWaterTile(MoveUpLeft(pos)) &&
-                    TypeDown(MoveLeft(pos)) <= Terrain.Water3 &&
-                    TypeUp(MoveUp(pos)) <= Terrain.Water3);
+            return (IsWaterTile(position) &&
+                    IsWaterTile(MoveUpLeft(position)) &&
+                    TypeDown(MoveLeft(position)) <= Terrain.Water3 &&
+                    TypeUp(MoveUp(position)) <= Terrain.Water3);
         }
 
-        /* Mapping from Object to Space. */
+        // Mapping from Object to Space. 
         internal static readonly Space[] MapSpaceFromObject = new Space[128]
         {
             Space.Open,             // Object.None = 0,
@@ -1462,30 +1482,30 @@ namespace Freeserf
 
             Space.Filled,           // Object.Tree0 = 8,
             Space.Filled,           // Object.Tree1,
-            Space.Filled,           // Object.Tree2, /* 10 */
+            Space.Filled,           // Object.Tree2, // 10 
             Space.Filled,           // Object.Tree3,
             Space.Filled,           // Object.Tree4,
             Space.Filled,           // Object.Tree5,
             Space.Filled,           // Object.Tree6,
-            Space.Filled,           // Object.Tree7, /* 15 */
+            Space.Filled,           // Object.Tree7, // 15 
 
             Space.Filled,           // Object.Pine0,
             Space.Filled,           // Object.Pine1,
             Space.Filled,           // Object.Pine2,
             Space.Filled,           // Object.Pine3,
-            Space.Filled,           // Object.Pine4, /* 20 */
+            Space.Filled,           // Object.Pine4, // 20 
             Space.Filled,           // Object.Pine5,
             Space.Filled,           // Object.Pine6,
             Space.Filled,           // Object.Pine7,
 
             Space.Filled,           // Object.Palm0,
-            Space.Filled,           // Object.Palm1, /* 25 */
+            Space.Filled,           // Object.Palm1, // 25 
             Space.Filled,           // Object.Palm2,
             Space.Filled,           // Object.Palm3,
 
             Space.Impassable,       // Object.WaterTree0,
             Space.Impassable,       // Object.WaterTree1,
-            Space.Impassable,       // Object.WaterTree2, /* 30 */
+            Space.Impassable,       // Object.WaterTree2, // 30 
             Space.Impassable,       // Object.WaterTree3,
             Space.Open,
             Space.Open,
@@ -1531,20 +1551,20 @@ namespace Freeserf
             Space.Impassable,       // Object.Stone0 = 72,
             Space.Impassable,       // Object.Stone1,
             Space.Impassable,       // Object.Stone2,
-            Space.Impassable,       // Object.Stone3, /* 75 */
+            Space.Impassable,       // Object.Stone3, // 75 
             Space.Impassable,       // Object.Stone4,
             Space.Impassable,       // Object.Stone5,
             Space.Impassable,       // Object.Stone6,
             Space.Impassable,       // Object.Stone7,
 
-            Space.Impassable,       // Object.Sandstone0, /* 80 */
+            Space.Impassable,       // Object.Sandstone0, // 80 
             Space.Impassable,       // Object.Sandstone1,
 
             Space.Filled,           // Object.Cross,
             Space.Open,             // Object.Stub,
 
             Space.Open,             // Object.Stone,
-            Space.Open,             // Object.Sandstone3, /* 85 */
+            Space.Open,             // Object.Sandstone3, // 85 
 
             Space.Open,             // Object.Cadaver0,
             Space.Open,             // Object.Cadaver1,
@@ -1552,91 +1572,98 @@ namespace Freeserf
             Space.Impassable,       // Object.WaterStone0,
             Space.Impassable,       // Object.WaterStone1,
 
-            Space.Filled,           // Object.Cactus0, /* 90 */
+            Space.Filled,           // Object.Cactus0, // 90 
             Space.Filled,           // Object.Cactus1,
 
             Space.Filled,           // Object.DeadTree,
 
             Space.Filled,           // Object.FelledPine0,
             Space.Filled,           // Object.FelledPine1,
-            Space.Filled,           // Object.FelledPine2, /* 95 */
+            Space.Filled,           // Object.FelledPine2, // 95 
             Space.Filled,           // Object.FelledPine3,
             Space.Open,             // Object.FelledPine4,
 
             Space.Filled,           // Object.FelledTree0,
             Space.Filled,           // Object.FelledTree1,
-            Space.Filled,           // Object.FelledTree2, /* 100 */
+            Space.Filled,           // Object.FelledTree2, // 100 
             Space.Filled,           // Object.FelledTree3,
             Space.Open,             // Object.FelledTree4,
 
             Space.Filled,           // Object.NewPine,
             Space.Filled,           // Object.NewTree,
 
-            Space.Semipassable,     // Object.Seeds0, /* 105 */
+            Space.Semipassable,     // Object.Seeds0, // 105 
             Space.Semipassable,     // Object.Seeds1,
             Space.Semipassable,     // Object.Seeds2,
             Space.Semipassable,     // Object.Seeds3,
             Space.Semipassable,     // Object.Seeds4,
-            Space.Semipassable,     // Object.Seeds5, /* 110 */
+            Space.Semipassable,     // Object.Seeds5, // 110 
             Space.Open,             // Object.FieldExpired,
 
             Space.Open,             // Object.SignLargeGold,
             Space.Open,             // Object.SignSmallGold,
             Space.Open,             // Object.SignLargeIron,
-            Space.Open,             // Object.SignSmallIron, /* 115 */
+            Space.Open,             // Object.SignSmallIron, // 115 
             Space.Open,             // Object.SignLargeCoal,
             Space.Open,             // Object.SignSmallCoal,
             Space.Open,             // Object.SignLargeStone,
             Space.Open,             // Object.SignSmallStone,
 
-            Space.Open,             // Object.SignEmpty, /* 120 */
+            Space.Open,             // Object.SignEmpty, // 120 
 
             Space.Semipassable,     // Object.Field0,
             Space.Semipassable,     // Object.Field1,
             Space.Semipassable,     // Object.Field2,
             Space.Semipassable,     // Object.Field3,
-            Space.Semipassable,     // Object.Field4, /* 125 */
+            Space.Semipassable,     // Object.Field4, // 125 
             Space.Semipassable,     // Object.Field5,
             Space.Open,             // Object.Object127
         };
 
-        /* Change the height of a map position. */
-        public void SetHeight(MapPos pos, uint height)
+        /// <summary>
+        /// Change the height of a map position.
+        /// </summary>
+        public void SetHeight(MapPos position, uint height)
         {
-            landscapeTiles[(int)pos].Height = height;
+            landscapeTiles[(int)position].Height = height;
 
-            /* Mark landscape dirty */
+            // Mark landscape dirty
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                foreach (Handler handler in changeHandlers)
+                foreach (var handler in changeHandlers)
                 {
-                    handler.OnHeightChanged(Move(pos, d));
+                    handler.OnHeightChanged(Move(position, direction));
                 }
             }
         }
 
-        /* Change the object at a map position. If index is non-negative
-           also change this. The index should be reset to zero when a flag or
-           building is removed. */
-        public void SetObject(MapPos pos, Object obj, int index)
+        /// <summary>
+        /// Change the object at a map position. If index is non-negative
+        /// also change this. The index should be reset to zero when a flag or
+        /// building is removed.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="obj"></param>
+        /// <param name="index"></param>
+        public void SetObject(MapPos position, Object obj, int index)
         {
-            var oldObject = landscapeTiles[(int)pos].Object;
+            var oldObject = landscapeTiles[(int)position].Object;
 
-            landscapeTiles[(int)pos].Object = obj;
+            landscapeTiles[(int)position].Object = obj;
 
             if (index >= 0)
-                gameTiles[(int)pos].ObjectIndex = (uint)index;
+                gameTiles[(int)position].ObjectIndex = (uint)index;
 
-            /* Notify about object change */
+            // Notify about object change
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                foreach (Handler handler in changeHandlers)
+                foreach (var handler in changeHandlers)
                 {
-                    handler.OnObjectChanged(Move(pos, d));
+                    handler.OnObjectChanged(Move(position, direction));
                 }
             }
 
@@ -1646,50 +1673,54 @@ namespace Freeserf
                 if (oldObject != Object.None && obj < Object.Tree0 && obj != Object.None)
                 {
                     // this will remove an existing map object when a building or flag is placed
-                    foreach (Handler handler in changeHandlers)
+                    foreach (var handler in changeHandlers)
                     {
-                        handler.OnObjectExchanged(pos, oldObject, obj);
+                        handler.OnObjectExchanged(position, oldObject, obj);
                     }
                 }
 
-                foreach (Handler handler in changeHandlers)
+                foreach (var handler in changeHandlers)
                 {
-                    handler.OnObjectPlaced(pos);
+                    handler.OnObjectPlaced(position);
                 }
             }
             else if (oldObject != Object.None)
             {
-                foreach (Handler handler in changeHandlers)
+                foreach (var handler in changeHandlers)
                 {
-                    handler.OnObjectExchanged(pos, oldObject, obj);
+                    handler.OnObjectExchanged(position, oldObject, obj);
                 }
             }
         }
 
-        /* Remove resources from the ground at a map position. */
-        public void RemoveGroundDeposit(MapPos pos, int amount)
+        /// <summary>
+        /// Remove resources from the ground at a map position.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="amount"></param>
+        public void RemoveGroundDeposit(MapPos position, int amount)
         {
-            landscapeTiles[(int)pos].ResourceAmount -= amount;
+            landscapeTiles[(int)position].ResourceAmount -= amount;
 
-            if (landscapeTiles[(int)pos].ResourceAmount <= 0)
+            if (landscapeTiles[(int)position].ResourceAmount <= 0)
             {
-                /* Also sets the ground deposit type to none. */
-                landscapeTiles[(int)pos].Mineral = Minerals.None;
+                // Also sets the ground deposit type to none. 
+                landscapeTiles[(int)position].Mineral = Minerals.None;
             }
         }
 
-        /* Remove fish at a map position (must be water). */
-        public void RemoveFish(MapPos pos, int amount)
+        // Remove fish at a map position (must be water). 
+        public void RemoveFish(MapPos position, int amount)
         {
-            landscapeTiles[(int)pos].ResourceAmount -= amount;
+            landscapeTiles[(int)position].ResourceAmount -= amount;
         }
 
-        /* Set the index of the serf occupying map position. */
-        public void SetSerfIndex(MapPos pos, int index)
+        // Set the index of the serf occupying map position. 
+        public void SetSerfIndex(MapPos position, int index)
         {
-            gameTiles[(int)pos].Serf = (uint)index;
+            gameTiles[(int)position].Serf = (uint)index;
 
-            /* TODO Mark dirty in viewport. */
+            // TODO Mark dirty in viewport. 
         }
 
         // Get count of gold mineral deposits in the map.
@@ -1697,37 +1728,37 @@ namespace Freeserf
         {
             uint count = 0;
 
-            foreach (MapPos pos in Geometry)
+            foreach (var position in Geometry)
             {
-                if (GetResourceType(pos) == Minerals.Gold)
+                if (GetResourceType(position) == Minerals.Gold)
                 {
-                    count += GetResourceAmount(pos);
+                    count += GetResourceAmount(position);
                 }
             }
 
             return count;
         }
 
-        /* Copy tile data from map generator into map tile data. */
+        // Copy tile data from map generator into map tile data. 
         public void InitTiles(MapGenerator generator)
         {
             landscapeTiles = generator.GetLandscape();
 
-            MapPos pos = 0;
+            MapPos position = 0;
 
             foreach (var tile in landscapeTiles)
             {
                 if (tile.Object != Object.None)
                 {
                     foreach (var handler in changeHandlers)
-                        handler.OnObjectPlaced(pos);
+                        handler.OnObjectPlaced(position);
                 }
 
-                ++pos;
+                ++position;
             }
         }
 
-        /* Update map data as part of the game progression. */
+        // Update map data as part of the game progression. 
         public void Update(ushort tick, Random random)
         {
             ushort delta = (ushort)(tick - updateState.LastTick);
@@ -1742,7 +1773,7 @@ namespace Freeserf
                 updateState.Counter += 20;
             }
 
-            MapPos pos = updateState.InitialPos;
+            var position = updateState.InitialPosition;
 
             for (int i = 0; i < iterations; ++i)
             {
@@ -1753,23 +1784,23 @@ namespace Freeserf
                     updateState.RemoveSignsCounter = 16;
                 }
 
-                /* Test if moving 23 positions right crosses map boundary. */
-                if (PosColumn(pos) + 23 < Geometry.Columns)
+                // Test if moving 23 positions right crosses map boundary. 
+                if (PositionColumn(position) + 23 < Geometry.Columns)
                 {
-                    pos = MoveRightN(pos, 23);
+                    position = MoveRightN(position, 23);
                 }
                 else
                 {
-                    pos = MoveRightN(pos, 23);
-                    pos = MoveDown(pos);
+                    position = MoveRightN(position, 23);
+                    position = MoveDown(position);
                 }
 
-                /* Update map at position. */
-                UpdateHidden(pos, random);
-                UpdatePublic(pos, random);
+                // Update map at position. 
+                UpdateHidden(position, random);
+                UpdatePublic(position, random);
             }
 
-            updateState.InitialPos = pos;
+            updateState.InitialPosition = position;
         }
 
         public UpdateState GetUpdateState()
@@ -1792,181 +1823,181 @@ namespace Freeserf
             changeHandlers.Remove(handler);
         }
 
-        /* Actually place road segments */
+        // Actually place road segments 
         public bool PlaceRoadSegments(Road road)
         {
-            MapPos pos = road.Source;
-            var dirs = road.Dirs.Reverse().ToList();
+            var position = road.Source;
+            var directions = road.Directions.Reverse().ToList();
 
-            for (int i = 0; i < dirs.Count; ++i)
+            for (int i = 0; i < directions.Count; ++i)
             {
-                Direction dir = dirs[i];
-                Direction revDir = dir.Reverse();
+                var direction = directions[i];
+                var reverseDirection = direction.Reverse();
 
-                if (!IsRoadSegmentValid(pos, dir))
+                if (!IsRoadSegmentValid(position, direction))
                 {
-                    /* Not valid after all. Backtrack and abort.
-                     This is needed to check that the road
-                     does not cross itself. */
+                    // Not valid after all. Backtrack and abort.
+                    // This is needed to check that the road
+                    // does not cross itself.
                     for (int j = i - 1; j >= 0; --j)
                     {
-                        dir = dirs[j];
-                        revDir = dir.Reverse();
+                        direction = directions[j];
+                        reverseDirection = direction.Reverse();
 
-                        gameTiles[(int)pos].Paths &= (byte)~Misc.BitU((int)dir);
-                        gameTiles[(int)Move(pos, dir)].Paths &= (byte)~Misc.BitU((int)revDir);
+                        gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction);
+                        gameTiles[(int)Move(position, direction)].Paths &= (byte)~Misc.BitU((int)reverseDirection);
 
                         foreach (var handler in changeHandlers)
-                            handler.OnRoadSegmentDeleted(pos, dir);
+                            handler.OnRoadSegmentDeleted(position, direction);
 
-                        pos = Move(pos, dir);
+                        position = Move(position, direction);
                     }
 
                     return false;
                 }
 
-                gameTiles[(int)pos].Paths |= (byte)Misc.BitU((int)dir);
-                gameTiles[(int)Move(pos, dir)].Paths |= (byte)Misc.BitU((int)revDir);
+                gameTiles[(int)position].Paths |= (byte)Misc.BitU((int)direction);
+                gameTiles[(int)Move(position, direction)].Paths |= (byte)Misc.BitU((int)reverseDirection);
 
                 foreach (var handler in changeHandlers)
-                    handler.OnRoadSegmentPlaced(pos, dir);
+                    handler.OnRoadSegmentPlaced(position, direction);
                 foreach (var handler in changeHandlers)
-                    handler.OnRoadSegmentPlaced(Move(pos, dir), dir.Reverse());
+                    handler.OnRoadSegmentPlaced(Move(position, direction), direction.Reverse());
 
-                pos = Move(pos, dir);
+                position = Move(position, direction);
             }
 
             return true;
         }
 
-        public bool RemoveRoadBackrefUntilFlag(MapPos pos, Direction dir)
+        public bool RemoveRoadBackrefUntilFlag(MapPos position, Direction direction)
         {
             while (true)
             {
-                pos = Move(pos, dir);
+                position = Move(position, direction);
 
-                /* Clear backreference */
-                gameTiles[(int)pos].Paths &= (byte)~Misc.Bit((int)dir.Reverse());
+                // Clear backreference 
+                gameTiles[(int)position].Paths &= (byte)~Misc.Bit((int)direction.Reverse());
 
-                if (GetObject(pos) == Object.Flag)
+                if (GetObject(position) == Object.Flag)
                     break;
 
-                /* Find next direction of path. */
-                dir = Direction.None;
+                // Find next direction of path. 
+                direction = Direction.None;
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var nextDirection in cycle)
                 {
-                    if (HasPath(pos, d))
+                    if (HasPath(position, nextDirection))
                     {
-                        dir = d;
+                        direction = nextDirection;
                         break;
                     }
                 }
 
-                if (dir == Direction.None)
+                if (direction == Direction.None)
                     return false;
             }
 
             return true;
         }
 
-        public bool RemoveRoadBackrefs(MapPos pos)
+        public bool RemoveRoadBackrefs(MapPos position)
         {
-            if (Paths(pos) == 0)
+            if (Paths(position) == 0)
                 return false;
 
-            /* Find directions of path segments to be split. */
-            Direction path1Dir = Direction.None;
+            // Find directions of path segments to be split. 
+            Direction path1Direction = Direction.None;
             var cycle = DirectionCycleCW.CreateDefault();
-            var it = cycle.Begin() as Iterator<Direction>;
+            var iter = cycle.Begin() as Iterator<Direction>;
 
-            for (; it != cycle.End(); ++it)
+            for (; iter != cycle.End(); ++iter)
             {
-                if (HasPath(pos, it.Current))
+                if (HasPath(position, iter.Current))
                 {
-                    path1Dir = it.Current;
+                    path1Direction = iter.Current;
                     break;
                 }
             }
 
-            Direction path2Dir = Direction.None;
-            ++it;
+            Direction path2Direction = Direction.None;
+            ++iter;
 
-            for (; it != cycle.End(); ++it)
+            for (; iter != cycle.End(); ++iter)
             {
-                if (HasPath(pos, it.Current))
+                if (HasPath(position, iter.Current))
                 {
-                    path2Dir = it.Current;
+                    path2Direction = iter.Current;
                     break;
                 }
             }
 
-            if (path1Dir == Direction.None || path2Dir == Direction.None)
+            if (path1Direction == Direction.None || path2Direction == Direction.None)
                 return false;
 
-            if (!RemoveRoadBackrefUntilFlag(pos, path1Dir))
+            if (!RemoveRoadBackrefUntilFlag(position, path1Direction))
                 return false;
-            if (!RemoveRoadBackrefUntilFlag(pos, path2Dir))
+            if (!RemoveRoadBackrefUntilFlag(position, path2Direction))
                 return false;
 
             return true;
         }
 
-        public Direction RemoveRoadSegment(ref MapPos pos, Direction dir)
+        public Direction RemoveRoadSegment(ref MapPos position, Direction direction)
         {
-            /* Clear forward reference. */
-            gameTiles[(int)pos].Paths &= (byte)~Misc.BitU((int)dir);
-            pos = Move(pos, dir);
+            // Clear forward reference. 
+            gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction);
+            position = Move(position, direction);
 
-            /* Clear backreference. */
-            gameTiles[(int)pos].Paths &= (byte)~Misc.BitU((int)dir.Reverse());
+            // Clear backreference. 
+            gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction.Reverse());
 
-            /* Find next direction of path. */
-            dir = Direction.None;
+            // Find next direction of path. 
+            direction = Direction.None;
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var nextDirection in cycle)
             {
-                if (HasPath(pos, d))
+                if (HasPath(position, nextDirection))
                 {
-                    dir = d;
+                    direction = nextDirection;
                     break;
                 }
             }
 
-            return dir;
+            return direction;
         }
 
-        public bool RoadSegmentInWater(MapPos pos, Direction dir)
+        public bool RoadSegmentInWater(MapPos position, Direction direction)
         {
-            if (dir > Direction.Down)
+            if (direction > Direction.Down)
             {
-                pos = Move(pos, dir);
-                dir = dir.Reverse();
+                position = Move(position, direction);
+                direction = direction.Reverse();
             }
 
             bool water = false;
 
-            switch (dir)
+            switch (direction)
             {
                 case Direction.Right:
-                    if (TypeDown(pos) <= Terrain.Water3 &&
-                        TypeUp(MoveUp(pos)) <= Terrain.Water3)
+                    if (TypeDown(position) <= Terrain.Water3 &&
+                        TypeUp(MoveUp(position)) <= Terrain.Water3)
                     {
                         water = true;
                     }
                     break;
                 case Direction.DownRight:
-                    if (TypeUp(pos) <= Terrain.Water3 &&
-                        TypeDown(pos) <= Terrain.Water3)
+                    if (TypeUp(position) <= Terrain.Water3 &&
+                        TypeDown(position) <= Terrain.Water3)
                     {
                         water = true;
                     }
                     break;
                 case Direction.Down:
-                    if (TypeUp(pos) <= Terrain.Water3 &&
-                        TypeDown(MoveLeft(pos)) <= Terrain.Water3)
+                    if (TypeUp(position) <= Terrain.Water3 &&
+                        TypeDown(MoveLeft(position)) <= Terrain.Water3)
                     {
                         water = true;
                     }
@@ -1979,26 +2010,32 @@ namespace Freeserf
             return water;
         }
 
-        /* Return true if the road segment from pos in direction dir
-           can be successfully constructed at the current time. */
-        public bool IsRoadSegmentValid(MapPos pos, Direction dir, bool endThere = false)
+        /// <summary>
+        /// Returns true if the road segment from position in the given
+        /// direction can be successfully constructed at the current time.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="direction"></param>
+        /// <param name="endThere"></param>
+        /// <returns></returns>
+        public bool IsRoadSegmentValid(MapPos position, Direction direction, bool endThere = false)
         {
-            MapPos otherPos = Move(pos, dir);
-            Object obj = GetObject(otherPos);
+            var otherPosition = Move(position, direction);
+            var obj = GetObject(otherPosition);
 
-            if ((Paths(otherPos) != 0 && obj != Object.Flag) ||
+            if ((Paths(otherPosition) != 0 && obj != Object.Flag) ||
                 MapSpaceFromObject[(int)obj] >= Space.Semipassable)
             {
                 return false;
             }
 
-            if (!HasOwner(otherPos) || GetOwner(otherPos) != GetOwner(pos))
+            if (!HasOwner(otherPosition) || GetOwner(otherPosition) != GetOwner(position))
             {
                 return false;
             }
 
-            if (IsInWater(pos) != IsInWater(otherPos) &&
-                !(endThere || HasFlag(pos) || HasFlag(otherPos)))
+            if (IsInWater(position) != IsInWater(otherPosition) &&
+                !(endThere || HasFlag(position) || HasFlag(otherPosition)))
             {
                 return false;
             }
@@ -2008,15 +2045,15 @@ namespace Freeserf
 
         public void ReadFrom(SaveReaderBinary reader)
         {
-            var geom = Geometry;
+            var geometry = Geometry;
 
-            for (uint y = 0; y < geom.Rows; ++y)
+            for (uint y = 0; y < geometry.Rows; ++y)
             {
-                for (uint x = 0; x < geom.Columns; ++x)
+                for (uint x = 0; x < geometry.Columns; ++x)
                 {
-                    MapPos pos = Pos(x, y);
-                    GameTile gameTile = gameTiles[(int)pos];
-                    LandscapeTile landscapeTile = landscapeTiles[(int)pos];
+                    var position = Position(x, y);
+                    var gameTile = gameTiles[(int)position];
+                    var landscapeTile = landscapeTiles[(int)position];
 
                     gameTile.Paths = (byte)(reader.ReadByte() & 0x3f);
                     byte heightAndOwner = reader.ReadByte();
@@ -2034,14 +2071,14 @@ namespace Freeserf
                     gameTile.IdleSerf = false;  // (Misc.BitTest(<the byte that was read before>, 7) != 0);
                 }
 
-                for (uint x = 0; x < geom.Columns; ++x)
+                for (uint x = 0; x < geometry.Columns; ++x)
                 {
-                    MapPos pos = Pos(x, y);
-                    GameTile gameTile = gameTiles[(int)pos];
-                    LandscapeTile landscapeTile = landscapeTiles[(int)pos];
+                    var position = Position(x, y);
+                    var gameTile = gameTiles[(int)position];
+                    var landscapeTile = landscapeTiles[(int)position];
 
-                    if (GetObject(pos) >= Object.Flag &&
-                        GetObject(pos) <= Object.Castle)
+                    if (GetObject(position) >= Object.Flag &&
+                        GetObject(position) <= Object.Castle)
                     {
                         landscapeTile.Mineral = Minerals.None; // Todo: What about mines? Will mines erase the resources in the ground?
                         landscapeTile.ResourceAmount = 0;
@@ -2067,15 +2104,15 @@ namespace Freeserf
             x = reader.Value("pos")[0].ReadUInt();
             y = reader.Value("pos")[1].ReadUInt();
 
-            MapPos pos = Pos(x, y);
+            var position = Position(x, y);
 
             for (y = 0; y < SAVE_MAP_TILE_SIZE; ++y)
             {
                 for (x = 0; x < SAVE_MAP_TILE_SIZE; ++x)
                 {
-                    MapPos p = PosAdd(pos, Pos(x, y));
-                    GameTile gameTile = gameTiles[(int)p];
-                    LandscapeTile landscapeTile = landscapeTiles[(int)p];
+                    var mapPosition = PositionAdd(position, Position(x, y));
+                    var gameTile = gameTiles[(int)mapPosition];
+                    var landscapeTile = landscapeTiles[(int)mapPosition];
                     int index = (int)(y * SAVE_MAP_TILE_SIZE + x);
 
                     gameTile.Paths = (byte)(reader.Value("paths")[index].ReadUInt() & 0x3f);
@@ -2090,10 +2127,10 @@ namespace Freeserf
                     }
                     catch
                     {
-                        uint val = reader.Value("object")[index].ReadUInt();
+                        uint value = reader.Value("object")[index].ReadUInt();
 
-                        landscapeTile.Object = (Object)(val & 0x7f);
-                        gameTile.IdleSerf = Misc.BitTest(val, 7);
+                        landscapeTile.Object = (Object)(value & 0x7f);
+                        gameTile.IdleSerf = Misc.BitTest(value, 7);
                     }
 
                     gameTile.Serf = reader.Value("serf")[index].ReadUInt();
@@ -2111,7 +2148,7 @@ namespace Freeserf
             {
                 for (uint tx = 0; tx < Columns; tx += SAVE_MAP_TILE_SIZE)
                 {
-                    SaveWriterText mapWriter = writer.AddSection("map", i++);
+                    var mapWriter = writer.AddSection("map", i++);
 
                     mapWriter.Value("pos").Write(tx);
                     mapWriter.Value("pos").Write(ty);
@@ -2120,25 +2157,25 @@ namespace Freeserf
                     {
                         for (uint x = 0; x < SAVE_MAP_TILE_SIZE; ++x)
                         {
-                            MapPos pos = Pos(tx + x, ty + y);
+                            var position = Position(tx + x, ty + y);
 
-                            mapWriter.Value("height").Write(GetHeight(pos));
-                            mapWriter.Value("type.up").Write((int)TypeUp(pos));
-                            mapWriter.Value("type.down").Write((int)TypeDown(pos));
-                            mapWriter.Value("paths").Write(Paths(pos));
-                            mapWriter.Value("object").Write((int)GetObject(pos));
-                            mapWriter.Value("serf").Write(GetSerfIndex(pos));
-                            mapWriter.Value("idle_serf").Write(GetIdleSerf(pos));
+                            mapWriter.Value("height").Write(GetHeight(position));
+                            mapWriter.Value("type.up").Write((int)TypeUp(position));
+                            mapWriter.Value("type.down").Write((int)TypeDown(position));
+                            mapWriter.Value("paths").Write(Paths(position));
+                            mapWriter.Value("object").Write((int)GetObject(position));
+                            mapWriter.Value("serf").Write(GetSerfIndex(position));
+                            mapWriter.Value("idle_serf").Write(GetIdleSerf(position));
 
-                            if (IsInWater(pos))
+                            if (IsInWater(position))
                             {
                                 mapWriter.Value("resource.type").Write(0);
-                                mapWriter.Value("resource.amount").Write(GetResourceFish(pos));
+                                mapWriter.Value("resource.amount").Write(GetResourceFish(position));
                             }
                             else
                             {
-                                mapWriter.Value("resource.type").Write((int)GetResourceType(pos));
-                                mapWriter.Value("resource.amount").Write(GetResourceAmount(pos));
+                                mapWriter.Value("resource.type").Write((int)GetResourceType(position));
+                                mapWriter.Value("resource.amount").Write(GetResourceAmount(position));
                             }
                         }
                     }
@@ -2156,10 +2193,10 @@ namespace Freeserf
 
             uint y = val & RowMask;
 
-            return Pos(x, y);
+            return Position(x, y);
         }
 
-        /* Initialize spiral_pos_pattern from spiral_pattern. */
+        // Initialize spiral_pos_pattern from spiral_pattern. 
         void InitSpiralPosPattern()
         {
             for (int i = 0; i < 295; ++i)
@@ -2167,22 +2204,22 @@ namespace Freeserf
                 uint x = (uint)(SpiralPattern[2 * i] & (int)Geometry.ColumnMask);
                 uint y = (uint)(SpiralPattern[2 * i + 1] & (int)Geometry.RowMask);
 
-                spiralPosPattern[i] = Pos(x, y);
+                spiralPosPattern[i] = Position(x, y);
             }
         }
 
-        /* Update public parts of the map data. */
-        void UpdatePublic(MapPos pos, Random random)
+        // Update public parts of the map data. 
+        void UpdatePublic(MapPos position, Random random)
         {
-            /* Update other map objects */
-            int r;
+            // Update other map objects 
+            int randomValue;
 
-            switch (GetObject(pos))
+            switch (GetObject(position))
             {
                 case Object.Stub:
                     if ((random.Next() & 3) == 0)
                     {
-                        SetObject(pos, Object.None, -1);
+                        SetObject(position, Object.None, -1);
                     }
                     break;
                 case Object.FelledPine0:
@@ -2195,20 +2232,20 @@ namespace Freeserf
                 case Object.FelledTree2:
                 case Object.FelledTree3:
                 case Object.FelledTree4:
-                    SetObject(pos, Object.Stub, -1);
+                    SetObject(position, Object.Stub, -1);
                     break;
                 case Object.NewPine:
-                    r = random.Next();
-                    if ((r & 0x300) == 0)
+                    randomValue = random.Next();
+                    if ((randomValue & 0x300) == 0)
                     {
-                        SetObject(pos, Object.Pine0 + (r & 7), -1);
+                        SetObject(position, Object.Pine0 + (randomValue & 7), -1);
                     }
                     break;
                 case Object.NewTree:
-                    r = random.Next();
-                    if ((r & 0x300) == 0)
+                    randomValue = random.Next();
+                    if ((randomValue & 0x300) == 0)
                     {
-                        SetObject(pos, Object.Tree0 + (r & 7), -1);
+                        SetObject(position, Object.Tree0 + (randomValue & 7), -1);
                     }
                     break;
                 case Object.Seeds0:
@@ -2221,13 +2258,13 @@ namespace Freeserf
                 case Object.Field2:
                 case Object.Field3:
                 case Object.Field4:
-                    SetObject(pos, GetObject(pos) + 1, -1);
+                    SetObject(position, GetObject(position) + 1, -1);
                     break;
                 case Object.Seeds5:
-                    SetObject(pos, Object.Field0, -1);
+                    SetObject(position, Object.Field0, -1);
                     break;
                 case Object.FieldExpired:
-                    SetObject(pos, Object.None, -1);
+                    SetObject(position, Object.None, -1);
                     break;
                 case Object.SignLargeGold:
                 case Object.SignSmallGold:
@@ -2240,47 +2277,48 @@ namespace Freeserf
                 case Object.SignEmpty:
                     if (updateState.RemoveSignsCounter == 0)
                     {
-                        SetObject(pos, Object.None, -1);
+                        SetObject(position, Object.None, -1);
                     }
                     break;
                 case Object.Field5:
-                    SetObject(pos, Object.FieldExpired, -1);
+                    SetObject(position, Object.FieldExpired, -1);
                     break;
                 default:
                     break;
             }
         }
 
-        /* Update hidden parts of the map data. */
-        void UpdateHidden(MapPos pos, Random random)
+        // Update hidden parts of the map data. 
+        void UpdateHidden(MapPos position, Random random)
         {
-            /* Update fish resources in water */
-            if (IsInWater(pos) && landscapeTiles[(int)pos].ResourceAmount > 0)
+            // Update fish resources in water 
+            if (IsInWater(position) && landscapeTiles[(int)position].ResourceAmount > 0)
             {
-                int r = random.Next();
+                int randomValue = random.Next();
 
-                if (landscapeTiles[(int)pos].ResourceAmount < 10 && (r & 0x3f00) != 0)
+                if (landscapeTiles[(int)position].ResourceAmount < 10 && (randomValue & 0x3f00) != 0)
                 {
-                    /* Spawn more fish. */
-                    ++landscapeTiles[(int)pos].ResourceAmount;
+                    // Spawn more fish. 
+                    ++landscapeTiles[(int)position].ResourceAmount;
                 }
 
-                /* Move in a random direction of: right, down right, left, up left */
-                MapPos adjPos = pos;
-                switch ((r >> 2) & 3)
+                // Move in a random direction of: right, down right, left, up left 
+                var adjacentPosition = position;
+
+                switch ((randomValue >> 2) & 3)
                 {
-                    case 0: adjPos = MoveRight(adjPos); break;
-                    case 1: adjPos = MoveDownRight(adjPos); break;
-                    case 2: adjPos = MoveLeft(adjPos); break;
-                    case 3: adjPos = MoveUpLeft(adjPos); break;
+                    case 0: adjacentPosition = MoveRight(adjacentPosition); break;
+                    case 1: adjacentPosition = MoveDownRight(adjacentPosition); break;
+                    case 2: adjacentPosition = MoveLeft(adjacentPosition); break;
+                    case 3: adjacentPosition = MoveUpLeft(adjacentPosition); break;
                     default: Debug.NotReached(); break;
                 }
 
-                if (IsInWater(adjPos))
+                if (IsInWater(adjacentPosition))
                 {
-                    /* Migrate a fish to adjacent water space. */
-                    --landscapeTiles[(int)pos].ResourceAmount;
-                    ++landscapeTiles[(int)adjPos].ResourceAmount;
+                    // Migrate a fish to adjacent water space. 
+                    --landscapeTiles[(int)position].ResourceAmount;
+                    ++landscapeTiles[(int)adjacentPosition].ResourceAmount;
                 }
             }
         }
@@ -2305,14 +2343,14 @@ namespace Freeserf
                 return false;
 
             // Check all tiles
-            foreach (MapPos pos in self.Geometry)
+            foreach (var position in self.Geometry)
             {
-                if (self.landscapeTiles[(int)pos] != other.landscapeTiles[(int)pos])
+                if (self.landscapeTiles[(int)position] != other.landscapeTiles[(int)position])
                 {
                     return false;
                 }
 
-                if (self.gameTiles[(int)pos] != other.gameTiles[(int)pos])
+                if (self.gameTiles[(int)position] != other.gameTiles[(int)position])
                 {
                     return false;
                 }

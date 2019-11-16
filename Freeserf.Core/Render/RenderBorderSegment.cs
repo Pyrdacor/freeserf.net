@@ -8,25 +8,26 @@ namespace Freeserf.Render
 
     internal class RenderBorderSegment : RenderObject
     {
-        Map map = null;
-        MapPos pos = Global.BadMapPos;
-        Direction dir = Direction.None;
+        readonly Map map = null;
+        readonly MapPos position = Constants.INVALID_MAPPOS;
+        readonly Direction direction = Direction.None;
         int offsetX = 0;
         int offsetY = 0;
         int spriteIndex = 0;
-        DataSource dataSource = null;
+        readonly DataSource dataSource = null;
 
-        public static long CreateIndex(MapPos pos, Direction dir)
+        public static long CreateIndex(MapPos position, Direction direction)
         {
-            return (((long)dir) << 32) | pos;
+            return (((long)direction) << 32) | position;
         }
 
-        public RenderBorderSegment(Map map, MapPos pos, Direction dir, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
+        public RenderBorderSegment(Map map, MapPos position, Direction direction,
+            IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
         {
             this.map = map;
-            this.pos = pos;
-            this.dir = dir;
+            this.position = position;
+            this.direction = direction;
             this.dataSource = dataSource;
 
             Initialize();
@@ -45,45 +46,45 @@ namespace Freeserf.Render
         // also used on initialization
         internal void UpdateAppearance()
         {
-            int h1 = (int)map.GetHeight(pos);
-            int h2 = (int)map.GetHeight(map.Move(pos, dir));
-            int hDiff = h2 - h1;
+            int height1 = (int)map.GetHeight(position);
+            int height2 = (int)map.GetHeight(map.Move(position, direction));
+            int heightDifference = height2 - height1;
 
-            Map.Terrain t1 = Map.Terrain.Water0;
-            Map.Terrain t2 = Map.Terrain.Water0;
-            int h3 = 0, h4 = 0, hDiff2 = 0;
+            Map.Terrain terrain1 = Map.Terrain.Water0;
+            Map.Terrain terrain2 = Map.Terrain.Water0;
+            int height3, height4, heightDifference2 = 0;
 
             offsetX = 0;
-            offsetY = 4 * h1;
+            offsetY = 4 * height1;
 
-            switch (dir)
+            switch (direction)
             {
                 case Direction.Right:
                     offsetX += RenderMap.TILE_WIDTH / 2;
-                    offsetY -= 2 * (h1 + h2) + 4;
-                    t1 = map.TypeDown(pos);
-                    t2 = map.TypeUp(map.MoveUp(pos));
-                    h3 = (int)map.GetHeight(map.MoveUp(pos));
-                    h4 = (int)map.GetHeight(map.MoveDownRight(pos));
-                    hDiff2 = h3 - h4 - 4 * hDiff;
+                    offsetY -= 2 * (height1 + height2) + 4;
+                    terrain1 = map.TypeDown(position);
+                    terrain2 = map.TypeUp(map.MoveUp(position));
+                    height3 = (int)map.GetHeight(map.MoveUp(position));
+                    height4 = (int)map.GetHeight(map.MoveDownRight(position));
+                    heightDifference2 = height3 - height4 - 4 * heightDifference;
                     break;
                 case Direction.DownRight:
                     offsetX += RenderMap.TILE_WIDTH / 4;
-                    offsetY -= 2 * (h1 + h2) - 6;
-                    t1 = map.TypeUp(pos);
-                    t2 = map.TypeDown(pos);
-                    h3 = (int)map.GetHeight(map.MoveRight(pos));
-                    h4 = (int)map.GetHeight(map.MoveDown(pos));
-                    hDiff2 = 2 * (h3 - h4);
+                    offsetY -= 2 * (height1 + height2) - 6;
+                    terrain1 = map.TypeUp(position);
+                    terrain2 = map.TypeDown(position);
+                    height3 = (int)map.GetHeight(map.MoveRight(position));
+                    height4 = (int)map.GetHeight(map.MoveDown(position));
+                    heightDifference2 = 2 * (height3 - height4);
                     break;
                 case Direction.Down:
                     offsetX -= RenderMap.TILE_WIDTH / 4;
-                    offsetY -= 2 * (h1 + h2) - 6;
-                    t1 = map.TypeUp(pos);
-                    t2 = map.TypeDown(map.MoveLeft(pos));
-                    h3 = (int)map.GetHeight(map.MoveLeft(pos));
-                    h4 = (int)map.GetHeight(map.MoveDown(pos));
-                    hDiff2 = 4 * hDiff - h3 + h4;
+                    offsetY -= 2 * (height1 + height2) - 6;
+                    terrain1 = map.TypeUp(position);
+                    terrain2 = map.TypeDown(map.MoveLeft(position));
+                    height3 = (int)map.GetHeight(map.MoveLeft(position));
+                    height4 = (int)map.GetHeight(map.MoveDown(position));
+                    heightDifference2 = 4 * heightDifference - height3 + height4;
                     break;
                 default:
                     Debug.NotReached();
@@ -91,13 +92,13 @@ namespace Freeserf.Render
             }
 
             spriteIndex = 0;
-            Map.Terrain type = (Map.Terrain)Math.Max((int)t1, (int)t2);
+            var type = (Map.Terrain)Math.Max((int)terrain1, (int)terrain2);
 
-            if (hDiff2 > 1)
+            if (heightDifference2 > 1)
             {
                 spriteIndex = 0;
             }
-            else if (hDiff2 > -9)
+            else if (heightDifference2 > -9)
             {
                 spriteIndex = 1;
             }
@@ -108,7 +109,7 @@ namespace Freeserf.Render
 
             if (type <= Map.Terrain.Water3)
             {
-                spriteIndex = 9; /* Bouy */
+                spriteIndex = 9; // Bouy 
             }
             else if (type >= Map.Terrain.Snow0)
             {
@@ -128,7 +129,7 @@ namespace Freeserf.Render
 
         public void Update(RenderMap map)
         {
-            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(pos);
+            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(position);
 
             sprite.X = renderPosition.X + offsetX;
             sprite.Y = renderPosition.Y + offsetY;

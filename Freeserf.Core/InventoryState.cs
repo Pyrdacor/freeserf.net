@@ -142,7 +142,7 @@ namespace Freeserf
             set => ResourceDirection = (byte)((ResourceDirection & 0xF3) | ((byte)value << 2));
         }
 
-        public bool HaveAnyOutMode()
+        public bool HasAnyOutMode()
         {
             return (ResourceDirection & 0x0A) != 0;
         }

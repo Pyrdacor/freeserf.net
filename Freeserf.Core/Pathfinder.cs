@@ -34,8 +34,8 @@ namespace Freeserf
         public SearchNode Parent;
         public uint GScore;
         public uint FScore;
-        public MapPos Pos;
-        public Direction Dir;
+        public MapPos Position;
+        public Direction Direction;
     }
 
     class FlagSearchNode
@@ -44,15 +44,15 @@ namespace Freeserf
         public uint GScore;
         public uint FScore;
         public Flag Flag;
-        public Direction Dir;
+        public Direction Direction;
     }
 
     class SimpleSearchNode
     {
         public SimpleSearchNode Parent;
-        public uint Dist;
+        public uint Distance;
         public uint Cost;
-        public MapPos Pos;
+        public MapPos Position;
     }
 
     class PriorityQueue<T> : IEnumerable<T> where T : class
@@ -176,21 +176,22 @@ namespace Freeserf
         {
             public int Compare(SimpleSearchNode left, SimpleSearchNode right)
             {
-                return (right.Dist + right.Cost).CompareTo(left.Dist + left.Cost);
+                return (right.Distance + right.Cost).CompareTo(left.Distance + left.Cost);
             }
         }
 
-        public static MapPos FindNearestSpot(Map map, MapPos start, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, uint> costFunction = null, int maxDist = int.MaxValue)
+        public static MapPos FindNearestSpot(Map map, MapPos start, Func<Map, MapPos, bool> searchFunc,
+            Func<Map, MapPos, uint> costFunction = null, int maxDistance = int.MaxValue)
         {
-            DateTime startTime = DateTime.Now;
-            PriorityQueue<SimpleSearchNode> open = new PriorityQueue<SimpleSearchNode>(new SimpleSearchNodeComparer());
-            List<MapPos> visited = new List<MapPos>();
+            var startTime = DateTime.Now;
+            var open = new PriorityQueue<SimpleSearchNode>(new SimpleSearchNodeComparer());
+            var visited = new List<MapPos>();
 
-            /* Create start node */
-            SimpleSearchNode node = new SimpleSearchNode()
+            // Create start node 
+            var node = new SimpleSearchNode()
             {
-                Pos = start,
-                Dist = 0,
+                Position = start,
+                Distance = 0,
             };
 
             open.Push(node);
@@ -198,28 +199,28 @@ namespace Freeserf
             while (open.Count != 0)
             {
                 if ((DateTime.Now - startTime).TotalMilliseconds > 2 * Global.TICK_LENGTH)
-                    return Global.BadMapPos; // tried too long
+                    return Constants.INVALID_MAPPOS; // tried too long
 
                 node = open.Pop();
 
-                if (searchFunc(map, node.Pos))
-                    return node.Pos;
+                if (searchFunc(map, node.Position))
+                    return node.Position;
 
-                /* Put current node on closed list. */
-                visited.Insert(0, node.Pos);
+                // Put current node on closed list. 
+                visited.Insert(0, node.Position);
 
-                if (node.Dist >= maxDist)
+                if (node.Distance >= maxDistance)
                     continue;
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
-                    MapPos newPos = map.Move(node.Pos, d);
-                    uint dist = node.Dist + 1;
+                    var newPosition = map.Move(node.Position, direction);
+                    var distance = node.Distance + 1;
 
                     // Check if neighbour was already visited.
-                    if (visited.Contains(newPos))
+                    if (visited.Contains(newPosition))
                         continue;
 
                     // See if neighbour is already in open list.
@@ -227,13 +228,13 @@ namespace Freeserf
 
                     foreach (var n in open)
                     {
-                        if (n.Pos == newPos)
+                        if (n.Position == newPosition)
                         {
                             inOpen = true;
 
-                            if (n.Dist > dist)
+                            if (n.Distance > distance)
                             {
-                                n.Dist = dist;
+                                n.Distance = distance;
                                 n.Parent = node;
 
                                 // Move element to the back and heapify
@@ -247,19 +248,19 @@ namespace Freeserf
                     // If not found in the open set, create a new node.
                     if (!inOpen)
                     {
-                        SimpleSearchNode newNode = new SimpleSearchNode();
+                        var newNode = new SimpleSearchNode();
 
-                        newNode.Pos = newPos;
-                        newNode.Dist = dist;
+                        newNode.Position = newPosition;
+                        newNode.Distance = distance;
                         newNode.Parent = node;
-                        newNode.Cost = (costFunction == null) ? 0u : costFunction(map, newPos);
+                        newNode.Cost = (costFunction == null) ? 0u : costFunction(map, newPosition);
 
                         open.Push(newNode);
                     }
                 }
             }
 
-            return Global.BadMapPos;
+            return Constants.INVALID_MAPPOS;
         }
 
         /// <summary>
@@ -278,15 +279,15 @@ namespace Freeserf
             if (maxLength < 1)
                 return new Road();
 
-            DateTime startTime = DateTime.Now;
-            PriorityQueue<SearchNode> open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
-            Dictionary<MapPos, SearchNode> closed = new Dictionary<MapPos, SearchNode>();
-            uint maxCost = (uint)maxLength * 511u; // 511 is the max road segment cost
+            var startTime = DateTime.Now;
+            var open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
+            var closed = new Dictionary<MapPos, SearchNode>();
+            var maxCost = (uint)maxLength * 511u; // 511 is the max road segment cost
 
-            /* Create start node */
-            SearchNode node = new SearchNode()
+            // Create start node 
+            var node = new SearchNode()
             {
-                Pos = end,
+                Position = end,
                 GScore = 0,
                 FScore = HeuristicCost(map, start, end)
             };
@@ -300,69 +301,69 @@ namespace Freeserf
 
                 node = open.Pop();
 
-                if (node.Pos == start)
+                if (node.Position == start)
                 {
-                    /* Construct solution */
-                    Road solution = new Road();
+                    // Construct solution 
+                    var solution = new Road();
                     solution.Start(start);
 
                     solution.Cost = node.GScore;
 
                     while (node.Parent != null)
                     {
-                        Direction dir = node.Dir;
-                        solution.Extend(dir.Reverse());
+                        var direction = node.Direction;
+                        solution.Extend(direction.Reverse());
                         node = node.Parent;
                     }
 
                     return solution;
                 }
 
-                /* Put current node on closed list. */
-                closed.Add(node.Pos, node);
+                // Put current node on closed list. 
+                closed.Add(node.Position, node);
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
-                    MapPos newPos = map.Move(node.Pos, d);
-                    uint cost = ActualCost(map, node.Pos, d);
+                    var newPosition = map.Move(node.Position, direction);
+                    var cost = ActualCost(map, node.Position, direction);
 
                     if (node.GScore + cost > maxCost)
                         continue; // exceeded max length / max cost
 
-                    /* Check if neighbour is valid. */
-                    if (!map.IsRoadSegmentValid(node.Pos, d, endThere && node.Pos == end) ||
-                        (map.GetObject(newPos) == Map.Object.Flag && newPos != start))
+                    // Check if neighbour is valid. 
+                    if (!map.IsRoadSegmentValid(node.Position, direction, endThere && node.Position == end) ||
+                        (map.GetObject(newPosition) == Map.Object.Flag && newPosition != start))
                     {
                         continue;
                     }
 
-                    if (buildingRoad != null && buildingRoad.HasPos(map, newPos) &&
-                        newPos != end && newPos != start)
+                    if (buildingRoad != null && buildingRoad.HasPos(map, newPosition) &&
+                        newPosition != end && newPosition != start)
                     {
                         continue;
                     }
 
-                    /* Check if neighbour is in closed list. */
-                    if (closed.ContainsKey(newPos))
+                    // Check if neighbour is in closed list. 
+                    if (closed.ContainsKey(newPosition))
                         continue;
 
-                    /* See if neighbour is already in open list. */
+                    // See if neighbour is already in open list. 
                     bool inOpen = false;
                     
                     foreach (var n in open)
                     {
-                        if (n.Pos == newPos)
+                        if (n.Position == newPosition)
                         {
                             inOpen = true;
 
                             if (n.GScore > node.GScore + cost)
                             {
                                 n.GScore = node.GScore + cost;
-                                n.FScore = n.GScore + HeuristicCost(map, newPos, start);
+                                n.FScore = n.GScore + HeuristicCost(map, newPosition, start);
                                 n.Parent = node;
-                                n.Dir = d;
+                                n.Direction = direction;
 
                                 // Move element to the back and heapify
                                 open.Push(open.Pop());
@@ -372,16 +373,16 @@ namespace Freeserf
                         }
                     }
 
-                    /* If not found in the open set, create a new node. */
+                    // If not found in the open set, create a new node. 
                     if (!inOpen)
                     {
-                        SearchNode newNode = new SearchNode();
+                        var newNode = new SearchNode();
 
-                        newNode.Pos = newPos;
+                        newNode.Position = newPosition;
                         newNode.GScore = node.GScore + cost;
-                        newNode.FScore = newNode.GScore + HeuristicCost(map, newPos, start);
+                        newNode.FScore = newNode.GScore + HeuristicCost(map, newPosition, start);
                         newNode.Parent = node;
-                        newNode.Dir = d;
+                        newNode.Direction = direction;
 
                         open.Push(newNode);
                     }
@@ -411,12 +412,12 @@ namespace Freeserf
             }
 
             totalCost = uint.MaxValue;
-            DateTime startTime = DateTime.Now;
-            PriorityQueue<FlagSearchNode> open = new PriorityQueue<FlagSearchNode>(new FlagSearchNodeComparer());
-            Dictionary<Flag, FlagSearchNode> closed = new Dictionary<Flag, FlagSearchNode>();
+            var startTime = DateTime.Now;
+            var open = new PriorityQueue<FlagSearchNode>(new FlagSearchNodeComparer());
+            var closed = new Dictionary<Flag, FlagSearchNode>();
 
-            /* Create start node */
-            FlagSearchNode node = new FlagSearchNode()
+            // Create start node 
+            var node = new FlagSearchNode()
             {
                 Flag = end,
                 GScore = 0,
@@ -434,31 +435,31 @@ namespace Freeserf
 
                 if (node.Flag == start)
                 {
-                    /* Construct solution */
-                    List<Direction> solution = new List<Direction>();
+                    // Construct solution 
+                    var solution = new List<Direction>();
 
                     totalCost = node.GScore;
 
                     while (node.Parent != null)
                     {
-                        solution.Add(node.Dir.Reverse());
+                        solution.Add(node.Direction.Reverse());
                         node = node.Parent;
                     }
 
                     return solution;
                 }
 
-                /* Put current node on closed list. */
+                // Put current node on closed list. 
                 closed.Add(node.Flag, node);
 
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
-                    var newRoad = node.Flag.GetRoad(d);
-                    var newFlag = node.Flag.GetOtherEndFlag(d);
+                    var newRoad = node.Flag.GetRoad(direction);
+                    var newFlag = node.Flag.GetOtherEndFlag(direction);
 
-                    /* Check if neighbour is valid. */
+                    // Check if neighbour is valid. 
                     if (newFlag == null || newRoad == null)
                     {
                         continue;
@@ -466,11 +467,11 @@ namespace Freeserf
                     
                     uint cost = newRoad.Cost;
 
-                    /* Check if neighbour is in closed list. */
+                    // Check if neighbour is in closed list. 
                     if (closed.ContainsKey(newFlag))
                         continue;
 
-                    /* See if neighbour is already in open list. */
+                    // See if neighbour is already in open list. 
                     bool inOpen = false;
 
                     foreach (var n in open)
@@ -484,7 +485,7 @@ namespace Freeserf
                                 n.GScore = node.GScore + cost;
                                 n.FScore = n.GScore + HeuristicCost(map, newFlag, start);
                                 n.Parent = node;
-                                n.Dir = d;
+                                n.Direction = direction;
 
                                 // Move element to the back and heapify
                                 open.Push(open.Pop());
@@ -494,16 +495,16 @@ namespace Freeserf
                         }
                     }
 
-                    /* If not found in the open set, create a new node. */
+                    // If not found in the open set, create a new node. 
                     if (!inOpen)
                     {
-                        FlagSearchNode newNode = new FlagSearchNode();
+                        var newNode = new FlagSearchNode();
 
                         newNode.Flag = newFlag;
                         newNode.GScore = node.GScore + cost;
                         newNode.FScore = newNode.GScore + HeuristicCost(map, newFlag, start);
                         newNode.Parent = node;
-                        newNode.Dir = d;
+                        newNode.Direction = direction;
 
                         open.Push(newNode);
                     }
@@ -520,26 +521,25 @@ namespace Freeserf
 
         static uint HeuristicCost(Map map, MapPos start, MapPos end)
         {
-            /* Calculate distance to target. */
-            int hDiff = Math.Abs((int)map.GetHeight(start) - (int)map.GetHeight(end));
-            int dist = map.Dist(start, end);
+            // Calculate distance to target. 
+            int heightDifference = Math.Abs((int)map.GetHeight(start) - (int)map.GetHeight(end));
+            int distance = map.Distance(start, end);
 
-            return (dist > 0) ? (uint)dist * walkCost[hDiff / dist] : 0u;
+            return (distance > 0) ? (uint)distance * walkCost[heightDifference / distance] : 0u;
         }
 
-        internal static uint ActualCost(Map map, MapPos pos, Direction dir)
+        internal static uint ActualCost(Map map, MapPos position, Direction direction)
         {
-            MapPos otherPos = map.Move(pos, dir);
+            var otherPosition = map.Move(position, direction);
+            int heightDifference = Math.Abs((int)map.GetHeight(position) - (int)map.GetHeight(otherPosition));
 
-            int hDiff = Math.Abs((int)map.GetHeight(pos) - (int)map.GetHeight(otherPos));
-
-            return walkCost[hDiff];
+            return walkCost[heightDifference];
         }
 
         static uint HeuristicCost(Map map, Flag start, Flag end)
         {
-            /* Calculate distance to target. */
-            return (uint)map.Dist(start.Position, end.Position);
+            // Calculate distance to target. 
+            return (uint)map.Distance(start.Position, end.Position);
         }
     }
 }

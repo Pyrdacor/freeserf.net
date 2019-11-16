@@ -19,11 +19,13 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using Freeserf.Data;
 
 namespace Freeserf.Render
 {
     using Data = Data.Data;
+    using MapPos = UInt32;
 
     internal class RenderFlag : RenderObject
     {
@@ -113,7 +115,7 @@ namespace Freeserf.Render
             }
         }
 
-        public void Update(uint tick, RenderMap map, uint pos)
+        public void Update(uint tick, RenderMap map, MapPos position)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
             uint offset = (tick >> 3) & 3;
@@ -121,7 +123,7 @@ namespace Freeserf.Render
 
             uint flagSpriteIndex = spriteIndex + flag.GetOwner() * 16u; // player colors
 
-            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(pos);
+            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(position);
 
             sprite.X = renderPosition.X + spriteOffsets[(int)offset].X;
             sprite.Y = renderPosition.Y + spriteOffsets[(int)offset].Y;

@@ -33,7 +33,7 @@ namespace Freeserf
         {
             try
             {
-                ConfigFile configFile = new ConfigFile();
+                var configFile = new ConfigFile();
 
                 if (!configFile.Load(filename))
                 {
@@ -77,8 +77,7 @@ namespace Freeserf
         {
             try
             {
-                ConfigFile configFile = new ConfigFile();
-
+                var configFile = new ConfigFile();
 
                 // Game
                 configFile.SetValue("game", "options", Game.Options);

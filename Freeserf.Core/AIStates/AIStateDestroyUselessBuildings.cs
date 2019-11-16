@@ -19,10 +19,13 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Linq;
 
 namespace Freeserf.AIStates
 {
+    using MapPos = UInt32;
+
     // Removes stonecutters or mines that can no longer quarry resources.
     // For mines this is called directly with a specific building index.
     // Otherwise it is a cyclic check and we check all stonecutters.
@@ -84,11 +87,11 @@ namespace Freeserf.AIStates
             Kill(ai);
         }
 
-        static Map.FindData FindStone(Map map, uint pos)
+        static Map.FindData FindStone(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(pos) >= Map.Object.Stone0 && map.GetObject(pos) <= Map.Object.Stone7
+                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7
             };
         }
     }

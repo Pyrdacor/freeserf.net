@@ -90,7 +90,7 @@ namespace Freeserf
             settings.KnightOccupation[3] = 0x43;
 
             settings.SerfToKnightRate = 20000;
-            state.SerfToKnightCounter = 0x8000; /* Overflow is important */
+            state.SerfToKnightCounter = 0x8000; // Overflow is important 
         }
 
         // Used for multiplayer games to see if an update is necessary.
@@ -155,8 +155,8 @@ namespace Freeserf
             if (state.HasCastle)
             {
                 info.CastlePosition = new PlayerInfo.Position(
-                    (int)Game.Map.PosColumn(state.CastlePosition),
-                    (int)Game.Map.PosRow(state.CastlePosition)
+                    (int)Game.Map.PositionColumn(state.CastlePosition),
+                    (int)Game.Map.PositionRow(state.CastlePosition)
                 );
             }
 
@@ -244,7 +244,7 @@ namespace Freeserf
         {
             notificationFlag = true;
 
-            Notification notification = new Notification();
+            var notification = new Notification();
             notification.NotificationType = type;
             notification.Position = position;
             notification.Data = data;
@@ -260,9 +260,9 @@ namespace Freeserf
             return notifications.Any(m => m.NotificationType == type);
         }
 
-        public void ResetUnderAttackNotificationTime(MapPos pos)
+        public void ResetUnderAttackNotificationTime(MapPos position)
         {
-            lastUnderAttackNotificationTimes[pos] = Game.GameTime;
+            lastUnderAttackNotificationTimes[position] = Game.GameTime;
         }
 
         public GameTime GetMostRecentUnderAttackNotificationTime(uint position = Constants.INVALID_MAPPOS)
@@ -514,7 +514,7 @@ namespace Freeserf
 
         public uint GoldDeposited => state.GoldDeposited;
 
-        /* Turn a number of serfs into knight for the given player. */
+        // Turn a number of serfs into knight for the given player. 
         public int PromoteSerfsToKnights(int number)
 		{
             if (number <= 0)
@@ -522,12 +522,12 @@ namespace Freeserf
 
             int promoted = 0;
 
-            foreach (Serf serf in Game.GetPlayerSerfs(this))
+            foreach (var serf in Game.GetPlayerSerfs(this))
             {
                 if (serf.SerfState == Serf.State.IdleInStock &&
                     serf.GetSerfType() == Serf.Type.Generic)
                 {
-                    Inventory inventory = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
+                    var inventory = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
 
                     if (inventory.PromoteSerfToKnight(serf))
                     {
@@ -544,7 +544,7 @@ namespace Freeserf
 
         public int KnightsAvailableForAttack(MapPos position)
 		{
-            /* Reset counters. */
+            // Reset counters. 
             for (int i = 0; i < 4; ++i)
             {
                 attackingKnights[i] = 0;
@@ -553,7 +553,7 @@ namespace Freeserf
             int count = 0;
             var map = Game.Map;
 
-            /* Iterate each shell around the position.*/
+            // Iterate each shell around the position.
             for (int i = 0; i < 32; ++i)
             {
                 position = map.MoveRight(position);
@@ -607,7 +607,7 @@ namespace Freeserf
 
         public bool PrepareAttack(uint targetPosition, int maxKnights = -1)
         {
-            Building building = Game.GetBuildingAtPos(targetPosition);
+            var building = Game.GetBuildingAtPos(targetPosition);
 
             buildingAttacked = (int)building.Index;
 
@@ -628,9 +628,9 @@ namespace Freeserf
 
                 for (int i = 257; i >= 0; --i)
                 {
-                    MapPos pos = map.PosAddSpirally(building.Position, (uint)(7 + 257 - i));
+                    var position = map.PositionAddSpirally(building.Position, (uint)(7 + 257 - i));
 
-                    if (map.HasOwner(pos) && map.GetOwner(pos) == Index)
+                    if (map.HasOwner(position) && map.GetOwner(position) == Index)
                     {
                         found = true;
                         break;
@@ -665,7 +665,7 @@ namespace Freeserf
 
         public void StartAttack()
 		{
-            Building target = Game.GetBuilding((uint)buildingAttacked);
+            var target = Game.GetBuilding((uint)buildingAttacked);
 
             if (!target.IsDone()   || !target.IsMilitary() ||
                 !target.IsActive() || target.GetThreatLevel() != 3)
@@ -673,23 +673,23 @@ namespace Freeserf
                 return;
             }
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             for (int i = 0; i < attackingBuildingCount; i++)
             {
-                Building building = Game.GetBuilding(attackingBuildings[i]);
+                var building = Game.GetBuilding(attackingBuildings[i]);
 
                 if (building == null || building.IsBurning() || map.GetOwner(building.Position) != Index)
                 {
                     continue;
                 }
 
-                MapPos flagPos = map.MoveDownRight(building.Position);
+                var flagPosition = map.MoveDownRight(building.Position);
 
-                if (map.HasSerf(flagPos))
+                if (map.HasSerf(flagPosition))
                 {
-                    /* Check if building is under siege. */
-                    Serf serf = Game.GetSerfAtPos(flagPos);
+                    // Check if building is under siege. 
+                    var serf = Game.GetSerfAtPos(flagPosition);
 
                     if (serf.Player != Index)
                         continue;
@@ -713,13 +713,12 @@ namespace Freeserf
                 {
                     // Find most appropriate knight to send according to player settings.
                     var bestType = SendStrongest ? Serf.Type.Knight0 : Serf.Type.Knight4;
-                    uint bestIndex = 0;
-
-                    uint knightIndex = building.GetFirstKnight();
+                    var knightIndex = building.GetFirstKnight();
+                    uint bestIndex = 0;                    
 
                     while (knightIndex != 0)
                     {
-                        Serf knight = Game.GetSerf(knightIndex);
+                        var knight = Game.GetSerf(knightIndex);
 
                         if (SendStrongest)
                         {
@@ -741,16 +740,16 @@ namespace Freeserf
                         knightIndex = knight.GetNextKnight();
                     }
 
-                    Serf defSerf = building.CallAttackerOut(bestIndex);
+                    var defendingSerf = building.CallAttackerOut(bestIndex);
 
                     target.SetUnderAttack();
 
-                    /* Calculate distance to target. */
-                    int distColumn = map.DistX(defSerf.Position, target.Position);
-                    int distRow = map.DistY(defSerf.Position, target.Position);
+                    // Calculate distance to target. 
+                    int distanceColumn = map.DistanceX(defendingSerf.Position, target.Position);
+                    int distanceRow = map.DistanceY(defendingSerf.Position, target.Position);
 
-                    /* Send this serf off to fight. */
-                    defSerf.SendOffToFight(distColumn, distRow);
+                    // Send this serf off to fight. 
+                    defendingSerf.SendOffToFight(distanceColumn, distanceRow);
 
                     if (--knightsAttacking == 0)
                         return;
@@ -776,8 +775,8 @@ namespace Freeserf
         public void CreateInitialCastleSerfs(Building castle)
 		{
             // Spawn castle transporter serf
-            Inventory inventory = castle.GetInventory();
-            Serf serf = inventory.SpawnSerfGeneric();
+            var inventory = castle.GetInventory();
+            var serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
             {
@@ -789,7 +788,7 @@ namespace Freeserf
 
             Game.Map.SetSerfIndex(serf.Position, (int)serf.Index);
 
-            Building building = Game.GetBuilding((uint)this.selectedBuildingIndex);
+            var building = Game.GetBuilding((uint)this.selectedBuildingIndex);
 
             // Spawn 3 generic serfs
             for (int i = 0; i < 5; i++)
@@ -890,7 +889,7 @@ namespace Freeserf
 
         public Serf SpawnSerfGeneric()
 		{
-            Serf serf = Game.CreateSerf();
+            var serf = Game.CreateSerf();
 
             if (serf == null)
                 return null;
@@ -902,8 +901,15 @@ namespace Freeserf
             return serf;
         }
 
-        /* Spawn new serf.
-           The serf object and inventory are returned if non-NULL. */
+        /// <summary>
+        /// Spawn new serf.
+        /// 
+        /// The serf object and inventory are returned if non-null.
+        /// </summary>
+        /// <param name="serf"></param>
+        /// <param name="inventory"></param>
+        /// <param name="wantKnight"></param>
+        /// <returns></returns>
         public bool SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
 		{
             if (!CanSpawn)
@@ -916,30 +922,30 @@ namespace Freeserf
                 return false;
             }
 
-            Inventory inv = null;
+            Inventory spawnInventory = null;
 
-            foreach (Inventory loopInv in inventories)
+            foreach (var loopInventory in inventories)
             {
-                if (loopInv.SerfMode == Inventory.Mode.In)
+                if (loopInventory.SerfMode == Inventory.Mode.In)
                 {
-                    if (wantKnight && (loopInv.GetCountOf(Resource.Type.Sword) == 0 ||
-                                       loopInv.GetCountOf(Resource.Type.Shield) == 0))
+                    if (wantKnight && (loopInventory.GetCountOf(Resource.Type.Sword) == 0 ||
+                                       loopInventory.GetCountOf(Resource.Type.Shield) == 0))
                     {
                         continue;
                     }
-                    else if (loopInv.FreeSerfCount() == 0)
+                    else if (loopInventory.FreeSerfCount() == 0)
                     {
-                        inv = loopInv;
+                        spawnInventory = loopInventory;
                         break;
                     }
-                    else if (inv == null || loopInv.FreeSerfCount() < inv.FreeSerfCount())
+                    else if (spawnInventory == null || loopInventory.FreeSerfCount() < spawnInventory.FreeSerfCount())
                     {
-                        inv = loopInv;
+                        spawnInventory = loopInventory;
                     }
                 }
             }
 
-            if (inv == null)
+            if (spawnInventory == null)
             {
                 if (wantKnight)
                 {
@@ -951,18 +957,18 @@ namespace Freeserf
                 }
             }
 
-            Serf s = inv.SpawnSerfGeneric();
+            var spawnedSerf = spawnInventory.SpawnSerfGeneric();
 
-            if (s == null)
+            if (spawnedSerf == null)
             {
                 return false;
             }
 
             if (serf != null)
-                serf.Value = s;
+                serf.Value = spawnedSerf;
 
             if (inventory != null)
-                inventory.Value = inv;
+                inventory.Value = spawnInventory;
 
             return true;
         }
@@ -1067,7 +1073,7 @@ namespace Freeserf
 
         public void BuildingBuilt(Building building)
 		{
-            Building.Type type = building.BuildingType;
+            var type = building.BuildingType;
 
             state.TotalBuildingScore += Building.BuildingGetScoreFromType(type);
             ++state.CompletedBuildingCount[(int)type];
@@ -1076,9 +1082,9 @@ namespace Freeserf
 
         public void BuildingCaptured(Building building)
 		{
-            Player defPlayer = Game.GetPlayer(building.Player);
+            var defendingPlayer = Game.GetPlayer(building.Player);
 
-            defPlayer.AddNotification(Notification.Type.LoseFight, building.Position, Index);
+            defendingPlayer.AddNotification(Notification.Type.LoseFight, building.Position, Index);
             AddNotification(Notification.Type.WinFight, building.Position, Index);
 
             if (building.BuildingType == Building.Type.Castle)
@@ -1090,9 +1096,9 @@ namespace Freeserf
                 var buildingType = building.BuildingType;
 
                 // Update player scores.
-                defPlayer.state.TotalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
-                defPlayer.state.TotalLandArea -= 7;
-                --defPlayer.state.CompletedBuildingCount[(int)buildingType];
+                defendingPlayer.state.TotalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
+                defendingPlayer.state.TotalLandArea -= 7;
+                --defendingPlayer.state.CompletedBuildingCount[(int)buildingType];
 
                 state.TotalBuildingScore += Building.BuildingGetScoreFromType(buildingType);
                 state.TotalLandArea += 7;
@@ -1278,7 +1284,7 @@ namespace Freeserf
                     if (timers[i].Timeout < 0)
                     {
                         // Timer has expired.
-                        // TODO box (+ pos) timer
+                        // TODO box (+ position) timer
                         AddNotification(Notification.Type.CallToLocation, timers[i].Position, 0);
                         timersToErase.Add(i);
                     }
@@ -1306,9 +1312,9 @@ namespace Freeserf
                 var sawmills = Game.GetPlayerBuildings(this, Building.Type.Sawmill);
 
                 // Check if all resources are delivered to the construction sites
-                if (lumberjacks.Any(l => l.IsDone() || l.HasAllConstructionMaterialsAtLocation()) &&
-                    stonecutters.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()) &&
-                    sawmills.Any(s => s.IsDone() || s.HasAllConstructionMaterialsAtLocation()))
+                if (lumberjacks.Any(lumberjack => lumberjack.IsDone() || lumberjack.HasAllConstructionMaterialsAtLocation()) &&
+                    stonecutters.Any(stonecutter => stonecutter.IsDone() || stonecutter.HasAllConstructionMaterialsAtLocation()) &&
+                    sawmills.Any(sawmill => sawmill.IsDone() || sawmill.HasAllConstructionMaterialsAtLocation()))
                 {
                     EmergencyProgramActive = false;
                     return;
@@ -1392,13 +1398,13 @@ namespace Freeserf
             uint militaryGold = 0;
 
             // Sum gold collected in inventories
-            foreach (Inventory inventory in Game.GetPlayerInventories(this))
+            foreach (var inventory in Game.GetPlayerInventories(this))
             {
                 inventoryGold += inventory.GetCountOf(Resource.Type.GoldBar);
             }
 
             // Sum gold deposited in military buildings
-            foreach (Building building in Game.GetPlayerBuildings(this))
+            foreach (var building in Game.GetPlayerBuildings(this))
             {
                 militaryGold += building.MilitaryGoldCount();
             }
@@ -1503,7 +1509,7 @@ namespace Freeserf
 
         public ResourceMap GetStatsResources()
         {
-            ResourceMap resources = new ResourceMap();
+            var resources = new ResourceMap();
 
             for (int j = 0; j < 26; ++j)
             {
@@ -1516,13 +1522,13 @@ namespace Freeserf
 
         public SerfMap GetStatsSerfsIdle()
         {
-            SerfMap serfs = new SerfMap();
+            var serfs = new SerfMap();
 
             foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
                 serfs.Add(type, 0);
 
             // Sum up all existing serfs.
-            foreach (Serf serf in Game.GetPlayerSerfs(this))
+            foreach (var serf in Game.GetPlayerSerfs(this))
             {
                 if (serf.SerfState == Serf.State.IdleInStock)
                 {
@@ -1535,13 +1541,13 @@ namespace Freeserf
 
         public SerfMap GetStatsSerfsPotential()
         {
-            SerfMap serfs = new SerfMap();
+            var serfs = new SerfMap();
 
             foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
                 serfs.Add(type, 0);
 
             // Sum up potential serfs of all inventories.
-            foreach (Inventory inventory in Game.GetPlayerInventories(this))
+            foreach (var inventory in Game.GetPlayerInventories(this))
             {
                 if (inventory.FreeSerfCount() > 0)
                 {
@@ -1681,20 +1687,20 @@ namespace Freeserf
         static readonly int[] minLevelTower = new int[] { 1, 2, 3, 4, 6 };
         static readonly int[] minLevelFortress = new int[] { 1, 3, 6, 9, 12 };
 
-        int AvailableKnightsAtPosition(MapPos pos, int index, int dist)
+        int AvailableKnightsAtPosition(MapPos position, int index, int distance)
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
-            if (map.GetOwner(pos) != Index ||
-                map.TypeUp(pos) <= Map.Terrain.Water3 ||
-                map.TypeDown(pos) <= Map.Terrain.Water3 ||
-                map.GetObject(pos) < Map.Object.SmallBuilding ||
-                map.GetObject(pos) > Map.Object.Castle)
+            if (map.GetOwner(position) != Index ||
+                map.TypeUp(position) <= Map.Terrain.Water3 ||
+                map.TypeDown(position) <= Map.Terrain.Water3 ||
+                map.GetObject(position) < Map.Object.SmallBuilding ||
+                map.GetObject(position) > Map.Object.Castle)
             {
                 return index;
             }
 
-            uint buildingIndex = map.GetObjectIndex(pos);
+            var buildingIndex = map.GetObjectIndex(position);
 
             for (int i = 0; i < index; ++i)
             {
@@ -1704,7 +1710,7 @@ namespace Freeserf
                 }
             }
 
-            Building building = Game.GetBuilding(buildingIndex);
+            var building = Game.GetBuilding(buildingIndex);
 
             if (!building.IsDone() || building.IsBurning())
             {
@@ -1726,17 +1732,17 @@ namespace Freeserf
 
             attackingBuildings[index] = buildingIndex;
 
-            uint state = building.GetThreatLevel();
-            uint knightsPresent = building.GetKnightCount();
-            int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[state] & 0xf];
+            var threatLevel = building.GetThreatLevel();
+            var knightsPresent = building.GetKnightCount();
+            int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[threatLevel] & 0xf];
 
             if (toSend > 0)
-                attackingKnights[dist] += toSend;
+                attackingKnights[distance] += toSend;
 
             return index + 1;
         }
 
-        static readonly Color[] DefaultPlayerColors = new Color[4]
+        public static readonly Color[] DefaultPlayerColors = new Color[4]
         {
             new Color { Red = 0x00, Green = 0xe3, Blue = 0xe3},
             new Color { Red = 0xcf, Green = 0x63, Blue = 0x63},

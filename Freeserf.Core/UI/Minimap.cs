@@ -37,7 +37,7 @@ namespace Freeserf.UI
         protected readonly Interface interf = null;
         readonly ILayerSprite sprite = null;
         protected Map map = null;
-        MapPos mapOffset = Global.BadMapPos;
+        MapPos mapOffset = Constants.INVALID_MAPPOS;
         int scale = 1; // 1-8
         protected static readonly Color GridColor = new Color(0x01, 0x01, 0x01);
 
@@ -110,7 +110,7 @@ namespace Freeserf.UI
             UpdateMinimap(true);
         }
 
-        /* Initialize minimap data. */
+        // Initialize minimap data. 
         public void UpdateMinimap(bool force = false)
         {
             if (map == null)
@@ -132,7 +132,7 @@ namespace Freeserf.UI
             byte[] minimapData = new byte[128 * 128 * 4];
             int visibleWidth = Math.Min(128, (int)map.Columns) / scale;
             int visibleHeight = Math.Min(128, (int)map.Rows) / scale;
-            var pos = offset;
+            var position = offset;
             Color tileColor = null;
             int index = 0;
 
@@ -149,35 +149,35 @@ namespace Freeserf.UI
             int viewRectX = (visibleWidth - viewRectWidth) / 2;
             int viewRectY = (visibleHeight - viewRectHeight) / 2;
 
-            for (int c = 0; c < visibleWidth; ++c)
+            for (int column = 0; column < visibleWidth; ++column)
             {
-                var start = pos;
+                var start = position;
 
-                for (int r = 0; r < visibleHeight; ++r)
+                for (int row = 0; row < visibleHeight; ++row)
                 {
-                    if (((c == viewRectX || c == viewRectX + viewRectWidth) && r >= viewRectY && r < viewRectY + viewRectHeight) ||
-                        ((r == viewRectY || r == viewRectY + viewRectHeight) && c >= viewRectX && c < viewRectX + viewRectWidth))
+                    if (((column == viewRectX || column == viewRectX + viewRectWidth) && row >= viewRectY && row < viewRectY + viewRectHeight) ||
+                        ((row == viewRectY || row == viewRectY + viewRectHeight) && column >= viewRectX && column < viewRectX + viewRectWidth))
                     {
-                        SetGridColor(minimapData, c, r, scale);
+                        SetGridColor(minimapData, column, row, scale);
                     }
                     else
                     {
-                        tileColor = GetTileColor(pos, index++);
+                        tileColor = GetTileColor(position, index++);
 
                         if (tileColor == GridColor)
-                            SetGridColor(minimapData, c, r, scale);
+                            SetGridColor(minimapData, column, row, scale);
                         else
-                            SetColor(minimapData, c, r, scale, tileColor);
+                            SetColor(minimapData, column, row, scale, tileColor);
                     }
 
-                    if (map.PosRow(pos) % 2 == 0)
-                        pos = map.MoveDownRight(pos);
+                    if (map.PositionRow(position) % 2 == 0)
+                        position = map.MoveDownRight(position);
                     else
-                        pos = map.MoveDown(pos);
+                        position = map.MoveDown(position);
                 }
 
                 start = map.MoveRight(start);
-                pos = start;
+                position = start;
             }
 
             interf.RenderView.MinimapTextureFactory.ResizeMinimapTexture(128, 128);
@@ -191,9 +191,9 @@ namespace Freeserf.UI
             int index = (yOffset * 128 + xOffset) * 4;
             int rowIndex = index;
 
-            for (int r = 0; r < scale; ++r)
+            for (int row = 0; row < scale; ++row)
             {
-                for (int c = 0; c < scale; ++c)
+                for (int column = 0; column < scale; ++column)
                 {
                     data[index++] = color.B;
                     data[index++] = color.G;
@@ -212,11 +212,11 @@ namespace Freeserf.UI
             int yOffset = y * scale;
             int index = (yOffset * 128 + xOffset) * 4;
             int rowIndex = index;
-            Color color = GridColor;
+            Color color;
 
-            for (int r = 0; r < scale; ++r)
+            for (int row = 0; row < scale; ++row)
             {
-                for (int c = 0; c < scale; ++c)
+                for (int column = 0; column < scale; ++column)
                 {
                     if ((y + x) % 2 == 0)
                         color = Color.White;
@@ -234,12 +234,12 @@ namespace Freeserf.UI
             }
         }
 
-        protected virtual Color GetTileColor(MapPos pos, int index)
+        protected virtual Color GetTileColor(MapPos position, int index)
         {
-            int typeOff = ColorOffset[(int)map.TypeUp(pos)];
+            int typeOff = ColorOffset[(int)map.TypeUp(position)];
 
-            int h1 = (int)map.GetHeight(map.MoveRight(pos));
-            int h2 = (int)map.GetHeight(map.MoveDown(pos));
+            int h1 = (int)map.GetHeight(map.MoveRight(position));
+            int h2 = (int)map.GetHeight(map.MoveDown(position));
 
             int hOff = h2 - h1 + 8;
 
@@ -305,9 +305,9 @@ namespace Freeserf.UI
             }
 
             // TODO: y regarding the grid seems to be 3 pixels to high (with scale 1). Maybe the grid is out of place as other positions work.
-            var pos = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapPosition.X, mapPosition.Y);
+            var position = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapPosition.X, mapPosition.Y);
 
-            interf.GotoMapPos(pos);
+            interf.GotoMapPos(position);
 
             return true;
         }
@@ -386,7 +386,7 @@ namespace Freeserf.UI
             Last = Solid
         }
 
-        OwnershipMode ownershipMode = OwnershipMode.None;
+        private OwnershipMode ownershipMode = OwnershipMode.None;
 
         public MinimapGame(Interface interf, Game game)
             : base(interf, game.Map)
@@ -401,7 +401,7 @@ namespace Freeserf.UI
                 // close the minimap
                 interf.ClosePopup();
 
-                // jump to map pos
+                // jump to map position
                 HandleClickLeft(x, y);                
             }
 
@@ -457,21 +457,21 @@ namespace Freeserf.UI
         public bool DrawBuildings { get; private set; } = true;
         public bool DrawGrid { get; private set; } = false;
 
-        protected override Color GetTileColor(MapPos pos, int index)
+        protected override Color GetTileColor(MapPos position, int index)
         {
-            var column = map.PosColumn(pos);
-            var row = map.PosRow(pos);
+            var column = map.PositionColumn(position);
+            var row = map.PositionRow(position);
 
             if (DrawGrid && (column == 0 || row == 0))
                 return GridColor;
 
             if (DrawBuildings)
             {
-                if (map.GetObject(pos) > Map.Object.Flag && map.GetObject(pos) <= Map.Object.Castle)
+                if (map.GetObject(position) > Map.Object.Flag && map.GetObject(position) <= Map.Object.Castle)
                 {
                     if (ownershipMode == OwnershipMode.None)
                     {
-                        var playerColor = interf.GetPlayerColor(map.GetOwner(pos));
+                        var playerColor = interf.GetPlayerColor(map.GetOwner(position));
 
                         return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
                     }
@@ -484,7 +484,7 @@ namespace Freeserf.UI
 
             if (DrawRoads)
             {
-                if (map.Paths(pos) > 0)
+                if (map.Paths(position) > 0)
                 {
                     return Color.Black;
                 }
@@ -493,20 +493,20 @@ namespace Freeserf.UI
             if (ownershipMode == OwnershipMode.Solid ||
                 (ownershipMode == OwnershipMode.Mixed && (index % 2 == 0) == ((index / 128) % 2 == 0)))
             {
-                if (!map.HasOwner(pos))
+                if (!map.HasOwner(position))
                 {
                     if (ownershipMode == OwnershipMode.Solid)
                         return Color.Black;
                 }
                 else
                 {
-                    var playerColor = interf.GetPlayerColor(map.GetOwner(pos));
+                    var playerColor = interf.GetPlayerColor(map.GetOwner(position));
 
                     return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
                 }
             }
             
-            return base.GetTileColor(pos, index);
+            return base.GetTileColor(position, index);
         }
     }
 }

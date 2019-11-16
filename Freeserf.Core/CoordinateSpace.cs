@@ -5,8 +5,9 @@ namespace Freeserf
     using Render;
     using MapPos = UInt32;
 
-    /* Space transformations. */
-    /* The game world space is a three dimensional space with the axes
+    /* Space transformations.
+
+       The game world space is a three dimensional space with the axes
        named "column", "row" and "height". The (column, row) coordinate
        can be encoded as a MapPos.
 
@@ -57,18 +58,18 @@ namespace Freeserf
             columnRowFactor = (map.Size % 2 == 0) ? 4 : 2;
         }
 
-        public Position TileSpaceToMapSpace(MapPos pos)
+        public Position TileSpaceToMapSpace(MapPos position)
         {
             int lwidth = (int)map.Columns * RenderMap.TILE_WIDTH;
             int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
 
-            int column = (int)map.PosColumn(pos);
-            int row = (int)map.PosRow(pos);
+            int column = (int)map.PositionColumn(position);
+            int row = (int)map.PositionRow(position);
 
             int x = RenderMap.TILE_WIDTH * column - (RenderMap.TILE_WIDTH / 2) * row;
             int y = row * RenderMap.TILE_HEIGHT;
 
-            y -= 4 * (int)map.GetHeight(pos);
+            y -= 4 * (int)map.GetHeight(position);
 
             /*if (y < 0)
             {
@@ -84,9 +85,9 @@ namespace Freeserf
             return new Position(x, y);
         }
 
-        public Position TileSpaceToViewSpace(MapPos pos)
+        public Position TileSpaceToViewSpace(MapPos position)
         {
-            return MapSpaceToViewSpace(TileSpaceToMapSpace(pos));
+            return MapSpaceToViewSpace(TileSpaceToMapSpace(position));
         }
 
         public Position MapSpaceToViewSpace(int x, int y)
@@ -100,9 +101,9 @@ namespace Freeserf
             x -= renderX;
             y -= renderY;
 
-            int yDiff = Math.Min(0, -(lheight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
+            int yDifference = Math.Min(0, -(lheight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
 
-            while (y < yDiff)
+            while (y < yDifference)
             {
                 x -= (int)map.Rows * RenderMap.TILE_WIDTH / 2;
                 y += lheight;
@@ -123,9 +124,9 @@ namespace Freeserf
             return new Position(x, y);
         }
 
-        public Position MapSpaceToViewSpace(Position pos)
+        public Position MapSpaceToViewSpace(Position position)
         {
-            return MapSpaceToViewSpace(pos.X, pos.Y);
+            return MapSpaceToViewSpace(position.X, position.Y);
         }
 
         public Position ViewSpaceToMapSpace(int x, int y)
@@ -160,9 +161,9 @@ namespace Freeserf
             return new Position(x, y);
         }
 
-        public Position ViewSpaceToMapSpace(Position pos)
+        public Position ViewSpaceToMapSpace(Position position)
         {
-            return ViewSpaceToMapSpace(pos.X, pos.Y);
+            return ViewSpaceToMapSpace(position.X, position.Y);
         }
 
         public MapPos MapSpaceToTileSpace(int x, int y)
@@ -185,91 +186,91 @@ namespace Freeserf
             int mappedX = (x + (y * RenderMap.TILE_WIDTH) / (2 * RenderMap.TILE_HEIGHT));// % lwidth;
             int column = mappedX / RenderMap.TILE_WIDTH;
             int row = y / RenderMap.TILE_HEIGHT;
-            int lastDist = int.MaxValue;
-            var pos = map.MoveUp(map.Pos((uint)column, 0u));
+            int lastDistance = int.MaxValue;
+            var position = map.MoveUp(map.Position((uint)column, 0u));
 
-            pos = map.MoveDownN(pos, row);
-            MapPos lastPos = pos;
+            position = map.MoveDownN(position, row);
+            var lastPosition = position;
 
             while (true)
             {
-                int rowY = TileSpaceToMapSpace(pos).Y;
+                int rowY = TileSpaceToMapSpace(position).Y;
 
-                int dist = Math.Abs(rowY - y);
+                int distance = Math.Abs(rowY - y);
 
-                if (dist >= lheight / 2)
-                    dist = Math.Abs(dist - lheight);
+                if (distance >= lheight / 2)
+                    distance = Math.Abs(distance - lheight);
 
-                if (lastDist < dist)
+                if (lastDistance < distance)
                 {
-                    var mapPosition = TileSpaceToMapSpace(lastPos);
+                    var mapPosition = TileSpaceToMapSpace(lastPosition);
 
-                    int xOff = x - mapPosition.X;
+                    int xOffset = x - mapPosition.X;
 
-                    if (xOff >= lwidth)
-                        xOff -= lwidth;
-                    else if (xOff <= -lwidth)
-                        xOff += lwidth;
+                    if (xOffset >= lwidth)
+                        xOffset -= lwidth;
+                    else if (xOffset <= -lwidth)
+                        xOffset += lwidth;
 
-                    if (xOff >= lwidth / 2)
-                        xOff -= lwidth / 2;
-                    else if (xOff <= -lwidth / 2)
-                        xOff += lwidth / 2;
+                    if (xOffset >= lwidth / 2)
+                        xOffset -= lwidth / 2;
+                    else if (xOffset <= -lwidth / 2)
+                        xOffset += lwidth / 2;
 
-                    if (xOff >= lwidth / 4)
-                        xOff -= lwidth / 4;
-                    else if (xOff <= -lwidth / 4)
-                        xOff += lwidth / 4;
+                    if (xOffset >= lwidth / 4)
+                        xOffset -= lwidth / 4;
+                    else if (xOffset <= -lwidth / 4)
+                        xOffset += lwidth / 4;
 
                     bool moved = true;
 
-                    if (xOff >= RenderMap.TILE_WIDTH / 2)
-                        lastPos = map.MoveRight(lastPos);
-                    else if (xOff < -RenderMap.TILE_WIDTH / 2)
-                        lastPos = map.MoveLeft(lastPos);
+                    if (xOffset >= RenderMap.TILE_WIDTH / 2)
+                        lastPosition = map.MoveRight(lastPosition);
+                    else if (xOffset < -RenderMap.TILE_WIDTH / 2)
+                        lastPosition = map.MoveLeft(lastPosition);
                     else
                         moved = false;
 
-                    // re-check y dist
+                    // re-check y distance
                     if (moved)
                     {
                         // TODO: as we moved to left or right, the height may lead to a wrong tile
-                        /*rowY = TileSpaceToMapSpace(lastPos).Y;
+                        /*rowY = TileSpaceToMapSpace(lastPosition).Y;
 
                         if (rowY < y - RenderMap.TILE_HEIGHT / 2)
                         {
-                            if (xOff < 0)
-                                lastPos = map.MoveUpLeft(lastPos);
+                            if (xOffset < 0)
+                                lastPosition = map.MoveUpLeft(lastPosition);
                             else
-                                lastPos = map.MoveUp(lastPos);
+                                lastPosition = map.MoveUp(lastPosition);
                         }
                         else if (rowY > y + RenderMap.TILE_HEIGHT / 2)
                         {
-                            if (xOff < 0)
-                                lastPos = map.MoveDown(lastPos);
+                            if (xOffset < 0)
+                                lastPosition = map.MoveDown(lastPosition);
                             else
-                                lastPos = map.MoveDownRight(lastPos);
+                                lastPosition = map.MoveDownRight(lastPosition);
                         }*/
                     }
 
-                    return lastPos;
+                    return lastPosition;
                 }
 
-                lastDist = dist;
-                lastPos = pos;
+                lastDistance = distance;
+                lastPosition = position;
 
                 if (row % 2 == 0)
-                    pos = map.MoveDown(pos);
+                    position = map.MoveDown(position);
                 else
-                    pos = map.MoveDownRight(pos);
+                    position = map.MoveDownRight(position);
 
                 ++row;
             }
         }
 
-        public MapPos MapSpaceToTileSpace(Position pos)
+        public MapPos MapSpaceToTileSpace(Position position)
         {
-            return MapSpaceToTileSpace(pos.X, pos.Y);
+            return MapSpaceToTileSpace(position.X, position.Y);
         }
 
         public MapPos ViewSpaceToTileSpace(uint renderColumn, uint renderRow)
@@ -282,9 +283,9 @@ namespace Freeserf
             return MapSpaceToTileSpace(ViewSpaceToMapSpace(x, y));
         }
 
-        public MapPos ViewSpaceToTileSpace(Position pos)
+        public MapPos ViewSpaceToTileSpace(Position position)
         {
-            return ViewSpaceToTileSpace(pos.X, pos.Y);
+            return ViewSpaceToTileSpace(position.X, position.Y);
         }
     }
 }

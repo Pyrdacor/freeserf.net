@@ -305,11 +305,11 @@ namespace Freeserf.UI
 
         public void PlaySound(Audio.Audio.TypeSfx sound)
         {
-            Audio.Audio.Player player = Audio?.GetSoundPlayer();
+            var soundPlayer = Audio?.GetSoundPlayer();
 
-            if (player != null)
+            if (soundPlayer != null)
             {
-                player.PlayTrack((int)sound);
+                soundPlayer.PlayTrack((int)sound);
             }
         }
 

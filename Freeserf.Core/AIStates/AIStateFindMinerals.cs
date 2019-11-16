@@ -25,6 +25,8 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
+    using MapPos = UInt32;
+
     // Find ore and build a mine there
     class AIStateFindMinerals : AIState
     {
@@ -86,8 +88,10 @@ namespace Freeserf.AIStates
             uint spot = 0;
             int maxGeologists = ai.HardTimes() ? 2 : 2 + (int)(ai.GameTime / ((45 - Misc.Max(ai.GoldFocus, ai.SteelFocus) * 5) * Global.TICKS_PER_MIN));
             var mineType = MineTypes[(int)mineralType - 1];
-            var largeSpots = AI.GetMemorizedMineralSpots(mineralType, true).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index).ToList();
-            var smallSpots = AI.GetMemorizedMineralSpots(mineralType, false).Where(s => game.Map.HasOwner(s) && game.Map.GetOwner(s) == player.Index && !largeSpots.Contains(s)).ToList();
+            var largeSpots = AI.GetMemorizedMineralSpots(mineralType, true)
+                .Where(mineralSpot => game.Map.HasOwner(mineralSpot) && game.Map.GetOwner(mineralSpot) == player.Index).ToList();
+            var smallSpots = AI.GetMemorizedMineralSpots(mineralType, false)
+                .Where(mineralSpot => game.Map.HasOwner(mineralSpot) && game.Map.GetOwner(mineralSpot) == player.Index && !largeSpots.Contains(mineralSpot)).ToList();
             bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_MIN + playerInfo.Intelligence * 30 * Global.TICKS_PER_MIN) || ai.StupidDecision();
 
             if (ai.HardTimes() && ((smallSpots.Count > 0 && ai.GameTime >= 60 * Global.TICKS_PER_MIN) || (smallSpots.Count > 3 && ai.GameTime >= 35 * Global.TICKS_PER_MIN)))
@@ -127,7 +131,7 @@ namespace Freeserf.AIStates
                 else if (canBuild || largeSpots.Count < 6)
                 {
                     // no valid mineral spots found -> send geologists
-                    var geologists = game.GetPlayerSerfs(player).Where(s => s.GetSerfType() == Serf.Type.Geologist).ToList();
+                    var geologists = game.GetPlayerSerfs(player).Where(serf => serf.GetSerfType() == Serf.Type.Geologist).ToList();
 
                     if (geologists.Count == 0) // no geologists? try to train them
                     {
@@ -183,78 +187,81 @@ namespace Freeserf.AIStates
             Kill(ai);
         }
 
-        int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral, Func<Map, uint, Map.FindData> searchFunc, int minDist = 0)
+        int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral,
+            Func<Map, uint, Map.FindData> searchFunc, int minDistance = 0)
         {
-            return map.FindInArea(basePosition, range, searchFunc, minDist).Where(f => ((KeyValuePair<Map.Minerals, uint>)f).Key == mineral).Select(f => (int)((KeyValuePair<Map.Minerals, uint>)f).Value).Sum();
+            return map.FindInArea(basePosition, range, searchFunc, minDistance)
+                .Where(finding => ((KeyValuePair<Map.Minerals, uint>)finding).Key == mineral)
+                .Select(finding => (int)((KeyValuePair<Map.Minerals, uint>)finding).Value).Sum();
         }
 
-        bool FindMountain(Map map, uint pos, bool withFlag)
+        bool FindMountain(Map map, MapPos position, bool withFlag)
         {
-            if (withFlag && !map.HasFlag(pos))
+            if (withFlag && !map.HasFlag(position))
                 return false;
 
-            return (map.TypeUp(pos) >= Map.Terrain.Tundra0 && map.TypeUp(pos) <= Map.Terrain.Tundra2) ||
-                (map.TypeDown(pos) >= Map.Terrain.Tundra0 && map.TypeDown(pos) <= Map.Terrain.Tundra2);
+            return (map.TypeUp(position) >= Map.Terrain.Tundra0 && map.TypeUp(position) <= Map.Terrain.Tundra2) ||
+                   (map.TypeDown(position) >= Map.Terrain.Tundra0 && map.TypeDown(position) <= Map.Terrain.Tundra2);
         }
 
-        bool FindMountain(Map map, uint pos)
+        bool FindMountain(Map map, MapPos position)
         {
-            return FindMountain(map, pos, false);
+            return FindMountain(map, position, false);
         }
 
-        bool FindMountainWithFlag(Map map, uint pos)
+        bool FindMountainWithFlag(Map map, MapPos position)
         {
-            return FindMountain(map, pos, true);
+            return FindMountain(map, position, true);
         }
 
-        void FindNearbyMountain(Game game, Player player, ref uint pos)
+        void FindNearbyMountain(Game game, Player player, ref MapPos position)
         {
-            pos = game.Map.FindSpotNear(pos, 9, FindMountainWithFlag, game.GetRandom(), 1);
+            position = game.Map.FindSpotNear(position, 9, FindMountainWithFlag, game.GetRandom(), 1);
 
-            if (pos == Global.BadMapPos || game.Map.GetOwner(pos) != player.Index)
-                pos = game.Map.FindSpotNear(pos, 9, FindMountain, game.GetRandom(), 1);
+            if (position == Constants.INVALID_MAPPOS || game.Map.GetOwner(position) != player.Index)
+                position = game.Map.FindSpotNear(position, 9, FindMountain, game.GetRandom(), 1);
         }
 
-        Map.FindData FindFlag(Map map, uint pos)
+        Map.FindData FindFlag(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.HasFlag(pos),
-                Data = pos
+                Success = map.HasFlag(position),
+                Data = position
             };
         }
 
-        Map.FindData FindMine(Map map, uint pos)
+        Map.FindData FindMine(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.HasBuilding(pos) && FindMountain(map, pos),
-                Data = map.GetObjectIndex(pos)
+                Success = map.HasBuilding(position) && FindMountain(map, position),
+                Data = map.GetObjectIndex(position)
             };
         }
 
         // TODO: With many military buildings, this will take quiet a while. Needs improvement.
         bool SendGeologist(AI ai, Game game, Player player)
         {
-            var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary());
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(building => building.IsMilitary());
 
             List<uint> possibleSpots = new List<uint>();
 
             // search for mountains near military buildings
             foreach (var building in militaryBuildings)
             {
-                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetRandom(), 1) != Global.BadMapPos)
+                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetRandom(), 1) != Constants.INVALID_MAPPOS)
                 {
                     possibleSpots.Add(game.Map.MoveDownRight(building.Position));
                     continue;
                 }
 
-                uint pos = building.Position;
-                FindNearbyMountain(game, player, ref pos);
+                var position = building.Position;
+                FindNearbyMountain(game, player, ref position);
 
-                if (pos != Global.BadMapPos)
+                if (position != Constants.INVALID_MAPPOS)
                 {
-                    possibleSpots.Add(pos);
+                    possibleSpots.Add(position);
                 }
             }
 
@@ -264,7 +271,7 @@ namespace Freeserf.AIStates
                 if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.Tower) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.Fortress) == 0 &&
-                    !game.GetPlayerBuildings(player).Where(b => b.IsMilitary(false)).Any(b => !b.HasSerf()))
+                    !game.GetPlayerBuildings(player).Where(building => building.IsMilitary(false)).Any(b => !b.HasSerf()))
                 {
                     // build only if there are no military buildings in progress or
                     // military buildings that are not occupied yet
@@ -274,7 +281,7 @@ namespace Freeserf.AIStates
                 return false;
             }
 
-            var spotsWithFlag = possibleSpots.Where(s => game.Map.HasFlag(s)).ToList();
+            var spotsWithFlag = possibleSpots.Where(possibleSpot => game.Map.HasFlag(possibleSpot)).ToList();
 
             for (int i = 0; i < 10; ++i)
             {
@@ -283,8 +290,7 @@ namespace Freeserf.AIStates
 
                 uint spot = (spotsWithFlag.Count > 0) ? spotsWithFlag[game.GetRandom().Next() % spotsWithFlag.Count] :
                     possibleSpots[game.GetRandom().Next() % possibleSpots.Count];
-
-                Flag flag = game.GetFlagAtPos(spot);
+                var flag = game.GetFlagAtPos(spot);
 
                 if (flag == null)
                 {
@@ -316,9 +322,9 @@ namespace Freeserf.AIStates
                     var flagPositions = game.Map.FindInArea(flag.Position, 7, FindFlag, 2).Select(d => (uint)d);
                     Road bestRoad = null;
 
-                    foreach (var flagPos in flagPositions)
+                    foreach (var flagPosition in flagPositions)
                     {
-                        var road = Pathfinder.FindShortestPath(game.Map, flag.Position, flagPos, null, 10);
+                        var road = Pathfinder.FindShortestPath(game.Map, flag.Position, flagPosition, null, 10);
 
                         if (road != null && road.Valid)
                         {

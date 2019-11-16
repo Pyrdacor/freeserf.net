@@ -1,5 +1,5 @@
 ﻿/*
- * Pathes.cs - Default freeserf paths
+ * Paths.cs - Default freeserf paths
  *
  * Copyright (C) 2019 Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -22,7 +22,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Freeserf.FileSystem
 {

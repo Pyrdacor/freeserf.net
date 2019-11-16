@@ -101,10 +101,8 @@ namespace Freeserf.Render
         public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null, int characterGapSize = 8)
         {
             // look if we have an unused render text
-            int index = renderTexts.FindIndex(r => r == null);
-
-            var spritePool = characterSprites.Where(s => !s.InUse);
-
+            int index = renderTexts.FindIndex(checkText => checkText == null);
+            var spritePool = characterSprites.Where(sprite => !sprite.InUse);
             int numAvailableChars = spritePool.Count();
             int lengthWithoutSpaces = text.Replace(" ", "").Length;
 
@@ -176,7 +174,7 @@ namespace Freeserf.Render
 
             if (renderText.Characters.Count < newLengthWithoutSpaces)
             {
-                var spritePool = characterSprites.Where(s => !s.InUse);
+                var spritePool = characterSprites.Where(sprite => !sprite.InUse);
 
                 int numAdditionalChars = newLengthWithoutSpaces - renderText.Characters.Count;
                 int numAvailableChars = spritePool.Count();

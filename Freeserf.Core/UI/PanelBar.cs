@@ -264,7 +264,7 @@ namespace Freeserf.UI
                 bg.DisplayLayer = BaseDisplayLayer;
         }
 
-        /* Draw notification icon in action panel. */
+        // Draw notification icon in action panel. 
         void DrawMessageNotify(bool visible)
         {
             if (visible)
@@ -278,21 +278,21 @@ namespace Freeserf.UI
             }
         }
 
-        /* Draw return arrow icon in action panel. */
+        // Draw return arrow icon in action panel. 
         void DrawReturnArrow(bool visible)
         {
             returnIcon.Displayed = visible && Displayed;
         }
 
-        /* Draw buttons in action panel. */
+        // Draw buttons in action panel. 
         void DrawPanelButtons()
         {
-            Player player = interf.GetPlayer();
+            var player = interf.GetPlayer();
 
-            /* Blinking message icon. */
+            // Blinking message icon. 
             DrawMessageNotify(player != null && player.HasNotification && blinkTrigger && Enabled);
 
-            /* Return arrow icon. */
+            // Return arrow icon. 
             DrawReturnArrow(interf.GetMsgFlag(3) && Enabled);
 
             for (int i = 0; i < 5; ++i)
@@ -304,7 +304,7 @@ namespace Freeserf.UI
             }
         }
 
-        /* Draw the frame around action buttons. */
+        // Draw the frame around action buttons. 
         void DrawPanelFrame()
         {
             for (int i = 0; i < 20; ++i)
@@ -374,7 +374,7 @@ namespace Freeserf.UI
                 SetButton(3, ButtonId.Stats);
                 SetButton(4, ButtonId.Sett);
 
-                Interface.BuildPossibility buildPossibility = interf.GetBuildPossibility();
+                var buildPossibility = interf.GetBuildPossibility();
 
                 switch (interf.GetMapCursorType())
                 {
@@ -502,10 +502,10 @@ namespace Freeserf.UI
             ButtonClick(1);
         }
 
-        /* Handle a click on the panel buttons. */
+        // Handle a click on the panel buttons. 
         void ButtonClick(int button)
         {
-            PopupBox popup = interf.PopupBox;
+            var popup = interf.PopupBox;
 
             if (button == 0 && panelButtonIds[button] != ButtonId.BuildInactive)
             {
@@ -532,10 +532,10 @@ namespace Freeserf.UI
 
                         interf.OpenPopup(PopupBox.Type.Map);
 
-                        /* Synchronize minimap window with viewport. */
+                        // Synchronize minimap window with viewport. 
                         if (popup != null)
                         {
-                            Minimap minimap = popup.MiniMap;
+                            var minimap = popup.MiniMap;
 
                             if (minimap != null)
                             {
@@ -671,17 +671,17 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.DestroyRoad:
                     {
-                        bool r = interf.GetPlayer().Game.DemolishRoad(interf.GetMapCursorPos(), interf.GetPlayer());
+                        bool result = interf.GetPlayer().Game.DemolishRoad(interf.GetMapCursorPosition(), interf.GetPlayer());
 
-                        if (!r)
+                        if (!result)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
-                            interf.UpdateMapCursorPos(interf.GetMapCursorPos());
+                            interf.UpdateMapCursorPosition(interf.GetMapCursorPosition());
                         }
                         else
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
-                            interf.UpdateMapCursorPos(interf.GetMapCursorPos());
+                            interf.UpdateMapCursorPosition(interf.GetMapCursorPosition());
                         }
                     }
                     break;
@@ -731,23 +731,23 @@ namespace Freeserf.UI
 
             if (x >= 41 && x < 53)
             {
-                /* Message bar click */
+                // Message bar click 
                 if (y < 16)
                 {
-                    /* Message icon */
+                    // Message icon 
                     interf.OpenMessage();
                 }
                 else if (y >= 28)
                 {
-                    /* Return arrow */
+                    // Return arrow 
                     interf.ReturnFromMessage();
                 }
             }
             else if (x >= 301 && x < 313)
             {
-                /* Timer bar click */
-                /* Call to map position */
-                int timerLength = 0;
+                // Timer bar click 
+                // Call to map position 
+                int timerLength;
 
                 if (y < 7)
                 {
@@ -770,7 +770,7 @@ namespace Freeserf.UI
                     timerLength = 60 * 60;
                 }
 
-                interf.GetPlayer().AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPos());
+                interf.GetPlayer().AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPosition());
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             }

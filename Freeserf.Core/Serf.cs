@@ -1,8 +1,8 @@
 ﻿/*
  * Serf.cs - Serf related functions
  *
- * Copyright (C) 2013  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -22,9 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -82,80 +79,80 @@ namespace Freeserf
             Walking,
             Transporting,
             EnteringBuilding,
-            LeavingBuilding, /* 5 */
+            LeavingBuilding, // 5 
             ReadyToEnter,
             ReadyToLeave,
             Digging,
             Building,
-            BuildingCastle, /* 10 */
+            BuildingCastle, // 10 
             MoveResourceOut,
             WaitForResourceOut,
             DropResourceOut,
             Delivering,
-            ReadyToLeaveInventory, /* 15 */
+            ReadyToLeaveInventory, // 15 
             FreeWalking,
             Logging,
             PlanningLogging,
             PlanningPlanting,
-            Planting, /* 20 */
+            Planting, // 20 
             PlanningStoneCutting,
             StoneCutterFreeWalking,
             StoneCutting,
             Sawing,
-            Lost, /* 25 */
+            Lost, // 25 
             LostSailor,
             FreeSailing,
             EscapeBuilding,
             Mining,
-            Smelting, /* 30 */
+            Smelting, // 30 
             PlanningFishing,
             Fishing,
             PlanningFarming,
             Farming,
-            Milling, /* 35 */
+            Milling, // 35 
             Baking,
             PigFarming,
             Butchering,
             MakingWeapon,
-            MakingTool, /* 40 */
+            MakingTool, // 40 
             BuildingBoat,
             LookingForGeoSpot,
             SamplingGeoSpot,
             KnightEngagingBuilding,
-            KnightPrepareAttacking, /* 45 */
+            KnightPrepareAttacking, // 45 
             KnightLeaveForFight,
             KnightPrepareDefending,
             KnightAttacking,
             KnightDefending,
-            KnightAttackingVictory, /* 50 */
+            KnightAttackingVictory, // 50 
             KnightAttackingDefeat,
             KnightOccupyEnemyBuilding,
             KnightFreeWalking,
             KnightEngageDefendingFree,
-            KnightEngageAttackingFree, /* 55 */
+            KnightEngageAttackingFree, // 55 
             KnightEngageAttackingFreeJoin,
             KnightPrepareAttackingFree,
             KnightPrepareDefendingFree,
             KnightPrepareDefendingFreeWait,
-            KnightAttackingFree, /* 60 */
+            KnightAttackingFree, // 60 
             KnightDefendingFree,
             KnightAttackingVictoryFree,
             KnightDefendingVictoryFree,
             KnightAttackingFreeWait,
-            KnightLeaveForWalkToFight, /* 65 */
+            KnightLeaveForWalkToFight, // 65 
             IdleOnPath,
             WaitIdleOnPath,
             WakeAtFlag,
             WakeOnPath,
-            DefendingHut, /* 70 */
+            DefendingHut, // 70 
             DefendingTower,
             DefendingFortress,
             Scatter,
             FinishedBuilding,
-            DefendingCastle, /* 75 */
+            DefendingCastle, // 75 
 
-            /* Additional state: goes at the end to ease loading of
-             original save game. */
+            // Additional state: goes at the end to ease loading of
+            // original save game.
             KnightAttackingDefeatFree
         }
 
@@ -169,21 +166,21 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SIdleInStock
             {
-                public uint InvIndex; /* E */
+                public uint InventoryIndex; // E 
             }
             [FieldOffset(0)]
             public SIdleInStock IdleInStock;
 
-            /* States: walking, transporting, delivering */
-            /* res: resource carried (when transporting), otherwise direction. */
+            // States: Walking, Transporting, Delivering 
+            // Resource: resource carried (when transporting), otherwise direction. 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SWalking
             {
-                public int Dir1; /* newly added */
-                public Resource.Type Res; /* B */
-                public uint Dest; /* C */
-                public int Dir; /* E */
-                public int WaitCounter; /* F */
+                public int Direction1; // newly added 
+                public Resource.Type Resource; // B 
+                public uint Destination; // C 
+                public int Direction; // E 
+                public int WaitCounter; // F 
             }
             [FieldOffset(0)]
             public SWalking Walking;
@@ -192,22 +189,21 @@ namespace Freeserf
             public struct SEnteringBuilding
             {
                 // FieldB = -2: Enter inventory (castle, etc)
-                public int FieldB; /* B */
-                public int SlopeLength; /* C */
+                public int FieldB; // B 
+                public int SlopeLength; // C 
             }
             [FieldOffset(0)]
             public SEnteringBuilding EnteringBuilding;
 
-            /* States: leavingBuilding, readyToLeave,
-               leaveForFight */
+            // States: LeavingBuilding, ReadyToLeave, LeaveForFight
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SLeavingBuilding
             {
-                public int FieldB; /* B */
-                public uint Dest; /* C */
-                public int Dest2; /* D */
-                public int Dir; /* E */
-                public State NextState; /* F */
+                public int FieldB; // B 
+                public uint Destination; // C 
+                public int Destination2; // D 
+                public int Direction; // E 
+                public State NextState; // F 
             }
             [FieldOffset(0)]
             public SLeavingBuilding LeavingBuilding;
@@ -215,7 +211,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SReadyToEnter
             {
-                public int FieldB; /* B */
+                public int FieldB; // B 
             }
             [FieldOffset(0)]
             public SReadyToEnter ReadyToEnter;
@@ -228,24 +224,24 @@ namespace Freeserf
                 // Substate = 1 -> Change height and go back to center (last step of digging)
                 // Substate > 1 -> Digging
                 // TargetH is the height after digging
-                // DigPos is the dig position (0 = center, 1-6 = directions)
-                public int HIndex; /* B */
-                public uint TargetH; /* C */
-                public int DigPos; /* D */
-                public int Substate; /* E */
+                // DigPosition is the dig position (0 = center, 1-6 = directions)
+                public int HeightIndex; // B 
+                public uint TargetHeight; // C 
+                public int DigPosition; // D 
+                public int Substate; // E 
             }
             [FieldOffset(0)]
             public SDigging Digging;
 
-            /* mode: one of three substates (negative, positive, zero).
-               Index: index of building. */
+            // Mode: one of three substates (negative, positive, zero).
+            // Index: index of building.
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SBuilding
             {
-                public int Mode; /* B */
-                public uint Index; /* C */
-                public uint MaterialStep; /* E */
-                public uint Counter; /* F */
+                public int Mode; // B 
+                public uint Index; // C 
+                public uint MaterialStep; // E 
+                public uint Counter; // F 
             }
             [FieldOffset(0)]
             public SBuilding Building;
@@ -253,59 +249,56 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SBuildingCastle
             {
-                public uint InvIndex; /* C */
+                public uint InventoryIndex; // C 
             }
             [FieldOffset(0)]
             public SBuildingCastle BuildingCastle;
 
-            /* States: MoveResourceOut, dropResourceOut */
+            // States: MoveResourceOut, DropResourceOut 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMoveResourceOut
             {
-                public uint Res; /* B */
-                public uint ResDest; /* C */
-                public State NextState; /* F */
+                public uint Resource; // B 
+                public uint ResourceDestination; // C 
+                public State NextState; // F 
             }
             [FieldOffset(0)]
             public SMoveResourceOut MoveResourceOut;
 
-            /* No state: waitForResourceOut */
+            // No state: WaitForResourceOut 
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SReadyToLeaveInventory
             {
-                public int Mode; /* B */
-                public uint Dest; /* C */
-                public uint InvIndex; /* E */
+                public int Mode; // B 
+                public uint Destination; // C 
+                public uint InventoryIndex; // E 
             }
             [FieldOffset(0)]
             public SReadyToLeaveInventory ReadyToLeaveInventory;
 
-            /* States: freeWalking, logging,
-               planting, stonecutting, fishing,
-               farming, samplingGeoSpot,
-               knightFreeWalking,
-               knightAttackingFree,
-               knightAttackingFreeWait */
+            // States: FreeWalking, Logging, Planting, Stonecutting, Fishing,
+            // Farming, SamplingGeoSpot, KnightFreeWalking, KnightAttackingFree,
+            // KnightAttackingFreeWait
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SFreeWalking
             {
-                public int Dist1; /* B */
-                public int Dist2; /* C */
-                public int NegDist1; /* D */
-                public int NegDist2; /* E */
-                public int Flags; /* F */
+                public int DistanceX; // B 
+                public int DistanceY; // C 
+                public int NegDistance1; // D 
+                public int NegDistance2; // E 
+                public int Flags; // F 
             }
             [FieldOffset(0)]
             public SFreeWalking FreeWalking;
 
-            /* No state data: planningLogging,
-               planningPlanting, planningStonecutting */
+            // No state data: PlanningLogging,
+            // PlanningPlanting, PlanningStonecutting
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SSawing
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SSawing Sawing;
@@ -313,7 +306,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SLost
             {
-                public int FieldB; /* B */
+                public int FieldB; // B 
             }
             [FieldOffset(0)]
             public SLost Lost;
@@ -321,31 +314,30 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMining
             {
-                public uint Substate; /* B */
-                public uint Res; /* D */
-                public Map.Minerals Deposit; /* E */
+                public uint Substate; // B 
+                public uint Resource; // D 
+                public Map.Minerals Deposit; // E 
             }
             [FieldOffset(0)]
             public SMining Mining;
 
-            /* type: Type of smelter (0 is steel, else gold). */
+            // Type: Type of smelter (0 is steel, else gold). 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SSmelting
             {
-                public int Mode; /* B */
-                public int Counter; /* C */
-                public int Type; /* D */
+                public int Mode; // B 
+                public int Counter; // C 
+                public int Type; // D 
             }
             [FieldOffset(0)]
             public SSmelting Smelting;
 
-            /* No state data: planningFishing,
-               planningFarming */
+            // No state data: PlanningFishing, PlanningFarming
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMilling
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SMilling Milling;
@@ -353,7 +345,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SBaking
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SBaking Baking;
@@ -361,7 +353,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SPigFarming
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SPigFarming PigFarming;
@@ -369,7 +361,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SButchering
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SButchering Butchering;
@@ -377,7 +369,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMakingWeapon
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SMakingWeapon MakingWeapon;
@@ -385,7 +377,7 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SMakingTool
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SMakingTool MakingTool;
@@ -393,56 +385,49 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SBuildingBoat
             {
-                public int Mode; /* B */
+                public int Mode; // B 
             }
             [FieldOffset(0)]
             public SBuildingBoat BuildingBoat;
 
-            /* No state data: lookingForGeoSpot */
+            // No state data: LookingForGeoSpot 
 
-            /* States: knightEngagingBuilding,
-               knightPrepareAttacking,
-               knightPrepareDefendingFreeWait,
-               knightAttackingDefeatFree,
-               knightAttacking,
-               knightAttackingVictory,
-               knightEngageAttackingFree,
-               knightEngageAttackingFreeJoin
-            */
+            // States: KnightEngagingBuilding, KnightPrepareAttacking,
+            // KnightPrepareDefendingFreeWait, KnightAttackingDefeatFree,
+            // KnightAttacking, KnightAttackingVictory, KnightEngageAttackingFree,
+            // KnightEngageAttackingFreeJoin
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SAttacking
             {
-                public int Move; /* B */
-                public int AttackerWon; /* C */
-                public int FieldD; /* D */
-                public int DefIndex; /* E */
+                public int Move; // B 
+                public int AttackerWon; // C 
+                public int FieldD; // D 
+                public int DefenderIndex; // E 
             }
             [FieldOffset(0)]
             public SAttacking Attacking;
 
-            /* States: knightAttackingVictoryFree
-            */
+            // States: KnightAttackingVictoryFree
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SAttackingVictoryFree
             {
-                public int Move; /* B */
-                public int DistColumn; /* C */
-                public int DistRow; /* D */
-                public int DefIndex; /* E */
+                public int Move; // B 
+                public int DistanceColumn; // C 
+                public int DistanceRow; // D 
+                public int DefenderIndex; // E 
             }
             [FieldOffset(0)]
             public SAttackingVictoryFree AttackingVictoryFree;
 
-            /* States: knightDefendingFree,
-               knightEngageDefendingFree */
+            // States: KnightDefendingFree, KnightEngageDefendingFree
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SDefendingFree
             {
-                public int DistColumn; /* B */
-                public int DistRow; /* C */
-                public int FieldD; /* D */
-                public int OtherDistColumn; /* E */
-                public int OtherDistRow; /* F */
+                public int DistanceColumn; // B 
+                public int DistanceRow; // C 
+                public int FieldD; // D 
+                public int OtherDistanceColumn; // E 
+                public int OtherDistanceRow; // F 
             }
             [FieldOffset(0)]
             public SDefendingFree DefendingFree;
@@ -450,36 +435,35 @@ namespace Freeserf
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SLeaveForWalkToFight
             {
-                public int DistColumn; /* B */
-                public int DistRow; /* C */
-                public int FieldD; /* D */
-                public int FieldE; /* E */
-                public State NextState; /* F */
+                public int DistanceColumn; // B 
+                public int DistanceRow; // C 
+                public int FieldD; // D 
+                public int FieldE; // E 
+                public State NextState; // F 
             }
             [FieldOffset(0)]
             public SLeaveForWalkToFight LeaveForWalkToFight;
 
-            /* States: idleOnPath, waitIdleOnPath,
-               wakeAtFlag, wakeOnPath. */
+            // States: IdleOnPath, WaitIdleOnPath, WakeAtFlag, WakeOnPath.
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SIdleOnPath
             {
                 // NOTE: Flag was a Flag* before! Now it is the index of it.
-                public uint FlagIndex; /* C */
-                public int FieldE; /* E */
-                public Direction RevDir; /* B */
+                public uint FlagIndex; // C 
+                public int FieldE; // E 
+                public Direction ReverseDirection; // B 
             }
             [FieldOffset(0)]
             public SIdleOnPath IdleOnPath;
 
-            /* No state data: finishedBuilding */
+            // No state data: FinishedBuilding 
 
-            /* States: defendingHut, defendingTower,
-               defendingFortress, defendingCastle */
+            // States: DefendingHut, DefendingTower,
+            // DefendingFortress, DefendingCastle
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct SDefending
             {
-                public uint NextKnight; /* E */
+                public uint NextKnight; // E 
             }
             [FieldOffset(0)]
             public SDefending Defending;
@@ -489,7 +473,7 @@ namespace Freeserf
 
         static readonly int[] CounterFromAnimation = new int[]
         {
-            /* Walking (0-80) */
+            // Walking (0-80) 
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
@@ -500,103 +484,103 @@ namespace Freeserf
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
             511, 447, 383, 319, 255, 319, 511, 767, 1023,
 
-            /* Waiting (81-86) */
+            // Waiting (81-86) 
             127, 127, 127, 127, 127, 127,
 
-            /* Digging (87-88) */
+            // Digging (87-88) 
             383, 383,
 
             255, 223, 191, 159, 127, 159, 255, 383,  511,
 
-            /* Building (98) */
+            // Building (98) 
             255,
 
-            /* Engage defending free (99) */
+            // Engage defending free (99) 
             255,
 
-            /* Building large building (100) */
+            // Building large building (100) 
             255,
 
             0,
 
-            /* Building (102-105) */
+            // Building (102-105) 
             767, 511, 511, 767,
 
             1023, 639, 639, 1023,
 
-            /* Transporting (turning?) (110-115) */
+            // Transporting (turning?) (110-115) 
             63, 63, 63, 63, 63, 63,
 
-            /* Logging (116-120) */
+            // Logging (116-120) 
             1023, 31, 767, 767, 255,
 
-            /* Planting (121-122) */
+            // Planting (121-122) 
             191, 127,
 
-            /* Stonecutting (123) */
+            // Stonecutting (123) 
             1535,
 
-            /* Sawing (124) */
+            // Sawing (124) 
             2367,
 
-            /* Mining (125-128) */
+            // Mining (125-128) 
             383, 303, 303, 383,
 
-            /* Smelting (129-130) */
+            // Smelting (129-130) 
             383, 383,
 
-            /* Fishing (131-134) */
+            // Fishing (131-134) 
             767, 767, 127, 127,
 
-            /* Farming (135-136) */
+            // Farming (135-136) 
             1471, 1983,
 
-            /* Milling (137) */
+            // Milling (137) 
             383,
 
-            /* Baking (138) */
+            // Baking (138) 
             767,
 
-            /* Pig farming (139) */
+            // Pig farming (139) 
             383,
 
-            /* Butchering (140) */
+            // Butchering (140) 
             1535,
 
-            /* Sampling geology (142) */
+            // Sampling geology (142) 
             783, 63,
 
-            /* Making weapon (143) */
+            // Making weapon (143) 
             575,
 
-            /* Making tool (144) */
+            // Making tool (144) 
             1535,
 
-            /* Building boat (145-146) */
+            // Building boat (145-146) 
             1407, 159,
 
-            /* Attacking (147-156) */
+            // Attacking (147-156) 
             127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
 
-            /* Defending (157-166) */
+            // Defending (157-166) 
             127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
 
-            /* Engage attacking (167) */
+            // Engage attacking (167) 
             191,
 
-            /* Victory attacking (168) */
+            // Victory attacking (168) 
             7,
 
-            /* Dying attacking (169-173) */
+            // Dying attacking (169-173) 
             255, 255, 255, 255, 255,
 
-            /* Dying defending (174-178) */
+            // Dying defending (174-178) 
             255, 255, 255, 255, 255,
 
-            /* Occupy attacking (179) */
+            // Occupy attacking (179) 
             127,
 
-            /* Victory defending (180) */
+            // Victory defending (180) 
             7
         };
 
@@ -718,7 +702,7 @@ namespace Freeserf
 
         static readonly int[] RoadBuildingSlope = new int[]
         {
-            /* Finished building */
+            // Finished building 
             5, 18, 18, 15, 18, 22, 22, 22,
             22, 18, 16, 18, 1, 10, 1, 15,
             15, 16, 15, 15, 10, 15, 20, 15,
@@ -734,7 +718,7 @@ namespace Freeserf
             sound = false;
             Animation = 0;
             Counter = 0;
-            Position = Global.BadMapPos;
+            Position = Constants.INVALID_MAPPOS;
             tick = 0;
 
             s = new StateInfo();
@@ -769,7 +753,7 @@ namespace Freeserf
                 }
             }
         }
-        public int Animation { get; private set; } /* Index to animation table in data file. */
+        public int Animation { get; private set; } // Index to animation table in data file. 
         public int Counter { get; private set; }
         public MapPos Position { get; private set; }
 
@@ -808,20 +792,20 @@ namespace Freeserf
 
         public void SetSerfType(Type newType)
         {
-            Type oldType = GetSerfType();
+            var oldType = GetSerfType();
 
             if (oldType == newType)
                 return;
 
             type = newType;
 
-            /* Register this type as transporter */
+            // Register this type as transporter 
             if (newType == Type.TransporterInventory)
                 newType = Type.Transporter;
             if (oldType == Type.TransporterInventory)
                 oldType = Type.Transporter;
 
-            Player player = Game.GetPlayer(Player);
+            var player = Game.GetPlayer(Player);
 
             if (oldType != Type.None)
             {
@@ -880,8 +864,8 @@ namespace Freeserf
             {
                 if (Game.RandomInt() < p)
                 {
-                    /* Level up */
-                    Type oldType = GetSerfType();
+                    // Level up 
+                    var oldType = GetSerfType();
                     SetSerfType(oldType + 1);
                     Counter = 6000;
 
@@ -900,22 +884,22 @@ namespace Freeserf
         {
             if (SerfState == State.Walking)
             {
-                if (s.Walking.Dir1 >= 0)
+                if (s.Walking.Direction1 >= 0)
                 {
-                    if (s.Walking.Dir1 != 6)
+                    if (s.Walking.Direction1 != 6)
                     {
-                        Direction dir = (Direction)s.Walking.Dir1;
-                        Flag flag = Game.GetFlag(s.Walking.Dest);
-                        flag.CancelSerfRequest(dir);
+                        var direction = (Direction)s.Walking.Direction1;
+                        var flag = Game.GetFlag(s.Walking.Destination);
+                        flag.CancelSerfRequest(direction);
 
-                        Direction otherDir = flag.GetOtherEndDirection(dir);
-                        flag.GetOtherEndFlag(dir).CancelSerfRequest(otherDir);
+                        var otherDirection = flag.GetOtherEndDirection(direction);
+                        flag.GetOtherEndFlag(direction).CancelSerfRequest(otherDirection);
                     }
                 }
-                else if (s.Walking.Dir1 == -1)
+                else if (s.Walking.Direction1 == -1)
                 {
-                    Flag flag = Game.GetFlag(s.Walking.Dest);
-                    Building building = flag.GetBuilding();
+                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var building = flag.GetBuilding();
                     building.RequestedSerfLost();
                 }
 
@@ -924,13 +908,13 @@ namespace Freeserf
             }
             else if (SerfState == State.Transporting || SerfState == State.Delivering)
             {
-                if (s.Walking.Res != Resource.Type.None)
+                if (s.Walking.Resource != Resource.Type.None)
                 {
-                    Resource.Type res = s.Walking.Res;
-                    uint dest = s.Walking.Dest;
+                    var resource = s.Walking.Resource;
+                    var destination = s.Walking.Destination;
 
-                    Game.CancelTransportedResource(res, dest);
-                    Game.LoseResource(res);
+                    Game.CancelTransportedResource(resource, destination);
+                    Game.LoseResource(resource);
                 }
 
                 if (GetSerfType() != Type.Sailor)
@@ -957,34 +941,34 @@ namespace Freeserf
         {
             if (SerfState == State.Walking)
             {
-                if (s.Walking.Dir1 >= 0)
+                if (s.Walking.Direction1 >= 0)
                 {
-                    if (s.Walking.Dir1 != 6)
+                    if (s.Walking.Direction1 != 6)
                     {
-                        Direction dir = (Direction)s.Walking.Dir1;
-                        Flag flag = Game.GetFlag(s.Walking.Dest);
-                        flag.CancelSerfRequest(dir);
+                        var direction = (Direction)s.Walking.Direction1;
+                        var flag = Game.GetFlag(s.Walking.Destination);
+                        flag.CancelSerfRequest(direction);
 
-                        Direction otherDir = flag.GetOtherEndDirection(dir);
-                        flag.GetOtherEndFlag(dir).CancelSerfRequest(otherDir);
+                        var otherDirection = flag.GetOtherEndDirection(direction);
+                        flag.GetOtherEndFlag(direction).CancelSerfRequest(otherDirection);
                     }
                 }
-                else if (s.Walking.Dir1 == -1)
+                else if (s.Walking.Direction1 == -1)
                 {
-                    Flag flag = Game.GetFlag(s.Walking.Dest);
-                    Building building = flag.GetBuilding();
+                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var building = flag.GetBuilding();
                     building.RequestedSerfLost();
                 }
             }
             else if (SerfState == State.Transporting || SerfState == State.Delivering)
             {
-                if (s.Walking.Res != Resource.Type.None)
+                if (s.Walking.Resource != Resource.Type.None)
                 {
-                    Resource.Type res = s.Walking.Res;
-                    uint dest = s.Walking.Dest;
+                    var resource = s.Walking.Resource;
+                    var destination = s.Walking.Destination;
 
-                    Game.CancelTransportedResource(res, dest);
-                    inventory.PushResource(res);
+                    Game.CancelTransportedResource(resource, destination);
+                    inventory.PushResource(resource);
                 }
             }
         }
@@ -1006,75 +990,75 @@ namespace Freeserf
             SetSerfType(Type.Generic);
             Player = inventory.Player;
 
-            Building building = Game.GetBuilding(inventory.Building);
+            var building = Game.GetBuilding(inventory.Building);
             Position = building.Position;
             tick = Game.Tick;
             SetState(State.IdleInStock);
-            s.IdleInStock.InvIndex = inventory.Index;
+            s.IdleInStock.InventoryIndex = inventory.Index;
         }
 
         public void InitInventoryTransporter(Inventory inventory)
         {
             SetState(State.BuildingCastle);
-            s.BuildingCastle.InvIndex = inventory.Index;
+            s.BuildingCastle.InventoryIndex = inventory.Index;
         }
 
         public void ResetTransport(Flag flag)
         {
-            if (SerfState == State.Walking && s.Walking.Dest == flag.Index && s.Walking.Dir1 < 0)
+            if (SerfState == State.Walking && s.Walking.Destination == flag.Index && s.Walking.Direction1 < 0)
             {
-                s.Walking.Dir1 = -2;
-                s.Walking.Dest = 0;
+                s.Walking.Direction1 = -2;
+                s.Walking.Destination = 0;
             }
             else if (SerfState == State.ReadyToLeaveInventory &&
-                     s.ReadyToLeaveInventory.Dest == flag.Index &&
+                     s.ReadyToLeaveInventory.Destination == flag.Index &&
                      s.ReadyToLeaveInventory.Mode < 0)
             {
                 s.ReadyToLeaveInventory.Mode = -2;
-                s.ReadyToLeaveInventory.Dest = 0;
+                s.ReadyToLeaveInventory.Destination = 0;
             }
             else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
                      s.LeavingBuilding.NextState == State.Walking &&
-                     s.LeavingBuilding.Dest == flag.Index &&
+                     s.LeavingBuilding.Destination == flag.Index &&
                      s.LeavingBuilding.FieldB < 0)
             {
                 s.LeavingBuilding.FieldB = -2;
-                s.LeavingBuilding.Dest = 0;
+                s.LeavingBuilding.Destination = 0;
             }
             else if (SerfState == State.Transporting &&
-                     s.Walking.Dest == flag.Index)
+                     s.Walking.Destination == flag.Index)
             {
-                s.Walking.Dest = 0;
+                s.Walking.Destination = 0;
             }
             else if (SerfState == State.MoveResourceOut &&
                      s.MoveResourceOut.NextState == State.DropResourceOut &&
-                     s.MoveResourceOut.ResDest == flag.Index)
+                     s.MoveResourceOut.ResourceDestination == flag.Index)
             {
-                s.MoveResourceOut.ResDest = 0;
+                s.MoveResourceOut.ResourceDestination = 0;
             }
             else if (SerfState == State.DropResourceOut &&
-                     s.MoveResourceOut.ResDest == flag.Index)
+                     s.MoveResourceOut.ResourceDestination == flag.Index)
             {
-                s.MoveResourceOut.ResDest = 0;
+                s.MoveResourceOut.ResourceDestination = 0;
             }
             else if (SerfState == State.LeavingBuilding &&
                      s.LeavingBuilding.NextState == State.DropResourceOut &&
-                     s.LeavingBuilding.Dest == flag.Index)
+                     s.LeavingBuilding.Destination == flag.Index)
             {
-                s.LeavingBuilding.Dest = 0;
+                s.LeavingBuilding.Destination = 0;
             }
         }
 
-        public bool PathSplited(uint flag1, Direction dir1, uint flag2, Direction dir2, ref int select)
+        public bool PathSplited(uint flag1, Direction direction1, uint flag2, Direction direction2, ref int select)
         {
             if (SerfState == State.Walking)
             {
-                if (s.Walking.Dest == flag1 && s.Walking.Dir1 == (int)dir1)
+                if (s.Walking.Destination == flag1 && s.Walking.Direction1 == (int)direction1)
                 {
                     select = 0; // TODO: change required?
                     return true;
                 }
-                else if (s.Walking.Dest == flag2 && s.Walking.Dir1 == (int)dir2)
+                else if (s.Walking.Destination == flag2 && s.Walking.Direction1 == (int)direction2)
                 {
                     select = 1;
                     return true;
@@ -1082,14 +1066,14 @@ namespace Freeserf
             }
             else if (SerfState == State.ReadyToLeaveInventory)
             {
-                if (s.ReadyToLeaveInventory.Dest == flag1 &&
-                    s.ReadyToLeaveInventory.Mode == (int)dir1)
+                if (s.ReadyToLeaveInventory.Destination == flag1 &&
+                    s.ReadyToLeaveInventory.Mode == (int)direction1)
                 {
                     select = 0; // TODO: change required?
                     return true;
                 }
-                else if (s.ReadyToLeaveInventory.Dest == flag2 &&
-                         s.ReadyToLeaveInventory.Mode == (int)dir2)
+                else if (s.ReadyToLeaveInventory.Destination == flag2 &&
+                         s.ReadyToLeaveInventory.Mode == (int)direction2)
                 {
                     select = 1;
                     return true;
@@ -1098,14 +1082,14 @@ namespace Freeserf
             else if ((SerfState == State.ReadyToLeave || SerfState == State.LeavingBuilding) &&
                      s.LeavingBuilding.NextState == State.Walking)
             {
-                if (s.LeavingBuilding.Dest == flag1 &&
-                    s.LeavingBuilding.FieldB == (int)dir1)
+                if (s.LeavingBuilding.Destination == flag1 &&
+                    s.LeavingBuilding.FieldB == (int)direction1)
                 {
                     select = 0; // TODO: change required?
                     return true;
                 }
-                else if (s.LeavingBuilding.Dest == flag2 &&
-                         s.LeavingBuilding.FieldB == (int)dir2)
+                else if (s.LeavingBuilding.Destination == flag2 &&
+                         s.LeavingBuilding.FieldB == (int)direction2)
                 {
                     select = 1;
                     return true;
@@ -1115,29 +1099,29 @@ namespace Freeserf
             return false;
         }
 
-        public bool IsRelatedTo(uint dest, Direction dir)
+        public bool IsRelatedTo(uint destination, Direction direction)
         {
             bool result = false;
 
             switch (SerfState)
             {
                 case State.Walking:
-                    if (s.Walking.Dest == dest && s.Walking.Dir1 == (int)dir)
+                    if (s.Walking.Destination == destination && s.Walking.Direction1 == (int)direction)
                     {
                         result = true;
                     }
                     break;
                 case State.ReadyToLeaveInventory:
-                    if (s.ReadyToLeaveInventory.Dest == dest &&
-                        s.ReadyToLeaveInventory.Mode == (int)dir)
+                    if (s.ReadyToLeaveInventory.Destination == destination &&
+                        s.ReadyToLeaveInventory.Mode == (int)direction)
                     {
                         result = true;
                     }
                     break;
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    if (s.LeavingBuilding.Dest == dest &&
-                        s.LeavingBuilding.FieldB == (int)dir &&
+                    if (s.LeavingBuilding.Destination == destination &&
+                        s.LeavingBuilding.FieldB == (int)direction &&
                         s.LeavingBuilding.NextState == State.Walking)
                     {
                         result = true;
@@ -1150,33 +1134,33 @@ namespace Freeserf
             return result;
         }
 
-        public void PathDeleted(uint dest, Direction dir)
+        public void PathDeleted(uint destination, Direction direction)
         {
             switch (SerfState)
             {
                 case State.Walking:
-                    if (s.Walking.Dest == dest && s.Walking.Dir1 == (int)dir)
+                    if (s.Walking.Destination == destination && s.Walking.Direction1 == (int)direction)
                     {
-                        s.Walking.Dir1 = -2;
-                        s.Walking.Dest = 0;
+                        s.Walking.Direction1 = -2;
+                        s.Walking.Destination = 0;
                     }
                     break;
                 case State.ReadyToLeaveInventory:
-                    if (s.ReadyToLeaveInventory.Dest == dest &&
-                        s.ReadyToLeaveInventory.Mode == (int)dir)
+                    if (s.ReadyToLeaveInventory.Destination == destination &&
+                        s.ReadyToLeaveInventory.Mode == (int)direction)
                     {
                         s.ReadyToLeaveInventory.Mode = -2;
-                        s.ReadyToLeaveInventory.Dest = 0;
+                        s.ReadyToLeaveInventory.Destination = 0;
                     }
                     break;
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    if (s.LeavingBuilding.Dest == dest &&
-                        s.LeavingBuilding.FieldB == (int)dir &&
+                    if (s.LeavingBuilding.Destination == destination &&
+                        s.LeavingBuilding.FieldB == (int)direction &&
                         s.LeavingBuilding.NextState == State.Walking)
                     {
                         s.LeavingBuilding.FieldB = -2;
-                        s.LeavingBuilding.Dest = 0;
+                        s.LeavingBuilding.Destination = 0;
                     }
                     break;
                 default:
@@ -1187,64 +1171,64 @@ namespace Freeserf
         public void PathMerged(Flag flag)
         {
             if (SerfState == State.ReadyToLeaveInventory &&
-                s.ReadyToLeaveInventory.Dest == flag.Index)
+                s.ReadyToLeaveInventory.Destination == flag.Index)
             {
-                s.ReadyToLeaveInventory.Dest = 0;
+                s.ReadyToLeaveInventory.Destination = 0;
                 s.ReadyToLeaveInventory.Mode = -2;
             }
-            else if (SerfState == State.Walking && s.Walking.Dest == flag.Index)
+            else if (SerfState == State.Walking && s.Walking.Destination == flag.Index)
             {
-                s.Walking.Dest = 0;
-                s.Walking.Dir1 = -2;
+                s.Walking.Destination = 0;
+                s.Walking.Direction1 = -2;
             }
             else if (SerfState == State.IdleInStock && true/*...*/) // TODO: ?
             {
-                /* TODO */
+                // TODO 
             }
             else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
-                   s.LeavingBuilding.Dest == flag.Index &&
+                   s.LeavingBuilding.Destination == flag.Index &&
                    s.LeavingBuilding.NextState == State.Walking)
             {
-                s.LeavingBuilding.Dest = 0;
+                s.LeavingBuilding.Destination = 0;
                 s.LeavingBuilding.FieldB = -2;
             }
         }
 
-        public void PathMerged2(uint flag1, Direction dir1, uint flag2, Direction dir2)
+        public void PathMerged2(uint flag1Index, Direction direction1, uint flag2Index, Direction direction2)
         {
             if (SerfState == State.ReadyToLeaveInventory &&
-              ((s.ReadyToLeaveInventory.Dest == flag1 &&
-                s.ReadyToLeaveInventory.Mode == (int)dir1) ||
-               (s.ReadyToLeaveInventory.Dest == flag2 &&
-                s.ReadyToLeaveInventory.Mode == (int)dir2)))
+              ((s.ReadyToLeaveInventory.Destination == flag1Index &&
+                s.ReadyToLeaveInventory.Mode == (int)direction1) ||
+               (s.ReadyToLeaveInventory.Destination == flag2Index &&
+                s.ReadyToLeaveInventory.Mode == (int)direction2)))
             {
-                s.ReadyToLeaveInventory.Dest = 0;
+                s.ReadyToLeaveInventory.Destination = 0;
                 s.ReadyToLeaveInventory.Mode = -2;
             }
             else if (SerfState == State.Walking &&
-                     ((s.Walking.Dest == flag1 && s.Walking.Dir1 == (int)dir1) ||
-                      (s.Walking.Dest == flag2 && s.Walking.Dir1 == (int)dir2)))
+                     ((s.Walking.Destination == flag1Index && s.Walking.Direction1 == (int)direction1) ||
+                      (s.Walking.Destination == flag2Index && s.Walking.Direction1 == (int)direction2)))
             {
-                s.Walking.Dest = 0;
-                s.Walking.Dir1 = -2;
+                s.Walking.Destination = 0;
+                s.Walking.Direction1 = -2;
             }
             else if (SerfState == State.IdleInStock)
             {
-                /* TODO */
+                // TODO 
             }
             else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
-                     ((s.LeavingBuilding.Dest == flag1 &&
-                       s.LeavingBuilding.FieldB == (int)dir1) ||
-                      (s.LeavingBuilding.Dest == flag2 &&
-                       s.LeavingBuilding.FieldB == (int)dir2)) &&
+                     ((s.LeavingBuilding.Destination == flag1Index &&
+                       s.LeavingBuilding.FieldB == (int)direction1) ||
+                      (s.LeavingBuilding.Destination == flag2Index &&
+                       s.LeavingBuilding.FieldB == (int)direction2)) &&
                      s.LeavingBuilding.NextState == State.Walking)
             {
-                s.LeavingBuilding.Dest = 0;
+                s.LeavingBuilding.Destination = 0;
                 s.LeavingBuilding.FieldB = -2;
             }
         }
 
-        public void FlagDeleted(MapPos flagPos)
+        public void FlagDeleted(MapPos flagPosition)
         {
             switch (SerfState)
             {
@@ -1254,7 +1238,7 @@ namespace Freeserf
                     break;
                 case State.FinishedBuilding:
                 case State.Walking:
-                    if (Game.Map.Paths(flagPos) == 0)
+                    if (Game.Map.Paths(flagPosition) == 0)
                     {
                         SetState(State.Lost);
                     }
@@ -1264,19 +1248,19 @@ namespace Freeserf
             }
         }
 
-        public bool BuildingDeleted(MapPos buildingPos, bool escape)
+        public bool BuildingDeleted(MapPos buildingPosition, bool escape)
         {
-            if (Position == buildingPos &&
+            if (Position == buildingPosition &&
                 (SerfState == State.IdleInStock || SerfState == State.ReadyToLeaveInventory))
             {
                 if (escape)
                 {
-                    /* Serf is escaping. */
+                    // Serf is escaping. 
                     SetState(State.EscapeBuilding);
                 }
                 else
                 {
-                    /* Kill this serf. */
+                    // Kill this serf. 
                     SetSerfType(Type.Dead);
                     Game.DeleteSerf(this);
                 }
@@ -1297,7 +1281,7 @@ namespace Freeserf
 
         public void CastleDeleted(MapPos castlePos, bool transporter)
         {
-            if (type == Type.None || Position == Global.BadMapPos) // TODO: There seem to be a null-serf in the castle. Maybe delete later?
+            if (type == Type.None || Position == Constants.INVALID_MAPPOS) // TODO: There seem to be a null-serf in the castle. Maybe delete later?
                 return;
 
             if ((!transporter || GetSerfType() == Type.TransporterInventory) &&
@@ -1322,9 +1306,9 @@ namespace Freeserf
             }
         }
 
-        public bool ChangeTransporterStateAtPos(MapPos pos, State state)
+        public bool ChangeTransporterStateAtPosition(MapPos position, State state)
         {
-            if (Position == pos &&
+            if (Position == position &&
               (state == State.WakeAtFlag || state == State.WakeOnPath ||
                state == State.WaitIdleOnPath || state == State.IdleOnPath))
             {
@@ -1341,13 +1325,13 @@ namespace Freeserf
             {
                 s.Walking.WaitCounter = -1;
 
-                if (s.Walking.Res != Resource.Type.None)
+                if (s.Walking.Resource != Resource.Type.None)
                 {
-                    Resource.Type res = s.Walking.Res;
-                    s.Walking.Res = Resource.Type.None;
+                    var resource = s.Walking.Resource;
+                    s.Walking.Resource = Resource.Type.None;
 
-                    Game.CancelTransportedResource(res, s.Walking.Dest);
-                    Game.LoseResource(res);
+                    Game.CancelTransportedResource(resource, s.Walking.Destination);
+                    Game.LoseResource(resource);
                 }
             }
             else
@@ -1356,33 +1340,33 @@ namespace Freeserf
             }
         }
 
-        public void ClearDestination(uint dest)
+        public void ClearDestination(uint destination)
         {
             switch (SerfState)
             {
                 case State.Walking:
-                    if (s.Walking.Dest == dest && s.Walking.Dir1 < 0)
+                    if (s.Walking.Destination == destination && s.Walking.Direction1 < 0)
                     {
-                        s.Walking.Dir1 = -2;
-                        s.Walking.Dest = 0;
+                        s.Walking.Direction1 = -2;
+                        s.Walking.Destination = 0;
                     }
                     break;
                 case State.ReadyToLeaveInventory:
-                    if (s.ReadyToLeaveInventory.Dest == dest &&
+                    if (s.ReadyToLeaveInventory.Destination == destination &&
                         s.ReadyToLeaveInventory.Mode < 0)
                     {
                         s.ReadyToLeaveInventory.Mode = -2;
-                        s.ReadyToLeaveInventory.Dest = 0;
+                        s.ReadyToLeaveInventory.Destination = 0;
                     }
                     break;
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    if (s.LeavingBuilding.Dest == dest &&
+                    if (s.LeavingBuilding.Destination == destination &&
                         s.LeavingBuilding.FieldB < 0 &&
                         s.LeavingBuilding.NextState == State.Walking)
                     {
                         s.LeavingBuilding.FieldB = -2;
-                        s.LeavingBuilding.Dest = 0;
+                        s.LeavingBuilding.Destination = 0;
                     }
                     break;
                 default:
@@ -1390,34 +1374,34 @@ namespace Freeserf
             }
         }
 
-        public void ClearDestination2(uint dest)
+        public void ClearDestination2(uint destination)
         {
             switch (SerfState)
             {
                 case State.Transporting:
-                    if (s.Walking.Dest == dest)
+                    if (s.Walking.Destination == destination)
                     {
-                        s.Walking.Dest = 0;
+                        s.Walking.Destination = 0;
                     }
                     break;
                 case State.DropResourceOut:
-                    if (s.MoveResourceOut.ResDest == dest)
+                    if (s.MoveResourceOut.ResourceDestination == destination)
                     {
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.ResourceDestination = 0;
                     }
                     break;
                 case State.LeavingBuilding:
-                    if (s.LeavingBuilding.Dest == dest &&
+                    if (s.LeavingBuilding.Destination == destination &&
                         s.LeavingBuilding.NextState == State.DropResourceOut)
                     {
-                        s.LeavingBuilding.Dest = 0;
+                        s.LeavingBuilding.Destination = 0;
                     }
                     break;
                 case State.MoveResourceOut:
-                    if (s.MoveResourceOut.ResDest == dest &&
+                    if (s.MoveResourceOut.ResourceDestination == destination &&
                         s.MoveResourceOut.NextState == State.DropResourceOut)
                     {
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.ResourceDestination = 0;
                     }
                     break;
                 default:
@@ -1425,57 +1409,58 @@ namespace Freeserf
             }
         }
 
-        public bool IdleToWaitState(MapPos pos)
+        public bool IdleToWaitState(MapPos position)
         {
-            if (Position == pos &&
+            if (Position == position &&
               (SerfState == State.IdleOnPath || SerfState == State.WaitIdleOnPath ||
                SerfState == State.WakeAtFlag || SerfState == State.WakeOnPath))
             {
                 SetState(State.WakeAtFlag);
                 return true;
             }
+
             return false;
         }
 
         public int GetDelivery()
         {
-            int res = 0;
+            int resource = 0;
 
             switch (SerfState)
             {
                 case State.Delivering:
                 case State.Transporting:
-                    res = (int)s.Walking.Res + 1;
+                    resource = (int)s.Walking.Resource + 1;
                     break;
                 case State.EnteringBuilding:
-                    res = s.EnteringBuilding.FieldB;
+                    resource = s.EnteringBuilding.FieldB;
                     break;
                 case State.LeavingBuilding:
-                    res = s.LeavingBuilding.FieldB;
+                    resource = s.LeavingBuilding.FieldB;
                     break;
                 case State.ReadyToEnter:
-                    res = s.ReadyToEnter.FieldB;
+                    resource = s.ReadyToEnter.FieldB;
                     break;
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    res = (int)s.MoveResourceOut.Res;
+                    resource = (int)s.MoveResourceOut.Resource;
                     break;
 
                 default:
                     break;
             }
 
-            return res;
+            return resource;
         }
 
         internal int GetFreeWalkingNegDist1()
         {
-            return s.FreeWalking.NegDist1;
+            return s.FreeWalking.NegDistance1;
         }
 
         internal int GetFreeWalkingNegDist2()
         {
-            return s.FreeWalking.NegDist2;
+            return s.FreeWalking.NegDistance2;
         }
 
         internal State GetLeavingBuildingNextState()
@@ -1490,17 +1475,17 @@ namespace Freeserf
 
         internal uint GetMiningRes()
         {
-            return s.Mining.Res;
+            return s.Mining.Resource;
         }
 
         internal Resource.Type GetTransportedResource()
         {
-            return s.Walking.Res;
+            return s.Walking.Resource;
         }
 
         internal uint GetTransportDestination()
         {
-            return s.Walking.Dest;
+            return s.Walking.Destination;
         }
 
         internal int GetAttackingFieldD()
@@ -1510,7 +1495,7 @@ namespace Freeserf
 
         internal int GetAttackingDefIndex()
         {
-            return s.Attacking.DefIndex;
+            return s.Attacking.DefenderIndex;
         }
 
         internal int GetWalkingWaitCounter()
@@ -1523,14 +1508,14 @@ namespace Freeserf
             s.Walking.WaitCounter = newCounter;
         }
 
-        internal int GetWalkingDir()
+        internal int GetWalkingDirection()
         {
-            return s.Walking.Dir;
+            return s.Walking.Direction;
         }
 
         internal uint GetIdleInStockInventoryIndex()
         {
-            return s.IdleInStock.InvIndex;
+            return s.IdleInStock.InventoryIndex;
         }
 
         internal int GetMiningSubstate()
@@ -1540,24 +1525,24 @@ namespace Freeserf
 
         public Serf ExtractLastKnightFromList()
         {
-            uint defIndex = Index;
-            Serf defSerf = Game.GetSerf(defIndex);
+            uint defenderIndex = Index;
+            var defendingSerf = Game.GetSerf(defenderIndex);
             Serf lastKnight = null;
 
-            while (defSerf.s.Defending.NextKnight != 0)
+            while (defendingSerf.s.Defending.NextKnight != 0)
             {
-                lastKnight = defSerf;
-                defIndex = defSerf.s.Defending.NextKnight;
-                defSerf = Game.GetSerf(defIndex);
+                lastKnight = defendingSerf;
+                defenderIndex = defendingSerf.s.Defending.NextKnight;
+                defendingSerf = Game.GetSerf(defenderIndex);
             }
 
             if (lastKnight != null)
             {
-                lastKnight.s.Defending.NextKnight = defSerf.s.Defending.NextKnight;
-                defSerf.s.Defending.NextKnight = 0;
+                lastKnight.s.Defending.NextKnight = defendingSerf.s.Defending.NextKnight;
+                defendingSerf.s.Defending.NextKnight = 0;
             }
 
-            return defSerf;
+            return defendingSerf;
         }
 
         public Serf ExtractKnightFromList(uint index, ref uint firstKnight, Serf lastKnight = null)
@@ -1586,7 +1571,7 @@ namespace Freeserf
             return nextKnight.ExtractKnightFromList(index, ref firstKnight, this);
         }
 
-        internal void SetPosition(uint position)
+        internal void SetPosition(MapPos position)
         {
             Position = position;
         }
@@ -1601,9 +1586,9 @@ namespace Freeserf
             return s.Defending.NextKnight;
         }
 
-        internal void SetNextKnight(uint next)
+        internal void SetNextKnight(uint nextKnightIndex)
         {
-            s.Defending.NextKnight = next;
+            s.Defending.NextKnight = nextKnightIndex;
         }
 
         internal Building GetBuilding()
@@ -1649,11 +1634,11 @@ namespace Freeserf
                     }
                     else
                     {
-                        if (s.Digging.DigPos == 0)
+                        if (s.Digging.DigPosition == 0)
                             return Game.GetBuildingAtPos(Position);
                         else
                         {
-                            var building = Game.GetBuildingAtPos(Game.Map.Move(Position, ((Direction)(6 - s.Digging.DigPos)).Reverse()));
+                            var building = Game.GetBuildingAtPos(Game.Map.Move(Position, ((Direction)(6 - s.Digging.DigPosition)).Reverse()));
 
                             if (building != null)
                                 return building;
@@ -1671,20 +1656,20 @@ namespace Freeserf
 
         // Commands
 
-        internal void GoOutFromInventory(uint inventory, MapPos dest, int mode)
+        internal void GoOutFromInventory(uint inventoryIndex, MapPos destination, int mode)
         {
             SetState(State.ReadyToLeaveInventory);
             s.ReadyToLeaveInventory.Mode = mode;
-            s.ReadyToLeaveInventory.Dest = dest;
-            s.ReadyToLeaveInventory.InvIndex = inventory;
+            s.ReadyToLeaveInventory.Destination = destination;
+            s.ReadyToLeaveInventory.InventoryIndex = inventoryIndex;
         }
 
-        internal void SendOffToFight(int distColumn, int distRow)
+        internal void SendOffToFight(int distanceColumn, int distanceRow)
         {
-            /* Send this serf off to fight. */
+            // Send this serf off to fight. 
             SetState(State.KnightLeaveForWalkToFight);
-            s.LeaveForWalkToFight.DistColumn = distColumn;
-            s.LeaveForWalkToFight.DistRow = distRow;
+            s.LeaveForWalkToFight.DistanceColumn = distanceColumn;
+            s.LeaveForWalkToFight.DistanceRow = distanceRow;
             s.LeaveForWalkToFight.FieldD = 0;
             s.LeaveForWalkToFight.FieldE = 0;
             s.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
@@ -1693,15 +1678,15 @@ namespace Freeserf
         internal void StayIdleInStock(uint inventory)
         {
             SetState(State.IdleInStock);
-            s.IdleInStock.InvIndex = inventory;
+            s.IdleInStock.InventoryIndex = inventory;
         }
 
-        internal void GoOutFromBuilding(MapPos dest, int dir, int fieldB)
+        internal void GoOutFromBuilding(MapPos destination, int direction, int fieldB)
         {
             SetState(State.ReadyToLeave);
             s.LeavingBuilding.FieldB = fieldB;
-            s.LeavingBuilding.Dest = dest;
-            s.LeavingBuilding.Dir = dir;
+            s.LeavingBuilding.Destination = destination;
+            s.LeavingBuilding.Direction = direction;
             s.LeavingBuilding.NextState = State.Walking;
         }
 
@@ -1711,7 +1696,7 @@ namespace Freeserf
             {
                 switch (SerfState)
                 {
-                    case State.Null: /* 0 */
+                    case State.Null: // 0 
                         break;
                     case State.Walking:
                         HandleSerfWalkingState();
@@ -1725,7 +1710,7 @@ namespace Freeserf
                     case State.EnteringBuilding:
                         HandleSerfEnteringBuildingState();
                         break;
-                    case State.LeavingBuilding: /* 5 */
+                    case State.LeavingBuilding: // 5 
                         HandleSerfLeavingBuildingState();
                         break;
                     case State.ReadyToEnter:
@@ -1740,7 +1725,7 @@ namespace Freeserf
                     case State.Building:
                         HandleSerfBuildingState();
                         break;
-                    case State.BuildingCastle: /* 10 */
+                    case State.BuildingCastle: // 10 
                         HandleSerfBuildingCastleState();
                         break;
                     case State.MoveResourceOut:
@@ -1755,7 +1740,7 @@ namespace Freeserf
                     case State.Delivering:
                         HandleSerfDeliveringState();
                         break;
-                    case State.ReadyToLeaveInventory: /* 15 */
+                    case State.ReadyToLeaveInventory: // 15 
                         HandleSerfReadyToLeaveInventoryState();
                         break;
                     case State.FreeWalking:
@@ -1770,7 +1755,7 @@ namespace Freeserf
                     case State.PlanningPlanting:
                         HandleSerfPlanningPlantingState();
                         break;
-                    case State.Planting: /* 20 */
+                    case State.Planting: // 20 
                         HandleSerfPlantingState();
                         break;
                     case State.PlanningStoneCutting:
@@ -1785,7 +1770,7 @@ namespace Freeserf
                     case State.Sawing:
                         HandleSerfSawingState();
                         break;
-                    case State.Lost: /* 25 */
+                    case State.Lost: // 25 
                         HandleSerfLostState();
                         break;
                     case State.LostSailor:
@@ -1800,7 +1785,7 @@ namespace Freeserf
                     case State.Mining:
                         HandleSerfMiningState();
                         break;
-                    case State.Smelting: /* 30 */
+                    case State.Smelting: // 30 
                         HandleSerfSmeltingState();
                         break;
                     case State.PlanningFishing:
@@ -1815,7 +1800,7 @@ namespace Freeserf
                     case State.Farming:
                         HandleSerfFarmingState();
                         break;
-                    case State.Milling: /* 35 */
+                    case State.Milling: // 35 
                         HandleSerfMillingState();
                         break;
                     case State.Baking:
@@ -1830,7 +1815,7 @@ namespace Freeserf
                     case State.MakingWeapon:
                         HandleSerfMakingWeaponState();
                         break;
-                    case State.MakingTool: /* 40 */
+                    case State.MakingTool: // 40 
                         HandleSerfMakingToolState();
                         break;
                     case State.BuildingBoat:
@@ -1845,7 +1830,7 @@ namespace Freeserf
                     case State.KnightEngagingBuilding:
                         HandleSerfKnightEngagingBuildingState();
                         break;
-                    case State.KnightPrepareAttacking: /* 45 */
+                    case State.KnightPrepareAttacking: // 45 
                         HandleSerfKnightPrepareAttacking();
                         break;
                     case State.KnightLeaveForFight:
@@ -1860,9 +1845,9 @@ namespace Freeserf
                         break;
                     case State.KnightDefending:
                     case State.KnightDefendingFree:
-                        /* The actual fight update is handled for the attacking knight. */
+                        // The actual fight update is handled for the attacking knight. 
                         break;
-                    case State.KnightAttackingVictory: /* 50 */
+                    case State.KnightAttackingVictory: // 50 
                         HandleSerfKnightAttackingVictoryState();
                         break;
                     case State.KnightAttackingDefeat:
@@ -1890,7 +1875,7 @@ namespace Freeserf
                         HandleStateKnightPrepareDefendingFree();
                         break;
                     case State.KnightPrepareDefendingFreeWait:
-                        /* Nothing to do for this state. */
+                        // Nothing to do for this state. 
                         break;
                     case State.KnightAttackingVictoryFree:
                         HandleKnightAttackingVictoryFree();
@@ -1904,7 +1889,7 @@ namespace Freeserf
                     case State.KnightAttackingFreeWait:
                         HandleKnightAttackingFreeWait();
                         break;
-                    case State.KnightLeaveForWalkToFight: /* 65 */
+                    case State.KnightLeaveForWalkToFight: // 65 
                         HandleSerfStateKnightLeaveForWalkToFight();
                         break;
                     case State.IdleOnPath:
@@ -1923,7 +1908,7 @@ namespace Freeserf
                         FixNonTransporterState();
                         HandleSerfWakeOnPathState();
                         break;
-                    case State.DefendingHut: /* 70 */
+                    case State.DefendingHut: // 70 
                         HandleSerfDefendingHutState();
                         break;
                     case State.DefendingTower:
@@ -1938,7 +1923,7 @@ namespace Freeserf
                     case State.FinishedBuilding:
                         HandleSerfFinishedBuildingState();
                         break;
-                    case State.DefendingCastle: /* 75 */
+                    case State.DefendingCastle: // 75 
                         HandleSerfDefendingCastleState();
                         break;
                     default:
@@ -1997,23 +1982,23 @@ namespace Freeserf
             {
                 case State.IdleInStock:
                     reader.Skip(3); // 11
-                    s.IdleInStock.InvIndex = reader.ReadWord(); // 14
+                    s.IdleInStock.InventoryIndex = reader.ReadWord(); // 14
                     break;
 
                 case State.Walking:
                     {
-                        s.Walking.Dir1 = reader.ReadByte(); // 11
-                        s.Walking.Dest = reader.ReadWord(); // 12
-                        s.Walking.Dir = reader.ReadByte(); // 14
+                        s.Walking.Direction1 = reader.ReadByte(); // 11
+                        s.Walking.Destination = reader.ReadWord(); // 12
+                        s.Walking.Direction = reader.ReadByte(); // 14
                         s.Walking.WaitCounter = reader.ReadByte(); // 15
                         break;
                     }
                 case State.Transporting:
                 case State.Delivering:
                     {
-                        s.Walking.Res = (Resource.Type)((reader.ReadByte()) - 1); // 11
-                        s.Walking.Dest = reader.ReadWord(); // 12
-                        s.Walking.Dir = reader.ReadByte(); // 14
+                        s.Walking.Resource = (Resource.Type)((reader.ReadByte()) - 1); // 11
+                        s.Walking.Destination = reader.ReadWord(); // 12
+                        s.Walking.Direction = reader.ReadByte(); // 14
                         s.Walking.WaitCounter = reader.ReadByte(); // 15
                         break;
                     }
@@ -2025,9 +2010,9 @@ namespace Freeserf
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
                     s.LeavingBuilding.FieldB = reader.ReadByte(); // 11
-                    s.LeavingBuilding.Dest = reader.ReadByte(); // 12
-                    s.LeavingBuilding.Dest2 = reader.ReadByte(); // 13
-                    s.LeavingBuilding.Dir = reader.ReadByte(); // 14
+                    s.LeavingBuilding.Destination = reader.ReadByte(); // 12
+                    s.LeavingBuilding.Destination2 = reader.ReadByte(); // 13
+                    s.LeavingBuilding.Direction = reader.ReadByte(); // 14
                     s.LeavingBuilding.NextState = (State)reader.ReadByte(); // 15
                     break;
 
@@ -2036,9 +2021,9 @@ namespace Freeserf
                     break;
 
                 case State.Digging:
-                    s.Digging.HIndex = reader.ReadByte(); // 11
-                    s.Digging.TargetH = reader.ReadByte(); // 12
-                    s.Digging.DigPos = reader.ReadByte(); // 13
+                    s.Digging.HeightIndex = reader.ReadByte(); // 11
+                    s.Digging.TargetHeight = reader.ReadByte(); // 12
+                    s.Digging.DigPosition = reader.ReadByte(); // 13
                     s.Digging.Substate = reader.ReadByte(); // 14
                     break;
 
@@ -2051,21 +2036,21 @@ namespace Freeserf
 
                 case State.BuildingCastle:
                     reader.Skip(1); // 11
-                    s.BuildingCastle.InvIndex = reader.ReadWord(); // 12
+                    s.BuildingCastle.InventoryIndex = reader.ReadWord(); // 12
                     break;
 
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    s.MoveResourceOut.Res = reader.ReadByte(); // 11
-                    s.MoveResourceOut.ResDest = reader.ReadWord(); // 12
+                    s.MoveResourceOut.Resource = reader.ReadByte(); // 11
+                    s.MoveResourceOut.ResourceDestination = reader.ReadWord(); // 12
                     reader.Skip(1); // 14
                     s.MoveResourceOut.NextState = (State)reader.ReadByte(); // 15
                     break;
 
                 case State.ReadyToLeaveInventory:
                     s.ReadyToLeaveInventory.Mode = reader.ReadByte(); // 11
-                    s.ReadyToLeaveInventory.Dest = reader.ReadWord(); // 12
-                    s.ReadyToLeaveInventory.InvIndex = reader.ReadWord(); // 14
+                    s.ReadyToLeaveInventory.Destination = reader.ReadWord(); // 12
+                    s.ReadyToLeaveInventory.InventoryIndex = reader.ReadWord(); // 14
                     break;
 
                 case State.FreeWalking:
@@ -2076,10 +2061,10 @@ namespace Freeserf
                 case State.Fishing:
                 case State.Farming:
                 case State.SamplingGeoSpot:
-                    s.FreeWalking.Dist1 = reader.ReadByte(); // 11
-                    s.FreeWalking.Dist2 = reader.ReadByte(); // 12
-                    s.FreeWalking.NegDist1 = reader.ReadByte(); // 13
-                    s.FreeWalking.NegDist2 = reader.ReadByte(); // 14
+                    s.FreeWalking.DistanceX = reader.ReadByte(); // 11
+                    s.FreeWalking.DistanceY = reader.ReadByte(); // 12
+                    s.FreeWalking.NegDistance1 = reader.ReadByte(); // 13
+                    s.FreeWalking.NegDistance2 = reader.ReadByte(); // 14
                     s.FreeWalking.Flags = reader.ReadByte(); // 15
                     break;
 
@@ -2094,7 +2079,7 @@ namespace Freeserf
                 case State.Mining:
                     s.Mining.Substate = reader.ReadByte(); // 11
                     reader.Skip(1); // 12
-                    s.Mining.Res = reader.ReadByte(); // 13
+                    s.Mining.Resource = reader.ReadByte(); // 13
                     s.Mining.Deposit = (Map.Minerals)reader.ReadByte(); // 14
                     break;
 
@@ -2144,7 +2129,7 @@ namespace Freeserf
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
                     {
-                        s.IdleOnPath.RevDir = (Direction)reader.ReadByte(); // 11
+                        s.IdleOnPath.ReverseDirection = (Direction)reader.ReadByte(); // 11
                         var v16 = reader.ReadWord(); // 12
                         Game.CreateFlag(v16 / 70);
                         s.IdleOnPath.FlagIndex = Game.CreateFlag(v16 / 70).Index;
@@ -2185,23 +2170,23 @@ namespace Freeserf
             uint x = reader.Value("pos")[0].ReadUInt();
             uint y = reader.Value("pos")[1].ReadUInt();
 
-            Position = Game.Map.Pos(x, y);
+            Position = Game.Map.Position(x, y);
             tick = (ushort)reader.Value("tick").ReadUInt();
             SerfState = (State)reader.Value("state").ReadInt();
 
             switch (SerfState)
             {
                 case State.IdleInStock:
-                    s.IdleInStock.InvIndex = reader.Value("state.inventory").ReadUInt();
+                    s.IdleInStock.InventoryIndex = reader.Value("state.inventory").ReadUInt();
                     break;
 
                 case State.Walking:
                 case State.Transporting:
                 case State.Delivering:
-                    s.Walking.Res = (Resource.Type)reader.Value("state.res").ReadInt();
-                    s.Walking.Dest = reader.Value("state.dest").ReadUInt();
-                    s.Walking.Dir = reader.Value("state.dir").ReadInt();
-                    s.Walking.Dir1 = reader.Value("state.dir1").ReadInt();
+                    s.Walking.Resource = (Resource.Type)reader.Value("state.res").ReadInt();
+                    s.Walking.Destination = reader.Value("state.dest").ReadUInt();
+                    s.Walking.Direction = reader.Value("state.dir").ReadInt();
+                    s.Walking.Direction1 = reader.Value("state.dir1").ReadInt();
                     s.Walking.WaitCounter = reader.Value("state.wait_counter").ReadInt();
                     break;
 
@@ -2214,9 +2199,9 @@ namespace Freeserf
                 case State.ReadyToLeave:
                 case State.KnightLeaveForFight:
                     s.LeavingBuilding.FieldB = reader.Value("state.field_b").ReadInt();
-                    s.LeavingBuilding.Dest = reader.Value("state.dest").ReadUInt();
-                    s.LeavingBuilding.Dest2 = reader.Value("state.dest2").ReadInt();
-                    s.LeavingBuilding.Dir = reader.Value("state.dir").ReadInt();
+                    s.LeavingBuilding.Destination = reader.Value("state.dest").ReadUInt();
+                    s.LeavingBuilding.Destination2 = reader.Value("state.dest2").ReadInt();
+                    s.LeavingBuilding.Direction = reader.Value("state.dir").ReadInt();
                     s.LeavingBuilding.NextState = (State)reader.Value("state.next_state").ReadInt();
                     break;
 
@@ -2225,9 +2210,9 @@ namespace Freeserf
                     break;
 
                 case State.Digging:
-                    s.Digging.HIndex = reader.Value("state.h_index").ReadInt();
-                    s.Digging.TargetH = reader.Value("state.target_h").ReadUInt();
-                    s.Digging.DigPos = reader.Value("state.dig_pos").ReadInt();
+                    s.Digging.HeightIndex = reader.Value("state.h_index").ReadInt();
+                    s.Digging.TargetHeight = reader.Value("state.target_h").ReadUInt();
+                    s.Digging.DigPosition = reader.Value("state.dig_pos").ReadInt();
                     s.Digging.Substate = reader.Value("state.substate").ReadInt();
                     break;
 
@@ -2239,20 +2224,20 @@ namespace Freeserf
                     break;
 
                 case State.BuildingCastle:
-                    s.BuildingCastle.InvIndex = reader.Value("state.inv_index").ReadUInt();
+                    s.BuildingCastle.InventoryIndex = reader.Value("state.inv_index").ReadUInt();
                     break;
 
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    s.MoveResourceOut.Res = reader.Value("state.res").ReadUInt();
-                    s.MoveResourceOut.ResDest = reader.Value("state.res_dest").ReadUInt();
+                    s.MoveResourceOut.Resource = reader.Value("state.res").ReadUInt();
+                    s.MoveResourceOut.ResourceDestination = reader.Value("state.res_dest").ReadUInt();
                     s.MoveResourceOut.NextState = (State)reader.Value("state.next_state").ReadInt();
                     break;
 
                 case State.ReadyToLeaveInventory:
                     s.ReadyToLeaveInventory.Mode = reader.Value("state.mode").ReadInt();
-                    s.ReadyToLeaveInventory.Dest = reader.Value("state.dest").ReadUInt();
-                    s.ReadyToLeaveInventory.InvIndex = reader.Value("state.inv_index").ReadUInt();
+                    s.ReadyToLeaveInventory.Destination = reader.Value("state.dest").ReadUInt();
+                    s.ReadyToLeaveInventory.InventoryIndex = reader.Value("state.inv_index").ReadUInt();
                     break;
 
                 case State.FreeWalking:
@@ -2266,10 +2251,10 @@ namespace Freeserf
                 case State.KnightFreeWalking:
                 case State.KnightAttackingFree:
                 case State.KnightAttackingFreeWait:
-                    s.FreeWalking.Dist1 = reader.Value("state.dist1").ReadInt();
-                    s.FreeWalking.Dist2 = reader.Value("state.dist2").ReadInt();
-                    s.FreeWalking.NegDist1 = reader.Value("state.neg_dist").ReadInt();
-                    s.FreeWalking.NegDist2 = reader.Value("state.neg_dist2").ReadInt();
+                    s.FreeWalking.DistanceX = reader.Value("state.dist1").ReadInt();
+                    s.FreeWalking.DistanceY = reader.Value("state.dist2").ReadInt();
+                    s.FreeWalking.NegDistance1 = reader.Value("state.neg_dist").ReadInt();
+                    s.FreeWalking.NegDistance2 = reader.Value("state.neg_dist2").ReadInt();
                     s.FreeWalking.Flags = reader.Value("state.flags").ReadInt();
                     break;
 
@@ -2283,7 +2268,7 @@ namespace Freeserf
 
                 case State.Mining:
                     s.Mining.Substate = reader.Value("state.substate").ReadUInt();
-                    s.Mining.Res = reader.Value("state.res").ReadUInt();
+                    s.Mining.Resource = reader.Value("state.res").ReadUInt();
                     s.Mining.Deposit = (Map.Minerals)reader.Value("state.deposit").ReadInt();
                     break;
 
@@ -2338,7 +2323,7 @@ namespace Freeserf
                     else
                         s.Attacking.AttackerWon = reader.Value("state.field_c").ReadInt();
                     s.Attacking.FieldD = reader.Value("state.field_d").ReadInt();
-                    s.Attacking.DefIndex = reader.Value("state.def_index").ReadInt();
+                    s.Attacking.DefenderIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
                 case State.KnightAttackingVictoryFree:
@@ -2347,28 +2332,28 @@ namespace Freeserf
                     else
                         s.AttackingVictoryFree.Move = reader.Value("state.field_b").ReadInt();
                     if (reader.HasValue("state.dist_col"))
-                        s.AttackingVictoryFree.DistColumn = reader.Value("state.dist_col").ReadInt();
+                        s.AttackingVictoryFree.DistanceColumn = reader.Value("state.dist_col").ReadInt();
                     else
-                        s.AttackingVictoryFree.DistColumn = reader.Value("state.field_c").ReadInt();
+                        s.AttackingVictoryFree.DistanceColumn = reader.Value("state.field_c").ReadInt();
                     if (reader.HasValue("state.dist_row"))
-                        s.AttackingVictoryFree.DistRow = reader.Value("state.dist_row").ReadInt();
+                        s.AttackingVictoryFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
                     else
-                        s.AttackingVictoryFree.DistRow = reader.Value("state.field_c").ReadInt();
-                    s.Attacking.DefIndex = reader.Value("state.def_index").ReadInt();
+                        s.AttackingVictoryFree.DistanceRow = reader.Value("state.field_c").ReadInt();
+                    s.Attacking.DefenderIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
                 case State.KnightDefendingFree:
                 case State.KnightEngageDefendingFree:
-                    s.DefendingFree.DistColumn = reader.Value("state.dist_col").ReadInt();
-                    s.DefendingFree.DistRow = reader.Value("state.dist_row").ReadInt();
+                    s.DefendingFree.DistanceColumn = reader.Value("state.dist_col").ReadInt();
+                    s.DefendingFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
                     s.DefendingFree.FieldD = reader.Value("state.field_d").ReadInt();
-                    s.DefendingFree.OtherDistColumn = reader.Value("state.other_dist_col").ReadInt();
-                    s.DefendingFree.OtherDistRow = reader.Value("state.other_dist_row").ReadInt();
+                    s.DefendingFree.OtherDistanceColumn = reader.Value("state.other_dist_col").ReadInt();
+                    s.DefendingFree.OtherDistanceRow = reader.Value("state.other_dist_row").ReadInt();
                     break;
 
                 case State.KnightLeaveForWalkToFight:
-                    s.LeaveForWalkToFight.DistColumn = reader.Value("state.dist_col").ReadInt();
-                    s.LeaveForWalkToFight.DistRow = reader.Value("state.dist_row").ReadInt();
+                    s.LeaveForWalkToFight.DistanceColumn = reader.Value("state.dist_col").ReadInt();
+                    s.LeaveForWalkToFight.DistanceRow = reader.Value("state.dist_row").ReadInt();
                     s.LeaveForWalkToFight.FieldD = reader.Value("state.field_d").ReadInt();
                     s.LeaveForWalkToFight.FieldE = reader.Value("state.field_e").ReadInt();
                     s.LeaveForWalkToFight.NextState = (State)reader.Value("state.next_state").ReadInt();
@@ -2378,7 +2363,7 @@ namespace Freeserf
                 case State.WaitIdleOnPath:
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
-                    s.IdleOnPath.RevDir = (Direction)reader.Value("state.rev_dir").ReadInt();
+                    s.IdleOnPath.ReverseDirection = (Direction)reader.Value("state.rev_dir").ReadInt();
                     s.IdleOnPath.FlagIndex = reader.Value("state.flag").ReadUInt();
                     s.IdleOnPath.FieldE = reader.Value("state.field_e").ReadInt();
                     break;
@@ -2400,24 +2385,24 @@ namespace Freeserf
             writer.Value("owner").Write(Player);
             writer.Value("animation").Write(Animation);
             writer.Value("counter").Write(Counter);
-            writer.Value("pos").Write(Game.Map.PosColumn(Position));
-            writer.Value("pos").Write(Game.Map.PosRow(Position));
+            writer.Value("pos").Write(Game.Map.PositionColumn(Position));
+            writer.Value("pos").Write(Game.Map.PositionRow(Position));
             writer.Value("tick").Write(tick);
             writer.Value("state").Write((int)SerfState);
 
             switch (SerfState)
             {
                 case State.IdleInStock:
-                    writer.Value("state.inventory").Write(s.IdleInStock.InvIndex);
+                    writer.Value("state.inventory").Write(s.IdleInStock.InventoryIndex);
                     break;
 
                 case State.Walking:
                 case State.Transporting:
                 case State.Delivering:
-                    writer.Value("state.res").Write((int)s.Walking.Res);
-                    writer.Value("state.dest").Write(s.Walking.Dest);
-                    writer.Value("state.dir").Write(s.Walking.Dir);
-                    writer.Value("state.dir1").Write(s.Walking.Dir1);
+                    writer.Value("state.res").Write((int)s.Walking.Resource);
+                    writer.Value("state.dest").Write(s.Walking.Destination);
+                    writer.Value("state.dir").Write(s.Walking.Direction);
+                    writer.Value("state.dir1").Write(s.Walking.Direction1);
                     writer.Value("state.wait_counter").Write(s.Walking.WaitCounter);
                     break;
 
@@ -2430,9 +2415,9 @@ namespace Freeserf
                 case State.ReadyToLeave:
                 case State.KnightLeaveForFight:
                     writer.Value("state.field_b").Write(s.LeavingBuilding.FieldB);
-                    writer.Value("state.dest").Write(s.LeavingBuilding.Dest);
-                    writer.Value("state.dest2").Write(s.LeavingBuilding.Dest2);
-                    writer.Value("state.dir").Write(s.LeavingBuilding.Dir);
+                    writer.Value("state.dest").Write(s.LeavingBuilding.Destination);
+                    writer.Value("state.dest2").Write(s.LeavingBuilding.Destination2);
+                    writer.Value("state.dir").Write(s.LeavingBuilding.Direction);
                     writer.Value("state.next_state").Write((int)s.LeavingBuilding.NextState);
                     break;
 
@@ -2441,9 +2426,9 @@ namespace Freeserf
                     break;
 
                 case State.Digging:
-                    writer.Value("state.h_index").Write(s.Digging.HIndex);
-                    writer.Value("state.target_h").Write(s.Digging.TargetH);
-                    writer.Value("state.dig_pos").Write(s.Digging.DigPos);
+                    writer.Value("state.h_index").Write(s.Digging.HeightIndex);
+                    writer.Value("state.target_h").Write(s.Digging.TargetHeight);
+                    writer.Value("state.dig_pos").Write(s.Digging.DigPosition);
                     writer.Value("state.substate").Write(s.Digging.Substate);
                     break;
 
@@ -2455,20 +2440,20 @@ namespace Freeserf
                     break;
 
                 case State.BuildingCastle:
-                    writer.Value("state.inv_index").Write(s.BuildingCastle.InvIndex);
+                    writer.Value("state.inv_index").Write(s.BuildingCastle.InventoryIndex);
                     break;
 
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    writer.Value("state.res").Write(s.MoveResourceOut.Res);
-                    writer.Value("state.res_dest").Write(s.MoveResourceOut.ResDest);
+                    writer.Value("state.res").Write(s.MoveResourceOut.Resource);
+                    writer.Value("state.res_dest").Write(s.MoveResourceOut.ResourceDestination);
                     writer.Value("state.next_state").Write((int)s.MoveResourceOut.NextState);
                     break;
 
                 case State.ReadyToLeaveInventory:
                     writer.Value("state.mode").Write(s.ReadyToLeaveInventory.Mode);
-                    writer.Value("state.dest").Write(s.ReadyToLeaveInventory.Dest);
-                    writer.Value("state.inv_index").Write(s.ReadyToLeaveInventory.InvIndex);
+                    writer.Value("state.dest").Write(s.ReadyToLeaveInventory.Destination);
+                    writer.Value("state.inv_index").Write(s.ReadyToLeaveInventory.InventoryIndex);
                     break;
 
                 case State.FreeWalking:
@@ -2482,10 +2467,10 @@ namespace Freeserf
                 case State.KnightFreeWalking:
                 case State.KnightAttackingFree:
                 case State.KnightAttackingFreeWait:
-                    writer.Value("state.dist1").Write(s.FreeWalking.Dist1);
-                    writer.Value("state.dist2").Write(s.FreeWalking.Dist2);
-                    writer.Value("state.neg_dist").Write(s.FreeWalking.NegDist1);
-                    writer.Value("state.neg_dist2").Write(s.FreeWalking.NegDist2);
+                    writer.Value("state.dist1").Write(s.FreeWalking.DistanceX);
+                    writer.Value("state.dist2").Write(s.FreeWalking.DistanceY);
+                    writer.Value("state.neg_dist").Write(s.FreeWalking.NegDistance1);
+                    writer.Value("state.neg_dist2").Write(s.FreeWalking.NegDistance2);
                     writer.Value("state.flags").Write(s.FreeWalking.Flags);
                     break;
 
@@ -2499,7 +2484,7 @@ namespace Freeserf
 
                 case State.Mining:
                     writer.Value("state.substate").Write(s.Mining.Substate);
-                    writer.Value("state.res").Write(s.Mining.Res);
+                    writer.Value("state.res").Write(s.Mining.Resource);
                     writer.Value("state.deposit").Write((int)s.Mining.Deposit);
                     break;
 
@@ -2548,28 +2533,28 @@ namespace Freeserf
                     writer.Value("state.move").Write(s.Attacking.Move);
                     writer.Value("state.field_c").Write(s.Attacking.AttackerWon);
                     writer.Value("state.field_d").Write(s.Attacking.FieldD);
-                    writer.Value("state.def_index").Write(s.Attacking.DefIndex);
+                    writer.Value("state.def_index").Write(s.Attacking.DefenderIndex);
                     break;
 
                 case State.KnightAttackingVictoryFree:
                     writer.Value("state.move").Write(s.AttackingVictoryFree.Move);
-                    writer.Value("state.dist_col").Write(s.AttackingVictoryFree.DistColumn);
-                    writer.Value("state.dist_row").Write(s.AttackingVictoryFree.DistRow);
-                    writer.Value("state.def_index").Write(s.AttackingVictoryFree.DefIndex);
+                    writer.Value("state.dist_col").Write(s.AttackingVictoryFree.DistanceColumn);
+                    writer.Value("state.dist_row").Write(s.AttackingVictoryFree.DistanceRow);
+                    writer.Value("state.def_index").Write(s.AttackingVictoryFree.DefenderIndex);
                     break;
 
                 case State.KnightDefendingFree:
                 case State.KnightEngageDefendingFree:
-                    writer.Value("state.dist_col").Write(s.DefendingFree.DistColumn);
-                    writer.Value("state.dist_row").Write(s.DefendingFree.DistRow);
+                    writer.Value("state.dist_col").Write(s.DefendingFree.DistanceColumn);
+                    writer.Value("state.dist_row").Write(s.DefendingFree.DistanceRow);
                     writer.Value("state.field_d").Write(s.DefendingFree.FieldD);
-                    writer.Value("state.other_dist_col").Write(s.DefendingFree.OtherDistColumn);
-                    writer.Value("state.other_dist_row").Write(s.DefendingFree.OtherDistRow);
+                    writer.Value("state.other_dist_col").Write(s.DefendingFree.OtherDistanceColumn);
+                    writer.Value("state.other_dist_row").Write(s.DefendingFree.OtherDistanceRow);
                     break;
 
                 case State.KnightLeaveForWalkToFight:
-                    writer.Value("state.dist_col").Write(s.LeaveForWalkToFight.DistColumn);
-                    writer.Value("state.dist_row").Write(s.LeaveForWalkToFight.DistRow);
+                    writer.Value("state.dist_col").Write(s.LeaveForWalkToFight.DistanceColumn);
+                    writer.Value("state.dist_row").Write(s.LeaveForWalkToFight.DistanceRow);
                     writer.Value("state.field_d").Write(s.LeaveForWalkToFight.FieldD);
                     writer.Value("state.field_e").Write(s.LeaveForWalkToFight.FieldE);
                     writer.Value("state.next_state").Write((int)s.LeaveForWalkToFight.NextState);
@@ -2579,7 +2564,7 @@ namespace Freeserf
                 case State.WaitIdleOnPath:
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
-                    writer.Value("state.rev_dir").Write((int)s.IdleOnPath.RevDir);
+                    writer.Value("state.rev_dir").Write((int)s.IdleOnPath.ReverseDirection);
                     writer.Value("state.flag").Write(s.IdleOnPath.FlagIndex);
                     writer.Value("state.field_e").Write(s.IdleOnPath.FieldE);
                     break;
@@ -2595,16 +2580,20 @@ namespace Freeserf
             }
         }
 
-        /* Return true if serf is waiting for a position to be available.
-           In this case, dir will be set to the desired direction of the serf,
-           or DirectionNone if the desired direction cannot be determined. */
-        bool IsWaiting(ref Direction dir)
+        /// <summary>
+        /// Return true if serf is waiting for a position to be available.
+        /// In this case, direction will be set to the desired direction of the serf,
+        /// or DirectionNone if the desired direction cannot be determined.
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        bool IsWaiting(ref Direction direction)
         {
             if ((SerfState == State.Transporting || SerfState == State.Walking ||
                  SerfState == State.Delivering) &&
-                 s.Walking.Dir < 0)
+                 s.Walking.Direction < 0)
             {
-                dir = (Direction)(s.Walking.Dir + 6);
+                direction = (Direction)(s.Walking.Direction + 6);
                 return true;
             }
             else if ((SerfState == State.FreeWalking ||
@@ -2612,26 +2601,26 @@ namespace Freeserf
                       SerfState == State.StoneCutterFreeWalking) &&
                       Animation == 82)
             {
-                int dx = s.FreeWalking.Dist1;
-                int dy = s.FreeWalking.Dist2;
+                int distanceX = s.FreeWalking.DistanceX;
+                int distanceY = s.FreeWalking.DistanceY;
 
-                if (Math.Abs(dx) <= 1 && Math.Abs(dy) <= 1 &&
-                    DirFromOffset[(dx + 1) + 3 * (dy + 1)] > Direction.None)
+                if (Math.Abs(distanceX) <= 1 && Math.Abs(distanceY) <= 1 &&
+                    DirectionFromOffset[(distanceX + 1) + 3 * (distanceY + 1)] > Direction.None)
                 {
-                    dir = DirFromOffset[(dx + 1) + 3 * (dy + 1)];
+                    direction = DirectionFromOffset[(distanceX + 1) + 3 * (distanceY + 1)];
                 }
                 else
                 {
-                    dir = Direction.None;
+                    direction = Direction.None;
                 }
 
                 return true;
             }
             else if (SerfState == State.Digging && s.Digging.Substate < 0)
             {
-                int d = s.Digging.DigPos;
+                int digPosition = s.Digging.DigPosition;
 
-                dir = (d == 0) ? Direction.Up : (Direction)(6 - d);
+                direction = (digPosition == 0) ? Direction.Up : (Direction)(6 - digPosition);
 
                 return true;
             }
@@ -2639,16 +2628,20 @@ namespace Freeserf
             return false;
         }
 
-        /* Signal waiting serf that it is possible to move in direction
-           while switching position with another serf. Returns 0 if the
-           switch is not acceptable. */
-        bool SwitchWaiting(Direction dir)
+        /// <summary>
+        /// Signal waiting serf that it is possible to move in direction
+        /// while switching position with another serf. Returns 0 if the
+        /// switch is not acceptable.
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        bool SwitchWaiting(Direction direction)
         {
             if ((SerfState == State.Transporting || SerfState == State.Walking ||
                 SerfState == State.Delivering) &&
-                s.Walking.Dir < 0)
+                s.Walking.Direction < 0)
             {
-                s.Walking.Dir = (int)dir.Reverse();
+                s.Walking.Direction = (int)direction.Reverse();
                 return true;
             }
             else if ((SerfState == State.FreeWalking ||
@@ -2656,15 +2649,15 @@ namespace Freeserf
                       SerfState == State.StoneCutterFreeWalking) &&
                       Animation == 82)
             {
-                int dx = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) < 2) ? 1 : 0);
-                int dy = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) > 0) ? 1 : 0);
+                int dx = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
+                int dy = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-                s.FreeWalking.Dist1 -= dx;
-                s.FreeWalking.Dist2 -= dy;
+                s.FreeWalking.DistanceX -= dx;
+                s.FreeWalking.DistanceY -= dy;
 
-                if (s.FreeWalking.Dist1 == 0 && s.FreeWalking.Dist2 == 0)
+                if (s.FreeWalking.DistanceX == 0 && s.FreeWalking.DistanceY == 0)
                 {
-                    /* Arriving to destination */
+                    // Arriving to destination 
                     s.FreeWalking.Flags = Misc.Bit(3);
                 }
 
@@ -2678,66 +2671,66 @@ namespace Freeserf
             return false;
         }
 
-        int GetWalkingAnimation(int hDiff, Direction dir, bool switchPos)
+        int GetWalkingAnimation(int heightDifference, Direction direction, bool switchPosition)
         {
-            int d = (int)dir;
+            int directionIndex = (int)direction;
 
-            if (switchPos && d < 3)
-                d += 6;
+            if (switchPosition && directionIndex < 3)
+                directionIndex += 6;
 
-            return 4 + hDiff + 9 * d;
+            return 4 + heightDifference + 9 * directionIndex;
         }
 
-        /* Preconditon: serf is in WALKING or TRANSPORTING state */
-        void ChangeDirection(Direction dir, bool altEnd)
+        // Preconditon: serf is in WALKING or TRANSPORTING state 
+        void ChangeDirection(Direction direction, bool altEnd)
         {
-            Map map = Game.Map;
-            MapPos newPos = map.Move(Position, dir);
+            var map = Game.Map;
+            var newPosition = map.Move(Position, direction);
 
-            if (!map.HasSerf(newPos))
+            if (!map.HasSerf(newPosition))
             {
-                /* Change direction, not occupied. */
+                // Change direction, not occupied. 
                 map.SetSerfIndex(Position, 0);
-                Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
-                s.Walking.Dir = (int)dir.Reverse();
+                Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, false);
+                s.Walking.Direction = (int)direction.Reverse();
             }
             else
             {
-                /* Direction is occupied. */
-                Serf otherSerf = Game.GetSerfAtPos(newPos);
-                Direction otherDir = Direction.None;
+                // Direction is occupied. 
+                var otherSerf = Game.GetSerfAtPos(newPosition);
+                var otherDirection = Direction.None;
 
                 // Sometimes an idle serf blocks us. This should be avoided.
                 // TODO: Maybe check later why this even happens and look it this helps.
                 if (otherSerf.serfState == State.IdleOnPath ||
                     otherSerf.serfState == State.WaitIdleOnPath)
                 {
-                    /* Change direction, not occupied. */
+                    // Change direction, not occupied. 
                     map.SetSerfIndex(Position, 0);
-                    Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
-                    s.Walking.Dir = (int)dir.Reverse();
+                    Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, false);
+                    s.Walking.Direction = (int)direction.Reverse();
                 }
-                else if (otherSerf.IsWaiting(ref otherDir) &&
-                    (otherDir == dir.Reverse() || otherDir == Direction.None) &&
-                    otherSerf.SwitchWaiting(dir.Reverse()))
+                else if (otherSerf.IsWaiting(ref otherDirection) &&
+                    (otherDirection == direction.Reverse() || otherDirection == Direction.None) &&
+                    otherSerf.SwitchWaiting(direction.Reverse()))
                 {
-                    /* Do the switch */
+                    // Do the switch 
                     otherSerf.Position = Position;
                     map.SetSerfIndex(otherSerf.Position, (int)otherSerf.Index);
                     otherSerf.Animation = GetWalkingAnimation(
-                        (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPos), dir.Reverse(), true);
+                        (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPosition), direction.Reverse(), true);
                     otherSerf.Counter = CounterFromAnimation[otherSerf.Animation];
 
                     Animation = GetWalkingAnimation(
-                        (int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, true);
-                    s.Walking.Dir = (int)dir.Reverse();
+                        (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, true);
+                    s.Walking.Direction = (int)direction.Reverse();
                 }
                 else
                 {
-                    /* Wait for other serf */
-                    Animation = 81 + (int)dir;
+                    // Wait for other serf 
+                    Animation = 81 + (int)direction;
                     Counter = CounterFromAnimation[Animation];
-                    s.Walking.Dir = (int)dir - 6;
+                    s.Walking.Direction = (int)direction - 6;
                     return;
                 }
             }
@@ -2745,13 +2738,13 @@ namespace Freeserf
             if (!altEnd)
                 s.Walking.WaitCounter = 0;
 
-            Position = newPos;
+            Position = newPosition;
             map.SetSerfIndex(Position, (int)Index);
             Counter += CounterFromAnimation[Animation];
 
             if (altEnd && Counter < 0)
             {
-                if (map.HasFlag(newPos))
+                if (map.HasFlag(newPosition))
                 {
                     Counter = 0;
                 }
@@ -2762,80 +2755,80 @@ namespace Freeserf
             }
         }
 
-        /* Precondition: serf state is in WALKING or TRANSPORTING state */
+        // Precondition: serf state is in WALKING or TRANSPORTING state 
         void TransporterMoveToFlag(Flag flag)
         {
-            Direction dir = (Direction)s.Walking.Dir;
+            var direction = (Direction)s.Walking.Direction;
 
-            if (flag.IsScheduled(dir))
+            if (flag.IsScheduled(direction))
             {
-                /* Fetch resource from flag */
+                // Fetch resource from flag 
                 s.Walking.WaitCounter = 0;
-                uint resIndex = flag.ScheduledSlot(dir);
+                var resourceIndex = flag.ScheduledSlot(direction);
 
-                if (s.Walking.Res == Resource.Type.None)
+                if (s.Walking.Resource == Resource.Type.None)
                 {
-                    /* Pick up resource. */
-                    flag.PickUpResource(resIndex, ref s.Walking.Res, ref s.Walking.Dest);
+                    // Pick up resource. 
+                    flag.PickUpResource(resourceIndex, ref s.Walking.Resource, ref s.Walking.Destination);
                 }
                 else
                 {
-                    /* Switch resources and destination. */
-                    Resource.Type tempRes = s.Walking.Res;
-                    uint tempDest = s.Walking.Dest;
+                    // Switch resources and destination. 
+                    var tempResource = s.Walking.Resource;
+                    var tempDestination = s.Walking.Destination;
 
-                    flag.PickUpResource(resIndex, ref s.Walking.Res, ref s.Walking.Dest);
+                    flag.PickUpResource(resourceIndex, ref s.Walking.Resource, ref s.Walking.Destination);
 
-                    flag.DropResource(tempRes, tempDest);
+                    flag.DropResource(tempResource, tempDestination);
                 }
 
-                /* Find next resource to be picked up */
-                Player player = Game.GetPlayer(Player);
-                flag.PrioritizePickup(dir, player);
+                // Find next resource to be picked up 
+                var player = Game.GetPlayer(Player);
+                flag.PrioritizePickup(direction, player);
             }
-            else if (s.Walking.Res != Resource.Type.None)
+            else if (s.Walking.Resource != Resource.Type.None)
             {
-                /* Drop resource at flag */
-                if (flag.DropResource(s.Walking.Res, s.Walking.Dest))
+                // Drop resource at flag 
+                if (flag.DropResource(s.Walking.Resource, s.Walking.Destination))
                 {
-                    s.Walking.Res = Resource.Type.None;
+                    s.Walking.Resource = Resource.Type.None;
                 }
             }
 
-            ChangeDirection(dir, true);
+            ChangeDirection(direction, true);
         }
 
-        void StartWalking(Direction dir, int slope, bool changePos)
+        void StartWalking(Direction direction, int slope, bool changePosition)
         {
-            Map map = Game.Map;
-            MapPos newPos = map.Move(Position, dir);
-            Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
+            var map = Game.Map;
+            var newPosition = map.Move(Position, direction);
+            Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, false);
             Counter += (slope * CounterFromAnimation[Animation]) >> 5;
 
-            if (changePos)
+            if (changePosition)
             {
                 map.SetSerfIndex(Position, 0);
-                map.SetSerfIndex(newPos, (int)Index);
+                map.SetSerfIndex(newPosition, (int)Index);
             }
 
-            Position = newPos;
+            Position = newPosition;
         }
 
         /* Start entering building in direction up-left.
            If joinPos is set the serf is assumed to origin from
            a joined position so the source position will not have it's
            serf index cleared. */
-        void EnterBuilding(int fieldB, bool joinPos)
+        void EnterBuilding(int fieldB, bool joinPosition)
         {
             SetState(State.EnteringBuilding);
 
-            StartWalking(Direction.UpLeft, 32, !joinPos);
+            StartWalking(Direction.UpLeft, 32, !joinPosition);
 
-            if (joinPos)
+            if (joinPosition)
                 Game.Map.SetSerfIndex(Position, (int)Index);
 
-            int slope = 0;
-            Building building = Game.GetBuildingAtPos(Position);
+            int slope;
+            var building = Game.GetBuildingAtPos(Position);
 
             if (building == null)
             {
@@ -2854,12 +2847,15 @@ namespace Freeserf
             s.EnteringBuilding.FieldB = fieldB;
         }
 
-        /* Start leaving building by switching to LEAVING BUILDING and
-           setting appropriate state. */
+        /// <summary>
+        /// Start leaving building by switching to LaevingBuilding state
+        /// and setting appropriate state.
+        /// </summary>
+        /// <param name="joinPos"></param>
         void LeaveBuilding(bool joinPos)
         {
-            int slope = 0;
-            Building building = Game.GetBuildingAtPos(Position);
+            int slope;
+            var building = Game.GetBuildingAtPos(Position);
 
             if (building == null)
             {
@@ -2877,27 +2873,26 @@ namespace Freeserf
                 Game.Map.SetSerfIndex(Position, 0);
 
             StartWalking(Direction.DownRight, slope, !joinPos);
-
             SetState(State.LeavingBuilding);
-
             Game.AddSerfForDrawing(this, Position);
         }
 
         void EnterInventory()
         {
             Game.Map.SetSerfIndex(Position, 0);
-            Building building = Game.GetBuildingAtPos(Position);
+            var building = Game.GetBuildingAtPos(Position);
             SetState(State.IdleInStock);
+            // TODO ?
             /*serf->s.idleInStock.FieldB = 0;
               serf->s.idleInStock.FieldC = 0;*/
-            s.IdleInStock.InvIndex = building.GetInventory().Index;
+            s.IdleInStock.InventoryIndex = building.GetInventory().Index;
         }
 
         void DropResource(Resource.Type resourceType)
         {
-            Flag flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
+            var flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
 
-            /* Resource is lost if no free slot is found */
+            // Resource is lost if no free slot is found 
             if (flag.DropResource(resourceType, 0))
             {
                 Game.GetPlayer(Player).IncreaseResourceCount(resourceType);
@@ -2906,20 +2901,20 @@ namespace Freeserf
 
         void FindInventory()
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (map.HasFlag(Position))
             {
-                Flag flag = Game.GetFlag(map.GetObjectIndex(Position));
+                var flag = Game.GetFlag(map.GetObjectIndex(Position));
 
                 if ((flag.LandPaths() != 0 ||
-                     (flag.HasInventory() && flag.AcceptsSerfs())) &&
-                      map.GetOwner(Position) == Player)
+                    (flag.HasInventory() && flag.AcceptsSerfs())) &&
+                    map.GetOwner(Position) == Player)
                 {
                     SetState(State.Walking);
-                    s.Walking.Dir1 = -2;
-                    s.Walking.Dest = 0;
-                    s.Walking.Dir = 0;
+                    s.Walking.Direction1 = -2;
+                    s.Walking.Destination = 0;
+                    s.Walking.Direction = 0;
                     Counter = 0;
 
                     return;
@@ -2931,14 +2926,14 @@ namespace Freeserf
             Counter = 0;
         }
 
-        public bool CanPassMapPos(MapPos pos)
+        public bool CanPassMapPosition(MapPos position)
         {
-            return Map.MapSpaceFromObject[(int)Game.Map.GetObject(pos)] <= Map.Space.Semipassable;
+            return Map.MapSpaceFromObject[(int)Game.Map.GetObject(position)] <= Map.Space.Semipassable;
         }
 
         void SetFightOutcome(Serf attacker, Serf defender)
         {
-            /* Calculate "morale" for attacker. */
+            // Calculate "morale" for attacker. 
             uint expFactor = 1u << (attacker.GetSerfType() - Type.Knight0);
             uint landFactor = 0x1000u;
 
@@ -2949,56 +2944,56 @@ namespace Freeserf
 
             uint morale = (0x400u * expFactor * landFactor) >> 16;
 
-            /* Calculate "morale" for defender. */
-            uint defExpFactor = 1u << (defender.GetSerfType() - Type.Knight0);
-            uint defLandFactor = 0x1000u;
+            // Calculate "morale" for defender. 
+            uint defenderExpFactor = 1u << (defender.GetSerfType() - Type.Knight0);
+            uint defenderLandFactor = 0x1000u;
 
             if (defender.Player != Game.Map.GetOwner(defender.Position))
             {
-                defLandFactor = Game.GetPlayer(defender.Player).KnightMorale;
+                defenderLandFactor = Game.GetPlayer(defender.Player).KnightMorale;
             }
 
-            uint defMorale = (0x400u * defExpFactor * defLandFactor) >> 16;
+            uint defenderMorale = (0x400u * defenderExpFactor * defenderLandFactor) >> 16;
 
             uint playerIndex;
-            uint value = 0;
-            Type ktype = Type.None;
-            uint result = ((morale + defMorale) * Game.RandomInt()) >> 16;
+            uint value;
+            Type knightType;
+            uint result = ((morale + defenderMorale) * Game.RandomInt()) >> 16;
 
             if (result < morale)
             {
                 playerIndex = defender.Player;
-                value = defExpFactor;
-                ktype = defender.GetSerfType();
+                value = defenderExpFactor;
+                knightType = defender.GetSerfType();
                 attacker.s.Attacking.AttackerWon = 1;
-                Log.Debug.Write("serf", $"Fight: {morale} vs {defMorale} ({result}). Attacker winning.");
+                Log.Debug.Write("serf", $"Fight: {morale} vs {defenderMorale} ({result}). Attacker winning.");
             }
             else
             {
                 playerIndex = attacker.Player;
                 value = expFactor;
-                ktype = attacker.GetSerfType();
+                knightType = attacker.GetSerfType();
                 attacker.s.Attacking.AttackerWon = 0;
-                Log.Debug.Write("serf", $"Fight: {morale} vs {defMorale} ({result}). Defender winning.");
+                Log.Debug.Write("serf", $"Fight: {morale} vs {defenderMorale} ({result}). Defender winning.");
             }
 
             var player = Game.GetPlayer(playerIndex);
 
             // TODO: Commented the following lines as the serf type later is set to 'Dead' and so the serf count and military score would be decreased twice. Needs testing.
             //player.DecreaseMilitaryScore(value);
-            //player.DecreaseSerfCount(ktype);
+            //player.DecreaseSerfCount(knightType);
             attacker.s.Attacking.Move = Game.RandomInt() & 0x70;
         }
 
         static bool HandleSerfWalkingStateSearchCB(Flag flag, object data)
         {
-            Serf serf = data as Serf;
-            Flag dest = flag.Game.GetFlag(serf.s.Walking.Dest);
+            var serf = data as Serf;
+            var destination = flag.Game.GetFlag(serf.s.Walking.Destination);
 
-            if (flag == dest)
+            if (flag == destination)
             {
-                Log.Verbose.Write("serf", " dest found: " + dest.SearchDirection);
-                serf.ChangeDirection(dest.SearchDirection, false);
+                Log.Verbose.Write("serf", " dest found: " + destination.SearchDirection);
+                serf.ChangeDirection(destination.SearchDirection, false);
                 return true;
             }
 
@@ -3007,7 +3002,7 @@ namespace Freeserf
 
         void HandleSerfIdleInStockState()
         {
-            Inventory inventory = Game.GetInventory(s.IdleInStock.InvIndex);
+            var inventory = Game.GetInventory(s.IdleInStock.InventoryIndex);
 
             if (inventory == null)
             {
@@ -3016,7 +3011,7 @@ namespace Freeserf
             }
 
             if (inventory.SerfMode == Inventory.Mode.In
-                || inventory.SerfMode == Inventory.Mode.Stop /* in, stop */
+                || inventory.SerfMode == Inventory.Mode.Stop // in, stop 
                 || inventory.GetSerfQueueLength() >= 3)
             {
                 switch (GetSerfType())
@@ -3039,23 +3034,23 @@ namespace Freeserf
                 }
             }
             else
-            { /* out */
+            { // out 
                 inventory.CallOutSerf(this);
 
                 SetState(State.ReadyToLeaveInventory);
                 s.ReadyToLeaveInventory.Mode = -3;
-                s.ReadyToLeaveInventory.InvIndex = inventory.Index;
-                /* TODO immediate switch to next state. */
+                s.ReadyToLeaveInventory.InventoryIndex = inventory.Index;
+                // TODO immediate switch to next state. 
             }
         }
 
         void HandleSerfWalkingStateDestReached()
         {
-            /* Destination reached. */
-            if (s.Walking.Dir1 < 0)
+            // Destination reached. 
+            if (s.Walking.Direction1 < 0)
             {
-                Map map = Game.Map;
-                Building building = Game.GetBuildingAtPos(map.MoveUpLeft(Position));
+                var map = Game.Map;
+                var building = Game.GetBuildingAtPos(map.MoveUpLeft(Position));
 
                 if (building == null) // not exists anymore?
                 {
@@ -3074,41 +3069,41 @@ namespace Freeserf
                 }
                 else
                 {
-                    EnterBuilding(s.Walking.Dir1, false);
+                    EnterBuilding(s.Walking.Direction1, false);
                 }
             }
-            else if (s.Walking.Dir1 == 6)
+            else if (s.Walking.Direction1 == 6)
             {
                 SetState(State.LookingForGeoSpot);
                 Counter = 0;
             }
             else
             {
-                Flag flag = Game.GetFlagAtPos(Position);
+                var flag = Game.GetFlagAtPos(Position);
 
                 if (flag == null)
                 {
                     throw new ExceptionFreeserf(Game, "serf", "Flag expected as destination of walking serf.");
                 }
 
-                Direction dir = (Direction)s.Walking.Dir1;
-                Flag otherFlag = flag.GetOtherEndFlag(dir);
+                var direction = (Direction)s.Walking.Direction1;
+                var otherFlag = flag.GetOtherEndFlag(direction);
 
                 if (otherFlag == null)
                 {
                     throw new ExceptionFreeserf(Game, "serf", "Path has no other end flag in selected dir.");
                 }
 
-                Direction otherDir = flag.GetOtherEndDirection(dir);
+                var otherDirection = flag.GetOtherEndDirection(direction);
 
-                /* Increment transport serf count */
-                flag.CompleteSerfRequest(dir);
-                otherFlag.CompleteSerfRequest(otherDir);
+                // Increment transport serf count 
+                flag.CompleteSerfRequest(direction);
+                otherFlag.CompleteSerfRequest(otherDirection);
 
                 SetState(State.Transporting);
-                s.Walking.Res = Resource.Type.None;
-                s.Walking.Dir = (int)dir;
-                s.Walking.Dir1 = 0;
+                s.Walking.Resource = Resource.Type.None;
+                s.Walking.Direction = (int)direction;
+                s.Walking.Direction1 = 0;
                 s.Walking.WaitCounter = 0;
 
                 TransporterMoveToFlag(flag);
@@ -3117,34 +3112,33 @@ namespace Freeserf
 
         void HandleSerfWalkingStateWaiting()
         {
-            /* Waiting for other serf. */
-            Direction dir = (Direction)(s.Walking.Dir + 6);
+            // Waiting for other serf. 
+            var direction = (Direction)(s.Walking.Direction + 6);
+            var map = Game.Map;
 
-            Map map = Game.Map;
-
-            /* Only check for loops once in a while. */
+            // Only check for loops once in a while. 
             ++s.Walking.WaitCounter;
 
             if ((!map.HasFlag(Position) && s.Walking.WaitCounter >= 10) ||
                 s.Walking.WaitCounter >= 50)
             {
                 s.Walking.WaitCounter = 0;
-                MapPos pos = Position;
-                List<Serf> loopSerfs = new List<Serf>() { this };
+                var position = Position;
+                var loopSerfs = new List<Serf>() { this };
 
-                /* Follow the chain of serfs waiting for each other and
-                   see if there is a loop. */
+                // Follow the chain of serfs waiting for each other and
+                // see if there is a loop.
                 for (int i = 0; i < 100; ++i)
                 {
-                    pos = map.Move(pos, dir);
+                    position = map.Move(position, direction);
 
-                    if (!map.HasSerf(pos))
+                    if (!map.HasSerf(position))
                     {
                         break;
                     }
-                    else if (map.GetSerfIndex(pos) == Index)
+                    else if (map.GetSerfIndex(position) == Index)
                     {
-                        /* We found a loop, check if the loop is at an inventory */
+                        // We found a loop, check if the loop is at an inventory 
                         foreach (var loopSerf in loopSerfs)
                         {
                             if (Game.Map.HasFlag(loopSerf.Position))
@@ -3160,13 +3154,13 @@ namespace Freeserf
                             }
                         }
 
-                        /* We have found a loop, try a different direction. */
-                        ChangeDirection(dir.Reverse(), false);
+                        // We have found a loop, try a different direction. 
+                        ChangeDirection(direction.Reverse(), false);
                         return;
                     }
 
-                    /* Get next serf and follow the chain */
-                    Serf otherSerf = Game.GetSerfAtPos(pos);
+                    // Get next serf and follow the chain 
+                    var otherSerf = Game.GetSerfAtPos(position);
 
                     if (otherSerf.SerfState != State.Walking &&
                         otherSerf.SerfState != State.Transporting)
@@ -3174,19 +3168,19 @@ namespace Freeserf
                         break;
                     }
 
-                    if (otherSerf.s.Walking.Dir >= 0 ||
-                        (otherSerf.s.Walking.Dir + 6) == (int)dir.Reverse())
+                    if (otherSerf.s.Walking.Direction >= 0 ||
+                        (otherSerf.s.Walking.Direction + 6) == (int)direction.Reverse())
                     {
                         break;
                     }
 
-                    dir = (Direction)(otherSerf.s.Walking.Dir + 6);
+                    direction = (Direction)(otherSerf.s.Walking.Direction + 6);
                     loopSerfs.Add(otherSerf);
                 }
             }
 
-            /* Stick to the same direction */
-            ChangeDirection((Direction)(s.Walking.Dir + 6), false);
+            // Stick to the same direction 
+            ChangeDirection((Direction)(s.Walking.Direction + 6), false);
         }
 
         void HandleSerfWalkingState()
@@ -3197,24 +3191,24 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.Walking.Dir < 0)
+                if (s.Walking.Direction < 0)
                 {
                     HandleSerfWalkingStateWaiting();
                     continue;
                 }
 
-                /* 301F0 */
+                // 301F0 
                 if (Game.Map.HasFlag(Position))
                 {
-                    /* Serf has reached a flag.
-                       Search for a destination if none is known. */
-                    if (s.Walking.Dest == 0)
+                    // Serf has reached a flag.
+                    // Search for a destination if none is known.
+                    if (s.Walking.Destination == 0)
                     {
-                        uint flagIndex = Game.Map.GetObjectIndex(Position);
-                        Flag src = Game.GetFlag(flagIndex);
-                        int r = src.FindNearestInventoryForSerf();
+                        var flagIndex = Game.Map.GetObjectIndex(Position);
+                        var sourceFlag = Game.GetFlag(flagIndex);
+                        int nearestInventory = sourceFlag.FindNearestInventoryForSerf();
 
-                        if (r < 0)
+                        if (nearestInventory < 0)
                         {
                             SetState(State.Lost);
                             s.Lost.FieldB = 1;
@@ -3223,29 +3217,29 @@ namespace Freeserf
                             return;
                         }
 
-                        s.Walking.Dest = (uint)r;
+                        s.Walking.Destination = (uint)nearestInventory;
                     }
 
-                    /* Check whether destination has been reached.
-                       If not, find out which direction to move in
-                       to reach the destination. */
-                    if (s.Walking.Dest == Game.Map.GetObjectIndex(Position))
+                    // Check whether destination has been reached.
+                    // If not, find out which direction to move in
+                    // to reach the destination.
+                    if (s.Walking.Destination == Game.Map.GetObjectIndex(Position))
                     {
                         HandleSerfWalkingStateDestReached();
                         return;
                     }
                     else
                     {
-                        Flag src = Game.GetFlagAtPos(Position);
-                        FlagSearch search = new FlagSearch(Game);
+                        var sourceFlag = Game.GetFlagAtPos(Position);
+                        var search = new FlagSearch(Game);
                         var cycle = DirectionCycleCCW.CreateDefault();
 
-                        foreach (Direction i in cycle)
+                        foreach (var direction in cycle)
                         {
-                            if (!src.IsWaterPath(i))
+                            if (!sourceFlag.IsWaterPath(direction))
                             {
-                                Flag otherFlag = src.GetOtherEndFlag(i);
-                                otherFlag.SearchDirection = i;
+                                var otherFlag = sourceFlag.GetOtherEndFlag(direction);
+                                otherFlag.SearchDirection = direction;
                                 search.AddSource(otherFlag);
                             }
                         }
@@ -3256,36 +3250,36 @@ namespace Freeserf
                 }
                 else
                 {
-                    /* 30A37 */
-                    /* Serf is not at a flag. Just follow the road. */
-                    uint paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Dir);
-                    Direction dir = Direction.None;
+                    // 30A37 
+                    // Serf is not at a flag. Just follow the road. 
+                    var paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Direction);
+                    var direction = Direction.None;
                     var cycle = DirectionCycleCW.CreateDefault();
 
-                    foreach (Direction d in cycle)
+                    foreach (var nextDirection in cycle)
                     {
-                        if (paths == Misc.BitU((int)d))
+                        if (paths == Misc.BitU((int)nextDirection))
                         {
-                            dir = d;
+                            direction = nextDirection;
                             break;
                         }
                     }
 
-                    if (dir >= 0)
+                    if (direction >= 0)
                     {
-                        ChangeDirection(dir, false);
+                        ChangeDirection(direction, false);
                         continue;
                     }
 
                     Counter = 0;
                 }
 
-                /* Either the road is a dead end; or
-                   we are at a flag, but the flag search for
-                   the destination failed. */
-                if (s.Walking.Dir1 < 0)
+                // Either the road is a dead end; or
+                // we are at a flag, but the flag search for
+                // the destination failed.
+                if (s.Walking.Direction1 < 0)
                 {
-                    if (s.Walking.Dir1 < -1)
+                    if (s.Walking.Direction1 < -1)
                     {
                         SetState(State.Lost);
                         s.Lost.FieldB = 1;
@@ -3294,22 +3288,22 @@ namespace Freeserf
                         return;
                     }
 
-                    Flag flag = Game.GetFlag(s.Walking.Dest);
-                    Building building = flag.GetBuilding();
+                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var building = flag.GetBuilding();
 
                     building.RequestedSerfLost();
                 }
-                else if (s.Walking.Dir1 != 6)
+                else if (s.Walking.Direction1 != 6)
                 {
-                    Flag flag = Game.GetFlag(s.Walking.Dest);
-                    Direction d = (Direction)s.Walking.Dir1;
+                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var direction = (Direction)s.Walking.Direction1;
 
-                    flag.CancelSerfRequest(d);
-                    flag.GetOtherEndFlag(d).CancelSerfRequest(flag.GetOtherEndDirection(d));
+                    flag.CancelSerfRequest(direction);
+                    flag.GetOtherEndFlag(direction).CancelSerfRequest(flag.GetOtherEndDirection(direction));
                 }
 
-                s.Walking.Dir1 = -2;
-                s.Walking.Dest = 0;
+                s.Walking.Direction1 = -2;
+                s.Walking.Destination = 0;
                 Counter = 0;
             }
         }
@@ -3323,70 +3317,70 @@ namespace Freeserf
             if (Counter >= 0)
                 return;
 
-            if (s.Walking.Dir < 0)
+            if (s.Walking.Direction < 0)
             {
-                ChangeDirection((Direction)(s.Walking.Dir + 6), true);
+                ChangeDirection((Direction)(s.Walking.Direction + 6), true);
             }
             else
             {
-                Map map = Game.Map;
+                var map = Game.Map;
 
-                /* 31549 */
+                // 31549 
                 if (map.HasFlag(Position))
                 {
-                    /* Current position occupied by waiting transporter */
+                    // Current position occupied by waiting transporter 
                     if (s.Walking.WaitCounter < 0)
                     {
                         SetState(State.Walking);
                         s.Walking.WaitCounter = 0;
-                        s.Walking.Dir1 = -2;
-                        s.Walking.Dest = 0;
+                        s.Walking.Direction1 = -2;
+                        s.Walking.Destination = 0;
                         Counter = 0;
 
                         return;
                     }
 
-                    /* 31590 */
-                    if (s.Walking.Res != Resource.Type.None &&
-                        map.GetObjectIndex(Position) == s.Walking.Dest &&
+                    // 31590 
+                    if (s.Walking.Resource != Resource.Type.None &&
+                        map.GetObjectIndex(Position) == s.Walking.Destination &&
                         (!Game.GetFlagAtPos(Position).HasInventory() ||
                         Game.GetFlagAtPos(Position).AcceptsResources()))
                     {
-                        /* At resource destination */
+                        // At resource destination 
                         SetState(State.Delivering);
                         s.Walking.WaitCounter = 0;
 
-                        MapPos newPos = map.MoveUpLeft(Position);
-                        Animation = 3 + (int)map.GetHeight(newPos) - (int)map.GetHeight(Position) +
+                        var newPosition = map.MoveUpLeft(Position);
+                        Animation = 3 + (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position) +
                                     ((int)Direction.UpLeft + 6) * 9;
                         Counter = CounterFromAnimation[Animation];
                         /* TODO next call is actually into the middle of
                            handleSerfDeliveringState().
                            Why is a nice and clean state switch not enough???
                            Just ignore this call and we'll be safe, I think... */
-                        /* handleSerfDeliveringState(serf); */
+                        // handleSerfDeliveringState(serf); 
                         return;
                     }
 
-                    Flag flag = Game.GetFlagAtPos(Position);
+                    var flag = Game.GetFlagAtPos(Position);
                     TransporterMoveToFlag(flag);
                 }
                 else
                 {
-                    uint paths = map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Dir);
-                    Direction dir = Direction.None;
+                    var paths = map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Direction);
+                    var direction = Direction.None;
                     var cycle = DirectionCycleCW.CreateDefault();
 
-                    foreach (Direction d in cycle)
+                    foreach (var nextDirection in cycle)
                     {
-                        if (paths == Misc.BitU((int)d))
+                        if (paths == Misc.BitU((int)nextDirection))
                         {
-                            dir = d;
+                            direction = nextDirection;
                             break;
                         }
                     }
 
-                    if (dir < 0)
+                    if (direction < 0)
                     {
                         SetState(State.Lost);
                         Counter = 0;
@@ -3394,48 +3388,47 @@ namespace Freeserf
                         return;
                     }
 
-                    if (!map.HasFlag(map.Move(Position, dir)) ||
-                        s.Walking.Res != Resource.Type.None ||
+                    if (!map.HasFlag(map.Move(Position, direction)) ||
+                        s.Walking.Resource != Resource.Type.None ||
                         s.Walking.WaitCounter < 0)
                     {
-                        ChangeDirection(dir, true);
+                        ChangeDirection(direction, true);
                         return;
                     }
 
-                    Flag flag = Game.GetFlagAtPos(map.Move(Position, dir));
-                    Direction revDir = dir.Reverse();
-                    Flag otherFlag = flag.GetOtherEndFlag(revDir);
-                    Direction otherDir = flag.GetOtherEndDirection(revDir);
+                    var flag = Game.GetFlagAtPos(map.Move(Position, direction));
+                    var reverseDirection = direction.Reverse();
+                    var otherFlag = flag.GetOtherEndFlag(reverseDirection);
+                    var otherDirection = flag.GetOtherEndDirection(reverseDirection);
 
-                    if (flag.IsScheduled(revDir))
+                    if (flag.IsScheduled(reverseDirection))
                     {
-                        ChangeDirection(dir, true);
+                        ChangeDirection(direction, true);
                         return;
                     }
 
-                    Animation = 110 + s.Walking.Dir;
+                    Animation = 110 + s.Walking.Direction;
                     Counter = CounterFromAnimation[Animation];
-                    s.Walking.Dir -= 6;
+                    s.Walking.Direction -= 6;
 
-                    if (flag.FreeTransporterCount(revDir) > 1)
+                    if (flag.FreeTransporterCount(reverseDirection) > 1)
                     {
                         ++s.Walking.WaitCounter;
 
                         if (s.Walking.WaitCounter > 3)
                         {
-                            flag.TransporterToServe(revDir);
-                            otherFlag.TransporterToServe(otherDir);
+                            flag.TransporterToServe(reverseDirection);
+                            otherFlag.TransporterToServe(otherDirection);
                             s.Walking.WaitCounter = -1;
                         }
                     }
                     else
                     {
-                        if (!otherFlag.IsScheduled(otherDir))
+                        if (!otherFlag.IsScheduled(otherDirection))
                         {
-                            /* TODO Don't use anim as state var */
-                            tick = (ushort)((tick & 0xff00) | (s.Walking.Dir & 0xff));
+                            tick = (ushort)((tick & 0xff00) | (s.Walking.Direction & 0xff));
                             SetState(State.IdleOnPath);
-                            s.IdleOnPath.RevDir = revDir;
+                            s.IdleOnPath.ReverseDirection = reverseDirection;
                             s.IdleOnPath.FlagIndex = flag.Index;
                             map.SetIdleSerf(Position);
                             map.SetSerfIndex(Position, 0);
@@ -3458,7 +3451,7 @@ namespace Freeserf
                 if (Game.Map.GetObjectIndex(Position) == 0 ||
                     Game.GetBuildingAtPos(Position).IsBurning())
                 {
-                    /* Burning */
+                    // Burning 
                     SetState(State.Lost);
                     s.Lost.FieldB = 0;
                     Counter = 0;
@@ -3467,7 +3460,7 @@ namespace Freeserf
                 }
 
                 Counter = s.EnteringBuilding.SlopeLength;
-                Map map = Game.Map;
+                var map = Game.Map;
 
                 switch (GetSerfType())
                 {
@@ -3479,10 +3472,10 @@ namespace Freeserf
                         else
                         {
                             map.SetSerfIndex(Position, 0);
-                            uint flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
-                            Flag flag = Game.GetFlag(flagIndex);
+                            var flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
+                            var flag = Game.GetFlag(flagIndex);
 
-                            /* Mark as inventory accepting resources and serfs. */
+                            // Mark as inventory accepting resources and serfs. 
                             flag.SetHasInventory();
                             flag.SetAcceptsResources(true);
                             flag.SetAcceptsSerfs(true);
@@ -3503,11 +3496,11 @@ namespace Freeserf
                         else
                         {
                             SetState(State.Digging);
-                            s.Digging.HIndex = 15;
+                            s.Digging.HeightIndex = 15;
 
-                            Building building = Game.GetBuildingAtPos(Position);
-                            s.Digging.DigPos = 6;
-                            s.Digging.TargetH = building.GetLevel();
+                            var building = Game.GetBuildingAtPos(Position);
+                            s.Digging.DigPosition = 6;
+                            s.Digging.TargetHeight = building.GetLevel();
                             s.Digging.Substate = 1;
                         }
                         break;
@@ -3525,7 +3518,7 @@ namespace Freeserf
                             s.Building.Index = map.GetObjectIndex(Position);
                             s.Building.MaterialStep = 0;
 
-                            Building building = Game.GetBuilding(s.Building.Index);
+                            var building = Game.GetBuilding(s.Building.Index);
 
                             switch (building.BuildingType)
                             {
@@ -3568,9 +3561,9 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                uint flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
-                                Flag flag = Game.GetFlag(flagIndex);
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
+                                var flag = Game.GetFlag(flagIndex);
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Lumber, 8);
                             }
@@ -3609,15 +3602,15 @@ namespace Freeserf
                         else
                         {
                             map.SetSerfIndex(Position, 0);
-                            Building building = Game.GetBuildingAtPos(Position);
-                            Building.Type buildingType = building.BuildingType;
+                            var building = Game.GetBuildingAtPos(Position);
+                            var buildingType = building.BuildingType;
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
                                 building.StartActivity();
                                 building.StopPlayingSfx();
 
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.GroupFood, 8);
                             }
@@ -3625,8 +3618,9 @@ namespace Freeserf
                             SetState(State.Mining);
                             s.Mining.Substate = 0;
                             s.Mining.Deposit = (Map.Minerals)(4 - (buildingType - Building.Type.StoneMine));
-                            /*s.Mining.FieldC = 0;*/
-                            s.Mining.Res = 0;
+                            // TODO ?
+                            //s.Mining.FieldC = 0;
+                            s.Mining.Resource = 0;
                         }
                         break;
                     case Type.Smelter:
@@ -3638,11 +3632,11 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            Building building = Game.GetBuildingAtPos(Position);
+                            var building = Game.GetBuildingAtPos(Position);
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Coal, 8);
 
@@ -3656,7 +3650,7 @@ namespace Freeserf
                                 }
                             }
 
-                            /* Switch to smelting state to begin work. */
+                            // Switch to smelting state to begin work. 
                             SetState(State.Smelting);
 
                             if (building.BuildingType == Building.Type.SteelSmelter)
@@ -3693,8 +3687,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
 
                                 building.SetInitialResourcesInStock(1, 1);
 
@@ -3723,8 +3717,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Pig, 8);
                             }
@@ -3755,8 +3749,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Wheat, 8);
                             }
@@ -3776,8 +3770,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Flour, 8);
                             }
@@ -3797,8 +3791,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Plank, 8);
                             }
@@ -3818,8 +3812,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Plank, 8);
                                 building.StockInit(1, Resource.Type.Steel, 8);
@@ -3840,8 +3834,8 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                Building building = Game.GetBuildingAtPos(Position);
-                                Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = Game.GetBuildingAtPos(Position);
+                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
                                 flag.ClearFlags();
                                 building.StockInit(0, Resource.Type.Coal, 8);
                                 building.StockInit(1, Resource.Type.Steel, 8);
@@ -3858,7 +3852,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            SetState(State.LookingForGeoSpot); /* TODO Should never be reached */
+                            SetState(State.LookingForGeoSpot); // TODO Should never be reached 
                             Counter = 0;
                         }
                         break;
@@ -3866,8 +3860,8 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            Building building = Game.GetBuildingAtPos(Position);
-                            Inventory inventory = building.GetInventory();
+                            var building = Game.GetBuildingAtPos(Position);
+                            var inventory = building.GetInventory();
 
                             if (inventory == null)
                             {
@@ -3877,7 +3871,7 @@ namespace Freeserf
                             inventory.SerfComeBack();
 
                             SetState(State.IdleInStock);
-                            s.IdleInStock.InvIndex = inventory.Index;
+                            s.IdleInStock.InventoryIndex = inventory.Index;
                             break;
                         }
                     case Type.Knight0:
@@ -3891,7 +3885,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            Building building = Game.GetBuildingAtPos(Position);
+                            var building = Game.GetBuildingAtPos(Position);
 
                             if (building.IsBurning())
                             {
@@ -3907,7 +3901,7 @@ namespace Freeserf
                                     SetState(State.DefendingCastle);
                                     Counter = 6000;
 
-                                    /* Prepend to knight list */
+                                    // Prepend to knight list 
                                     s.Defending.NextKnight = building.GetFirstKnight();
                                     building.SetFirstKnight(Index);
 
@@ -3918,7 +3912,7 @@ namespace Freeserf
 
                                 building.RequestedKnightArrived();
 
-                                State nextState = State.Invalid;
+                                var nextState = State.Invalid;
 
                                 switch (building.BuildingType)
                                 {
@@ -3936,11 +3930,11 @@ namespace Freeserf
                                         break;
                                 }
 
-                                /* Switch to defending state */
+                                // Switch to defending state 
                                 SetState(nextState);
                                 Counter = 6000;
 
-                                /* Prepend to knight list */
+                                // Prepend to knight list 
                                 s.Defending.NextKnight = building.GetFirstKnight();
                                 building.SetFirstKnight(Index);
                             }
@@ -3964,40 +3958,40 @@ namespace Freeserf
                 Counter = 0;
                 SetState(s.LeavingBuilding.NextState);
 
-                /* Set FieldF to 0, do this for individual states if necessary */
+                // Set FieldF to 0, do this for individual states if necessary 
                 if (SerfState == State.Walking)
                 {
                     int mode = s.LeavingBuilding.FieldB;
-                    uint dest = s.LeavingBuilding.Dest;
-                    s.Walking.Dir1 = mode;
-                    s.Walking.Dest = dest;
+                    uint destination = s.LeavingBuilding.Destination;
+                    s.Walking.Direction1 = mode;
+                    s.Walking.Destination = destination;
                     s.Walking.WaitCounter = 0;
                 }
                 else if (SerfState == State.DropResourceOut)
                 {
-                    uint res = (uint)s.LeavingBuilding.FieldB;
-                    uint resDest = s.LeavingBuilding.Dest;
-                    s.MoveResourceOut.Res = res;
-                    s.MoveResourceOut.ResDest = resDest;
+                    uint resource = (uint)s.LeavingBuilding.FieldB;
+                    uint resourceDestination = s.LeavingBuilding.Destination;
+                    s.MoveResourceOut.Resource = resource;
+                    s.MoveResourceOut.ResourceDestination = resourceDestination;
                 }
                 else if (SerfState == State.FreeWalking ||
                          SerfState == State.KnightFreeWalking ||
                          SerfState == State.StoneCutterFreeWalking)
                 {
-                    int dist1 = s.LeavingBuilding.FieldB;
-                    int dist2 = (int)s.LeavingBuilding.Dest;
-                    int negDist1 = s.LeavingBuilding.Dest2;
-                    int negDist2 = s.LeavingBuilding.Dir;
-                    s.FreeWalking.Dist1 = dist1;
-                    s.FreeWalking.Dist2 = dist2;
-                    s.FreeWalking.NegDist1 = negDist1;
-                    s.FreeWalking.NegDist2 = negDist2;
+                    int distance1 = s.LeavingBuilding.FieldB;
+                    int distance2 = (int)s.LeavingBuilding.Destination;
+                    int negDistance1 = s.LeavingBuilding.Destination2;
+                    int negDistance2 = s.LeavingBuilding.Direction;
+                    s.FreeWalking.DistanceX = distance1;
+                    s.FreeWalking.DistanceY = distance2;
+                    s.FreeWalking.NegDistance1 = negDistance1;
+                    s.FreeWalking.NegDistance2 = negDistance2;
                     s.FreeWalking.Flags = 0;
                 }
                 else if (SerfState == State.KnightPrepareDefending ||
                          SerfState == State.Scatter)
                 {
-                    /* No state. */
+                    // No state. 
                 }
                 else
                 {
@@ -4008,9 +4002,9 @@ namespace Freeserf
 
         void HandleSerfReadyToEnterState()
         {
-            MapPos newPos = Game.Map.MoveUpLeft(Position);
+            var newPosition = Game.Map.MoveUpLeft(Position);
 
-            if (Game.Map.HasSerf(newPos))
+            if (Game.Map.HasSerf(newPosition))
             {
                 Animation = 85;
                 Counter = 0;
@@ -4026,10 +4020,10 @@ namespace Freeserf
             tick = Game.Tick;
             Counter = 0;
 
-            Map map = Game.Map;
-            MapPos newPos = map.MoveDownRight(Position);
+            var map = Game.Map;
+            var newPosition = map.MoveDownRight(Position);
 
-            if ((map.GetSerfIndex(Position) != Index && map.HasSerf(Position)) || map.HasSerf(newPos))
+            if ((map.GetSerfIndex(Position) != Index && map.HasSerf(Position)) || map.HasSerf(newPosition))
             {
                 Animation = 82;
                 Counter = 0;
@@ -4040,7 +4034,7 @@ namespace Freeserf
             LeaveBuilding(false);
         }
 
-        static readonly int[] DiggingHDiff = new int[]
+        static readonly int[] DiggingHeightDifferences = new int[]
         {
             -1, 1, -2, 2, -3, 3, -4, 4,
             -5, 5, -6, 6, -7, 7, -8, 8
@@ -4052,7 +4046,7 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
@@ -4062,33 +4056,33 @@ namespace Freeserf
                 {
                     Log.Verbose.Write("serf", "substate -1: wait for serf.");
 
-                    int d = s.Digging.DigPos;
-                    Direction dir = (d == 0) ? Direction.Up : (Direction)(6 - d);
-                    MapPos newPos = map.Move(Position, dir);
+                    int digPosition = s.Digging.DigPosition;
+                    var direction = (digPosition == 0) ? Direction.Up : (Direction)(6 - digPosition);
+                    var newPosition = map.Move(Position, direction);
 
-                    if (map.HasSerf(newPos))
+                    if (map.HasSerf(newPosition))
                     {
-                        Serf otherSerf = Game.GetSerfAtPos(newPos);
-                        Direction otherDir = Direction.None;
+                        var otherSerf = Game.GetSerfAtPos(newPosition);
+                        var otherDirection = Direction.None;
 
-                        if (otherSerf.IsWaiting(ref otherDir) &&
-                            otherDir == dir.Reverse() &&
-                            otherSerf.SwitchWaiting(otherDir))
+                        if (otherSerf.IsWaiting(ref otherDirection) &&
+                            otherDirection == direction.Reverse() &&
+                            otherSerf.SwitchWaiting(otherDirection))
                         {
-                            /* Do the switch */
+                            // Do the switch 
                             otherSerf.Position = Position;
                             map.SetSerfIndex(otherSerf.Position, (int)otherSerf.Index);
                             otherSerf.Animation = GetWalkingAnimation(
-                                (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPos), dir.Reverse(), true);
+                                (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPosition), direction.Reverse(), true);
                             otherSerf.Counter = CounterFromAnimation[otherSerf.Animation];
 
-                            if (d != 0)
+                            if (digPosition != 0)
                             {
-                                Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, true);
+                                Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, true);
                             }
                             else
                             {
-                                Animation = (int)map.GetHeight(newPos) - (int)map.GetHeight(Position);
+                                Animation = (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position);
                             }
                         }
                         else
@@ -4103,119 +4097,119 @@ namespace Freeserf
                     {
                         map.SetSerfIndex(Position, 0);
 
-                        if (d != 0)
+                        if (digPosition != 0)
                         {
-                            Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, false);
+                            Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, false);
                         }
                         else
                         {
-                            Animation = (int)map.GetHeight(newPos) - (int)map.GetHeight(Position);
+                            Animation = (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position);
                         }
                     }
 
-                    map.SetSerfIndex(newPos, (int)Index);
-                    Position = newPos;
+                    map.SetSerfIndex(newPosition, (int)Index);
+                    Position = newPosition;
                     s.Digging.Substate = 3;
                     Counter += CounterFromAnimation[Animation];
                 }
                 else if (s.Digging.Substate == 1)
                 {
-                    /* 34CD6: Change height, head back to center */
-                    int h = (int)map.GetHeight(Position);
-                    h += ((s.Digging.HIndex & 1) != 0) ? -1 : 1;
-                    Log.Verbose.Write("serf", "substate 1: change height " + (((s.Digging.HIndex & 1) != 0) ? "down." : "up."));
-                    map.SetHeight(Position, (uint)h);
+                    // 34CD6: Change height, head back to center 
+                    int height = (int)map.GetHeight(Position);
+                    height += ((s.Digging.HeightIndex & 1) != 0) ? -1 : 1;
+                    Log.Verbose.Write("serf", "substate 1: change height " + (((s.Digging.HeightIndex & 1) != 0) ? "down." : "up."));
+                    map.SetHeight(Position, (uint)height);
 
-                    if (s.Digging.DigPos == 0)
+                    if (s.Digging.DigPosition == 0)
                     {
                         s.Digging.Substate = 1;
                     }
                     else
                     {
-                        Direction dir = ((Direction)(6 - s.Digging.DigPos)).Reverse();
-                        StartWalking(dir, 32, true);
+                        var direction = ((Direction)(6 - s.Digging.DigPosition)).Reverse();
+                        StartWalking(direction, 32, true);
                     }
                 }
                 else if (s.Digging.Substate > 1)
                 {
                     Log.Verbose.Write("serf", "substate 2: dig.");
-                    /* 34E89 */
-                    Animation = 88 - (s.Digging.HIndex & 1);
+                    // 34E89 
+                    Animation = 88 - (s.Digging.HeightIndex & 1);
                     Counter += 383;
                 }
                 else
                 {
-                    /* 34CDC: Looking for a place to dig */
-                    Log.Verbose.Write("serf", $"substate 0: looking for place to dig {s.Digging.DigPos}, {s.Digging.HIndex}");
+                    // 34CDC: Looking for a place to dig 
+                    Log.Verbose.Write("serf", $"substate 0: looking for place to dig {s.Digging.DigPosition}, {s.Digging.HeightIndex}");
 
                     do
                     {
-                        int h = DiggingHDiff[s.Digging.HIndex] + (int)s.Digging.TargetH;
+                        int heightDifference = DiggingHeightDifferences[s.Digging.HeightIndex] + (int)s.Digging.TargetHeight;
 
-                        if (s.Digging.DigPos >= 0 && h >= 0 && h < 32)
+                        if (s.Digging.DigPosition >= 0 && heightDifference >= 0 && heightDifference < 32)
                         {
-                            if (s.Digging.DigPos == 0)
+                            if (s.Digging.DigPosition == 0)
                             {
                                 int height = (int)map.GetHeight(Position);
 
-                                if (height != h)
+                                if (height != heightDifference)
                                 {
-                                    --s.Digging.DigPos;
+                                    --s.Digging.DigPosition;
                                     continue;
                                 }
 
-                                /* Dig here */
+                                // Dig here 
                                 s.Digging.Substate = 2;
-                                Animation = 87 + (s.Digging.HIndex & 1);
+                                Animation = 87 + (s.Digging.HeightIndex & 1);
                                 Counter += 383;
                             }
                             else
                             {
-                                Direction dir = (Direction)(6 - s.Digging.DigPos);
-                                MapPos newPos = map.Move(Position, dir);
-                                int newHeight = (int)map.GetHeight(newPos);
+                                var direction = (Direction)(6 - s.Digging.DigPosition);
+                                var newPosition = map.Move(Position, direction);
+                                var newHeight = (int)map.GetHeight(newPosition);
 
-                                if (newHeight != h)
+                                if (newHeight != heightDifference)
                                 {
-                                    --s.Digging.DigPos;
+                                    --s.Digging.DigPosition;
                                     continue;
                                 }
 
-                                Log.Verbose.Write("serf", $"  found at: {s.Digging.DigPos}.");
+                                Log.Verbose.Write("serf", $"  found at: {s.Digging.DigPosition}.");
 
-                                /* Digging spot found */
-                                if (map.HasSerf(newPos))
+                                // Digging spot found 
+                                if (map.HasSerf(newPosition))
                                 {
-                                    /* Occupied by other serf, wait */
+                                    // Occupied by other serf, wait 
                                     s.Digging.Substate = 0;
-                                    Animation = 87 - s.Digging.DigPos;
+                                    Animation = 87 - s.Digging.DigPosition;
                                     Counter = CounterFromAnimation[Animation];
 
                                     return;
                                 }
 
-                                /* Go to dig there */
-                                StartWalking(dir, 32, true);
+                                // Go to dig there 
+                                StartWalking(direction, 32, true);
                                 s.Digging.Substate = 3;
                             }
 
                             break;
                         }
 
-                        s.Digging.DigPos = 6;
-                        --s.Digging.HIndex;
+                        s.Digging.DigPosition = 6;
+                        --s.Digging.HeightIndex;
 
-                    } while (s.Digging.HIndex >= 0);
+                    } while (s.Digging.HeightIndex >= 0);
 
-                    if (s.Digging.HIndex < 0)
+                    if (s.Digging.HeightIndex < 0)
                     {
-                        /* Done Digging */
-                        Building building = Game.GetBuilding(map.GetObjectIndex(Position));
+                        // Done Digging 
+                        var building = Game.GetBuilding(map.GetObjectIndex(Position));
                         building.DoneLeveling();
                         SetState(State.ReadyToLeave);
-                        s.LeavingBuilding.Dest = 0;
+                        s.LeavingBuilding.Destination = 0;
                         s.LeavingBuilding.FieldB = -2;
-                        s.LeavingBuilding.Dir = 0;
+                        s.LeavingBuilding.Direction = 0;
                         s.LeavingBuilding.NextState = State.Walking;
                         HandleSerfReadyToLeaveState();  // TODO(jonls): why isn't a state switch enough?
 
@@ -4241,7 +4235,7 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                Building building = Game.GetBuilding(s.Building.Index);
+                var building = Game.GetBuilding(s.Building.Index);
 
                 if (building == null)
                     return;
@@ -4266,12 +4260,12 @@ namespace Freeserf
                         if (Misc.BitTest(s.Building.MaterialStep, 7))
                             Animation = 100;
 
-                        /* 353A5 */
+                        // 353A5 
                         int materialStep = (int)s.Building.MaterialStep & 0xf;
 
                         if (!Misc.BitTest(MaterialOrder[(int)building.BuildingType], materialStep))
                         {
-                            /* Planks */
+                            // Planks 
                             if (building.GetResourceCountInStock(0) == 0)
                             {
                                 Counter += 256;
@@ -4286,7 +4280,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            /* Stone */
+                            // Stone 
                             if (building.GetResourceCountInStock(1) == 0)
                             {
                                 Counter += 256;
@@ -4316,12 +4310,12 @@ namespace Freeserf
                             Animation = 100;
                     }
 
-                    /* 353A5: Duplicate code */
+                    // 353A5: Duplicate code 
                     int materialStep = (int)s.Building.MaterialStep & 0xf;
 
                     if (!Misc.BitTest(MaterialOrder[(int)building.BuildingType], materialStep))
                     {
-                        /* Planks */
+                        // Planks 
                         if (building.GetResourceCountInStock(0) == 0)
                         {
                             Counter += 256;
@@ -4336,7 +4330,7 @@ namespace Freeserf
                     }
                     else
                     {
-                        /* Stone */
+                        // Stone 
                         if (building.GetResourceCountInStock(1) == 0)
                         {
                             Counter += 256;
@@ -4369,12 +4363,12 @@ namespace Freeserf
         {
             tick = Game.Tick;
 
-            Inventory inventory = Game.GetInventory(s.BuildingCastle.InvIndex);
-            Building building = Game.GetBuilding(inventory.Building);
+            var inventory = Game.GetInventory(s.BuildingCastle.InventoryIndex);
+            var building = Game.GetBuilding(inventory.Building);
 
             if (building.BuildProgress())
             {
-                /* Finished */
+                // Finished 
                 Game.Map.SetSerfIndex(Position, 0);
                 SetState(State.WaitForResourceOut);
             }
@@ -4385,38 +4379,39 @@ namespace Freeserf
             tick = Game.Tick;
             Counter = 0;
 
-            Map map = Game.Map;
+            var map = Game.Map;
+
             if ((map.GetSerfIndex(Position) != Index && map.HasSerf(Position)) || map.HasSerf(map.MoveDownRight(Position)))
             {
-                /* Occupied by serf, wait */
+                // Occupied by serf, wait 
                 Animation = 82;
                 Counter = 0;
 
                 return;
             }
 
-            Flag flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+            var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
 
             if (flag == null)
                 return;
 
             if (!flag.HasEmptySlot())
             {
-                /* All resource slots at flag are occupied, wait */
+                // All resource slots at flag are occupied, wait 
                 Animation = 82;
                 Counter = 0;
 
                 return;
             }
 
-            uint res = s.MoveResourceOut.Res;
-            uint resDest = s.MoveResourceOut.ResDest;
-            State nextState = s.MoveResourceOut.NextState;
+            var resource = s.MoveResourceOut.Resource;
+            // var resourceDestination = s.MoveResourceOut.ResourceDestination;
+            var nextState = s.MoveResourceOut.NextState;
 
             LeaveBuilding(false);
 
             s.LeavingBuilding.NextState = nextState;
-            s.LeavingBuilding.FieldB = (int)res;
+            s.LeavingBuilding.FieldB = (int)resource;
         }
 
         void HandleSerfWaitForResourceOutState()
@@ -4433,12 +4428,12 @@ namespace Freeserf
                 Counter = 0;
             }
 
-            Building building = Game.GetBuildingAtPos(Position);
+            var building = Game.GetBuildingAtPos(Position);
 
             if (building == null)
                 return;
 
-            Inventory inventory = building.GetInventory();
+            var inventory = building.GetInventory();
 
             if (inventory.GetSerfQueueLength() > 0 ||
                 !inventory.HasResourceInQueue())
@@ -4447,26 +4442,27 @@ namespace Freeserf
             }
 
             SetState(State.MoveResourceOut);
-            Resource.Type res = Resource.Type.None;
-            uint dest = 0;
+            var resource = Resource.Type.None;
+            uint destination = 0;
 
-            inventory.GetResourceFromQueue(ref res, ref dest);
-            s.MoveResourceOut.Res = (uint)(res + 1);
-            s.MoveResourceOut.ResDest = dest;
+            inventory.GetResourceFromQueue(ref resource, ref destination);
+            s.MoveResourceOut.Resource = (uint)(resource + 1);
+            s.MoveResourceOut.ResourceDestination = destination;
             s.MoveResourceOut.NextState = State.DropResourceOut;
 
-            /* why isn't a state switch enough? */
-            /*HandleSerfMoveResourceOutState(serf);*/
+            // TODO ?
+            // why isn't a state switch enough? 
+            //HandleSerfMoveResourceOutState(serf);
         }
 
         void HandleSerfDropResourceOutState()
         {
-            Flag flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
+            var flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
 
             if (flag == null)
                 return;
 
-            if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Res - 1), s.MoveResourceOut.ResDest))
+            if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Resource - 1), s.MoveResourceOut.ResourceDestination))
             {
                 throw new ExceptionFreeserf(Game, "serf", "Failed to drop resource.");
             }
@@ -4488,19 +4484,19 @@ namespace Freeserf
                     SetState(State.Transporting);
                     s.Walking.WaitCounter = 0;
 
-                    Flag flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
+                    var flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
 
                     TransporterMoveToFlag(flag);
 
                     return;
                 }
 
-                if (s.Walking.Res != Resource.Type.None)
+                if (s.Walking.Resource != Resource.Type.None)
                 {
-                    Resource.Type res = s.Walking.Res;
-                    s.Walking.Res = Resource.Type.None;
-                    Building building = Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
-                    building.RequestedResourceDelivered(res);
+                    var building = Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
+                    var resource = s.Walking.Resource;
+                    s.Walking.Resource = Resource.Type.None;                    
+                    building.RequestedResourceDelivered(resource);
                 }
 
                 Animation = 4 + 9 - (Animation - (3 + 10 * 9));
@@ -4514,7 +4510,7 @@ namespace Freeserf
             tick = Game.Tick;
             Counter = 0;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (map.HasSerf(Position) || map.HasSerf(map.MoveDownRight(Position)))
             {
@@ -4531,19 +4527,19 @@ namespace Freeserf
             {
                 var cycle = new DirectionCycleCW(Direction.Up, 5);
 
-                foreach (var dir in cycle)
+                foreach (var direction in cycle)
                 {
-                    var pos = map.Move(inventoryFlag.Position, dir);
+                    var position = map.Move(inventoryFlag.Position, direction);
 
-                    if (map.HasSerf(pos))
+                    if (map.HasSerf(position))
                     {
-                        var serf = Game.GetSerfAtPos(pos);
-                        Direction temp = Direction.None;
+                        var serf = Game.GetSerfAtPos(position);
+                        var tempDirection = Direction.None;
 
                         if ((serf.SerfState == State.Walking || serf.SerfState == State.Transporting || serf.SerfState == State.KnightEngagingBuilding) &&
-                            serf.IsWaiting(ref temp))
+                            serf.IsWaiting(ref tempDirection))
                         {
-                            if (!(serf.SerfState != State.Transporting && serf.s.Walking.Dest == inventoryFlag.Position && serf.s.Walking.Dir == (int)dir.Reverse()))
+                            if (!(serf.SerfState != State.Transporting && serf.s.Walking.Destination == inventoryFlag.Position && serf.s.Walking.Direction == (int)direction.Reverse()))
                             {
                                 Animation = 82;
                                 Counter = 0;
@@ -4556,11 +4552,11 @@ namespace Freeserf
 
             if (s.ReadyToLeaveInventory.Mode == -1)
             {
-                Flag flag = Game.GetFlag(s.ReadyToLeaveInventory.Dest);
+                var flag = Game.GetFlag(s.ReadyToLeaveInventory.Destination);
 
                 if (flag.HasBuilding())
                 {
-                    Building building = flag.GetBuilding();
+                    var building = flag.GetBuilding();
 
                     if (map.HasSerf(building.Position))
                     {
@@ -4572,43 +4568,43 @@ namespace Freeserf
                 }
             }
 
-            Inventory inventory = Game.GetInventory(s.ReadyToLeaveInventory.InvIndex);
+            var inventory = Game.GetInventory(s.ReadyToLeaveInventory.InventoryIndex);
 
             inventory.SerfAway();
 
-            State nextState = State.Walking;
-            int mode = s.ReadyToLeaveInventory.Mode;
+            var nextState = State.Walking;
+            var mode = s.ReadyToLeaveInventory.Mode;
 
             if (mode == -3)
             {
                 nextState = State.Scatter;
             }
 
-            uint dest = s.ReadyToLeaveInventory.Dest;
+            uint destination = s.ReadyToLeaveInventory.Destination;
 
             LeaveBuilding(false);
             s.LeavingBuilding.NextState = nextState;
             s.LeavingBuilding.FieldB = mode;
-            s.LeavingBuilding.Dest = dest;
-            s.LeavingBuilding.Dir = 0;
+            s.LeavingBuilding.Destination = destination;
+            s.LeavingBuilding.Direction = 0;
         }
 
         void HandleSerfFreeWalkingStateDestReached()
         {
-            if (s.FreeWalking.NegDist1 == -128 && s.FreeWalking.NegDist2 < 0)
+            if (s.FreeWalking.NegDistance1 == -128 && s.FreeWalking.NegDistance2 < 0)
             {
                 FindInventory();
                 return;
             }
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             switch (GetSerfType())
             {
                 case Type.Lumberjack:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
-                        if (s.FreeWalking.NegDist2 > 0)
+                        if (s.FreeWalking.NegDistance2 > 0)
                         {
                             DropResource(Resource.Type.Lumber);
                         }
@@ -4619,37 +4615,37 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.Dist1 = s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 = s.FreeWalking.NegDist2;
+                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
                         var obj = map.GetObject(Position);
 
                         if (obj >= Map.Object.Tree0 &&
                             obj <= Map.Object.Pine7)
                         {
                             SetState(State.Logging);
-                            s.FreeWalking.NegDist1 = 0;
-                            s.FreeWalking.NegDist2 = 0;
+                            s.FreeWalking.NegDistance1 = 0;
+                            s.FreeWalking.NegDistance2 = 0;
 
                             if ((int)obj < 16)
-                                s.FreeWalking.NegDist1 = -1;
+                                s.FreeWalking.NegDistance1 = -1;
 
                             Animation = 116;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
-                            /* The expected tree is gone */
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = 0;
+                            // The expected tree is gone 
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
                     break;
                 case Type.Stonecutter:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
-                        if (s.FreeWalking.NegDist2 > 0)
+                        if (s.FreeWalking.NegDistance2 > 0)
                         {
                             DropResource(Resource.Type.Stone);
                         }
@@ -4660,14 +4656,13 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.Dist1 = s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 = s.FreeWalking.NegDist2;
+                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
 
-                        MapPos newPos = map.MoveUpLeft(Position);
+                        var newPosition = map.MoveUpLeft(Position);
+                        var obj = map.GetObject(newPosition);
 
-                        var obj = map.GetObject(newPos);
-
-                        if (!map.HasSerf(newPos) &&
+                        if (!map.HasSerf(newPosition) &&
                             obj >= Map.Object.Stone0 &&
                             obj <= Map.Object.Stone7)
                         {
@@ -4675,21 +4670,21 @@ namespace Freeserf
                             StartWalking(Direction.UpLeft, 32, true);
 
                             SetState(State.StoneCutting);
-                            s.FreeWalking.NegDist2 = Counter >> 2;
-                            s.FreeWalking.NegDist1 = 0;
+                            s.FreeWalking.NegDistance2 = Counter >> 2;
+                            s.FreeWalking.NegDistance1 = 0;
                         }
                         else
                         {
-                            /* The expected stone is gone or unavailable */
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = 0;
+                            // The expected stone is gone or unavailable 
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
                     break;
                 case Type.Forester:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
                         SetState(State.ReadyToEnter);
                         s.ReadyToEnter.FieldB = 0;
@@ -4697,30 +4692,30 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.Dist1 = s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 = s.FreeWalking.NegDist2;
+                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
 
                         if (map.GetObject(Position) == Map.Object.None)
                         {
                             SetState(State.Planting);
-                            s.FreeWalking.NegDist2 = 0;
+                            s.FreeWalking.NegDistance2 = 0;
                             Animation = 121;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
-                            /* The expected free space is no longer empty */
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = 0;
+                            // The expected free space is no longer empty 
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
                     break;
                 case Type.Fisher:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
-                        if (s.FreeWalking.NegDist2 > 0)
+                        if (s.FreeWalking.NegDistance2 > 0)
                         {
                             DropResource(Resource.Type.Fish);
                         }
@@ -4731,48 +4726,48 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.Dist1 = s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 = s.FreeWalking.NegDist2;
+                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
 
-                        int a = -1;
+                        int fisherAnimation = 0;
 
                         if (map.Paths(Position) == 0)
                         {
                             if (map.TypeDown(Position) <= Map.Terrain.Water3 &&
                                 map.TypeUp(map.MoveUpLeft(Position)) >= Map.Terrain.Grass0)
                             {
-                                a = 132;
+                                fisherAnimation = 132;
                             }
                             else if (map.TypeDown(map.MoveLeft(Position)) <= Map.Terrain.Water3 &&
                                      map.TypeUp(map.MoveUp(Position)) >= Map.Terrain.Grass0)
                             {
-                                a = 131;
+                                fisherAnimation = 131;
                             }
                         }
 
-                        if (a < 0)
+                        if (fisherAnimation == 0)
                         {
-                            /* Cannot fish here after all. */
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = 0;
+                            // Cannot fish here after all. 
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                         else
                         {
                             SetState(State.Fishing);
-                            s.FreeWalking.NegDist1 = 0;
-                            s.FreeWalking.NegDist2 = 0;
+                            s.FreeWalking.NegDistance1 = 0;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
-                            Animation = a;
-                            Counter = CounterFromAnimation[a];
+                            Animation = fisherAnimation;
+                            Counter = CounterFromAnimation[fisherAnimation];
                         }
                     }
                     break;
                 case Type.Farmer:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
-                        if (s.FreeWalking.NegDist2 > 0)
+                        if (s.FreeWalking.NegDistance2 > 0)
                         {
                             DropResource(Resource.Type.Wheat);
                         }
@@ -4783,8 +4778,8 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.Dist1 = s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 = s.FreeWalking.NegDist2;
+                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
 
                         var obj = map.GetObject(Position);
 
@@ -4792,35 +4787,35 @@ namespace Freeserf
                             (obj >= Map.Object.Field0 &&
                              obj <= Map.Object.Field5))
                         {
-                            /* Existing field. */
+                            // Existing field. 
                             Animation = 136;
-                            s.FreeWalking.NegDist1 = 1;
+                            s.FreeWalking.NegDistance1 = 1;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else if (obj == Map.Object.None &&
                                  map.Paths(Position) == 0)
                         {
-                            /* Empty space. */
+                            // Empty space. 
                             Animation = 135;
-                            s.FreeWalking.NegDist1 = 0;
+                            s.FreeWalking.NegDistance1 = 0;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
-                            /* Space not available after all. */
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = 0;
+                            // Space not available after all. 
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                             break;
                         }
 
                         SetState(State.Farming);
-                        s.FreeWalking.NegDist2 = 0;
+                        s.FreeWalking.NegDistance2 = 0;
                     }
                     break;
                 case Type.Geologist:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
                         if (map.GetObject(Position) == Map.Object.Flag &&
                             map.GetOwner(Position) == Player)
@@ -4837,21 +4832,21 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.Dist1 = s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 = s.FreeWalking.NegDist2;
+                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
 
                         if (map.GetObject(Position) == Map.Object.None)
                         {
                             SetState(State.SamplingGeoSpot);
-                            s.FreeWalking.NegDist1 = 0;
+                            s.FreeWalking.NegDistance1 = 0;
                             Animation = 141;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
-                            /* Destination is not a free space after all. */
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = 0;
+                            // Destination is not a free space after all. 
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = 0;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
@@ -4862,7 +4857,7 @@ namespace Freeserf
                 case Type.Knight2:
                 case Type.Knight3:
                 case Type.Knight4:
-                    if (s.FreeWalking.NegDist1 == -128)
+                    if (s.FreeWalking.NegDistance1 == -128)
                     {
                         FindInventory();
                     }
@@ -4878,89 +4873,89 @@ namespace Freeserf
             }
         }
 
-        void HandleSerfFreeWalkingSwitchOnDir(Direction dir)
+        void HandleSerfFreeWalkingSwitchOnDirection(Direction direction)
         {
             // A suitable direction has been found; walk.
-            if (dir < Direction.Right)
+            if (direction < Direction.Right)
             {
                 throw new ExceptionFreeserf(Game, "serf", "Wrong direction.");
             }
 
-            int dx = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) < 2) ? 1 : 0);
-            int dy = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) > 0) ? 1 : 0);
+            int distanceX = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
+            int distanceY = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-            Log.Verbose.Write("serf", $"serf {Index}: free walking: dest {s.FreeWalking.Dist1}, {s.FreeWalking.Dist2}, move {dx}, {dy}");
+            Log.Verbose.Write("serf", $"serf {Index}: free walking: dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
 
-            s.FreeWalking.Dist1 -= dx;
-            s.FreeWalking.Dist2 -= dy;
+            s.FreeWalking.DistanceX -= distanceX;
+            s.FreeWalking.DistanceY -= distanceY;
 
-            StartWalking(dir, 32, true);
+            StartWalking(direction, 32, true);
 
-            if (s.FreeWalking.Dist1 == 0 &&
-                s.FreeWalking.Dist2 == 0)
+            if (s.FreeWalking.DistanceX == 0 &&
+                s.FreeWalking.DistanceY == 0)
             {
-                /* Arriving to destination */
+                // Arriving to destination 
                 s.FreeWalking.Flags = Misc.Bit(3);
             }
         }
 
         void HandleSerfFreeWalkingSwitchWithOther()
         {
-            /* No free position can be found. Switch with other serf. */
-            MapPos newPos = 0;
-            Direction dir = Direction.None;
+            // No free position can be found. Switch with other serf. 
+            MapPos newPosition = 0;
+            var direction = Direction.None;
             Serf otherSerf = null;
-            Map map = Game.Map;
+            var map = Game.Map;
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction i in cycle)
+            foreach (var checkDirection in cycle)
             {
-                newPos = map.Move(Position, i);
+                newPosition = map.Move(Position, checkDirection);
 
-                if (map.HasSerf(newPos))
+                if (map.HasSerf(newPosition))
                 {
-                    otherSerf = Game.GetSerfAtPos(newPos);
-                    Direction otherDir = Direction.None;
+                    otherSerf = Game.GetSerfAtPos(newPosition);
+                    var otherDirection = Direction.None;
 
-                    if (otherSerf.IsWaiting(ref otherDir) &&
-                        otherDir == i.Reverse() &&
-                        otherSerf.SwitchWaiting(otherDir))
+                    if (otherSerf.IsWaiting(ref otherDirection) &&
+                        otherDirection == checkDirection.Reverse() &&
+                        otherSerf.SwitchWaiting(otherDirection))
                     {
-                        dir = i;
+                        direction = checkDirection;
                         break;
                     }
                 }
             }
 
-            if (dir > Direction.None)
+            if (direction > Direction.None)
             {
-                int dx = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) < 2) ? 1 : 0);
-                int dy = (((int)dir < 3) ? 1 : -1) * ((((int)dir % 3) > 0) ? 1 : 0);
+                int distanceX = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
+                int distanceY = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-                Log.Verbose.Write("serf", $"free walking (switch): dest {s.FreeWalking.Dist1}, {s.FreeWalking.Dist2}, move {dx}, {dy}");
+                Log.Verbose.Write("serf", $"free walking (switch): dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
 
-                s.FreeWalking.Dist1 -= dx;
-                s.FreeWalking.Dist2 -= dy;
+                s.FreeWalking.DistanceX -= distanceX;
+                s.FreeWalking.DistanceY -= distanceY;
 
-                if (s.FreeWalking.Dist1 == 0 &&
-                    s.FreeWalking.Dist2 == 0)
+                if (s.FreeWalking.DistanceX == 0 &&
+                    s.FreeWalking.DistanceY == 0)
                 {
-                    /* Arriving to destination */
+                    // Arriving to destination 
                     s.FreeWalking.Flags = Misc.Bit(3);
                 }
 
-                /* Switch with other serf. */
+                // Switch with other serf. 
                 map.SetSerfIndex(Position, (int)otherSerf.Index);
-                map.SetSerfIndex(newPos, (int)Index);
+                map.SetSerfIndex(newPosition, (int)Index);
 
-                otherSerf.Animation = GetWalkingAnimation((int)map.GetHeight(Position) - (int)map.GetHeight(otherSerf.Position), dir.Reverse(), true);
-                Animation = GetWalkingAnimation((int)map.GetHeight(newPos) - (int)map.GetHeight(Position), dir, true);
+                otherSerf.Animation = GetWalkingAnimation((int)map.GetHeight(Position) - (int)map.GetHeight(otherSerf.Position), direction.Reverse(), true);
+                Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, true);
 
                 otherSerf.Counter = CounterFromAnimation[otherSerf.Animation];
                 Counter = CounterFromAnimation[Animation];
 
                 otherSerf.Position = Position;
-                Position = newPos;
+                Position = newPosition;
             }
             else
             {
@@ -4969,15 +4964,15 @@ namespace Freeserf
             }
         }
 
-        static readonly Direction[] DirFromOffset = new Direction[]
+        static readonly Direction[] DirectionFromOffset = new Direction[]
         {
             Direction.UpLeft, Direction.Up,   Direction.None,
             Direction.Left,   Direction.None, Direction.Right,
             Direction.None,   Direction.Down, Direction.DownRight
         };
 
-        /* Follow right-hand edge */
-        static readonly Direction[] DirRightEdge = new Direction[]
+        // Follow right-hand edge 
+        static readonly Direction[] DirectionRightEdge = new Direction[]
         {
                 Direction.Down, Direction.DownRight, Direction.Right, Direction.Up,
                 Direction.UpLeft, Direction.Left, Direction.Left, Direction.Down,
@@ -4990,8 +4985,8 @@ namespace Freeserf
                 Direction.UpLeft, Direction.Left, Direction.Down,
         };
 
-        /* Follow left-hand edge */
-        static readonly Direction[] DirLeftEdge = new Direction[]
+        // Follow left-hand edge 
+        static readonly Direction[] DirectionLeftEdge = new Direction[]
         {
                 Direction.UpLeft, Direction.Up, Direction.Right, Direction.DownRight,
                 Direction.Down, Direction.Left, Direction.Up, Direction.Right,
@@ -5007,42 +5002,41 @@ namespace Freeserf
         int HandleFreeWalkingFollowEdge()
         {
             bool water = SerfState == State.FreeSailing;
-            int dirIndex = -1;
-            Direction[] dirArray = null;
+            Direction[] directions;
+            int directionIndex;            
 
             if (Misc.BitTest(s.FreeWalking.Flags, 3))
             {
-                /* Follow right-hand edge */
-                dirArray = DirLeftEdge;
-                dirIndex = (s.FreeWalking.Flags & 7) - 1;
+                // Follow right-hand edge 
+                directions = DirectionLeftEdge;
+                directionIndex = (s.FreeWalking.Flags & 7) - 1;
             }
             else
             {
-                /* Follow right-hand edge */
-                dirArray = DirRightEdge;
-                dirIndex = (s.FreeWalking.Flags & 7) - 1;
+                // Follow right-hand edge 
+                directions = DirectionRightEdge;
+                directionIndex = (s.FreeWalking.Flags & 7) - 1;
             }
 
-            int d1 = s.FreeWalking.Dist1;
-            int d2 = s.FreeWalking.Dist2;
+            int distanceX = s.FreeWalking.DistanceX;
+            int distanceY = s.FreeWalking.DistanceY;
 
-            /* Check if dest is only one step away. */
-            if (!water && Math.Abs(d1) <= 1 && Math.Abs(d2) <= 1 &&
-                DirFromOffset[(d1 + 1) + 3 * (d2 + 1)] > Direction.None)
+            // Check if destination is only one step away. 
+            if (!water && Math.Abs(distanceX) <= 1 && Math.Abs(distanceY) <= 1 &&
+                DirectionFromOffset[(distanceX + 1) + 3 * (distanceY + 1)] > Direction.None)
             {
-                /* Convert offset in two dimensions to
-                   direction variable. */
-                Direction dirFromOffset = DirFromOffset[(d1 + 1) + 3 * (d2 + 1)];
-                MapPos newPos = Game.Map.Move(Position, dirFromOffset);
+                // Convert offset in two dimensions to direction variable.
+                var directionFromOffset = DirectionFromOffset[(distanceX + 1) + 3 * (distanceY + 1)];
+                var newPosition = Game.Map.Move(Position, directionFromOffset);
 
-                if (!CanPassMapPos(newPos))
+                if (!CanPassMapPosition(newPosition))
                 {
-                    if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDist1 != -128)
+                    if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128)
                     {
-                        s.FreeWalking.Dist1 += s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 += s.FreeWalking.NegDist2;
-                        s.FreeWalking.NegDist1 = 0;
-                        s.FreeWalking.NegDist2 = 0;
+                        s.FreeWalking.DistanceX += s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY += s.FreeWalking.NegDistance2;
+                        s.FreeWalking.NegDistance1 = 0;
+                        s.FreeWalking.NegDistance2 = 0;
                         s.FreeWalking.Flags = 0;
                         Animation = 82;
                         Counter = CounterFromAnimation[Animation];
@@ -5057,10 +5051,10 @@ namespace Freeserf
                     return 0;
                 }
 
-                if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDist1 != -128 &&
-                    Game.Map.HasSerf(newPos))
+                if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128 &&
+                    Game.Map.HasSerf(newPosition))
                 {
-                    /* Wait for other serfs */
+                    // Wait for other serfs 
                     s.FreeWalking.Flags = 0;
                     Animation = 82;
                     Counter = CounterFromAnimation[Animation];
@@ -5068,52 +5062,50 @@ namespace Freeserf
                 }
             }
 
-            int dirOffset = 6 * dirIndex;
-            Direction i0 = Direction.None;
-            Direction dir = Direction.None;
-            Map map = Game.Map;
+            int directionOffset = 6 * directionIndex;
+            var checkDirection = Direction.None;
+            var direction = Direction.None;
+            var map = Game.Map;
             var cycle = DirectionCycleCW.CreateDefault();
 
             foreach (Direction i in cycle)
             {
-                MapPos newPos = map.Move(Position, dirArray[dirOffset + (int)i]);
+                var newPosition = map.Move(Position, directions[directionOffset + (int)i]);
 
-                if (((water && map.GetObject(newPos) == 0) ||
-                     (!water && !map.IsInWater(newPos) &&
-                      CanPassMapPos(newPos))) && !map.HasSerf(newPos))
+                if (((water && map.GetObject(newPosition) == 0) ||
+                     (!water && !map.IsInWater(newPosition) &&
+                      CanPassMapPosition(newPosition))) && !map.HasSerf(newPosition))
                 {
-                    dir = dirArray[dirOffset + (int)i];
-                    i0 = i;
+                    direction = directions[directionOffset + (int)i];
+                    checkDirection = i;
                     break;
                 }
             }
 
-            if (i0 > Direction.None)
+            if (checkDirection > Direction.None)
             {
-                int upper = ((s.FreeWalking.Flags >> 4) & 0xf) + (int)i0 - 2;
+                int upper = ((s.FreeWalking.Flags >> 4) & 0xf) + (int)checkDirection - 2;
 
-                if ((int)i0 < 2 && upper < 0)
+                if ((int)checkDirection < 2 && upper < 0)
                 {
                     s.FreeWalking.Flags = 0;
-                    HandleSerfFreeWalkingSwitchOnDir(dir);
+                    HandleSerfFreeWalkingSwitchOnDirection(direction);
                     return 0;
                 }
-                else if ((int)i0 > 2 && upper > 15)
+                else if ((int)checkDirection > 2 && upper > 15)
                 {
                     s.FreeWalking.Flags = 0;
                 }
                 else
                 {
-                    int dirIndex2 = (int)dir + 1;
-                    s.FreeWalking.Flags = (upper << 4) | (s.FreeWalking.Flags & 0x8) | dirIndex2;
-                    HandleSerfFreeWalkingSwitchOnDir(dir);
+                    s.FreeWalking.Flags = (upper << 4) | (s.FreeWalking.Flags & 0x8) | ((int)direction + 1);
+                    HandleSerfFreeWalkingSwitchOnDirection(direction);
                     return 0;
                 }
             }
             else
             {
-                int dirIndex3 = 0;
-                s.FreeWalking.Flags = (s.FreeWalking.Flags & 0xf8) | dirIndex3;
+                s.FreeWalking.Flags = (s.FreeWalking.Flags & 0xf8);
                 s.FreeWalking.Flags &= ~Misc.Bit(3);
                 HandleSerfFreeWalkingSwitchWithOther();
                 return 0;
@@ -5140,7 +5132,7 @@ namespace Freeserf
             *    5             8
             *         6    7
             */
-        static readonly Direction[] DirForward = new Direction[]
+        static readonly Direction[] DirectionForward = new Direction[]
         {
             Direction.Up, Direction.UpLeft, Direction.Right, Direction.Left,
             Direction.DownRight, Direction.Down, Direction.UpLeft, Direction.Up,
@@ -5169,134 +5161,133 @@ namespace Freeserf
             if (Misc.BitTest(s.FreeWalking.Flags, 3) &&
                 (s.FreeWalking.Flags & 7) == 0)
             {
-                /* Destination reached */
+                // Destination reached 
                 HandleSerfFreeWalkingStateDestReached();
                 return;
             }
 
             if ((s.FreeWalking.Flags & 7) != 0)
             {
-                /* Obstacle encountered, follow along the edge */
+                // Obstacle encountered, follow along the edge 
                 if (HandleFreeWalkingFollowEdge() >= 0)
                     return;
             }
 
-            /* Move fowards */
-            int dirIndex = -1;
-            int d1 = s.FreeWalking.Dist1;
-            int d2 = s.FreeWalking.Dist2;
+            // Move fowards 
+            int directionIndex;
+            int distance1 = s.FreeWalking.DistanceX;
+            int distance2 = s.FreeWalking.DistanceY;
 
-            if (d1 < 0)
+            if (distance1 < 0)
             {
-                if (d2 < 0)
+                if (distance2 < 0)
                 {
-                    if (-d2 < -d1)
+                    if (-distance2 < -distance1)
                     {
-                        if (-2 * d2 < -d1)
+                        if (-2 * distance2 < -distance1)
                         {
-                            dirIndex = 3;
+                            directionIndex = 3;
                         }
                         else
                         {
-                            dirIndex = 2;
+                            directionIndex = 2;
                         }
                     }
                     else
                     {
-                        if (-d2 < -2 * d1)
+                        if (-distance2 < -2 * distance1)
                         {
-                            dirIndex = 1;
+                            directionIndex = 1;
                         }
                         else
                         {
-                            dirIndex = 0;
+                            directionIndex = 0;
                         }
                     }
                 }
                 else
                 {
-                    if (d2 >= -d1)
+                    if (distance2 >= -distance1)
                     {
-                        dirIndex = 5;
+                        directionIndex = 5;
                     }
                     else
                     {
-                        dirIndex = 4;
+                        directionIndex = 4;
                     }
                 }
             }
             else
             {
-                if (d2 < 0)
+                if (distance2 < 0)
                 {
-                    if (-d2 >= d1)
+                    if (-distance2 >= distance1)
                     {
-                        dirIndex = 11;
+                        directionIndex = 11;
                     }
                     else
                     {
-                        dirIndex = 10;
+                        directionIndex = 10;
                     }
                 }
                 else
                 {
-                    if (d2 < d1)
+                    if (distance2 < distance1)
                     {
-                        if (2 * d2 < d1)
+                        if (2 * distance2 < distance1)
                         {
-                            dirIndex = 9;
+                            directionIndex = 9;
                         }
                         else
                         {
-                            dirIndex = 8;
+                            directionIndex = 8;
                         }
                     }
                     else
                     {
-                        if (d2 < 2 * d1)
+                        if (distance2 < 2 * distance1)
                         {
-                            dirIndex = 7;
+                            directionIndex = 7;
                         }
                         else
                         {
-                            dirIndex = 6;
+                            directionIndex = 6;
                         }
                     }
                 }
             }
 
-            /* Try to move directly in the preferred direction */
-            int dirOffset = 6 * dirIndex;
-            Direction dir = DirForward[dirOffset];
-            Map map = Game.Map;
-            MapPos newPos = map.Move(Position, dir);
+            // Try to move directly in the preferred direction.
+            int directionOffset = 6 * directionIndex;
+            var direction = DirectionForward[directionOffset];
+            var map = Game.Map;
+            var newPosition = map.Move(Position, direction);
 
-            if (((water && map.GetObject(newPos) == 0) ||
-                 (!water && !map.IsInWater(newPos) &&
-                 CanPassMapPos(newPos))) &&
-                 !map.HasSerf(newPos))
+            if (((water && map.GetObject(newPosition) == 0) ||
+                 (!water && !map.IsInWater(newPosition) &&
+                 CanPassMapPosition(newPosition))) &&
+                 !map.HasSerf(newPosition))
             {
-                HandleSerfFreeWalkingSwitchOnDir(dir);
+                HandleSerfFreeWalkingSwitchOnDirection(direction);
                 return;
             }
 
-            /* Check if dest is only one step away. */
-            if (!water && Math.Abs(d1) <= 1 && Math.Abs(d2) <= 1 &&
-                DirFromOffset[(d1 + 1) + 3 * (d2 + 1)] > Direction.None)
+            // Check if destination is only one step away.
+            if (!water && Math.Abs(distance1) <= 1 && Math.Abs(distance2) <= 1 &&
+                DirectionFromOffset[(distance1 + 1) + 3 * (distance2 + 1)] > Direction.None)
             {
-                /* Convert offset in two dimensions to
-                   direction variable. */
-                Direction d = DirFromOffset[(d1 + 1) + 3 * (d2 + 1)];
-                MapPos newPos2 = map.Move(Position, d);
+                // Convert offset in two dimensions to direction variable.
+                direction = DirectionFromOffset[(distance1 + 1) + 3 * (distance2 + 1)];
+                newPosition = map.Move(Position, direction);
 
-                if (!CanPassMapPos(newPos2))
+                if (!CanPassMapPosition(newPosition))
                 {
-                    if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDist1 != -128)
+                    if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128)
                     {
-                        s.FreeWalking.Dist1 += s.FreeWalking.NegDist1;
-                        s.FreeWalking.Dist2 += s.FreeWalking.NegDist2;
-                        s.FreeWalking.NegDist1 = 0;
-                        s.FreeWalking.NegDist2 = 0;
+                        s.FreeWalking.DistanceX += s.FreeWalking.NegDistance1;
+                        s.FreeWalking.DistanceY += s.FreeWalking.NegDistance2;
+                        s.FreeWalking.NegDistance1 = 0;
+                        s.FreeWalking.NegDistance2 = 0;
                         s.FreeWalking.Flags = 0;
                     }
                     else
@@ -5309,28 +5300,28 @@ namespace Freeserf
                     return;
                 }
 
-                if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDist1 != -128
-                    && map.HasSerf(newPos2))
+                if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128
+                    && map.HasSerf(newPosition))
                 {
-                    Serf otherSerf = Game.GetSerfAtPos(newPos2);
-                    Direction otherDir = Direction.None;
+                    var otherSerf = Game.GetSerfAtPos(newPosition);
+                    var otherDirection = Direction.None;
 
-                    if (otherSerf.IsWaiting(ref otherDir) &&
-                        (otherDir == d.Reverse() || otherDir == Direction.None) &&
-                        otherSerf.SwitchWaiting(d.Reverse()))
+                    if (otherSerf.IsWaiting(ref otherDirection) &&
+                        (otherDirection == direction.Reverse() || otherDirection == Direction.None) &&
+                        otherSerf.SwitchWaiting(direction.Reverse()))
                     {
-                        /* Do the switch */
+                        // Do the switch 
                         otherSerf.Position = Position;
                         map.SetSerfIndex(otherSerf.Position, (int)otherSerf.Index);
                         otherSerf.Animation = GetWalkingAnimation(
-                            (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPos2), d.Reverse(), true);
+                            (int)map.GetHeight(otherSerf.Position) - (int)map.GetHeight(newPosition), direction.Reverse(), true);
                         otherSerf.Counter = CounterFromAnimation[otherSerf.Animation];
 
                         Animation = GetWalkingAnimation(
-                            (int)map.GetHeight(newPos2) - (int)map.GetHeight(Position), d, true);
+                            (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, true);
                         Counter = CounterFromAnimation[Animation];
 
-                        Position = newPos2;
+                        Position = newPosition;
                         map.SetSerfIndex(Position, (int)Index);
 
                         return;
@@ -5339,20 +5330,21 @@ namespace Freeserf
                     if (otherSerf.SerfState == State.Walking ||
                         otherSerf.SerfState == State.Transporting)
                     {
-                        ++s.FreeWalking.NegDist2;
+                        ++s.FreeWalking.NegDistance2;
 
-                        if (s.FreeWalking.NegDist2 >= 10)
+                        if (s.FreeWalking.NegDistance2 >= 10)
                         {
-                            s.FreeWalking.NegDist2 = 0;
+                            s.FreeWalking.NegDistance2 = 0;
 
                             if (otherSerf.SerfState == State.Transporting)
                             {
-                                if (map.HasFlag(newPos2))
+                                if (map.HasFlag(newPosition))
                                 {
                                     if (otherSerf.s.Walking.WaitCounter != -1)
                                     {
-                                        //                int dir = otherSerf.s.Walking.Dir;
-                                        //                if (dir < 0) dir += 6;
+                                        // TODO ?
+                                        // int dir = otherSerf.s.Walking.Direction;
+                                        // if (dir < 0) dir += 6;
                                         Log.Debug.Write("serf", $"TODO remove {otherSerf.Index} from path");
                                     }
 
@@ -5373,25 +5365,24 @@ namespace Freeserf
                 }
             }
 
-            /* Look for another direction to go in. */
-            Direction i0 = Direction.None;
+            // Look for another direction to go in. 
+            var newDirection = Direction.None;
 
             for (int i = 0; i < 5; ++i)
             {
-                dir = DirForward[dirOffset + 1 + i];
+                direction = DirectionForward[directionOffset + 1 + i];
+                newPosition = map.Move(Position, direction);
 
-                MapPos newPos2 = map.Move(Position, dir);
-
-                if (((water && map.GetObject(newPos2) == 0) ||
-                     (!water && !map.IsInWater(newPos2) &&
-                      CanPassMapPos(newPos2))) && !map.HasSerf(newPos2))
+                if (((water && map.GetObject(newPosition) == 0) ||
+                     (!water && !map.IsInWater(newPosition) &&
+                      CanPassMapPosition(newPosition))) && !map.HasSerf(newPosition))
                 {
-                    i0 = (Direction)i;
+                    newDirection = (Direction)i;
                     break;
                 }
             }
 
-            if (i0 < 0)
+            if (newDirection < 0)
             {
                 HandleSerfFreeWalkingSwitchWithOther();
                 return;
@@ -5399,14 +5390,14 @@ namespace Freeserf
 
             int edge = 0;
 
-            if (Misc.BitTest(dirIndex ^ (int)i0, 0))
+            if (Misc.BitTest(directionIndex ^ (int)newDirection, 0))
                 edge = 1;
 
-            int upper = ((int)i0 / 2) + 1;
+            int upper = ((int)newDirection / 2) + 1;
 
-            s.FreeWalking.Flags = (upper << 4) | (edge << 3) | ((int)dir + 1);
+            s.FreeWalking.Flags = (upper << 4) | (edge << 3) | ((int)direction + 1);
 
-            HandleSerfFreeWalkingSwitchOnDir(dir);
+            HandleSerfFreeWalkingSwitchOnDirection(direction);
         }
 
         void HandleSerfFreeWalkingState()
@@ -5429,33 +5420,33 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                ++s.FreeWalking.NegDist2;
+                ++s.FreeWalking.NegDistance2;
 
                 int newObject = -1;
 
-                if (s.FreeWalking.NegDist1 != 0)
+                if (s.FreeWalking.NegDistance1 != 0)
                 {
-                    newObject = (int)Map.Object.FelledTree0 + s.FreeWalking.NegDist2 - 1;
+                    newObject = (int)Map.Object.FelledTree0 + s.FreeWalking.NegDistance2 - 1;
                 }
                 else
                 {
-                    newObject = (int)Map.Object.FelledPine0 + s.FreeWalking.NegDist2 - 1;
+                    newObject = (int)Map.Object.FelledPine0 + s.FreeWalking.NegDistance2 - 1;
                 }
 
-                /* Change map object. */
+                // Change map object. 
                 Game.Map.SetObject(Position, (Map.Object)newObject, -1);
 
-                if (s.FreeWalking.NegDist2 < 5)
+                if (s.FreeWalking.NegDistance2 < 5)
                 {
-                    Animation = 116 + s.FreeWalking.NegDist2;
+                    Animation = 116 + s.FreeWalking.NegDistance2;
                     Counter += CounterFromAnimation[Animation];
                 }
                 else
                 {
                     SetState(State.FreeWalking);
                     Counter = 0;
-                    s.FreeWalking.NegDist1 = -128;
-                    s.FreeWalking.NegDist2 = 1;
+                    s.FreeWalking.NegDistance1 = -128;
+                    s.FreeWalking.NegDistance2 = 1;
                     s.FreeWalking.Flags = 0;
 
                     return;
@@ -5471,19 +5462,19 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                int dist = (Game.RandomInt() & 0x7f) + 1;
-                MapPos pos = Game.Map.PosAddSpirally(Position, (uint)dist);
-                var obj = Game.Map.GetObject(pos);
+                int distance = (Game.RandomInt() & 0x7f) + 1;
+                var position = Game.Map.PositionAddSpirally(Position, (uint)distance);
+                var obj = Game.Map.GetObject(position);
 
                 if (obj >= Map.Object.Tree0 && obj <= Map.Object.Pine7)
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
-                    s.LeavingBuilding.Dest = (uint)Map.GetSpiralPattern()[2 * dist + 1] - 1;
-                    s.LeavingBuilding.Dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
-                    s.LeavingBuilding.Dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
+                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning logging: tree found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Dest}.");
+                    Log.Verbose.Write("serf", $"planning logging: tree found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -5498,27 +5489,27 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
-                int dist = (Game.RandomInt() & 0x7f) + 1;
-                MapPos pos = map.PosAddSpirally(Position, (uint)dist);
+                int distance = (Game.RandomInt() & 0x7f) + 1;
+                var position = map.PositionAddSpirally(Position, (uint)distance);
 
-                if (map.Paths(pos) == 0 &&
-                    map.GetObject(pos) == Map.Object.None &&
-                    map.TypeUp(pos) == Map.Terrain.Grass1 &&
-                    map.TypeDown(pos) == Map.Terrain.Grass1 &&
-                    map.TypeUp(map.MoveUpLeft(pos)) == Map.Terrain.Grass1 &&
-                    map.TypeDown(map.MoveUpLeft(pos)) == Map.Terrain.Grass1)
+                if (map.Paths(position) == 0 &&
+                    map.GetObject(position) == Map.Object.None &&
+                    map.TypeUp(position) == Map.Terrain.Grass1 &&
+                    map.TypeDown(position) == Map.Terrain.Grass1 &&
+                    map.TypeUp(map.MoveUpLeft(position)) == Map.Terrain.Grass1 &&
+                    map.TypeDown(map.MoveUpLeft(position)) == Map.Terrain.Grass1)
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
-                    s.LeavingBuilding.Dest = (uint)Map.GetSpiralPattern()[2 * dist + 1] - 1;
-                    s.LeavingBuilding.Dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
-                    s.LeavingBuilding.Dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
+                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning planting: free space found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Dest}.");
+                    Log.Verbose.Write("serf", $"planning planting: free space found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -5533,31 +5524,31 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDist2 != 0)
+                if (s.FreeWalking.NegDistance2 != 0)
                 {
                     SetState(State.FreeWalking);
-                    s.FreeWalking.NegDist1 = -128;
-                    s.FreeWalking.NegDist2 = 0;
+                    s.FreeWalking.NegDistance1 = -128;
+                    s.FreeWalking.NegDistance2 = 0;
                     s.FreeWalking.Flags = 0;
                     Counter = 0;
 
                     return;
                 }
 
-                /* Plant a tree */
+                // Plant a tree 
                 Animation = 122;
-                Map.Object newObject = (Map.Object)(Map.Object.NewPine + (Game.RandomInt() & 1));
+                var newObject = (Map.Object)(Map.Object.NewPine + (Game.RandomInt() & 1));
 
                 if (map.Paths(Position) == 0 && map.GetObject(Position) == Map.Object.None)
                 {
                     map.SetObject(Position, newObject, -1);
                 }
 
-                s.FreeWalking.NegDist2 = -s.FreeWalking.NegDist2 - 1;
+                s.FreeWalking.NegDistance2 = -s.FreeWalking.NegDistance2 - 1;
                 Counter += 128;
             }
         }
@@ -5568,23 +5559,24 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
+
             while (Counter < 0)
             {
-                int dist = (Game.RandomInt() & 0x7f) + 1;
-                MapPos pos = map.PosAddSpirally(Position, (uint)dist);
-                var obj = map.GetObject(map.MoveUpLeft(pos));
+                int distance = (Game.RandomInt() & 0x7f) + 1;
+                var position = map.PositionAddSpirally(Position, (uint)distance);
+                var obj = map.GetObject(map.MoveUpLeft(position));
 
                 if (obj >= Map.Object.Stone0 && obj <= Map.Object.Stone7 &&
-                    CanPassMapPos(pos))
+                    CanPassMapPosition(position))
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
-                    s.LeavingBuilding.Dest = (uint)Map.GetSpiralPattern()[2 * dist + 1] - 1;
-                    s.LeavingBuilding.Dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
-                    s.LeavingBuilding.Dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
+                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.StoneCutterFreeWalking;
-                    Log.Verbose.Write("serf", $"planning stonecutting: stone found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Dest}.");
+                    Log.Verbose.Write("serf", $"planning stonecutting: stone found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -5599,19 +5591,19 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
-                MapPos pos = map.MoveUpLeft(Position);
+                var position = map.MoveUpLeft(Position);
 
-                if (!map.HasSerf(Position) && map.GetObject(pos) >= Map.Object.Stone0 &&
-                    map.GetObject(pos) <= Map.Object.Stone7)
+                if (!map.HasSerf(Position) && map.GetObject(position) >= Map.Object.Stone0 &&
+                    map.GetObject(position) <= Map.Object.Stone7)
                 {
-                    s.FreeWalking.NegDist1 += s.FreeWalking.Dist1;
-                    s.FreeWalking.NegDist2 += s.FreeWalking.Dist2;
-                    s.FreeWalking.Dist1 = 0;
-                    s.FreeWalking.Dist2 = 0;
+                    s.FreeWalking.NegDistance1 += s.FreeWalking.DistanceX;
+                    s.FreeWalking.NegDistance2 += s.FreeWalking.DistanceY;
+                    s.FreeWalking.DistanceX = 0;
+                    s.FreeWalking.DistanceY = 0;
                     s.FreeWalking.Flags = 8;
                 }
 
@@ -5625,30 +5617,30 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            if (s.FreeWalking.NegDist1 == 0)
+            if (s.FreeWalking.NegDistance1 == 0)
             {
-                if (Counter > s.FreeWalking.NegDist2)
+                if (Counter > s.FreeWalking.NegDistance2)
                     return;
 
-                Counter -= s.FreeWalking.NegDist2 + 1;
-                s.FreeWalking.NegDist1 = 1;
+                Counter -= s.FreeWalking.NegDistance2 + 1;
+                s.FreeWalking.NegDistance1 = 1;
                 Animation = 123;
                 Counter += 1536;
             }
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDist1 != 1)
+                if (s.FreeWalking.NegDistance1 != 1)
                 {
                     SetState(State.FreeWalking);
-                    s.FreeWalking.NegDist1 = -128;
-                    s.FreeWalking.NegDist2 = 1;
+                    s.FreeWalking.NegDistance1 = -128;
+                    s.FreeWalking.NegDistance2 = 1;
                     s.FreeWalking.Flags = 0;
                     Counter = 0;
                     return;
                 }
 
-                Map map = Game.Map;
+                var map = Game.Map;
 
                 if (map.HasSerf(map.MoveDownRight(Position)))
                 {
@@ -5656,8 +5648,8 @@ namespace Freeserf
                     return;
                 }
 
-                /* Decrement stone quantity or remove entirely if this
-                   was the last piece. */
+                // Decrement stone quantity or remove entirely if this
+                // was the last piece.
                 var obj = map.GetObject(Position);
 
                 if (obj <= Map.Object.Stone6)
@@ -5673,7 +5665,7 @@ namespace Freeserf
                 StartWalking(Direction.DownRight, 24, true);
                 tick = Game.Tick;
 
-                s.FreeWalking.NegDist1 = 2;
+                s.FreeWalking.NegDistance1 = 2;
             }
         }
 
@@ -5681,7 +5673,7 @@ namespace Freeserf
         {
             if (s.Sawing.Mode == 0)
             {
-                Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+                var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
                 if (building.UseResourceInStock(0))
                 {
@@ -5703,12 +5695,12 @@ namespace Freeserf
 
                 Game.Map.SetSerfIndex(Position, 0);
                 SetState(State.MoveResourceOut);
-                s.MoveResourceOut.Res = (uint)Resource.Type.Plank + 1;
-                s.MoveResourceOut.ResDest = 0;
+                s.MoveResourceOut.Resource = (uint)Resource.Type.Plank + 1;
+                s.MoveResourceOut.ResourceDestination = 0;
                 s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                /* Update resource stats. */
-                Player player = Game.GetPlayer(Player);
+                // Update resource stats. 
+                var player = Game.GetPlayer(Player);
                 player.IncreaseResourceCount(Resource.Type.Plank);
             }
         }
@@ -5719,24 +5711,24 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
-                /* Try to find a suitable destination. */
+                // Try to find a suitable destination. 
                 for (int i = 0; i < 258; ++i)
                 {
-                    int dist = (s.Lost.FieldB == 0) ? 1 + i : 258 - i;
+                    int distance = (s.Lost.FieldB == 0) ? 1 + i : 258 - i;
+                    var destination = map.PositionAddSpirally(Position, (uint)distance);
 
-                    MapPos dest = map.PosAddSpirally(Position, (uint)dist);
-
-                    if (map.HasFlag(dest))
+                    if (map.HasFlag(destination))
                     {
-                        Flag flag = Game.GetFlag(map.GetObjectIndex(dest));
+                        var flag = Game.GetFlag(map.GetObjectIndex(destination));
+
                         if ((flag.LandPaths() != 0 ||
                              (flag.HasInventory() && flag.AcceptsSerfs())) &&
-                              map.HasOwner(dest) &&
-                              map.GetOwner(dest) == Player)
+                              map.HasOwner(destination) &&
+                              map.GetOwner(destination) == Player)
                         {
                             if (IsKnight())
                             {
@@ -5747,10 +5739,10 @@ namespace Freeserf
                                 SetState(State.FreeWalking);
                             }
 
-                            s.FreeWalking.Dist1 = Map.GetSpiralPattern()[2 * dist];
-                            s.FreeWalking.Dist2 = Map.GetSpiralPattern()[2 * dist + 1];
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = -1;
+                            s.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * distance];
+                            s.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * distance + 1];
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = -1;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
 
@@ -5759,38 +5751,37 @@ namespace Freeserf
                     }
                 }
 
-                /* Choose a random destination */
+                // Choose a random destination 
                 int size = 16;
-                int tries = 10;
+                int numRemainingTries = 10;
 
                 while (true)
                 {
-                    --tries;
+                    --numRemainingTries;
 
-                    if (tries < 0)
+                    if (numRemainingTries < 0)
                     {
                         if (size < 64)
                         {
-                            tries = 19;
+                            numRemainingTries = 19;
                             size *= 2;
                         }
                         else
                         {
-                            tries = -1;
+                            numRemainingTries = -1;
                             size = 16;
                         }
                     }
 
-                    int r = Game.RandomInt();
-                    int column = (r & (size - 1)) - (size / 2);
-                    int row = ((r >> 8) & (size - 1)) - (size / 2);
+                    int random = Game.RandomInt();
+                    int column = (random & (size - 1)) - (size / 2);
+                    int row = ((random >> 8) & (size - 1)) - (size / 2);
+                    var destination = map.PositionAdd(Position, column, row);
 
-                    MapPos dest = map.PosAdd(Position, column, row);
-
-                    if ((map.GetObject(dest) == 0 && map.GetHeight(dest) > 0) ||
-                        (map.HasFlag(dest) &&
-                         (map.HasOwner(dest) &&
-                           map.GetOwner(dest) == Player)))
+                    if ((map.GetObject(destination) == 0 && map.GetHeight(destination) > 0) ||
+                        (map.HasFlag(destination) &&
+                        (map.HasOwner(destination) &&
+                        map.GetOwner(destination) == Player)))
                     {
                         if (GetSerfType() >= Type.Knight0 && GetSerfType() <= Type.Knight4)
                         {
@@ -5801,10 +5792,10 @@ namespace Freeserf
                             SetState(State.FreeWalking);
                         }
 
-                        s.FreeWalking.Dist1 = column;
-                        s.FreeWalking.Dist2 = row;
-                        s.FreeWalking.NegDist1 = -128;
-                        s.FreeWalking.NegDist2 = -1;
+                        s.FreeWalking.DistanceX = column;
+                        s.FreeWalking.DistanceY = row;
+                        s.FreeWalking.NegDistance1 = -128;
+                        s.FreeWalking.NegDistance2 = -1;
                         s.FreeWalking.Flags = 0;
                         Counter = 0;
 
@@ -5820,28 +5811,29 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
+
             while (Counter < 0)
             {
-                /* Try to find a suitable destination. */
-                for (int i = 0; i < 258; ++i)
+                // Try to find a suitable destination. 
+                for (uint i = 0; i < 258; ++i)
                 {
-                    MapPos dest = map.PosAddSpirally(Position, (uint)i);
+                    var destination = map.PositionAddSpirally(Position, i);
 
-                    if (map.HasFlag(dest))
+                    if (map.HasFlag(destination))
                     {
-                        Flag flag = Game.GetFlag(map.GetObjectIndex(dest));
+                        var flag = Game.GetFlag(map.GetObjectIndex(destination));
 
                         if (flag.LandPaths() != 0 &&
-                            map.HasOwner(dest) &&
-                            map.GetOwner(dest) == Player)
+                            map.HasOwner(destination) &&
+                            map.GetOwner(destination) == Player)
                         {
                             SetState(State.FreeSailing);
 
-                            s.FreeWalking.Dist1 = Map.GetSpiralPattern()[2 * i];
-                            s.FreeWalking.Dist2 = Map.GetSpiralPattern()[2 * i + 1];
-                            s.FreeWalking.NegDist1 = -128;
-                            s.FreeWalking.NegDist2 = -1;
+                            s.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * i];
+                            s.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * i + 1];
+                            s.FreeWalking.NegDistance1 = -128;
+                            s.FreeWalking.NegDistance2 = -1;
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
 
@@ -5850,23 +5842,22 @@ namespace Freeserf
                     }
                 }
 
-                /* Choose a random, empty destination */
+                // Choose a random, empty destination 
                 while (true)
                 {
-                    int r = Game.RandomInt();
-                    int column = (r & 0x1f) - 16;
-                    int row = ((r >> 8) & 0x1f) - 16;
+                    int random = Game.RandomInt();
+                    int column = (random & 0x1f) - 16;
+                    int row = ((random >> 8) & 0x1f) - 16;
+                    var destination = map.PositionAdd(Position, column, row);
 
-                    MapPos dest = map.PosAdd(Position, column, row);
-
-                    if (map.GetObject(dest) == 0)
+                    if (map.GetObject(destination) == 0)
                     {
                         SetState(State.FreeSailing);
 
-                        s.FreeWalking.Dist1 = column;
-                        s.FreeWalking.Dist2 = row;
-                        s.FreeWalking.NegDist1 = -128;
-                        s.FreeWalking.NegDist2 = -1;
+                        s.FreeWalking.DistanceX = column;
+                        s.FreeWalking.DistanceY = row;
+                        s.FreeWalking.NegDistance1 = -128;
+                        s.FreeWalking.NegDistance2 = -1;
                         s.FreeWalking.Flags = 0;
                         Counter = 0;
 
@@ -5927,10 +5918,11 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
+
             while (Counter < 0)
             {
-                Building building = Game.GetBuilding(map.GetObjectIndex(Position));
+                var building = Game.GetBuilding(map.GetObjectIndex(Position));
 
                 Log.Verbose.Write("serf", $"mining substate: {s.Mining.Substate}.");
 
@@ -5940,9 +5932,9 @@ namespace Freeserf
                         {
                             /* There is a small chance that the miner will
                                not require food and skip to state 2. */
-                            int r = Game.RandomInt();
+                            int random = Game.RandomInt();
 
-                            if ((r & 7) == 0)
+                            if ((random & 7) == 0)
                             {
                                 s.Mining.Substate = 2;
                             }
@@ -5951,13 +5943,13 @@ namespace Freeserf
                                 s.Mining.Substate = 1;
                             }
 
-                            Counter += 100 + (r & 0x1ff);
+                            Counter += 100 + (random & 0x1ff);
                             break;
                         }
                     case 1: // Wait idle or initiate mining by consuming food
                         if (building.UseResourceInStock(0))
                         {
-                            /* Eat the food. */
+                            // Eat the food. 
                             s.Mining.Substate = 3;
                             map.SetSerfIndex(Position, (int)Index);
                             Animation = 125;
@@ -5989,7 +5981,7 @@ namespace Freeserf
                         {
                             building.StartPlayingSfx();
                             map.SetSerfIndex(Position, 0);
-                            /* fall through */
+                            // fall through 
                         }
                         goto case 5;
                     case 5: // Underground mining
@@ -5998,19 +5990,19 @@ namespace Freeserf
                         {
                             ++s.Mining.Substate;
 
-                            /* Look for resource in ground. */
-                            MapPos dest = map.PosAddSpirally(Position, (uint)(Game.RandomInt() >> 2) & 0x1f);
+                            // Look for resource in ground.
+                            var destination = map.PositionAddSpirally(Position, (uint)(Game.RandomInt() >> 2) & 0x1f);
 
-                            if ((map.GetObject(dest) == Map.Object.None ||
-                                 map.GetObject(dest) > Map.Object.Castle) &&
-                                map.GetResourceType(dest) == s.Mining.Deposit &&
-                                map.GetResourceAmount(dest) > 0)
+                            if ((map.GetObject(destination) == Map.Object.None ||
+                                 map.GetObject(destination) > Map.Object.Castle) &&
+                                map.GetResourceType(destination) == s.Mining.Deposit &&
+                                map.GetResourceAmount(destination) > 0)
                             {
-                                /* Decrement resource count in ground. */
-                                map.RemoveGroundDeposit(dest, 1);
+                                // Decrement resource count in ground. 
+                                map.RemoveGroundDeposit(destination, 1);
 
-                                /* Hand resource to miner. */
-                                s.Mining.Res = (uint)ResFromMineType[(int)s.Mining.Deposit - 1] + 1;
+                                // Hand resource to miner. 
+                                s.Mining.Resource = (uint)ResFromMineType[(int)s.Mining.Deposit - 1] + 1;
                                 s.Mining.Substate = 8;
                             }
 
@@ -6026,30 +6018,30 @@ namespace Freeserf
                         break;
                     case 9: // Elevator comes up
                         s.Mining.Substate = 10;
-                        building.IncreaseMining((int)s.Mining.Res);
+                        building.IncreaseMining((int)s.Mining.Resource);
                         Animation = 128;
                         Counter = CounterFromAnimation[Animation];
                         break;
                     case 10: // Move resource out or finish working
                         map.SetSerfIndex(Position, 0);
-                        if (s.Mining.Res == 0)
+                        if (s.Mining.Resource == 0)
                         {
                             s.Mining.Substate = 0;
                             Counter = 0;
                         }
                         else
                         {
-                            uint res = s.Mining.Res;
+                            uint resource = s.Mining.Resource;
                             map.SetSerfIndex(Position, 0);
 
                             SetState(State.MoveResourceOut);
-                            s.MoveResourceOut.Res = res;
-                            s.MoveResourceOut.ResDest = 0;
+                            s.MoveResourceOut.Resource = resource;
+                            s.MoveResourceOut.ResourceDestination = 0;
                             s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                            /* Update resource stats. */
-                            Player player = Game.GetPlayer(Player);
-                            player.IncreaseResourceCount((Resource.Type)(res - 1));
+                            // Update resource stats. 
+                            var player = Game.GetPlayer(Player);
+                            player.IncreaseResourceCount((Resource.Type)(resource - 1));
 
                             return;
                         }
@@ -6063,7 +6055,7 @@ namespace Freeserf
 
         void HandleSerfSmeltingState()
         {
-            Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.Smelting.Mode == 0)
             {
@@ -6103,26 +6095,26 @@ namespace Freeserf
                     {
                         building.StopActivity();
 
-                        int res = -1;
+                        Resource.Type resource;
 
                         if (s.Smelting.Type == 0)
                         {
-                            res = 1 + (int)Resource.Type.Steel;
+                            resource = Resource.Type.Steel;
                         }
                         else
                         {
-                            res = 1 + (int)Resource.Type.GoldBar;
+                            resource = Resource.Type.GoldBar;
                         }
 
                         SetState(State.MoveResourceOut);
 
-                        s.MoveResourceOut.Res = (uint)res;
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.Resource = (uint)resource + 1u;
+                        s.MoveResourceOut.ResourceDestination = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        /* Update resource stats. */
-                        Player player = Game.GetPlayer(Player);
-                        player.IncreaseResourceCount((Resource.Type)(res - 1));
+                        // Update resource stats. 
+                        var player = Game.GetPlayer(Player);
+                        player.IncreaseResourceCount(resource);
 
                         return;
                     }
@@ -6142,26 +6134,27 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
+
             while (Counter < 0)
             {
-                int dist = ((Game.RandomInt() >> 2) & 0x3f) + 1;
-                MapPos dest = map.PosAddSpirally(Position, (uint)dist);
+                var distance = (uint)((Game.RandomInt() >> 2) & 0x3f) + 1u;
+                var destination = map.PositionAddSpirally(Position, distance);
 
-                if (map.GetObject(dest) == Map.Object.None &&
-                    map.Paths(dest) == 0 &&
-                    ((map.TypeDown(dest) <= Map.Terrain.Water3 &&
-                      map.TypeUp(map.MoveUpLeft(dest)) >= Map.Terrain.Grass0) ||
-                     (map.TypeDown(map.MoveLeft(dest)) <= Map.Terrain.Water3 &&
-                      map.TypeUp(map.MoveUp(dest)) >= Map.Terrain.Grass0)))
+                if (map.GetObject(destination) == Map.Object.None &&
+                    map.Paths(destination) == 0 &&
+                    ((map.TypeDown(destination) <= Map.Terrain.Water3 &&
+                      map.TypeUp(map.MoveUpLeft(destination)) >= Map.Terrain.Grass0) ||
+                     (map.TypeDown(map.MoveLeft(destination)) <= Map.Terrain.Water3 &&
+                      map.TypeUp(map.MoveUp(destination)) >= Map.Terrain.Grass0)))
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
-                    s.LeavingBuilding.Dest = (uint)Map.GetSpiralPattern()[2 * dist + 1] - 1;
-                    s.LeavingBuilding.Dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
-                    s.LeavingBuilding.Dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
+                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning fishing: lake found, dist {s.LeavingBuilding.FieldB},{s.LeavingBuilding.Dest}");
+                    Log.Verbose.Write("serf", $"planning fishing: lake found, dist {s.LeavingBuilding.FieldB},{s.LeavingBuilding.Destination}");
 
                     return;
                 }
@@ -6178,59 +6171,59 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDist2 != 0 ||
+                if (s.FreeWalking.NegDistance2 != 0 ||
                     s.FreeWalking.Flags == 10)
                 {
-                    /* Stop fishing. Walk back. */
+                    // Stop fishing. Walk back. 
                     SetState(State.FreeWalking);
-                    s.FreeWalking.NegDist1 = -128;
+                    s.FreeWalking.NegDistance1 = -128;
                     s.FreeWalking.Flags = 0;
                     Counter = 0;
 
                     return;
                 }
 
-                s.FreeWalking.NegDist1 += 1;
-                if ((s.FreeWalking.NegDist1 % 2) == 0)
+                s.FreeWalking.NegDistance1 += 1;
+                if ((s.FreeWalking.NegDistance1 % 2) == 0)
                 {
                     Animation -= 2;
                     Counter += 768;
                     continue;
                 }
 
-                Map map = Game.Map;
-                Direction dir = Direction.None;
+                var map = Game.Map;
+                Direction direction;
 
                 if (Animation == 131)
                 {
                     if (map.IsInWater(map.MoveLeft(Position)))
                     {
-                        dir = Direction.Left;
+                        direction = Direction.Left;
                     }
                     else
                     {
-                        dir = Direction.Down;
+                        direction = Direction.Down;
                     }
                 }
                 else
                 {
                     if (map.IsInWater(map.MoveRight(Position)))
                     {
-                        dir = Direction.Right;
+                        direction = Direction.Right;
                     }
                     else
                     {
-                        dir = Direction.DownRight;
+                        direction = Direction.DownRight;
                     }
                 }
 
-                uint res = map.GetResourceFish(map.Move(Position, dir));
+                uint resourceAmount = map.GetResourceFish(map.Move(Position, direction));
 
-                if (res > 0 && (Game.RandomInt() & 0x3f) + 4 < res)
+                if (resourceAmount > 0 && (Game.RandomInt() & 0x3f) + 4 < resourceAmount)
                 {
-                    /* Caught a fish. */
-                    map.RemoveFish(map.Move(Position, dir), 1);
-                    s.FreeWalking.NegDist2 = 1 + (int)Resource.Type.Fish;
+                    // Caught a fish.
+                    map.RemoveFish(map.Move(Position, direction), 1);
+                    s.FreeWalking.NegDistance2 = 1 + (int)Resource.Type.Fish;
                 }
 
                 ++s.FreeWalking.Flags;
@@ -6245,48 +6238,48 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
+
             while (Counter < 0)
             {
-                int dist = ((Game.RandomInt() >> 2) & 0x1f) + 7;
+                int distance = ((Game.RandomInt() >> 2) & 0x1f) + 7;
+                var destination = map.PositionAddSpirally(Position, (uint)distance);
 
-                MapPos dest = map.PosAddSpirally(Position, (uint)dist);
-
-                /* If destination doesn't have an object it must be
-                   of the correct type and the surrounding spaces
-                   must not be occupied by large buildings.
-                   If it Has_ an object it must be an existing field. */
-                if ((map.GetObject(dest) == Map.Object.None &&
-                      map.TypeUp(dest) == Map.Terrain.Grass1 &&
-                      map.TypeDown(dest) == Map.Terrain.Grass1 &&
-                      map.Paths(dest) == 0 &&
-                      map.GetObject(map.MoveRight(dest)) != Map.Object.LargeBuilding &&
-                      map.GetObject(map.MoveRight(dest)) != Map.Object.Castle &&
-                      map.GetObject(map.MoveDownRight(dest)) != Map.Object.LargeBuilding &&
-                      map.GetObject(map.MoveDownRight(dest)) != Map.Object.Castle &&
-                      map.GetObject(map.MoveDown(dest)) != Map.Object.LargeBuilding &&
-                      map.GetObject(map.MoveDown(dest)) != Map.Object.Castle &&
-                      map.TypeDown(map.MoveLeft(dest)) == Map.Terrain.Grass1 &&
-                      map.GetObject(map.MoveLeft(dest)) != Map.Object.LargeBuilding &&
-                      map.GetObject(map.MoveLeft(dest)) != Map.Object.Castle &&
-                      map.TypeUp(map.MoveUpLeft(dest)) == Map.Terrain.Grass1 &&
-                      map.TypeDown(map.MoveUpLeft(dest)) == Map.Terrain.Grass1 &&
-                      map.GetObject(map.MoveUpLeft(dest)) != Map.Object.LargeBuilding &&
-                      map.GetObject(map.MoveUpLeft(dest)) != Map.Object.Castle &&
-                      map.TypeUp(map.MoveUp(dest)) == Map.Terrain.Grass1 &&
-                      map.GetObject(map.MoveUp(dest)) != Map.Object.LargeBuilding &&
-                      map.GetObject(map.MoveUp(dest)) != Map.Object.Castle) ||
-                      map.GetObject(dest) == Map.Object.Seeds5 ||
-                      (map.GetObject(dest) >= Map.Object.Field0 &&
-                      map.GetObject(dest) <= Map.Object.Field5))
+                // If destination doesn't have an object it must be
+                // of the correct type and the surrounding spaces
+                // must not be occupied by large buildings.
+                // If it Has_ an object it must be an existing field.
+                if ((map.GetObject(destination) == Map.Object.None &&
+                     map.TypeUp(destination) == Map.Terrain.Grass1 &&
+                     map.TypeDown(destination) == Map.Terrain.Grass1 &&
+                     map.Paths(destination) == 0 &&
+                     map.GetObject(map.MoveRight(destination)) != Map.Object.LargeBuilding &&
+                     map.GetObject(map.MoveRight(destination)) != Map.Object.Castle &&
+                     map.GetObject(map.MoveDownRight(destination)) != Map.Object.LargeBuilding &&
+                     map.GetObject(map.MoveDownRight(destination)) != Map.Object.Castle &&
+                     map.GetObject(map.MoveDown(destination)) != Map.Object.LargeBuilding &&
+                     map.GetObject(map.MoveDown(destination)) != Map.Object.Castle &&
+                     map.TypeDown(map.MoveLeft(destination)) == Map.Terrain.Grass1 &&
+                     map.GetObject(map.MoveLeft(destination)) != Map.Object.LargeBuilding &&
+                     map.GetObject(map.MoveLeft(destination)) != Map.Object.Castle &&
+                     map.TypeUp(map.MoveUpLeft(destination)) == Map.Terrain.Grass1 &&
+                     map.TypeDown(map.MoveUpLeft(destination)) == Map.Terrain.Grass1 &&
+                     map.GetObject(map.MoveUpLeft(destination)) != Map.Object.LargeBuilding &&
+                     map.GetObject(map.MoveUpLeft(destination)) != Map.Object.Castle &&
+                     map.TypeUp(map.MoveUp(destination)) == Map.Terrain.Grass1 &&
+                     map.GetObject(map.MoveUp(destination)) != Map.Object.LargeBuilding &&
+                     map.GetObject(map.MoveUp(destination)) != Map.Object.Castle) ||
+                     map.GetObject(destination) == Map.Object.Seeds5 ||
+                     (map.GetObject(destination) >= Map.Object.Field0 &&
+                     map.GetObject(destination) <= Map.Object.Field5))
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * dist] - 1;
-                    s.LeavingBuilding.Dest = (uint)Map.GetSpiralPattern()[2 * dist + 1] - 1;
-                    s.LeavingBuilding.Dest2 = -Map.GetSpiralPattern()[2 * dist] + 1;
-                    s.LeavingBuilding.Dir = -Map.GetSpiralPattern()[2 * dist + 1] + 1;
+                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning farming: field spot found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Dest}.");
+                    Log.Verbose.Write("serf", $"planning farming: field spot found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -6304,11 +6297,11 @@ namespace Freeserf
             if (Counter >= 0)
                 return;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
-            if (s.FreeWalking.NegDist1 == 0)
+            if (s.FreeWalking.NegDistance1 == 0)
             {
-                /* Sowing. */
+                // Sowing. 
                 if (map.GetObject(Position) == 0 && map.Paths(Position) == 0)
                 {
                     map.SetObject(Position, Map.Object.Seeds0, -1);
@@ -6316,8 +6309,8 @@ namespace Freeserf
             }
             else
             {
-                /* Harvesting. */
-                s.FreeWalking.NegDist2 = 1;
+                // Harvesting. 
+                s.FreeWalking.NegDistance2 = 1;
 
                 if (map.GetObject(Position) == Map.Object.Seeds5)
                 {
@@ -6334,14 +6327,14 @@ namespace Freeserf
             }
 
             SetState(State.FreeWalking);
-            s.FreeWalking.NegDist1 = -128;
+            s.FreeWalking.NegDistance1 = -128;
             s.FreeWalking.Flags = 0;
             Counter = 0;
         }
 
         void HandleSerfMillingState()
         {
-            Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.Milling.Mode == 0)
             {
@@ -6369,14 +6362,14 @@ namespace Freeserf
 
                     if (s.Milling.Mode == 5)
                     {
-                        /* Done milling. */
+                        // Done milling. 
                         building.StopActivity();
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Res = 1 + (uint)Resource.Type.Flour;
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Flour;
+                        s.MoveResourceOut.ResourceDestination = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        Player player = Game.GetPlayer(Player);
+                        var player = Game.GetPlayer(Player);
                         player.IncreaseResourceCount(Resource.Type.Flour);
                         return;
                     }
@@ -6397,7 +6390,7 @@ namespace Freeserf
 
         void HandleSerfBakingState()
         {
-            Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.Baking.Mode == 0)
             {
@@ -6423,15 +6416,15 @@ namespace Freeserf
 
                     if (s.Baking.Mode == 3)
                     {
-                        /* Done baking. */
+                        // Done baking. 
                         building.StopActivity();
 
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Res = 1 + (uint)Resource.Type.Bread;
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Bread;
+                        s.MoveResourceOut.ResourceDestination = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        Player player = Game.GetPlayer(Player);
+                        var player = Game.GetPlayer(Player);
                         player.IncreaseResourceCount(Resource.Type.Bread);
                         return;
                     }
@@ -6452,10 +6445,10 @@ namespace Freeserf
 
         void HandleSerfPigfarmingState()
         {
-            /* When the serf is present there is also at least one
-               pig present and at most eight. */
+            // When the serf is present there is also at least one
+            // pig present and at most eight.
 
-            Building building = Game.GetBuildingAtPos(Position);
+            var building = Game.GetBuildingAtPos(Position);
 
             if (s.PigFarming.Mode == 0)
             {
@@ -6491,16 +6484,16 @@ namespace Freeserf
                                  (building.PigsCount() > 3 &&
                                  ((20 * Game.RandomInt()) >> 16) < building.PigsCount()))
                         {
-                            /* Pig is ready for the butcher. */
+                            // Pig is ready for the butcher. 
                             building.SendPigToButcher();
 
                             SetState(State.MoveResourceOut);
-                            s.MoveResourceOut.Res = 1 + (uint)Resource.Type.Pig;
-                            s.MoveResourceOut.ResDest = 0;
+                            s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Pig;
+                            s.MoveResourceOut.ResourceDestination = 0;
                             s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                            /* Update resource stats. */
-                            Player player = Game.GetPlayer(Player);
+                            // Update resource stats. 
+                            var player = Game.GetPlayer(Player);
                             player.IncreaseResourceCount(Resource.Type.Pig);
                         }
                         else if ((Game.RandomInt() & 0xf) != 0)
@@ -6536,7 +6529,7 @@ namespace Freeserf
 
         void HandleSerfButcheringState()
         {
-            Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.Butchering.Mode == 0)
             {
@@ -6558,16 +6551,16 @@ namespace Freeserf
 
                 if (Counter < 0)
                 {
-                    /* Done butchering. */
+                    // Done butchering. 
                     Game.Map.SetSerfIndex(Position, 0);
 
                     SetState(State.MoveResourceOut);
-                    s.MoveResourceOut.Res = 1 + (uint)Resource.Type.Meat;
-                    s.MoveResourceOut.ResDest = 0;
+                    s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Meat;
+                    s.MoveResourceOut.ResourceDestination = 0;
                     s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                    /* Update resource stats. */
-                    Player player = Game.GetPlayer(Player);
+                    // Update resource stats. 
+                    var player = Game.GetPlayer(Player);
                     player.IncreaseResourceCount(Resource.Type.Meat);
                 }
             }
@@ -6575,14 +6568,14 @@ namespace Freeserf
 
         void HandleSerfMakingWeaponState()
         {
-            Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.MakingWeapon.Mode == 0)
             {
-                /* One of each resource makes a sword and a shield.
-                   Bit 3 is set if a sword has been made and a
-                   shield can be made without more resources. */
-                /* TODO Use of this bit overlaps with sfx check bit. */
+                // One of each resource makes a sword and a shield.
+                // Bit 3 is set if a sword has been made and a
+                // shield can be made without more resources.
+                // TODO Use of this bit overlaps with sfx check bit. 
                 if (!building.IsPlayingSfx())
                 {
                     if (!building.UseResourcesInStocks())
@@ -6612,11 +6605,11 @@ namespace Freeserf
 
                     if (s.MakingWeapon.Mode == 7)
                     {
-                        /* Done making sword or shield. */
+                        // Done making sword or shield. 
                         building.StopActivity();
                         Game.Map.SetSerfIndex(Position, 0);
 
-                        Resource.Type res = building.IsPlayingSfx() ? Resource.Type.Shield : Resource.Type.Sword;
+                        var resource = building.IsPlayingSfx() ? Resource.Type.Shield : Resource.Type.Sword;
 
                         if (building.IsPlayingSfx())
                         {
@@ -6628,13 +6621,13 @@ namespace Freeserf
                         }
 
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Res = 1 + (uint)res;
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.Resource = 1 + (uint)resource;
+                        s.MoveResourceOut.ResourceDestination = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        /* Update resource stats. */
-                        Player player = Game.GetPlayer(Player);
-                        player.IncreaseResourceCount(res);
+                        // Update resource stats. 
+                        var player = Game.GetPlayer(Player);
+                        player.IncreaseResourceCount(resource);
                         return;
                     }
                     else
@@ -6647,7 +6640,7 @@ namespace Freeserf
 
         void HandleSerfMakingToolState()
         {
-            Building building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
 
             if (s.MakingTool.Mode == 0)
             {
@@ -6673,53 +6666,52 @@ namespace Freeserf
 
                     if (s.MakingTool.Mode == 4)
                     {
-                        /* Done making tool. */
+                        // Done making tool. 
                         Game.Map.SetSerfIndex(Position, 0);
 
-                        Player player = Game.GetPlayer(Player);
-                        int totalToolPrio = 0;
+                        var player = Game.GetPlayer(Player);
+                        int totalToolPriority = 0;
 
                         for (int i = 0; i < 9; ++i)
-                            totalToolPrio += player.GetToolPriority(i);
+                            totalToolPriority += player.GetToolPriority(i);
 
-                        totalToolPrio >>= 4;
+                        totalToolPriority >>= 4;
 
-                        int res = -1;
+                        int resource = -1;
 
-                        if (totalToolPrio > 0)
+                        if (totalToolPriority > 0)
                         {
-                            /* Use defined tool priorities. */
-                            int prioOffset = (totalToolPrio * Game.RandomInt()) >> 16;
+                            // Use defined tool priorities. 
+                            int priorityOffset = (totalToolPriority * Game.RandomInt()) >> 16;
 
                             for (int i = 0; i < 9; ++i)
                             {
-                                prioOffset -= player.GetToolPriority(i) >> 4;
+                                priorityOffset -= player.GetToolPriority(i) >> 4;
 
-                                if (prioOffset < 0)
+                                if (priorityOffset < 0)
                                 {
-                                    res = (int)Resource.Type.Shovel + i;
+                                    resource = (int)Resource.Type.Shovel + i;
                                     break;
                                 }
                             }
                         }
                         else
                         {
-                            /* Completely random. */
-                            res = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
+                            // Completely random. 
+                            resource = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
                         }
 
-                        if (res == -1) // TODO: This was added because res is sometimes -1 when totalToolPrio > 0. But should this happen? And in what case?
-                            res = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
+                        if (resource == -1) // TODO: This was added because resource is sometimes -1 when totalToolPriority > 0. But should this happen? And in what case?
+                            resource = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
 
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Res = 1 + (uint)res;
-                        s.MoveResourceOut.ResDest = 0;
+                        s.MoveResourceOut.Resource = 1 + (uint)resource;
+                        s.MoveResourceOut.ResourceDestination = 0;
                         s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                        /* Update resource stats. */
-                        player.IncreaseResourceCount((Resource.Type)res);
-
-                        player.NotifyCraftedTool((Resource.Type)res);
+                        // Update resource stats. 
+                        player.IncreaseResourceCount((Resource.Type)resource);
+                        player.NotifyCraftedTool((Resource.Type)resource);
 
                         return;
                     }
@@ -6733,8 +6725,8 @@ namespace Freeserf
 
         void HandleSerfBuildingBoatState()
         {
-            Map map = Game.Map;
-            Building building = Game.GetBuilding(map.GetObjectIndex(Position));
+            var map = Game.Map;
+            var building = Game.GetBuilding(map.GetObjectIndex(Position));
 
             if (s.BuildingBoat.Mode == 0)
             {
@@ -6762,28 +6754,28 @@ namespace Freeserf
 
                     if (s.BuildingBoat.Mode == 9)
                     {
-                        /* Boat done. */
-                        MapPos newPos = map.MoveDownRight(Position);
+                        // Boat done. 
+                        var newPosition = map.MoveDownRight(Position);
 
-                        if (map.HasSerf(newPos))
+                        if (map.HasSerf(newPosition))
                         {
-                            /* Wait for flag to be free. */
+                            // Wait for flag to be free. 
                             --s.BuildingBoat.Mode;
                             Counter = 0;
                         }
                         else
                         {
-                            /* Drop boat at flag. */
+                            // Drop boat at flag. 
                             building.BoatClear();
                             map.SetSerfIndex(Position, 0);
 
                             SetState(State.MoveResourceOut);
-                            s.MoveResourceOut.Res = 1 + (uint)Resource.Type.Boat;
-                            s.MoveResourceOut.ResDest = 0;
+                            s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Boat;
+                            s.MoveResourceOut.ResourceDestination = 0;
                             s.MoveResourceOut.NextState = State.DropResourceOut;
 
-                            /* Update resource stats. */
-                            Player player = Game.GetPlayer(Player);
+                            // Update resource stats. 
+                            var player = Game.GetPlayer(Player);
                             player.IncreaseResourceCount(Resource.Type.Boat);
 
                             break;
@@ -6791,7 +6783,7 @@ namespace Freeserf
                     }
                     else
                     {
-                        /* Continue building. */
+                        // Continue building. 
                         building.BoatDo();
                         Animation = 145;
                         Counter += 1408;
@@ -6802,35 +6794,35 @@ namespace Freeserf
 
         void HandleSerfLookingForGeoSpotState()
         {
-            int tries = 2;
-            Map map = Game.Map;
+            int numRemainingTries = 2;
+            var map = Game.Map;
+
             for (int i = 0; i < 8; ++i)
             {
-                int dist = ((Game.RandomInt() >> 2) & 0x3f) + 1;
-                MapPos dest = map.PosAddSpirally(Position, (uint)dist);
-
-                var obj = map.GetObject(dest);
+                int distance = ((Game.RandomInt() >> 2) & 0x3f) + 1;
+                var destination = map.PositionAddSpirally(Position, (uint)distance);
+                var obj = map.GetObject(destination);
 
                 if (obj == Map.Object.None)
                 {
-                    Map.Terrain t1 = map.TypeDown(dest);
-                    Map.Terrain t2 = map.TypeUp(dest);
-                    Map.Terrain t3 = map.TypeDown(map.MoveUpLeft(dest));
-                    Map.Terrain t4 = map.TypeUp(map.MoveUpLeft(dest));
+                    var terrain1 = map.TypeDown(destination);
+                    var terrain2 = map.TypeUp(destination);
+                    var terrain3 = map.TypeDown(map.MoveUpLeft(destination));
+                    var terrain4 = map.TypeUp(map.MoveUpLeft(destination));
 
-                    if ((t1 >= Map.Terrain.Tundra0 && t1 <= Map.Terrain.Snow0) ||
-                        (t2 >= Map.Terrain.Tundra0 && t2 <= Map.Terrain.Snow0) ||
-                        (t3 >= Map.Terrain.Tundra0 && t3 <= Map.Terrain.Snow0) ||
-                        (t4 >= Map.Terrain.Tundra0 && t4 <= Map.Terrain.Snow0))
+                    if ((terrain1 >= Map.Terrain.Tundra0 && terrain1 <= Map.Terrain.Snow0) ||
+                        (terrain2 >= Map.Terrain.Tundra0 && terrain2 <= Map.Terrain.Snow0) ||
+                        (terrain3 >= Map.Terrain.Tundra0 && terrain3 <= Map.Terrain.Snow0) ||
+                        (terrain4 >= Map.Terrain.Tundra0 && terrain4 <= Map.Terrain.Snow0))
                     {
                         SetState(State.FreeWalking);
-                        s.FreeWalking.Dist1 = Map.GetSpiralPattern()[2 * dist];
-                        s.FreeWalking.Dist2 = Map.GetSpiralPattern()[2 * dist + 1];
-                        s.FreeWalking.NegDist1 = -Map.GetSpiralPattern()[2 * dist];
-                        s.FreeWalking.NegDist2 = -Map.GetSpiralPattern()[2 * dist + 1];
+                        s.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * distance];
+                        s.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * distance + 1];
+                        s.FreeWalking.NegDistance1 = -Map.GetSpiralPattern()[2 * distance];
+                        s.FreeWalking.NegDistance2 = -Map.GetSpiralPattern()[2 * distance + 1];
                         s.FreeWalking.Flags = 0;
                         tick = Game.Tick;
-                        Log.Verbose.Write("serf", $"looking for geo spot: found, dist {s.FreeWalking.Dist1}, {s.FreeWalking.Dist2}.");
+                        Log.Verbose.Write("serf", $"looking for geo spot: found, dist {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}.");
 
                         return;
                     }
@@ -6838,15 +6830,15 @@ namespace Freeserf
                 else if (obj >= Map.Object.SignLargeGold &&
                          obj <= Map.Object.SignEmpty)
                 {
-                    if (--tries == 0)
+                    if (--numRemainingTries == 0)
                         break;
                 }
             }
 
             SetState(State.Walking);
-            s.Walking.Dest = 0;
-            s.Walking.Dir1 = -2;
-            s.Walking.Dir = 0;
+            s.Walking.Destination = 0;
+            s.Walking.Direction1 = -2;
+            s.Walking.Direction = 0;
             s.Walking.WaitCounter = 0;
             Counter = 0;
         }
@@ -6857,68 +6849,68 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDist1 == 0 && map.GetObject(Position) == Map.Object.None)
+                if (s.FreeWalking.NegDistance1 == 0 && map.GetObject(Position) == Map.Object.None)
                 {
                     if (map.GetResourceType(Position) == Map.Minerals.None ||
                         map.GetResourceAmount(Position) == 0)
                     {
-                        /* No available resource here. Put empty sign. */
+                        // No available resource here. Put empty sign. 
                         map.SetObject(Position, Map.Object.SignEmpty, -1);
                     }
                     else
                     {
-                        s.FreeWalking.NegDist1 = -1;
+                        s.FreeWalking.NegDistance1 = -1;
                         Animation = 142;
 
-                        /* Select small or large sign with the right resource depicted. */
+                        // Select small or large sign with the right resource depicted. 
                         var obj = Map.Object.SignLargeGold +
                             2 * ((int)map.GetResourceType(Position) - 1) +
                             (map.GetResourceAmount(Position) < 12 ? 1 : 0);
                         map.SetObject(Position, obj, -1);
 
-                        /* Check whether a new notification should be posted. */
+                        // Check whether a new notification should be posted. 
                         bool showNotification = true;
 
                         for (uint i = 0; i < 60; ++i)
                         {
-                            MapPos pos = map.PosAddSpirally(Position, 1u + i);
+                            var position = map.PositionAddSpirally(Position, 1u + i);
 
-                            if (((int)map.GetObject(pos) >> 1) == ((int)obj >> 1))
+                            if (((int)map.GetObject(position) >> 1) == ((int)obj >> 1))
                             {
                                 showNotification = false;
                                 break;
                             }
                         }
 
-                        /* Create notification for found resource. */
+                        // Create notification for found resource. 
                         if (showNotification)
                         {
-                            Notification.Type messageType = Notification.Type.None;
+                            var notificationType = Notification.Type.None;
 
                             switch (map.GetResourceType(Position))
                             {
                                 case Map.Minerals.Coal:
-                                    messageType = Notification.Type.FoundCoal;
+                                    notificationType = Notification.Type.FoundCoal;
                                     break;
                                 case Map.Minerals.Iron:
-                                    messageType = Notification.Type.FoundIron;
+                                    notificationType = Notification.Type.FoundIron;
                                     break;
                                 case Map.Minerals.Gold:
-                                    messageType = Notification.Type.FoundGold;
+                                    notificationType = Notification.Type.FoundGold;
                                     break;
                                 case Map.Minerals.Stone:
-                                    messageType = Notification.Type.FoundStone;
+                                    notificationType = Notification.Type.FoundStone;
                                     break;
                                 default:
                                     Debug.NotReached();
                                     break;
                             }
 
-                            Game.GetPlayer(Player).AddNotification(messageType, Position, (uint)map.GetResourceType(Position) - 1);
+                            Game.GetPlayer(Player).AddNotification(notificationType, Position, (uint)map.GetResourceType(Position) - 1);
                         }
 
                         Counter += 64;
@@ -6927,8 +6919,8 @@ namespace Freeserf
                 }
 
                 SetState(State.FreeWalking);
-                s.FreeWalking.NegDist1 = -128;
-                s.FreeWalking.NegDist2 = 0;
+                s.FreeWalking.NegDistance1 = -128;
+                s.FreeWalking.NegDistance2 = 0;
                 s.FreeWalking.Flags = 0;
                 Counter = 0;
             }
@@ -6942,11 +6934,11 @@ namespace Freeserf
 
             if (Counter < 0)
             {
-                Map map = Game.Map;
+                var map = Game.Map;
 
                 if (map.HasBuilding(map.MoveUpLeft(Position)))
                 {
-                    Building building = Game.GetBuilding(map.GetObjectIndex(map.MoveUpLeft(Position)));
+                    var building = Game.GetBuilding(map.GetObjectIndex(map.MoveUpLeft(Position)));
 
                     if (building.IsDone() &&
                         building.IsMilitary() &&
@@ -6965,24 +6957,24 @@ namespace Freeserf
                                 player.ResetUnderAttackNotificationTime(building.Position);
                         }
 
-                        /* Change state of attacking knight */
+                        // Change state of attacking knight 
                         Counter = 0;
                         SetState(State.KnightPrepareAttacking);
                         Animation = 168;
 
-                        Serf defSerf = building.CallDefenderOut();
+                        var defendingSerf = building.CallDefenderOut();
 
-                        s.Attacking.DefIndex = (int)defSerf.Index;
+                        s.Attacking.DefenderIndex = (int)defendingSerf.Index;
 
-                        /* Change state of defending knight */
-                        SetOtherState(defSerf, State.KnightLeaveForFight);
-                        defSerf.s.LeavingBuilding.NextState = State.KnightPrepareDefending;
-                        defSerf.Counter = 0;
+                        // Change state of defending knight 
+                        SetOtherState(defendingSerf, State.KnightLeaveForFight);
+                        defendingSerf.s.LeavingBuilding.NextState = State.KnightPrepareDefending;
+                        defendingSerf.Counter = 0;
                         return;
                     }
                 }
 
-                /* No one to defend this building. Occupy it. */
+                // No one to defend this building. Occupy it. 
                 SetState(State.KnightOccupyEnemyBuilding);
                 Animation = 179;
                 Counter = CounterFromAnimation[Animation];
@@ -6992,20 +6984,20 @@ namespace Freeserf
 
         void HandleSerfKnightPrepareAttacking()
         {
-            Serf defSerf = Game.GetSerf((uint)s.Attacking.DefIndex);
+            var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
 
-            if (defSerf.SerfState == State.KnightPrepareDefending)
+            if (defendingSerf.SerfState == State.KnightPrepareDefending)
             {
-                /* Change state of attacker. */
+                // Change state of attacker. 
                 SetState(State.KnightAttacking);
                 Counter = 0;
                 tick = Game.Tick;
 
-                /* Change state of defender. */
-                SetOtherState(defSerf, State.KnightDefending);
-                defSerf.Counter = 0;
+                // Change state of defender. 
+                SetOtherState(defendingSerf, State.KnightDefending);
+                defendingSerf.Counter = 0;
 
-                SetFightOutcome(this, defSerf);
+                SetFightOutcome(this, defendingSerf);
             }
         }
 
@@ -7051,13 +7043,12 @@ namespace Freeserf
 
         void HandleKnightAttacking()
         {
-            Serf defSerf = Game.GetSerf((uint)s.Attacking.DefIndex);
-
+            var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
             ushort delta = (ushort)(Game.Tick - tick);
             tick = Game.Tick;
-            defSerf.tick = tick;
+            defendingSerf.tick = tick;
             Counter -= delta;
-            defSerf.Counter = Counter;
+            defendingSerf.Counter = Counter;
 
             while (Counter < 0)
             {
@@ -7067,15 +7058,15 @@ namespace Freeserf
                 {
                     if (s.Attacking.AttackerWon == 0)
                     {
-                        /* Defender won. */
+                        // Defender won. 
                         if (SerfState == State.KnightAttackingFree)
                         {
-                            SetOtherState(defSerf, State.KnightDefendingVictoryFree);
+                            SetOtherState(defendingSerf, State.KnightDefendingVictoryFree);
 
-                            defSerf.Animation = 180;
-                            defSerf.Counter = 0;
+                            defendingSerf.Animation = 180;
+                            defendingSerf.Counter = 0;
 
-                            /* Attacker dies. */
+                            // Attacker dies. 
                             SetState(State.KnightAttackingDefeatFree);
                             Animation = 152 + (int)GetSerfType();
                             Counter = 255;
@@ -7083,10 +7074,10 @@ namespace Freeserf
                         }
                         else
                         {
-                            /* Defender returns to building. */
-                            defSerf.EnterBuilding(-1, true);
+                            // Defender returns to building. 
+                            defendingSerf.EnterBuilding(-1, true);
 
-                            /* Attacker dies. */
+                            // Attacker dies. 
                             SetState(State.KnightAttackingDefeat);
                             Animation = 152 + (int)GetSerfType();
                             Counter = 255;
@@ -7095,16 +7086,16 @@ namespace Freeserf
                     }
                     else
                     {
-                        /* Attacker won. */
+                        // Attacker won. 
                         if (SerfState == State.KnightAttackingFree)
                         {
                             SetState(State.KnightAttackingVictoryFree);
                             Animation = 168;
                             Counter = 0;
 
-                            s.AttackingVictoryFree.Move = defSerf.s.DefendingFree.FieldD;
-                            s.AttackingVictoryFree.DistColumn = defSerf.s.DefendingFree.OtherDistColumn;
-                            s.AttackingVictoryFree.DistRow = defSerf.s.DefendingFree.OtherDistRow;
+                            s.AttackingVictoryFree.Move = defendingSerf.s.DefendingFree.FieldD;
+                            s.AttackingVictoryFree.DistanceColumn = defendingSerf.s.DefendingFree.OtherDistanceColumn;
+                            s.AttackingVictoryFree.DistanceRow = defendingSerf.s.DefendingFree.OtherDistanceRow;
                         }
                         else
                         {
@@ -7112,21 +7103,21 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
-                            uint objectIndex = Game.Map.GetObjectIndex(Game.Map.MoveUpLeft(defSerf.Position));
-                            Building building = Game.GetBuilding(objectIndex);
+                            var objectIndex = Game.Map.GetObjectIndex(Game.Map.MoveUpLeft(defendingSerf.Position));
+                            var building = Game.GetBuilding(objectIndex);
                             building.RequestedKnightDefeatOnWalk();
                         }
 
-                        /* Defender dies. */
-                        defSerf.tick = Game.Tick;
-                        defSerf.Animation = 147 + (int)GetSerfType();
-                        defSerf.Counter = 255;
-                        defSerf.SetSerfType(Type.Dead);
+                        // Defender dies. 
+                        defendingSerf.tick = Game.Tick;
+                        defendingSerf.Animation = 147 + (int)GetSerfType();
+                        defendingSerf.Counter = 255;
+                        defendingSerf.SetSerfType(Type.Dead);
                     }
                 }
                 else
                 {
-                    /* Go to next move in fight sequence. */
+                    // Go to next move in fight sequence. 
                     ++s.Attacking.Move;
 
                     if (s.Attacking.AttackerWon == 0)
@@ -7134,29 +7125,28 @@ namespace Freeserf
 
                     s.Attacking.FieldD = move;
 
-                    int off = (Game.RandomInt() * KnightFightAnimMax[move]) >> 16;
-                    int a = KnightFightAnim[move * 16 + off];
+                    int animationOffset = (Game.RandomInt() * KnightFightAnimMax[move]) >> 16;
+                    int knightAnimation = KnightFightAnim[move * 16 + animationOffset];
 
-                    Animation = 146 + ((a >> 4) & 0xf);
-                    defSerf.Animation = 156 + (a & 0xf);
+                    Animation = 146 + ((knightAnimation >> 4) & 0xf);
+                    defendingSerf.Animation = 156 + (knightAnimation & 0xf);
                     Counter = 72 + (Game.RandomInt() & 0x18);
-                    defSerf.Counter = Counter;
+                    defendingSerf.Counter = Counter;
                 }
             }
         }
 
         void HandleSerfKnightAttackingVictoryState()
         {
-            Serf defSerf = Game.GetSerf((uint)s.Attacking.DefIndex);
+            var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+            ushort delta = (ushort)(Game.Tick - defendingSerf.tick);
+            defendingSerf.tick = Game.Tick;
+            defendingSerf.Counter -= delta;
 
-            ushort delta = (ushort)(Game.Tick - defSerf.tick);
-            defSerf.tick = Game.Tick;
-            defSerf.Counter -= delta;
-
-            if (defSerf.Counter < 0)
+            if (defendingSerf.Counter < 0)
             {
-                Game.DeleteSerf(defSerf);
-                s.Attacking.DefIndex = 0;
+                Game.DeleteSerf(defendingSerf);
+                s.Attacking.DefenderIndex = 0;
 
                 SetState(State.KnightEngagingBuilding);
                 tick = Game.Tick;
@@ -7188,7 +7178,7 @@ namespace Freeserf
                 return;
             }
 
-            Building building = Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
+            var building = Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
 
             if (building != null)
             {
@@ -7196,7 +7186,7 @@ namespace Freeserf
                 {
                     if (building.Player == Player)
                     {
-                        /* Enter building if there is space. */
+                        // Enter building if there is space. 
                         if (building.BuildingType == Building.Type.Castle)
                         {
                             EnterBuilding(-2, false);
@@ -7206,7 +7196,7 @@ namespace Freeserf
                         {
                             if (building.IsEnoughPlaceForKnight())
                             {
-                                /* Enter building */
+                                // Enter building 
                                 EnterBuilding(-1, false);
                                 building.KnightOccupy();
                                 return;
@@ -7215,7 +7205,7 @@ namespace Freeserf
                     }
                     else if (!building.HasKnight())
                     {
-                        /* Occupy the building. */
+                        // Occupy the building. 
                         Game.OccupyEnemyBuilding(building, Player);
 
                         if (building.BuildingType == Building.Type.Castle)
@@ -7224,7 +7214,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            /* Enter building */
+                            // Enter building 
                             EnterBuilding(-1, false);
                             building.KnightOccupy();
                         }
@@ -7240,7 +7230,7 @@ namespace Freeserf
                 }
             }
 
-            /* Something is wrong. */
+            // Something is wrong. 
             SetState(State.Lost);
             s.Lost.FieldB = 0;
             Counter = 0;
@@ -7252,75 +7242,75 @@ namespace Freeserf
             tick = Game.Tick;
             Counter -= delta;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             while (Counter < 0)
             {
-                /* Check for enemy knights nearby. */
+                // Check for enemy knights nearby. 
                 var cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
-                    MapPos pos = map.Move(Position, d);
+                    var position = map.Move(Position, direction);
 
-                    if (map.HasSerf(pos))
+                    if (map.HasSerf(position))
                     {
-                        Serf other = Game.GetSerfAtPos(pos);
+                        var otherSerf = Game.GetSerfAtPos(position);
 
-                        if (Player != other.Player)
+                        if (Player != otherSerf.Player)
                         {
-                            if (other.SerfState == State.KnightFreeWalking)
+                            if (otherSerf.SerfState == State.KnightFreeWalking)
                             {
-                                pos = map.MoveLeft(pos);
+                                position = map.MoveLeft(position);
 
-                                if (CanPassMapPos(pos))
+                                if (CanPassMapPosition(position))
                                 {
-                                    int distCol = s.FreeWalking.Dist1;
-                                    int distRow = s.FreeWalking.Dist2;
+                                    int distanceColumn = s.FreeWalking.DistanceX;
+                                    int distanceRow = s.FreeWalking.DistanceY;
 
                                     SetState(State.KnightEngageDefendingFree);
 
-                                    s.DefendingFree.DistColumn = distCol;
-                                    s.DefendingFree.DistRow = distRow;
-                                    s.DefendingFree.OtherDistColumn = other.s.FreeWalking.Dist1;
-                                    s.DefendingFree.OtherDistRow = other.s.FreeWalking.Dist2;
+                                    s.DefendingFree.DistanceColumn = distanceColumn;
+                                    s.DefendingFree.DistanceRow = distanceRow;
+                                    s.DefendingFree.OtherDistanceColumn = otherSerf.s.FreeWalking.DistanceX;
+                                    s.DefendingFree.OtherDistanceRow = otherSerf.s.FreeWalking.DistanceY;
                                     s.DefendingFree.FieldD = 1;
                                     Animation = 99;
                                     Counter = 255;
 
-                                    SetOtherState(other, State.KnightEngageAttackingFree);
-                                    other.s.Attacking.FieldD = (int)d;
-                                    other.s.Attacking.DefIndex = (int)Index;
+                                    SetOtherState(otherSerf, State.KnightEngageAttackingFree);
+                                    otherSerf.s.Attacking.FieldD = (int)direction;
+                                    otherSerf.s.Attacking.DefenderIndex = (int)Index;
                                     return;
                                 }
                             }
-                            else if (other.SerfState == State.Walking && other.IsKnight())
+                            else if (otherSerf.SerfState == State.Walking && otherSerf.IsKnight())
                             {
-                                pos = map.MoveLeft(pos);
+                                position = map.MoveLeft(position);
 
-                                if (CanPassMapPos(pos))
+                                if (CanPassMapPosition(position))
                                 {
-                                    int distCol = s.FreeWalking.Dist1;
-                                    int distRow = s.FreeWalking.Dist2;
+                                    int distanceColumn = s.FreeWalking.DistanceX;
+                                    int distanceRow = s.FreeWalking.DistanceY;
 
                                     SetState(State.KnightEngageDefendingFree);
-                                    s.DefendingFree.DistColumn = distCol;
-                                    s.DefendingFree.DistRow = distRow;
+                                    s.DefendingFree.DistanceColumn = distanceColumn;
+                                    s.DefendingFree.DistanceRow = distanceRow;
                                     s.DefendingFree.FieldD = 0;
                                     Animation = 99;
                                     Counter = 255;
 
-                                    Flag dest = Game.GetFlag(other.s.Walking.Dest);
-                                    Building building = dest.GetBuilding();
+                                    var destination = Game.GetFlag(otherSerf.s.Walking.Destination);
+                                    var building = destination.GetBuilding();
 
                                     if (building != null && !building.HasInventory())
                                     {
                                         building.RequestedKnightAttackingOnWalk();
                                     }
 
-                                    SetOtherState(other, State.KnightEngageAttackingFree);
-                                    other.s.Attacking.FieldD = (int)d;
-                                    other.s.Attacking.DefIndex = (int)Index;
+                                    SetOtherState(otherSerf, State.KnightEngageAttackingFree);
+                                    otherSerf.s.Attacking.FieldD = (int)direction;
+                                    otherSerf.s.Attacking.DefenderIndex = (int)Index;
 
                                     return;
                                 }
@@ -7368,40 +7358,40 @@ namespace Freeserf
                 Animation = 168;
                 Counter = 0;
 
-                Serf other = Game.GetSerf((uint)s.Attacking.DefIndex);
-                MapPos otherPos = other.Position;
+                var other = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+                var otherPosition = other.Position;
                 SetOtherState(other, State.KnightPrepareDefendingFree);
                 other.Counter = Counter;
 
-                /* Adjust distance to final destination. */
-                Direction d = (Direction)s.Attacking.FieldD;
+                // Adjust distance to final destination. 
+                var direction = (Direction)s.Attacking.FieldD;
 
-                if (d == Direction.Right || d == Direction.DownRight)
+                if (direction == Direction.Right || direction == Direction.DownRight)
                 {
-                    --other.s.DefendingFree.DistColumn;
+                    --other.s.DefendingFree.DistanceColumn;
                 }
-                else if (d == Direction.Left || d == Direction.UpLeft)
+                else if (direction == Direction.Left || direction == Direction.UpLeft)
                 {
-                    ++other.s.DefendingFree.DistColumn;
-                }
-
-                if (d == Direction.DownRight || d == Direction.Down)
-                {
-                    --other.s.DefendingFree.DistRow;
-                }
-                else if (d == Direction.UpLeft || d == Direction.Up)
-                {
-                    ++other.s.DefendingFree.DistRow;
+                    ++other.s.DefendingFree.DistanceColumn;
                 }
 
-                other.StartWalking(d, 32, false);
-                Game.Map.SetSerfIndex(otherPos, 0);
+                if (direction == Direction.DownRight || direction == Direction.Down)
+                {
+                    --other.s.DefendingFree.DistanceRow;
+                }
+                else if (direction == Direction.UpLeft || direction == Direction.Up)
+                {
+                    ++other.s.DefendingFree.DistanceRow;
+                }
+
+                other.StartWalking(direction, 32, false);
+                Game.Map.SetSerfIndex(otherPosition, 0);
             }
         }
 
         void HandleStateKnightPrepareAttackingFree()
         {
-            Serf other = Game.GetSerf((uint)s.Attacking.DefIndex);
+            var other = Game.GetSerf((uint)s.Attacking.DefenderIndex);
 
             if (other.SerfState == State.KnightPrepareDefendingFreeWait)
             {
@@ -7430,8 +7420,7 @@ namespace Freeserf
 
         void HandleKnightAttackingVictoryFree()
         {
-            Serf other = Game.GetSerf((uint)s.AttackingVictoryFree.DefIndex);
-
+            var other = Game.GetSerf((uint)s.AttackingVictoryFree.DefenderIndex);
             ushort delta = (ushort)(Game.Tick - other.tick);
             other.tick = Game.Tick;
             other.Counter -= delta;
@@ -7440,15 +7429,15 @@ namespace Freeserf
             {
                 Game.DeleteSerf(other);
 
-                int distColumn = s.AttackingVictoryFree.DistColumn;
-                int distRow = s.AttackingVictoryFree.DistRow;
+                int distanceColumn = s.AttackingVictoryFree.DistanceColumn;
+                int distanceRow = s.AttackingVictoryFree.DistanceRow;
 
                 SetState(State.KnightAttackingFreeWait);
 
-                s.FreeWalking.Dist1 = distColumn;
-                s.FreeWalking.Dist2 = distRow;
-                s.FreeWalking.NegDist1 = 0;
-                s.FreeWalking.NegDist2 = 0;
+                s.FreeWalking.DistanceX = distanceColumn;
+                s.FreeWalking.DistanceY = distanceRow;
+                s.FreeWalking.NegDistance1 = 0;
+                s.FreeWalking.NegDistance2 = 0;
 
                 if (s.Attacking.Move != 0)
                 {
@@ -7479,24 +7468,24 @@ namespace Freeserf
 
             if (Counter < 0)
             {
-                /* Change state of other. */
-                Serf other = Game.GetSerf((uint)s.Attacking.DefIndex);
-                int distCol = other.s.DefendingFree.DistColumn;
-                int distRow = other.s.DefendingFree.DistRow;
+                // Change state of other. 
+                var other = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+                int distanceColumn = other.s.DefendingFree.DistanceColumn;
+                int distanceRow = other.s.DefendingFree.DistanceRow;
 
                 SetOtherState(other, State.KnightFreeWalking);
 
-                other.s.FreeWalking.Dist1 = distCol;
-                other.s.FreeWalking.Dist2 = distRow;
-                other.s.FreeWalking.NegDist1 = 0;
-                other.s.FreeWalking.NegDist2 = 0;
+                other.s.FreeWalking.DistanceX = distanceColumn;
+                other.s.FreeWalking.DistanceY = distanceRow;
+                other.s.FreeWalking.NegDistance1 = 0;
+                other.s.FreeWalking.NegDistance2 = 0;
                 other.s.FreeWalking.Flags = 0;
 
                 other.Animation = 179;
                 other.Counter = 0;
                 other.tick = Game.Tick;
 
-                /* Remove itself. */
+                // Remove itself. 
                 Game.Map.SetSerfIndex(Position, (int)other.Index);
                 Game.DeleteSerf(this);
             }
@@ -7528,7 +7517,7 @@ namespace Freeserf
             tick = Game.Tick;
             Counter = 0;
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (map.HasSerf(Position) && map.GetSerfIndex(Position) != Index)
             {
@@ -7537,31 +7526,31 @@ namespace Freeserf
                 return;
             }
 
-            Building building = Game.GetBuilding(map.GetObjectIndex(Position));
-            MapPos newPos = map.MoveDownRight(Position);
+            var building = Game.GetBuilding(map.GetObjectIndex(Position));
+            var newPosition = map.MoveDownRight(Position);
 
-            if (!map.HasSerf(newPos))
+            if (!map.HasSerf(newPosition))
             {
-                /* For clean state change, save the values first. */
-                /* TODO maybe knightLeaveForWalkToFight can
-                   share leavingBuilding state vars. */
-                int distCol = s.LeaveForWalkToFight.DistColumn;
-                int distRow = s.LeaveForWalkToFight.DistRow;
+                // For clean state change, save the values first. 
+                // TODO maybe KnightLeaveForWalkToFight can
+                // share LeavingBuilding state vars.
+                int distanceColumn = s.LeaveForWalkToFight.DistanceColumn;
+                int distanceRow = s.LeaveForWalkToFight.DistanceRow;
                 int fieldD = s.LeaveForWalkToFight.FieldD;
                 int fieldE = s.LeaveForWalkToFight.FieldE;
-                Serf.State nextState = s.LeaveForWalkToFight.NextState;
+                var nextState = s.LeaveForWalkToFight.NextState;
 
                 LeaveBuilding(false);
-                /* TODO names for leavingBuilding vars make no sense here. */
-                s.LeavingBuilding.FieldB = distCol;
-                s.LeavingBuilding.Dest = (uint)distRow;
-                s.LeavingBuilding.Dest2 = fieldD;
-                s.LeavingBuilding.Dir = fieldE;
+                // TODO names for LeavingBuilding vars make no sense here. 
+                s.LeavingBuilding.FieldB = distanceColumn;
+                s.LeavingBuilding.Destination = (uint)distanceRow;
+                s.LeavingBuilding.Destination2 = fieldD;
+                s.LeavingBuilding.Direction = fieldE;
                 s.LeavingBuilding.NextState = nextState;
             }
             else
             {
-                Serf other = Game.GetSerfAtPos(newPos);
+                var other = Game.GetSerfAtPos(newPosition);
 
                 if (Player == other.Player)
                 {
@@ -7570,7 +7559,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    /* Go back to defending the building. */
+                    // Go back to defending the building. 
                     switch (building.BuildingType)
                     {
                         case Building.Type.Hut:
@@ -7598,22 +7587,22 @@ namespace Freeserf
 
         void HandleSerfIdleOnPathState()
         {
-            Flag flag = Game.GetFlag(s.IdleOnPath.FlagIndex);
-            Direction revDir = s.IdleOnPath.RevDir;
+            var flag = Game.GetFlag(s.IdleOnPath.FlagIndex);
+            var reverseDirection = s.IdleOnPath.ReverseDirection;
 
-            /* Set walking dir in fieldE. */
-            if (flag.IsScheduled(revDir))
+            // Set walking direction in fieldE.
+            if (flag.IsScheduled(reverseDirection))
             {
                 s.IdleOnPath.FieldE = (tick & 0xff) + 6;
             }
             else
             {
-                Flag otherFlag = flag.GetOtherEndFlag(revDir);
-                Direction otherDir = flag.GetOtherEndDirection((Direction)revDir);
+                var otherFlag = flag.GetOtherEndFlag(reverseDirection);
+                var otherDirection = flag.GetOtherEndDirection(reverseDirection);
 
-                if (otherFlag != null && otherFlag.IsScheduled(otherDir))
+                if (otherFlag != null && otherFlag.IsScheduled(otherDirection))
                 {
-                    s.IdleOnPath.FieldE = (int)revDir.Reverse();
+                    s.IdleOnPath.FieldE = (int)reverseDirection.Reverse();
                 }
                 else
                 {
@@ -7621,19 +7610,19 @@ namespace Freeserf
                 }
             }
 
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (!map.HasSerf(Position))
             {
                 map.ClearIdleSerf(Position);
                 map.SetSerfIndex(Position, (int)Index);
 
-                int dir = s.IdleOnPath.FieldE;
+                int direction = s.IdleOnPath.FieldE;
 
                 SetState(State.Transporting);
-                s.Walking.Res = Resource.Type.None;
+                s.Walking.Resource = Resource.Type.None;
                 s.Walking.WaitCounter = 0;
-                s.Walking.Dir = dir;
+                s.Walking.Direction = direction;
                 tick = Game.Tick;
                 Counter = 0;
             }
@@ -7645,20 +7634,20 @@ namespace Freeserf
 
         void HandleSerfWaitIdleOnPathState()
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (!map.HasSerf(Position))
             {
-                /* Duplicate code from handleSerfIdleOnPathState() */
+                // Duplicate code from HandleSerfIdleOnPathState() 
                 map.ClearIdleSerf(Position);
                 map.SetSerfIndex(Position, (int)Index);
 
-                int dir = s.IdleOnPath.FieldE;
+                int direction = s.IdleOnPath.FieldE;
 
                 SetState(State.Transporting);
-                s.Walking.Res = Resource.Type.None;
+                s.Walking.Resource = Resource.Type.None;
                 s.Walking.WaitCounter = 0;
-                s.Walking.Dir = dir;
+                s.Walking.Direction = direction;
                 tick = Game.Tick;
                 Counter = 0;
             }
@@ -7666,24 +7655,24 @@ namespace Freeserf
 
         void HandleScatterState()
         {
-            /* Choose a random, empty destination */
+            // Choose a random, empty destination 
             while (true)
             {
-                int r = Game.RandomInt();
-                int column = (r & 0xf);
+                int random = Game.RandomInt();
+                int column = (random & 0xf);
 
                 if (column < 8)
                     column -= 16;
 
-                int row = ((r >> 8) & 0xf);
+                int row = ((random >> 8) & 0xf);
 
                 if (row < 8)
                     row -= 16;
 
-                Map map = Game.Map;
-                MapPos dest = map.PosAdd(Position, column, row);
+                var map = Game.Map;
+                var destination = map.PositionAdd(Position, column, row);
 
-                if (map.GetObject(dest) == 0 && map.GetHeight(dest) > 0)
+                if (map.GetObject(destination) == 0 && map.GetHeight(destination) > 0)
                 {
                     if (IsKnight())
                     {
@@ -7694,10 +7683,10 @@ namespace Freeserf
                         SetState(State.FreeWalking);
                     }
 
-                    s.FreeWalking.Dist1 = column;
-                    s.FreeWalking.Dist2 = row;
-                    s.FreeWalking.NegDist1 = -128;
-                    s.FreeWalking.NegDist2 = -1;
+                    s.FreeWalking.DistanceX = column;
+                    s.FreeWalking.DistanceY = row;
+                    s.FreeWalking.NegDistance1 = -128;
+                    s.FreeWalking.NegDistance2 = -1;
                     s.FreeWalking.Flags = 0;
                     Counter = 0;
 
@@ -7708,14 +7697,14 @@ namespace Freeserf
 
         void HandleSerfFinishedBuildingState()
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (!map.HasSerf(map.MoveDownRight(Position)))
             {
                 SetState(State.ReadyToLeave);
-                s.LeavingBuilding.Dest = 0;
+                s.LeavingBuilding.Destination = 0;
                 s.LeavingBuilding.FieldB = -2;
-                s.LeavingBuilding.Dir = 0;
+                s.LeavingBuilding.Direction = 0;
                 s.LeavingBuilding.NextState = State.Walking;
 
                 if (map.GetSerfIndex(Position) != Index && map.HasSerf(Position))
@@ -7727,7 +7716,7 @@ namespace Freeserf
 
         void HandleSerfWakeAtFlagState()
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (!map.HasSerf(Position))
             {
@@ -7754,11 +7743,11 @@ namespace Freeserf
 
             var cycle = DirectionCycleCCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                if (Misc.BitTest(Game.Map.Paths(Position), (int)d))
+                if (Misc.BitTest(Game.Map.Paths(Position), (int)direction))
                 {
-                    s.IdleOnPath.FieldE = (int)d;
+                    s.IdleOnPath.FieldE = (int)direction;
                     break;
                 }
             }
@@ -7774,7 +7763,7 @@ namespace Freeserf
                 case Type.Knight3:
                     TrainKnight(trainingParams[GetSerfType() - Type.Knight0]);
                     break;
-                case Type.Knight4: /* Cannot train anymore. */
+                case Type.Knight4: // Cannot train anymore. 
                     break;
                 default:
                     Debug.NotReached();

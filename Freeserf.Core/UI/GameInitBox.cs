@@ -748,7 +748,7 @@ namespace Freeserf.UI
                     break;
             }
 
-            /* Game info */
+            // Game info 
             if (gameType != GameType.Load && gameType != GameType.MultiplayerClient)
             {
                 int bx = 0;
@@ -781,7 +781,7 @@ namespace Freeserf.UI
                     playerBoxes[i].Visible = false;
             }
 
-            /* Display program name and version */
+            // Display program name and version 
             DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
         }
 
@@ -1165,7 +1165,7 @@ namespace Freeserf.UI
                 return true;
             }
 
-            PlayerInfo player = mission.GetPlayer(playerIndex);
+            var player = mission.GetPlayer(playerIndex);
             
             if (cx < 8 + 32 && cy < 72) // click on face
             {
@@ -1177,7 +1177,7 @@ namespace Freeserf.UI
 
                 if (!canNotChange)
                 {
-                    /* Face */
+                    // Face 
                     bool inUse = false;
 
                     do
@@ -1187,7 +1187,7 @@ namespace Freeserf.UI
 
                         player.SetCharacter((PlayerFace)next);
 
-                        /* Check that face is not already in use by another player */
+                        // Check that face is not already in use by another player 
                         inUse = false;
 
                         for (uint i = 0; i < mission.PlayerCount; ++i)
@@ -1249,7 +1249,7 @@ namespace Freeserf.UI
                             canNotChange = true;
                         }
 
-                        /* Supplies */
+                        // Supplies 
                         if (!canNotChange)
                         {
                             if (checkBoxSameValues.Checked)
@@ -1278,7 +1278,7 @@ namespace Freeserf.UI
                                 canNotChange = true;
                         }
 
-                        /* Intelligence */
+                        // Intelligence 
                         if (!canNotChange)
                             player.Intelligence = value;
                     }
@@ -1293,7 +1293,7 @@ namespace Freeserf.UI
                             canNotChange = true;
                         }
 
-                        /* Reproduction */
+                        // Reproduction 
                         if (!canNotChange)
                         {
                             if (checkBoxSameValues.Checked)

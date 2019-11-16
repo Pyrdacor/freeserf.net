@@ -1,8 +1,8 @@
 ﻿/*
  * Inventory.cs - Resources related definitions.
  *
- * Copyright (C) 2015  Wicked_Digger <wicked_digger@mail.ru>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2015       Wicked_Digger <wicked_digger@mail.ru>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -42,7 +42,7 @@ namespace Freeserf
         internal class OutQueue : IComparable
         {
             public Resource.Type Type;
-            public uint Dest;
+            public uint Destination;
 
             public int CompareTo(object other)
             {
@@ -51,7 +51,7 @@ namespace Freeserf
                     var otherQueue = other as OutQueue;
                     
                     if (Type == otherQueue.Type)
-                        return Dest.CompareTo(otherQueue.Dest);
+                        return Destination.CompareTo(otherQueue.Destination);
 
                     return Type.CompareTo(otherQueue.Type);
                 }
@@ -72,7 +72,7 @@ namespace Freeserf
             for (int i = 0; i < 2; ++i)
             {
                 state.OutQueue[i].Type = Resource.Type.None;
-                state.OutQueue[i].Dest = 0;
+                state.OutQueue[i].Destination = 0;
             }
 
             foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
@@ -126,9 +126,9 @@ namespace Freeserf
             state.ResetDirtyFlag();
         }
 
-        public bool HaveAnyOutMode()
+        public bool HasAnyOutMode()
         {
-            return state.HaveAnyOutMode();
+            return state.HasAnyOutMode();
         }
 
         public uint GetSerfQueueLength()
@@ -169,7 +169,7 @@ namespace Freeserf
                 return null;
             }
 
-            Serf serf = Game.GetSerf(state.Serfs[type]);
+            var serf = Game.GetSerf(state.Serfs[type]);
 
             if (!CallOutSerf(serf))
             {
@@ -198,7 +198,7 @@ namespace Freeserf
                 return null;
             }
 
-            Serf serf = Game.GetSerf(state.Serfs[type]);
+            var serf = Game.GetSerf(state.Serfs[type]);
             state.Serfs[type] = 0;
 
             return serf;
@@ -249,31 +249,31 @@ namespace Freeserf
             return (state.OutQueue[1].Type != Resource.Type.None);
         }
 
-        public void GetResourceFromQueue(ref Resource.Type res, ref uint dest)
+        public void GetResourceFromQueue(ref Resource.Type resource, ref uint destination)
         {
-            res = state.OutQueue[0].Type;
-            dest = state.OutQueue[0].Dest;
+            resource = state.OutQueue[0].Type;
+            destination = state.OutQueue[0].Destination;
 
             state.OutQueue[0].Type = state.OutQueue[1].Type;
-            state.OutQueue[0].Dest = state.OutQueue[1].Dest;
+            state.OutQueue[0].Destination = state.OutQueue[1].Destination;
 
             state.OutQueue[1].Type = Resource.Type.None;
-            state.OutQueue[1].Dest = 0;
+            state.OutQueue[1].Destination = 0;
         }
 
         public void ResetQueueForDest(Flag flag)
         {
-            if (state.OutQueue[1].Type != Resource.Type.None && state.OutQueue[1].Dest == flag.Index)
+            if (state.OutQueue[1].Type != Resource.Type.None && state.OutQueue[1].Destination == flag.Index)
             {
                 PushResource(state.OutQueue[1].Type);
                 state.OutQueue[1].Type = Resource.Type.None;
             }
 
-            if (state.OutQueue[0].Type != Resource.Type.None && state.OutQueue[0].Dest == flag.Index)
+            if (state.OutQueue[0].Type != Resource.Type.None && state.OutQueue[0].Destination == flag.Index)
             {
                 PushResource(state.OutQueue[0].Type);
                 state.OutQueue[0].Type = state.OutQueue[1].Type;
-                state.OutQueue[0].Dest = state.OutQueue[1].Dest;
+                state.OutQueue[0].Destination = state.OutQueue[1].Destination;
                 state.OutQueue[1].Type = Resource.Type.None;
             }
         }
@@ -287,7 +287,7 @@ namespace Freeserf
 
         // Take resource from inventory and put in out queue.
         // The resource must be present.
-        public void AddToQueue(Resource.Type type, uint dest)
+        public void AddToQueue(Resource.Type type, uint destination)
         {
             if (type == Resource.Type.GroupFood)
             {
@@ -323,12 +323,12 @@ namespace Freeserf
             if (state.OutQueue[0].Type == Resource.Type.None)
             {
                 state.OutQueue[0].Type = type;
-                state.OutQueue[0].Dest = dest;
+                state.OutQueue[0].Destination = destination;
             }
             else
             {
                 state.OutQueue[1].Type = type;
-                state.OutQueue[1].Dest = dest;
+                state.OutQueue[1].Destination = destination;
             }
         }
 
@@ -480,7 +480,7 @@ namespace Freeserf
 
         public Serf SpawnSerfGeneric()
         {
-            Serf serf = Game.GetPlayer(Player).SpawnSerfGeneric();
+            var serf = Game.GetPlayer(Player).SpawnSerfGeneric();
 
             if (serf != null)
             {
@@ -584,7 +584,7 @@ namespace Freeserf
                 return null;
             }
 
-            Serf serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
+            var serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
 
             if (!SpecializeSerf(serf, type))
             {
@@ -618,7 +618,7 @@ namespace Freeserf
 
         public void KnightTraining(Serf serf, int p)
         {
-            Serf.Type oldType = serf.GetSerfType();
+            var oldType = serf.GetSerfType();
 
             if (serf.TrainKnight(p))
             {
@@ -647,7 +647,7 @@ namespace Freeserf
 
             for (int j = 0; j < 2; ++j)
             {
-                state.OutQueue[j].Dest = reader.ReadWord(); // 60 + 2*j
+                state.OutQueue[j].Destination = reader.ReadWord(); // 60 + 2*j
             }
 
             state.GenericCount = reader.ReadWord(); // 64
@@ -668,7 +668,7 @@ namespace Freeserf
             for (int i = 0; i < 2; ++i)
             {
                 state.OutQueue[i].Type = (Resource.Type)reader.Value("queue.type")[i].ReadInt();
-                state.OutQueue[i].Dest = reader.Value("queue.dest")[i].ReadUInt();
+                state.OutQueue[i].Destination = reader.Value("queue.dest")[i].ReadUInt();
             }
 
             state.GenericCount = reader.Value("generic_count").ReadUInt();
@@ -692,7 +692,7 @@ namespace Freeserf
             for (int i = 0; i < 2; ++i)
             {
                 writer.Value("queue.type").Write((int)state.OutQueue[i].Type);
-                writer.Value("queue.dest").Write(state.OutQueue[i].Dest);
+                writer.Value("queue.dest").Write(state.OutQueue[i].Destination);
             }
 
             writer.Value("generic_count").Write(state.GenericCount);
@@ -719,10 +719,10 @@ namespace Freeserf
                 {
                     for (int i = 0; i < 2 && state.OutQueue[i].Type != Resource.Type.None; ++i)
                     {
-                        Resource.Type resource = state.OutQueue[i].Type;
-                        uint dest = state.OutQueue[i].Dest;
+                        var resource = state.OutQueue[i].Type;
+                        var destination = state.OutQueue[i].Destination;
 
-                        Game.CancelTransportedResource(resource, dest);
+                        Game.CancelTransportedResource(resource, destination);
                         Game.LoseResource(resource);
                     }
 

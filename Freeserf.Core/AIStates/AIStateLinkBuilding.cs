@@ -25,12 +25,12 @@ namespace Freeserf.AIStates
 {
     class AIStateLinkBuilding : AIState
     {
-        uint buildingPosition = Global.BadMapPos;
+        uint buildingPosition = Constants.INVALID_MAPPOS;
 
-        public AIStateLinkBuilding(uint buildingPos)
+        public AIStateLinkBuilding(uint buildingPosition)
             : base(AI.State.LinkBuilding)
         {
-            this.buildingPosition = buildingPos;
+            this.buildingPosition = buildingPosition;
         }
 
         protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
@@ -55,23 +55,22 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            var buildingType = game.GetBuildingAtPos(buildingPosition).BuildingType;
-            var flagPos = game.Map.MoveDownRight(buildingPosition);
+            var flagPosition = game.Map.MoveDownRight(buildingPosition);
 
             // don't link if already linked
-            if (game.Map.Paths(flagPos) > 0 && game.GetFlagAtPos(flagPos).FindNearestInventoryForSerf() != -1)
+            if (game.Map.Paths(flagPosition) > 0 && game.GetFlagAtPos(flagPosition).FindNearestInventoryForSerf() != -1)
             {
                 Kill(ai);
                 return;
             }
 
             // if we cannot link the building, we will demolish it
-            if (!ai.LinkFlag(game.GetFlagAtPos(flagPos)))
+            if (!ai.LinkFlag(game.GetFlagAtPos(flagPosition)))
             {
                 game.DemolishBuilding(buildingPosition, player);
 
-                if (game.Map.Paths(flagPos) == 0)
-                    game.DemolishFlag(flagPos, player);
+                if (game.Map.Paths(flagPosition) == 0)
+                    game.DemolishFlag(flagPosition, player);
             }
 
             // return to idle state and decide there what to do

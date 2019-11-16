@@ -159,7 +159,7 @@ namespace Freeserf.Audio
 
         protected float volume = 0.75f;
 
-        /* Common audio. */
+        // Common audio. 
 
         public abstract IVolumeController GetVolumeController();
         public abstract Player GetSoundPlayer();

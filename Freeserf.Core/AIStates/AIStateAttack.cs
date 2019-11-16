@@ -345,7 +345,7 @@ namespace Freeserf.AIStates
         void AttackRandom(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
             var targetPlayer = game.GetPlayer(targetPlayerIndex);
-            var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(b => b.IsMilitary(true)).ToList();
+            var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(building => building.IsMilitary(true)).ToList();
 
             AttackRandom(ai, game, player, targetPlayerMilitaryBuildings);
         }
@@ -387,14 +387,14 @@ namespace Freeserf.AIStates
         }
 
         // The higher the return value, the better is this target in terms of winning chance.
-        int CheckTargetBuilding(Game game, Player player, uint pos)
+        int CheckTargetBuilding(Game game, Player player, uint position)
         {
-            int numMaxAttackKnights = player.KnightsAvailableForAttack(pos);
+            int numMaxAttackKnights = player.KnightsAvailableForAttack(position);
 
             if (numMaxAttackKnights == 0)
                 return int.MinValue;
 
-            int numKnights = (int)game.GetBuildingAtPos(pos).GetKnightCount();
+            int numKnights = (int)game.GetBuildingAtPos(position).GetKnightCount();
 
             return numMaxAttackKnights - numKnights;
         }

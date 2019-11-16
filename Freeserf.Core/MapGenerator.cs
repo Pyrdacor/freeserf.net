@@ -2,7 +2,7 @@
  * MapGenerator.cs - Map generator
  *
  * Copyright (C) 2013-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -37,16 +37,16 @@ namespace Freeserf
 
         public abstract void Generate();
 
-        public abstract uint GetHeight(MapPos pos);
-        public abstract Map.Terrain GetTypeUp(MapPos pos);
-        public abstract Map.Terrain GetTypeDown(MapPos pos);
-        public abstract Map.Object GetObject(MapPos pos);
-        public abstract Map.Minerals GetResourceType(MapPos pos);
-        public abstract int GetResourceAmount(MapPos pos);
+        public abstract uint GetHeight(MapPos position);
+        public abstract Map.Terrain GetTypeUp(MapPos position);
+        public abstract Map.Terrain GetTypeDown(MapPos position);
+        public abstract Map.Object GetObject(MapPos position);
+        public abstract Map.Minerals GetResourceType(MapPos position);
+        public abstract int GetResourceAmount(MapPos position);
         public abstract Map.LandscapeTile[] GetLandscape();
     }
 
-    /* Classic map generator as in original game. */
+    // Classic map generator as in original game. 
     public class ClassicMapGenerator : MapGenerator
     {
         const uint DefaultMaxLakeArea = 14;
@@ -55,7 +55,7 @@ namespace Freeserf
 
         public ClassicMapGenerator(Map map, Random random)
         {
-            rnd = random;
+            this.random = random;
             int tileCount = (int)map.Geometry.TileCount;
 
             tiles = new Map.LandscapeTile[tileCount];
@@ -81,7 +81,7 @@ namespace Freeserf
 
         public override void Generate()
         {
-            rnd ^= new Random(0x5a5a, 0xa5a5, 0xc3c3);
+            random ^= new Random(0x5a5a, 0xa5a5, 0xc3c3);
 
             RandomInt();
             RandomInt();
@@ -91,10 +91,10 @@ namespace Freeserf
             switch (heightGenerator)
             {
                 case HeightGenerator.Midpoints:
-                    InitHeightsMidpoints(); /* Midpoint displacement algorithm */
+                    InitHeightsMidpoints(); // Midpoint displacement algorithm 
                     break;
                 case HeightGenerator.DiamondSquare:
-                    InitHeightsDiamondSquare(); /* Diamond square algorithm */
+                    InitHeightsDiamondSquare(); // Diamond square algorithm 
                     break;
                 default:
                     Debug.NotReached();
@@ -123,9 +123,9 @@ namespace Freeserf
             CleanUp();
         }
 
-        public override uint GetHeight(uint pos)
+        public override uint GetHeight(MapPos position)
         {
-            return tiles[(int)pos].Height;
+            return tiles[(int)position].Height;
         }
 
         public override Map.LandscapeTile[] GetLandscape()
@@ -133,33 +133,33 @@ namespace Freeserf
             return tiles;
         }
 
-        public override Map.Object GetObject(uint pos)
+        public override Map.Object GetObject(MapPos position)
         {
-            return tiles[(int)pos].Object;
+            return tiles[(int)position].Object;
         }
 
-        public override int GetResourceAmount(uint pos)
+        public override int GetResourceAmount(MapPos position)
         {
-            return tiles[(int)pos].ResourceAmount;
+            return tiles[(int)position].ResourceAmount;
         }
 
-        public override Map.Minerals GetResourceType(uint pos)
+        public override Map.Minerals GetResourceType(MapPos position)
         {
-            return tiles[(int)pos].Mineral;
+            return tiles[(int)position].Mineral;
         }
 
-        public override Map.Terrain GetTypeDown(uint pos)
+        public override Map.Terrain GetTypeDown(MapPos position)
         {
-            return tiles[(int)pos].TypeDown;
+            return tiles[(int)position].TypeDown;
         }
 
-        public override Map.Terrain GetTypeUp(uint pos)
+        public override Map.Terrain GetTypeUp(MapPos position)
         {
-            return tiles[(int)pos].TypeUp;
+            return tiles[(int)position].TypeUp;
         }
 
         Map map;
-        Random rnd = new Random();
+        Random random = new Random();
 
         readonly Map.LandscapeTile[] tiles;
         readonly int[] tags;
@@ -172,30 +172,37 @@ namespace Freeserf
 
         ushort RandomInt()
         {
-            return rnd.Next();
+            return random.Next();
         }
 
-        /* Get a random position in the spiral pattern based at col, row. */
-        MapPos PosAddSpirallyRandom(MapPos pos, int mask)
+        /// <summary>
+        /// Get a random position in the spiral pattern based at column, row. 
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="mask"></param>
+        /// <returns></returns>
+        MapPos PosAddSpirallyRandom(MapPos position, int mask)
         {
-            return map.PosAddSpirally(pos, (uint)(RandomInt() & mask));
+            return map.PositionAddSpirally(position, (uint)(RandomInt() & mask));
         }
 
-        bool IsWaterTile(MapPos pos)
+        bool IsWaterTile(MapPos position)
         {
-            return tiles[(int)pos].TypeDown <= Map.Terrain.Water3 && tiles[(int)pos].TypeUp <= Map.Terrain.Water3;
+            return tiles[(int)position].TypeDown <= Map.Terrain.Water3 && tiles[(int)position].TypeUp <= Map.Terrain.Water3;
         }
 
-        bool IsInWater(MapPos pos)
+        bool IsInWater(MapPos position)
         {
-            return  IsWaterTile(pos) &&
-                    IsWaterTile(map.MoveUpLeft(pos)) &&
-                    tiles[(int)map.MoveLeft(pos)].TypeDown <= Map.Terrain.Water3 &&
-                    tiles[(int)map.MoveUp(pos)].TypeUp <= Map.Terrain.Water3;
+            return  IsWaterTile(position) &&
+                    IsWaterTile(map.MoveUpLeft(position)) &&
+                    tiles[(int)map.MoveLeft(position)].TypeDown <= Map.Terrain.Water3 &&
+                    tiles[(int)map.MoveUp(position)].TypeUp <= Map.Terrain.Water3;
         }
 
-        /* Midpoint displacement map generator. This function initialises the height
-           values in the corners of 16x16 squares. */
+        /// <summary>
+        /// Midpoint displacement map generator. This function initialises the height
+        /// values in the corners of 16x16 squares.
+        /// </summary>
         void InitHeightsSquares()
         {
             for (uint y = 0; y < map.Rows; y += 16)
@@ -204,21 +211,22 @@ namespace Freeserf
                 {
                     int rndl = RandomInt() & 0xff;
 
-                    tiles[(int)map.Pos(x, y)].Height = Math.Min((uint)rndl, 250u);
+                    tiles[(int)map.Position(x, y)].Height = Math.Min((uint)rndl, 250u);
                 }
             }
         }
 
         int CalcHeightDisplacement(int avg, int base_, int offset)
         {
-            int r = RandomInt();
-            int h = ((r * base_) >> 16) - offset + avg;
+            int height = ((RandomInt() * base_) >> 16) - offset + avg;
 
-            return Math.Max(0, Math.Min(h, 250));
+            return Math.Max(0, Math.Min(height, 250));
         }
 
-        /* Calculate height values of the subdivisions in the
-           midpoint displacement algorithm. */
+        /// <summary>
+        /// Calculate height values of the subdivisions in the
+        /// midpoint displacement algorithm.
+        /// </summary>
         void InitHeightsMidpoints()
         {
             /*   This is the central part of the midpoint displacement algorithm.
@@ -234,8 +242,8 @@ namespace Freeserf
                  spikyness will result in smooth mountains and sharp valleys.
               */
 
-            int rndl = RandomInt();
-            int r1 = 0x80 + (rndl & 0x7f);
+            int randomValue = RandomInt();
+            int r1 = 0x80 + (randomValue & 0x7f);
             int r2 = (r1 * terrainSpikyness) >> 16;
 
             for (uint i = 8; i > 0; i >>= 1)
@@ -244,33 +252,33 @@ namespace Freeserf
                 {
                     for (uint x = 0; x < map.Columns; x += 2 * i)
                     {
-                        MapPos pos = map.Pos(x, y);
-                        uint h = tiles[(int)pos].Height;
+                        var position = map.Position(x, y);
+                        uint height = tiles[(int)position].Height;
 
-                        MapPos posRight = map.MoveRightN(pos, 2 * (int)i);
-                        MapPos posMidRight = map.MoveRightN(pos, (int)i);
-                        uint hRight = tiles[(int)posRight].Height;
+                        var positionRight = map.MoveRightN(position, 2 * (int)i);
+                        var positionMidRight = map.MoveRightN(position, (int)i);
+                        uint heightRight = tiles[(int)positionRight].Height;
 
                         if (preserveBugs)
                         {
-                            /* The intention was probably just to set hRight to the map height value,
-                               but the upper bits of rnd must be preserved in hRight in the first
-                               iteration to generate the same maps as the original game. */
+                            // The intention was probably just to set hRight to the map height value,
+                            // but the upper bits of rnd must be preserved in hRight in the first
+                            // iteration to generate the same maps as the original game.
                             if (x == 0 && y == 0 && i == 8)
-                                hRight |= (uint)rndl & 0xff00u;
+                                heightRight |= (uint)randomValue & 0xff00u;
                         }
 
-                        tiles[(int)posMidRight].Height = (uint)CalcHeightDisplacement((int)(h + hRight) / 2, r1, r2);
+                        tiles[(int)positionMidRight].Height = (uint)CalcHeightDisplacement((int)(height + heightRight) / 2, r1, r2);
 
-                        MapPos posDown = map.MoveDownN(pos, 2 * (int)i);
-                        MapPos posMidDown = map.MoveDownN(pos, (int)i);
-                        uint hDown = tiles[(int)posDown].Height;
-                        tiles[(int)posMidDown].Height = (uint)CalcHeightDisplacement((int)(h + hDown) / 2, r1, r2);
+                        var positionDown = map.MoveDownN(position, 2 * (int)i);
+                        var positionMidDown = map.MoveDownN(position, (int)i);
+                        uint heightDown = tiles[(int)positionDown].Height;
+                        tiles[(int)positionMidDown].Height = (uint)CalcHeightDisplacement((int)(height + heightDown) / 2, r1, r2);
 
-                        MapPos posDownRight = map.MoveRightN(map.MoveDownN(pos, 2 * (int)i), 2 * (int)i);
-                        MapPos posMidDownRight = map.MoveRightN(map.MoveDownN(pos, (int)i), (int)i);
-                        uint hDownRight = tiles[(int)posDownRight].Height;
-                        tiles[(int)posMidDownRight].Height = (uint)CalcHeightDisplacement((int)(h + hDownRight) / 2, r1, r2);
+                        var positionDownRight = map.MoveRightN(map.MoveDownN(position, 2 * (int)i), 2 * (int)i);
+                        var positionMidDownRight = map.MoveRightN(map.MoveDownN(position, (int)i), (int)i);
+                        uint heightDownRight = tiles[(int)positionDownRight].Height;
+                        tiles[(int)positionMidDownRight].Height = (uint)CalcHeightDisplacement((int)(height + heightDownRight) / 2, r1, r2);
                     }
                 }
 
@@ -296,65 +304,65 @@ namespace Freeserf
                  spikyness will result in smooth mountains and sharp valleys.
               */
 
-            int rndl = RandomInt();
-            int r1 = 0x80 + (rndl & 0x7f);
+            int randomValue = RandomInt();
+            int r1 = 0x80 + (randomValue & 0x7f);
             int r2 = (r1 * terrainSpikyness) >> 16;
 
             for (uint i = 8; i > 0; i >>= 1)
             {
-                /* Diamond step */
+                // Diamond step 
                 for (uint y = 0; y < map.Rows; y += 2 * i)
                 {
                     for (uint x = 0; x < map.Columns; x += 2 * i)
                     {
-                        MapPos pos = map.Pos(x, y);
-                        uint h = tiles[(int)pos].Height;
+                        var position = map.Position(x, y);
+                        uint height = tiles[(int)position].Height;
 
-                        MapPos posRight = map.MoveRightN(pos, 2 * (int)i);
-                        int hRight = (int)tiles[(int)posRight].Height;
+                        var positionRight = map.MoveRightN(position, 2 * (int)i);
+                        int heightRight = (int)tiles[(int)positionRight].Height;
 
-                        MapPos posDown = map.MoveDownN(pos, 2 * (int)i);
-                        int hDown = (int)tiles[(int)posDown].Height;
+                        var positionDown = map.MoveDownN(position, 2 * (int)i);
+                        int heightDown = (int)tiles[(int)positionDown].Height;
 
-                        MapPos posDownRight = map.MoveRightN(map.MoveDownN(pos, 2 * (int)i), 2 * (int)i);
-                        int hDownRight = (int)tiles[(int)posDownRight].Height;
+                        var positionDownRight = map.MoveRightN(map.MoveDownN(position, 2 * (int)i), 2 * (int)i);
+                        int heightDownRight = (int)tiles[(int)positionDownRight].Height;
 
-                        MapPos posMidDownRight = map.MoveRightN(map.MoveDownN(pos, (int)i), (int)i);
-                        int avg = (int)(h + hRight + hDown + hDownRight) / 4;
-                        tiles[(int)posMidDownRight].Height = (uint)CalcHeightDisplacement(avg, r1, r2);
+                        var positionMidDownRight = map.MoveRightN(map.MoveDownN(position, (int)i), (int)i);
+                        int average = (int)(height + heightRight + heightDown + heightDownRight) / 4;
+                        tiles[(int)positionMidDownRight].Height = (uint)CalcHeightDisplacement(average, r1, r2);
                     }
                 }
 
-                /* Square step */
+                // Square step 
                 for (uint y = 0; y < map.Rows; y += 2 * i)
                 {
                     for (uint x = 0; x < map.Columns; x += 2 * i)
                     {
-                        MapPos pos = map.Pos(x, y);
-                        int h = (int)tiles[(int)pos].Height;
+                        var position = map.Position(x, y);
+                        int height = (int)tiles[(int)position].Height;
 
-                        MapPos posRight = map.MoveRightN(pos, 2 * (int)i);
-                        int hRight = (int)tiles[(int)posRight].Height;
+                        var positionRight = map.MoveRightN(position, 2 * (int)i);
+                        int heightRight = (int)tiles[(int)positionRight].Height;
 
-                        MapPos posDown = map.MoveDownN(pos, 2 * (int)i);
-                        int hDown = (int)tiles[(int)posDown].Height;
+                        var positionDown = map.MoveDownN(position, 2 * (int)i);
+                        int heightDown = (int)tiles[(int)positionDown].Height;
 
-                        MapPos posUpRight = map.MoveRightN(map.MoveDownN(pos, -(int)i), (int)i);
-                        int hUpRight = (int)tiles[(int)posUpRight].Height;
+                        var positionUpRight = map.MoveRightN(map.MoveDownN(position, -(int)i), (int)i);
+                        int heightUpRight = (int)tiles[(int)positionUpRight].Height;
 
-                        MapPos posDownRight = map.MoveRightN(map.MoveDownN(pos, (int)i), (int)i);
-                        int hDownRight = (int)tiles[(int)posDownRight].Height;
+                        var positionDownRight = map.MoveRightN(map.MoveDownN(position, (int)i), (int)i);
+                        int heightDownRight = (int)tiles[(int)positionDownRight].Height;
 
-                        MapPos posDownLeft = map.MoveRightN(map.MoveDownN(pos, (int)i), -(int)i);
-                        int hDownLeft = (int)tiles[(int)posDownLeft].Height;
+                        var positionDownLeft = map.MoveRightN(map.MoveDownN(position, (int)i), -(int)i);
+                        int heightDownLeft = (int)tiles[(int)positionDownLeft].Height;
 
-                        MapPos posMidRight = map.MoveRightN(pos, (int)i);
-                        int avgRight = (h + hRight + hUpRight + hDownRight) / 4;
-                        tiles[(int)posMidRight].Height = (uint)CalcHeightDisplacement(avgRight, r1, r2);
+                        var positionMidRight = map.MoveRightN(position, (int)i);
+                        int averageRight = (height + heightRight + heightUpRight + heightDownRight) / 4;
+                        tiles[(int)positionMidRight].Height = (uint)CalcHeightDisplacement(averageRight, r1, r2);
 
-                        MapPos posMidDown = map.MoveDownN(pos, (int)i);
-                        int avgDown = (h + hDown + hDownLeft + hDownRight) / 4;
-                        tiles[(int)posMidDown].Height = (uint)CalcHeightDisplacement(avgDown, r1, r2);
+                        var positionMidDown = map.MoveDownN(position, (int)i);
+                        int averageDown = (height + heightDown + heightDownLeft + heightDownRight) / 4;
+                        tiles[(int)positionMidDown].Height = (uint)CalcHeightDisplacement(averageDown, r1, r2);
                     }
                 }
 
@@ -363,18 +371,18 @@ namespace Freeserf
             }
         }
 
-        bool AdjustMapHeight(int h1, int h2, MapPos pos)
+        bool AdjustMapHeight(int height1, int height2, MapPos position)
         {
-            if (Math.Abs(h1 - h2) > 32)
+            if (Math.Abs(height1 - height2) > 32)
             {
-                tiles[(int)pos].Height = (uint)(h1 + ((h1 < h2) ? 32 : -32));
+                tiles[(int)position].Height = (uint)(height1 + ((height1 < height2) ? 32 : -32));
                 return true;
             }
 
             return false;
         }
 
-        /* Ensure that map heights of adjacent fields are not too far apart. */
+        // Ensure that map heights of adjacent fields are not too far apart. 
         void ClampHeights()
         {
             bool changed = true;
@@ -383,21 +391,21 @@ namespace Freeserf
             {
                 changed = false;
 
-                foreach (MapPos pos in map.Geometry)
+                foreach (var position in map.Geometry)
                 {
-                    int h = (int)tiles[(int)pos].Height;
+                    int height = (int)tiles[(int)position].Height;
 
-                    MapPos posDown = map.MoveDown(pos);
-                    int hDown = (int)tiles[(int)posDown].Height;
-                    changed |= AdjustMapHeight(h, hDown, posDown);
+                    var positionDown = map.MoveDown(position);
+                    int heightDown = (int)tiles[(int)positionDown].Height;
+                    changed |= AdjustMapHeight(height, heightDown, positionDown);
 
-                    MapPos posDownRight = map.MoveDownRight(pos);
-                    int hDownRight = (int)tiles[(int)posDownRight].Height;
-                    changed |= AdjustMapHeight(h, hDownRight, posDownRight);
+                    var positionDownRight = map.MoveDownRight(position);
+                    int heightDownRight = (int)tiles[(int)positionDownRight].Height;
+                    changed |= AdjustMapHeight(height, heightDownRight, positionDownRight);
 
-                    MapPos posRight = map.MoveRight(pos);
-                    int hRight = (int)tiles[(int)posRight].Height;
-                    changed |= AdjustMapHeight(h, hRight, posRight);
+                    var positionRight = map.MoveRight(position);
+                    int heightRight = (int)tiles[(int)positionRight].Height;
+                    changed |= AdjustMapHeight(height, heightRight, positionRight);
                 }
             }
         }
@@ -410,15 +418,15 @@ namespace Freeserf
         // as water (255) the surrounding positions, that are not yet marked, are
         // changed to shore (254). Returns true only if the given position was
         // converted to water.
-        bool ExpandWaterPosition(MapPos pos)
+        bool ExpandWaterPosition(MapPos position)
         {
             bool expanding = false;
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                MapPos newPos = map.Move(pos, d);
-                uint height = tiles[(int)newPos].Height;
+                var newPosition = map.Move(position, direction);
+                uint height = tiles[(int)newPosition].Height;
 
                 if (waterLevel < height && height < 254)
                 {
@@ -432,16 +440,16 @@ namespace Freeserf
 
             if (expanding)
             {
-                tiles[(int)pos].Height = 255;
+                tiles[(int)position].Height = 255;
 
                 cycle = DirectionCycleCW.CreateDefault();
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
-                    MapPos newPos = map.Move(pos, d);
+                    var newPosition = map.Move(position, direction);
 
-                    if (tiles[(int)newPos].Height != 255)
-                        tiles[(int)newPos].Height = 254;
+                    if (tiles[(int)newPosition].Height != 255)
+                        tiles[(int)newPosition].Height = 254;
                 }
             }
 
@@ -452,33 +460,33 @@ namespace Freeserf
         //
         // After expanding, the water body will be tagged with the heights 253 for
         // positions in water and 252 for positions on the shore.
-        void ExpandWaterBody(MapPos pos)
+        void ExpandWaterBody(MapPos position)
         {
             // Check whether it is possible to expand from this position.
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                MapPos newPos = map.Move(pos, d);
+                var newPosition = map.Move(position, direction);
 
-                if (tiles[(int)newPos].Height > waterLevel)
+                if (tiles[(int)newPosition].Height > waterLevel)
                 {
                     // Expanding water from this position was not possible. Just raise the
                     // height to one above sea level.
-                    tiles[(int)pos].Height = 0;
+                    tiles[(int)position].Height = 0;
                     return;
                 }
             }
 
             // Initialize expansion
-            tiles[(int)pos].Height = 255;
+            tiles[(int)position].Height = 255;
             cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                MapPos newPos = map.Move(pos, d);
+                var newPosition = map.Move(position, direction);
 
-                tiles[(int)newPos].Height = 254;
+                tiles[(int)newPosition].Height = 254;
             }
 
             // Expand water until we are unable to expand any more or until the max
@@ -486,17 +494,16 @@ namespace Freeserf
             for (uint i = 0; i < maxLakeArea; ++i)
             {
                 bool expanded = false;
-
-                MapPos newPos = map.MoveRightN(pos, (int)i + 1);
+                var newPosition = map.MoveRightN(position, (int)i + 1);
 
                 cycle = new DirectionCycleCW(Direction.Down, 6);
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
                     for (uint j = 0; j <= i; ++j)
                     {
-                        expanded |= ExpandWaterPosition(newPos);
-                        newPos = map.Move(newPos, d);
+                        expanded |= ExpandWaterPosition(newPosition);
+                        newPosition = map.Move(newPosition, direction);
                     }
                 }
 
@@ -508,21 +515,21 @@ namespace Freeserf
             // when expanding another lake, this area will look like an elevated plateau
             // at heights 252/253 and the other lake will not be able to expand into this
             // area. This keeps water bodies from growing larger than the max lake area.
-            tiles[(int)pos].Height -= 2;
+            tiles[(int)position].Height -= 2;
 
             for (uint i = 0; i < maxLakeArea + 1; ++i)
             {
-                MapPos newPos = map.MoveRightN(pos, (int)i + 1);
+                var newPosition = map.MoveRightN(position, (int)i + 1);
                 cycle = new DirectionCycleCW(Direction.Down, 6);
 
-                foreach (Direction d in cycle)
+                foreach (var direction in cycle)
                 {
                     for (uint j = 0; j <= i; ++j)
                     {
-                        if (tiles[(int)newPos].Height > 253)
-                            tiles[(int)newPos].Height -= 2;
+                        if (tiles[(int)newPosition].Height > 253)
+                            tiles[(int)newPosition].Height -= 2;
 
-                        newPos = map.Move(newPos, d);
+                        newPosition = map.Move(newPosition, direction);
                     }
                 }
             }
@@ -537,13 +544,13 @@ namespace Freeserf
         // shore).
         void CreateWaterBodies()
         {
-            for (uint h = 0; h <= waterLevel; ++h)
+            for (uint height = 0; height <= waterLevel; ++height)
             {
-                foreach (MapPos pos in map.Geometry)
+                foreach (var position in map.Geometry)
                 {
-                    if (tiles[(int)pos].Height == h)
+                    if (tiles[(int)position].Height == height)
                     {
-                        ExpandWaterBody(pos);
+                        ExpandWaterBody(position);
                     }
                 }
             }
@@ -552,35 +559,35 @@ namespace Freeserf
             // 0: Above water level.
             // 252: Land at water level.
             // 253: Water.
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                int h = (int)tiles[(int)pos].Height;
+                int height = (int)tiles[(int)position].Height;
 
-                switch (h)
+                switch (height)
                 {
                     case 0:
-                        tiles[(int)pos].Height = waterLevel + 1;
+                        tiles[(int)position].Height = waterLevel + 1;
                         break;
                     case 252:
-                        tiles[(int)pos].Height = waterLevel;
+                        tiles[(int)position].Height = waterLevel;
                         break;
                     case 253:
-                        tiles[(int)pos].Height = waterLevel - 1;
-                        tiles[(int)pos].Mineral = Map.Minerals.None;
-                        tiles[(int)pos].ResourceAmount = RandomInt() & 7; /* Fish */
+                        tiles[(int)position].Height = waterLevel - 1;
+                        tiles[(int)position].Mineral = Map.Minerals.None;
+                        tiles[(int)position].ResourceAmount = RandomInt() & 7; // Fish 
                         break;
                 }
             }
         }
 
-        /* Adjust heights so zero height is sea level. */
+        // Adjust heights so zero height is sea level. 
         void HeightsRebase()
         {
-            int h = (int)waterLevel - 1;
+            int height = (int)waterLevel - 1;
 
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                tiles[(int)pos].Height = (uint)(tiles[(int)pos].Height - h);
+                tiles[(int)position].Height = (uint)(tiles[(int)position].Height - height);
             }
         }
 
@@ -596,25 +603,25 @@ namespace Freeserf
             return Map.Terrain.Snow1;
         }
 
-        /* Set type of map fields based on the height value. */
+        // Set type of map fields based on the height value. 
         void InitTypes()
         {
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                int h1 = (int)tiles[(int)pos].Height;
-                int h2 = (int)tiles[(int)map.MoveRight(pos)].Height;
-                int h3 = (int)tiles[(int)map.MoveDownRight(pos)].Height;
-                int h4 = (int)tiles[(int)map.MoveDown(pos)].Height;
-                tiles[(int)pos].TypeUp = CalcMapType(h1 + h3 + h4);
-                tiles[(int)pos].TypeDown = CalcMapType(h1 + h2 + h3);
+                int h1 = (int)tiles[(int)position].Height;
+                int h2 = (int)tiles[(int)map.MoveRight(position)].Height;
+                int h3 = (int)tiles[(int)map.MoveDownRight(position)].Height;
+                int h4 = (int)tiles[(int)map.MoveDown(position)].Height;
+                tiles[(int)position].TypeUp = CalcMapType(h1 + h3 + h4);
+                tiles[(int)position].TypeDown = CalcMapType(h1 + h2 + h3);
             }
         }
 
         void ClearAllTags()
         {
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                tags[(int)pos] = 0;
+                tags[(int)position] = 0;
             }
         }
 
@@ -638,11 +645,11 @@ namespace Freeserf
             // itself expanded the tag is changed to 2.
             ClearAllTags();
 
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                if (tiles[(int)pos].Height> 0 && tags[(int)pos] == 0)
+                if (tiles[(int)position].Height> 0 && tags[(int)position] == 0)
                 {
-                    tags[(int)pos] = 1;
+                    tags[(int)position] = 1;
 
                     uint num = 0;
                     bool changed = true;
@@ -651,37 +658,37 @@ namespace Freeserf
                     {
                         changed = false;
 
-                        foreach (MapPos pos_ in map.Geometry)
+                        foreach (var otherPosition in map.Geometry)
                         {
-                            if (tags[(int)pos_] == 1)
+                            if (tags[(int)otherPosition] == 1)
                             {
                                 ++num;
-                                tags[(int)pos_] = 2;
+                                tags[(int)otherPosition] = 2;
 
                                 // The i'th flag will indicate whether a path on land from
                                 // pos_in direction i is possible.
                                 int flags = 0;
-                                if (tiles[(int)pos_].TypeDown >= Map.Terrain.Grass0)
+                                if (tiles[(int)otherPosition].TypeDown >= Map.Terrain.Grass0)
                                 {
                                     flags |= 3;
                                 }
-                                if (tiles[(int)pos_].TypeUp >= Map.Terrain.Grass0)
+                                if (tiles[(int)otherPosition].TypeUp >= Map.Terrain.Grass0)
                                 {
                                     flags |= 6;
                                 }
-                                if (tiles[(int)map.MoveLeft(pos_)].TypeDown >= Map.Terrain.Grass0)
+                                if (tiles[(int)map.MoveLeft(otherPosition)].TypeDown >= Map.Terrain.Grass0)
                                 {
                                     flags |= 0xc;
                                 }
-                                if (tiles[(int)map.MoveUpLeft(pos_)].TypeUp >= Map.Terrain.Grass0)
+                                if (tiles[(int)map.MoveUpLeft(otherPosition)].TypeUp >= Map.Terrain.Grass0)
                                 {
                                     flags |= 0x18;
                                 }
-                                if (tiles[(int)map.MoveUpLeft(pos_)].TypeDown >= Map.Terrain.Grass0)
+                                if (tiles[(int)map.MoveUpLeft(otherPosition)].TypeDown >= Map.Terrain.Grass0)
                                 {
                                     flags |= 0x30;
                                 }
-                                if (tiles[(int)map.MoveUp(pos_)].TypeUp >= Map.Terrain.Grass0)
+                                if (tiles[(int)map.MoveUp(otherPosition)].TypeUp >= Map.Terrain.Grass0)
                                 {
                                     flags |= 0x21;
                                 }
@@ -689,13 +696,13 @@ namespace Freeserf
                                 // Mark positions following any valid direction on land.
                                 var cycle = DirectionCycleCW.CreateDefault();
 
-                                foreach (Direction d in cycle)
+                                foreach (var direction in cycle)
                                 {
-                                    if (Misc.BitTest(flags, (int)d))
+                                    if (Misc.BitTest(flags, (int)direction))
                                     {
-                                        if (tags[(int)map.Move(pos_, d)] == 0)
+                                        if (tags[(int)map.Move(otherPosition, direction)] == 0)
                                         {
-                                            tags[(int)map.Move(pos_, d)] = 1;
+                                            tags[(int)map.Move(otherPosition, direction)] = 1;
                                             changed = true;
                                         }
                                     }
@@ -710,28 +717,28 @@ namespace Freeserf
             }
 
             // Change every position that was not tagged (i.e. tag is 0) to water.
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                if (tiles[(int)pos].Height> 0 && tags[(int)pos] == 0)
+                if (tiles[(int)position].Height> 0 && tags[(int)position] == 0)
                 {
-                    tiles[(int)pos].Height= 0;
-                    tiles[(int)pos].TypeUp = Map.Terrain.Water0;
-                    tiles[(int)pos].TypeUp = Map.Terrain.Water0;
+                    tiles[(int)position].Height= 0;
+                    tiles[(int)position].TypeUp = Map.Terrain.Water0;
+                    tiles[(int)position].TypeUp = Map.Terrain.Water0;
 
-                    tiles[(int)map.MoveLeft(pos)].TypeDown = Map.Terrain.Water0;
-                    tiles[(int)map.MoveUpLeft(pos)].TypeUp = Map.Terrain.Water0;
-                    tiles[(int)map.MoveUpLeft(pos)].TypeDown = Map.Terrain.Water0;
-                    tiles[(int)map.MoveUp(pos)].TypeUp = Map.Terrain.Water0;
+                    tiles[(int)map.MoveLeft(position)].TypeDown = Map.Terrain.Water0;
+                    tiles[(int)map.MoveUpLeft(position)].TypeUp = Map.Terrain.Water0;
+                    tiles[(int)map.MoveUpLeft(position)].TypeDown = Map.Terrain.Water0;
+                    tiles[(int)map.MoveUp(position)].TypeUp = Map.Terrain.Water0;
                 }
             }
         }
 
-        /* Rescale height values to be in [0;31]. */
+        // Rescale height values to be in [0;31]. 
         void HeightsRescale()
         {
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                tiles[(int)pos].Height= (tiles[(int)pos].Height + 6) >> 3;
+                tiles[(int)position].Height= (tiles[(int)position].Height + 6) >> 3;
             }
         }
 
@@ -741,7 +748,7 @@ namespace Freeserf
         // has type seed, then the triangle is changed into the new_ terrain type.
         void SeedTerrainType(Map.Terrain old, Map.Terrain seed, Map.Terrain new_)
         {
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
                 // Check that the central triangle is of type old (*), and that any
                 // adjacent triangle is of type seed:
@@ -753,21 +760,21 @@ namespace Freeserf
                 // \  /\  /\  /
                 //  \/__\/__\/
                 //
-                if (tiles[(int)pos].TypeUp == old &&
-                    (seed == tiles[(int)map.MoveUpLeft(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveUpLeft(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveUp(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveLeft(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveLeft(pos)].TypeUp ||
-                     seed == tiles[(int)pos].TypeDown ||
-                     seed == tiles[(int)map.MoveRight(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveLeft(map.MoveDown(pos))].TypeDown ||
-                     seed == tiles[(int)map.MoveDown(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveDown(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveDownRight(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveDownRight(pos)].TypeUp))
+                if (tiles[(int)position].TypeUp == old &&
+                    (seed == tiles[(int)map.MoveUpLeft(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveUpLeft(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveUp(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveLeft(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveLeft(position)].TypeUp ||
+                     seed == tiles[(int)position].TypeDown ||
+                     seed == tiles[(int)map.MoveRight(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveLeft(map.MoveDown(position))].TypeDown ||
+                     seed == tiles[(int)map.MoveDown(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveDown(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveDownRight(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveDownRight(position)].TypeUp))
                 {
-                    tiles[(int)pos].TypeUp = new_;
+                    tiles[(int)position].TypeUp = new_;
                 }
 
                 // Check that the central triangle is of type old (*), and that any
@@ -780,21 +787,21 @@ namespace Freeserf
                 //   \  /\  /
                 //    \/__\/
                 //
-                if (tiles[(int)pos].TypeDown == old &&
-                    (seed == tiles[(int)map.MoveUpLeft(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveUpLeft(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveUp(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveUp(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveRight(map.MoveUp(pos))].TypeUp ||
-                     seed == tiles[(int)map.MoveLeft(pos)].TypeDown ||
-                     seed == tiles[(int)pos].TypeUp ||
-                     seed == tiles[(int)map.MoveRight(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveRight(pos)].TypeUp ||
-                     seed == tiles[(int)map.MoveDown(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveDownRight(pos)].TypeDown ||
-                     seed == tiles[(int)map.MoveDownRight(pos)].TypeUp))
+                if (tiles[(int)position].TypeDown == old &&
+                    (seed == tiles[(int)map.MoveUpLeft(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveUpLeft(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveUp(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveUp(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveRight(map.MoveUp(position))].TypeUp ||
+                     seed == tiles[(int)map.MoveLeft(position)].TypeDown ||
+                     seed == tiles[(int)position].TypeUp ||
+                     seed == tiles[(int)map.MoveRight(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveRight(position)].TypeUp ||
+                     seed == tiles[(int)map.MoveDown(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveDownRight(position)].TypeDown ||
+                     seed == tiles[(int)map.MoveDownRight(position)].TypeUp))
                 {
-                    tiles[(int)pos].TypeDown = new_;
+                    tiles[(int)position].TypeDown = new_;
                 }
             }
         }
@@ -832,10 +839,10 @@ namespace Freeserf
         //   \  /
         //    \/
         //
-        bool CheckDesertDownTriangle(MapPos pos)
+        bool CheckDesertDownTriangle(MapPos position)
         {
-            Map.Terrain typeDown = tiles[(int)pos].TypeDown;
-            Map.Terrain typeUp = tiles[(int)pos].TypeUp;
+            var typeDown = tiles[(int)position].TypeDown;
+            var typeUp = tiles[(int)position].TypeUp;
 
             if (typeDown != Map.Terrain.Grass1 && typeDown != Map.Terrain.Desert2)
             {
@@ -847,14 +854,14 @@ namespace Freeserf
                 return false;
             }
 
-            typeDown = tiles[(int)map.MoveLeft(pos)].TypeDown;
+            typeDown = tiles[(int)map.MoveLeft(position)].TypeDown;
 
             if (typeDown != Map.Terrain.Grass1 && typeDown != Map.Terrain.Desert2)
             {
                 return false;
             }
 
-            typeDown = tiles[(int)map.MoveDown(pos)].TypeDown;
+            typeDown = tiles[(int)map.MoveDown(position)].TypeDown;
 
             if (typeDown != Map.Terrain.Grass1 && typeDown != Map.Terrain.Desert2)
             {
@@ -875,10 +882,10 @@ namespace Freeserf
         //    /\  /\
         //   /__\/__\
         //
-        bool CheckDesertUpTriangle(MapPos pos)
+        bool CheckDesertUpTriangle(MapPos position)
         {
-            Map.Terrain typeDown = tiles[(int)pos].TypeDown;
-            Map.Terrain typeUp = tiles[(int)pos].TypeUp;
+            var typeDown = tiles[(int)position].TypeDown;
+            var typeUp = tiles[(int)position].TypeUp;
 
             if (typeDown != Map.Terrain.Grass1 && typeDown != Map.Terrain.Desert2)
             {
@@ -890,14 +897,14 @@ namespace Freeserf
                 return false;
             }
 
-            typeUp = tiles[(int)map.MoveRight(pos)].TypeUp;
+            typeUp = tiles[(int)map.MoveRight(position)].TypeUp;
 
             if (typeUp != Map.Terrain.Grass1 && typeUp != Map.Terrain.Desert2)
             {
                 return false;
             }
 
-            typeUp = tiles[(int)map.MoveUp(pos)].TypeUp;
+            typeUp = tiles[(int)map.MoveUp(position)].TypeUp;
 
             if (typeUp != Map.Terrain.Grass1 && typeUp != Map.Terrain.Desert2)
             {
@@ -914,25 +921,25 @@ namespace Freeserf
             // Only TerrainGrass1 triangles will be converted to desert.
             for (uint i = 0; i < map.RegionCount; ++i)
             {
-                for (int try_ = 0; try_ < 200; ++try_)
+                for (int tryIndex = 0; tryIndex < 200; ++tryIndex)
                 {
-                    MapPos rndPos = map.GetRandomCoord(rnd);
+                    var randomPosition = map.GetRandomCoordinate(random);
 
-                    if (tiles[(int)rndPos].TypeUp == Map.Terrain.Grass1 &&
-                        tiles[(int)rndPos].TypeDown == Map.Terrain.Grass1)
+                    if (tiles[(int)randomPosition].TypeUp == Map.Terrain.Grass1 &&
+                        tiles[(int)randomPosition].TypeDown == Map.Terrain.Grass1)
                     {
                         for (int index = 255; index >= 0; index--)
                         {
-                            MapPos pos = map.PosAddSpirally(rndPos, (uint)index);
+                            var position = map.PositionAddSpirally(randomPosition, (uint)index);
 
-                            if (CheckDesertDownTriangle(pos))
+                            if (CheckDesertDownTriangle(position))
                             {
-                                tiles[(int)pos].TypeUp = Map.Terrain.Desert2;
+                                tiles[(int)position].TypeUp = Map.Terrain.Desert2;
                             }
 
-                            if (CheckDesertUpTriangle(pos))
+                            if (CheckDesertUpTriangle(position))
                             {
-                                tiles[(int)pos].TypeDown = Map.Terrain.Desert2;
+                                tiles[(int)position].TypeDown = Map.Terrain.Desert2;
                             }
                         }
 
@@ -950,19 +957,19 @@ namespace Freeserf
             // Convert all triangles in the TerrainGrass3 - TerrainDesert1 range to
             // TerrainGrass1. This reduces the size of the desert areas to the core
             // that was made up of TerrainDesert2.
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                var typeDown = tiles[(int)pos].TypeDown;
-                var typeUp = tiles[(int)pos].TypeUp;
+                var typeDown = tiles[(int)position].TypeDown;
+                var typeUp = tiles[(int)position].TypeUp;
 
                 if (typeDown >= Map.Terrain.Grass3 && typeDown <= Map.Terrain.Desert1)
                 {
-                    tiles[(int)pos].TypeDown = Map.Terrain.Grass1;
+                    tiles[(int)position].TypeDown = Map.Terrain.Grass1;
                 }
 
                 if (typeUp >= Map.Terrain.Grass3 && typeUp <= Map.Terrain.Desert1)
                 {
-                    tiles[(int)pos].TypeUp = Map.Terrain.Grass1;
+                    tiles[(int)position].TypeUp = Map.Terrain.Grass1;
                 }
             }
 
@@ -973,22 +980,22 @@ namespace Freeserf
             SeedTerrainType(Map.Terrain.Grass1, Map.Terrain.Desert0, Map.Terrain.Grass3);
         }
 
-        /* Put crosses on top of mountains. */
+        // Put crosses on top of mountains. 
         void CreateCrosses()
         {
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                uint h = tiles[(int)pos].Height;
+                var height = tiles[(int)position].Height;
 
-                if (h >= 26 &&
-                    h >= tiles[(int)map.MoveRight(pos)].Height&&
-                    h >= tiles[(int)map.MoveDownRight(pos)].Height&&
-                    h >= tiles[(int)map.MoveDown(pos)].Height&&
-                    h > tiles[(int)map.MoveLeft(pos)].Height&&
-                    h > tiles[(int)map.MoveUpLeft(pos)].Height&&
-                    h > tiles[(int)map.MoveUp(pos)].Height)
+                if (height >= 26 &&
+                    height >= tiles[(int)map.MoveRight(position)].Height&&
+                    height >= tiles[(int)map.MoveDownRight(position)].Height&&
+                    height >= tiles[(int)map.MoveDown(position)].Height&&
+                    height > tiles[(int)map.MoveLeft(position)].Height&&
+                    height > tiles[(int)map.MoveUpLeft(position)].Height&&
+                    height > tiles[(int)map.MoveUp(position)].Height)
                 {
-                    tiles[(int)pos].Object = Map.Object.Cross;
+                    tiles[(int)position].Object = Map.Object.Cross;
                 }
             }
         }
@@ -1077,7 +1084,7 @@ namespace Freeserf
 
         /* Check that hexagon has tile types in range.
 
-           Check whether the hexagon at pos has triangles of types between min and max,
+           Check whether the hexagon at position has triangles of types between min and max,
            both inclusive. Return false if not all triangles are in this range,
            otherwise true.
 
@@ -1085,40 +1092,40 @@ namespace Freeserf
            quirk is enabled, one of the tiles that is checked is not in the hexagon but
            is instead an adjacent tile. This is necessary to generate original game
            maps. */
-        bool HexagonTypesInRange(MapPos pos, Map.Terrain min, Map.Terrain max)
+        bool HexagonTypesInRange(MapPos position, Map.Terrain min, Map.Terrain max)
         {
-            Map.Terrain typeDown = tiles[(int)pos].TypeDown;
-            Map.Terrain typeUp = tiles[(int)pos].TypeUp;
+            var typeDown = tiles[(int)position].TypeDown;
+            var typeUp = tiles[(int)position].TypeUp;
 
             if (typeDown < min || typeDown > max)
                 return false;
             if (typeUp < min || typeUp > max)
                 return false;
 
-            typeDown = tiles[(int)map.MoveLeft(pos)].TypeDown;
+            typeDown = tiles[(int)map.MoveLeft(position)].TypeDown;
 
             if (typeDown < min || typeDown > max)
                 return false;
 
-            typeDown = tiles[(int)map.MoveUpLeft(pos)].TypeDown;
-            typeUp = tiles[(int)map.MoveUpLeft(pos)].TypeUp;
+            typeDown = tiles[(int)map.MoveUpLeft(position)].TypeDown;
+            typeUp = tiles[(int)map.MoveUpLeft(position)].TypeUp;
 
             if (typeDown < min || typeDown > max)
                 return false;
             if (typeUp < min || typeUp > max)
                 return false;
 
-            /* Should be checkeing the up tri type. */
+            // Should be checkeing the up tri type. 
             if (preserveBugs)
             {
-                typeDown = tiles[(int)map.MoveUp(pos)].TypeDown;
+                typeDown = tiles[(int)map.MoveUp(position)].TypeDown;
 
                 if (typeDown < min || typeDown > max)
                     return false;
             }
             else
             {
-                typeUp = tiles[(int)map.MoveUp(pos)].TypeUp;
+                typeUp = tiles[(int)map.MoveUp(position)].TypeUp;
 
                 if (typeUp < min || typeUp > max)
                     return false;
@@ -1139,26 +1146,26 @@ namespace Freeserf
            base to obtain the final object type.
         */
         void CreateRandomObjectClusters(int numClusters, int objectsInCluster,
-                                           int posMask, Map.Terrain typeMin,
-                                           Map.Terrain typeMax, Map.Object objectBase,
-                                           int objectMask)
+                                        int positionMaks, Map.Terrain typeMin,
+                                        Map.Terrain typeMax, Map.Object objectBase,
+                                        int objectMask)
         {
             for (int i = 0; i < numClusters; ++i)
             {
-                for (int try_ = 0; try_ < 100; ++try_)
+                for (int tryIndex = 0; tryIndex < 100; ++tryIndex)
                 {
-                    MapPos rndPos = map.GetRandomCoord(rnd);
+                    var randomPosition = map.GetRandomCoordinate(random);
 
-                    if (HexagonTypesInRange(rndPos, typeMin, typeMax))
+                    if (HexagonTypesInRange(randomPosition, typeMin, typeMax))
                     {
                         for (int j = 0; j < objectsInCluster; j++)
                         {
-                            MapPos pos = PosAddSpirallyRandom(rndPos, posMask);
+                            var position = PosAddSpirallyRandom(randomPosition, positionMaks);
 
-                            if (HexagonTypesInRange(pos, typeMin, typeMax) &&
-                                tiles[(int)pos].Object == Map.Object.None)
+                            if (HexagonTypesInRange(position, typeMin, typeMax) &&
+                                tiles[(int)position].Object == Map.Object.None)
                             {
-                                tiles[(int)pos].Object = objectBase + (RandomInt() & objectMask);
+                                tiles[(int)position].Object = objectBase + (RandomInt() & objectMask);
                             }
                         }
                         break;
@@ -1168,19 +1175,19 @@ namespace Freeserf
         }
 
         // Expand a cluster of minerals.
-        void ExpandMineralCluster(int iterations, MapPos initialPos, ref int index, int amount, Map.Minerals type)
+        void ExpandMineralCluster(int iterations, MapPos initialPosition, ref int index, int amount, Map.Minerals type)
         {
             for (int i = 0; i < iterations; ++i)
             {
-                MapPos pos = map.PosAddSpirally(initialPos, (uint)index);
+                var position = map.PositionAddSpirally(initialPosition, (uint)index);
 
                 ++index;
 
-                if (tiles[(int)pos].Mineral == Map.Minerals.None ||
-                    tiles[(int)pos].ResourceAmount < amount)
+                if (tiles[(int)position].Mineral == Map.Minerals.None ||
+                    tiles[(int)position].ResourceAmount < amount)
                 {
-                    tiles[(int)pos].Mineral = type;
-                    tiles[(int)pos].ResourceAmount = amount;
+                    tiles[(int)position].Mineral = type;
+                    tiles[(int)position].ResourceAmount = amount;
                 }
             }
         }
@@ -1196,11 +1203,11 @@ namespace Freeserf
         {
             for (uint i = 0; i < numClusters; ++i)
             {
-                for (int try_ = 0; try_ < 100; ++try_)
+                for (int tryIndex = 0; tryIndex < 100; ++tryIndex)
                 {
-                    MapPos pos = map.GetRandomCoord(rnd);
+                    var position = map.GetRandomCoordinate(random);
 
-                    if (HexagonTypesInRange(pos, min, max))
+                    if (HexagonTypesInRange(position, min, max))
                     {
                         int index = 0;
                         int count = 2 + ((RandomInt() >> 2) & 3);
@@ -1209,7 +1216,7 @@ namespace Freeserf
                         {
                             int amount = 4 * (count - j);
 
-                            ExpandMineralCluster(Iterations[j], pos, ref index, amount, type);
+                            ExpandMineralCluster(Iterations[j], position, ref index, amount, type);
                         }
 
                         break;
@@ -1237,7 +1244,7 @@ namespace Freeserf
         {
             uint regions = map.RegionCount;
 
-            foreach (Deposit deposit in Deposits)
+            foreach (var deposit in Deposits)
             {
                 CreateRandomMineralClusters(regions * deposit.Mult, deposit.Mineral, Map.Terrain.Tundra0, Map.Terrain.Snow0);
             }
@@ -1248,9 +1255,9 @@ namespace Freeserf
             /* Make sure that it is always possible to walk around
                any impassable objects. This also clears water obstacles
                except in certain positions near the shore. */
-            foreach (MapPos pos in map.Geometry)
+            foreach (var position in map.Geometry)
             {
-                if (Map.MapSpaceFromObject[(int)tiles[(int)pos].Object] >= Map.Space.Impassable)
+                if (Map.MapSpaceFromObject[(int)tiles[(int)position].Object] >= Map.Space.Impassable)
                 {
                     // Due to a quirk in the original game the three adjacent positions
                     // were not checked directly whether they were impassable but instead
@@ -1263,22 +1270,22 @@ namespace Freeserf
                     // 2) y == 0 && (d == DirectionUp || d == DirectionUpLeft)
                     var cycle = new DirectionCycleCW(Direction.Left, 3);
 
-                    foreach (Direction d in cycle)
+                    foreach (var direction in cycle)
                     {
-                        MapPos otherPos = map.Move(pos, d);
-                        Map.Space space = Map.MapSpaceFromObject[(int)tiles[(int)otherPos].Object];
+                        var otherPosition = map.Move(position, direction);
+                        var space = Map.MapSpaceFromObject[(int)tiles[(int)otherPosition].Object];
 
                         bool check_impassable = false;
-                        if (!(map.PosColumn(pos) == 0 && d == Direction.Left) &&
-                            !((d == Direction.Up || d == Direction.UpLeft) &&
-                              map.PosRow(pos) == 0))
+                        if (!(map.PositionColumn(position) == 0 && direction == Direction.Left) &&
+                            !((direction == Direction.Up || direction == Direction.UpLeft) &&
+                              map.PositionRow(position) == 0))
                         {
                             check_impassable = space >= Map.Space.Impassable;
                         }
 
-                        if (IsInWater(otherPos) || check_impassable)
+                        if (IsInWater(otherPosition) || check_impassable)
                         {
-                            tiles[(int)pos].Object = Map.Object.None;
+                            tiles[(int)position].Object = Map.Object.None;
                             break;
                         }
                     }
@@ -1287,7 +1294,7 @@ namespace Freeserf
         }
     }
 
-    /* Classic map generator that generates identical maps for missions. */
+    // Classic map generator that generates identical maps for missions. 
     public class ClassicMissionMapGenerator : ClassicMapGenerator
     {
         public ClassicMissionMapGenerator(Map map, Random random)

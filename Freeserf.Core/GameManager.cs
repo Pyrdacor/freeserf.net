@@ -79,7 +79,7 @@ namespace Freeserf
 
         public bool StartGame(GameInfo gameInfo, Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
-            Game newGame = gameInfo.Instantiate(renderView, audioInterface);
+            var newGame = gameInfo.Instantiate(renderView, audioInterface);
 
             if (newGame == null)
             {
@@ -105,7 +105,7 @@ namespace Freeserf
 
         public bool LoadGame(string path, Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
         {
-            Game newGame = new Game(renderView, audioInterface);
+            var newGame = new Game(renderView, audioInterface);
 
             if (!GameStore.Instance.Load(path, newGame))
             {
@@ -172,7 +172,7 @@ namespace Freeserf
                 return;
             }
 
-            foreach (IHandler handler in handlers)
+            foreach (var handler in handlers)
             {
                 handler.OnNewGame(currentGame);
             }

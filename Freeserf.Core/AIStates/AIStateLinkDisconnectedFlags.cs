@@ -26,6 +26,8 @@ using System.Threading;
 
 namespace Freeserf.AIStates
 {
+    using MapPos = UInt32;
+
     class AIStateLinkDisconnectedFlags : ResetableAIState
     {
         readonly Dictionary<Flag, int> connectTriesPerFlag = new Dictionary<Flag, int>();
@@ -211,24 +213,24 @@ namespace Freeserf.AIStates
                     // we also check if the link is good
                     if (!finishedLinking)
                     {
-                        DirectionCycleCW cycle = DirectionCycleCW.CreateDefault();
-                        List<Direction> pathes = new List<Direction>();
+                        var cycle = DirectionCycleCW.CreateDefault();
+                        var paths = new List<Direction>();
 
-                        foreach (var dir in cycle)
+                        foreach (var direction in cycle)
                         {
-                            if (flag.HasPath(dir))
+                            if (flag.HasPath(direction))
                             {
-                                pathes.Add(dir);
+                                paths.Add(direction);
                             }
                         }
 
-                        if (pathes.Count < 6)
+                        if (paths.Count < 6)
                         {
                             int shortestPath = int.MaxValue;
 
-                            foreach (var dir in pathes)
+                            foreach (var direction in paths)
                             {
-                                int pathLength = (int)flag.GetRoad(dir).Length;
+                                int pathLength = (int)flag.GetRoad(direction).Length;
 
                                 if (pathLength < shortestPath)
                                     shortestPath = pathLength;
@@ -237,16 +239,16 @@ namespace Freeserf.AIStates
                                     break;
                             }
 
-                            if (shortestPath > 2 + pathes.Count * 2)
+                            if (shortestPath > 2 + paths.Count * 2)
                             {
-                                LinkFlag(ai, flag, 2 + pathes.Count * 2, true, tick);
+                                LinkFlag(ai, flag, 2 + paths.Count * 2, true, tick);
                                 return;
                             }
                             else
                             {
                                 var nearbyFlags = game.Map.FindInArea(flag.Position, 4, FindFlag, 2);
 
-                                if (nearbyFlags.Count > pathes.Count)
+                                if (nearbyFlags.Count > paths.Count)
                                 {
                                     LinkFlag(ai, game, flag, nearbyFlags, 4, true, tick);
                                     return;
@@ -270,12 +272,12 @@ namespace Freeserf.AIStates
             }
         }
 
-        Map.FindData FindFlag(Map map, uint pos)
+        Map.FindData FindFlag(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.HasFlag(pos),
-                Data = pos
+                Success = map.HasFlag(position),
+                Data = position
             };
         }
 

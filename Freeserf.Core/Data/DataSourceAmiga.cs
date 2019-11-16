@@ -274,7 +274,7 @@ namespace Freeserf.Data
                 reader.ReadBytes(12); // skip last disk alteration date values
                 reader.ReadBytes(12); // skip filesystem creation date values
                 reader.ReadUInt32(); // skip next hash
-                reader.ReadUInt32(); // skip parent dir
+                reader.ReadUInt32(); // skip parent directory
 
                 if (reader.ReadUInt32BigEndian() != 0 || // extension must be 0
                     reader.ReadUInt32BigEndian() != 1) // block secondary type = ST_ROOT (1)

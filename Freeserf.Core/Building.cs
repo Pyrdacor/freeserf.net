@@ -1,8 +1,8 @@
 ﻿/*
  * Building.cs - Building related functions.
  *
- * Copyright (C) 2013  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -241,7 +241,7 @@ namespace Freeserf
 
                 Game.GetPlayer(Player).AddNotification(Notification.Type.KnightOccupied, Position, militaryType);
 
-                Flag flag = Game.GetFlagAtPos(Game.Map.MoveDownRight(Position));
+                var flag = Game.GetFlagAtPos(Game.Map.MoveDownRight(Position));
                 flag.ClearFlags();
                 StockInit(1, Resource.Type.GoldBar, maxGold);
                 Game.BuildingCaptured(this);
@@ -353,14 +353,14 @@ namespace Freeserf
                 UpdateMilitaryFlagState();
             }
 
-            Flag flag = Game.GetFlag(FlagIndex);
+            var flag = Game.GetFlag(FlagIndex);
 
             StockInit(0, Resource.Type.None, 0);
             StockInit(1, Resource.Type.None, 0);
             flag.ClearFlags();
 
             // Update player fields.
-            Player player = Game.GetPlayer(Player);
+            var player = Game.GetPlayer(Player);
             player.BuildingBuilt(this);
 
             return true;
@@ -373,7 +373,7 @@ namespace Freeserf
             if (state.Progress == 0x8000)
             {
                 // Handle empty mine.
-                Player player = Game.GetPlayer(Player);
+                var player = Game.GetPlayer(Player);
 
                 if (player.IsAI)
                 {
@@ -486,7 +486,7 @@ namespace Freeserf
                 // Let some serfs escape while the building is burning.
                 uint escapingSerfs = 0;
 
-                foreach (Serf serf in Game.GetSerfsAtPos(Position).ToArray())
+                foreach (var serf in Game.GetSerfsAtPos(Position).ToArray())
                 {
                     if (serf.BuildingDeleted(Position, escapingSerfs < 12))
                     {
@@ -508,7 +508,7 @@ namespace Freeserf
             burningCounter = 2047;
             state.Tick = Game.Tick;
 
-            Player player = Game.GetPlayer(Player);
+            var player = Game.GetPlayer(Player);
             player.BuildingDemolished(this);
 
             if (state.Holder)
@@ -519,7 +519,7 @@ namespace Freeserf
                 {
                     SetBurningCounter(8191);
 
-                    foreach (Serf serf in Game.GetSerfsAtPos(Position).ToArray())
+                    foreach (var serf in Game.GetSerfsAtPos(Position).ToArray())
                     {
                         serf.CastleDeleted(Position, true);
                     }
@@ -531,7 +531,7 @@ namespace Freeserf
                 {
                     while (serfIndex != 0)
                     {
-                        Serf serf = Game.GetSerf(serfIndex);
+                        var serf = Game.GetSerf(serfIndex);
                         serfIndex = serf.GetNextKnight();
 
                         serf.CastleDeleted(Position, false);
@@ -539,10 +539,10 @@ namespace Freeserf
                 }
                 else
                 {
-                    Serf serf = Game.GetSerfAtPos(Position);
+                    var serf = Game.GetSerfAtPos(Position);
 
                     if (serf == null)
-                        serf = Game.GetPlayerSerfs(Game.GetPlayer(Player)).FirstOrDefault(s => s.Position == Position);
+                        serf = Game.GetPlayerSerfs(Game.GetPlayer(Player)).FirstOrDefault(serfToCheck => serfToCheck.Position == Position);
 
                     if (serf != null)
                     {
@@ -556,12 +556,12 @@ namespace Freeserf
                 }
             }
 
-            Map map = Game.Map;
-            MapPos flagPos = map.MoveDownRight(Position);
+            var map = Game.Map;
+            var flagPosition = map.MoveDownRight(Position);
 
-            if (map.GetOwner(flagPos) != Player && map.Paths(flagPos) == 0 && map.GetObject(flagPos) == Map.Object.Flag)
+            if (map.GetOwner(flagPosition) != Player && map.Paths(flagPosition) == 0 && map.GetObject(flagPosition) == Map.Object.Flag)
             {
-                Game.DemolishFlag(flagPos, player);
+                Game.DemolishFlag(flagPosition, player);
             }
 
             return true;
@@ -765,15 +765,15 @@ namespace Freeserf
             }
 
             // The last knight in the list has to defend.
-            Serf firstSerf = Game.GetSerf(state.FirstKnight);
-            Serf defSerf = firstSerf.ExtractLastKnightFromList();
+            var firstSerf = Game.GetSerf(state.FirstKnight);
+            var defendingSerf = firstSerf.ExtractLastKnightFromList();
 
-            if (defSerf.Index == state.FirstKnight)
+            if (defendingSerf.Index == state.FirstKnight)
             {
                 state.FirstKnight = 0;
             }
 
-            return defSerf;
+            return defendingSerf;
         }
 
         public Serf CallAttackerOut(uint knightIndex)
@@ -781,7 +781,7 @@ namespace Freeserf
             --state.Stock[0].Available;
 
             // Unlink knight from list.
-            Serf firstSerf = Game.GetSerf(state.FirstKnight);
+            var firstSerf = Game.GetSerf(state.FirstKnight);
             uint firstKnight = 0;
 
             var result = firstSerf.ExtractKnightFromList(knightIndex, ref firstKnight);
@@ -794,11 +794,11 @@ namespace Freeserf
             return result;
         }
 
-        public bool AddRequestedResource(Resource.Type res, bool fixPriority)
+        public bool AddRequestedResource(Resource.Type resource, bool fixPriority)
         {
             for (int j = 0; j < MaxStock; ++j)
             {
-                if (state.Stock[j].Type == res)
+                if (state.Stock[j].Type == resource)
                 {
                     if (fixPriority)
                     {
@@ -1102,7 +1102,7 @@ namespace Freeserf
             if (IsEnoughPlaceForKnight())
             {
                 ++state.Stock[0].Available;
-                Serf serf = Game.GetSerf(state.FirstKnight);
+                var serf = Game.GetSerf(state.FirstKnight);
                 knight.InsertKnightBefore(serf);
                 state.FirstKnight = (word)knight.Index;
 
@@ -1145,20 +1145,20 @@ namespace Freeserf
 
         public void UpdateMilitaryFlagState()
         {
-            int f, k;
-            Map map = Game.Map;
+            int threatLevel, borderCheckIndex;
+            var map = Game.Map;
 
-            for (f = 3, k = 0; f > 0; --f)
+            for (threatLevel = 3, borderCheckIndex = 0; threatLevel > 0; --threatLevel)
             {
                 int offset;
 
-                while ((offset = BorderCheckOffsets[k++]) >= 0)
+                while ((offset = BorderCheckOffsets[borderCheckIndex++]) >= 0)
                 {
-                    MapPos checkPos = map.PosAddSpirally(Position, (uint)offset);
+                    var checkPosition = map.PositionAddSpirally(Position, (uint)offset);
 
-                    if (map.HasOwner(checkPos) && map.GetOwner(checkPos) != Player)
+                    if (map.HasOwner(checkPosition) && map.GetOwner(checkPosition) != Player)
                     {
-                        state.ThreatLevel = (byte)f;
+                        state.ThreatLevel = (byte)threatLevel;
                         return;
                     }
                 }
@@ -1326,7 +1326,7 @@ namespace Freeserf
         {
             uint x = reader.Value("pos")[0].ReadUInt();
             uint y = reader.Value("pos")[1].ReadUInt();
-            state.Position = Game.Map.Pos(x, y);
+            state.Position = Game.Map.Position(x, y);
             state.Type = (Type)reader.Value("type").ReadInt();
 
             try
@@ -1400,8 +1400,8 @@ namespace Freeserf
 
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("pos").Write(Game.Map.PosColumn(state.Position));
-            writer.Value("pos").Write(Game.Map.PosRow(state.Position));
+            writer.Value("pos").Write(Game.Map.PositionColumn(state.Position));
+            writer.Value("pos").Write(Game.Map.PositionRow(state.Position));
             writer.Value("type").Write((int)state.Type);
             writer.Value("owner").Write(Player);
             writer.Value("constructing").Write(state.Constructing);
@@ -1455,50 +1455,50 @@ namespace Freeserf
             {
                 RequestSerfIfNeeded();
 
-                Player player = Game.GetPlayer(Player);
-                uint totalResource1 = (uint)(state.Stock[0].Requested + state.Stock[0].Available);
-                uint totalResource2 = (uint)(state.Stock[1].Requested + state.Stock[1].Available);
+                var player = Game.GetPlayer(Player);
+                var totalResource1 = (uint)(state.Stock[0].Requested + state.Stock[0].Available);
+                var totalResource2 = (uint)(state.Stock[1].Requested + state.Stock[1].Available);
                 int resource1Modifier = 8 + (int)totalResource1;
                 int resource2Modifier = 8 + (int)totalResource2;
-                Func<uint> GetPrioFuncResource1 = null;
-                Func<uint> GetPrioFuncResource2 = null;
+                Func<uint> GetPriorityFuncResource1 = null;
+                Func<uint> GetPriorityFuncResource2 = null;
 
                 switch (BuildingType)
                 {
                     case Type.Boatbuilder:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetPlanksBoatbuilder; // Planks
+                            GetPriorityFuncResource1 = player.GetPlanksBoatbuilder; // Planks
                         }
                         break;
                     case Type.StoneMine:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodStonemine; // Food
+                            GetPriorityFuncResource1 = player.GetFoodStonemine; // Food
                         }
                         break;
                     case Type.CoalMine:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodCoalmine; // Food
+                            GetPriorityFuncResource1 = player.GetFoodCoalmine; // Food
                         }
                         break;
                     case Type.IronMine:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodIronmine; // Food
+                            GetPriorityFuncResource1 = player.GetFoodIronmine; // Food
                         }
                         break;
                     case Type.GoldMine:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetFoodGoldmine; // Food
+                            GetPriorityFuncResource1 = player.GetFoodGoldmine; // Food
                         }
                         break;
                     case Type.Stock:
                         if (!IsActive())
                         {
-                            Inventory inventory = Game.CreateInventory();
+                            var inventory = Game.CreateInventory();
 
                             if (inventory == null)
                                 return;
@@ -1525,10 +1525,10 @@ namespace Freeserf
                                                    Resource.Type.None);
                             }
 
-                            Inventory inventory = Game.GetInventory(state.Inventory);
+                            var inventory = Game.GetInventory(state.Inventory);
 
                             if (state.Holder &&
-                                !inventory.HaveAnyOutMode() && // Not serf or res OUT mode 
+                                !inventory.HasAnyOutMode() && // Not serf or resource OUT mode 
                                 inventory.FreeSerfCount() == 0)
                             {
                                 if (player.TickSendGenericDelay())
@@ -1540,16 +1540,16 @@ namespace Freeserf
                             }
 
                             // TODO Following code looks like a hack
-                            Map map = Game.Map;
-                            MapPos flagPos = map.MoveDownRight(Position);
+                            var map = Game.Map;
+                            var flagPosition = map.MoveDownRight(Position);
 
-                            if (map.HasSerf(flagPos))
+                            if (map.HasSerf(flagPosition))
                             {
-                                Serf serf = Game.GetSerfAtPos(flagPos);
+                                var serf = Game.GetSerfAtPos(flagPosition);
 
-                                if (serf.Position != flagPos)
+                                if (serf.Position != flagPosition)
                                 {
-                                    map.SetSerfIndex(flagPos, 0);
+                                    map.SetSerfIndex(flagPosition, 0);
                                 }
                             }
                         }
@@ -1563,7 +1563,7 @@ namespace Freeserf
                         if (state.Holder)
                         {
                             // Meat
-                            GetPrioFuncResource1 = () =>
+                            GetPriorityFuncResource1 = () =>
                             {
                                 return 0xffu >> (int)totalResource1;
                             };
@@ -1573,20 +1573,20 @@ namespace Freeserf
                     case Type.PigFarm:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetWheatPigfarm; // Wheat
+                            GetPriorityFuncResource1 = player.GetWheatPigfarm; // Wheat
                         }
                         break;
                     case Type.Mill:
                         if (state.Holder)
                         {
-                            GetPrioFuncResource1 = player.GetWheatMill; // Wheat
+                            GetPriorityFuncResource1 = player.GetWheatMill; // Wheat
                         }
                         break;
                     case Type.Baker:
                         if (state.Holder)
                         {
                             // Flour
-                            GetPrioFuncResource1 = () =>
+                            GetPriorityFuncResource1 = () =>
                             {
                                 return 0xffu >> (int)totalResource1;
                             };
@@ -1597,7 +1597,7 @@ namespace Freeserf
                         if (state.Holder)
                         {
                             // Lumber
-                            GetPrioFuncResource1 = () =>
+                            GetPriorityFuncResource1 = () =>
                             {
                                 return 0xffu >> (int)totalResource1;
                             };
@@ -1608,10 +1608,10 @@ namespace Freeserf
                         if (state.Holder)
                         {
                             // Request more coal 
-                            GetPrioFuncResource1 = player.GetCoalSteelsmelter;
+                            GetPriorityFuncResource1 = player.GetCoalSteelsmelter;
 
                             // Request more iron ore 
-                            GetPrioFuncResource2 = () =>
+                            GetPriorityFuncResource2 = () =>
                             {
                                 return 0xffu >> (int)totalResource2;
                             };
@@ -1622,30 +1622,30 @@ namespace Freeserf
                         if (state.Holder)
                         {
                             // Request more planks. 
-                            GetPrioFuncResource1 = player.GetPlanksToolmaker;
+                            GetPriorityFuncResource1 = player.GetPlanksToolmaker;
 
                             // Request more steel. 
-                            GetPrioFuncResource2 = player.GetSteelToolmaker;
+                            GetPriorityFuncResource2 = player.GetSteelToolmaker;
                         }
                         break;
                     case Type.WeaponSmith:
                         if (state.Holder)
                         {
                             // Request more coal. 
-                            GetPrioFuncResource1 = player.GetCoalWeaponsmith;
+                            GetPriorityFuncResource1 = player.GetCoalWeaponsmith;
 
                             // Request more steel. 
-                            GetPrioFuncResource2 = player.GetSteelWeaponsmith;
+                            GetPriorityFuncResource2 = player.GetSteelWeaponsmith;
                         }
                         break;
                     case Type.GoldSmelter:
                         if (state.Holder)
                         {
                             // Request more coal. 
-                            GetPrioFuncResource1 = player.GetCoalGoldsmelter;
+                            GetPriorityFuncResource1 = player.GetCoalGoldsmelter;
 
                             // Request more gold ore. 
-                            GetPrioFuncResource2 = () =>
+                            GetPriorityFuncResource2 = () =>
                             {
                                 return 0xffu >> (int)totalResource2;
                             };
@@ -1660,19 +1660,19 @@ namespace Freeserf
                 }
 
                 // Set priority for resource 1
-                if (GetPrioFuncResource1 != null)
+                if (GetPriorityFuncResource1 != null)
                 {
                     if (totalResource1 < state.Stock[0].Maximum)
-                        state.Stock[0].Priority = (byte)(GetPrioFuncResource1() >> resource1Modifier);
+                        state.Stock[0].Priority = (byte)(GetPriorityFuncResource1() >> resource1Modifier);
                     else
                         state.Stock[0].Priority = 0;
                 }
 
                 // Set priority for resource 2
-                if (GetPrioFuncResource2 != null)
+                if (GetPriorityFuncResource2 != null)
                 {
                     if (totalResource2 < state.Stock[1].Maximum)
-                        state.Stock[1].Priority = (byte)(GetPrioFuncResource2() >> resource2Modifier);
+                        state.Stock[1].Priority = (byte)(GetPriorityFuncResource2() >> resource2Modifier);
                     else
                         state.Stock[1].Priority = 0;
                 }
@@ -1721,7 +1721,7 @@ namespace Freeserf
 
         void UpdateUnfinished()
         {
-            Player player = Game.GetPlayer(Player);
+            var player = Game.GetPlayer(Player);
 
             // don't send a builder during active emergency program
             // if this is not an essential building
@@ -1800,9 +1800,9 @@ namespace Freeserf
 
             for (uint i = 0; i < 7; ++i)
             {
-                MapPos pos = Game.Map.PosAddSpirally(Position, i);
+                var position = Game.Map.PositionAddSpirally(Position, i);
 
-                if (Game.Map.GetHeight(pos) != height)
+                if (Game.Map.GetHeight(position) != height)
                 {
                     needLeveling = true;
                     break;
@@ -1828,8 +1828,8 @@ namespace Freeserf
 
         void UpdateCastle()
         {
-            Player player = Game.GetPlayer(Player);
-            Inventory inventory = Game.GetInventory(state.Inventory);
+            var player = Game.GetPlayer(Player);
+            var inventory = Game.GetInventory(state.Inventory);
 
             if (player.CastleKnights == player.CastleKnightsWanted)
             {
@@ -1839,7 +1839,7 @@ namespace Freeserf
 
                 while (nextSerfIndex != 0)
                 {
-                    Serf serf = Game.GetSerf(nextSerfIndex);
+                    var serf = Game.GetSerf(nextSerfIndex);
 
                     if (serf == null)
                     {
@@ -1857,7 +1857,7 @@ namespace Freeserf
 
                 if (bestKnight != null)
                 {
-                    Serf.Type knightType = bestKnight.GetSerfType();
+                    var knightType = bestKnight.GetSerfType();
 
                     for (int t = (int)Serf.Type.Knight0; t <= (int)Serf.Type.Knight4; ++t)
                     {
@@ -1868,14 +1868,14 @@ namespace Freeserf
                     }
 
                     // Switch types
-                    Serf.Type tmp = bestKnight.GetSerfType();
+                    var bestKnightType = bestKnight.GetSerfType();
                     bestKnight.SetSerfType(lastKnight.GetSerfType());
-                    lastKnight.SetSerfType(tmp);
+                    lastKnight.SetSerfType(bestKnightType);
                 }
             }
             else if (player.CastleKnights < player.CastleKnightsWanted)
             {
-                Serf.Type knightType = Serf.Type.None;
+                var knightType = Serf.Type.None;
 
                 for (int t = (int)Serf.Type.Knight4; t >= (int)Serf.Type.Knight0; --t)
                 {
@@ -1893,7 +1893,7 @@ namespace Freeserf
                         inventory.GetCountOf(Resource.Type.Sword) != 0 &&
                         inventory.GetCountOf(Resource.Type.Shield) != 0)
                     {
-                        Serf serf = inventory.SpecializeFreeSerf(Serf.Type.Knight0);
+                        var serf = inventory.SpecializeFreeSerf(Serf.Type.Knight0);
                         inventory.CallInternal(serf);
 
                         serf.AddToDefendingQueue(state.FirstKnight, false);
@@ -1913,7 +1913,7 @@ namespace Freeserf
                 else
                 {
                     // Prepend to knights list
-                    Serf serf = inventory.CallInternal(knightType);
+                    var serf = inventory.CallInternal(knightType);
                     serf.AddToDefendingQueue(state.FirstKnight, true);
                     state.FirstKnight = (word)serf.Index;
                     player.IncreaseCastleKnights();
@@ -1923,15 +1923,15 @@ namespace Freeserf
             {
                 player.DecreaseCastleKnights();
 
-                uint serfIndex = state.FirstKnight;
-                Serf serf = Game.GetSerf(serfIndex);
+                var serfIndex = state.FirstKnight;
+                var serf = Game.GetSerf(serfIndex);
                 state.FirstKnight = (word)serf.GetNextKnight();
 
                 serf.StayIdleInStock(state.Inventory);
             }
 
             if (state.Holder &&
-                !inventory.HaveAnyOutMode() && // Not serf or res OUT mode
+                !inventory.HasAnyOutMode() && // Not serf or resource OUT mode
                 inventory.FreeSerfCount() == 0)
             {
                 if (player.TickSendGenericDelay())
@@ -1942,16 +1942,16 @@ namespace Freeserf
                 }
             }
 
-            Map map = Game.Map;
-            MapPos flagPos = map.MoveDownRight(Position);
+            var map = Game.Map;
+            var flagPosition = map.MoveDownRight(Position);
 
-            if (map.HasSerf(flagPos))
+            if (map.HasSerf(flagPosition))
             {
-                Serf serf = Game.GetSerfAtPos(flagPos);
+                var serf = Game.GetSerfAtPos(flagPosition);
 
-                if (serf.Position != flagPos)
+                if (serf.Position != flagPosition)
                 {
-                    map.SetSerfIndex(flagPos, 0);
+                    map.SetSerfIndex(flagPosition, 0);
                 }
             }
         }
@@ -1976,7 +1976,7 @@ namespace Freeserf
 
         void UpdateMilitary()
         {
-            Player player = Game.GetPlayer(Player);
+            var player = Game.GetPlayer(Player);
             uint maxOccupiedLevel = (player.GetKnightOccupation(state.ThreatLevel) >> 4) & 0xf;
 
             if (player.ReducedKnightLevel)
@@ -2027,7 +2027,7 @@ namespace Freeserf
 
                 while (serfIndex != 0)
                 {
-                    Serf serf = Game.GetSerf(serfIndex);
+                    var serf = Game.GetSerf(serfIndex);
 
                     if (serf == null)
                     {
@@ -2055,7 +2055,7 @@ namespace Freeserf
 
                         while (serfIndex != 0)
                         {
-                            Serf serf = Game.GetSerf(serfIndex);
+                            var serf = Game.GetSerf(serfIndex);
 
                             if (serf.GetNextKnight() == leavingSerf.Index)
                             {
@@ -2094,11 +2094,11 @@ namespace Freeserf
 
         internal struct Request
         {
-            public Request(Serf.Type serfType, Resource.Type resType1, Resource.Type resType2)
+            public Request(Serf.Type serfType, Resource.Type resourceType1, Resource.Type resourceType2)
             {
                 SerfType = serfType;
-                ResType1 = resType1;
-                ResType2 = resType2;
+                ResType1 = resourceType1;
+                ResType2 = resourceType2;
             }
 
             public Serf.Type SerfType;

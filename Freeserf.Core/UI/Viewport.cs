@@ -87,12 +87,12 @@ namespace Freeserf.UI
         public void CleanUp()
         {
             // destroy build sprites
-            for (uint r = 0; r < map.RenderMap.NumVisibleRows; ++r)
+            for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
             {
-                for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
+                for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
                 {
-                    if (builds[c, r] != null)
-                        builds[c, r].Delete();
+                    if (builds[column, row] != null)
+                        builds[column, row].Delete();
                 }
             }
 
@@ -104,7 +104,7 @@ namespace Freeserf.UI
             }
         }
 
-        /* Called periodically when the game progresses. */
+        // Called periodically when the game progresses. 
         public void Update()
         {
             // update map zoom factor
@@ -114,17 +114,17 @@ namespace Freeserf.UI
             SetRedraw();
         }
 
-        public MapPos GetCurrentMapPos()
+        public MapPos GetCurrentMapPosition()
         {
             return map.RenderMap.GetMapOffset();
         }
 
-        public void MoveToMapPos(MapPos pos, bool center)
+        public void MoveToMapPosition(MapPos position, bool center)
         {
             if (center)
-                map.RenderMap.CenterMapPos(pos);
+                map.RenderMap.CenterMapPos(position);
             else
-                map.RenderMap.ScrollToMapPos(pos);
+                map.RenderMap.ScrollToMapPos(position);
 
             interf.UpdateMinimap();
         }
@@ -151,21 +151,21 @@ namespace Freeserf.UI
             else
                 ClearMapCursorPossibleBuild();
 
-            MapPos pos = interf.GetMapCursorPos();
+            var position = interf.GetMapCursorPosition();
 
-            DrawMapCursorSprite(pos, 0, interf.GetMapCursorSprite(0));
+            DrawMapCursorSprite(position, 0, interf.GetMapCursorSprite(0));
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
-                DrawMapCursorSprite(map.Move(pos, d), 1 + (int)d, interf.GetMapCursorSprite(1 + (int)d));
+                DrawMapCursorSprite(map.Move(position, direction), 1 + (int)direction, interf.GetMapCursorSprite(1 + (int)direction));
             }
         }
 
-        void DrawMapCursorSprite(MapPos pos, int index, uint spriteIndex)
+        void DrawMapCursorSprite(MapPos position, int index, uint spriteIndex)
         {
-            var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(pos);
+            var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
             var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
 
@@ -209,53 +209,51 @@ namespace Freeserf.UI
 
         void ClearMapCursorPossibleBuild()
         {
-            Game game = interf.Game;
-
-            for (uint r = 0; r < map.RenderMap.NumVisibleRows; ++r)
+            for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
             {
-                for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
+                for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
                 {
-                    SetBuildSprite(c, r, -1);
+                    SetBuildSprite(column, row, -1);
                 }
             }
         }
 
         void DrawMapCursorPossibleBuild()
         {
-            Game game = interf.Game;
+            var game = interf.Game;
 
-            for (uint r = 0; r < map.RenderMap.NumVisibleRows; ++r)
+            for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
             {
-                for (uint c = 0; c < map.RenderMap.NumVisibleColumns; ++c)
+                for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
                 {
-                    var pos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(c, r);
+                    var position = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(column, row);
 
-                    /* Draw possible building */
+                    // Draw possible building 
                     int sprite = -1;
 
-                    if (game.CanBuildCastle(pos, interf.GetPlayer()))
+                    if (game.CanBuildCastle(position, interf.GetPlayer()))
                     {
                         sprite = 49;
                     }
-                    else if (game.CanPlayerBuild(pos, interf.GetPlayer()) &&
-                             Map.MapSpaceFromObject[(int)map.GetObject(pos)] == Map.Space.Open &&
-                             (game.CanBuildFlag(map.MoveDownRight(pos), interf.GetPlayer()) || map.HasFlag(map.MoveDownRight(pos))))
+                    else if (game.CanPlayerBuild(position, interf.GetPlayer()) &&
+                             Map.MapSpaceFromObject[(int)map.GetObject(position)] == Map.Space.Open &&
+                             (game.CanBuildFlag(map.MoveDownRight(position), interf.GetPlayer()) || map.HasFlag(map.MoveDownRight(position))))
                     {
-                        if (game.CanBuildMine(pos))
+                        if (game.CanBuildMine(position))
                         {
                             sprite = 47;
                         }
-                        else if (game.CanBuildLarge(pos))
+                        else if (game.CanBuildLarge(position))
                         {
                             sprite = 49;
                         }
-                        else if (game.CanBuildSmall(pos))
+                        else if (game.CanBuildSmall(position))
                         {
                             sprite = 48;
                         }
                     }
 
-                    SetBuildSprite(c, r, sprite);
+                    SetBuildSprite(column, row, sprite);
                 }
             }
         }
@@ -305,53 +303,53 @@ namespace Freeserf.UI
             interf.ClosePopup();
 
             var position = new Position(x, y);
-            var mapPos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
+            var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
 
             if (interf.IsBuildingRoad())
             {
-                int dx = map.DistX(interf.GetMapCursorPos(), mapPos) + 1;
-                int dy = map.DistY(interf.GetMapCursorPos(), mapPos) + 1;
-                Direction dir = Direction.None;
+                int distanceX = map.DistanceX(interf.GetMapCursorPosition(), mapPosition) + 1;
+                int distanceY = map.DistanceY(interf.GetMapCursorPosition(), mapPosition) + 1;
+                Direction direction;
 
-                if (dx == 0)
+                if (distanceX == 0)
                 {
-                    if (dy == 1)
+                    if (distanceY == 1)
                     {
-                        dir = Direction.Left;
+                        direction = Direction.Left;
                     }
-                    else if (dy == 0)
+                    else if (distanceY == 0)
                     {
-                        dir = Direction.UpLeft;
+                        direction = Direction.UpLeft;
                     }
                     else
                     {
                         return false;
                     }
                 }
-                else if (dx == 1)
+                else if (distanceX == 1)
                 {
-                    if (dy == 2)
+                    if (distanceY == 2)
                     {
-                        dir = Direction.Down;
+                        direction = Direction.Down;
                     }
-                    else if (dy == 0)
+                    else if (distanceY == 0)
                     {
-                        dir = Direction.Up;
+                        direction = Direction.Up;
                     }
                     else
                     {
                         return false;
                     }
                 }
-                else if (dx == 2)
+                else if (distanceX == 2)
                 {
-                    if (dy == 1)
+                    if (distanceY == 1)
                     {
-                        dir = Direction.Right;
+                        direction = Direction.Right;
                     }
-                    else if (dy == 2)
+                    else if (distanceY == 2)
                     {
-                        dir = Direction.DownRight;
+                        direction = Direction.DownRight;
                     }
                     else
                     {
@@ -363,16 +361,16 @@ namespace Freeserf.UI
                     return false;
                 }
 
-                if (interf.BuildRoadIsValidDir(dir))
+                if (interf.BuildRoadIsValidDir(direction))
                 {
-                    Road road = interf.GetBuildingRoad();
+                    var road = interf.GetBuildingRoad();
 
-                    if (road.IsUndo(dir))
+                    if (road.IsUndo(direction))
                     {
-                        /* Delete existing path */
-                        int r = interf.RemoveRoadSegment();
+                        // Delete existing path 
+                        int result = interf.RemoveRoadSegment();
 
-                        if (r < 0)
+                        if (result < 0)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
@@ -386,14 +384,14 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        /* Build new road segment */
-                        int r = interf.BuildRoadSegment(dir, false);
+                        // Build new road segment 
+                        int result = interf.BuildRoadSegment(direction, false);
 
-                        if (r< 0)
+                        if (result < 0)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
-                        else if (r == 0)
+                        else if (result == 0)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                         }
@@ -406,7 +404,7 @@ namespace Freeserf.UI
             }
             else
             {
-                interf.UpdateMapCursorPos(mapPos);
+                interf.UpdateMapCursorPosition(mapPosition);
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
             }
 
@@ -426,31 +424,31 @@ namespace Freeserf.UI
             interf.ClosePopup();
 
             var position = new Position(x, y);
-            var mapPos = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
-            Player player = interf.GetPlayer();
+            var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
+            var player = interf.GetPlayer();
 
             if (interf.IsBuildingRoad())
             {
-                if (mapPos != interf.GetMapCursorPos())
+                if (mapPosition != interf.GetMapCursorPosition())
                 {
-                    MapPos pos = interf.GetBuildingRoad().GetEnd(map);
-                    Road road = Pathfinder.FindShortestPath(map, pos, mapPos, interf.GetBuildingRoad());
+                    var roadEndPosition = interf.GetBuildingRoad().GetEnd(map);
+                    var road = Pathfinder.FindShortestPath(map, roadEndPosition, mapPosition, interf.GetBuildingRoad());
 
                     if (road.Length != 0)
                     {
-                        int r = interf.ExtendRoad(road);
+                        int result = interf.ExtendRoad(road);
 
-                        if (r < 0)
+                        if (result < 0)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                         }
-                        else if (r == 1)
+                        else if (result == 1)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
                         else
                         {
-                            if (interf.Game.BuildFlag(interf.GetMapCursorPos(), player))
+                            if (interf.Game.BuildFlag(interf.GetMapCursorPosition(), player))
                             {
                                 interf.BuildRoad();
                                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
@@ -468,9 +466,9 @@ namespace Freeserf.UI
                 }
                 else
                 {
-                    bool r = interf.Game.BuildFlag(interf.GetMapCursorPos(), player);
+                    bool result = interf.Game.BuildFlag(interf.GetMapCursorPosition(), player);
 
-                    if (r)
+                    if (result)
                     {
                         interf.BuildRoad();
                     }
@@ -482,33 +480,33 @@ namespace Freeserf.UI
             }
             else
             {
-                interf.UpdateMapCursorPos(mapPos);
+                interf.UpdateMapCursorPosition(mapPosition);
 
-                if (map.GetObject(mapPos) == Map.Object.None ||
-                    map.GetObject(mapPos) > Map.Object.Castle)
+                if (map.GetObject(mapPosition) == Map.Object.None ||
+                    map.GetObject(mapPosition) > Map.Object.Castle)
                 {
                     PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                     return false;
                 }
 
-                if (map.GetObject(mapPos) == Map.Object.Flag)
+                if (map.GetObject(mapPosition) == Map.Object.Flag)
                 {
-                    if (map.GetOwner(mapPos) == player.Index)
+                    if (map.GetOwner(mapPosition) == player.Index)
                     {
                         interf.OpenPopup(PopupBox.Type.TransportInfo);
                     }
 
-                    player.tempIndex = map.GetObjectIndex(mapPos);
+                    player.tempIndex = map.GetObjectIndex(mapPosition);
                     PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 }
                 else
                 { 
-                    /* Building */
-                    if (map.GetOwner(mapPos) == player.Index || interf.AccessRights != Viewer.Access.Player)
+                    // Building 
+                    if (map.GetOwner(mapPosition) == player.Index || interf.AccessRights != Viewer.Access.Player)
                     {
                         PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
-                        Building building = interf.Game.GetBuildingAtPos(mapPos);
+                        var building = interf.Game.GetBuildingAtPos(mapPosition);
 
                         if (building.BuildingType == Building.Type.Castle)
                         {
@@ -543,13 +541,13 @@ namespace Freeserf.UI
                             interf.OpenPopup(PopupBox.Type.BuildingStock);
                         }
 
-                        player.tempIndex = map.GetObjectIndex(mapPos);
+                        player.tempIndex = map.GetObjectIndex(mapPosition);
                     }
                     else
                     {
-                        /* Foreign building */
-                        /* TODO handle coop mode*/
-                        if (player.PrepareAttack(mapPos))
+                        // Foreign building 
+                        // TODO handle coop mode
+                        if (player.PrepareAttack(mapPosition))
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.OpenPopup(PopupBox.Type.StartAttack);

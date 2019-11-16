@@ -25,6 +25,8 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
+    using MapPos = UInt32;
+
     // The idle state holds one single instance of this
     // which is pushed to the state stack from time to time.
     // So each AI only uses one instance of this state.
@@ -241,7 +243,7 @@ namespace Freeserf.AIStates
             if (ai.MaxMilitaryBuildings == -1)
                 return true;
 
-            var militaryBuildings = game.GetPlayerBuildings(player).Where(b => b.IsMilitary(false));
+            var militaryBuildings = game.GetPlayerBuildings(player).Where(building => building.IsMilitary(false));
 
             return militaryBuildings.Count() < ai.MaxMilitaryBuildings;
         }
@@ -304,7 +306,7 @@ namespace Freeserf.AIStates
                     case Building.Type.Hut:
                         if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
                             game.HasAnyOfBuildingCompletedOrMaterialsAtPlace(player, Building.Type.Forester) && 
-                            !game.GetPlayerBuildings(player, Building.Type.Hut).Any(b => !b.HasKnight())
+                            !game.GetPlayerBuildings(player, Building.Type.Hut).Any(building => !building.HasKnight())
                             && ai.GameTime > count * 180 * Global.TICKS_PER_SEC && game.GetPossibleFreeKnightCount(player) > 0)
                             return CheckResult.Needed;
                         break;
@@ -343,7 +345,7 @@ namespace Freeserf.AIStates
                 return CheckResult.NotNeeded;
             }
 
-            int numIncompleteBuildings = game.GetPlayerBuildings(player).Count(b => !b.IsDone());
+            int numIncompleteBuildings = game.GetPlayerBuildings(player).Count(building => !building.IsDone());
 
             if (numIncompleteBuildings > 2 + player.GetLandArea() / 200 + ai.GameTime / (20 * Global.TICKS_PER_MIN) + Math.Max(ai.ExpandFocus - 1, ai.BuildingFocus))
                 return CheckResult.NotNeeded;
@@ -590,11 +592,11 @@ namespace Freeserf.AIStates
             // Therefore the ratio for food end buildings need adjustment in this case.
             // Otherwise no new food chains will be build.
 
-            int numberOfMines = game.GetPlayerBuildings(player).Where(b =>
-                b.BuildingType == Building.Type.CoalMine ||
-                b.BuildingType == Building.Type.IronMine ||
-                b.BuildingType == Building.Type.GoldMine ||
-                b.BuildingType == Building.Type.StoneMine).Count();
+            int numberOfMines = game.GetPlayerBuildings(player).Where(building =>
+                building.BuildingType == Building.Type.CoalMine ||
+                building.BuildingType == Building.Type.IronMine ||
+                building.BuildingType == Building.Type.GoldMine ||
+                building.BuildingType == Building.Type.StoneMine).Count();
             int numberOfFishers = (int)player.GetTotalBuildingCount(Building.Type.Fisher);
             int numberOfFarms = (int)player.GetTotalBuildingCount(Building.Type.Farm);
             int numberOfCompletedFarms = (int)player.GetCompletedBuildingCount(Building.Type.Farm);
@@ -646,9 +648,9 @@ namespace Freeserf.AIStates
             }
 
             int numPossibleMines = numberOfFishers + numberOfButchers * 3 + numberOfBakers * 2;
-            int numMineDiff = ai.FoodFocus + numberOfMines - numPossibleMines;
+            int numMineDifference = ai.FoodFocus + numberOfMines - numPossibleMines;
 
-            if (numMineDiff <= 0)
+            if (numMineDifference <= 0)
             {
                 return false;
             }
@@ -727,19 +729,19 @@ namespace Freeserf.AIStates
             return false;
         }
 
-        static bool FindFish(Map map, uint pos)
+        static bool FindFish(Map map, MapPos position)
         {
-            return map.IsInWater(pos) && map.GetResourceFish(pos) > 0u;
+            return map.IsInWater(position) && map.GetResourceFish(position) > 0u;
         }
 
-        static Map.FindData FindFishNear(Map map, uint pos)
+        static Map.FindData FindFishNear(Map map, MapPos position)
         {
-            var foundPos = map.FindSpotNear(pos, 4, FindFish, new Random());
+            var foundPosition = map.FindSpotNear(position, 4, FindFish, new Random());
 
             return new Map.FindData()
             {
-                Success = foundPos != Global.BadMapPos,
-                Data = foundPos
+                Success = foundPosition != Constants.INVALID_MAPPOS,
+                Data = foundPosition
             };
         }
     }

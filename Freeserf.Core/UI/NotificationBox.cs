@@ -379,7 +379,7 @@ namespace Freeserf.UI
             if (face != 0u)
                 return 0x10b + (uint)face;
 
-            return 0x119u; /* sprite_face_none */
+            return 0x119u; // sprite_face_none 
         }
     }
 }

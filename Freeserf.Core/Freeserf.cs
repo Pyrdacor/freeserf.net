@@ -32,7 +32,7 @@ namespace Freeserf
         public static readonly string VERSION = $"{Assembly.GetEntryAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}";
         public static readonly string EXTENDED_VERSION = $"{Assembly.GetEntryAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
 
-        /* The length between game updates in milliseconds. */
+        // The length between game updates in milliseconds. 
         public const int TICK_LENGTH = 20;
         public const int TICKS_PER_SEC = 1000 / TICK_LENGTH;
         public const int TICKS_PER_MIN = 60 * TICKS_PER_SEC;

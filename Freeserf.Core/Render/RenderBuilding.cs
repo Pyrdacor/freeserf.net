@@ -19,12 +19,14 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections.Generic;
 using Freeserf.Data;
 
 namespace Freeserf.Render
 {
     using Data = Data.Data;
+    using MapPos = UInt32;
 
     internal class RenderBuilding : RenderObject
     {
@@ -53,43 +55,43 @@ namespace Freeserf.Render
 
         static readonly int[] BuildingBurnAnimation = new int[]
         {
-            /* Unfinished */
+            // Unfinished 
             0, -8, 2,
             8, 0, 4,
             0, 8, 2, -1,
 
-            /* Fisher */
+            // Fisher 
             0, -8, -10,
             0, 4, -12,
             8, -8, 4,
             8, 7, 4,
             0, -2, 8, -1,
 
-            /* Lumberjack */
+            // Lumberjack 
             0, 3, -13,
             0, -8, -10,
             8, 9, 3,
             8, -6, 3, -1,
 
-            /* Boat builder */
+            // Boat builder 
             0, -1, -12,
             8, -8, 11,
             8, 7, 5, -1,
 
-            /* Stone cutter */
+            // Stone cutter 
             0, 6, -14,
             0, -9, -11,
             8, -8, 5,
             8, 6, 5, -1,
 
-            /* Stone mine */
+            // Stone mine 
             8, -4, -40,
             8, -8, -15,
             8, 3, -14,
             8, -9, 4,
             8, 6, 5, -1,
 
-            /* Coal mine */
+            // Coal mine 
             8, -4, -40,
             8, -1, -18,
             8, -8, -15,
@@ -97,7 +99,7 @@ namespace Freeserf.Render
             8, 0, 8,
             8, -8, 9, -1,
 
-            /* Iron mine, gold mine */
+            // Iron mine, gold mine 
             8, -4, -40,
             8, -2, -19,
             8, -9, -14,
@@ -105,13 +107,13 @@ namespace Freeserf.Render
             8, 6, 2,
             0, -4, 8, -1,
 
-            /* Forester */
+            // Forester 
             0, 8, -11,
             0, -6, -8,
             8, -8, 4,
             8, 6, 4, -1,
 
-            /* Stock */
+            // Stock 
             0, -2, -25,
             0, 6, -17,
             0, -9, -16,
@@ -122,12 +124,12 @@ namespace Freeserf.Render
             8, -8, 15,
             8, 5, 15, -1,
 
-            /* Hut */
+            // Hut 
             0, 0, -11,
             8, -8, 5,
             8, 8, 5, -1,
 
-            /* Farm */
+            // Farm 
             8, 22, -2,
             8, 7, -5,
             8, -3, -1,
@@ -139,13 +141,13 @@ namespace Freeserf.Render
             0, -10, 15,
             0, -2, 15, -1,
 
-            /* Butcher */
+            // Butcher 
             8, -15, 3,
             8, 20, 3,
             8, 7, 3,
             8, -4, 3, -1,
 
-            /* Pig farm */
+            // Pig farm 
             8, 0, -2,
             8, 22, 1,
             8, 15, 5,
@@ -155,7 +157,7 @@ namespace Freeserf.Render
             0, -16, 7,
             0, -12, 14, -1,
 
-            /* Mill */
+            // Mill 
             0, 7, -33,
             0, 5, -20,
             8, -2, -24,
@@ -163,7 +165,7 @@ namespace Freeserf.Render
             8, 4, 2,
             0, -3, 6, -1,
 
-            /* Baker */
+            // Baker 
             0, -15, -16,
             0, -4, -19,
             0, 3, -16,
@@ -172,7 +174,7 @@ namespace Freeserf.Render
             8, 6, 7,
             0, 17, 1, -1,
 
-            /* Saw mill */
+            // Saw mill 
             0, 7, -19,
             0, -1, -14,
             0, 16, -13,
@@ -183,7 +185,7 @@ namespace Freeserf.Render
             8, -11, 10,
             8, -1, 12, -1,
 
-            /* Steel smelter */
+            // Steel smelter 
             0, 5, -19,
             0, 16, -16,
             8, -14, 2,
@@ -191,7 +193,7 @@ namespace Freeserf.Render
             8, 15, 5,
             8, 2, 5, -1,
 
-            /* Tool maker */
+            // Tool maker 
             8, 7, -19,
             0, -11, -17,
             0, -4, -11,
@@ -201,13 +203,13 @@ namespace Freeserf.Render
             8, 1, 7,
             8, 15, 7, -1,
 
-            /* Weapon smith */
+            // Weapon smith 
             8, -15, 1,
             8, -10, 3,
             8, 20, 3,
             8, 5, 3, -1,
 
-            /* Tower */
+            // Tower 
             0, -6, -30,
             0, 7, -14,
             8, -11, -3,
@@ -215,7 +217,7 @@ namespace Freeserf.Render
             8, 9, 5,
             8, -4, 5, -1,
 
-            /* Fortress */
+            // Fortress 
             0, -3, -30,
             0, -15, -26,
             0, 21, -29,
@@ -229,7 +231,7 @@ namespace Freeserf.Render
             8, 4, 13,
             8, -11, 15, -1,
 
-            /* Gold smelter */
+            // Gold smelter 
             0, -15, -20,
             0, 10, -22,
             0, -3, -25,
@@ -240,7 +242,7 @@ namespace Freeserf.Render
             8, 6, 5,
             0, 16, 6, -1,
 
-            /* Castle */
+            // Castle 
             0, 11, -46,
             0, -19, -42,
             8, 1, -27,
@@ -589,9 +591,9 @@ namespace Freeserf.Render
             }
         }
 
-        public void Update(int tick, RenderMap map, uint pos)
+        public void Update(int tick, RenderMap map, MapPos position)
         {
-            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(pos);
+            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(position);
 
             uint spriteIndex = MapBuildingSprite[(int)building.BuildingType];
 
@@ -1174,9 +1176,9 @@ namespace Freeserf.Render
                         additionalSprites[1].Resize(info.Width, info.Height);
                         additionalSprites[1].Visible = true;
 
-                        var pos = building.Position;
+                        var position = building.Position;
 
-                        if ((((tick + (pos & 0xff)) >> 3) & 7) == 0 && random.Next() < 40000)
+                        if ((((tick + (position & 0xff)) >> 3) & 7) == 0 && random.Next() < 40000)
                         {
                             PlaySound(Audio.Audio.TypeSfx.Elevator);
                         }

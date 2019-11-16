@@ -127,10 +127,10 @@ namespace Freeserf
 
             if (value.IndexOf(',') != -1)
             {
-                var s = new AutoParseableString(value);
+                var str = new AutoParseableString(value);
                 string item;
 
-                while ((item = s.GetLine(',')) != null)
+                while ((item = str.GetLine(',')) != null)
                 {
                     parts.Add(new SaveReaderTextValue(item));
                 }
@@ -204,7 +204,7 @@ namespace Freeserf
             return value;
         }
 
-        public SaveReaderTextValue this[int pos] => parts[(int)pos];
+        public SaveReaderTextValue this[int index] => parts[index];
     }
 
     public class SaveWriterTextValue
@@ -410,8 +410,8 @@ namespace Freeserf
 
         public bool QuickSave(string prefix, Game game)
         {
-            /* Build filename including time stamp. */
-            GameStore saveGame = new GameStore(); // TODO: Do we need this?
+            // Build filename including time stamp. 
+            var saveGame = new GameStore(); // TODO: Do we need this?
             string name = DateTime.Now.ToString("dd-MM-yy-HH-mm-ss", CultureInfo.InvariantCulture);
 
             string path = Path.Combine(saveGame.FolderPath, prefix + "-" + name + ".save");
@@ -421,8 +421,8 @@ namespace Freeserf
 
         public bool QuickSave(string prefix, Game game, out string savedPath)
         {
-            /* Build filename including time stamp. */
-            GameStore saveGame = new GameStore(); // TODO: Do we need this?
+            // Build filename including time stamp. 
+            var saveGame = new GameStore(); // TODO: Do we need this?
             string name = DateTime.Now.ToString("dd-MM-yy-HH-mm-ss", CultureInfo.InvariantCulture);
 
             savedPath = Path.Combine(saveGame.FolderPath, prefix + "-" + name + ".save");
@@ -539,7 +539,7 @@ namespace Freeserf
 
         public bool Save(string path)
         {
-            ConfigFile file = new ConfigFile();
+            var file = new ConfigFile();
 
             Save(file);
 
@@ -548,7 +548,7 @@ namespace Freeserf
 
         public bool Write(StreamWriter writer)
         {
-            ConfigFile file = new ConfigFile();
+            var file = new ConfigFile();
 
             Save(file);
 
@@ -574,7 +574,7 @@ namespace Freeserf
                 file.SetValue(str, value.Key, value.Value.Value);
             }
 
-            foreach (SaveWriterTextSection writer in sections)
+            foreach (var writer in sections)
             {
                 writer.Save(file);
             }
@@ -596,13 +596,13 @@ namespace Freeserf
             this.name = name;
             number = 0;
 
-            var pos = name.IndexOf(' ');
+            var spacePosition = name.IndexOf(' ');
 
-            if (pos != -1)
+            if (spacePosition != -1)
             {
-                string value = name.Substring(pos + 1, name.Length - pos - 1);
+                string value = name.Substring(spacePosition + 1, name.Length - spacePosition - 1);
 
-                this.name = this.name.Substring(0, pos);
+                this.name = this.name.Substring(0, spacePosition);
 
                 number = int.Parse(value);
             }
@@ -648,25 +648,25 @@ namespace Freeserf
 
         public SaveReaderTextFile(StreamReader reader)
         {
-            ConfigFile file = new ConfigFile();
+            var file = new ConfigFile();
 
             file.Read(reader);
 
-            var sects = file.GetSections();
+            var sections = file.GetSections();
 
-            foreach (string name in sects)
+            foreach (string name in sections)
             {
                 var section = new SaveReaderTextSection(file, name);
 
-                sections.Add(section);
+                this.sections.Add(section);
             }
 
-            var vals = file.GetValues("main");
+            var values = file.GetValues("main");
 
-            foreach (string vname in vals)
+            foreach (string vname in values)
             {
-                if (!values.ContainsKey(vname))
-                    values.Add(vname, new SaveReaderTextValue(file.Value("main", vname, "")));
+                if (!this.values.ContainsKey(vname))
+                    this.values.Add(vname, new SaveReaderTextValue(file.Value("main", vname, "")));
             }
         }
 
@@ -682,9 +682,9 @@ namespace Freeserf
 
         public override Readers GetSections(string name)
         {
-            Readers result = new Readers();
+            var result = new Readers();
 
-            foreach (SaveReaderTextSection reader in sections)
+            foreach (var reader in sections)
             {
                 if (reader.Name == name)
                 {

@@ -68,7 +68,7 @@ namespace Freeserf
 
         public bool Read(StreamReader reader)
         {
-            Values section = new Values();
+            var section = new Values();
             data["global"] = section;
             uint lineNumber = 0;
 
@@ -119,9 +119,9 @@ namespace Freeserf
                 {
                     if (line.Length != 0)
                     {
-                        int pos = line.IndexOf('=');
-                        string name = line.Substring(0, pos).Trim().ToLower();
-                        string val = line.Substring(pos + 1).Trim();
+                        int assignPosition = line.IndexOf('=');
+                        string name = line.Substring(0, assignPosition).Trim().ToLower();
+                        string val = line.Substring(assignPosition + 1).Trim();
                         section[name] = val;
                     }
                 }

@@ -2,7 +2,7 @@
  * MapGeometry.cs - Map geometry functions
  *
  * Copyright (C) 2013-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -26,15 +26,10 @@ using System.Collections.Generic;
 
 namespace Freeserf
 {
-    // MapPos is a compact composition of col and row values that
+    // MapPos is a compact composition of column and row values that
     // uniquely identifies a vertex in the map space. It is also used
     // directly as index to map data arrays.
     using MapPos = UInt32;
-
-    public static partial class Global
-    {
-        public const MapPos BadMapPos = MapPos.MaxValue;
-    }
 
     // Map directions
     //
@@ -74,25 +69,25 @@ namespace Freeserf
         // clockwise in 60 degree increment the specified number of times.
         // If times is a negative number the direction will be turned counter
         // clockwise.
-        public static Direction Turn(this Direction d, int times)
+        public static Direction Turn(this Direction direction, int times)
         {
-            if (d == Direction.None)
+            if (direction == Direction.None)
             {
                 throw new ExceptionFreeserf("map", "Failed to turn uninitialised direction");
             }
 
-            int td = ((int)d + times) % 6;
+            int turnedDirection = ((int)direction + times) % 6;
 
-            if (td < 0)
-                td += 6;
+            if (turnedDirection < 0)
+                turnedDirection += 6;
 
-            return (Direction)td;
+            return (Direction)turnedDirection;
         }
 
         // Return the given direction reversed.
-        public static Direction Reverse(this Direction d)
+        public static Direction Reverse(this Direction direction)
         {
-            return Turn(d, 3);
+            return Turn(direction, 3);
         }
     }
 
@@ -244,7 +239,7 @@ namespace Freeserf
             public override Direction Current => (Direction)(((int)(cycle as DirectionCycleCW).Start + offset) % 6);
         }
 
-        public DirectionCycleCW(Direction start, MapPos length)
+        public DirectionCycleCW(Direction start, uint length)
             : base(start, length)
         {
 
@@ -353,21 +348,21 @@ namespace Freeserf
         public class Iterator : Iterator<MapPos>
         {
             MapGeometry mapGeometry;
-            MapPos pos;
+            MapPos position;
 
-            internal Iterator(MapGeometry mapGeometry, MapPos pos)
+            internal Iterator(MapGeometry mapGeometry, MapPos position)
             {
                 this.mapGeometry = mapGeometry;
-                this.pos = pos;
+                this.position = position;
             }
 
             public Iterator(Iterator other)
             {
                 mapGeometry = other.mapGeometry;
-                pos = other.pos;
+                position = other.position;
             }
 
-            public override MapPos Current => pos;
+            public override MapPos Current => position;
 
             public override bool Equals(Iterator<MapPos> other)
             {
@@ -377,18 +372,18 @@ namespace Freeserf
                 var iter = other as Iterator;
 
                 return mapGeometry == iter.mapGeometry &&
-                    pos == iter.pos;
+                    position == iter.position;
             }
 
             protected override void Increment()
             {
-                if (pos < mapGeometry.TileCount)
-                    ++pos;
+                if (position < mapGeometry.TileCount)
+                    ++position;
             }
         }
 
         // Derived members
-        protected MapPos[] dirs = new MapPos[6];
+        protected MapPos[] directions = new MapPos[6];
 
         public uint Size { get; protected set; }
         public uint ColumnSize { get; protected set; }
@@ -412,92 +407,127 @@ namespace Freeserf
         {
 
         }
-
-        /* Extract col and row from MapPos */
-        public uint PosColumn(uint pos)
+        /// <summary>
+        /// Extract column from MapPos.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public uint PositionColumn(MapPos position)
         {
-            return pos & ColumnMask;
+            return position & ColumnMask;
 
         }
 
-        public uint PosRow(uint pos)
+        /// <summary>
+        /// Extract row from MapPos.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public uint PositionRow(MapPos position)
         {
-            return (pos >> RowShift) & RowMask;
+            return (position >> RowShift) & RowMask;
         }
 
-        /* Translate col, row coordinate to MapPos value. */
-        public MapPos Pos(uint x, uint y)
+        /// <summary>
+        /// Translate column, row coordinate to MapPos value.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public MapPos Position(uint x, uint y)
         {
             return (y << RowShift) | x;
         }
 
-        /* Addition of two map positions. */
-        public MapPos PosAdd(MapPos pos, int x, int y)
+        /// <summary>
+        /// Addition of two map positions.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public MapPos PositionAdd(MapPos position, int x, int y)
         {
-            return Pos((uint)((int)Columns + (int)PosColumn(pos) + x) & ColumnMask, (uint)((int)Rows + (int)PosRow(pos) + y) & RowMask);
+            return Position((uint)((int)Columns + (int)PositionColumn(position) + x) & ColumnMask, (uint)((int)Rows + (int)PositionRow(position) + y) & RowMask);
         }
 
-        public MapPos PosAdd(MapPos pos, MapPos off)
+        /// <summary>
+        /// Addition of two map positions.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public MapPos PositionAdd(MapPos position, MapPos offset)
         {
-            return Pos((PosColumn(pos) + PosColumn(off)) & ColumnMask,
-                    (PosRow(pos) + PosRow(off)) & RowMask);
+            return Position((PositionColumn(position) + PositionColumn(offset)) & ColumnMask,
+                    (PositionRow(position) + PositionRow(offset)) & RowMask);
         }
 
-        // Shortest signed distance between map positions.
-        public int DistX(MapPos pos1, MapPos pos2)
+        /// <summary>
+        /// Shortest signed distance between map positions.
+        /// </summary>
+        /// <param name="position1"></param>
+        /// <param name="position2"></param>
+        /// <returns></returns>
+        public int DistanceX(MapPos position1, MapPos position2)
         {
-            return (int)Columns/2 - (int)(((int)Columns / 2 + (int)PosColumn(pos1) - (int)PosColumn(pos2)) & ColumnMask);
+            return (int)Columns/2 - (int)(((int)Columns / 2 + (int)PositionColumn(position1) - (int)PositionColumn(position2)) & ColumnMask);
         }
 
-        public int DistY(MapPos pos1, MapPos pos2)
+        public int DistanceY(MapPos position1, MapPos position2)
         {
-            return (int)Rows/2 - (int)(((int)Rows/2 + (int)PosRow(pos1) - (int)PosRow(pos2)) & RowMask);
+            return (int)Rows/2 - (int)(((int)Rows/2 + (int)PositionRow(position1) - (int)PositionRow(position2)) & RowMask);
         }
 
-        /* Movement of map position according to directions. */
-        public MapPos Move(MapPos pos, Direction dir)
+        /// <summary>
+        /// Movement of map position according to directions.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        public MapPos Move(MapPos position, Direction direction)
         {
-            return PosAdd(pos, dirs[(int)dir]);
+            return PositionAdd(position, directions[(int)direction]);
         }
 
-        public MapPos MoveRight(MapPos pos)
+        public MapPos MoveRight(MapPos position)
         {
-            return Move(pos, Direction.Right);
+            return Move(position, Direction.Right);
         }
 
-        public MapPos MoveDownRight(MapPos pos)
+        public MapPos MoveDownRight(MapPos position)
         {
-            return Move(pos, Direction.DownRight);
+            return Move(position, Direction.DownRight);
         }
 
-        public MapPos MoveDown(MapPos pos)
+        public MapPos MoveDown(MapPos position)
         {
-            return Move(pos, Direction.Down);
+            return Move(position, Direction.Down);
         }
 
-        public MapPos MoveLeft(MapPos pos)
+        public MapPos MoveLeft(MapPos position)
         {
-            return Move(pos, Direction.Left);
+            return Move(position, Direction.Left);
         }
 
-        public MapPos MoveUpLeft(MapPos pos)
+        public MapPos MoveUpLeft(MapPos position)
         {
-            return Move(pos, Direction.UpLeft);
+            return Move(position, Direction.UpLeft);
         }
 
-        public MapPos MoveUp(MapPos pos)
+        public MapPos MoveUp(MapPos position)
         {
-            return Move(pos, Direction.Up);
+            return Move(position, Direction.Up);
         }
 
-        public MapPos MoveRightN(MapPos pos, int n)
+        public MapPos MoveRightN(MapPos position, int count)
         {
-            return PosAdd(pos, (MapPos)(dirs[(int)Direction.Right] * n));
+            return PositionAdd(position, (MapPos)(directions[(int)Direction.Right] * count));
         }
 
-        public MapPos MoveDownN(MapPos pos, int n)
+        public MapPos MoveDownN(MapPos position, int count)
         {
-            return PosAdd(pos, (MapPos)(dirs[(int)Direction.Down] * n));
+            return PositionAdd(position, (MapPos)(directions[(int)Direction.Down] * count));
         }
 
         public Iterator Begin()
@@ -527,13 +557,13 @@ namespace Freeserf
             RowShift = (int)ColumnSize;
 
             // Setup direction offsets
-            dirs[(int)Direction.Right] = 1u & ColumnMask;
-            dirs[(int)Direction.Left] = (MapPos)(-1 & ColumnMask);
-            dirs[(int)Direction.Down] = (1 & RowMask) << RowShift;
-            dirs[(int)Direction.Up] = (MapPos)(-1 & RowMask) << RowShift;
+            directions[(int)Direction.Right] = 1u & ColumnMask;
+            directions[(int)Direction.Left] = (MapPos)(-1 & ColumnMask);
+            directions[(int)Direction.Down] = (1 & RowMask) << RowShift;
+            directions[(int)Direction.Up] = (MapPos)(-1 & RowMask) << RowShift;
 
-            dirs[(int)Direction.DownRight] = dirs[(int)Direction.Right] | dirs[(int)Direction.Down];
-            dirs[(int)Direction.UpLeft] = dirs[(int)Direction.Left] | dirs[(int)Direction.Up];
+            directions[(int)Direction.DownRight] = directions[(int)Direction.Right] | directions[(int)Direction.Down];
+            directions[(int)Direction.UpLeft] = directions[(int)Direction.Left] | directions[(int)Direction.Up];
         }
 
         public bool Equals(MapGeometry other)
@@ -541,22 +571,22 @@ namespace Freeserf
             return this == other;
         }
 
-        public static bool operator ==(MapGeometry self, MapGeometry rhs)
+        public static bool operator ==(MapGeometry self, MapGeometry other)
         {
 #pragma warning disable IDE0041
             if (ReferenceEquals(self, null))
-                return ReferenceEquals(rhs, null);
+                return ReferenceEquals(other, null);
 
-            if (ReferenceEquals(rhs, null))
+            if (ReferenceEquals(other, null))
                 return false;
 #pragma warning restore IDE0041
 
-            return self.Size == rhs.Size;
+            return self.Size == other.Size;
         }
 
-        public static bool operator !=(MapGeometry self, MapGeometry rhs)
+        public static bool operator !=(MapGeometry self, MapGeometry other)
         {
-            return !(self == rhs);
+            return !(self == other);
         }
 
         public override bool Equals(object obj)
@@ -579,7 +609,7 @@ namespace Freeserf
             return (obj == null) ? 0 : obj.GetHashCode();
         }
 
-        public IEnumerator<uint> GetEnumerator()
+        public IEnumerator<MapPos> GetEnumerator()
         {
             var iter = Begin() as Iterator<MapPos>;
             var end = End() as Iterator<MapPos>;

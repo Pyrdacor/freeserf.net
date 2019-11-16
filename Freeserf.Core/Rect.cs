@@ -26,8 +26,8 @@ namespace Freeserf
 {
     public class Rect : IEquatable<Rect>, IEqualityComparer<Rect>
     {
-        Position position = new Position();
-        Size size = new Size();
+        private Position position = new Position();
+        private Size size = new Size();
 
         public Position Position
         {
@@ -200,8 +200,8 @@ namespace Freeserf
 
     public class FloatRect : IEquatable<FloatRect>, IEqualityComparer<FloatRect>
     {
-        FloatPosition position = new FloatPosition();
-        FloatSize size = new FloatSize();
+        private FloatPosition position = new FloatPosition();
+        private FloatSize size = new FloatSize();
 
         public FloatPosition Position
         {

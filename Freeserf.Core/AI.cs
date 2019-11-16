@@ -25,6 +25,8 @@ using System.Linq;
 
 namespace Freeserf
 {
+    using MapPos = UInt32;
+
     abstract class AIState
     {
         readonly AI.State state = AI.State.None;
@@ -202,18 +204,18 @@ namespace Freeserf
                 memorizedMineralSpots.Add((Map.Minerals)i, new List<MineralSpot>());
         }
 
-        public static void MemorizeMineralSpot(uint pos, Map.Minerals mineral, bool large)
+        public static void MemorizeMineralSpot(MapPos position, Map.Minerals mineral, bool large)
         {
             memorizedMineralSpots[mineral].Add(new MineralSpot()
             {
-                Position = pos,
+                Position = position,
                 Large = large
             });
         }
 
         internal static IEnumerable<uint> GetMemorizedMineralSpots(Map.Minerals mineral, bool large)
         {
-            return memorizedMineralSpots[mineral].Where(s => !large || s.Large).Select(s => s.Position);
+            return memorizedMineralSpots[mineral].Where(spot => !large || spot.Large).Select(s => s.Position);
         }
 
         /// <summary>
@@ -698,21 +700,21 @@ namespace Freeserf
             return false;
         }
 
-        Map.FindData FindFlag(Map map, uint pos)
+        Map.FindData FindFlag(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.HasFlag(pos),
-                Data = pos
+                Success = map.HasFlag(position),
+                Data = position
             };
         }
 
-        Map.FindData FindPath(Map map, uint pos)
+        Map.FindData FindPath(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.Paths(pos) != 0,
-                Data = pos
+                Success = map.Paths(position) != 0,
+                Data = position
             };
         }
 
@@ -756,19 +758,18 @@ namespace Freeserf
             }
         }
 
-        internal bool CanLinkFlag(uint flagPos, bool noWater = true)
+        internal bool CanLinkFlag(uint flagPosition, bool noWater = true)
         {
             var map = player.Game.Map;
-
             // Note: For now this only checks flags in a search range of 9
-            var flags = map.FindInArea(flagPos, 9, FindFlag, 2);
+            var flags = map.FindInArea(flagPosition, 9, FindFlag, 2);
 
             if (flags.Count == 0)
                 return false;
 
             foreach (var flag in flags)
             {
-                if (Pathfinder.FindShortestPath(map, flagPos, (uint)flag, null, 15).Length != 0)
+                if (Pathfinder.FindShortestPath(map, flagPosition, (uint)flag, null, 15).Length != 0)
                     return true;
             }
 
@@ -792,7 +793,9 @@ namespace Freeserf
             var game = player.Game;
             var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
 
-            var flags = (maxLength < 10) ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(pos => game.GetFlagAtPos((uint)pos)) : game.GetPlayerFlags(player).ToList();
+            var flags = (maxLength < 10)
+                ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(position => game.GetFlagAtPos((MapPos)position))
+                : game.GetPlayerFlags(player).ToList();
 
             foreach (var otherFlag in flags)
             {
@@ -802,9 +805,9 @@ namespace Freeserf
                 if (flag.HasDirectConnectionTo(otherFlag)) // TODO: maybe let this happen in special cases later
                     continue; // not link if already linked
 
-                int dist = game.Map.Dist(flag.Position, otherFlag.Position);
+                int distance = game.Map.Distance(flag.Position, otherFlag.Position);
 
-                if (dist > maxLength) // too far away
+                if (distance > maxLength) // too far away
                     continue;
 
                 uint flagCost = otherFlag.GetCostToNearestInventory(BuildingNeedsInventoryResIn(buildingType), BuildingNeedsInventoryResOut(buildingType));
@@ -846,7 +849,7 @@ namespace Freeserf
             if (bestRoad == null)
             {
                 // Could not find a valid flag to link to.
-                if (maxLength < 6) // Only link larger pathes.
+                if (maxLength < 6) // Only link larger paths.
                     return false;
 
                 // Try to build one on a nearby path.
@@ -858,23 +861,23 @@ namespace Freeserf
 
         bool LinkFlagToNearbyPath(Game game, Flag flag, int maxLength, bool allowWater)
         {
-            // TODO: Don't link to an existing road to this flag!
+            // TODO: Don't link to an existing road that leads to this flag!
 
             if (maxLength > 6)
                 maxLength = 6;
 
-            var pathes = game.Map.FindInArea(flag.Position, maxLength, FindPath, 2);
+            var paths = game.Map.FindInArea(flag.Position, maxLength, FindPath, 2);
             Road bestRoad = null;
-            uint bestRoadEndPos = Global.BadMapPos;
+            uint bestRoadEndPosition = Constants.INVALID_MAPPOS;
 
-            foreach (var path in pathes)
+            foreach (var path in paths)
             {
-                uint pos = (uint)path;
+                var position = (MapPos)path;
 
-                if (!game.CanBuildFlag(pos, player))
+                if (!game.CanBuildFlag(position, player))
                     continue;
 
-                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, pos, null, 15);
+                var road = Pathfinder.FindShortestPath(game.Map, flag.Position, position, null, 15);
 
                 if (road != null && road.Valid)
                 {
@@ -887,7 +890,7 @@ namespace Freeserf
                     if (bestRoad == null || road.Cost < bestRoad.Cost)
                     {
                         bestRoad = road;
-                        bestRoadEndPos = pos;
+                        bestRoadEndPosition = position;
                     }
                 }
             }
@@ -895,7 +898,7 @@ namespace Freeserf
             if (bestRoad == null)
                 return false;
 
-            return game.BuildFlag(bestRoadEndPos, player) && game.BuildRoad(bestRoad, player);
+            return game.BuildFlag(bestRoadEndPosition, player) && game.BuildRoad(bestRoad, player);
         }
 
         /// <summary>
@@ -1228,11 +1231,11 @@ namespace Freeserf
 
                         if (reader.HasValue(spotName + "_pos") && reader.HasValue(spotName + "_large"))
                         {
-                            var pos = reader.Value(spotName + "_pos").ReadUInt();
+                            var position = reader.Value(spotName + "_pos").ReadUInt();
                             var large = reader.Value(spotName + "_large").ReadBool();
                             var spot = new MineralSpot()
                             {
-                                Position = pos,
+                                Position = position,
                                 Large = large
                             };
 

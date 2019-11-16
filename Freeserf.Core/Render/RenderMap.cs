@@ -178,19 +178,19 @@ namespace Freeserf.Render
             triangles = new List<ITriangle>((int)numTriangles);
             waves = new List<IMaskedSprite>((int)numTriangles / 2);
 
-            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
+            for (uint column = 0; column < numColumns + ADDITIONAL_X_TILES; ++column)
             {
                 for (int i = 0; i < 2; ++i) // up and down row
                 {
-                    for (uint r = 0; r < numRows + ADDITIONAL_Y_TILES; ++r)
+                    for (uint row = 0; row < numRows + ADDITIONAL_Y_TILES; ++row)
                     {
                         // the triangles are created with the max mask height of 41.
                         // also see comments in TextureAtlasManager.AddAll for further details.
 
                         var triangle = triangleFactory.Create(TILE_WIDTH, TILE_RENDER_MAX_HEIGHT, 0, 0);
 
-                        triangle.X = (int)(c * TILE_WIDTH) - TILE_WIDTH / 2 + i * TILE_WIDTH / 2;
-                        triangle.Y = (int)(r * TILE_HEIGHT);
+                        triangle.X = (int)(column * TILE_WIDTH) - TILE_WIDTH / 2 + i * TILE_WIDTH / 2;
+                        triangle.Y = (int)(row * TILE_HEIGHT);
                         triangle.Visible = true;
 
                         triangles.Add(triangle);
@@ -198,14 +198,14 @@ namespace Freeserf.Render
                 }
             }
 
-            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
+            for (uint column = 0; column < numColumns + ADDITIONAL_X_TILES; ++column)
             {
-                for (uint r = 0; r < numRows + ADDITIONAL_Y_TILES; ++r)
+                for (uint row = 0; row < numRows + ADDITIONAL_Y_TILES; ++row)
                 {
                     var wave = spriteFactory.Create(48, 19, 0, 0, true, false) as IMaskedSprite;
 
-                    wave.X = (int)(c * TILE_WIDTH) - TILE_WIDTH / 2;
-                    wave.Y = (int)(r * TILE_HEIGHT);
+                    wave.X = (int)(column * TILE_WIDTH) - TILE_WIDTH / 2;
+                    wave.Y = (int)(row * TILE_HEIGHT);
                     wave.Visible = false;
 
                     waves.Add(wave);
@@ -215,11 +215,11 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
-        void UpdateWave(MapPos pos, int index, int tick, int x, int y)
+        void UpdateWave(MapPos position, int index, int tick, int x, int y)
         {
-            int sprite = ((int)(pos ^ 5) + (tick >> 3)) & 0xf;
+            int sprite = ((int)(position ^ 5) + (tick >> 3)) & 0xf;
 
-            if (map.TypeUp(pos) <= Map.Terrain.Water3 && map.TypeDown(pos) <= Map.Terrain.Water3)
+            if (map.TypeUp(position) <= Map.Terrain.Water3 && map.TypeDown(position) <= Map.Terrain.Water3)
             {
                 waves[index].X = x;
                 waves[index].Y = y;
@@ -227,7 +227,7 @@ namespace Freeserf.Render
                 waves[index].MaskTextureAtlasOffset = textureAtlasWaves.GetOffset(WaveMaskFull);
                 waves[index].Visible = true;
             }
-            else if (map.TypeDown(pos) <= Map.Terrain.Water3)
+            else if (map.TypeDown(position) <= Map.Terrain.Water3)
             {
                 waves[index].X = x + maskOffsets[81 + 40].X + TILE_WIDTH / 2;
                 waves[index].Y = y + maskOffsets[81 + 40].Y + TILE_HEIGHT;
@@ -235,7 +235,7 @@ namespace Freeserf.Render
                 waves[index].MaskTextureAtlasOffset = textureAtlasWaves.GetOffset(WaveMaskDown);
                 waves[index].Visible = true;
             }
-            else if (map.TypeUp(pos) <= Map.Terrain.Water3)
+            else if (map.TypeUp(position) <= Map.Terrain.Water3)
             {
                 waves[index].X = x + maskOffsets[40].X;
                 waves[index].Y = y + maskOffsets[40].Y;
@@ -249,53 +249,53 @@ namespace Freeserf.Render
             }
         }
 
-        void UpdateEvenWaveColumn(MapPos pos, ref int index, int tick, int x, int y)
+        void UpdateEvenWaveColumn(MapPos position, ref int index, int tick, int x, int y)
         {
-            pos = map.MoveDown(pos);
+            position = map.MoveDown(position);
 
             for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
             {
-                UpdateWave(map.MoveUp(pos), index++, tick, x, y);
+                UpdateWave(map.MoveUp(position), index++, tick, x, y);
 
                 y += TILE_HEIGHT;
 
-                pos = map.MoveDownRight(pos);
+                position = map.MoveDownRight(position);
 
-                UpdateWave(map.MoveUpLeft(pos), index++, tick, x - TILE_WIDTH / 2, y);
+                UpdateWave(map.MoveUpLeft(position), index++, tick, x - TILE_WIDTH / 2, y);
 
                 y += TILE_HEIGHT;
 
-                pos = map.MoveDown(pos);
+                position = map.MoveDown(position);
             }
 
             if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
             {
-                UpdateWave(map.MoveUp(pos), index++, tick, x, y);
+                UpdateWave(map.MoveUp(position), index++, tick, x, y);
             }
         }
 
-        void UpdateOddWaveColumn(MapPos pos, ref int index, int tick, int x, int y)
+        void UpdateOddWaveColumn(MapPos position, ref int index, int tick, int x, int y)
         {
-            pos = map.MoveDownRight(pos);
+            position = map.MoveDownRight(position);
 
             for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
             {
-                UpdateWave(map.MoveUpLeft(pos), index++, tick, x - TILE_WIDTH / 2, y);
+                UpdateWave(map.MoveUpLeft(position), index++, tick, x - TILE_WIDTH / 2, y);
 
                 y += TILE_HEIGHT;
 
-                pos = map.MoveDown(pos);
+                position = map.MoveDown(position);
 
-                UpdateWave(map.MoveUp(pos), index++, tick, x, y);
+                UpdateWave(map.MoveUp(position), index++, tick, x, y);
 
                 y += TILE_HEIGHT;
 
-                pos = map.MoveDownRight(pos);
+                position = map.MoveDownRight(position);
             }
 
             if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
             {
-                UpdateWave(map.MoveUpLeft(pos), index++, tick, x - TILE_WIDTH / 2, y);
+                UpdateWave(map.MoveUpLeft(position), index++, tick, x - TILE_WIDTH / 2, y);
             }
         }
 
@@ -303,17 +303,17 @@ namespace Freeserf.Render
         {
             bool odd = ScrollY % 2 == 1;
             int index = 0;
-            MapPos pos = GetMapOffset();
+            var position = GetMapOffset();
             int x = -TILE_WIDTH / 2;
 
             for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
             {
                 if (odd)
-                    UpdateOddWaveColumn(pos, ref index, tick, x, 0);
+                    UpdateOddWaveColumn(position, ref index, tick, x, 0);
                 else
-                    UpdateEvenWaveColumn(pos, ref index, tick, x, 0);
+                    UpdateEvenWaveColumn(position, ref index, tick, x, 0);
 
-                pos = map.MoveRight(pos);
+                position = map.MoveRight(position);
                 x += TILE_WIDTH;
             }
         }
@@ -361,17 +361,17 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
-        public void ScrollToMapPos(MapPos pos)
+        public void ScrollToMapPos(MapPos position)
         {
-            ScrollY = map.PosRow(pos);
-            ScrollX = map.PosColumn(pos) - ScrollY / 2;
+            ScrollY = map.PositionRow(position);
+            ScrollX = map.PositionColumn(position) - ScrollY / 2;
 
             UpdatePosition();
         }
 
-        public void CenterMapPos(MapPos pos)
+        public void CenterMapPos(MapPos position)
         {
-            var mapPosition = CoordinateSpace.TileSpaceToMapSpace(pos);
+            var mapPosition = CoordinateSpace.TileSpaceToMapSpace(position);
 
             mapPosition.X -= (int)numColumns * TILE_WIDTH / 2;
             mapPosition.Y -= (int)numRows * TILE_HEIGHT / 2;
@@ -392,25 +392,25 @@ namespace Freeserf.Render
             ScrollToMapPos(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
         }
 
-        void UpdateTriangleUp(int index, int yOffset, int m, int left, int right, MapPos pos)
+        void UpdateTriangleUp(int index, int yOffset, int height, int left, int right, MapPos position)
         {
-            if (((left - m) < -4) || ((left - m) > 4))
+            if (((left - height) < -4) || ((left - height) > 4))
             {
                 throw new ExceptionFreeserf("render", "Failed to draw triangle up (1).");
             }
-            if (((right - m) < -4) || ((right - m) > 4))
+            if (((right - height) < -4) || ((right - height) > 4))
             {
                 throw new ExceptionFreeserf("render", "Failed to draw triangle up (2).");
             }
 
-            int mask = 4 + m - left + 9 * (4 + m - right);
+            int mask = 4 + height - left + 9 * (4 + height - right);
 
             if (TileMaskUp[mask] < 0)
             {
                 throw new ExceptionFreeserf("render", "Failed to draw triangle up (3).");
             }
 
-            var terrain = map.TypeUp(map.MoveUp(pos));
+            var terrain = map.TypeUp(map.MoveUp(position));
             int spriteIndex = (int)terrain * 8 + TileMaskUp[mask];
             uint sprite = TileSprites[spriteIndex];
 
@@ -419,25 +419,25 @@ namespace Freeserf.Render
             triangles[index].MaskTextureAtlasOffset = textureAtlasTiles.GetOffset((uint)MaskUpSprites[mask]);
         }
 
-        void UpdateTriangleDown(int index, int yOffset, int m, int left, int right, MapPos pos)
+        void UpdateTriangleDown(int index, int yOffset, int height, int left, int right, MapPos position)
         {
-            if (((left - m) < -4) || ((left - m) > 4))
+            if (((left - height) < -4) || ((left - height) > 4))
             {
                 throw new ExceptionFreeserf("render", "Failed to draw triangle down (1).");
             }
-            if (((right - m) < -4) || ((right - m) > 4))
+            if (((right - height) < -4) || ((right - height) > 4))
             {
                 throw new ExceptionFreeserf("render", "Failed to draw triangle down (2).");
             }
 
-            int mask = 4 + left - m + 9 * (4 + right - m);
+            int mask = 4 + left - height + 9 * (4 + right - height);
 
             if (TileMaskDown[mask] < 0)
             {
                 throw new ExceptionFreeserf("render", "Failed to draw triangle down (3).");
             }
 
-            var terrain = map.TypeDown(map.MoveUpLeft(pos));
+            var terrain = map.TypeDown(map.MoveUpLeft(position));
             int spriteIndex = (int)terrain * 8 + TileMaskDown[mask];
             uint sprite = TileSprites[spriteIndex];
 
@@ -446,72 +446,72 @@ namespace Freeserf.Render
             triangles[index].MaskTextureAtlasOffset = textureAtlasTiles.GetOffset((uint)MaskDownSprites[mask]);
         }
 
-        void UpdateUpTileColumn(MapPos pos, ref int index, int yOffset)
+        void UpdateUpTileColumn(MapPos position, ref int index, int yOffset)
         {
-            int m = (int)map.GetHeight(pos);
+            int height = (int)map.GetHeight(position);
 
-            pos = map.MoveDown(pos);
+            position = map.MoveDown(position);
 
-            int left = (int)map.GetHeight(pos);
-            int right = (int)map.GetHeight(map.MoveRight(pos));
+            int left = (int)map.GetHeight(position);
+            int right = (int)map.GetHeight(map.MoveRight(position));
 
             for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
             {
-                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
+                UpdateTriangleUp(index++, yOffset - 4 * height, height, left, right, position);
 
                 yOffset += TILE_HEIGHT;
 
-                pos = map.MoveDownRight(pos);
-                m = (int)map.GetHeight(pos);
+                position = map.MoveDownRight(position);
+                height = (int)map.GetHeight(position);
 
-                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
+                UpdateTriangleDown(index++, yOffset - 4 * height, height, left, right, position);
 
                 yOffset += TILE_HEIGHT;
 
-                pos = map.MoveDown(pos);
+                position = map.MoveDown(position);
 
-                left = (int)map.GetHeight(pos);
-                right = (int)map.GetHeight(map.MoveRight(pos));
+                left = (int)map.GetHeight(position);
+                right = (int)map.GetHeight(map.MoveRight(position));
             }
 
             if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
             {
-                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
+                UpdateTriangleUp(index++, yOffset - 4 * height, height, left, right, position);
             }
         }
 
-        void UpdateDownTileColumn(MapPos pos, ref int index, int yOffset)
+        void UpdateDownTileColumn(MapPos position, ref int index, int yOffset)
         {
-            int left = (int)map.GetHeight(pos);
-            int right = (int)map.GetHeight(map.MoveRight(pos));
+            int left = (int)map.GetHeight(position);
+            int right = (int)map.GetHeight(map.MoveRight(position));
 
-            pos = map.MoveDownRight(pos);
+            position = map.MoveDownRight(position);
 
-            int m = (int)map.GetHeight(pos);
+            int m = (int)map.GetHeight(position);
 
             for (int i = 0; i < (numRows + ADDITIONAL_Y_TILES) / 2; ++i)
             {
-                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
+                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, position);
 
                 yOffset += TILE_HEIGHT;
 
-                pos = map.MoveDown(pos);
+                position = map.MoveDown(position);
 
-                left = (int)map.GetHeight(pos);
-                right = (int)map.GetHeight(map.MoveRight(pos));
+                left = (int)map.GetHeight(position);
+                right = (int)map.GetHeight(map.MoveRight(position));
 
-                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, pos);
+                UpdateTriangleUp(index++, yOffset - 4 * m, m, left, right, position);
 
                 yOffset += TILE_HEIGHT;
 
-                pos = map.MoveDownRight(pos);
+                position = map.MoveDownRight(position);
 
-                m = (int)map.GetHeight(pos);
+                m = (int)map.GetHeight(position);
             }
 
             if ((numRows + ADDITIONAL_Y_TILES) % 2 == 1)
             {
-                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, pos);
+                UpdateTriangleDown(index++, yOffset - 4 * m, m, left, right, position);
             }
         }
 
@@ -520,7 +520,7 @@ namespace Freeserf.Render
             uint realColumn = (ScrollX + ScrollY / 2) & map.ColumnMask;
             uint realRow = ScrollY & map.RowMask;
 
-            return map.Pos(realColumn, realRow);
+            return map.Position(realColumn, realRow);
         }
 
         public MapPos GetCenteredPosition()
@@ -539,20 +539,19 @@ namespace Freeserf.Render
 
             bool odd = ScrollY % 2 == 1;
             int index = 0;
+            var position = GetMapOffset();
 
-            MapPos pos = GetMapOffset();
-
-            for (uint c = 0; c < numColumns + ADDITIONAL_X_TILES; ++c)
+            for (uint column = 0; column < numColumns + ADDITIONAL_X_TILES; ++column)
             {
-                if (c > 0 || !odd) // (1): this and (2) avoids x-change when scrolled to odd row numbers
-                    UpdateUpTileColumn(pos, ref index, 0);
+                if (column > 0 || !odd) // (1): this and (2) avoids x-change when scrolled to odd row numbers
+                    UpdateUpTileColumn(position, ref index, 0);
 
-                UpdateDownTileColumn(pos, ref index, 0);
+                UpdateDownTileColumn(position, ref index, 0);
 
-                pos = map.MoveRight(pos);
+                position = map.MoveRight(position);
 
-                if (c == numColumns + ADDITIONAL_X_TILES - 1 && odd) // (2): see (1)
-                    UpdateUpTileColumn(pos, ref index, 0);
+                if (column == numColumns + ADDITIONAL_X_TILES - 1 && odd) // (2): see (1)
+                    UpdateUpTileColumn(position, ref index, 0);
             }
         }
     }

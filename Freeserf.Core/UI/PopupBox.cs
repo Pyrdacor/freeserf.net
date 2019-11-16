@@ -38,7 +38,7 @@ namespace Freeserf.UI
         {
             None = 0,
             Map,
-            MapOverlay, /* UNUSED */
+            MapOverlay, // UNUSED 
             MineBuilding,
             BasicBld,
             BasicBldFlip,
@@ -71,7 +71,7 @@ namespace Freeserf.UI
             TransportPriorities,
             QuitConfirm,
             NoSaveQuitConfirm,
-            SettSelectFile, /* UNUSED */
+            SettSelectFile, // UNUSED 
             Options,
             ExtendedOptions,
             GameInitOptions,
@@ -259,8 +259,8 @@ namespace Freeserf.UI
             ShowSave,
             CycleKnights,
             OptionsMessageCount,
-            ShowSettSelectFile, /* Unused */
-            ShowStatSelectFile, /* Unused */
+            ShowSettSelectFile, // Unused 
+            ShowStatSelectFile, // Unused 
             DefaultFoodDistribution,
             DefaultPlanksAndSteelDistribution,
             DefaultTransportPriorities,
@@ -477,7 +477,7 @@ namespace Freeserf.UI
             currentResourceForStatistics = 7;
             currentPlayerStatisticsMode = 0;
 
-            /* Initialize minimap */
+            // Initialize minimap 
             MiniMap.SetSize(128, 128);
             AddChild(MiniMap, 8, 8, false);
 
@@ -747,7 +747,7 @@ namespace Freeserf.UI
                     return null;
                 default:
                 case Type.Map:
-                case Type.MapOverlay: /* UNUSED */
+                case Type.MapOverlay: // UNUSED 
                     break; // no background, but just use default from above
                 case Type.MineBuilding:
                 case Type.BasicBld:
@@ -793,7 +793,7 @@ namespace Freeserf.UI
                     pattern = BackgroundPattern.DiagonalGreen;
                     break;
                 case Type.Message:
-                case Type.SettSelectFile: /* UNUSED */
+                case Type.SettSelectFile: // UNUSED 
                 case Type.LoadArchive:
                 case Type.Type25:
                 case Type.GameEnd:
@@ -1085,7 +1085,7 @@ namespace Freeserf.UI
             if (face != 0)
                 return 0x10bu + (uint)face;
 
-            return 0x119u; /* sprite_face_none */
+            return 0x119u; // sprite_face_none 
         }
 
         void DrawMapBox()
@@ -1111,7 +1111,7 @@ namespace Freeserf.UI
             SetBuilding(index++, 40, 86, Building.Type.IronMine);
             SetBuilding(index++, 88, 86, Building.Type.GoldMine);
 
-            if (interf.Game.CanBuildFlag(interf.GetMapCursorPos(), interf.GetPlayer()))
+            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.GetPlayer()))
             {
                 SetFlag(index, 24, 123);
                 ++num;
@@ -1127,7 +1127,7 @@ namespace Freeserf.UI
             int index = 0;
 
             // add hut if military buildings are possible
-            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPos()))
+            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPosition()))
             {
                 SetBuilding(index++, 88, 22, Building.Type.Hut);
                 ++num;
@@ -1140,7 +1140,7 @@ namespace Freeserf.UI
             SetBuilding(index++, 24, 94, Building.Type.Mill);
             SetBuilding(index++, 88, 96, Building.Type.Boatbuilder);
 
-            if (interf.Game.CanBuildFlag(interf.GetMapCursorPos(), interf.GetPlayer()))
+            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.GetPlayer()))
             {
                 SetFlag(index, 72, 117);
                 ++num;
@@ -1175,7 +1175,7 @@ namespace Freeserf.UI
             int index = 0;
 
             // add hut if military buildings are possible
-            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPos()))
+            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPosition()))
             {
                 SetBuilding(index++, 24, 108, Building.Type.Tower);
                 SetBuilding(index++, 72, 93, Building.Type.Fortress);
@@ -1196,7 +1196,7 @@ namespace Freeserf.UI
 
         static readonly int[] ResourcesLayout = new int[]
         {
-            0x28, 1, 0, /* resources */
+            0x28, 1, 0, // resources 
             0x29, 1, 16,
             0x2a, 1, 32,
             0x2b, 1, 48,
@@ -1631,21 +1631,21 @@ namespace Freeserf.UI
             }
         }
 
-        static void SetPlayerChartValue(byte[] data, int x, int y, int h, Render.Color color)
+        static void SetPlayerChartValue(byte[] data, int x, int y, int height, Render.Color color)
         {
             if (x < 0 || x >= 112)
                 return;
 
-            if (h <= 0 || y < 0 || y >= 100)
+            if (height <= 0 || y < 0 || y >= 100)
                 return;
 
-            if (y + h > 100)
-                h = 100 - y;
+            if (y + height > 100)
+                height = 100 - y;
 
             int index = (y * 112 + x) * 4;
             const int rowOffset = 112 * 4;
 
-            for (int i = 0; i < h; ++i)
+            for (int i = 0; i < height; ++i)
             {
                 data[index + 0] = color.B;
                 data[index + 1] = color.G;
@@ -1662,7 +1662,7 @@ namespace Freeserf.UI
             const int height = 100;
 
             var color = new Render.Color(playerColor.Red, playerColor.Green, playerColor.Blue);
-            uint prevValue = playerData[index];
+            uint previousValue = playerData[index];
 
             for (int i = 0; i < width; ++i)
             {
@@ -1670,38 +1670,38 @@ namespace Freeserf.UI
 
                 index = index > 0 ? index - 1 : width - 1;
 
-                if (value > 0 || prevValue > 0)
+                if (value > 0 || previousValue > 0)
                 {
-                    if (value == prevValue)
+                    if (value == previousValue)
                     {
                         SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value, height), 1, color);
                         SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - (int)value, height), 1, color);
                     }
-                    else if (value > prevValue)
+                    else if (value > previousValue)
                     {
-                        int diff = (int)value - (int)prevValue;
-                        int h = diff / 2;
+                        int difference = (int)value - (int)previousValue;
+                        int differenceHeight = difference / 2;
 
-                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - h - (int)prevValue, height), h, color);
+                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - differenceHeight - (int)previousValue, height), differenceHeight, color);
 
-                        diff -= h;
+                        difference -= differenceHeight;
 
-                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value, height), diff, color);
+                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value, height), difference, color);
                     }
-                    else // value < prevValue
+                    else // value < previousValue
                     {
-                        int diff = (int)prevValue - (int)value;
-                        int h = diff / 2;
+                        int difference = (int)previousValue - (int)value;
+                        int differenceHeight = difference / 2;
 
-                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - (int)prevValue, height), h, color);
+                        SetPlayerChartValue(chartData, width - i, Misc.Clamp(0, height - (int)previousValue, height), differenceHeight, color);
 
-                        diff -= h;
+                        difference -= differenceHeight;
 
-                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value - diff, height), diff, color);
+                        SetPlayerChartValue(chartData, width - i - 1, Misc.Clamp(0, height - (int)value - difference, height), difference, color);
                     }
                 }
 
-                prevValue = value;
+                previousValue = value;
             }
         }
 
@@ -1888,7 +1888,7 @@ namespace Freeserf.UI
 
         static void CalculateGaugeValues(Player player, uint[,,] values)
         {
-            foreach (Building building in player.Game.GetPlayerBuildings(player))
+            foreach (var building in player.Game.GetPlayerBuildings(player))
             {
                 if (building.IsBurning() || !building.HasSerf())
                 {
@@ -1915,7 +1915,7 @@ namespace Freeserf.UI
 
         void DrawFoodProductionCycleBox()
 		{
-            SetIcon(8, 9, 0x18); /* baker */
+            SetIcon(8, 9, 0x18); // baker 
             SetIcon(8, 25, 0xb4);
             SetIcon(8, 33, 0xb3);
             SetIcon(8, 41, 0xb2);
@@ -1928,8 +1928,8 @@ namespace Freeserf.UI
             SetIcon(8, 97, 0xb3);
             SetIcon(8, 105, 0xd4);
             SetIcon(8, 121, 0xb1);
-            SetIcon(8, 129, 0x13); /* fisher */
-            SetIcon(24, 57, 0x15); /* butcher */
+            SetIcon(8, 129, 0x13); // fisher 
+            SetIcon(24, 57, 0x15); // butcher 
             SetIcon(24, 73, 0xb4);
             SetIcon(24, 81, 0xb3);
             SetIcon(24, 89, 0xd4);
@@ -1940,30 +1940,30 @@ namespace Freeserf.UI
             SetIcon(40, 89, 0xa6);
             SetIcon(40, 105, 0xa6);
             SetIcon(40, 121, 0xa6);
-            SetIcon(56, 9, 0x26); /* flour */
-            SetIcon(56, 41, 0x23); /* pig */
+            SetIcon(56, 9, 0x26); // flour 
+            SetIcon(56, 41, 0x23); // pig 
             SetIcon(56, 73, 0xb5);
-            SetIcon(56, 85, 0x24); /* meat */
-            SetIcon(56, 101, 0x27); /* bread */
-            SetIcon(56, 117, 0x22); /* fish */
+            SetIcon(56, 85, 0x24); // meat 
+            SetIcon(56, 101, 0x27); // bread 
+            SetIcon(56, 117, 0x22); // fish 
             SetIcon(56, 133, 0xb6);
-            SetIcon(72, 9, 0x17); /* miller */
-            SetIcon(72, 41, 0x14); /* pigfarmer */
+            SetIcon(72, 9, 0x17); // miller 
+            SetIcon(72, 41, 0x14); // pigfarmer 
             SetIcon(72, 73, 0xa6);
             SetIcon(72, 97, 0xab);
             SetIcon(72, 111, 0xab);
             SetIcon(72, 137, 0xa6);
             SetIcon(104, 17, 0xba);
-            SetIcon(104, 65, 0x11); /* miner */
-            SetIcon(104, 89, 0x11); /* miner */
-            SetIcon(104, 113, 0x11); /* miner */
-            SetIcon(104, 137, 0x11); /* miner */
-            SetIcon(120, 9, 0x16); /* farmer */
-            SetIcon(120, 25, 0x25); /* wheat */
-            SetIcon(120, 65, 0x2f); /* goldore */
-            SetIcon(120, 89, 0x2e); /* coal */
-            SetIcon(120, 113, 0x2c); /* ironore */
-            SetIcon(120, 137, 0x2b); /* stone */
+            SetIcon(104, 65, 0x11); // miner 
+            SetIcon(104, 89, 0x11); // miner 
+            SetIcon(104, 113, 0x11); // miner 
+            SetIcon(104, 137, 0x11); // miner 
+            SetIcon(120, 9, 0x16); // farmer 
+            SetIcon(120, 25, 0x25); // wheat 
+            SetIcon(120, 65, 0x2f); // goldore 
+            SetIcon(120, 89, 0x2e); // coal 
+            SetIcon(120, 113, 0x2c); // ironore 
+            SetIcon(120, 137, 0x2b); // stone 
 
             uint[,,] values = new uint[24, Building.MaxStock, 2];
 
@@ -1981,19 +1981,19 @@ namespace Freeserf.UI
 
         void DrawMaterialProductionCycleBox()
 		{
-            SetIcon(8, 9, 0x11); /* miner */
-            SetIcon(8, 33, 0x11); /* miner */
-            SetIcon(8, 65, 0x11); /* miner */
-            SetIcon(8, 89, 0xd); /* lumberjack */
-            SetIcon(8, 113, 0x11); /* miner */
-            SetIcon(8, 137, 0xf); /* stonecutter */
-            SetIcon(24, 9, 0x2f); /* goldore */
-            SetIcon(24, 33, 0x2e); /* coal */
+            SetIcon(8, 9, 0x11); // miner 
+            SetIcon(8, 33, 0x11); // miner 
+            SetIcon(8, 65, 0x11); // miner 
+            SetIcon(8, 89, 0xd); // lumberjack 
+            SetIcon(8, 113, 0x11); // miner 
+            SetIcon(8, 137, 0xf); // stonecutter 
+            SetIcon(24, 9, 0x2f); // goldore 
+            SetIcon(24, 33, 0x2e); // coal 
             SetIcon(24, 49, 0xb0);
-            SetIcon(24, 65, 0x2c); /* ironore */
-            SetIcon(24, 89, 0x28); /* lumber */
-            SetIcon(24, 113, 0x2b); /* stone */
-            SetIcon(24, 137, 0x2b); /* stone */
+            SetIcon(24, 65, 0x2c); // ironore 
+            SetIcon(24, 89, 0x28); // lumber 
+            SetIcon(24, 113, 0x2b); // stone 
+            SetIcon(24, 137, 0x2b); // stone 
             SetIcon(40, 13, 0xaa);
             SetIcon(40, 33, 0xab);
             SetIcon(40, 41, 0xad);
@@ -2002,15 +2002,15 @@ namespace Freeserf.UI
             SetIcon(40, 73, 0xaa);
             SetIcon(40, 117, 0xbb);
             SetIcon(56, 41, 0xa4);
-            SetIcon(56, 105, 0xe); /* sawmiller */
+            SetIcon(56, 105, 0xe); // sawmiller 
             SetIcon(56, 141, 0xa5);
-            SetIcon(72, 9, 0x30); /* gold */
-            SetIcon(72, 25, 0x12); /* smelter */
+            SetIcon(72, 9, 0x30); // gold 
+            SetIcon(72, 25, 0x12); // smelter 
             SetIcon(72, 41, 0xa4);
-            SetIcon(72, 49, 0x2d); /* steel */
-            SetIcon(72, 65, 0x12); /* smelter */
+            SetIcon(72, 49, 0x2d); // steel 
+            SetIcon(72, 65, 0x12); // smelter 
             SetIcon(72, 89, 0xb8);
-            SetIcon(72, 105, 0x29); /* planks */
+            SetIcon(72, 105, 0x29); // planks 
             SetIcon(72, 121, 0xaf);
             SetIcon(72, 141, 0xa5);
             SetIcon(88, 13, 0xaa);
@@ -2021,11 +2021,11 @@ namespace Freeserf.UI
             SetIcon(88, 105, 0xa9);
             SetIcon(88, 121, 0xa6);
             SetIcon(88, 141, 0xa7);
-            SetIcon(120, 9, 0x21); /* knight 4 */
-            SetIcon(120, 37, 0x1b); /* weaponsmith */
-            SetIcon(120, 73, 0x1a); /* toolmaker */
-            SetIcon(120, 101, 0x19); /* boatbuilder */
-            SetIcon(120, 129, 0xc); /* builder */
+            SetIcon(120, 9, 0x21); // knight 4 
+            SetIcon(120, 37, 0x1b); // weaponsmith 
+            SetIcon(120, 73, 0x1a); // toolmaker 
+            SetIcon(120, 101, 0x19); // boatbuilder 
+            SetIcon(120, 129, 0xc); // builder 
 
             uint[,,] values = new uint[24, Building.MaxStock, 2];
 
@@ -2153,7 +2153,7 @@ namespace Freeserf.UI
             SetIcon(96, 105, 0x1c);
             SetIcon(96, 121, 0x82);
 
-            /* First column */
+            // First column 
             DrawSerfMeter(3,   0, serfs[Serf.Type.Transporter]);
             DrawSerfMeter(3,  16, serfs[Serf.Type.Sailor]);
             DrawSerfMeter(3,  32, serfs[Serf.Type.Digger]);
@@ -2164,7 +2164,7 @@ namespace Freeserf.UI
             DrawSerfMeter(3, 112, serfs[Serf.Type.Knight1]);
             DrawSerfMeter(3, 128, serfs[Serf.Type.Knight0]);
 
-            /* Second column */
+            // Second column 
             DrawSerfMeter(8,   0, serfs[Serf.Type.Lumberjack]);
             DrawSerfMeter(8,  16, serfs[Serf.Type.Sawmiller]);
             DrawSerfMeter(8,  32, serfs[Serf.Type.Smelter]);
@@ -2175,7 +2175,7 @@ namespace Freeserf.UI
             DrawSerfMeter(8, 112, serfs[Serf.Type.Toolmaker]);
             DrawSerfMeter(8, 128, serfs[Serf.Type.WeaponSmith]);
 
-            /* Third column */
+            // Third column 
             DrawSerfMeter(13,  0, serfs[Serf.Type.Fisher]);
             DrawSerfMeter(13,  16, serfs[Serf.Type.PigFarmer]);
             DrawSerfMeter(13,  32, serfs[Serf.Type.Butcher]);
@@ -2270,10 +2270,10 @@ namespace Freeserf.UI
 
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
 
-            var pos = interf.GetMapCursorPos();
+            var position = interf.GetMapCursorPosition();
             uint[] estimates = new uint[5];
 
-            interf.Game.PrepareGroundAnalysis(pos, estimates);
+            interf.Game.PrepareGroundAnalysis(position, estimates);
 
             SetText(8, 39, "GROUND-ANALYSIS:");
 
@@ -2325,7 +2325,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(16, 17, 295u, Action.DefaultFoodDistribution); // reset values button
 
-            Player player = interf.GetPlayer();
+            var player = interf.GetPlayer();
 
             slideBars[0].MoveTo(40, 30);
             slideBars[0].Displayed = Displayed;
@@ -2357,7 +2357,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(112, 17, 295u, Action.DefaultPlanksAndSteelDistribution); // reset values button
 
-            Player player = interf.GetPlayer();
+            var player = interf.GetPlayer();
 
             slideBars[0].MoveTo(8, 35);
             slideBars[0].Displayed = Displayed;
@@ -2394,7 +2394,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(16, 69, 295u, Action.DefaultCoalAndWheatDistribution); // reset values button
 
-            Player player = interf.GetPlayer();
+            var player = interf.GetPlayer();
 
             slideBars[0].MoveTo(8, 48);
             slideBars[0].Displayed = Displayed;
@@ -2478,9 +2478,9 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(112, 17, 295u, Action.DefaultToolmakerPriorities); // reset values button
 
-            Player player = interf.GetPlayer();
+            var player = interf.GetPlayer();
 
-            int[] locations = new int[9]
+            var locations = new int[9]
             {
                 13, 29, 141, 125, 77, 45, 61, 93, 109
             };
@@ -2529,9 +2529,9 @@ namespace Freeserf.UI
 
             for (int i = 0; i < count; ++i)
             {
-                int pos = count - order[i];
+                int position = count - order[i];
 
-                SetButton(8 * ResourceStairLayout[2 * pos] + 8, ResourceStairLayout[2 * pos + 1] + 9, 34u + (uint)i, Action.SetTransportItem1 + pos);
+                SetButton(8 * ResourceStairLayout[2 * position] + 8, ResourceStairLayout[2 * position + 1] + 9, 34u + (uint)i, Action.SetTransportItem1 + position);
             }
 		}
 
@@ -2623,7 +2623,7 @@ namespace Freeserf.UI
             SetText(16, 63, "Volume");
 
             // Music
-            Audio.Audio.Player player = Audio?.GetMusicPlayer();
+            var player = Audio?.GetMusicPlayer();
             SetButton(112, 19, (player != null && player.Enabled) ? 288u : 220u, Action.OptionsMusic);
 
             // Sfx
@@ -2631,8 +2631,8 @@ namespace Freeserf.UI
             SetButton(112, 39, (player != null && player.Enabled) ? 288u : 220u, Action.OptionsSfx);
 
             // Volume
-            SetButton(96, 59, 220u, Action.OptionsVolumeMinus); /* Volume minus */
-            SetButton(112, 59, 221u, Action.OptionsVolumePlus); /* Volume plus */
+            SetButton(96, 59, 220u, Action.OptionsVolumeMinus); // Volume minus 
+            SetButton(112, 59, 221u, Action.OptionsVolumePlus); // Volume plus 
 
             float volume = 0.0f;
             Audio.Audio.IVolumeController volumeController = Audio?.GetVolumeController();
@@ -2737,18 +2737,18 @@ namespace Freeserf.UI
             {
                 if (building.GetProgress() == 0)
                 {
-                    /* Digger */
+                    // Digger 
                     SetIcon(18, 121, 0xbu);
                 }
                 else
                 {
-                    /* Builder */
+                    // Builder 
                     SetIcon(18, 121, 0xcu);
                 }
             }
             else
             {
-                /* Minus box */
+                // Minus box 
                 SetIcon(18, 121, 0xdcu);
             }
 
@@ -2879,25 +2879,25 @@ namespace Freeserf.UI
 
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (var dir in cycle)
+            foreach (var direction in cycle)
             {
-                int index = 5 - (int)dir;
+                int index = 5 - (int)direction;
                 int x = 8 + 8 * FlagLayout[index * 2];
                 int y = 9 + FlagLayout[index * 2 + 1];
 
-                if (flag.HasPath(dir))
+                if (flag.HasPath(direction))
                 {
                     uint sprite = 0xdcu; // minus box
 
-                    if (flag.HasTransporter(dir))
+                    if (flag.HasTransporter(direction))
                         sprite = 0x120u; // check box
 
                     SetIcon(x, y, sprite);
                 }
             }
 
-            /* TODO show path merge button. */
-            /* if (r == 0) draw_popup_icon(7, 51, 0x135); */
+            // TODO show path merge button. 
+            // if (r == 0) draw_popup_icon(7, 51, 0x135); 
 
             SetText(8, 13, "Transport Info:");
 
@@ -3239,7 +3239,7 @@ namespace Freeserf.UI
         void DrawDiskMessageBox()
         {
             uint iconIndex = 220u;
-            Action closeAction = Action.CloseBox;
+            var closeAction = Action.CloseBox;
 
             switch (GameStore.Instance.LastOperationResult)
             {
@@ -3943,8 +3943,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        var pos = interf.GetMapCursorPos();
-                        Flag flag = interf.Game.GetFlagAtPos(pos);
+                        var position = interf.GetMapCursorPosition();
+                        var flag = interf.Game.GetFlagAtPos(position);
 
                         if (!interf.Game.SendGeologist(flag))
                         {
@@ -4150,8 +4150,8 @@ namespace Freeserf.UI
                     {
                         var castlePos = interf.Game.GetPlayer((uint)(action - Action.JumpToPlayer1)).CastlePosition;
 
-                        if (castlePos != Global.BadMapPos)
-                            interf.Viewport.MoveToMapPos(castlePos, true);
+                        if (castlePos != Constants.INVALID_MAPPOS)
+                            interf.Viewport.MoveToMapPosition(castlePos, true);
 
                         SetBox(Type.PlayerStatistics);
                     }
@@ -4204,7 +4204,7 @@ namespace Freeserf.UI
 
             // TODO
 
-            /* Dispatch to one of the popup box functions above. */
+            // Dispatch to one of the popup box functions above. 
             switch (Box)
             {
                 case Type.Map:

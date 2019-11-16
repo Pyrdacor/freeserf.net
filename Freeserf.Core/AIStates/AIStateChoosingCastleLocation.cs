@@ -25,11 +25,13 @@ using System.Linq;
 
 namespace Freeserf.AIStates
 {
+    using MapPos = UInt32;
+
     class AIStateChooseCastleLocation : AIState
     {
         const int scansPerUpdate = 50;
         bool built = false;
-        int tries = 0;
+        int numTries = 0;
         int goldFocus = -1;
         int steelFocus = -1;
         int militaryFocus = -1;
@@ -59,13 +61,13 @@ namespace Freeserf.AIStates
 
             for (int i = 0; i < scansPerUpdate; ++i)
             {
-                var pos = game.Map.GetRandomCoord(game.GetRandom());
-                int foundPos = CheckCastleSpot(game, player, pos, (int)playerInfo.Intelligence);
+                var position = game.Map.GetRandomCoordinate(game.GetRandom());
+                int foundPosition = CheckCastleSpot(game, player, position, (int)playerInfo.Intelligence);
 
-                if (foundPos != -1 && game.CanBuildCastle((uint)foundPos, player))
+                if (foundPosition != -1 && game.CanBuildCastle((uint)foundPosition, player))
                 {
                     // If found a good spot, build the castle
-                    if (!game.BuildCastle((uint)foundPos, player))
+                    if (!game.BuildCastle((uint)foundPosition, player))
                         continue; // failed -> try again
                     else
                     {
@@ -76,7 +78,7 @@ namespace Freeserf.AIStates
             }
 
             // lower the ai focus after several tries to finally find a spot (only on small maps)
-            if (++tries % (5 + game.Map.Size * 5) == 0)
+            if (++numTries % (5 + game.Map.Size * 5) == 0)
             {
                 if (goldFocus > 0)
                     --goldFocus;
@@ -101,77 +103,77 @@ namespace Freeserf.AIStates
                 GoToState(ai, AI.State.CastleBuilt);
         }
 
-        Map.FindData FindTree(Map map, uint pos)
+        Map.FindData FindTree(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(pos) >= Map.Object.Tree0 && map.GetObject(pos) <= Map.Object.Pine7
+                Success = map.GetObject(position) >= Map.Object.Tree0 && map.GetObject(position) <= Map.Object.Pine7
             };
         }
 
-        Map.FindData FindStone(Map map, uint pos)
+        Map.FindData FindStone(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(pos) >= Map.Object.Stone0 && map.GetObject(pos) <= Map.Object.Stone7
+                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7
             };
         }
 
-        Map.FindData FindFish(Map map, uint pos)
+        Map.FindData FindFish(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = FindWater(map, pos).Success && map.GetResourceFish(pos) > 0u
+                Success = FindWater(map, position).Success && map.GetResourceFish(position) > 0u
             };
         }
 
-        Map.FindData FindMineral(Map map, uint pos)
+        Map.FindData FindMineral(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = FindMountain(map, pos).Success &&  map.GetResourceAmount(pos) > 0u,
-                Data = new KeyValuePair<Map.Minerals, uint>(map.GetResourceType(pos), map.GetResourceAmount(pos))
+                Success = FindMountain(map, position).Success &&  map.GetResourceAmount(position) > 0u,
+                Data = new KeyValuePair<Map.Minerals, uint>(map.GetResourceType(position), map.GetResourceAmount(position))
             };
         }
 
-        Map.FindData FindMountain(Map map, uint pos)
+        Map.FindData FindMountain(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = (map.TypeUp(pos) >= Map.Terrain.Tundra0 && map.TypeUp(pos) <= Map.Terrain.Tundra2) ||
-                    (map.TypeDown(pos) >= Map.Terrain.Tundra0 && map.TypeDown(pos) <= Map.Terrain.Tundra2)
+                Success = (map.TypeUp(position) >= Map.Terrain.Tundra0 && map.TypeUp(position) <= Map.Terrain.Tundra2) ||
+                    (map.TypeDown(position) >= Map.Terrain.Tundra0 && map.TypeDown(position) <= Map.Terrain.Tundra2)
             };
         }
 
-        Map.FindData FindWater(Map map, uint pos)
+        Map.FindData FindWater(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = (map.TypeUp(pos) >= Map.Terrain.Water0 && map.TypeUp(pos) <= Map.Terrain.Water3) ||
-                    (map.TypeDown(pos) >= Map.Terrain.Water0 && map.TypeDown(pos) <= Map.Terrain.Water3)
+                Success = (map.TypeUp(position) >= Map.Terrain.Water0 && map.TypeUp(position) <= Map.Terrain.Water3) ||
+                    (map.TypeDown(position) >= Map.Terrain.Water0 && map.TypeDown(position) <= Map.Terrain.Water3)
             };
         }
 
-        Map.FindData FindDesert(Map map, uint pos)
+        Map.FindData FindDesert(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = (map.TypeUp(pos) >= Map.Terrain.Desert0 && map.TypeUp(pos) <= Map.Terrain.Desert2) ||
-                    (map.TypeDown(pos) >= Map.Terrain.Desert0 && map.TypeDown(pos) <= Map.Terrain.Desert2)
+                Success = (map.TypeUp(position) >= Map.Terrain.Desert0 && map.TypeUp(position) <= Map.Terrain.Desert2) ||
+                    (map.TypeDown(position) >= Map.Terrain.Desert0 && map.TypeDown(position) <= Map.Terrain.Desert2)
             };
         }
 
-        int CheckCastleSpot(Game game, Player player, uint pos, int intelligence)
+        int CheckCastleSpot(Game game, Player player, MapPos position, int intelligence)
         {
             var map = game.Map;
 
-            int treeCount = map.FindInArea(pos, 5, FindTree, 1).Count;
-            int stoneCount = map.FindInArea(pos, 5, FindStone, 1).Count;
-            int fishCount = map.FindInArea(pos, 7, FindFish, 1).Count;
-            int mountainCountNear = map.FindInArea(pos, 3, FindMountain, 0).Count;
-            int mountainCountFar = map.FindInArea(pos, 9, FindMountain, 4).Count;
-            int desertCount = map.FindInArea(pos, 6, FindDesert, 0).Count;
-            int waterCount = map.FindInArea(pos, 6, FindWater, 0).Count;
+            int treeCount = map.FindInArea(position, 5, FindTree, 1).Count;
+            int stoneCount = map.FindInArea(position, 5, FindStone, 1).Count;
+            int fishCount = map.FindInArea(position, 7, FindFish, 1).Count;
+            int mountainCountNear = map.FindInArea(position, 3, FindMountain, 0).Count;
+            int mountainCountFar = map.FindInArea(position, 9, FindMountain, 4).Count;
+            int desertCount = map.FindInArea(position, 6, FindDesert, 0).Count;
+            int waterCount = map.FindInArea(position, 6, FindWater, 0).Count;
 
             int numLargeSpots = 3;
             int numSmallSpots = 3;
@@ -180,7 +182,7 @@ namespace Freeserf.AIStates
             if (player.InitialSupplies < 5)
             {
                 // we need coal and iron close enough when starting with low supplies
-                var minerals = map.FindInArea(pos, 9, FindMineral, 1).Select(m => (KeyValuePair<Map.Minerals, uint>)m);
+                var minerals = map.FindInArea(position, 9, FindMineral, 1).Select(m => (KeyValuePair<Map.Minerals, uint>)m);
 
                 int ironCount = minerals.Where(m => m.Key == Map.Minerals.Iron).Select(m => (int)m.Value).Sum();
                 int coalCount = minerals.Where(m => m.Key == Map.Minerals.Coal).Select(m => (int)m.Value).Sum();
@@ -208,12 +210,12 @@ namespace Freeserf.AIStates
             }
 
             // if we tried too often we will only assure that there is a bit of trees and stones
-            if (tries >= 25 + map.Size * 5)
+            if (numTries >= 25 + map.Size * 5)
             {
                 if (treeCount < 5 || stoneCount < 2)
                     return -1;
 
-                if (tries < 1000) // after 1000 tries, just place it somewhere
+                if (numTries < 1000) // after 1000 tries, just place it somewhere
                 {
                     if (mountainCountNear > 7) // too close to mountain
                         return -1;
@@ -232,18 +234,18 @@ namespace Freeserf.AIStates
 
                     numLargeSpots = 2; // the toolmaker can be build when we have expanded the land
 
-                    if (tries >= 80 && player.InitialSupplies > 4)
+                    if (numTries >= 80 && player.InitialSupplies > 4)
                         numLargeSpots = 1; // we need to expand the territory to build the sawmill
 
                     if (game.Map.Size < 5)
                     {
                         // in small maps we no longer force enemy distance after many tries
-                        if (tries >= 120)
+                        if (numTries >= 120)
                             keepDistanceToEnemies = 0;
-                        else if (tries >= 80)
+                        else if (numTries >= 80)
                             keepDistanceToEnemies = 15;
                     }
-                    else if (tries >= 200) // if tried very long we will have mercy in any case
+                    else if (numTries >= 200) // if tried very long we will have mercy in any case
                     {
                         keepDistanceToEnemies = 0;
                     }
@@ -260,7 +262,7 @@ namespace Freeserf.AIStates
                 if (desertCount + waterCount + mountainCountNear + mountainCountFar > 10) // too much desert/water/mountain
                     return -1;
 
-                var minerals = map.FindInArea(pos, 9, FindMineral, 1).Select(m => (KeyValuePair<Map.Minerals, uint>)m);
+                var minerals = map.FindInArea(position, 9, FindMineral, 1).Select(m => (KeyValuePair<Map.Minerals, uint>)m);
 
                 int stoneOreCount = minerals.Where(m => m.Key == Map.Minerals.Stone).Select(m => (int)m.Value).Sum();
                 int goldCount = minerals.Where(m => m.Key == Map.Minerals.Gold).Select(m => (int)m.Value).Sum();
@@ -299,7 +301,7 @@ namespace Freeserf.AIStates
                     return -1;
             }
 
-            if (keepDistanceToEnemies > 0 && tries < 1000)
+            if (keepDistanceToEnemies > 0 && numTries < 1000)
             {
                 for (uint i = 0; i < game.GetPlayerCount(); ++i)
                 {
@@ -308,9 +310,9 @@ namespace Freeserf.AIStates
                     if (enemy == player || !enemy.HasCastle)
                         continue;
 
-                    int dist = Math.Min(Math.Abs(game.Map.DistX(pos, enemy.CastlePosition)), Math.Abs(game.Map.DistY(pos, enemy.CastlePosition)));
+                    int distance = Math.Min(Math.Abs(game.Map.DistanceX(position, enemy.CastlePosition)), Math.Abs(game.Map.DistanceY(position, enemy.CastlePosition)));
 
-                    if (dist < keepDistanceToEnemies)
+                    if (distance < keepDistanceToEnemies)
                         return -1;
                 }
             }
@@ -324,15 +326,15 @@ namespace Freeserf.AIStates
 
             for (int i = 0; i < 100; ++i)
             {
-                uint checkPos = map.PosAddSpirally(pos, (uint)i);
+                uint checkPosition = map.PositionAddSpirally(position, (uint)i);
 
-                if (game.CanBuildLarge(checkPos))
+                if (game.CanBuildLarge(checkPosition))
                 {
                     ++numSmall;
                     ++numLarge;
-                    largeSpots.Add(checkPos);
+                    largeSpots.Add(checkPosition);
                 }
-                else if (game.CanBuildSmall(checkPos))
+                else if (game.CanBuildSmall(checkPosition))
                 {
                     ++numSmall;
                 }

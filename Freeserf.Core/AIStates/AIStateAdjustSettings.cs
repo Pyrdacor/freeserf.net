@@ -73,7 +73,7 @@ namespace Freeserf.AIStates
             {
                 uint additionalKnights = 0;
 
-                if (game.GetPlayerBuildings(player).Count(b => b.IsMilitary() && !b.HasKnight()) == 0)
+                if (game.GetPlayerBuildings(player).Count(building => building.IsMilitary() && !building.HasKnight()) == 0)
                 {
                     // every 45-53 minutes (depending on intelligence) an additional knight should protect the castle (starting at 35 minutes)
                     additionalKnights = (uint)Misc.Max(0, (int)((ai.GameTime - 35 * Global.TICKS_PER_MIN) / ((53 - playerInfo.Intelligence / 5) * Global.TICKS_PER_MIN)));

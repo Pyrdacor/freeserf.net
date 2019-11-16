@@ -91,15 +91,15 @@ namespace Freeserf
 
         public ushort Next()
         {
-            ushort[] rnd = state;
-            ushort r = (ushort)((rnd[0] + rnd[1]) ^ rnd[2]);
-            rnd[2] += rnd[1];
-            rnd[1] ^= rnd[2];
-            rnd[1] = (ushort)((rnd[1] >> 1) | (rnd[1] << 15));
-            rnd[2] = (ushort)((rnd[2] >> 1) | (rnd[2] << 15));
-            rnd[0] = r;
+            ushort[] random = state;
+            ushort result = (ushort)((random[0] + random[1]) ^ random[2]);
+            random[2] += random[1];
+            random[1] ^= random[2];
+            random[1] = (ushort)((random[1] >> 1) | (random[1] << 15));
+            random[2] = (ushort)((random[2] >> 1) | (random[2] << 15));
+            random[0] = result;
 
-            return r;
+            return result;
         }
 
         public override string ToString()

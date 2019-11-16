@@ -1,8 +1,8 @@
 ﻿/*
  * Buffer.cs - Memory buffer implementation
  *
- * Copyright (C) 2017  Wicked_Digger <wicked_digger@mail.ru>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2017       Wicked_Digger <wicked_digger@mail.ru>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -22,7 +22,6 @@
 
 using System;
 using System.IO;
-using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 
 namespace Freeserf.Data
@@ -33,14 +32,13 @@ namespace Freeserf.Data
     {
         byte[] data;
         byte* start;
-        uint size;
 
         public static BufferStream CreateFromValues<T>(T value, uint count)
         {
             var size = (uint)Marshal.SizeOf<T>() * count;
 
             var stream = new BufferStream(size);
-            stream.size = size;
+            stream.Size = size;
             dynamic v = value;
 
             fixed (byte* pointer = stream.data)
@@ -80,7 +78,7 @@ namespace Freeserf.Data
         public BufferStream(byte* data, uint size)
         {
             start = data;
-            this.size = size;
+            this.Size = size;
         }
 
         public BufferStream(byte[] data)
@@ -91,7 +89,7 @@ namespace Freeserf.Data
 
         public BufferStream(ushort[] data)
         {
-            uint size = (uint)data.Length << 1;
+            var size = (uint)data.Length << 1;
 
             this.data = new byte[size];
 
@@ -108,7 +106,7 @@ namespace Freeserf.Data
                 start = pointer;
             }
 
-            this.size = size;
+            Size = size;
         }
 
         public BufferStream(byte[] data, uint offset, uint size)
@@ -125,7 +123,7 @@ namespace Freeserf.Data
                 start = pointer;
             }
 
-            this.size = size;
+            Size = size;
         }
 
         public BufferStream(BufferStream baseStream, uint offset, uint size)
@@ -134,18 +132,18 @@ namespace Freeserf.Data
                 throw new IndexOutOfRangeException("The combination of offset and size exceeds base stream size.");
 
             start = baseStream.start + offset;
-            this.size = size;
+            Size = size;
         }
 
         public void Realloc(uint newSize)
         {
             if (data == null)
             {
-                size = newSize;
+                Size = newSize;
                 return;
             }
 
-            var temp = new byte[size];
+            var temp = new byte[Size];
             System.Buffer.BlockCopy(data, 0, temp, 0, temp.Length);
 
             data = new byte[newSize];
@@ -160,7 +158,7 @@ namespace Freeserf.Data
             temp = null;
         }
 
-        public uint Size => size;
+        public uint Size { get; private set; }
 
         unsafe public byte* GetPointer()
         {
@@ -172,7 +170,7 @@ namespace Freeserf.Data
             if (this.data != null)
                 return this.data;
 
-            byte[] data = new byte[size];
+            byte[] data = new byte[Size];
 
             fixed (byte* ptr = data)
             {
@@ -190,8 +188,8 @@ namespace Freeserf.Data
             {
                 // TODO: should we add data from base stream before the copy action? is there a use case?
 
-                stream.data = new byte[size];
-                stream.size = size;
+                stream.data = new byte[Size];
+                stream.Size = Size;
 
                 fixed (byte* pointer = stream.data)
                 {
@@ -200,19 +198,19 @@ namespace Freeserf.Data
             }
             else
             {
-                offset = (int)stream.size;
-                stream.size += size;
+                offset = (int)stream.Size;
+                stream.Size += Size;
             }
 
             // Note: If stream.data already exists we might want to check for size exceeding here.
             // But as the Buffer class handles this, we omit it here.
 
             if (data != null)
-                System.Buffer.BlockCopy(data, 0, stream.data, offset, (int)size);
+                System.Buffer.BlockCopy(data, 0, stream.data, offset, (int)Size);
             else
             {
                 byte* current = start;
-                byte* end = start + size;
+                byte* end = start + Size;
                 byte* streamCurrent = stream.start + offset;
 
                 while (current != end)
@@ -222,21 +220,21 @@ namespace Freeserf.Data
 
         public void CopyTo(Stream stream)
         {
-            byte[] buffer = new byte[size];
+            byte[] buffer = new byte[Size];
 
             if (data != null)
-                System.Buffer.BlockCopy(data, 0, buffer, 0, (int)size);
+                System.Buffer.BlockCopy(data, 0, buffer, 0, (int)Size);
             else
             {
                 byte* current = start;
-                byte* end = start + size;
+                byte* end = start + Size;
 
                 fixed (byte* bufPointer = buffer)
                 {
-                    byte* dest = bufPointer;
+                    byte* destination = bufPointer;
 
                     while (current != end)
-                        *dest++ = *current++;
+                        *destination++ = *current++;
                 }
             }
 

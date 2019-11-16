@@ -79,7 +79,7 @@ namespace Freeserf.Render
             shadowSprite = spriteFactory.Create(shadowInfo.Width, shadowInfo.Height, 0, 0, false, false);
         }
 
-        public void Update(uint tick, RenderMap map, uint pos)
+        public void Update(uint tick, RenderMap map, uint position)
         {
             uint spriteIndex = (uint)objectType - 8;
 
@@ -104,7 +104,7 @@ namespace Freeserf.Render
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
-            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(pos);
+            var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(position);
 
             sprite.X = renderPosition.X + spriteOffsets[spriteIndex].X;
             sprite.Y = renderPosition.Y + spriteOffsets[spriteIndex].Y;

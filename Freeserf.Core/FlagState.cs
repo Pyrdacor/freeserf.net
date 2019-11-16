@@ -25,9 +25,7 @@ namespace Freeserf
 {
     using Serialize;
     using word = UInt16;
-    using dword = UInt32;
     using MapPos = UInt32;
-    using OtherEndpoint = Flag.OtherEndpoint;
     using OtherEndpointPath = Flag.OtherEndpointPath;
     using FlagPath = Flag.FlagPath;
     using ResourceSlot = Flag.ResourceSlot;

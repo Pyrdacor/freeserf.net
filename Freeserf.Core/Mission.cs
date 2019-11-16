@@ -26,7 +26,6 @@ using System.Collections.Generic;
 namespace Freeserf
 {
     using MapPos = UInt32;
-    using dword = UInt32;
 
     public class Character
     {
@@ -86,8 +85,8 @@ namespace Freeserf
 
         public struct Preset
         {
-            public Preset(dword character, dword intelligence, dword supplies,
-                dword reproduction, Position castlePos)
+            public Preset(uint character, uint intelligence, uint supplies,
+                uint reproduction, Position castlePos)
             {
                 Character = Characters[character];
                 Intelligence = intelligence;
@@ -97,15 +96,15 @@ namespace Freeserf
             }
 
             public Character Character;
-            public dword Intelligence;
-            public dword Supplies;
-            public dword Reproduction;
+            public uint Intelligence;
+            public uint Supplies;
+            public uint Reproduction;
             public Position Castle;
         }
 
-        public dword Intelligence { get; set; }
-        public dword Supplies { get; set; }
-        public dword Reproduction { get; set; }
+        public uint Intelligence { get; set; }
+        public uint Supplies { get; set; }
+        public uint Reproduction { get; set; }
         public PlayerFace Face { get; private set; }
         public Color Color { get; set; }
         public Position CastlePosition { get; set; }
@@ -126,7 +125,7 @@ namespace Freeserf
         }
 
         public PlayerInfo(PlayerFace character, Color color,
-             dword intelligence, dword supplies, dword reproduction)
+             uint intelligence, uint supplies, uint reproduction)
         {
             SetCharacter(character);
 
@@ -383,11 +382,11 @@ namespace Freeserf
             )
         };
 
-        public dword MapSize { get; set; }
+        public uint MapSize { get; set; }
 
         public Random RandomBase { get; private set; }
 
-        public dword PlayerCount => (dword)players.Count;
+        public uint PlayerCount => (uint)players.Count;
 
         readonly List<PlayerInfo> players = new List<PlayerInfo>(4);
         readonly string name = "";
@@ -402,9 +401,9 @@ namespace Freeserf
 
             for (int i = 0; i < missionPreset.Players.Length; ++i)
             {
-                PlayerInfo.Preset playerInfo = missionPreset.Players[i];
+                var playerInfo = missionPreset.Players[i];
                 var character = playerInfo.Character.Face;
-                PlayerInfo player = new PlayerInfo(character, PlayerInfo.PlayerColors[i],
+                var player = new PlayerInfo(character, PlayerInfo.PlayerColors[i],
                                                   playerInfo.Intelligence, playerInfo.Supplies,
                                                   playerInfo.Reproduction);
                 player.CastlePosition = playerInfo.Castle;
@@ -420,14 +419,14 @@ namespace Freeserf
             SetRandomBase(randomBase, aiPlayersOnly);
         }
 
-        public PlayerInfo GetPlayer(dword player)
+        public PlayerInfo GetPlayer(uint player)
         {
             return players[(int)player];
         }
 
         public void SetRandomBase(Random randomBase, bool aiPlayersOnly)
         {
-            Random random = randomBase;
+            var random = randomBase;
             RandomBase = randomBase;
 
             players.Clear();
@@ -441,7 +440,7 @@ namespace Freeserf
                 players[0].Intelligence = 40;
             }
 
-            PlayerInfo playerInfo = null;
+            PlayerInfo playerInfo;
 
             // Player 1
 
@@ -453,9 +452,9 @@ namespace Freeserf
 
             players.Add(playerInfo);
 
-            dword val = random.Next();
+            uint value = random.Next();
 
-            if ((val & 7) != 0)
+            if ((value & 7) != 0)
             {
                 // Player 2
 
@@ -467,9 +466,9 @@ namespace Freeserf
 
                 players.Add(playerInfo);
 
-                val = random.Next();
+                value = random.Next();
 
-                if ((val & 3) == 0)
+                if ((value & 3) == 0)
                 {
                     // Player 3
 
@@ -485,7 +484,7 @@ namespace Freeserf
 
             int i = 0;
 
-            foreach (PlayerInfo info in players)
+            foreach (var info in players)
             {
                 info.Color = PlayerInfo.PlayerColors[i++];
             }
@@ -497,8 +496,8 @@ namespace Freeserf
         }
 
         public void AddPlayer(PlayerFace character, Color color,
-                         dword intelligence, dword supplies,
-                         dword reproduction)
+                         uint intelligence, uint supplies,
+                         uint reproduction)
         {
             AddPlayer(new PlayerInfo(character, color, intelligence, supplies, reproduction));
         }
@@ -508,7 +507,7 @@ namespace Freeserf
             players.Clear();
         }
 
-        public void RemovePlayer(dword index)
+        public void RemovePlayer(uint index)
         {
             if (index >= players.Count)
                 return;
@@ -532,7 +531,7 @@ namespace Freeserf
             return new GameInfo(IntroMission);
         }
 
-        public static GameInfo GetMission(dword mission)
+        public static GameInfo GetMission(uint mission)
         {
             if (mission >= GetMissionCount())
             {
@@ -542,12 +541,12 @@ namespace Freeserf
             return new GameInfo(missions[(int)mission]);
         }
 
-        public static dword GetMissionCount()
+        public static uint GetMissionCount()
         {
-            return (dword)missions.Length;
+            return (uint)missions.Length;
         }
 
-        public Character GetCharacter(dword character)
+        public Character GetCharacter(uint character)
         {
             if (character >= GetCharacterCount())
             {
@@ -557,27 +556,27 @@ namespace Freeserf
             return PlayerInfo.Characters[character];
         }
 
-        public dword GetCharacterCount()
+        public uint GetCharacterCount()
         {
-            return (dword)PlayerInfo.Characters.Length;
+            return (uint)PlayerInfo.Characters.Length;
         }
 
         public Game Instantiate(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
-            Game game = new Game(renderView, audioInterface);
+            var game = new Game(renderView, audioInterface);
 
             if (!game.Init(MapSize, RandomBase))
             {
                 return null;
             }
 
-            /* Initialize player and build initial castle */
-            foreach (PlayerInfo playerInfo in players)
+            // Initialize player and build initial castle 
+            foreach (var playerInfo in players)
             {
-                dword index = game.AddPlayer(playerInfo.Intelligence,
-                                            playerInfo.Supplies,
-                                            playerInfo.Reproduction);
-                Player player = game.GetPlayer(index);
+                var index = game.AddPlayer(playerInfo.Intelligence,
+                                           playerInfo.Supplies,
+                                           playerInfo.Reproduction);
+                var player = game.GetPlayer(index);
 
                 if (!playerInfo.Face.IsHuman()) // not you or your partner
                 {
@@ -589,11 +588,11 @@ namespace Freeserf
 
                 player.InitView(playerInfo.Color, playerInfo.Face);
 
-                PlayerInfo.Position castlePos = playerInfo.CastlePosition;
+                var castlePos = playerInfo.CastlePosition;
 
                 if (castlePos.Column > -1 && castlePos.Row > -1)
                 {
-                    var position = game.Map.Pos((MapPos)castlePos.Column, (MapPos)castlePos.Row);
+                    var position = game.Map.Position((MapPos)castlePos.Column, (MapPos)castlePos.Row);
 
                     game.BuildCastle(position, player);
                 }

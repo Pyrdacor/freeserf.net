@@ -85,7 +85,7 @@ namespace Freeserf.UI
         object gameLock = new object();
         GameInitBox initBox;
 
-        protected MapPos mapCursorPos = 0u;
+        protected MapPos mapCursorPosition = 0u;
         CursorType mapCursorType = CursorType.None;
         BuildPossibility buildPossibility = BuildPossibility.None;
 
@@ -308,9 +308,9 @@ namespace Freeserf.UI
             config = Misc.BitInvert(config, i);
         }
 
-        public MapPos GetMapCursorPos()
+        public MapPos GetMapCursorPosition()
         {
-            return mapCursorPos;
+            return mapCursorPosition;
         }
 
         public CursorType GetMapCursorType()
@@ -338,7 +338,7 @@ namespace Freeserf.UI
             return buildPossibility;
         }
 
-        /* Open popup box */
+        // Open popup box 
         public void OpenPopup(PopupBox.Type box)
         {
             if (PopupBox == null)
@@ -354,7 +354,7 @@ namespace Freeserf.UI
             PanelBar?.Update();
         }
 
-        /* Close the current popup. */
+        // Close the current popup. 
         public void ClosePopup()
         {
             if (PopupBox == null)
@@ -369,11 +369,11 @@ namespace Freeserf.UI
             else
                 DeleteChild(PopupBox);
 
-            UpdateMapCursorPos(mapCursorPos);
+            UpdateMapCursorPosition(mapCursorPosition);
             PanelBar?.Update();
         }
 
-        /* Open box for starting a new game */
+        // Open box for starting a new game 
         public void OpenGameInit(GameInitBox.GameType gameType = GameInitBox.GameType.Custom)
         {
             // the following code will start the intro mission that is played in the background while the GameInitBox is active
@@ -419,10 +419,10 @@ namespace Freeserf.UI
             Viewport.Enabled = true;
             Layout();
 
-            UpdateMapCursorPos(mapCursorPos);
+            UpdateMapCursorPosition(mapCursorPosition);
         }
 
-        /* Open box for next message in the message queue */
+        // Open box for next message in the message queue 
         public void OpenMessage()
         {
             if (!player.HasNotification)
@@ -435,16 +435,16 @@ namespace Freeserf.UI
                 msgFlags |= Misc.Bit(4);
                 msgFlags |= Misc.Bit(3);
 
-                MapPos pos = Viewport.GetCurrentMapPos();
+                var position = Viewport.GetCurrentMapPosition();
 
-                returnPos = (int)pos;
+                returnPos = (int)position;
             }
 
-            Notification notification = player.PopNotification();
+            var notification = player.PopNotification();
 
             if (notification.NotificationType == Notification.Type.CallToMenu)
             {
-                /* TODO */
+                // TODO 
             }
 
             if (NotificationBox == null)
@@ -458,9 +458,9 @@ namespace Freeserf.UI
 
             if (Misc.BitTest(0x8f3fe, (int)notification.NotificationType))
             {
-                /* Move screen to new position */
-                Viewport.MoveToMapPos(notification.Position, true);
-                UpdateMapCursorPos(notification.Position);
+                // Move screen to new position 
+                Viewport.MoveToMapPosition(notification.Position, true);
+                UpdateMapCursorPosition(notification.Position);
             }
 
             msgFlags |= Misc.Bit(1);
@@ -472,12 +472,12 @@ namespace Freeserf.UI
         {
             if (Misc.BitTest(msgFlags, 3))
             {
-                /* Return arrow present */
+                // Return arrow present 
                 msgFlags |= Misc.Bit(4);
                 msgFlags &= ~Misc.Bit(3);
 
                 returnTimeout = 0;
-                Viewport.MoveToMapPos((uint)returnPos, false);
+                Viewport.MoveToMapPosition((uint)returnPos, false);
 
                 if (PopupBox != null && PopupBox.Box == PopupBox.Type.Message)
                 {
@@ -509,12 +509,12 @@ namespace Freeserf.UI
             }
         }
 
-        public void GotoMapPos(MapPos pos)
+        public void GotoMapPos(MapPos position)
         {
             if (Ingame && Viewport != null)
             {
-                Viewport.MoveToMapPos(pos, true);
-                UpdateMapCursorPos(pos);
+                Viewport.MoveToMapPosition(position, true);
+                UpdateMapCursorPosition(position);
             }
         }
 
@@ -559,8 +559,8 @@ namespace Freeserf.UI
 
             this.player = Game.GetPlayer(player);
 
-            /* Move viewport to initial position */
-            MapPos initPos = Game.Map.Pos(0, 0);
+            // Move viewport to initial position 
+            var initialPosition = Game.Map.Position(0, 0);
 
             if (this.player != null)
             {
@@ -569,21 +569,21 @@ namespace Freeserf.UI
                 else
                     PanelBar.Displayed = false;
 
-                if (this.player.CastlePosition != Global.BadMapPos)
-                    initPos = this.player.CastlePosition;
+                if (this.player.CastlePosition != Constants.INVALID_MAPPOS)
+                    initialPosition = this.player.CastlePosition;
             }
             else
             {
                 PanelBar.Displayed = false;
             }
 
-            UpdateMapCursorPos(initPos);
-            Viewport.MoveToMapPos(mapCursorPos, true);
+            UpdateMapCursorPosition(initialPosition);
+            Viewport.MoveToMapPosition(mapCursorPosition, true);
         }
 
-        public void UpdateMapCursorPos(MapPos pos)
+        public void UpdateMapCursorPosition(MapPos position)
         {
-            mapCursorPos = pos;
+            mapCursorPosition = position;
 
             if (IsBuildingRoad())
             {
@@ -607,7 +607,7 @@ namespace Freeserf.UI
             return buildingRoad;
         }
 
-        /* Start road construction mode for player interface. */
+        // Start road construction mode for player interface. 
         public void BuildRoadBegin()
         {
             DetermineMapCursorType();
@@ -623,13 +623,13 @@ namespace Freeserf.UI
                 buildingRoad = new Road();
 
             buildingRoad.Invalidate();
-            buildingRoad.Start(mapCursorPos);
-            UpdateMapCursorPos(mapCursorPos);
+            buildingRoad.Start(mapCursorPosition);
+            UpdateMapCursorPosition(mapCursorPosition);
 
             PanelBar?.Update();
         }
 
-        /* End road construction mode for player interface. */
+        // End road construction mode for player interface. 
         public void BuildRoadEnd()
         {
             mapCursorSprites[1].Sprite = 32;
@@ -641,7 +641,7 @@ namespace Freeserf.UI
 
             ClearBuildingRoadSegments();
             buildingRoad.Invalidate();
-            UpdateMapCursorPos(mapCursorPos);
+            UpdateMapCursorPosition(mapCursorPosition);
 
             PanelBar?.Update();
         }
@@ -654,33 +654,32 @@ namespace Freeserf.UI
 
         /* Build a single road segment. Return -1 on fail, 0 on successful
            construction, and 1 if this segment completed the path. */
-        public int BuildRoadSegment(Direction dir, bool roadEndsThere)
+        public int BuildRoadSegment(Direction direction, bool roadEndsThere)
         {
             if (!buildingRoad.Extendable)
             {
-                /* Max length reached */
+                // Max length reached 
                 return -1;
             }
 
-            buildingRoad.Cost += Pathfinder.ActualCost(Game.Map, buildingRoad.GetEnd(Game.Map), dir);
+            buildingRoad.Cost += Pathfinder.ActualCost(Game.Map, buildingRoad.GetEnd(Game.Map), direction);
 
-            AddBuildingRoadSegment(buildingRoad.GetEnd(Game.Map), dir);
-            buildingRoad.Extend(dir);
+            AddBuildingRoadSegment(buildingRoad.GetEnd(Game.Map), direction);
+            buildingRoad.Extend(direction);
 
-            MapPos dest = 0;
+            MapPos destination = 0;
             bool water = false;
+            int result = Game.CanBuildRoad(buildingRoad, player, ref destination, ref water, roadEndsThere);
 
-            int r = Game.CanBuildRoad(buildingRoad, player, ref dest, ref water, roadEndsThere);
-
-            if (r <= 0)
+            if (result <= 0)
             {
-                /* Invalid construction, undo. */
+                // Invalid construction, undo. 
                 return RemoveRoadSegment();
             }
 
-            if (Game.Map.GetObject(dest) == Map.Object.Flag)
+            if (Game.Map.GetObject(destination) == Map.Object.Flag)
             {
-                /* Existing flag at destination, try to connect. */
+                // Existing flag at destination, try to connect. 
                 if (!Game.BuildRoad(buildingRoad, player, true))
                 {
                     BuildRoadEnd();
@@ -689,21 +688,21 @@ namespace Freeserf.UI
                 else
                 {
                     BuildRoadEnd();
-                    UpdateMapCursorPos(dest);
+                    UpdateMapCursorPosition(destination);
                     return 1;
                 }
             }
-            else if (Game.Map.Paths(dest) == 0)
+            else if (Game.Map.Paths(destination) == 0)
             {
-                /* No existing paths at destination, build segment. */
-                UpdateMapCursorPos(dest);
+                // No existing paths at destination, build segment. 
+                UpdateMapCursorPosition(destination);
 
                 if (GetConfig(6)) // pathway scrolling
-                    Viewport.MoveToMapPos(dest, true);
+                    Viewport.MoveToMapPosition(destination, true);
             }
             else
             {
-                /* TODO fast split path and connect on double click */
+                // TODO fast split path and connect on double click 
                 return -1;
             }
 
@@ -712,58 +711,58 @@ namespace Freeserf.UI
 
         public int RemoveRoadSegment()
         {
-            MapPos dest = buildingRoad.Source;
-            int res = 0;
+            var destination = buildingRoad.Source;
+            int result = 0;
             bool water = false;
             buildingRoad.Undo();
             RemoveLastBuildingRoadSegment();
 
             if (buildingRoad.Length == 0 ||
-                Game.CanBuildRoad(buildingRoad, player, ref dest, ref water) == 0)
+                Game.CanBuildRoad(buildingRoad, player, ref destination, ref water) == 0)
             {
-                /* Road construction is no longer valid, abort. */
+                // Road construction is no longer valid, abort.
                 BuildRoadEnd();
-                res = -1;
+                result = -1;
             }
 
-            UpdateMapCursorPos(dest);
+            UpdateMapCursorPosition(destination);
 
             if (GetConfig(6)) // pathway scrolling
-                Viewport.MoveToMapPos(dest, true);
+                Viewport.MoveToMapPosition(destination, true);
 
-            return res;
+            return result;
         }
 
-        /* Extend currently constructed road with an array of directions. */
+        // Extend currently constructed road with an array of directions. 
         public int ExtendRoad(Road road)
         {
-            Road oldRoad = buildingRoad;
-            int i = 0;
+            var oldRoad = buildingRoad;
+            int directionIndex = 0;
 
-            foreach (Direction dir in road.Dirs.Reverse())
+            foreach (var direction in road.Directions.Reverse())
             {
-                int r = BuildRoadSegment(dir, i == road.Length - 1);
+                int result = BuildRoadSegment(direction, directionIndex == road.Length - 1);
 
-                if (r < 0)
+                if (result < 0)
                 {
                     buildingRoad = oldRoad;
                     return -1;
                 }
-                else if (r == 1)
+                else if (result == 1)
                 {
                     buildingRoad.Invalidate();
                     return 1;
                 }
 
-                ++i;
+                ++directionIndex;
             }
 
             return 0;
         }
 
-        public bool BuildRoadIsValidDir(Direction dir)
+        public bool BuildRoadIsValidDir(Direction direction)
         {
-            return Misc.BitTest(buildingRoadValidDir, (int)dir);
+            return Misc.BitTest(buildingRoadValidDir, (int)direction);
         }
 
         public void DemolishObject()
@@ -773,23 +772,23 @@ namespace Freeserf.UI
             if (mapCursorType == CursorType.RemovableFlag)
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
-                Game.DemolishFlag(mapCursorPos, player);
+                Game.DemolishFlag(mapCursorPosition, player);
                 DetermineMapCursorType();
             }
             else if (mapCursorType == CursorType.Building)
             {
-                Building building = Game.GetBuildingAtPos(mapCursorPos);
+                var building = Game.GetBuildingAtPos(mapCursorPosition);
 
                 if (building.IsDone() &&
                     (building.BuildingType == Building.Type.Hut ||
                      building.BuildingType == Building.Type.Tower ||
                      building.BuildingType == Building.Type.Fortress))
                 {
-                    /* TODO */
+                    // TODO 
                 }
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Ahhh);
-                Game.DemolishBuilding(mapCursorPos, player);
+                Game.DemolishBuilding(mapCursorPosition, player);
                 DetermineMapCursorType();
             }
             else
@@ -800,28 +799,28 @@ namespace Freeserf.UI
             UpdateInterface();
         }
 
-        /* Build new flag. */
+        // Build new flag. 
         public void BuildFlag()
         {
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildFlag(mapCursorPos, player))
+            if (!Game.BuildFlag(mapCursorPosition, player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
             }
 
-            UpdateMapCursorPos(mapCursorPos);
+            UpdateMapCursorPosition(mapCursorPosition);
         }
 
-        /* Build a new building. */
+        // Build a new building. 
         public void BuildBuilding(Building.Type type)
         {
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildBuilding(mapCursorPos, type, player))
+            if (!Game.BuildBuilding(mapCursorPosition, type, player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
@@ -830,25 +829,25 @@ namespace Freeserf.UI
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             ClosePopup();
 
-            /* Move cursor to flag. */
-            MapPos flagPos = Game.Map.MoveDownRight(mapCursorPos);
-            UpdateMapCursorPos(flagPos);
+            // Move cursor to flag. 
+            var flagPosition = Game.Map.MoveDownRight(mapCursorPosition);
+            UpdateMapCursorPosition(flagPosition);
         }
 
-        /* Build castle. */
+        // Build castle. 
         public void BuildCastle()
         {
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildCastle(mapCursorPos, player))
+            if (!Game.BuildCastle(mapCursorPosition, player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
             }
 
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
-            UpdateMapCursorPos(mapCursorPos);
+            UpdateMapCursorPosition(mapCursorPosition);
         }
 
         public void BuildRoad()
@@ -859,7 +858,7 @@ namespace Freeserf.UI
             if (!Game.BuildRoad(buildingRoad, player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
-                Game.DemolishFlag(mapCursorPos, player);
+                Game.DemolishFlag(mapCursorPosition, player);
             }
             else
             {
@@ -874,7 +873,7 @@ namespace Freeserf.UI
             5, 5, 4, 4, 4, 4, 0, 0, 0, 0
         };
 
-        /* Called periodically when the game progresses. */
+        // Called periodically when the game progresses. 
         public virtual void Update()
         {
             if (Game == null)
@@ -891,11 +890,11 @@ namespace Freeserf.UI
 
                 UpdateBuildingRoadSegments();
 
-                int tickDiff = (int)Game.ConstTick - (int)lastConstTick;
+                int tickDifference = (int)Game.ConstTick - (int)lastConstTick;
                 lastConstTick = Game.ConstTick;
 
-                /* Clear return arrow after a timeout */
-                if (returnTimeout < tickDiff)
+                // Clear return arrow after a timeout 
+                if (returnTimeout < tickDifference)
                 {
                     msgFlags |= Misc.Bit(4);
                     msgFlags &= ~Misc.Bit(3);
@@ -903,17 +902,17 @@ namespace Freeserf.UI
                 }
                 else
                 {
-                    returnTimeout -= tickDiff;
+                    returnTimeout -= tickDifference;
                 }
 
-                /* Handle newly enqueued messages */
+                // Handle newly enqueued messages 
                 if (player != null && player.HasNotification)
                 {
                     player.DropNotifications();
 
                     while (player.HasNotification)
                     {
-                        Notification notification = player.PeekNotification();
+                        var notification = player.PeekNotification();
 
                         if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
                         {
@@ -938,7 +937,7 @@ namespace Freeserf.UI
                             break;
                         }
 
-                        Notification notification = player.PeekNotification();
+                        var notification = player.PeekNotification();
 
                         if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
                             break;
@@ -952,17 +951,18 @@ namespace Freeserf.UI
             }
         }
 
-        void AddBuildingRoadSegment(MapPos pos, Direction dir)
+        void AddBuildingRoadSegment(MapPos position, Direction direction)
         {
             // We only support road segments in direcitons Right, DownRight and Down.
             // So if it is another direction, we use the reverse direction with the opposite position.
-            if (dir > Direction.Down)
+            if (direction > Direction.Down)
             {
-                pos = Game.Map.Move(pos, dir);
-                dir = dir.Reverse();
+                position = Game.Map.Move(position, direction);
+                direction = direction.Reverse();
             }
 
-            var segment = new RenderRoadSegment(Game.Map, pos, dir, RenderView.GetLayer(Freeserf.Layer.Paths), RenderView.SpriteFactory, RenderView.DataSource);
+            var segment = new RenderRoadSegment(Game.Map, position, direction,
+                RenderView.GetLayer(Freeserf.Layer.Paths), RenderView.SpriteFactory, RenderView.DataSource);
 
             segment.Visible = true;
 
@@ -993,11 +993,11 @@ namespace Freeserf.UI
             }
         }
 
-        void GetMapCursorType(Player player, MapPos pos,
+        void GetMapCursorType(Player player, MapPos position,
                            out BuildPossibility buildPossibility,
                            out CursorType cursorType)
         {
-            Map map = Game.Map;
+            var map = Game.Map;
 
             if (player == null || AccessRights != Viewer.Access.Player)
             {
@@ -1006,28 +1006,28 @@ namespace Freeserf.UI
                 return;
             }
 
-            if (Game.CanBuildCastle(pos, player))
+            if (Game.CanBuildCastle(position, player))
             {
                 buildPossibility = BuildPossibility.Castle;
             }
-            else if (Game.CanPlayerBuild(pos, player) &&
-                Map.MapSpaceFromObject[(int)map.GetObject(pos)] == Map.Space.Open &&
-                (Game.CanBuildFlag(map.MoveDownRight(pos), player) ||
-                map.HasFlag(map.MoveDownRight(pos))))
+            else if (Game.CanPlayerBuild(position, player) &&
+                Map.MapSpaceFromObject[(int)map.GetObject(position)] == Map.Space.Open &&
+                (Game.CanBuildFlag(map.MoveDownRight(position), player) ||
+                map.HasFlag(map.MoveDownRight(position))))
             {
-                if (Game.CanBuildMine(pos))
+                if (Game.CanBuildMine(position))
                 {
                     buildPossibility = BuildPossibility.Mine;
                 }
-                else if (Game.CanBuildLarge(pos))
+                else if (Game.CanBuildLarge(position))
                 {
                     buildPossibility = BuildPossibility.Large;
                 }
-                else if (Game.CanBuildSmall(pos))
+                else if (Game.CanBuildSmall(position))
                 {
                     buildPossibility = BuildPossibility.Small;
                 }
-                else if (Game.CanBuildFlag(pos, player))
+                else if (Game.CanBuildFlag(position, player))
                 {
                     buildPossibility = BuildPossibility.Flag;
                 }
@@ -1036,7 +1036,7 @@ namespace Freeserf.UI
                     buildPossibility = BuildPossibility.None;
                 }
             }
-            else if (Game.CanBuildFlag(pos, player))
+            else if (Game.CanBuildFlag(position, player))
             {
                 buildPossibility = BuildPossibility.Flag;
             }
@@ -1045,10 +1045,10 @@ namespace Freeserf.UI
                 buildPossibility = BuildPossibility.None;
             }
 
-            if (map.GetObject(pos) == Map.Object.Flag &&
-                map.GetOwner(pos) == player.Index)
+            if (map.GetObject(position) == Map.Object.Flag &&
+                map.GetOwner(position) == player.Index)
             {
-                if (Game.CanDemolishFlag(pos, player))
+                if (Game.CanDemolishFlag(position, player))
                 {
                     cursorType = CursorType.RemovableFlag;
                 }
@@ -1057,15 +1057,15 @@ namespace Freeserf.UI
                     cursorType = CursorType.Flag;
                 }
             }
-            else if (!map.HasBuilding(pos) && !map.HasFlag(pos))
+            else if (!map.HasBuilding(position) && !map.HasFlag(position))
             {
-                if (map.Paths(pos) == 0)
+                if (map.Paths(position) == 0)
                 {
-                    if (map.GetObject(map.MoveDownRight(pos)) == Map.Object.Flag)
+                    if (map.GetObject(map.MoveDownRight(position)) == Map.Object.Flag)
                     {
                         cursorType = CursorType.ClearByFlag;
                     }
-                    else if (map.Paths(map.MoveDownRight(pos)) == 0)
+                    else if (map.Paths(map.MoveDownRight(position)) == 0)
                     {
                         cursorType = CursorType.Clear;
                     }
@@ -1074,7 +1074,7 @@ namespace Freeserf.UI
                         cursorType = CursorType.ClearByPath;
                     }
                 }
-                else if (map.GetOwner(pos) == player.Index)
+                else if (map.GetOwner(position) == player.Index)
                 {
                     cursorType = CursorType.Path;
                 }
@@ -1083,11 +1083,11 @@ namespace Freeserf.UI
                     cursorType = CursorType.None;
                 }
             }
-            else if ((map.GetObject(pos) == Map.Object.SmallBuilding ||
-                map.GetObject(pos) == Map.Object.LargeBuilding) &&
-                map.GetOwner(pos) == player.Index)
+            else if ((map.GetObject(position) == Map.Object.SmallBuilding ||
+                map.GetObject(position) == Map.Object.LargeBuilding) &&
+                map.GetOwner(position) == player.Index)
             {
-                Building building = Game.GetBuildingAtPos(pos);
+                var building = Game.GetBuildingAtPos(position);
 
                 if (!building.IsBurning())
                 {
@@ -1108,7 +1108,7 @@ namespace Freeserf.UI
            in get_map_cursor_type(). */
         void DetermineMapCursorType()
         {
-            GetMapCursorType(player, mapCursorPos, out buildPossibility, out mapCursorType);
+            GetMapCursorType(player, mapCursorPosition, out buildPossibility, out mapCursorType);
         }
 
         /* Update the interface_t object with the information returned
@@ -1116,28 +1116,28 @@ namespace Freeserf.UI
            when the player interface is in road construction mode. */
         void DetermineMapCursorTypeRoad()
         {
-            Map map = Game.Map;
-            MapPos pos = mapCursorPos;
-            int h = (int)map.GetHeight(pos);
-            int validDir = 0;
+            var map = Game.Map;
+            var position = mapCursorPosition;
+            int height = (int)map.GetHeight(position);
+            int validDirection = 0;
             var cycle = DirectionCycleCW.CreateDefault();
 
-            foreach (Direction d in cycle)
+            foreach (var direction in cycle)
             {
                 uint sprite = 0;
 
-                if (buildingRoad.IsUndo(d))
+                if (buildingRoad.IsUndo(direction))
                 {
-                    sprite = 44; /* undo */
-                    validDir |= Misc.Bit((int)d);
+                    sprite = 44; // undo 
+                    validDirection |= Misc.Bit((int)direction);
                 }
-                else if (map.IsRoadSegmentValid(pos, d))
+                else if (map.IsRoadSegmentValid(position, direction))
                 {
-                    if (buildingRoad.IsValidExtension(map, d))
+                    if (buildingRoad.IsValidExtension(map, direction))
                     {
-                        int hDiff = (int)map.GetHeight(map.Move(pos, d)) - h;
-                        sprite = (uint)(38 + hDiff); /* height indicators */
-                        validDir |= Misc.Bit((int)d);
+                        int heightDifference = (int)map.GetHeight(map.Move(position, direction)) - height;
+                        sprite = (uint)(38 + heightDifference); // height indicators 
+                        validDirection |= Misc.Bit((int)direction);
                     }
                     else
                     {
@@ -1146,16 +1146,16 @@ namespace Freeserf.UI
                 }
                 else
                 {
-                    sprite = 43; /* striped */
+                    sprite = 43; // striped 
                 }
 
-                mapCursorSprites[(int)d + 1].Sprite = sprite;
+                mapCursorSprites[(int)direction + 1].Sprite = sprite;
             }
 
-            buildingRoadValidDir = validDir;
+            buildingRoadValidDir = validDirection;
         }
 
-        /* Set the appropriate sprites for the panel buttons and the map cursor. */
+        // Set the appropriate sprites for the panel buttons and the map cursor. 
         void UpdateInterface()
         {
             if (!IsBuildingRoad())
@@ -1310,7 +1310,7 @@ namespace Freeserf.UI
 
             switch (key)
             {
-                /* Interface control */
+                // Interface control 
                 case Event.SystemKeys.Tab:
                     {
                         if ((modifier & 2) != 0)
@@ -1341,7 +1341,7 @@ namespace Freeserf.UI
                         break;
                     }
 
-                /* Game speed */
+                // Game speed 
                 case '+':
                     {
                         if (!IsRemote)
@@ -1367,31 +1367,31 @@ namespace Freeserf.UI
                         break;
                     }
 
-                /* Audio */
+                // Audio 
                 case 'S':
                     {
-                        Audio.Audio.Player audioPlayer = Audio?.GetSoundPlayer();
+                        var soundPlayer = Audio?.GetSoundPlayer();
 
-                        if (audioPlayer != null)
+                        if (soundPlayer != null)
                         {
-                            audioPlayer.Enabled = !audioPlayer.Enabled;
+                            soundPlayer.Enabled = !soundPlayer.Enabled;
                         }
 
                         break;
                     }
                 case 'M':
                     {
-                        Audio.Audio.Player audioPlayer = Audio?.GetMusicPlayer();
+                        var musicPlayer = Audio?.GetMusicPlayer();
 
-                        if (audioPlayer != null)
+                        if (musicPlayer != null)
                         {
-                            audioPlayer.Enabled = !audioPlayer.Enabled;
+                            musicPlayer.Enabled = !musicPlayer.Enabled;
                         }
 
                         break;
                     }
 
-                /* Game control */
+                // Game control 
                 case 'B':
                     {
                         Viewport.ShowPossibleBuilds = !Viewport.ShowPossibleBuilds;

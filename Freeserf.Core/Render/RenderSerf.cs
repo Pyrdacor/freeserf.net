@@ -19,12 +19,14 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections.Generic;
 using Freeserf.Data;
 
 namespace Freeserf.Render
 {
     using Data = Data.Data;
+    using MapPos = UInt32;
 
     // TODO: The baseline offset is bad when a serf walks through resources at a flag.
     //       The serf is always on top of the resources. Maybe fix later somehow.
@@ -453,10 +455,10 @@ namespace Freeserf.Render
             SetBaseLineOffset(System.Math.Max(0, 1 + baseLine - (sprite.Y + sprite.Height)));
         }
 
-        public void Update(Game game, DataSource dataSource, int tick, Map map, uint pos)
+        public void Update(Game game, DataSource dataSource, int tick, Map map, MapPos position)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs);
-            var renderPosition = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(pos);
+            var renderPosition = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
             int x = 0;
             int y = 0;
             int body = -1;
@@ -472,17 +474,17 @@ namespace Freeserf.Render
 
                 if (index != 0)
                 {
-                    Serf defSerf = game.GetSerf((uint)index);
+                    var defendingSerf = game.GetSerf((uint)index);
 
-                    if (defSerf.Animation < 0 || defSerf.Animation > 199 || defSerf.Counter < 0)
+                    if (defendingSerf.Animation < 0 || defendingSerf.Animation > 199 || defendingSerf.Counter < 0)
                     {
-                        Log.Error.Write("viewport", $"bad animation for serf #{defSerf.Index} ({Serf.GetStateName(defSerf.SerfState)}): {defSerf.Animation},{defSerf.Counter}");
+                        Log.Error.Write("viewport", $"bad animation for serf #{defendingSerf.Index} ({Serf.GetStateName(defendingSerf.SerfState)}): {defendingSerf.Animation},{defendingSerf.Counter}");
                         return;
                     }
 
                     body = GetActiveSerfBody();
 
-                    Animation animation = dataSource.GetAnimation(defSerf.Animation, defSerf.Counter);
+                    var animation = dataSource.GetAnimation(defendingSerf.Animation, defendingSerf.Counter);
                     x = renderPosition.X + animation.X;
                     y = renderPosition.Y + animation.Y;
 
@@ -492,7 +494,7 @@ namespace Freeserf.Render
             }
             else*/
             {
-                if (map.HasSerf(pos) && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf
+                if (map.HasSerf(position) && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf
                 {
                     if (serf.SerfState == Serf.State.Mining &&
                         (serf.GetMiningSubstate() == 0 ||
@@ -517,18 +519,18 @@ namespace Freeserf.Render
 
                     body = GetActiveSerfBody();
 
-                    Animation animation = dataSource.GetAnimation(serf.Animation, serf.Counter);
+                    var animation = dataSource.GetAnimation(serf.Animation, serf.Counter);
                     x = renderPosition.X + animation.X;
                     y = renderPosition.Y + animation.Y;
 
-                    if (map.HasFlag(pos) && (serf.SerfState == Serf.State.KnightAttacking || serf.SerfState == Serf.State.KnightAttackingFree))
+                    if (map.HasFlag(position) && (serf.SerfState == Serf.State.KnightAttacking || serf.SerfState == Serf.State.KnightAttackingFree))
                     {
                         baseLineOffset += 3; // stay in front of resources
                     }
 
                     // TODO: The defending serf is already drawn. What is the purpose of this?
                     // The only thing that is necessary is the fighting flash.
-                    //DrawAdditionalSerf(game, tick, map, animation, renderPosition);
+                    // DrawAdditionalSerf(game, tick, map, animation, renderPosition);
                     DrawFightingFlash(game, tick, map, animation, renderPosition);
                 }
                 /*else if(fightingEnemy != null)
@@ -537,9 +539,9 @@ namespace Freeserf.Render
                     fightingEnemy = null;
                 }*/
 
-                if (map.GetIdleSerf(pos) && serf.SerfState == Serf.State.IdleOnPath) // idle serf
+                if (map.GetIdleSerf(position) && serf.SerfState == Serf.State.IdleOnPath) // idle serf
                 {
-                    body = GetIdleSerfBody(map, pos, out Position offset, tick);
+                    body = GetIdleSerfBody(map, position, out Position offset, tick);
 
                     x = renderPosition.X + offset.X;
                     y = renderPosition.Y + offset.Y;
@@ -641,31 +643,31 @@ namespace Freeserf.Render
                 else
                 {
                     // adjust baseline when walking around a building
-                    if (map.HasBuilding(map.MoveLeft(pos)) ||
+                    if (map.HasBuilding(map.MoveLeft(position)) ||
                         (serf.SerfState == Serf.State.Mining && (serf.GetMiningSubstate() == 3 || serf.GetMiningSubstate() == 10)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveLeft(pos));
+                        building = game.GetBuildingAtPos(map.MoveLeft(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
-                    if (map.HasBuilding(map.MoveUpLeft(pos)))
+                    if (map.HasBuilding(map.MoveUpLeft(position)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveUpLeft(pos));
+                        building = game.GetBuildingAtPos(map.MoveUpLeft(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
-                    if (map.HasBuilding(map.MoveRight(pos)))
+                    if (map.HasBuilding(map.MoveRight(position)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveRight(pos));
+                        building = game.GetBuildingAtPos(map.MoveRight(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
                     }
-                    if (map.HasBuilding(map.MoveUp(pos)))
+                    if (map.HasBuilding(map.MoveUp(position)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveUp(pos));
+                        building = game.GetBuildingAtPos(map.MoveUp(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
@@ -689,24 +691,24 @@ namespace Freeserf.Render
 
                 if (index != 0)
                 {
-                    Serf defSerf = game.GetSerf((uint)index);
+                    var defendingSerf = game.GetSerf((uint)index);
 
                     if (serf.Animation >= 146 && serf.Animation < 156)
                     {
                         if ((serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4) && serf.Counter < 32)
                         {
-                            int anim = -1;
+                            int fightAnimation;
 
                             if (serf.GetAttackingFieldD() == 0)
                             {
-                                anim = serf.Animation - 147;
+                                fightAnimation = serf.Animation - 147;
                             }
                             else
                             {
-                                anim = defSerf.Animation - 147;
+                                fightAnimation = defendingSerf.Animation - 147;
                             }
 
-                            uint sprite = (uint)(197 + ((serf.Counter >> 3) ^ 3));
+                            var sprite = (uint)(197 + ((serf.Counter >> 3) ^ 3));
 
                             if (fightingFlash == null)
                             {
@@ -718,8 +720,8 @@ namespace Freeserf.Render
                             var offset = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs).GetOffset(5000u + sprite);
 
                             fightingFlashVisible = true;
-                            fightingFlash.X = renderPosition.X + animation.X + FightingFlashOffsets[2 * anim] - 4;
-                            fightingFlash.Y = renderPosition.Y + animation.Y - FightingFlashOffsets[2 * anim + 1] - 2;
+                            fightingFlash.X = renderPosition.X + animation.X + FightingFlashOffsets[2 * fightAnimation] - 4;
+                            fightingFlash.Y = renderPosition.Y + animation.Y - FightingFlashOffsets[2 * fightAnimation + 1] - 2;
                             fightingFlash.Resize(info.Width, info.Height);
                             fightingFlash.TextureAtlasOffset = offset;
                             fightingFlash.BaseLineOffset = 5 + this.sprite.Y + this.sprite.Height + this.sprite.BaseLineOffset - fightingFlash.Y - fightingFlash.Height;
@@ -746,14 +748,14 @@ namespace Freeserf.Render
 
                 if (index != 0)
                 {
-                    Serf defSerf = game.GetSerf((uint)index);
+                    var defendingSerf = game.GetSerf((uint)index);
 
                     if (fightingEnemy == null)
                     {
-                        fightingEnemy = new RenderSerf(serf, this, defSerf, sprite.Layer, spriteFactory, dataSource, audio);
+                        fightingEnemy = new RenderSerf(serf, this, defendingSerf, sprite.Layer, spriteFactory, dataSource, audio);
                     }
 
-                    fightingEnemy.Update(game, dataSource, tick, map, defSerf.Position);
+                    fightingEnemy.Update(game, dataSource, tick, map, defendingSerf.Position);
                 }
             }
             else if (fightingEnemy != null)
@@ -772,24 +774,24 @@ namespace Freeserf.Render
 
                 if (index != 0)
                 {
-                    Serf defSerf = game.GetSerf((uint)index);
+                    var defendingSerf = game.GetSerf((uint)index);
 
                     if (serf.Animation >= 146 && serf.Animation < 156)
                     {
                         if ((serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4) && serf.Counter < 32)
                         {
-                            int anim = -1;
+                            int fightAnimation;
 
                             if (serf.GetAttackingFieldD() == 0)
                             {
-                                anim = serf.Animation - 147;
+                                fightAnimation = serf.Animation - 147;
                             }
                             else
                             {
-                                anim = defSerf.Animation - 147;
+                                fightAnimation = defendingSerf.Animation - 147;
                             }
 
-                            uint sprite = (uint)(197 + ((serf.Counter >> 3) ^ 3));
+                            var sprite = (uint)(197 + ((serf.Counter >> 3) ^ 3));
 
                             if (fightingFlash == null)
                             {
@@ -802,8 +804,8 @@ namespace Freeserf.Render
 
                             // TODO: the fighting flashs x-coordinate is too high
                             fightingFlashVisible = true;
-                            fightingFlash.X = renderPosition.X + FightingFlashOffsets[2 * anim];
-                            fightingFlash.Y = renderPosition.Y - FightingFlashOffsets[2 * anim + 1];
+                            fightingFlash.X = renderPosition.X + FightingFlashOffsets[2 * fightAnimation];
+                            fightingFlash.Y = renderPosition.Y - FightingFlashOffsets[2 * fightAnimation + 1];
                             fightingFlash.Resize(info.Width, info.Height);
                             fightingFlash.TextureAtlasOffset = offset;
                             fightingFlash.BaseLineOffset = 1 + this.sprite.Y + this.sprite.Height - fightingFlash.Y - fightingFlash.Height;
@@ -816,25 +818,25 @@ namespace Freeserf.Render
                 fightingFlash.Visible = fightingFlashVisible;
         }
 
-        int GetIdleSerfBody(Map map, uint pos, out Position offset, int tick)
+        int GetIdleSerfBody(Map map, uint position, out Position offset, int tick)
         {
-            int x = 0;
-            int y = 0;
-            int body = 0;
+            int x;
+            int y;
+            int body;
 
-            if (map.IsInWater(pos))
+            if (map.IsInWater(position))
             { 
-                /* Sailor */
+                // Sailor 
                 x = 0;
                 y = 0;
                 body = 0x203;
             }
             else
             {
-                /* Transporter */
-                x = IdleAnimations3[2 * map.Paths(pos)];
-                y = IdleAnimations3[2 * map.Paths(pos) + 1];
-                body = IdleAnimations2[((tick + IdleAnimations1[pos & 0xf]) >> 3) & 0x7f];
+                // Transporter 
+                x = IdleAnimations3[2 * map.Paths(position)];
+                y = IdleAnimations3[2 * map.Paths(position) + 1];
+                body = IdleAnimations2[((tick + IdleAnimations1[position & 0xf]) >> 3) & 0x7f];
             }
 
             offset = new Position(x, y);
@@ -844,20 +846,20 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.Audio.TypeSfx type)
         {
-            Audio.Audio.Player player = audio?.GetSoundPlayer();
+            var soundPlayer = audio?.GetSoundPlayer();
 
-            if (player != null)
+            if (soundPlayer != null)
             {
-                player.PlayTrack((int)type);
+                soundPlayer.PlayTrack((int)type);
             }
         }
 
-        /* Extracted from obsolete update_map_serf_rows(). */
-        /* Translate serf type into the corresponding sprite code. */
+        // Extracted from obsolete update_map_serf_rows(). 
+        // Translate serf type into the corresponding sprite code. 
         int GetActiveSerfBody()
         {
-            Animation animation = dataSource.GetAnimation(serf.Animation, serf.Counter);
-            int t = animation.Sprite;
+            var animation = dataSource.GetAnimation(serf.Animation, serf.Counter);
+            int bodySprite = animation.Sprite;
 
             switch (serf.GetSerfType())
             {
@@ -871,13 +873,13 @@ namespace Freeserf.Render
                              serf.SerfState == Serf.State.Delivering) &&
                              serf.GetDelivery() != 0)
                     {
-                        t += TransporterType[serf.GetDelivery()];
+                        bodySprite += TransporterType[serf.GetDelivery()];
                     }
                     break;
                 case Serf.Type.Sailor:
-                    if (serf.SerfState == Serf.State.Transporting && t < 0x80)
+                    if (serf.SerfState == Serf.State.Transporting && bodySprite < 0x80)
                     {
-                        if (((t & 7) == 4 && !serf.PlayingSfx()) || (t & 7) == 3)
+                        if (((bodySprite & 7) == 4 && !serf.PlayingSfx()) || (bodySprite & 7) == 3)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Rowing);
@@ -893,9 +895,9 @@ namespace Freeserf.Render
                         serf.SerfState == Serf.State.LostSailor ||
                         serf.SerfState == Serf.State.FreeSailing)
                     {
-                        if (t < 0x80)
+                        if (bodySprite < 0x80)
                         {
-                            if (((t & 7) == 4 && !serf.PlayingSfx()) || (t & 7) == 3)
+                            if (((bodySprite & 7) == 4 && !serf.PlayingSfx()) || (bodySprite & 7) == 3)
                             {
                                 serf.StartPlayingSfx();
                                 PlaySound(Audio.Audio.TypeSfx.Rowing);
@@ -906,57 +908,57 @@ namespace Freeserf.Render
                             }
                         }
 
-                        t += 0x200;
+                        bodySprite += 0x200;
                     }
                     else if (serf.SerfState == Serf.State.Transporting)
                     {
-                        t += SailorType[serf.GetDelivery()];
+                        bodySprite += SailorType[serf.GetDelivery()];
                     }
                     else
                     {
-                        t += 0x100;
+                        bodySprite += 0x100;
                     }
                     break;
                 case Serf.Type.Digger:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
-                        t += 0x300;
+                        bodySprite += 0x300;
                     }
-                    else if (t == 0x83 || t == 0x84)
+                    else if (bodySprite == 0x83 || bodySprite == 0x84)
                     {
-                        if (t == 0x83 || !serf.PlayingSfx())
+                        if (bodySprite == 0x83 || !serf.PlayingSfx())
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Digging);
                         }
 
-                        t += 0x380;
+                        bodySprite += 0x380;
                     }
                     else
                     {
                         serf.StopPlayingSfx();
-                        t += 0x380;
+                        bodySprite += 0x380;
                     }
                     break;
                 case Serf.Type.Builder:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
-                        t += 0x500;
+                        bodySprite += 0x500;
                     }
-                    else if ((t & 7) == 4 || (t & 7) == 5)
+                    else if ((bodySprite & 7) == 4 || (bodySprite & 7) == 5)
                     {
-                        if ((t & 7) == 4 || !serf.PlayingSfx())
+                        if ((bodySprite & 7) == 4 || !serf.PlayingSfx())
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.HammerBlow);
                         }
 
-                        t += 0x580;
+                        bodySprite += 0x580;
                     }
                     else
                     {
                         serf.StopPlayingSfx();
-                        t += 0x580;
+                        bodySprite += 0x580;
                     }
                     break;
                 case Serf.Type.TransporterInventory:
@@ -966,30 +968,30 @@ namespace Freeserf.Render
                     }
                     else
                     {
-                        int res = serf.GetDelivery();
+                        int resource = serf.GetDelivery();
 
-                        if (res < 0)
+                        if (resource < 0)
                             return 0;
 
-                        t += TransporterType[res];
+                        bodySprite += TransporterType[resource];
                     }
                     break;
                 case Serf.Type.Lumberjack:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.FreeWalking &&
                             serf.GetFreeWalkingNegDist1() == -128 &&
                             serf.GetFreeWalkingNegDist2() == 1)
                         {
-                            t += 0x1000;
+                            bodySprite += 0x1000;
                         }
                         else
                         {
-                            t += 0xb00;
+                            bodySprite += 0xb00;
                         }
                     }
-                    else if ((t == 0x86 && !serf.PlayingSfx()) ||
-                       t == 0x85)
+                    else if ((bodySprite == 0x86 && !serf.PlayingSfx()) ||
+                       bodySprite == 0x85)
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.AxeBlow);
@@ -1001,45 +1003,59 @@ namespace Freeserf.Render
                             PlaySound(Audio.Audio.TypeSfx.TreeFall);
                         }
 
-                        t += 0xe80;
+                        bodySprite += 0xe80;
                     }
-                    else if (t != 0x86)
+                    else if (bodySprite != 0x86)
                     {
                         serf.StopPlayingSfx();
-                        t += 0xe80;
+                        bodySprite += 0xe80;
                     }
                     break;
                 case Serf.Type.Sawmiller:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding &&
                             serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
-                            t += 0x1700;
+                            bodySprite += 0x1700;
                         }
                         else
                         {
-                            t += 0xc00;
+                            bodySprite += 0xc00;
                         }
                     }
                     else
                     {
-                        /* player_num += 4; ??? */
-                        if (t == 0xb3 || t == 0xbb || t == 0xc3 || t == 0xcb || (!serf.PlayingSfx() && (t == 0xb7 || t == 0xbf || t == 0xc7 || t == 0xcf)))
+                        // player_num += 4; ??? 
+                        if (bodySprite == 0xb3 ||
+                            bodySprite == 0xbb ||
+                            bodySprite == 0xc3 ||
+                            bodySprite == 0xcb ||
+                            (!serf.PlayingSfx() &&
+                             (bodySprite == 0xb7 ||
+                              bodySprite == 0xbf ||
+                              bodySprite == 0xc7 ||
+                              bodySprite == 0xcf
+                             )
+                            )
+                           )
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Sawing);
                         }
-                        else if (t != 0xb7 && t != 0xbf && t != 0xc7 && t != 0xcf)
+                        else if (bodySprite != 0xb7 &&
+                                 bodySprite != 0xbf &&
+                                 bodySprite != 0xc7 &&
+                                 bodySprite != 0xcf)
                         {
                             serf.StopPlayingSfx();
                         }
 
-                        t += 0x1580;
+                        bodySprite += 0x1580;
                     }
                     break;
                 case Serf.Type.Stonecutter:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if ((serf.SerfState == Serf.State.FreeWalking &&
                              serf.GetFreeWalkingNegDist1() == -128 &&
@@ -1047,44 +1063,44 @@ namespace Freeserf.Render
                             (serf.SerfState == Serf.State.StoneCutting &&
                              serf.GetFreeWalkingNegDist1() == 2))
                         {
-                            t += 0x1200;
+                            bodySprite += 0x1200;
                         }
                         else
                         {
-                            t += 0xd00;
+                            bodySprite += 0xd00;
                         }
                     }
-                    else if (t == 0x85 || (t == 0x86 && !serf.PlayingSfx()))
+                    else if (bodySprite == 0x85 || (bodySprite == 0x86 && !serf.PlayingSfx()))
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.PickBlow);
-                        t += 0x1280;
+                        bodySprite += 0x1280;
                     }
-                    else if (t != 0x86)
+                    else if (bodySprite != 0x86)
                     {
                         serf.StopPlayingSfx();
-                        t += 0x1280;
+                        bodySprite += 0x1280;
                     }
                     break;
                 case Serf.Type.Forester:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
-                        t += 0xe00;
+                        bodySprite += 0xe00;
                     }
-                    else if (t == 0x86 || (t == 0x87 && !serf.PlayingSfx()))
+                    else if (bodySprite == 0x86 || (bodySprite == 0x87 && !serf.PlayingSfx()))
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.Planting);
-                        t += 0x1080;
+                        bodySprite += 0x1080;
                     }
-                    else if (t != 0x87)
+                    else if (bodySprite != 0x87)
                     {
                         serf.StopPlayingSfx();
-                        t += 0x1080;
+                        bodySprite += 0x1080;
                     }
                     break;
                 case Serf.Type.Miner:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if ((serf.SerfState != Serf.State.Mining ||
                              serf.GetMiningRes() == 0) &&
@@ -1092,349 +1108,349 @@ namespace Freeserf.Render
                              serf.GetLeavingBuildingNextState() !=
                              Serf.State.DropResourceOut))
                         {
-                            t += 0x1800;
+                            bodySprite += 0x1800;
                         }
                         else
                         {
-                            Resource.Type res = Resource.Type.None;
+                            var resource = Resource.Type.None;
 
                             switch (serf.SerfState)
                             {
                                 case Serf.State.Mining:
-                                    res = (Resource.Type)(serf.GetMiningRes() - 1);
+                                    resource = (Resource.Type)(serf.GetMiningRes() - 1);
                                     break;
                                 case Serf.State.LeavingBuilding:
-                                    res = (Resource.Type)(serf.GetLeavingBuildingFieldB() - 1);
+                                    resource = (Resource.Type)(serf.GetLeavingBuildingFieldB() - 1);
                                     break;
                                 default:
                                     Debug.NotReached();
                                     break;
                             }
 
-                            switch (res)
+                            switch (resource)
                             {
-                                case Resource.Type.Stone: t += 0x2700; break;
-                                case Resource.Type.IronOre: t += 0x2500; break;
-                                case Resource.Type.Coal: t += 0x2600; break;
-                                case Resource.Type.GoldOre: t += 0x2400; break;
+                                case Resource.Type.Stone: bodySprite += 0x2700; break;
+                                case Resource.Type.IronOre: bodySprite += 0x2500; break;
+                                case Resource.Type.Coal: bodySprite += 0x2600; break;
+                                case Resource.Type.GoldOre: bodySprite += 0x2400; break;
                                 default: Debug.NotReached(); break;
                             }
                         }
                     }
                     else
                     {
-                        t += 0x2a80;
+                        bodySprite += 0x2a80;
                     }
                     break;
                 case Serf.Type.Smelter:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
                             if (serf.GetLeavingBuildingFieldB() == 1 + (int)Resource.Type.Steel)
                             {
-                                t += 0x2900;
+                                bodySprite += 0x2900;
                             }
                             else
                             {
-                                t += 0x2800;
+                                bodySprite += 0x2800;
                             }
                         }
                         else
                         {
-                            t += 0x1900;
+                            bodySprite += 0x1900;
                         }
                     }
                     else
                     {
-                        /* edi10 += 4; */
-                        t += 0x2980;
+                        // edi10 += 4; 
+                        bodySprite += 0x2980;
                     }
                     break;
                 case Serf.Type.Fisher:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.FreeWalking &&
                             serf.GetFreeWalkingNegDist1() == -128 &&
                             serf.GetFreeWalkingNegDist2() == 1)
                         {
-                            t += 0x2f00;
+                            bodySprite += 0x2f00;
                         }
                         else
                         {
-                            t += 0x2c00;
+                            bodySprite += 0x2c00;
                         }
                     }
                     else
                     {
-                        if (t != 0x80 && t != 0x87 && t != 0x88 && t != 0x8f)
+                        if (bodySprite != 0x80 && bodySprite != 0x87 && bodySprite != 0x88 && bodySprite != 0x8f)
                         {
                             PlaySound(Audio.Audio.TypeSfx.FishingRodReel);
                         }
 
-                        /* TODO no check for state */
+                        // TODO no check for state 
                         if (serf.GetFreeWalkingNegDist2() == 1)
                         {
-                            t += 0x2d80;
+                            bodySprite += 0x2d80;
                         }
                         else
                         {
-                            t += 0x2c80;
+                            bodySprite += 0x2c80;
                         }
                     }
                     break;
                 case Serf.Type.PigFarmer:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
-                            t += 0x3400;
+                            bodySprite += 0x3400;
                         }
                         else
                         {
-                            t += 0x3200;
+                            bodySprite += 0x3200;
                         }
                     }
                     else
                     {
-                        t += 0x3280;
+                        bodySprite += 0x3280;
                     }
                     break;
                 case Serf.Type.Butcher:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
-                            t += 0x3a00;
+                            bodySprite += 0x3a00;
                         }
                         else
                         {
-                            t += 0x3700;
+                            bodySprite += 0x3700;
                         }
                     }
                     else
                     {
-                        /* edi10 += 4; */
-                        if ((t == 0xb2 || t == 0xba || t == 0xc2 || t == 0xca) && !serf.PlayingSfx())
+                        // edi10 += 4; 
+                        if ((bodySprite == 0xb2 || bodySprite == 0xba || bodySprite == 0xc2 || bodySprite == 0xca) && !serf.PlayingSfx())
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.BackswordBlow);
                         }
-                        else if (t != 0xb2 && t != 0xba && t != 0xc2 && t != 0xca)
+                        else if (bodySprite != 0xb2 && bodySprite != 0xba && bodySprite != 0xc2 && bodySprite != 0xca)
                         {
                             serf.StopPlayingSfx();
                         }
 
-                        t += 0x3780;
+                        bodySprite += 0x3780;
                     }
                     break;
                 case Serf.Type.Farmer:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.FreeWalking &&
                             serf.GetFreeWalkingNegDist1() == -128 &&
                             serf.GetFreeWalkingNegDist2() == 1)
                         {
-                            t += 0x4000;
+                            bodySprite += 0x4000;
                         }
                         else
                         {
-                            t += 0x3d00;
+                            bodySprite += 0x3d00;
                         }
                     }
                     else
                     {
-                        /* TODO access to state without state check */
+                        // TODO access to state without state check 
                         if (serf.GetFreeWalkingNegDist1() == 0)
                         {
-                            t += 0x3d80;
+                            bodySprite += 0x3d80;
                         }
-                        else if (t == 0x83 || (t == 0x84 && !serf.PlayingSfx()))
+                        else if (bodySprite == 0x83 || (bodySprite == 0x84 && !serf.PlayingSfx()))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Mowing);
-                            t += 0x3e80;
+                            bodySprite += 0x3e80;
                         }
-                        else if (t != 0x83 && t != 0x84)
+                        else if (bodySprite != 0x83 && bodySprite != 0x84)
                         {
                             serf.StopPlayingSfx();
-                            t += 0x3e80;
+                            bodySprite += 0x3e80;
                         }
                     }
                     break;
                 case Serf.Type.Miller:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
-                            t += 0x4500;
+                            bodySprite += 0x4500;
                         }
                         else
                         {
-                            t += 0x4300;
+                            bodySprite += 0x4300;
                         }
                     }
                     else
                     {
-                        /* edi10 += 4; */
-                        t += 0x4380;
+                        // edi10 += 4; 
+                        bodySprite += 0x4380;
                     }
                     break;
                 case Serf.Type.Baker:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
-                            t += 0x4a00;
+                            bodySprite += 0x4a00;
                         }
                         else
                         {
-                            t += 0x4800;
+                            bodySprite += 0x4800;
                         }
                     }
                     else
                     {
-                        /* edi10 += 4; */
-                        t += 0x4880;
+                        // edi10 += 4; 
+                        bodySprite += 0x4880;
                     }
                     break;
                 case Serf.Type.BoatBuilder:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
-                            t += 0x5000;
+                            bodySprite += 0x5000;
                         }
                         else
                         {
-                            t += 0x4e00;
+                            bodySprite += 0x4e00;
                         }
                     }
-                    else if (t == 0x84 || t == 0x85)
+                    else if (bodySprite == 0x84 || bodySprite == 0x85)
                     {
-                        if (t == 0x84 || !serf.PlayingSfx())
+                        if (bodySprite == 0x84 || !serf.PlayingSfx())
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.WoodHammering);
                         }
 
-                        t += 0x4e80;
+                        bodySprite += 0x4e80;
                     }
                     else
                     {
                         serf.StopPlayingSfx();
-                        t += 0x4e80;
+                        bodySprite += 0x4e80;
                     }
                     break;
                 case Serf.Type.Toolmaker:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
                             switch ((Resource.Type)(serf.GetLeavingBuildingFieldB() - 1))
                             {
-                                case Resource.Type.Shovel: t += 0x5a00; break;
-                                case Resource.Type.Hammer: t += 0x5b00; break;
-                                case Resource.Type.Rod: t += 0x5c00; break;
-                                case Resource.Type.Cleaver: t += 0x5d00; break;
-                                case Resource.Type.Scythe: t += 0x5e00; break;
-                                case Resource.Type.Axe: t += 0x6100; break;
-                                case Resource.Type.Saw: t += 0x6200; break;
-                                case Resource.Type.Pick: t += 0x6300; break;
-                                case Resource.Type.Pincer: t += 0x6400; break;
+                                case Resource.Type.Shovel: bodySprite += 0x5a00; break;
+                                case Resource.Type.Hammer: bodySprite += 0x5b00; break;
+                                case Resource.Type.Rod: bodySprite += 0x5c00; break;
+                                case Resource.Type.Cleaver: bodySprite += 0x5d00; break;
+                                case Resource.Type.Scythe: bodySprite += 0x5e00; break;
+                                case Resource.Type.Axe: bodySprite += 0x6100; break;
+                                case Resource.Type.Saw: bodySprite += 0x6200; break;
+                                case Resource.Type.Pick: bodySprite += 0x6300; break;
+                                case Resource.Type.Pincer: bodySprite += 0x6400; break;
                                 default: Debug.NotReached(); break;
                             }
                         }
                         else
                         {
-                            t += 0x5800;
+                            bodySprite += 0x5800;
                         }
                     }
                     else
                     {
-                        /* edi10 += 4; */
-                        if (t == 0x83 || (t == 0xb2 && !serf.PlayingSfx()))
+                        // edi10 += 4; 
+                        if (bodySprite == 0x83 || (bodySprite == 0xb2 && !serf.PlayingSfx()))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Sawing);
                         }
-                        else if (t == 0x87 || (t == 0xb6 && !serf.PlayingSfx()))
+                        else if (bodySprite == 0x87 || (bodySprite == 0xb6 && !serf.PlayingSfx()))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.WoodHammering);
                         }
-                        else if (t != 0xb2 && t != 0xb6)
+                        else if (bodySprite != 0xb2 && bodySprite != 0xb6)
                         {
                             serf.StopPlayingSfx();
                         }
 
-                        t += 0x5880;
+                        bodySprite += 0x5880;
                     }
                     break;
                 case Serf.Type.WeaponSmith:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
                         {
                             if (serf.GetLeavingBuildingFieldB() == 1 + (int)Resource.Type.Sword)
                             {
-                                t += 0x5500;
+                                bodySprite += 0x5500;
                             }
                             else
                             {
-                                t += 0x5400;
+                                bodySprite += 0x5400;
                             }
                         }
                         else
                         {
-                            t += 0x5200;
+                            bodySprite += 0x5200;
                         }
                     }
                     else
                     {
-                        /* edi10 += 4; */
-                        if (t == 0x83 || (t == 0x84 && !serf.PlayingSfx()))
+                        // edi10 += 4; 
+                        if (bodySprite == 0x83 || (bodySprite == 0x84 && !serf.PlayingSfx()))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.MetalHammering);
                         }
-                        else if (t != 0x84)
+                        else if (bodySprite != 0x84)
                         {
                             serf.StopPlayingSfx();
                         }
 
-                        t += 0x5280;
+                        bodySprite += 0x5280;
                     }
                     break;
                 case Serf.Type.Geologist:
-                    if (t < 0x80)
+                    if (bodySprite < 0x80)
                     {
-                        t += 0x3900;
+                        bodySprite += 0x3900;
                     }
-                    else if (t == 0x83 || t == 0x84 || t == 0x86)
+                    else if (bodySprite == 0x83 || bodySprite == 0x84 || bodySprite == 0x86)
                     {
-                        if (t == 0x83 || !serf.PlayingSfx())
+                        if (bodySprite == 0x83 || !serf.PlayingSfx())
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.GeologistSampling);
                         }
 
-                        t += 0x4c80;
+                        bodySprite += 0x4c80;
                     }
-                    else if (t == 0x8c || t == 0x8d)
+                    else if (bodySprite == 0x8c || bodySprite == 0x8d)
                     {
-                        if (t == 0x8c || !serf.PlayingSfx())
+                        if (bodySprite == 0x8c || !serf.PlayingSfx())
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.ResourceFound);
                         }
 
-                        t += 0x4c80;
+                        bodySprite += 0x4c80;
                     }
                     else
                     {
                         serf.StopPlayingSfx();
-                        t += 0x4c80;
+                        bodySprite += 0x4c80;
                     }
                     break;
                 case Serf.Type.Knight0:
@@ -1445,11 +1461,11 @@ namespace Freeserf.Render
                     {
                         int k = serf.GetSerfType() - Serf.Type.Knight0;
 
-                        if (t < 0x80)
+                        if (bodySprite < 0x80)
                         {
-                            t += 0x7800 + 0x100 * k;
+                            bodySprite += 0x7800 + 0x100 * k;
                         }
-                        else if (t < 0xc0)
+                        else if (bodySprite < 0xc0)
                         {
                             if (serf.SerfState == Serf.State.KnightAttacking ||
                                 serf.SerfState == Serf.State.KnightAttackingFree)
@@ -1468,7 +1484,7 @@ namespace Freeserf.Render
                                     }
                                     else if (serf.GetAttackingFieldD() == 2)
                                     {
-                                        /* TODO when is TypeSfxFight02 played? */
+                                        // TODO when is TypeSfxFight02 played? 
                                         PlaySound(Audio.Audio.TypeSfx.Fight03);
                                     }
                                     else
@@ -1478,16 +1494,16 @@ namespace Freeserf.Render
                                 }
                             }
 
-                            t += 0x7cd0 + 0x200 * k;
+                            bodySprite += 0x7cd0 + 0x200 * k;
                         }
                         else
                         {
-                            t += 0x7d90 + 0x200 * k;
+                            bodySprite += 0x7d90 + 0x200 * k;
                         }
                     }
                     break;
                 case Serf.Type.Dead:
-                    if ((!serf.PlayingSfx() && (t == 2 || t == 5)) || t == 1 || t == 4)
+                    if ((!serf.PlayingSfx() && (bodySprite == 2 || bodySprite == 5)) || bodySprite == 1 || bodySprite == 4)
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.SerfDying);
@@ -1496,14 +1512,14 @@ namespace Freeserf.Render
                     {
                         serf.StopPlayingSfx();
                     }
-                    t += 0x8700;
+                    bodySprite += 0x8700;
                     break;
                 default:
                     Debug.NotReached();
                     break;
             }
 
-            return t;
+            return bodySprite;
         }
     }
 }
