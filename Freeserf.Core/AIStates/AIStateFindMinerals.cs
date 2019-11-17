@@ -74,7 +74,7 @@ namespace Freeserf.AIStates
             var mines = game.Map.FindInArea(spot, 4, FindMine, 1);
             var mine = MineTypes[(int)mineralType - 1];
 
-            return mines.Count(m => game.GetBuilding((uint)m).BuildingType == mine) < maxInArea;
+            return mines.Count(mineIndex => game.GetBuilding((uint)mineIndex).BuildingType == mine) < maxInArea;
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
@@ -290,7 +290,7 @@ namespace Freeserf.AIStates
 
                 uint spot = (spotsWithFlag.Count > 0) ? spotsWithFlag[game.GetRandom().Next() % spotsWithFlag.Count] :
                     possibleSpots[game.GetRandom().Next() % possibleSpots.Count];
-                var flag = game.GetFlagAtPos(spot);
+                var flag = game.GetFlagAtPosition(spot);
 
                 if (flag == null)
                 {
@@ -316,7 +316,7 @@ namespace Freeserf.AIStates
                         }
                     }
 
-                    flag = game.GetFlagAtPos(spot);
+                    flag = game.GetFlagAtPosition(spot);
 
                     // link flag
                     var flagPositions = game.Map.FindInArea(flag.Position, 7, FindFlag, 2).Select(d => (uint)d);

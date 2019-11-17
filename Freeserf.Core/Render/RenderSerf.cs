@@ -358,7 +358,7 @@ namespace Freeserf.Render
 
         static int GetBuildingBaseLine(uint mapPos, Game game, DataSource dataSource, Map map)
         {
-            return GetBuildingBaseLine(game.GetBuildingAtPos(mapPos), dataSource, map);
+            return GetBuildingBaseLine(game.GetBuildingAtPosition(mapPos), dataSource, map);
         }
 
         static int GetBuildingBaseLine(Building building, DataSource dataSource, Map map)
@@ -646,28 +646,28 @@ namespace Freeserf.Render
                     if (map.HasBuilding(map.MoveLeft(position)) ||
                         (serf.SerfState == Serf.State.Mining && (serf.GetMiningSubstate() == 3 || serf.GetMiningSubstate() == 10)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveLeft(position));
+                        building = game.GetBuildingAtPosition(map.MoveLeft(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
                     if (map.HasBuilding(map.MoveUpLeft(position)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveUpLeft(position));
+                        building = game.GetBuildingAtPosition(map.MoveUpLeft(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
                     }
                     if (map.HasBuilding(map.MoveRight(position)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveRight(position));
+                        building = game.GetBuildingAtPosition(map.MoveRight(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
                     }
                     if (map.HasBuilding(map.MoveUp(position)))
                     {
-                        building = game.GetBuildingAtPos(map.MoveUp(position));
+                        building = game.GetBuildingAtPosition(map.MoveUp(position));
 
                         if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
                             SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);

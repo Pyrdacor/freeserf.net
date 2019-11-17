@@ -289,7 +289,7 @@ namespace Freeserf.AIStates
             {
                 foreach (var nearbyFlag in nearbyFlags)
                 {
-                    if (Pathfinder.FindShortestRoad(game.Map, flag, game.GetFlagAtPos((uint)nearbyFlag), out uint cost) == null ||
+                    if (Pathfinder.FindShortestRoad(game.Map, flag, game.GetFlagAtPosition((uint)nearbyFlag), out uint cost) == null ||
                         cost >= 1500u)
                     {
                         ++linkingCount;

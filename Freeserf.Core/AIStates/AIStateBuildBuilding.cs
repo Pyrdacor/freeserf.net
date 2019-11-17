@@ -840,7 +840,7 @@ namespace Freeserf.AIStates
             return new Map.FindData()
             {
                 Success = map.HasBuilding(position) && map.GetOwner(position) == player.Index,
-                Data = game.GetBuildingAtPos(position)
+                Data = game.GetBuildingAtPosition(position)
             };
         }
 
@@ -848,8 +848,8 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.HasBuilding(position) && game.GetBuildingAtPos(position).IsMilitary() && map.GetOwner(position) == player.Index,
-                Data = game.GetBuildingAtPos(position)
+                Success = map.HasBuilding(position) && game.GetBuildingAtPosition(position).IsMilitary() && map.GetOwner(position) == player.Index,
+                Data = game.GetBuildingAtPosition(position)
             };
         }
 

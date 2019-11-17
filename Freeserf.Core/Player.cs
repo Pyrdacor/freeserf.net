@@ -607,7 +607,7 @@ namespace Freeserf
 
         public bool PrepareAttack(uint targetPosition, int maxKnights = -1)
         {
-            var building = Game.GetBuildingAtPos(targetPosition);
+            var building = Game.GetBuildingAtPosition(targetPosition);
 
             buildingAttacked = (int)building.Index;
 
@@ -689,7 +689,7 @@ namespace Freeserf
                 if (map.HasSerf(flagPosition))
                 {
                     // Check if building is under siege. 
-                    var serf = Game.GetSerfAtPos(flagPosition);
+                    var serf = Game.GetSerfAtPosition(flagPosition);
 
                     if (serf.Player != Index)
                         continue;

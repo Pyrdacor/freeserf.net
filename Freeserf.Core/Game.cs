@@ -180,7 +180,7 @@ namespace Freeserf
             GoldTotal = (uint)((int)GoldTotal + delta);
         }
 
-        public Building GetBuildingAtPos(MapPos position)
+        public Building GetBuildingAtPosition(MapPos position)
         {
             var mapObject = Map.GetObject(position);
 
@@ -192,7 +192,7 @@ namespace Freeserf
             return null;
         }
 
-        public Flag GetFlagAtPos(MapPos position)
+        public Flag GetFlagAtPosition(MapPos position)
         {
             if (Map.GetObject(position) != Map.Object.Flag)
             {
@@ -202,7 +202,7 @@ namespace Freeserf
             return flags[Map.GetObjectIndex(position)];
         }
 
-        public Serf GetSerfAtPos(MapPos position)
+        public Serf GetSerfAtPosition(MapPos position)
         {
             var serf = serfs[Map.GetSerfIndex(position)];
 
@@ -981,8 +981,8 @@ namespace Freeserf
                 return false;
 
             // Connect flags 
-            var sourceFlag = GetFlagAtPos(road.Source);
-            var destinationFlag = GetFlagAtPos(destination);
+            var sourceFlag = GetFlagAtPosition(road.Source);
+            var destinationFlag = GetFlagAtPosition(destination);
 
             sourceFlag.LinkWithFlag(destinationFlag, waterPath, inDirection, outDirection, road);
 
@@ -1035,7 +1035,7 @@ namespace Freeserf
             }
 
             var flagPosition = Map.MoveDownRight(position);
-            var flag = GetFlagAtPos(flagPosition);
+            var flag = GetFlagAtPosition(flagPosition);
 
             // TODO: Sometimes there is no flag but a path in only one direction. This should not happen.
 
@@ -1047,7 +1047,7 @@ namespace Freeserf
                     return false;
                 }
 
-                flag = GetFlagAtPos(flagPosition);
+                flag = GetFlagAtPosition(flagPosition);
             }
 
             uint flagIndex = flag.Index;
@@ -1330,7 +1330,7 @@ namespace Freeserf
 
                     if (Map.HasBuilding(checkPosition))
                     { 
-                        var building = GetBuildingAtPos(checkPosition);
+                        var building = GetBuildingAtPosition(checkPosition);
                         int militaryType = -1;
 
                         if (building.BuildingType == Building.Type.Castle)
@@ -1635,7 +1635,7 @@ namespace Freeserf
             data.Resource1 = resource1;
             data.Resource2 = resource2;
 
-            if (!FlagSearch.Single(destination, SendSerfToFlagSearchCb, true, false, data))
+            if (!FlagSearch.Single(destination, SendSerfToFlagSearchCallback, true, false, data))
             {
                 return false;
             }
@@ -1657,6 +1657,11 @@ namespace Freeserf
                 }
                 else
                 {
+                    if (serfType < 0) // safety check
+                    {
+                        return false;
+                    }
+
                     serf.SetSerfType((Serf.Type)serfType);
 
                     int mode = 0;
@@ -1888,7 +1893,7 @@ namespace Freeserf
             return inventories.Where(inventory => inventory.Player == player.Index);
         }
 
-        public IEnumerable<Serf> GetSerfsAtPos(MapPos position)
+        public IEnumerable<Serf> GetSerfsAtPosition(MapPos position)
         {
             return serfs.Where(serf => serf.Position == position);
         }
@@ -2351,7 +2356,7 @@ namespace Freeserf
             public Resource.Type Resource2;
         }
 
-        protected static bool SendSerfToFlagSearchCb(Flag flag, object data)
+        protected static bool SendSerfToFlagSearchCallback(Flag flag, object data)
         {
             if (!flag.HasInventory())
             {
@@ -2781,7 +2786,7 @@ namespace Freeserf
 
                 if (Map.HasSerf(position))
                 {
-                    var serf = GetSerfAtPos(position);
+                    var serf = GetSerfAtPosition(position);
 
                     if (!Map.HasFlag(position))
                     {
@@ -2978,7 +2983,7 @@ namespace Freeserf
             // Handle any serf at position. 
             if (Map.HasSerf(position))
             {
-                var serf = GetSerfAtPos(position);
+                var serf = GetSerfAtPosition(position);
                 serf.FlagDeleted(position);
             }
 
@@ -3176,7 +3181,7 @@ namespace Freeserf
             Map = new Map(new MapGeometry((uint)mapSize), renderView);
 
             reader.Skip(8);
-            MapGoldMoraleFactor= reader.ReadWord(); // 200
+            MapGoldMoraleFactor = reader.ReadWord(); // 200
             reader.Skip(2);
             playerScoreLeader = reader.ReadByte(); // 204
 
@@ -3692,7 +3697,7 @@ namespace Freeserf
             // rendering
             if (obj == Map.Object.Flag)
             {
-                var flag = GetFlagAtPos(position);
+                var flag = GetFlagAtPosition(position);
 
                 if (!renderFlags.ContainsKey(flag))
                 {
@@ -3707,7 +3712,7 @@ namespace Freeserf
                      obj == Map.Object.LargeBuilding ||
                      obj == Map.Object.Castle)
             {
-                var building = GetBuildingAtPos(position);
+                var building = GetBuildingAtPosition(position);
 
                 if (!renderBuildings.ContainsKey(building))
                 {

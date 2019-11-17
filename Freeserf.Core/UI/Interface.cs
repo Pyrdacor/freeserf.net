@@ -505,11 +505,11 @@ namespace Freeserf.UI
         {
             if (player != null && player.HasCastle)
             {
-                GotoMapPos(player.CastlePosition);
+                GotoMapPosition(player.CastlePosition);
             }
         }
 
-        public void GotoMapPos(MapPos position)
+        public void GotoMapPosition(MapPos position)
         {
             if (Ingame && Viewport != null)
             {
@@ -760,7 +760,7 @@ namespace Freeserf.UI
             return 0;
         }
 
-        public bool BuildRoadIsValidDir(Direction direction)
+        public bool BuildRoadIsValidDirection(Direction direction)
         {
             return Misc.BitTest(buildingRoadValidDir, (int)direction);
         }
@@ -777,7 +777,7 @@ namespace Freeserf.UI
             }
             else if (mapCursorType == CursorType.Building)
             {
-                var building = Game.GetBuildingAtPos(mapCursorPosition);
+                var building = Game.GetBuildingAtPosition(mapCursorPosition);
 
                 if (building.IsDone() &&
                     (building.BuildingType == Building.Type.Hut ||
@@ -1087,7 +1087,7 @@ namespace Freeserf.UI
                 map.GetObject(position) == Map.Object.LargeBuilding) &&
                 map.GetOwner(position) == player.Index)
             {
-                var building = Game.GetBuildingAtPos(position);
+                var building = Game.GetBuildingAtPosition(position);
 
                 if (!building.IsBurning())
                 {

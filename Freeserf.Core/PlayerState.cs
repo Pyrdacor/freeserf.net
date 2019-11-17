@@ -115,7 +115,7 @@ namespace Freeserf
         private word reproductionReset = 0;
         private word serfToKnightCounter = 0;
         private word knightCycleCounter = 0;
-        private dword totalLandArea= 0;
+        private dword totalLandArea = 0;
         private dword totalBuildingScore = 0;
         private dword totalMilitaryScore = 0;
         private readonly DirtyArray<dword> serfCounts = new DirtyArray<dword>(Constants.NUM_SERF_TYPES);

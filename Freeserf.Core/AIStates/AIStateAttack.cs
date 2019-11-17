@@ -394,7 +394,7 @@ namespace Freeserf.AIStates
             if (numMaxAttackKnights == 0)
                 return int.MinValue;
 
-            int numKnights = (int)game.GetBuildingAtPos(position).GetKnightCount();
+            int numKnights = (int)game.GetBuildingAtPosition(position).GetKnightCount();
 
             return numMaxAttackKnights - numKnights;
         }

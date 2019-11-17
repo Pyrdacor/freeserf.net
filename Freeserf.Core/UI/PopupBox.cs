@@ -3944,7 +3944,7 @@ namespace Freeserf.UI
                     else
                     {
                         var position = interf.GetMapCursorPosition();
-                        var flag = interf.Game.GetFlagAtPos(position);
+                        var flag = interf.Game.GetFlagAtPosition(position);
 
                         if (!interf.Game.SendGeologist(flag))
                         {

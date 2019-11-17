@@ -307,7 +307,7 @@ namespace Freeserf.UI
             // TODO: y regarding the grid seems to be 3 pixels to high (with scale 1). Maybe the grid is out of place as other positions work.
             var position = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapPosition.X, mapPosition.Y);
 
-            interf.GotoMapPos(position);
+            interf.GotoMapPosition(position);
 
             return true;
         }

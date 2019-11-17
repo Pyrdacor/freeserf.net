@@ -339,7 +339,7 @@ namespace Freeserf
                         continue;
                     }
 
-                    if (buildingRoad != null && buildingRoad.HasPos(map, newPosition) &&
+                    if (buildingRoad != null && buildingRoad.HasPosition(map, newPosition) &&
                         newPosition != end && newPosition != start)
                     {
                         continue;

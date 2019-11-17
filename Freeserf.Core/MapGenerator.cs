@@ -719,9 +719,9 @@ namespace Freeserf
             // Change every position that was not tagged (i.e. tag is 0) to water.
             foreach (var position in map.Geometry)
             {
-                if (tiles[(int)position].Height> 0 && tags[(int)position] == 0)
+                if (tiles[(int)position].Height > 0 && tags[(int)position] == 0)
                 {
-                    tiles[(int)position].Height= 0;
+                    tiles[(int)position].Height = 0;
                     tiles[(int)position].TypeUp = Map.Terrain.Water0;
                     tiles[(int)position].TypeUp = Map.Terrain.Water0;
 
@@ -738,7 +738,7 @@ namespace Freeserf
         {
             foreach (var position in map.Geometry)
             {
-                tiles[(int)position].Height= (tiles[(int)position].Height + 6) >> 3;
+                tiles[(int)position].Height = (tiles[(int)position].Height + 6) >> 3;
             }
         }
 

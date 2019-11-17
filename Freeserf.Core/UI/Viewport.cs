@@ -122,9 +122,9 @@ namespace Freeserf.UI
         public void MoveToMapPosition(MapPos position, bool center)
         {
             if (center)
-                map.RenderMap.CenterMapPos(position);
+                map.RenderMap.CenterMapPosition(position);
             else
-                map.RenderMap.ScrollToMapPos(position);
+                map.RenderMap.ScrollToMapPosition(position);
 
             interf.UpdateMinimap();
         }
@@ -361,7 +361,7 @@ namespace Freeserf.UI
                     return false;
                 }
 
-                if (interf.BuildRoadIsValidDir(direction))
+                if (interf.BuildRoadIsValidDirection(direction))
                 {
                     var road = interf.GetBuildingRoad();
 
@@ -506,7 +506,7 @@ namespace Freeserf.UI
                     {
                         PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
-                        var building = interf.Game.GetBuildingAtPos(mapPosition);
+                        var building = interf.Game.GetBuildingAtPosition(mapPosition);
 
                         if (building.BuildingType == Building.Type.Castle)
                         {

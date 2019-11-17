@@ -29,7 +29,6 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
-    // TODO: Can't we just replace things like Game.GetFlag(map.GetObjectIndex(Position)) with Game.GetFlagAtPos(Position) ???
     // TODO: Give the state values plausible names instead of FieldX and so on!
 
     public class Serf : GameObject
@@ -1591,6 +1590,16 @@ namespace Freeserf
             s.Defending.NextKnight = nextKnightIndex;
         }
 
+        private Flag GetFlagAtPosition()
+        {
+            return Game.GetFlagAtPosition(Position);
+        }
+
+        private Building GetBuildingAtPosition()
+        {
+            return Game.GetBuildingAtPosition(Position);
+        }
+
         internal Building GetBuilding()
         {
             switch (SerfState)
@@ -1624,31 +1633,31 @@ namespace Freeserf
                 case State.ReadyToLeave:
                 case State.ReadyToLeaveInventory:
                 case State.WaitForResourceOut:
-                    return Game.GetBuildingAtPos(Position);
+                    return GetBuildingAtPosition();
                 case State.Building:
                     return Game.GetBuilding(s.Building.Index);
                 case State.Digging:
                     if (s.Digging.Substate <= 0)
                     {
-                        return Game.GetBuildingAtPos(Position);
+                        return GetBuildingAtPosition();
                     }
                     else
                     {
                         if (s.Digging.DigPosition == 0)
-                            return Game.GetBuildingAtPos(Position);
+                            return GetBuildingAtPosition();
                         else
                         {
-                            var building = Game.GetBuildingAtPos(Game.Map.Move(Position, ((Direction)(6 - s.Digging.DigPosition)).Reverse()));
+                            var building = Game.GetBuildingAtPosition(Game.Map.Move(Position, ((Direction)(6 - s.Digging.DigPosition)).Reverse()));
 
                             if (building != null)
                                 return building;
 
-                            return Game.GetBuildingAtPos(Position);
+                            return GetBuildingAtPosition();
                         }
                     }
                 case State.DropResourceOut:
                 case State.ReadyToEnter:
-                    return Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
+                    return Game.GetBuildingAtPosition(Game.Map.MoveUpLeft(Position));
                 default:
                     return null;
             }
@@ -2697,7 +2706,7 @@ namespace Freeserf
             else
             {
                 // Direction is occupied. 
-                var otherSerf = Game.GetSerfAtPos(newPosition);
+                var otherSerf = Game.GetSerfAtPosition(newPosition);
                 var otherDirection = Direction.None;
 
                 // Sometimes an idle serf blocks us. This should be avoided.
@@ -2814,10 +2823,14 @@ namespace Freeserf
             Position = newPosition;
         }
 
-        /* Start entering building in direction up-left.
-           If joinPos is set the serf is assumed to origin from
-           a joined position so the source position will not have it's
-           serf index cleared. */
+        /// <summary>
+        /// Start entering building in direction up-left.
+        /// If joinPosition is set the serf is assumed to origin from
+        /// a joined position so the source position will not have it's
+        /// serf index cleared.
+        /// </summary>
+        /// <param name="fieldB"></param>
+        /// <param name="joinPosition"></param>
         void EnterBuilding(int fieldB, bool joinPosition)
         {
             SetState(State.EnteringBuilding);
@@ -2828,7 +2841,7 @@ namespace Freeserf
                 Game.Map.SetSerfIndex(Position, (int)Index);
 
             int slope;
-            var building = Game.GetBuildingAtPos(Position);
+            var building = GetBuildingAtPosition();
 
             if (building == null)
             {
@@ -2855,7 +2868,7 @@ namespace Freeserf
         void LeaveBuilding(bool joinPos)
         {
             int slope;
-            var building = Game.GetBuildingAtPos(Position);
+            var building = GetBuildingAtPosition();
 
             if (building == null)
             {
@@ -2880,7 +2893,7 @@ namespace Freeserf
         void EnterInventory()
         {
             Game.Map.SetSerfIndex(Position, 0);
-            var building = Game.GetBuildingAtPos(Position);
+            var building = GetBuildingAtPosition();
             SetState(State.IdleInStock);
             // TODO ?
             /*serf->s.idleInStock.FieldB = 0;
@@ -2890,7 +2903,7 @@ namespace Freeserf
 
         void DropResource(Resource.Type resourceType)
         {
-            var flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
+            var flag = GetFlagAtPosition();
 
             // Resource is lost if no free slot is found 
             if (flag.DropResource(resourceType, 0))
@@ -2905,7 +2918,7 @@ namespace Freeserf
 
             if (map.HasFlag(Position))
             {
-                var flag = Game.GetFlag(map.GetObjectIndex(Position));
+                var flag = GetFlagAtPosition();
 
                 if ((flag.LandPaths() != 0 ||
                     (flag.HasInventory() && flag.AcceptsSerfs())) &&
@@ -3050,7 +3063,7 @@ namespace Freeserf
             if (s.Walking.Direction1 < 0)
             {
                 var map = Game.Map;
-                var building = Game.GetBuildingAtPos(map.MoveUpLeft(Position));
+                var building = Game.GetBuildingAtPosition(map.MoveUpLeft(Position));
 
                 if (building == null) // not exists anymore?
                 {
@@ -3079,7 +3092,7 @@ namespace Freeserf
             }
             else
             {
-                var flag = Game.GetFlagAtPos(Position);
+                var flag = GetFlagAtPosition();
 
                 if (flag == null)
                 {
@@ -3143,7 +3156,7 @@ namespace Freeserf
                         {
                             if (Game.Map.HasFlag(loopSerf.Position))
                             {
-                                var flag = Game.GetFlagAtPos(loopSerf.Position);
+                                var flag = Game.GetFlagAtPosition(loopSerf.Position);
 
                                 if (flag.HasInventory() && flag.AcceptsSerfs())
                                 {
@@ -3160,7 +3173,7 @@ namespace Freeserf
                     }
 
                     // Get next serf and follow the chain 
-                    var otherSerf = Game.GetSerfAtPos(position);
+                    var otherSerf = Game.GetSerfAtPosition(position);
 
                     if (otherSerf.SerfState != State.Walking &&
                         otherSerf.SerfState != State.Transporting)
@@ -3204,8 +3217,7 @@ namespace Freeserf
                     // Search for a destination if none is known.
                     if (s.Walking.Destination == 0)
                     {
-                        var flagIndex = Game.Map.GetObjectIndex(Position);
-                        var sourceFlag = Game.GetFlag(flagIndex);
+                        var sourceFlag = GetFlagAtPosition();
                         int nearestInventory = sourceFlag.FindNearestInventoryForSerf();
 
                         if (nearestInventory < 0)
@@ -3230,7 +3242,7 @@ namespace Freeserf
                     }
                     else
                     {
-                        var sourceFlag = Game.GetFlagAtPos(Position);
+                        var sourceFlag = GetFlagAtPosition();
                         var search = new FlagSearch(Game);
                         var cycle = DirectionCycleCCW.CreateDefault();
 
@@ -3340,11 +3352,12 @@ namespace Freeserf
                         return;
                     }
 
+                    var flag = GetFlagAtPosition();
+
                     // 31590 
                     if (s.Walking.Resource != Resource.Type.None &&
                         map.GetObjectIndex(Position) == s.Walking.Destination &&
-                        (!Game.GetFlagAtPos(Position).HasInventory() ||
-                        Game.GetFlagAtPos(Position).AcceptsResources()))
+                        (!flag.HasInventory() || flag.AcceptsResources()))
                     {
                         // At resource destination 
                         SetState(State.Delivering);
@@ -3362,7 +3375,6 @@ namespace Freeserf
                         return;
                     }
 
-                    var flag = Game.GetFlagAtPos(Position);
                     TransporterMoveToFlag(flag);
                 }
                 else
@@ -3396,7 +3408,7 @@ namespace Freeserf
                         return;
                     }
 
-                    var flag = Game.GetFlagAtPos(map.Move(Position, direction));
+                    var flag = Game.GetFlagAtPosition(map.Move(Position, direction));
                     var reverseDirection = direction.Reverse();
                     var otherFlag = flag.GetOtherEndFlag(reverseDirection);
                     var otherDirection = flag.GetOtherEndDirection(reverseDirection);
@@ -3440,6 +3452,19 @@ namespace Freeserf
             }
         }
 
+        void InitBuilding(Resource.Type resource1, Resource.Type resource2 = Resource.Type.None)
+        {
+            var building = GetBuildingAtPosition();
+            var flag = Game.GetFlag(building.FlagIndex);
+            
+            building.StockInit(0, resource1, 8);
+
+            if (resource2 != Resource.Type.None)
+                building.StockInit(1, resource2, 8);
+
+            flag.ClearFlags();
+        }
+
         void HandleSerfEnteringBuildingState()
         {
             ushort delta = (ushort)(Game.Tick - tick);
@@ -3449,7 +3474,7 @@ namespace Freeserf
             if (Counter < 0 || Counter <= s.EnteringBuilding.SlopeLength)
             {
                 if (Game.Map.GetObjectIndex(Position) == 0 ||
-                    Game.GetBuildingAtPos(Position).IsBurning())
+                    GetBuildingAtPosition().IsBurning())
                 {
                     // Burning 
                     SetState(State.Lost);
@@ -3472,8 +3497,7 @@ namespace Freeserf
                         else
                         {
                             map.SetSerfIndex(Position, 0);
-                            var flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
-                            var flag = Game.GetFlag(flagIndex);
+                            var flag = Game.GetFlagAtPosition(map.MoveDownRight(Position));
 
                             // Mark as inventory accepting resources and serfs. 
                             flag.SetHasInventory();
@@ -3498,7 +3522,7 @@ namespace Freeserf
                             SetState(State.Digging);
                             s.Digging.HeightIndex = 15;
 
-                            var building = Game.GetBuildingAtPos(Position);
+                            var building = GetBuildingAtPosition();
                             s.Digging.DigPosition = 6;
                             s.Digging.TargetHeight = building.GetLevel();
                             s.Digging.Substate = 1;
@@ -3561,11 +3585,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flagIndex = map.GetObjectIndex(map.MoveDownRight(Position));
-                                var flag = Game.GetFlag(flagIndex);
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Lumber, 8);
+                                InitBuilding(Resource.Type.Lumber);
                             }
 
                             SetState(State.Sawing);
@@ -3602,7 +3622,7 @@ namespace Freeserf
                         else
                         {
                             map.SetSerfIndex(Position, 0);
-                            var building = Game.GetBuildingAtPos(Position);
+                            var building = GetBuildingAtPosition();
                             var buildingType = building.BuildingType;
 
                             if (s.EnteringBuilding.FieldB != 0)
@@ -3610,9 +3630,7 @@ namespace Freeserf
                                 building.StartActivity();
                                 building.StopPlayingSfx();
 
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.GroupFood, 8);
+                                InitBuilding(Resource.Type.GroupFood);
                             }
 
                             SetState(State.Mining);
@@ -3632,21 +3650,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            var building = Game.GetBuildingAtPos(Position);
+                            var building = GetBuildingAtPosition();
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Coal, 8);
-
                                 if (building.BuildingType == Building.Type.SteelSmelter)
                                 {
-                                    building.StockInit(1, Resource.Type.IronOre, 8);
+                                    InitBuilding(Resource.Type.Coal, Resource.Type.IronOre);
                                 }
                                 else
                                 {
-                                    building.StockInit(1, Resource.Type.GoldOre, 8);
+                                    InitBuilding(Resource.Type.Coal, Resource.Type.GoldOre);
                                 }
                             }
 
@@ -3687,13 +3701,10 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+                                var building = GetBuildingAtPosition();
 
                                 building.SetInitialResourcesInStock(1, 1);
-
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Wheat, 8);
+                                InitBuilding(Resource.Type.Wheat);
 
                                 SetState(State.PigFarming);
                                 s.PigFarming.Mode = 0;
@@ -3717,10 +3728,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Pig, 8);
+                                InitBuilding(Resource.Type.Pig);
                             }
 
                             SetState(State.Butchering);
@@ -3749,10 +3757,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Wheat, 8);
+                                InitBuilding(Resource.Type.Wheat);
                             }
 
                             SetState(State.Milling);
@@ -3770,10 +3775,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Flour, 8);
+                                InitBuilding(Resource.Type.Flour);
                             }
 
                             SetState(State.Baking);
@@ -3791,10 +3793,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Plank, 8);
+                                InitBuilding(Resource.Type.Plank);
                             }
 
                             SetState(State.BuildingBoat);
@@ -3812,11 +3811,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Plank, 8);
-                                building.StockInit(1, Resource.Type.Steel, 8);
+                                InitBuilding(Resource.Type.Plank, Resource.Type.Steel);
                             }
 
                             SetState(State.MakingTool);
@@ -3834,11 +3829,7 @@ namespace Freeserf
 
                             if (s.EnteringBuilding.FieldB != 0)
                             {
-                                var building = Game.GetBuildingAtPos(Position);
-                                var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
-                                flag.ClearFlags();
-                                building.StockInit(0, Resource.Type.Coal, 8);
-                                building.StockInit(1, Resource.Type.Steel, 8);
+                                InitBuilding(Resource.Type.Coal, Resource.Type.Steel);
                             }
 
                             SetState(State.MakingWeapon);
@@ -3860,7 +3851,7 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            var building = Game.GetBuildingAtPos(Position);
+                            var building = GetBuildingAtPosition();
                             var inventory = building.GetInventory();
 
                             if (inventory == null)
@@ -3885,7 +3876,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            var building = Game.GetBuildingAtPos(Position);
+                            var building = GetBuildingAtPosition();
 
                             if (building.IsBurning())
                             {
@@ -4062,7 +4053,7 @@ namespace Freeserf
 
                     if (map.HasSerf(newPosition))
                     {
-                        var otherSerf = Game.GetSerfAtPos(newPosition);
+                        var otherSerf = Game.GetSerfAtPosition(newPosition);
                         var otherDirection = Direction.None;
 
                         if (otherSerf.IsWaiting(ref otherDirection) &&
@@ -4203,8 +4194,8 @@ namespace Freeserf
 
                     if (s.Digging.HeightIndex < 0)
                     {
-                        // Done Digging 
-                        var building = Game.GetBuilding(map.GetObjectIndex(Position));
+                        // Done digging 
+                        var building = GetBuildingAtPosition();
                         building.DoneLeveling();
                         SetState(State.ReadyToLeave);
                         s.LeavingBuilding.Destination = 0;
@@ -4390,7 +4381,7 @@ namespace Freeserf
                 return;
             }
 
-            var flag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+            var flag = Game.GetFlagAtPosition(map.MoveDownRight(Position));
 
             if (flag == null)
                 return;
@@ -4428,7 +4419,7 @@ namespace Freeserf
                 Counter = 0;
             }
 
-            var building = Game.GetBuildingAtPos(Position);
+            var building = GetBuildingAtPosition();
 
             if (building == null)
                 return;
@@ -4457,7 +4448,7 @@ namespace Freeserf
 
         void HandleSerfDropResourceOutState()
         {
-            var flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
+            var flag = GetFlagAtPosition();
 
             if (flag == null)
                 return;
@@ -4484,19 +4475,24 @@ namespace Freeserf
                     SetState(State.Transporting);
                     s.Walking.WaitCounter = 0;
 
-                    var flag = Game.GetFlag(Game.Map.GetObjectIndex(Position));
-
-                    TransporterMoveToFlag(flag);
+                    TransporterMoveToFlag(GetFlagAtPosition());
 
                     return;
                 }
 
                 if (s.Walking.Resource != Resource.Type.None)
                 {
-                    var building = Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
-                    var resource = s.Walking.Resource;
-                    s.Walking.Resource = Resource.Type.None;                    
-                    building.RequestedResourceDelivered(resource);
+                    var building = Game.GetBuildingAtPosition(Game.Map.MoveUpLeft(Position));
+
+                    if (building.RequestedResourceDelivered(s.Walking.Resource))
+                        s.Walking.Resource = Resource.Type.None;
+                    else
+                    {
+                        // if we can't deliver the serf transport it back to the nearest inventory.
+                        // therefore we switch to transporting and set destination to 0.
+                        SetState(State.Transporting);
+                        s.Walking.Destination = 0;
+                    }
                 }
 
                 Animation = 4 + 9 - (Animation - (3 + 10 * 9));
@@ -4521,7 +4517,7 @@ namespace Freeserf
 
             // Check if there is a serf that waits to approach the flag.
             // If so, we wait inside.
-            var inventoryFlag = Game.GetFlagAtPos(map.MoveDownRight(Position));
+            var inventoryFlag = Game.GetFlagAtPosition(map.MoveDownRight(Position));
 
             if (inventoryFlag != null)
             {
@@ -4533,7 +4529,7 @@ namespace Freeserf
 
                     if (map.HasSerf(position))
                     {
-                        var serf = Game.GetSerfAtPos(position);
+                        var serf = Game.GetSerfAtPosition(position);
                         var tempDirection = Direction.None;
 
                         if ((serf.SerfState == State.Walking || serf.SerfState == State.Transporting || serf.SerfState == State.KnightEngagingBuilding) &&
@@ -4914,7 +4910,7 @@ namespace Freeserf
 
                 if (map.HasSerf(newPosition))
                 {
-                    otherSerf = Game.GetSerfAtPos(newPosition);
+                    otherSerf = Game.GetSerfAtPosition(newPosition);
                     var otherDirection = Direction.None;
 
                     if (otherSerf.IsWaiting(ref otherDirection) &&
@@ -5303,7 +5299,7 @@ namespace Freeserf
                 if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128
                     && map.HasSerf(newPosition))
                 {
-                    var otherSerf = Game.GetSerfAtPos(newPosition);
+                    var otherSerf = Game.GetSerfAtPosition(newPosition);
                     var otherDirection = Direction.None;
 
                     if (otherSerf.IsWaiting(ref otherDirection) &&
@@ -5673,7 +5669,7 @@ namespace Freeserf
         {
             if (s.Sawing.Mode == 0)
             {
-                var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+                var building = GetBuildingAtPosition();
 
                 if (building.UseResourceInStock(0))
                 {
@@ -5723,7 +5719,7 @@ namespace Freeserf
 
                     if (map.HasFlag(destination))
                     {
-                        var flag = Game.GetFlag(map.GetObjectIndex(destination));
+                        var flag = Game.GetFlagAtPosition(destination);
 
                         if ((flag.LandPaths() != 0 ||
                              (flag.HasInventory() && flag.AcceptsSerfs())) &&
@@ -5822,7 +5818,7 @@ namespace Freeserf
 
                     if (map.HasFlag(destination))
                     {
-                        var flag = Game.GetFlag(map.GetObjectIndex(destination));
+                        var flag = Game.GetFlagAtPosition(destination);
 
                         if (flag.LandPaths() != 0 &&
                             map.HasOwner(destination) &&
@@ -5922,7 +5918,7 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                var building = Game.GetBuilding(map.GetObjectIndex(Position));
+                var building = GetBuildingAtPosition();
 
                 Log.Verbose.Write("serf", $"mining substate: {s.Mining.Substate}.");
 
@@ -6055,7 +6051,7 @@ namespace Freeserf
 
         void HandleSerfSmeltingState()
         {
-            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.Smelting.Mode == 0)
             {
@@ -6334,7 +6330,7 @@ namespace Freeserf
 
         void HandleSerfMillingState()
         {
-            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.Milling.Mode == 0)
             {
@@ -6390,7 +6386,7 @@ namespace Freeserf
 
         void HandleSerfBakingState()
         {
-            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.Baking.Mode == 0)
             {
@@ -6448,7 +6444,7 @@ namespace Freeserf
             // When the serf is present there is also at least one
             // pig present and at most eight.
 
-            var building = Game.GetBuildingAtPos(Position);
+            var building = GetBuildingAtPosition();
 
             if (s.PigFarming.Mode == 0)
             {
@@ -6529,7 +6525,7 @@ namespace Freeserf
 
         void HandleSerfButcheringState()
         {
-            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.Butchering.Mode == 0)
             {
@@ -6568,7 +6564,7 @@ namespace Freeserf
 
         void HandleSerfMakingWeaponState()
         {
-            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.MakingWeapon.Mode == 0)
             {
@@ -6640,7 +6636,7 @@ namespace Freeserf
 
         void HandleSerfMakingToolState()
         {
-            var building = Game.GetBuilding(Game.Map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.MakingTool.Mode == 0)
             {
@@ -6726,7 +6722,7 @@ namespace Freeserf
         void HandleSerfBuildingBoatState()
         {
             var map = Game.Map;
-            var building = Game.GetBuilding(map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
 
             if (s.BuildingBoat.Mode == 0)
             {
@@ -6938,7 +6934,7 @@ namespace Freeserf
 
                 if (map.HasBuilding(map.MoveUpLeft(Position)))
                 {
-                    var building = Game.GetBuilding(map.GetObjectIndex(map.MoveUpLeft(Position)));
+                    var building = Game.GetBuildingAtPosition(map.MoveUpLeft(Position));
 
                     if (building.IsDone() &&
                         building.IsMilitary() &&
@@ -7086,7 +7082,7 @@ namespace Freeserf
                     }
                     else
                     {
-                        // Attacker won. 
+                        // Attacker won
                         if (SerfState == State.KnightAttackingFree)
                         {
                             SetState(State.KnightAttackingVictoryFree);
@@ -7103,12 +7099,11 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
-                            var objectIndex = Game.Map.GetObjectIndex(Game.Map.MoveUpLeft(defendingSerf.Position));
-                            var building = Game.GetBuilding(objectIndex);
+                            var building = Game.GetBuildingAtPosition(Game.Map.MoveUpLeft(defendingSerf.Position));
                             building.RequestedKnightDefeatOnWalk();
                         }
 
-                        // Defender dies. 
+                        // Defender dies
                         defendingSerf.tick = Game.Tick;
                         defendingSerf.Animation = 147 + (int)GetSerfType();
                         defendingSerf.Counter = 255;
@@ -7178,7 +7173,7 @@ namespace Freeserf
                 return;
             }
 
-            var building = Game.GetBuildingAtPos(Game.Map.MoveUpLeft(Position));
+            var building = Game.GetBuildingAtPosition(Game.Map.MoveUpLeft(Position));
 
             if (building != null)
             {
@@ -7255,7 +7250,7 @@ namespace Freeserf
 
                     if (map.HasSerf(position))
                     {
-                        var otherSerf = Game.GetSerfAtPos(position);
+                        var otherSerf = Game.GetSerfAtPosition(position);
 
                         if (Player != otherSerf.Player)
                         {
@@ -7526,7 +7521,7 @@ namespace Freeserf
                 return;
             }
 
-            var building = Game.GetBuilding(map.GetObjectIndex(Position));
+            var building = GetBuildingAtPosition();
             var newPosition = map.MoveDownRight(Position);
 
             if (!map.HasSerf(newPosition))
@@ -7550,7 +7545,7 @@ namespace Freeserf
             }
             else
             {
-                var other = Game.GetSerfAtPos(newPosition);
+                var other = Game.GetSerfAtPosition(newPosition);
 
                 if (Player == other.Player)
                 {

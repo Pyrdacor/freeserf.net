@@ -361,7 +361,7 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
-        public void ScrollToMapPos(MapPos position)
+        public void ScrollToMapPosition(MapPos position)
         {
             ScrollY = map.PositionRow(position);
             ScrollX = map.PositionColumn(position) - ScrollY / 2;
@@ -369,7 +369,7 @@ namespace Freeserf.Render
             UpdatePosition();
         }
 
-        public void CenterMapPos(MapPos position)
+        public void CenterMapPosition(MapPos position)
         {
             var mapPosition = CoordinateSpace.TileSpaceToMapSpace(position);
 
@@ -389,7 +389,7 @@ namespace Freeserf.Render
                 mapPosition.X += (int)map.Rows * TILE_WIDTH / 2;
             }
 
-            ScrollToMapPos(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
+            ScrollToMapPosition(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
         }
 
         void UpdateTriangleUp(int index, int yOffset, int height, int left, int right, MapPos position)

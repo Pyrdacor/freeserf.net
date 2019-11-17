@@ -259,7 +259,7 @@ namespace Freeserf
             return result;
         }
 
-        public bool HasPos(Map map, MapPos position)
+        public bool HasPosition(Map map, MapPos position)
         {
             var result = Source;
 
@@ -799,9 +799,9 @@ namespace Freeserf
             RenderMap?.ScrollTo(x, y);
         }
 
-        public void CenterMapPos(MapPos position)
+        public void CenterMapPosition(MapPos position)
         {
-            RenderMap?.CenterMapPos(position);
+            RenderMap?.CenterMapPosition(position);
         }
 
         // Extract column and row from MapPos

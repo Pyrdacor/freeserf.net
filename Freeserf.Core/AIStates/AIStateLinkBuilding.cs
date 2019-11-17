@@ -49,7 +49,7 @@ namespace Freeserf.AIStates
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
-            if (game.GetBuildingAtPos(buildingPosition) == null) // building has gone (maybe an enemy took the land)
+            if (game.GetBuildingAtPosition(buildingPosition) == null) // building has gone (maybe an enemy took the land)
             {
                 Kill(ai);
                 return;
@@ -58,14 +58,14 @@ namespace Freeserf.AIStates
             var flagPosition = game.Map.MoveDownRight(buildingPosition);
 
             // don't link if already linked
-            if (game.Map.Paths(flagPosition) > 0 && game.GetFlagAtPos(flagPosition).FindNearestInventoryForSerf() != -1)
+            if (game.Map.Paths(flagPosition) > 0 && game.GetFlagAtPosition(flagPosition).FindNearestInventoryForSerf() != -1)
             {
                 Kill(ai);
                 return;
             }
 
             // if we cannot link the building, we will demolish it
-            if (!ai.LinkFlag(game.GetFlagAtPos(flagPosition)))
+            if (!ai.LinkFlag(game.GetFlagAtPosition(flagPosition)))
             {
                 game.DemolishBuilding(buildingPosition, player);
 

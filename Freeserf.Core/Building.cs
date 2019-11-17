@@ -241,7 +241,7 @@ namespace Freeserf
 
                 Game.GetPlayer(Player).AddNotification(Notification.Type.KnightOccupied, Position, militaryType);
 
-                var flag = Game.GetFlagAtPos(Game.Map.MoveDownRight(Position));
+                var flag = Game.GetFlagAtPosition(Game.Map.MoveDownRight(Position));
                 flag.ClearFlags();
                 StockInit(1, Resource.Type.GoldBar, maxGold);
                 Game.BuildingCaptured(this);
@@ -486,7 +486,7 @@ namespace Freeserf
                 // Let some serfs escape while the building is burning.
                 uint escapingSerfs = 0;
 
-                foreach (var serf in Game.GetSerfsAtPos(Position).ToArray())
+                foreach (var serf in Game.GetSerfsAtPosition(Position).ToArray())
                 {
                     if (serf.BuildingDeleted(Position, escapingSerfs < 12))
                     {
@@ -519,7 +519,7 @@ namespace Freeserf
                 {
                     SetBurningCounter(8191);
 
-                    foreach (var serf in Game.GetSerfsAtPos(Position).ToArray())
+                    foreach (var serf in Game.GetSerfsAtPosition(Position).ToArray())
                     {
                         serf.CastleDeleted(Position, true);
                     }
@@ -539,7 +539,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    var serf = Game.GetSerfAtPos(Position);
+                    var serf = Game.GetSerfAtPosition(Position);
 
                     if (serf == null)
                         serf = Game.GetPlayerSerfs(Game.GetPlayer(Player)).FirstOrDefault(serfToCheck => serfToCheck.Position == Position);
@@ -633,7 +633,7 @@ namespace Freeserf
         public void SetInventory(Inventory inventory)
         {
             if (inventory == null)
-                state.Inventory= word.MaxValue;
+                state.Inventory = word.MaxValue;
             else
                 state.Inventory = (word)inventory.Index;
         }
@@ -919,21 +919,31 @@ namespace Freeserf
             state.Stock[stockNumber].Available = (byte)count;
         }
 
-        public void RequestedResourceDelivered(Resource.Type resource)
+        /// <summary>
+        /// Tries to deliver the resource.
+        /// 
+        /// Returns false if this is not possible or should not be done.
+        /// This may happen if the emergency program was activated during
+        /// delivery or an unrequested resource was delivered.
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <returns></returns>
+        public bool RequestedResourceDelivered(Resource.Type resource)
         {
             if (state.Burning)
             {
-                return;
+                return false;
             }
 
             if (resource == Resource.Type.None)
             {
-                return;
+                return false;
             }
 
             if (HasInventory())
             {
                 Game.GetInventory(state.Inventory).PushResource(resource);
+                return true;
             }
             else
             {
@@ -950,49 +960,35 @@ namespace Freeserf
                     if (state.Stock[i].Type == resource)
                     {
                         if (state.Stock[i].Requested == 0)
-                        {
-                            // TODO: The exception occurs. Seen with GoldBar and Hut and Plank and CoalMine. There seems to be a bug.
+                        {                            
                             if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone())
                             {
-                                // In emergency program we set the requested amount to zero.
-                                // But sometimes the resource might still delivered.
-                                // In this case we just add the delivered resource.
-                                // But not if the building does not need it anymore.
-                                if (state.Stock[i].Maximum == 0)
-                                {
-                                    Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                                    // TODO: For now we ignore this bug as it won't hurt as much as an exception.
-                                    //throw new ExceptionFreeserf("Delivered more resources than requested.");
-                                }
-
-                                ++state.Stock[i].Available;
-                             }
+                                // In emergency program we set the requested amount to zero for most buildings.
+                                // But sometimes the resource might still be delivered. We stop delivery so the
+                                // resource is brought back to castle/stock. No logging needed here as it is
+                                // a valid scenario.
+                                return false;
+                            }
                             else
                             {
-                                // TODO: This exception occurs from time to time. Maybe fixed now?
+                                // We did not request the resource at all
                                 Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
-                                // TODO: For now we ignore this bug as it won't hurt as much as an exception.
-                                //throw new ExceptionFreeserf("Delivered more resources than requested.");
+                                return false;
                             }
                         }
                         else
                         {
                             ++state.Stock[i].Available;
                             --state.Stock[i].Requested;
-                        }
-
-                        return;
+                            return true; // Resource delivered successfully
+                        }                        
                     }
                 }
 
-                // TODO: For now we just add the resource back to the castle. Later we have to find the reason for this.
-                Game.GetBuildingAtPos(Game.GetPlayer(Player).CastlePosition).GetInventory().PushResource(resource);
-                return;
-
-                // TODO: This exception occurs from time to time.
-                // TODO: Seen for IronMine (was finished but a plank arrived).
+                // A resource was delivered that is not meant for this building.
+                // This should not happen but for safety reasons we log it and deny delivery.
                 Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone().ToString()}");
-                throw new ExceptionFreeserf(Game, "building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone().ToString()}");
+                return false;
             }
         }
 
@@ -1545,7 +1541,7 @@ namespace Freeserf
 
                             if (map.HasSerf(flagPosition))
                             {
-                                var serf = Game.GetSerfAtPos(flagPosition);
+                                var serf = Game.GetSerfAtPosition(flagPosition);
 
                                 if (serf.Position != flagPosition)
                                 {
@@ -1859,9 +1855,9 @@ namespace Freeserf
                 {
                     var knightType = bestKnight.GetSerfType();
 
-                    for (int t = (int)Serf.Type.Knight0; t <= (int)Serf.Type.Knight4; ++t)
+                    for (int type = (int)Serf.Type.Knight0; type <= (int)Serf.Type.Knight4; ++type)
                     {
-                        if ((int)knightType > t)
+                        if ((int)knightType > type)
                         {
                             inventory.CallInternal(bestKnight);
                         }
@@ -1877,11 +1873,11 @@ namespace Freeserf
             {
                 var knightType = Serf.Type.None;
 
-                for (int t = (int)Serf.Type.Knight4; t >= (int)Serf.Type.Knight0; --t)
+                for (int type = (int)Serf.Type.Knight4; type >= (int)Serf.Type.Knight0; --type)
                 {
-                    if (inventory.HasSerf((Serf.Type)t))
+                    if (inventory.HasSerf((Serf.Type)type))
                     {
-                        knightType = (Serf.Type)t;
+                        knightType = (Serf.Type)type;
                         break;
                     }
                 }
@@ -1902,12 +1898,9 @@ namespace Freeserf
                     }
                     else
                     {
+                        // if we don't have a knight, send one
                         if (player.TickSendKnightDelay())
-                        {
-                            SendSerfToBuilding(Serf.Type.None,
-                                               Resource.Type.None,
-                                               Resource.Type.None);
-                        }
+                            SendKnightToBuilding();
                     }
                 }
                 else
@@ -1947,7 +1940,7 @@ namespace Freeserf
 
             if (map.HasSerf(flagPosition))
             {
-                var serf = Game.GetSerfAtPos(flagPosition);
+                var serf = Game.GetSerfAtPosition(flagPosition);
 
                 if (serf.Position != flagPosition)
                 {
@@ -2014,9 +2007,7 @@ namespace Freeserf
             {
                 if (!state.SerfRequestFailed)
                 {
-                    state.SerfRequestFailed = !SendSerfToBuilding(Serf.Type.None,
-                                                                  Resource.Type.None,
-                                                                  Resource.Type.None);
+                    state.SerfRequestFailed = !SendKnightToBuilding();
                 }
             }
             else if (neededOccupants < presentKnights && !Game.Map.HasSerf(Game.Map.MoveDownRight(Position)))
@@ -2153,6 +2144,12 @@ namespace Freeserf
         bool SendSerfToBuilding(Serf.Type type, Resource.Type resource1, Resource.Type resource2)
         {
             return Game.SendSerfToFlag(Game.GetFlag(state.Flag), type, resource1, resource2);
+        }
+
+        bool SendKnightToBuilding()
+        {
+            // Note: If serf type is None, any knight is used (preferring strong knights while cycling them)
+            return SendSerfToBuilding(Serf.Type.None, Resource.Type.None, Resource.Type.None);
         }
 
         static readonly uint[] BuildingScoreFromType = new uint[]

@@ -907,7 +907,7 @@ namespace Freeserf
                 {
                     state.EndPointFlags &= ~EndPointFlags.HasUnscheduledResources;
 
-                    for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; slot++)
+                    for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; ++slot)
                     {
                         if (state.Slots[slot].Type != Resource.Type.None)
                         {
@@ -1184,9 +1184,9 @@ namespace Freeserf
         }
 
         // Find a transporter at position and change it to state.
-        static int ChangeTransporterStateAtPos(Game game, MapPos position, Serf.State state)
+        static int ChangeTransporterStateAtPosition(Game game, MapPos position, Serf.State state)
         {
-            foreach (var serf in game.GetSerfsAtPos(position))
+            foreach (var serf in game.GetSerfsAtPosition(position))
             {
                 if (serf.ChangeTransporterStateAtPosition(position, state))
                 {
@@ -1199,12 +1199,12 @@ namespace Freeserf
 
         static int WakeTransporterAtFlag(Game game, MapPos position)
         {
-            return ChangeTransporterStateAtPos(game, position, Serf.State.WakeAtFlag);
+            return ChangeTransporterStateAtPosition(game, position, Serf.State.WakeAtFlag);
         }
 
         static int WakeTransporterOnPath(Game game, MapPos position)
         {
-            return ChangeTransporterStateAtPos(game, position, Serf.State.WakeOnPath);
+            return ChangeTransporterStateAtPosition(game, position, Serf.State.WakeOnPath);
         }
 
         public static void FillPathSerfInfo(Game game, MapPos position,
@@ -1221,7 +1221,7 @@ namespace Freeserf
             // Handle first position.
             if (map.HasSerf(position))
             {
-                var serf = game.GetSerfAtPos(position);
+                var serf = game.GetSerfAtPosition(position);
 
                 if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                 {
@@ -1275,7 +1275,7 @@ namespace Freeserf
                 // Check if there is a serf occupying this space.
                 if (map.HasSerf(position))
                 {
-                    var serf = game.GetSerfAtPos(position);
+                    var serf = game.GetSerfAtPosition(position);
 
                     if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
                     {
@@ -1288,7 +1288,7 @@ namespace Freeserf
             // Handle last position.
             if (map.HasSerf(position))
             {
-                var serf = game.GetSerfAtPos(position);
+                var serf = game.GetSerfAtPosition(position);
 
                 if ((serf.SerfState == Serf.State.Transporting &&
                     serf.GetWalkingWaitCounter() != -1) ||
@@ -1367,7 +1367,7 @@ namespace Freeserf
                     if (!source.IsScheduled(state.SearchDirection))
                     {
                         // Item is requesting to be fetched
-                        state.ScheduleOtherEndpoint(state.SearchDirection, (byte)slot);
+                        source.state.ScheduleOtherEndpoint(state.SearchDirection, (byte)slot);
                     }
                     else
                     {
