@@ -131,7 +131,7 @@ namespace Freeserf.AIStates
                 else if (canBuild || largeSpots.Count < 6)
                 {
                     // no valid mineral spots found -> send geologists
-                    var geologists = game.GetPlayerSerfs(player).Where(serf => serf.GetSerfType() == Serf.Type.Geologist).ToList();
+                    var geologists = game.GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Geologist).ToList();
 
                     if (geologists.Count == 0) // no geologists? try to train them
                     {

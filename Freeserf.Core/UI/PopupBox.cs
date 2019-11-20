@@ -2690,7 +2690,7 @@ namespace Freeserf.UI
 
             for (int i = 0; i < 15; ++i)
             {
-                output += Misc.BitTest(building.GetProgress(), i) ? outputWeight[i] : 0;
+                output += Misc.BitTest(building.Progress, i) ? outputWeight[i] : 0;
             }
 
             // Print output precentage
@@ -2735,7 +2735,7 @@ namespace Freeserf.UI
 
             if (building.HasSerf())
             {
-                if (building.GetProgress() == 0)
+                if (building.Progress == 0)
                 {
                     // Digger 
                     SetIcon(18, 121, 0xbu);
@@ -2837,19 +2837,19 @@ namespace Freeserf.UI
             SetText(32, 71, "Defenders:");
 
             // draw knights
-            uint nextKnight = building.GetFirstKnight();
+            uint nextKnight = building.FirstKnight;
 
             for (int i = 0; nextKnight != 0; ++i)
             {
                 var knight = player.Game.GetSerf(nextKnight);
 
-                SetIcon(32 + 32 * (i % 3), 81 + 16 * (i / 3), 7u + (uint)knight.GetSerfType());
+                SetIcon(32 + 32 * (i % 3), 81 + 16 * (i / 3), 7u + (uint)knight.SerfType);
 
                 nextKnight = knight.GetNextKnight();
             }
 
             SetText(8, 137, "State:");
-            SetText(54, 137, building.GetThreatLevel().ToString());
+            SetText(54, 137, building.ThreatLevel.ToString());
 
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
         }
@@ -3002,7 +3002,7 @@ namespace Freeserf.UI
             if (building == null)
                 return;
 
-            var inventory = building.GetInventory();
+            var inventory = building.Inventory;
             var resources = inventory.GetAllResources();
 
             DrawResourcesBox(resources);
@@ -3027,11 +3027,11 @@ namespace Freeserf.UI
             }
 
             uint[] serfCounts = new uint[27];
-            var inventory = building.GetInventory();
+            var inventory = building.Inventory;
 
             foreach (var serf in interf.Game.GetSerfsInInventory(inventory))
             {
-                ++serfCounts[(int)serf.GetSerfType()];
+                ++serfCounts[(int)serf.SerfType];
             }
 
             DrawSerfsBox(serfCounts, -1);
@@ -3054,12 +3054,12 @@ namespace Freeserf.UI
                 uint[] knights = new uint[5];
 
                 // follow linked list of knights on duty
-                uint serfIndex = building.GetFirstKnight();
+                uint serfIndex = building.FirstKnight;
 
                 while (serfIndex != 0)
                 {
                     var serf = interf.Game.GetSerf(serfIndex);
-                    var serfType = serf.GetSerfType();
+                    var serfType = serf.SerfType;
 
                     if (serfType < Serf.Type.Knight0 || serfType > Serf.Type.Knight4)
                         throw new ExceptionFreeserf(interf.Game, "gui", "Not a knight among the castle defenders.");
@@ -3085,7 +3085,7 @@ namespace Freeserf.UI
             SetIcon(40, 25, 0x128); // resource direction box
             SetIcon(40, 89, 0x129); // serf direction box
 
-            var inventory = building.GetInventory();
+            var inventory = building.Inventory;
             var resourceMode = inventory.ResourceMode;
             var serfMode = inventory.SerfMode;
 
@@ -4444,7 +4444,7 @@ namespace Freeserf.UI
         void SetInventoryMode(Action action)
         {
             var building = interf.Game.GetBuilding(interf.GetPlayer().tempIndex);
-            var inventory = building.GetInventory();
+            var inventory = building.Inventory;
 
             switch (action)
             {

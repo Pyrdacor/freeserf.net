@@ -525,7 +525,7 @@ namespace Freeserf
             foreach (var serf in Game.GetPlayerSerfs(this))
             {
                 if (serf.SerfState == Serf.State.IdleInStock &&
-                    serf.GetSerfType() == Serf.Type.Generic)
+                    serf.SerfType == Serf.Type.Generic)
                 {
                     var inventory = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
 
@@ -615,11 +615,11 @@ namespace Freeserf
                 building.IsMilitary())
             {
                 if (!building.IsActive() ||
-                    building.GetThreatLevel() != 3)
+                    building.ThreatLevel != 3)
                 {
-                    /* It is not allowed to attack
-                       if currently not occupied or
-                       is too far from the border. */
+                    // It is not allowed to attack
+                    // if currently not occupied or
+                    // is too far from the border.
                     return false;
                 }
 
@@ -668,7 +668,7 @@ namespace Freeserf
             var target = Game.GetBuilding((uint)buildingAttacked);
 
             if (!target.IsDone()   || !target.IsMilitary() ||
-                !target.IsActive() || target.GetThreatLevel() != 3)
+                !target.IsActive() || target.ThreatLevel != 3)
             {
                 return;
             }
@@ -705,15 +705,15 @@ namespace Freeserf
                     default: continue;
                 }
 
-                uint state = building.GetThreatLevel();
-                uint knightsPresent = building.GetKnightCount();
+                uint state = building.ThreatLevel;
+                uint knightsPresent = building.KnightCount;
                 int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[state] & 0xf];
 
                 for (int j = 0; j < toSend; ++j)
                 {
                     // Find most appropriate knight to send according to player settings.
                     var bestType = SendStrongest ? Serf.Type.Knight0 : Serf.Type.Knight4;
-                    var knightIndex = building.GetFirstKnight();
+                    var knightIndex = building.FirstKnight;
                     uint bestIndex = 0;                    
 
                     while (knightIndex != 0)
@@ -722,18 +722,18 @@ namespace Freeserf
 
                         if (SendStrongest)
                         {
-                            if (knight.GetSerfType() >= bestType)
+                            if (knight.SerfType >= bestType)
                             {
                                 bestIndex = knightIndex;
-                                bestType = knight.GetSerfType();
+                                bestType = knight.SerfType;
                             }
                         }
                         else
                         {
-                            if (knight.GetSerfType() <= bestType)
+                            if (knight.SerfType <= bestType)
                             {
                                 bestIndex = knightIndex;
-                                bestType = knight.GetSerfType();
+                                bestType = knight.SerfType;
                             }
                         }
 
@@ -775,7 +775,7 @@ namespace Freeserf
         public void CreateInitialCastleSerfs(Building castle)
 		{
             // Spawn castle transporter serf
-            var inventory = castle.GetInventory();
+            var inventory = castle.Inventory;
             var serf = inventory.SpawnSerfGeneric();
 
             if (serf == null)
@@ -804,8 +804,8 @@ namespace Freeserf
                 if (serf == null)
                     return;
 
-                if (inventory.PromoteSerfToKnight(serf) && building.GetFirstKnight() == 0)
-                    building.SetFirstKnight(serf.Index);
+                if (inventory.PromoteSerfToKnight(serf) && building.FirstKnight == 0)
+                    building.FirstKnight = serf.Index;
             }
 
             // Spawn toolmaker
@@ -1060,7 +1060,7 @@ namespace Freeserf
                 state.HasCastle = true;
                 state.CanSpawn = true;
                 state.TotalBuildingScore += Building.BuildingGetScoreFromType(Building.Type.Castle);
-                state.CastleInventoryIndex = building.GetInventory().Index;
+                state.CastleInventoryIndex = building.Inventory.Index;
                 selectedBuildingIndex = building.Index;
                 CreateInitialCastleSerfs(building);
                 lastTick = Game.Tick;
@@ -1532,7 +1532,7 @@ namespace Freeserf
             {
                 if (serf.SerfState == Serf.State.IdleInStock)
                 {
-                    ++serfs[serf.GetSerfType()];
+                    ++serfs[serf.SerfType];
                 }
             }
 
@@ -1732,8 +1732,8 @@ namespace Freeserf
 
             attackingBuildings[index] = buildingIndex;
 
-            var threatLevel = building.GetThreatLevel();
-            var knightsPresent = building.GetKnightCount();
+            var threatLevel = building.ThreatLevel;
+            var knightsPresent = building.KnightCount;
             int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[threatLevel] & 0xf];
 
             if (toSend > 0)

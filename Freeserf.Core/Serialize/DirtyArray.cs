@@ -53,6 +53,11 @@ namespace Freeserf.Serialize
 
         public event EventHandler GotDirty;
 
+        public void RemoveGotDirtyHandlers()
+        {
+            GotDirty = null;
+        }
+
         public static implicit operator T[](DirtyArray<T> array)
         {
             // TODO make this readonly/a copy?

@@ -366,9 +366,9 @@ namespace Freeserf.Render
             if (building == null)
                 return -1;
 
-            uint sprite = 0;
+            uint sprite;
 
-            if (building.IsDone() || Misc.BitTest(building.GetProgress(), 15))
+            if (building.IsDone() || Misc.BitTest(building.Progress, 15))
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -389,7 +389,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || Misc.BitTest(building.GetProgress(), 15))
+            if (building.IsDone() || building.FrameFinished)
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -432,7 +432,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || Misc.BitTest(building.GetProgress(), 15))
+            if (building.IsDone() || building.FrameFinished)
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -861,7 +861,7 @@ namespace Freeserf.Render
             var animation = dataSource.GetAnimation(serf.Animation, serf.Counter);
             int bodySprite = animation.Sprite;
 
-            switch (serf.GetSerfType())
+            switch (serf.SerfType)
             {
                 case Serf.Type.Transporter:
                 case Serf.Type.Generic:
@@ -879,7 +879,7 @@ namespace Freeserf.Render
                 case Serf.Type.Sailor:
                     if (serf.SerfState == Serf.State.Transporting && bodySprite < 0x80)
                     {
-                        if (((bodySprite & 7) == 4 && !serf.PlayingSfx()) || (bodySprite & 7) == 3)
+                        if (((bodySprite & 7) == 4 && !serf.IsPlayingSfx) || (bodySprite & 7) == 3)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Rowing);
@@ -897,7 +897,7 @@ namespace Freeserf.Render
                     {
                         if (bodySprite < 0x80)
                         {
-                            if (((bodySprite & 7) == 4 && !serf.PlayingSfx()) || (bodySprite & 7) == 3)
+                            if (((bodySprite & 7) == 4 && !serf.IsPlayingSfx) || (bodySprite & 7) == 3)
                             {
                                 serf.StartPlayingSfx();
                                 PlaySound(Audio.Audio.TypeSfx.Rowing);
@@ -926,7 +926,7 @@ namespace Freeserf.Render
                     }
                     else if (bodySprite == 0x83 || bodySprite == 0x84)
                     {
-                        if (bodySprite == 0x83 || !serf.PlayingSfx())
+                        if (bodySprite == 0x83 || !serf.IsPlayingSfx)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Digging);
@@ -947,7 +947,7 @@ namespace Freeserf.Render
                     }
                     else if ((bodySprite & 7) == 4 || (bodySprite & 7) == 5)
                     {
-                        if ((bodySprite & 7) == 4 || !serf.PlayingSfx())
+                        if ((bodySprite & 7) == 4 || !serf.IsPlayingSfx)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.HammerBlow);
@@ -990,7 +990,7 @@ namespace Freeserf.Render
                             bodySprite += 0xb00;
                         }
                     }
-                    else if ((bodySprite == 0x86 && !serf.PlayingSfx()) ||
+                    else if ((bodySprite == 0x86 && !serf.IsPlayingSfx) ||
                        bodySprite == 0x85)
                     {
                         serf.StartPlayingSfx();
@@ -1031,7 +1031,7 @@ namespace Freeserf.Render
                             bodySprite == 0xbb ||
                             bodySprite == 0xc3 ||
                             bodySprite == 0xcb ||
-                            (!serf.PlayingSfx() &&
+                            (!serf.IsPlayingSfx &&
                              (bodySprite == 0xb7 ||
                               bodySprite == 0xbf ||
                               bodySprite == 0xc7 ||
@@ -1070,7 +1070,7 @@ namespace Freeserf.Render
                             bodySprite += 0xd00;
                         }
                     }
-                    else if (bodySprite == 0x85 || (bodySprite == 0x86 && !serf.PlayingSfx()))
+                    else if (bodySprite == 0x85 || (bodySprite == 0x86 && !serf.IsPlayingSfx))
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.PickBlow);
@@ -1087,7 +1087,7 @@ namespace Freeserf.Render
                     {
                         bodySprite += 0xe00;
                     }
-                    else if (bodySprite == 0x86 || (bodySprite == 0x87 && !serf.PlayingSfx()))
+                    else if (bodySprite == 0x86 || (bodySprite == 0x87 && !serf.IsPlayingSfx))
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.Planting);
@@ -1231,7 +1231,7 @@ namespace Freeserf.Render
                     else
                     {
                         // edi10 += 4; 
-                        if ((bodySprite == 0xb2 || bodySprite == 0xba || bodySprite == 0xc2 || bodySprite == 0xca) && !serf.PlayingSfx())
+                        if ((bodySprite == 0xb2 || bodySprite == 0xba || bodySprite == 0xc2 || bodySprite == 0xca) && !serf.IsPlayingSfx)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.BackswordBlow);
@@ -1265,7 +1265,7 @@ namespace Freeserf.Render
                         {
                             bodySprite += 0x3d80;
                         }
-                        else if (bodySprite == 0x83 || (bodySprite == 0x84 && !serf.PlayingSfx()))
+                        else if (bodySprite == 0x83 || (bodySprite == 0x84 && !serf.IsPlayingSfx))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Mowing);
@@ -1328,7 +1328,7 @@ namespace Freeserf.Render
                     }
                     else if (bodySprite == 0x84 || bodySprite == 0x85)
                     {
-                        if (bodySprite == 0x84 || !serf.PlayingSfx())
+                        if (bodySprite == 0x84 || !serf.IsPlayingSfx)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.WoodHammering);
@@ -1369,12 +1369,12 @@ namespace Freeserf.Render
                     else
                     {
                         // edi10 += 4; 
-                        if (bodySprite == 0x83 || (bodySprite == 0xb2 && !serf.PlayingSfx()))
+                        if (bodySprite == 0x83 || (bodySprite == 0xb2 && !serf.IsPlayingSfx))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.Sawing);
                         }
-                        else if (bodySprite == 0x87 || (bodySprite == 0xb6 && !serf.PlayingSfx()))
+                        else if (bodySprite == 0x87 || (bodySprite == 0xb6 && !serf.IsPlayingSfx))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.WoodHammering);
@@ -1409,7 +1409,7 @@ namespace Freeserf.Render
                     else
                     {
                         // edi10 += 4; 
-                        if (bodySprite == 0x83 || (bodySprite == 0x84 && !serf.PlayingSfx()))
+                        if (bodySprite == 0x83 || (bodySprite == 0x84 && !serf.IsPlayingSfx))
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.MetalHammering);
@@ -1429,7 +1429,7 @@ namespace Freeserf.Render
                     }
                     else if (bodySprite == 0x83 || bodySprite == 0x84 || bodySprite == 0x86)
                     {
-                        if (bodySprite == 0x83 || !serf.PlayingSfx())
+                        if (bodySprite == 0x83 || !serf.IsPlayingSfx)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.GeologistSampling);
@@ -1439,7 +1439,7 @@ namespace Freeserf.Render
                     }
                     else if (bodySprite == 0x8c || bodySprite == 0x8d)
                     {
-                        if (bodySprite == 0x8c || !serf.PlayingSfx())
+                        if (bodySprite == 0x8c || !serf.IsPlayingSfx)
                         {
                             serf.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.ResourceFound);
@@ -1459,7 +1459,7 @@ namespace Freeserf.Render
                 case Serf.Type.Knight3:
                 case Serf.Type.Knight4:
                     {
-                        int k = serf.GetSerfType() - Serf.Type.Knight0;
+                        int k = serf.SerfType - Serf.Type.Knight0;
 
                         if (bodySprite < 0x80)
                         {
@@ -1474,7 +1474,7 @@ namespace Freeserf.Render
                                 {
                                     serf.StopPlayingSfx();
                                 }
-                                else if (!serf.PlayingSfx())
+                                else if (!serf.IsPlayingSfx)
                                 {
                                     serf.StartPlayingSfx();
 
@@ -1503,7 +1503,7 @@ namespace Freeserf.Render
                     }
                     break;
                 case Serf.Type.Dead:
-                    if ((!serf.PlayingSfx() && (bodySprite == 2 || bodySprite == 5)) || bodySprite == 1 || bodySprite == 4)
+                    if ((!serf.IsPlayingSfx && (bodySprite == 2 || bodySprite == 5)) || bodySprite == 1 || bodySprite == 4)
                     {
                         serf.StartPlayingSfx();
                         PlaySound(Audio.Audio.TypeSfx.SerfDying);

@@ -315,7 +315,7 @@ namespace Freeserf.AIStates
                 if (!building.IsMilitary() || !building.IsDone() || building.IsBurning())
                     continue;
 
-                if (!building.IsActive() || building.GetThreatLevel() != 3)
+                if (!building.IsActive() || building.ThreatLevel != 3)
                     continue;
 
                 int score = CheckTargetBuilding(game, player, building.Position);
@@ -394,7 +394,7 @@ namespace Freeserf.AIStates
             if (numMaxAttackKnights == 0)
                 return int.MinValue;
 
-            int numKnights = (int)game.GetBuildingAtPosition(position).GetKnightCount();
+            int numKnights = (int)game.GetBuildingAtPosition(position).KnightCount;
 
             return numMaxAttackKnights - numKnights;
         }

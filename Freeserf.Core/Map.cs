@@ -2183,7 +2183,7 @@ namespace Freeserf
             }
         }
 
-        public MapPos PosFromSavedValue(uint val)
+        public MapPos PositionFromSavedValue(uint val)
         {
             val >>= 2;
 

@@ -567,13 +567,13 @@ namespace Freeserf.Render
             else
             {
                 float progress;
-                var buildingProgess = building.GetProgress();
+                var buildingProgess = building.Progress;
 
                 if (buildingProgess <= 1)
                 {
                     return offset;
                 }
-                else if (Misc.BitTest(buildingProgess, 15) && building.BuildingType != Building.Type.Castle)
+                else if (building.FrameFinished && building.BuildingType != Building.Type.Castle)
                 {
                     progress = 2.0f * (buildingProgess & 0x7fffu) / 0xffffu;
                 }
@@ -735,7 +735,7 @@ namespace Freeserf.Render
                     // BitTest(Progress, 15) = true: Frame finished         [This means Progress >= 32768]
                     // Progress = 0xffff: Building finished                 [This means Progress == 65535]
 
-                    var progress = building.GetProgress();
+                    var progress = building.Progress;
 
                     if (progress == 0)
                         crossOrStoneSprite.TextureAtlasOffset = textureAtlas.GetOffset(CrossSprite);
@@ -746,8 +746,6 @@ namespace Freeserf.Render
                         crossOrStoneSprite.Delete();
                         crossOrStoneSprite = null;
                     }
-
-                    uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
 
                     if (!Misc.BitTest(progress, 15)) // building frame
                     {
@@ -778,7 +776,7 @@ namespace Freeserf.Render
                     }
 
                     // Update stone waiting
-                    uint stone = building.WaitingStone(); // max is 5
+                    uint stone = building.WaitingStone; // max is 5
 
                     for (int i = stones.Count - 1; i >= stone; --i) // remove stones that are not present anymore
                     {
@@ -795,7 +793,7 @@ namespace Freeserf.Render
                     }
 
                     // Update planks waiting
-                    uint plank = building.WaitingPlanks(); // max is 5
+                    uint plank = building.WaitingPlanks; // max is 5
 
                     for (int i = planks.Count - 1; i >= plank; --i) // remove stones that are not present anymore
                     {
@@ -820,35 +818,35 @@ namespace Freeserf.Render
         {
             // Play sound effect
             if (sprite.Visible &&
-                ((building.GetBurningCounter() >> 3) & 3) == 3 &&
-                !building.IsPlayingSfx())
+                ((building.BurningCounter >> 3) & 3) == 3 &&
+                !building.IsPlayingSfx)
             {
                 building.StartPlayingSfx();
                 PlaySound(Audio.Audio.TypeSfx.Burning);
             }
             // Stop playing sound effect if not on screen
-            else if (!sprite.Visible && building.IsPlayingSfx())
+            else if (!sprite.Visible && building.IsPlayingSfx)
             {
                 building.StopPlayingSfx();
                 StopSound();
             }
 
-            ushort delta = (ushort)(tick - building.GetTick());
-            building.SetTick((uint)tick);
+            ushort delta = (ushort)(tick - building.Tick);
+            building.Tick = (uint)tick;
 
-            if (building.GetBurningCounter() >= delta)
+            if (building.BurningCounter >= delta)
             {
                 building.DecreaseBurningCounter(delta);
 
                 int type = 0;
 
                 if (building.IsDone() ||
-                    building.GetProgress() >= 16000)
+                    building.Progress >= 16000)
                 {
                     type = (int)building.BuildingType;
                 }
 
-                int offset = ((building.GetBurningCounter() >> 3) & 7) ^ 7;
+                int offset = ((building.BurningCounter >> 3) & 7) ^ 7;
                 int animationIndex = BuildingAnimationOffsetFromType[type];
                 int burningSpriteIndex = 0;
 
@@ -880,7 +878,7 @@ namespace Freeserf.Render
             }
             else
             {
-                building.SetBurningCounter(0);
+                building.BurningCounter = 0;
             }
         }
 
@@ -1045,7 +1043,7 @@ namespace Freeserf.Render
                     {
                         int i = (tick >> 3) & 7;
 
-                        if (i == 0 || (i == 7 && !building.IsPlayingSfx()))
+                        if (i == 0 || (i == 7 && !building.IsPlayingSfx))
                         {
                             building.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.GoldBoils);
@@ -1086,7 +1084,7 @@ namespace Freeserf.Render
                             {
                                 building.StopPlayingSfx();
                             }
-                            else if (!building.IsPlayingSfx())
+                            else if (!building.IsPlayingSfx)
                             {
                                 building.StartPlayingSfx();
                                 PlaySound(Audio.Audio.TypeSfx.MillGrinding);
@@ -1162,7 +1160,7 @@ namespace Freeserf.Render
                         additionalSprites[0].Visible = false;
                     }
                     // draw the rope
-                    if (building.IsPlayingSfx())
+                    if (building.IsPlayingSfx)
                     {
                         uint spriteIndex = 152u;
 
@@ -1194,7 +1192,7 @@ namespace Freeserf.Render
                     {
                         int i = (tick >> 3) & 7;
 
-                        if (i == 0 || (i == 7 && !building.IsPlayingSfx()))
+                        if (i == 0 || (i == 7 && !building.IsPlayingSfx))
                         {
                             building.StartPlayingSfx();
                             PlaySound(Audio.Audio.TypeSfx.GoldBoils);
@@ -1256,14 +1254,14 @@ namespace Freeserf.Render
             if (building.HasKnight())
             {
                 uint tickBase = (second) ? ((((uint)tick >> 3) + 2) & 3) : (((uint)tick >> 3) & 3);
-                uint spriteIndex = 181u + tickBase + 4 * building.GetThreatLevel();
+                uint spriteIndex = 181u + tickBase + 4 * building.ThreatLevel;
                 var info = dataSource.GetSpriteInfo(Data.Resource.GameObject, spriteIndex);
 
                 additionalSprites[index].X = x;
                 if (second)
-                    additionalSprites[index].Y = y - ((int)building.GetKnightCount() + 1) / 2;
+                    additionalSprites[index].Y = y - ((int)building.KnightCount + 1) / 2;
                 else
-                    additionalSprites[index].Y = y - Misc.Round(mul * building.GetKnightCount());
+                    additionalSprites[index].Y = y - Misc.Round(mul * building.KnightCount);
                 additionalSprites[index].TextureAtlasOffset = textureAtlas.GetOffset(spriteIndexOffset + spriteIndex);
                 additionalSprites[index].Layer = materialLayer; // we use the material layer for special objects (it is the map object layer)
                 additionalSprites[index].BaseLineOffset = System.Math.Max(0, sprite.Y + sprite.Height + sprite.BaseLineOffset + 1 - additionalSprites[index].Y); // otherwise we wouldn't see them

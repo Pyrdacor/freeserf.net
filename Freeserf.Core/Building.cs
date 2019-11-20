@@ -153,8 +153,6 @@ namespace Freeserf
         [Data]
         private BuildingState state = new BuildingState();
 
-        int burningCounter = 0;
-
         public Building(Game game, uint index)
             : base(game, index)
         {
@@ -203,64 +201,55 @@ namespace Freeserf
             return state.FirstKnight != 0;
         }
 
-        public uint GetFirstKnight()
+        public uint FirstKnight
         {
-            return state.FirstKnight;
-        }
-
-        public void SetFirstKnight(uint knightIndex)
-        {
-            state.FirstKnight = (word)knightIndex;
-
-            // Test whether building is already occupied by knights
-            if (!state.Active)
+            get => state.FirstKnight;
+            set
             {
-                state.Active = true;
+                state.FirstKnight = (word)value;
 
-                uint militaryType = 0;
-                uint maxGold = uint.MaxValue;
-
-                switch (BuildingType)
+                // Test whether building is already occupied by knights
+                if (!state.Active)
                 {
-                    case Type.Hut:
-                        militaryType = 0;
-                        maxGold = 2;
-                        break;
-                    case Type.Tower:
-                        militaryType = 1;
-                        maxGold = 4;
-                        break;
-                    case Type.Fortress:
-                        militaryType = 2;
-                        maxGold = 8;
-                        break;
-                    default:
-                        Debug.NotReached();
-                        break;
+                    state.Active = true;
+
+                    uint militaryType = 0;
+                    uint maxGold = uint.MaxValue;
+
+                    switch (BuildingType)
+                    {
+                        case Type.Hut:
+                            militaryType = 0;
+                            maxGold = 2;
+                            break;
+                        case Type.Tower:
+                            militaryType = 1;
+                            maxGold = 4;
+                            break;
+                        case Type.Fortress:
+                            militaryType = 2;
+                            maxGold = 8;
+                            break;
+                        default:
+                            Debug.NotReached();
+                            break;
+                    }
+
+                    Game.GetPlayer(Player).AddNotification(Notification.Type.KnightOccupied, Position, militaryType);
+
+                    var flag = Game.GetFlagAtPosition(Game.Map.MoveDownRight(Position));
+                    flag.ClearFlags();
+                    StockInit(1, Resource.Type.GoldBar, maxGold);
+                    Game.BuildingCaptured(this);
                 }
-
-                Game.GetPlayer(Player).AddNotification(Notification.Type.KnightOccupied, Position, militaryType);
-
-                var flag = Game.GetFlagAtPosition(Game.Map.MoveDownRight(Position));
-                flag.ClearFlags();
-                StockInit(1, Resource.Type.GoldBar, maxGold);
-                Game.BuildingCaptured(this);
             }
         }
 
-        public int GetBurningCounter()
-        {
-            return burningCounter;
-        }
-
-        public void SetBurningCounter(int counter)
-        {
-            burningCounter = counter;
-        }
+        public int BurningCounter { get; set; } = 0;
 
         public void DecreaseBurningCounter(int delta)
         {
-            burningCounter -= delta;
+            BurningCounter -= delta;
         }
 
         public bool IsMilitary(bool includeCastle = true)
@@ -318,16 +307,20 @@ namespace Freeserf
             return mapObject;
         }
 
-        public uint GetProgress()
-        {
-            return state.Progress;
-        }
+        /// <summary>
+        /// Progress of unfinished building:
+        /// 0: Need leveling
+        /// 1: No leveling needed
+        /// >= 0x8000: Frame finished
+        /// > 0xffff: Building finished
+        /// </summary>
+        public uint Progress => state.Progress;
+
+        public bool FrameFinished => Misc.BitTest(Progress, 15);
 
         public bool BuildProgress()
         {
-            bool frameFinished = Misc.BitTest(state.Progress, 15);
-
-            var progress = state.Progress + ((!frameFinished) ? ConstructionInfos[(int)BuildingType].Phase1 : ConstructionInfos[(int)BuildingType].Phase2);
+            var progress = state.Progress + ((!FrameFinished) ? ConstructionInfos[(int)BuildingType].Phase1 : ConstructionInfos[(int)BuildingType].Phase2);
 
             if (progress <= 0xffff)
             {
@@ -402,18 +395,16 @@ namespace Freeserf
             return Misc.BitTest(state.Progress, 0);
         }
 
-        // The threat level of the building. Higher values mean that
-        // the building is closer to the enemy.
-        public uint GetThreatLevel()
-        {
-            return state.ThreatLevel;
-        }
+        /// <summary>
+        /// The threat level of the building. Higher values mean that
+        /// the building is closer to the enemy.
+        /// </summary>
+        public uint ThreatLevel => state.ThreatLevel;
 
-        // Building is currently playing back a sound effect.
-        public bool IsPlayingSfx()
-        {
-            return state.PlayingSfx;
-        }
+        /// <summary>
+        /// Building is currently playing back a sound effect.
+        /// </summary>
+        public bool IsPlayingSfx => state.PlayingSfx;
 
         public void StartPlayingSfx()
         {
@@ -505,7 +496,7 @@ namespace Freeserf
             StopPlayingSfx();
 
             uint serfIndex = state.FirstKnight;
-            burningCounter = 2047;
+            BurningCounter = 2047;
             state.Tick = Game.Tick;
 
             var player = Game.GetPlayer(Player);
@@ -517,7 +508,7 @@ namespace Freeserf
 
                 if (!state.Constructing && BuildingType == Type.Castle)
                 {
-                    SetBurningCounter(8191);
+                    BurningCounter = 8191;
 
                     foreach (var serf in Game.GetSerfsAtPosition(Position).ToArray())
                     {
@@ -546,9 +537,9 @@ namespace Freeserf
 
                     if (serf != null)
                     {
-                        if (serf.GetSerfType() == Serf.Type.TransporterInventory)
+                        if (serf.SerfType == Serf.Type.TransporterInventory)
                         {
-                            serf.SetSerfType(Serf.Type.Transporter);
+                            serf.SerfType = Serf.Type.Transporter;
                         }
 
                         serf.BuildingDeleted(Position, true);
@@ -595,7 +586,7 @@ namespace Freeserf
         {
             state.Holder = true;
 
-            if (state.SerfRequested && serf.IsKnight())
+            if (state.SerfRequested && serf.IsKnight)
             {
                 if (state.FirstKnight == 0)
                     state.FirstKnight = (word)serf.Index;
@@ -622,56 +613,41 @@ namespace Freeserf
             return state.Stock[0].Requested == 0xff;
         }
 
-        public Inventory GetInventory()
+        public Inventory Inventory
         {
-            if (state.Inventory == word.MaxValue)
-                return null;
+            get
+            {
+                if (state.Inventory == word.MaxValue)
+                    return null;
 
-            return Game.GetInventory(state.Inventory);
+                return Game.GetInventory(state.Inventory);
+            }
+            set
+            {
+                if (value == null)
+                    state.Inventory = word.MaxValue;
+                else
+                    state.Inventory = (word)value.Index;
+            }
         }
 
-        public void SetInventory(Inventory inventory)
+        public uint Level
         {
-            if (inventory == null)
-                state.Inventory = word.MaxValue;
-            else
-                state.Inventory = (word)inventory.Index;
+            get => state.Level;
+            set => state.Level = (word)value;
         }
 
-        public uint GetLevel()
+        public uint Tick
         {
-            return state.Level;
+            get => state.Tick;
+            set => state.Tick = (word)value;
         }
 
-        public void SetLevel(uint level)
-        {
-            state.Level = (word)level;
-        }
+        public uint KnightCount => state.Stock[0].Available;
 
-        public uint GetTick()
-        {
-            return state.Tick;
-        }
+        public uint WaitingPlanks => state.Stock[0].Available; // Planks always in stock #0
 
-        public void SetTick(uint tick)
-        {
-            state.Tick = (word)tick;
-        }
-
-        public uint GetKnightCount()
-        {
-            return state.Stock[0].Available;
-        }
-
-        public uint WaitingStone()
-        {
-            return state.Stock[1].Available; // Stone always in stock #1
-        }
-
-        public uint WaitingPlanks()
-        {
-            return state.Stock[0].Available; // Planks always in stock #0
-        }
+        public uint WaitingStone => state.Stock[1].Available; // Stone always in stock #1        
 
         public bool HasAllConstructionMaterials()
         {
@@ -1168,9 +1144,9 @@ namespace Freeserf
                 word delta = (word)(tick - state.Tick);
                 state.Tick = (word)tick;
 
-                if (burningCounter >= delta)
+                if (BurningCounter >= delta)
                 {
-                    burningCounter -= delta;
+                    BurningCounter -= delta;
                 }
                 else
                 {
@@ -1185,7 +1161,7 @@ namespace Freeserf
 
         public void ReadFrom(SaveReaderBinary reader)
         {
-            Position = Game.Map.PosFromSavedValue(reader.ReadDWord()); // 0
+            Position = Game.Map.PositionFromSavedValue(reader.ReadDWord()); // 0
 
             byte v8 = reader.ReadByte(); // 4
             state.Type = (Type)((v8 >> 2) & 0x1f);
@@ -1842,7 +1818,7 @@ namespace Freeserf
                         throw new ExceptionFreeserf(Game, "building", "Index of nonexistent serf in the queue.");
                     }
 
-                    if (bestKnight == null || serf.GetSerfType() < bestKnight.GetSerfType())
+                    if (bestKnight == null || serf.SerfType < bestKnight.SerfType)
                     {
                         bestKnight = serf;
                     }
@@ -1853,7 +1829,7 @@ namespace Freeserf
 
                 if (bestKnight != null)
                 {
-                    var knightType = bestKnight.GetSerfType();
+                    var knightType = bestKnight.SerfType;
 
                     for (int type = (int)Serf.Type.Knight0; type <= (int)Serf.Type.Knight4; ++type)
                     {
@@ -1864,9 +1840,9 @@ namespace Freeserf
                     }
 
                     // Switch types
-                    var bestKnightType = bestKnight.GetSerfType();
-                    bestKnight.SetSerfType(lastKnight.GetSerfType());
-                    lastKnight.SetSerfType(bestKnightType);
+                    var bestKnightType = bestKnight.SerfType;
+                    bestKnight.SerfType = lastKnight.SerfType;
+                    lastKnight.SerfType = bestKnightType;
                 }
             }
             else if (player.CastleKnights < player.CastleKnightsWanted)
@@ -2025,7 +2001,7 @@ namespace Freeserf
                         throw new ExceptionFreeserf(Game, "building", "Index of nonexistent serf in the queue.");
                     }
 
-                    if (leavingSerf == null || serf.GetSerfType() < leavingSerf.GetSerfType())
+                    if (leavingSerf == null || serf.SerfType < leavingSerf.SerfType)
                     {
                         leavingSerf = serf;
                     }

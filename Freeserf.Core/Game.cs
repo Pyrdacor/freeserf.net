@@ -468,7 +468,7 @@ namespace Freeserf
                     if (building.IsLeveling())
                     { 
                         // Leveling in progress 
-                        uint height = building.GetLevel();
+                        uint height = building.Level;
 
                         if (heightMin > height)
                             heightMin = height;
@@ -1052,7 +1052,7 @@ namespace Freeserf
 
             uint flagIndex = flag.Index;
 
-            building.SetLevel((uint)GetLevelingHeight(position));
+            building.Level = (uint)GetLevelingHeight(position);
             building.Position = position;
 
             var mapObject = building.StartBuilding(type);
@@ -1127,7 +1127,7 @@ namespace Freeserf
                 return false;
             }
 
-            castle.SetInventory(inventory);
+            castle.Inventory = inventory;
 
             inventory.Building = castle.Index;
             inventory.Flag = flag.Index;
@@ -1649,7 +1649,7 @@ namespace Freeserf
                     // Knight 
                     building.KnightRequestGranted();
 
-                    serf.SetSerfType(Serf.Type.Knight0);
+                    serf.SerfType = Serf.Type.Knight0;
                     serf.GoOutFromInventory(inventory.Index, building.FlagIndex, -1);
 
                     inventory.PopResource(Resource.Type.Sword);
@@ -1662,7 +1662,7 @@ namespace Freeserf
                         return false;
                     }
 
-                    serf.SetSerfType((Serf.Type)serfType);
+                    serf.SerfType = (Serf.Type)serfType;
 
                     int mode = 0;
 
@@ -1832,7 +1832,7 @@ namespace Freeserf
         public int GetFreeKnightCount(Player player)
         {
             return Math.Max(0, serfs.Count(serf =>
-                serf.Player == player.Index && serf.IsKnight() && serf.SerfState == Serf.State.IdleInStock) - ((int)player.CastleKnightsWanted - (int)player.CastleKnights));
+                serf.Player == player.Index && serf.IsKnight && serf.SerfState == Serf.State.IdleInStock) - ((int)player.CastleKnightsWanted - (int)player.CastleKnights));
         }
 
         public int GetPossibleFreeKnightCount(Player player)
@@ -1955,7 +1955,7 @@ namespace Freeserf
                 }
             }
 
-            foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.GetSerfType() == Serf.Type.Transporter))
+            foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Transporter))
             {
                 if (transporter.GetTransportedResource() == type)
                     ++count;
@@ -1986,7 +1986,7 @@ namespace Freeserf
                 }
             }
 
-            foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.GetSerfType() == Serf.Type.Transporter))
+            foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Transporter))
             {
                 if (transporter.GetTransportedResource() == type)
                     return true;
@@ -2367,7 +2367,7 @@ namespace Freeserf
 
             // Inventory reached
             var building = flag.GetBuilding();
-            var inventory = building.GetInventory();
+            var inventory = building.Inventory;
 
             int type = sendData.SerfType;
 

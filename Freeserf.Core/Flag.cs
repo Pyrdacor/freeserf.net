@@ -1688,7 +1688,7 @@ namespace Freeserf
             {
                 // Inventory reached
                 var building = flag.GetBuilding();
-                var inventory = building.GetInventory();
+                var inventory = building.Inventory;
 
                 if (!roadData.Water)
                 {

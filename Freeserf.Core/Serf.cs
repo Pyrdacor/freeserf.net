@@ -23,15 +23,15 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Freeserf
 {
+    using Serialize;
     using MapPos = UInt32;
 
     // TODO: Give the state values plausible names instead of FieldX and so on!
 
-    public class Serf : GameObject
+    public class Serf : GameObject, IState
     {
         public enum Type : sbyte
         {
@@ -66,9 +66,9 @@ namespace Freeserf
             Dead
         }
 
-        /* The term FREE is used loosely in the following
-         names to denote a state where the serf is not
-         bound to a road or a flag. */
+        // The term FREE is used loosely in the following
+        // names to denote a state where the serf is not
+        // bound to a road or a flag.
         public enum State : sbyte
         {
             Invalid = -1,
@@ -155,68 +155,313 @@ namespace Freeserf
             KnightAttackingDefeatFree
         }
 
-        bool sound;
-        ushort tick;
-        Type type;
-
-        [StructLayout(LayoutKind.Explicit, Pack = 1)]
-        public struct StateInfo
+        internal class StateData : Serialize.State
         {
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SIdleInStock
+            [Data]
+            public StateDataBase Data { get; private set; } = null;
+
+            public class StateDataBase
             {
-                public uint InventoryIndex; // E 
+                private readonly StateData parent;
+
+                protected StateDataBase(StateData parent)
+                {
+                    this.parent = parent;
+                }
+
+                protected void MarkAsDirty()
+                {
+                    parent.MarkPropertyAsDirty(nameof(Data));
+                }
             }
-            [FieldOffset(0)]
-            public SIdleInStock IdleInStock;
+
+            public class StateDataIdleInStock : StateDataBase
+            {
+                private uint inventoryIndex;
+
+                public StateDataIdleInStock(StateData parent) : base(parent) { }
+
+                public uint InventoryIndex
+                {
+                    get => inventoryIndex;
+                    set
+                    {
+                        if (inventoryIndex != value)
+                        {
+                            inventoryIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataIdleInStock IdleInStock
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataIdleInStock))
+                    {
+                        Data = new StateDataIdleInStock(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataIdleInStock;
+                }
+            }
 
             // States: Walking, Transporting, Delivering 
             // Resource: resource carried (when transporting), otherwise direction. 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SWalking
+            public class StateDataWalking : StateDataBase
             {
-                public int Direction1; // newly added 
-                public Resource.Type Resource; // B 
-                public uint Destination; // C 
-                public int Direction; // E 
-                public int WaitCounter; // F 
-            }
-            [FieldOffset(0)]
-            public SWalking Walking;
+                private int direction1; // newly added 
+                private Resource.Type resource; // B 
+                private uint destination; // C 
+                private int direction; // E 
+                private int waitCounter; // F 
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SEnteringBuilding
+                public StateDataWalking(StateData parent) : base(parent) { }
+
+                public int Direction1
+                {
+                    get => direction1;
+                    set
+                    {
+                        if (direction1 != value)
+                        {
+                            direction1 = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public Resource.Type Resource
+                {
+                    get => resource;
+                    set
+                    {
+                        if (resource != value)
+                        {
+                            resource = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint Destination
+                {
+                    get => destination;
+                    set
+                    {
+                        if (destination != value)
+                        {
+                            destination = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Direction
+                {
+                    get => direction;
+                    set
+                    {
+                        if (direction != value)
+                        {
+                            direction = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int WaitCounter
+                {
+                    get => waitCounter;
+                    set
+                    {
+                        if (waitCounter != value)
+                        {
+                            waitCounter = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataWalking Walking
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataWalking))
+                    {
+                        Data = new StateDataWalking(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataWalking;
+                }
+            }
+
+            public class StateDataEnteringBuilding : StateDataBase
             {
                 // FieldB = -2: Enter inventory (castle, etc)
-                public int FieldB; // B 
-                public int SlopeLength; // C 
+                private int fieldB; // B
+                private int slopeLength; // C
+
+                public StateDataEnteringBuilding(StateData parent) : base(parent) { }
+
+                public int FieldB
+                {
+                    get => fieldB;
+                    set
+                    {
+                        if (fieldB != value)
+                        {
+                            fieldB = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int SlopeLength
+                {
+                    get => slopeLength;
+                    set
+                    {
+                        if (slopeLength != value)
+                        {
+                            slopeLength = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SEnteringBuilding EnteringBuilding;
+            public StateDataEnteringBuilding EnteringBuilding
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataEnteringBuilding))
+                    {
+                        Data = new StateDataEnteringBuilding(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataEnteringBuilding;
+                }
+            }
 
             // States: LeavingBuilding, ReadyToLeave, LeaveForFight
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SLeavingBuilding
+            public class StateDataLeavingBuilding : StateDataBase
             {
-                public int FieldB; // B 
-                public uint Destination; // C 
-                public int Destination2; // D 
-                public int Direction; // E 
-                public State NextState; // F 
-            }
-            [FieldOffset(0)]
-            public SLeavingBuilding LeavingBuilding;
+                private int fieldB; // B
+                private uint destination; // C
+                private int destination2; // D
+                private int direction; // E
+                private State nextState; // F
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SReadyToEnter
+                public StateDataLeavingBuilding(StateData parent) : base(parent) { }
+
+                public int FieldB
+                {
+                    get => fieldB;
+                    set
+                    {
+                        if (fieldB != value)
+                        {
+                            fieldB = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint Destination
+                {
+                    get => destination;
+                    set
+                    {
+                        if (destination != value)
+                        {
+                            destination = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Destination2
+                {
+                    get => destination2;
+                    set
+                    {
+                        if (destination2 != value)
+                        {
+                            destination2 = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Direction
+                {
+                    get => direction;
+                    set
+                    {
+                        if (direction != value)
+                        {
+                            direction = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public State NextState
+                {
+                    get => nextState;
+                    set
+                    {
+                        if (nextState != value)
+                        {
+                            nextState = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataLeavingBuilding LeavingBuilding
             {
-                public int FieldB; // B 
-            }
-            [FieldOffset(0)]
-            public SReadyToEnter ReadyToEnter;
+                get
+                {
+                    if (Data == null || !(Data is StateDataLeavingBuilding))
+                    {
+                        Data = new StateDataLeavingBuilding(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SDigging
+                    return Data as StateDataLeavingBuilding;
+                }
+            }
+
+            public class StateDataReadyToEnter : StateDataBase
+            {
+                private int fieldB; // B
+
+                public StateDataReadyToEnter(StateData parent) : base(parent) { }
+
+                public int FieldB
+                {
+                    get => fieldB;
+                    set
+                    {
+                        if (fieldB != value)
+                        {
+                            fieldB = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataReadyToEnter ReadyToEnter
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataReadyToEnter))
+                    {
+                        Data = new StateDataReadyToEnter(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataReadyToEnter;
+                }
+            }
+
+            public class StateDataDigging : StateDataBase
             {
                 // Substate < 0 -> Wait for serf
                 // Substate = 0 -> Looking for a place to dig
@@ -224,170 +469,812 @@ namespace Freeserf
                 // Substate > 1 -> Digging
                 // TargetH is the height after digging
                 // DigPosition is the dig position (0 = center, 1-6 = directions)
-                public int HeightIndex; // B 
-                public uint TargetHeight; // C 
-                public int DigPosition; // D 
-                public int Substate; // E 
+                private int heightIndex; // B
+                private uint targetHeight; // C
+                private int digPosition; // D
+                private int substate; // E
+
+                public StateDataDigging(StateData parent) : base(parent) { }
+
+                public int HeightIndex
+                {
+                    get => heightIndex;
+                    set
+                    {
+                        if (heightIndex != value)
+                        {
+                            heightIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint TargetHeight
+                {
+                    get => targetHeight;
+                    set
+                    {
+                        if (targetHeight != value)
+                        {
+                            targetHeight = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DigPosition
+                {
+                    get => digPosition;
+                    set
+                    {
+                        if (digPosition != value)
+                        {
+                            digPosition = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Substate
+                {
+                    get => substate;
+                    set
+                    {
+                        if (substate != value)
+                        {
+                            substate = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SDigging Digging;
+            public StateDataDigging Digging
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataDigging))
+                    {
+                        Data = new StateDataDigging(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataDigging;
+                }
+            }
 
             // Mode: one of three substates (negative, positive, zero).
             // Index: index of building.
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SBuilding
+            public class StateDataBuilding : StateDataBase
             {
-                public int Mode; // B 
-                public uint Index; // C 
-                public uint MaterialStep; // E 
-                public uint Counter; // F 
-            }
-            [FieldOffset(0)]
-            public SBuilding Building;
+                private int mode; // B
+                private uint index; // C
+                private uint materialStep; // E
+                private uint counter; // F
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SBuildingCastle
-            {
-                public uint InventoryIndex; // C 
+                public StateDataBuilding(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint Index
+                {
+                    get => index;
+                    set
+                    {
+                        if (index != value)
+                        {
+                            index = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint MaterialStep
+                {
+                    get => materialStep;
+                    set
+                    {
+                        if (materialStep != value)
+                        {
+                            materialStep = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint Counter
+                {
+                    get => counter;
+                    set
+                    {
+                        if (counter != value)
+                        {
+                            counter = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SBuildingCastle BuildingCastle;
+            public StateDataBuilding Building
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataBuilding))
+                    {
+                        Data = new StateDataBuilding(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataBuilding;
+                }
+            }
+
+            public class StateDataBuildingCastle : StateDataBase
+            {
+                private uint inventoryIndex; // C
+
+                public StateDataBuildingCastle(StateData parent) : base(parent) { }
+
+                public uint InventoryIndex
+                {
+                    get => inventoryIndex;
+                    set
+                    {
+                        if (inventoryIndex != value)
+                        {
+                            inventoryIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataBuildingCastle BuildingCastle
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataBuildingCastle))
+                    {
+                        Data = new StateDataBuildingCastle(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataBuildingCastle;
+                }
+            }
 
             // States: MoveResourceOut, DropResourceOut 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SMoveResourceOut
+            public class StateDataMoveResourceOut : StateDataBase
             {
-                public uint Resource; // B 
-                public uint ResourceDestination; // C 
-                public State NextState; // F 
+                private uint resource; // B
+                private uint resourceDestination; // C
+                private State nextState; // F
+
+                public StateDataMoveResourceOut(StateData parent) : base(parent) { }
+
+                public uint Resource
+                {
+                    get => resource;
+                    set
+                    {
+                        if (resource != value)
+                        {
+                            resource = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint ResourceDestination
+                {
+                    get => resourceDestination;
+                    set
+                    {
+                        if (resourceDestination != value)
+                        {
+                            resourceDestination = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public State NextState
+                {
+                    get => nextState;
+                    set
+                    {
+                        if (nextState != value)
+                        {
+                            nextState = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SMoveResourceOut MoveResourceOut;
+            public StateDataMoveResourceOut MoveResourceOut
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataMoveResourceOut))
+                    {
+                        Data = new StateDataMoveResourceOut(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataMoveResourceOut;
+                }
+            }
 
             // No state: WaitForResourceOut 
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SReadyToLeaveInventory
+            public class StateDataReadyToLeaveInventory : StateDataBase
             {
-                public int Mode; // B 
-                public uint Destination; // C 
-                public uint InventoryIndex; // E 
+                private int mode; // B
+                private uint destination; // C
+                private uint inventoryIndex; // E
+
+                public StateDataReadyToLeaveInventory(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint Destination
+                {
+                    get => destination;
+                    set
+                    {
+                        if (destination != value)
+                        {
+                            destination = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint InventoryIndex
+                {
+                    get => inventoryIndex;
+                    set
+                    {
+                        if (inventoryIndex != value)
+                        {
+                            inventoryIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SReadyToLeaveInventory ReadyToLeaveInventory;
+            public StateDataReadyToLeaveInventory ReadyToLeaveInventory
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataReadyToLeaveInventory))
+                    {
+                        Data = new StateDataReadyToLeaveInventory(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataReadyToLeaveInventory;
+                }
+            }
 
             // States: FreeWalking, Logging, Planting, Stonecutting, Fishing,
             // Farming, SamplingGeoSpot, KnightFreeWalking, KnightAttackingFree,
             // KnightAttackingFreeWait
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SFreeWalking
+            public class StateDataFreeWalking : StateDataBase
             {
-                public int DistanceX; // B 
-                public int DistanceY; // C 
-                public int NegDistance1; // D 
-                public int NegDistance2; // E 
-                public int Flags; // F 
+                private int distanceX; // B
+                private int distanceY; // C
+                private int negDistance1; // D
+                private int negDistance2; // E
+                private int flags; // F
+
+                public StateDataFreeWalking(StateData parent) : base(parent) { }
+
+                public int DistanceX
+                {
+                    get => distanceX;
+                    set
+                    {
+                        if (distanceX != value)
+                        {
+                            distanceX = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DistanceY
+                {
+                    get => distanceY;
+                    set
+                    {
+                        if (distanceY != value)
+                        {
+                            distanceY = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int NegDistance1
+                {
+                    get => negDistance1;
+                    set
+                    {
+                        if (negDistance1 != value)
+                        {
+                            negDistance1 = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int NegDistance2
+                {
+                    get => negDistance2;
+                    set
+                    {
+                        if (negDistance2 != value)
+                        {
+                            negDistance2 = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Flags
+                {
+                    get => flags;
+                    set
+                    {
+                        if (flags != value)
+                        {
+                            flags = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SFreeWalking FreeWalking;
+            public StateDataFreeWalking FreeWalking
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataFreeWalking))
+                    {
+                        Data = new StateDataFreeWalking(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataFreeWalking;
+                }
+            }
 
             // No state data: PlanningLogging,
             // PlanningPlanting, PlanningStonecutting
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SSawing
+            public class StateDataSawing : StateDataBase
             {
-                public int Mode; // B 
-            }
-            [FieldOffset(0)]
-            public SSawing Sawing;
+                private int mode; // B
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SLost
-            {
-                public int FieldB; // B 
-            }
-            [FieldOffset(0)]
-            public SLost Lost;
+                public StateDataSawing(StateData parent) : base(parent) { }
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SMining
-            {
-                public uint Substate; // B 
-                public uint Resource; // D 
-                public Map.Minerals Deposit; // E 
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SMining Mining;
+            public StateDataSawing Sawing
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataSawing))
+                    {
+                        Data = new StateDataSawing(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataSawing;
+                }
+            }
+
+            public class StateDataLost : StateDataBase
+            {
+                private int fieldB; // B
+
+                public StateDataLost(StateData parent) : base(parent) { }
+
+                public int FieldB
+                {
+                    get => fieldB;
+                    set
+                    {
+                        if (fieldB != value)
+                        {
+                            fieldB = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataLost Lost
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataLost))
+                    {
+                        Data = new StateDataLost(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataLost;
+                }
+            }
+
+            public class StateDataMining : StateDataBase
+            {
+                private uint substate; // B
+                private uint resource; // D
+                private Map.Minerals deposit; // E
+
+                public StateDataMining(StateData parent) : base(parent) { }
+
+                public uint Substate
+                {
+                    get => substate;
+                    set
+                    {
+                        if (substate != value)
+                        {
+                            substate = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public uint Resource
+                {
+                    get => resource;
+                    set
+                    {
+                        if (resource != value)
+                        {
+                            resource = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public Map.Minerals Deposit
+                {
+                    get => deposit;
+                    set
+                    {
+                        if (deposit != value)
+                        {
+                            deposit = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataMining Mining
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataMining))
+                    {
+                        Data = new StateDataMining(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataMining;
+                }
+            }
 
             // Type: Type of smelter (0 is steel, else gold). 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SSmelting
+            public class StateDataSmelting : StateDataBase
             {
-                public int Mode; // B 
-                public int Counter; // C 
-                public int Type; // D 
+                private int mode; // B
+                private int counter; // C
+                private int type; // D
+
+                public StateDataSmelting(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Counter
+                {
+                    get => counter;
+                    set
+                    {
+                        if (counter != value)
+                        {
+                            counter = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int Type
+                {
+                    get => type;
+                    set
+                    {
+                        if (type != value)
+                        {
+                            type = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SSmelting Smelting;
+            public StateDataSmelting Smelting
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataSmelting))
+                    {
+                        Data = new StateDataSmelting(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataSmelting;
+                }
+            }
 
             // No state data: PlanningFishing, PlanningFarming
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SMilling
+            public class StateDataMilling : StateDataBase
             {
-                public int Mode; // B 
-            }
-            [FieldOffset(0)]
-            public SMilling Milling;
+                private int mode; // B
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SBaking
-            {
-                public int Mode; // B 
-            }
-            [FieldOffset(0)]
-            public SBaking Baking;
+                public StateDataMilling(StateData parent) : base(parent) { }
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SPigFarming
-            {
-                public int Mode; // B 
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SPigFarming PigFarming;
+            public StateDataMilling Milling
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataMilling))
+                    {
+                        Data = new StateDataMilling(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SButchering
-            {
-                public int Mode; // B 
+                    return Data as StateDataMilling;
+                }
             }
-            [FieldOffset(0)]
-            public SButchering Butchering;
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SMakingWeapon
+            public class StateDataBaking : StateDataBase
             {
-                public int Mode; // B 
-            }
-            [FieldOffset(0)]
-            public SMakingWeapon MakingWeapon;
+                private int mode; // B
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SMakingTool
-            {
-                public int Mode; // B 
-            }
-            [FieldOffset(0)]
-            public SMakingTool MakingTool;
+                public StateDataBaking(StateData parent) : base(parent) { }
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SBuildingBoat
-            {
-                public int Mode; // B 
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SBuildingBoat BuildingBoat;
+            public StateDataBaking Baking
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataBaking))
+                    {
+                        Data = new StateDataBaking(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataBaking;
+                }
+            }
+
+            public class StateDataPigFarming : StateDataBase
+            {
+                private int mode; // B
+
+                public StateDataPigFarming(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataPigFarming PigFarming
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataPigFarming))
+                    {
+                        Data = new StateDataPigFarming(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataPigFarming;
+                }
+            }
+
+            public class StateDataButchering : StateDataBase
+            {
+                private int mode; // B
+
+                public StateDataButchering(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataButchering Butchering
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataButchering))
+                    {
+                        Data = new StateDataButchering(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataButchering;
+                }
+            }
+
+            public class StateDataMakingWeapon : StateDataBase
+            {
+                private int mode; // B
+
+                public StateDataMakingWeapon(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataMakingWeapon MakingWeapon
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataMakingWeapon))
+                    {
+                        Data = new StateDataMakingWeapon(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataMakingWeapon;
+                }
+            }
+
+            public class StateDataMakingTool : StateDataBase
+            {
+                private int mode; // B
+
+                public StateDataMakingTool(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataMakingTool MakingTool
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataMakingTool))
+                    {
+                        Data = new StateDataMakingTool(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataMakingTool;
+                }
+            }
+
+            public class StateDataBuildingBoat : StateDataBase
+            {
+                private int mode; // B
+
+                public StateDataBuildingBoat(StateData parent) : base(parent) { }
+
+                public int Mode
+                {
+                    get => mode;
+                    set
+                    {
+                        if (mode != value)
+                        {
+                            mode = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataBuildingBoat BuildingBoat
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataBuildingBoat))
+                    {
+                        Data = new StateDataBuildingBoat(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataBuildingBoat;
+                }
+            }
 
             // No state data: LookingForGeoSpot 
 
@@ -395,80 +1282,420 @@ namespace Freeserf
             // KnightPrepareDefendingFreeWait, KnightAttackingDefeatFree,
             // KnightAttacking, KnightAttackingVictory, KnightEngageAttackingFree,
             // KnightEngageAttackingFreeJoin
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SAttacking
+            public class StateDataAttacking : StateDataBase
             {
-                public int Move; // B 
-                public int AttackerWon; // C 
-                public int FieldD; // D 
-                public int DefenderIndex; // E 
+                private int move; // B
+                private int attackerWon; // C
+                private int fieldD; // D
+                private int defenderIndex; // E
+
+                public StateDataAttacking(StateData parent) : base(parent) { }
+
+                public int Move
+                {
+                    get => move;
+                    set
+                    {
+                        if (move != value)
+                        {
+                            move = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int AttackerWon
+                {
+                    get => attackerWon;
+                    set
+                    {
+                        if (attackerWon != value)
+                        {
+                            attackerWon = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int FieldD
+                {
+                    get => fieldD;
+                    set
+                    {
+                        if (fieldD != value)
+                        {
+                            fieldD = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DefenderIndex
+                {
+                    get => defenderIndex;
+                    set
+                    {
+                        if (defenderIndex != value)
+                        {
+                            defenderIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SAttacking Attacking;
+            public StateDataAttacking Attacking
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataAttacking))
+                    {
+                        Data = new StateDataAttacking(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataAttacking;
+                }
+            }
 
             // States: KnightAttackingVictoryFree
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SAttackingVictoryFree
+            public class StateDataAttackingVictoryFree : StateDataBase
             {
-                public int Move; // B 
-                public int DistanceColumn; // C 
-                public int DistanceRow; // D 
-                public int DefenderIndex; // E 
+                private int move; // B
+                private int distanceColumn; // C
+                private int distanceRow; // D
+                private int defenderIndex; // E
+
+                public StateDataAttackingVictoryFree(StateData parent) : base(parent) { }
+
+                public int Move
+                {
+                    get => move;
+                    set
+                    {
+                        if (move != value)
+                        {
+                            move = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DistanceColumn
+                {
+                    get => distanceColumn;
+                    set
+                    {
+                        if (distanceColumn != value)
+                        {
+                            distanceColumn = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DistanceRow
+                {
+                    get => distanceRow;
+                    set
+                    {
+                        if (distanceRow != value)
+                        {
+                            distanceRow = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DefenderIndex
+                {
+                    get => defenderIndex;
+                    set
+                    {
+                        if (defenderIndex != value)
+                        {
+                            defenderIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SAttackingVictoryFree AttackingVictoryFree;
+            public StateDataAttackingVictoryFree AttackingVictoryFree
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataAttackingVictoryFree))
+                    {
+                        Data = new StateDataAttackingVictoryFree(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataAttackingVictoryFree;
+                }
+            }
 
             // States: KnightDefendingFree, KnightEngageDefendingFree
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SDefendingFree
+            public class StateDataDefendingFree : StateDataBase
             {
-                public int DistanceColumn; // B 
-                public int DistanceRow; // C 
-                public int FieldD; // D 
-                public int OtherDistanceColumn; // E 
-                public int OtherDistanceRow; // F 
-            }
-            [FieldOffset(0)]
-            public SDefendingFree DefendingFree;
+                private int distanceColumn; // B
+                private int distanceRow; // C
+                private int fieldD; // D
+                private int otherDistanceColumn; // E
+                private int otherDistanceRow; // F
 
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SLeaveForWalkToFight
-            {
-                public int DistanceColumn; // B 
-                public int DistanceRow; // C 
-                public int FieldD; // D 
-                public int FieldE; // E 
-                public State NextState; // F 
+                public StateDataDefendingFree(StateData parent) : base(parent) { }
+
+                public int DistanceColumn
+                {
+                    get => distanceColumn;
+                    set
+                    {
+                        if (distanceColumn != value)
+                        {
+                            distanceColumn = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DistanceRow
+                {
+                    get => distanceRow;
+                    set
+                    {
+                        if (distanceRow != value)
+                        {
+                            distanceRow = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int FieldD
+                {
+                    get => fieldD;
+                    set
+                    {
+                        if (fieldD != value)
+                        {
+                            fieldD = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int OtherDistanceColumn
+                {
+                    get => otherDistanceColumn;
+                    set
+                    {
+                        if (otherDistanceColumn != value)
+                        {
+                            otherDistanceColumn = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int OtherDistanceRow
+                {
+                    get => otherDistanceRow;
+                    set
+                    {
+                        if (otherDistanceRow != value)
+                        {
+                            otherDistanceRow = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SLeaveForWalkToFight LeaveForWalkToFight;
+            public StateDataDefendingFree DefendingFree
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataDefendingFree))
+                    {
+                        Data = new StateDataDefendingFree(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataDefendingFree;
+                }
+            }
+
+            public class StateDataLeaveForWalkToFight : StateDataBase
+            {
+                private int distanceColumn; // B
+                private int distanceRow; // C
+                private int fieldD; // D
+                private int fieldE; // E
+                private State nextState; // F
+
+                public StateDataLeaveForWalkToFight(StateData parent) : base(parent) { }
+
+                public int DistanceColumn
+                {
+                    get => distanceColumn;
+                    set
+                    {
+                        if (distanceColumn != value)
+                        {
+                            distanceColumn = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int DistanceRow
+                {
+                    get => distanceRow;
+                    set
+                    {
+                        if (distanceRow != value)
+                        {
+                            distanceRow = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int FieldD
+                {
+                    get => fieldD;
+                    set
+                    {
+                        if (fieldD != value)
+                        {
+                            fieldD = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int FieldE
+                {
+                    get => fieldE;
+                    set
+                    {
+                        if (fieldE != value)
+                        {
+                            fieldE = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public State NextState
+                {
+                    get => nextState;
+                    set
+                    {
+                        if (nextState != value)
+                        {
+                            nextState = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataLeaveForWalkToFight LeaveForWalkToFight
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataLeaveForWalkToFight))
+                    {
+                        Data = new StateDataLeaveForWalkToFight(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataLeaveForWalkToFight;
+                }
+            }
 
             // States: IdleOnPath, WaitIdleOnPath, WakeAtFlag, WakeOnPath.
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SIdleOnPath
+            public class StateDataIdleOnPath : StateDataBase
             {
                 // NOTE: Flag was a Flag* before! Now it is the index of it.
-                public uint FlagIndex; // C 
-                public int FieldE; // E 
-                public Direction ReverseDirection; // B 
+                private uint flagIndex; // C
+                private int fieldE; // E
+                private Direction reverseDirection; // B
+
+                public StateDataIdleOnPath(StateData parent) : base(parent) { }
+
+                public uint FlagIndex
+                {
+                    get => flagIndex;
+                    set
+                    {
+                        if (flagIndex != value)
+                        {
+                            flagIndex = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public int FieldE
+                {
+                    get => fieldE;
+                    set
+                    {
+                        if (fieldE != value)
+                        {
+                            fieldE = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+                public Direction ReverseDirection
+                {
+                    get => reverseDirection;
+                    set
+                    {
+                        if (reverseDirection != value)
+                        {
+                            reverseDirection = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
             }
-            [FieldOffset(0)]
-            public SIdleOnPath IdleOnPath;
+            public StateDataIdleOnPath IdleOnPath
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataIdleOnPath))
+                    {
+                        Data = new StateDataIdleOnPath(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataIdleOnPath;
+                }
+            }
 
             // No state data: FinishedBuilding 
 
             // States: DefendingHut, DefendingTower,
             // DefendingFortress, DefendingCastle
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct SDefending
+            public class StateDataDefending : StateDataBase
             {
-                public uint NextKnight; // E 
-            }
-            [FieldOffset(0)]
-            public SDefending Defending;
-        }
+                private uint nextKnight; // E
 
-        StateInfo s;
+                public StateDataDefending(StateData parent) : base(parent) { }
+
+                public uint NextKnight
+                {
+                    get => nextKnight;
+                    set
+                    {
+                        if (nextKnight != value)
+                        {
+                            nextKnight = value;
+                            MarkAsDirty();
+                        }
+                    }
+                }
+            }
+            public StateDataDefending Defending
+            {
+                get
+                {
+                    if (Data == null || !(Data is StateDataDefending))
+                    {
+                        Data = new StateDataDefending(this);
+                        MarkPropertyAsDirty(nameof(Data));
+                    }
+
+                    return Data as StateDataDefending;
+                }
+            }
+        }
 
         static readonly int[] CounterFromAnimation = new int[]
         {
@@ -708,35 +1935,34 @@ namespace Freeserf
             18
         };
 
+        [Data]
+        private SerfState state = new SerfState();
+        readonly StateData s = new StateData();
+
         public Serf(Game game, uint index)
             : base(game, index)
         {
-            SerfState = State.Null;
-            Player = uint.MaxValue;
-            type = Type.None;
-            sound = false;
-            Animation = 0;
-            Counter = 0;
-            Position = Constants.INVALID_MAPPOS;
-            tick = 0;
 
-            s = new StateInfo();
         }
 
-        State serfState = State.Null;
+        public bool Dirty => state.Dirty;
 
-        public uint Player { get; set; }
+        public uint Player
+        {
+            get => state.Player;
+            set => state.Player = (byte)value;
+        }
         public State SerfState
         {
-            get => serfState;
+            get => state.State;
             private set
             {
-                if (serfState == value)
+                if (state.State == value)
                     return;
 
-                serfState = value;
+                state.State = value;
 
-                switch (serfState)
+                switch (state.State)
                 {
                     case State.BuildingCastle:
                     case State.IdleInStock:
@@ -752,19 +1978,39 @@ namespace Freeserf
                 }
             }
         }
-        public int Animation { get; private set; } // Index to animation table in data file. 
-        public int Counter { get; private set; }
-        public MapPos Position { get; private set; }
+        /// <summary>
+        /// Index to animation table in data file.
+        /// </summary>
+        public int Animation
+        {
+            get => state.Animation;
+            private set => state.Animation = (byte)value;
+        }
+        public int Counter
+        {
+            get => state.Counter;
+            private set => state.Counter = value;
+        }
+        public MapPos Position
+        {
+            get => state.Position;
+            set => state.Position = value;
+        }
+
+        public void ResetDirtyFlag()
+        {
+            state.ResetDirtyFlag();
+        }
 
         void SetState(State newState, [CallerMemberName] string function = "", [CallerLineNumber] int lineNumber = 0)
         {
             try
             {
-                Log.Verbose.Write("serf", $"serf {Index} ({SerfTypeNames[(int)type]}): state {SerfStateNames[(int)SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+                Log.Verbose.Write("serf", $"serf {Index} ({SerfTypeNames[(int)state.Type]}): state {SerfStateNames[(int)SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
             }
             catch
             {
-                Log.Verbose.Write("serf", $"Missing serf type name or serf state name: serf type name index = {(int)type}, serf state name index = {(int)SerfState}");
+                Log.Verbose.Write("serf", $"Missing serf type name or serf state name: serf type name index = {(int)state.Type}, serf state name index = {(int)SerfState}");
             }
 
             SerfState = newState;
@@ -774,98 +2020,91 @@ namespace Freeserf
         {
             try
             {
-                Log.Verbose.Write("serf", $"serf {otherSerf.Index} ({SerfTypeNames[(int)otherSerf.type]}): state {SerfStateNames[(int)otherSerf.SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+                Log.Verbose.Write("serf", $"serf {otherSerf.Index} ({SerfTypeNames[(int)otherSerf.state.Type]}): state {SerfStateNames[(int)otherSerf.SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
             }
             catch
             {
-                Log.Verbose.Write("serf", $"Missing other serf type name or other serf state name: serf type name index = {(int)otherSerf.type}, serf state name index = {(int)otherSerf.SerfState}");
+                Log.Verbose.Write("serf", $"Missing other serf type name or other serf state name: serf type name index = {(int)otherSerf.state.Type}, serf state name index = {(int)otherSerf.SerfState}");
             }
 
             otherSerf.SerfState = newState;
         }
 
-        public Type GetSerfType()
+        public Type SerfType
         {
-            return type;
+            get => state.Type;
+            set
+            {
+                var oldType = state.Type;
+                var newType = value;
+
+                if (oldType == newType)
+                    return;
+
+                state.Type = newType;
+
+                // Register this type as transporter 
+                if (newType == Type.TransporterInventory)
+                    newType = Type.Transporter;
+                if (oldType == Type.TransporterInventory)
+                    oldType = Type.Transporter;
+
+                var player = Game.GetPlayer(Player);
+
+                if (oldType != Type.None)
+                {
+                    player.DecreaseSerfCount(oldType);
+                }
+                if (state.Type != Type.Dead && state.Type != Type.Generic) // generic count is increased on creating
+                {
+                    player.IncreaseSerfCount(newType);
+                }
+
+                if (oldType >= Type.Knight0 &&
+                    oldType <= Type.Knight4)
+                {
+                    uint score = 1u << (oldType - Type.Knight0);
+                    player.DecreaseMilitaryScore(score);
+                }
+                if (newType >= Type.Knight0 &&
+                    newType <= Type.Knight4)
+                {
+                    uint score = 1u << (state.Type - Type.Knight0);
+                    player.IncreaseMilitaryScore(score);
+                }
+                if (newType == Type.Transporter)
+                {
+                    state.Counter = 0;
+                }
+            }
         }
 
-        public void SetSerfType(Type newType)
-        {
-            var oldType = GetSerfType();
+        public bool IsKnight => state.Type >= Type.Knight0 && state.Type <= Type.Knight4;
 
-            if (oldType == newType)
-                return;
-
-            type = newType;
-
-            // Register this type as transporter 
-            if (newType == Type.TransporterInventory)
-                newType = Type.Transporter;
-            if (oldType == Type.TransporterInventory)
-                oldType = Type.Transporter;
-
-            var player = Game.GetPlayer(Player);
-
-            if (oldType != Type.None)
-            {
-                player.DecreaseSerfCount(oldType);
-            }
-            if (type != Type.Dead && type != Type.Generic) // generic count is increased on creating
-            {
-                player.IncreaseSerfCount(newType);
-            }
-
-            if (oldType >= Type.Knight0 &&
-                oldType <= Type.Knight4)
-            {
-                uint value = 1u << (oldType - Type.Knight0);
-                player.DecreaseMilitaryScore(value);
-            }
-            if (newType >= Type.Knight0 &&
-                newType <= Type.Knight4)
-            {
-                uint value = 1u << (type - Type.Knight0);
-                player.IncreaseMilitaryScore(value);
-            }
-            if (newType == Type.Transporter)
-            {
-                Counter = 0;
-            }
-        }
-
-        public bool IsKnight()
-        {
-            return type >= Type.Knight0 && type <= Type.Knight4;
-        }
-
-        public bool PlayingSfx()
-        {
-            return sound;
-        }
+        public bool IsPlayingSfx => state.PlayingSfx;
 
         public void StartPlayingSfx()
         {
-            sound = true;
+            state.PlayingSfx = true;
         }
 
         public void StopPlayingSfx()
         {
-            sound = false;
+            state.PlayingSfx = false;
         }
 
-        public bool TrainKnight(int p)
+        public bool TrainKnight(int probability)
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
-            while (Counter < 0)
+            while (state.Counter < 0)
             {
-                if (Game.RandomInt() < p)
+                if (Game.RandomInt() < probability)
                 {
                     // Level up 
-                    var oldType = GetSerfType();
-                    SetSerfType(oldType + 1);
+                    ++SerfType;
                     Counter = 6000;
 
                     return true;
@@ -877,8 +2116,8 @@ namespace Freeserf
             return false;
         }
 
-        /* Change serf state to lost, but make necessary clean up
-           from any earlier state first. */
+        // Change serf state to lost, but make necessary clean up
+        // from any earlier state first.
         public void SetLostState()
         {
             if (SerfState == State.Walking)
@@ -916,7 +2155,7 @@ namespace Freeserf
                     Game.LoseResource(resource);
                 }
 
-                if (GetSerfType() != Type.Sailor)
+                if (SerfType != Type.Sailor)
                 {
                     SetState(State.Lost);
                     s.Lost.FieldB = 0;
@@ -986,12 +2225,12 @@ namespace Freeserf
 
         public void InitGeneric(Inventory inventory)
         {
-            SetSerfType(Type.Generic);
+            SerfType = Type.Generic;
             Player = inventory.Player;
 
             var building = Game.GetBuilding(inventory.Building);
             Position = building.Position;
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
             SetState(State.IdleInStock);
             s.IdleInStock.InventoryIndex = inventory.Index;
         }
@@ -1260,13 +2499,13 @@ namespace Freeserf
                 else
                 {
                     // Kill this serf. 
-                    SetSerfType(Type.Dead);
+                    SerfType = Type.Dead;
                     Game.DeleteSerf(this);
                 }
 
                 return true;
             }
-            else if ((type == Type.Builder && SerfState == State.Building) || (type == Type.Digger && SerfState == State.Digging))
+            else if ((state.Type == Type.Builder && SerfState == State.Building) || (state.Type == Type.Digger && SerfState == State.Digging))
             {
                 SetLostState();
             }
@@ -1280,15 +2519,16 @@ namespace Freeserf
 
         public void CastleDeleted(MapPos castlePos, bool transporter)
         {
-            if (type == Type.None || Position == Constants.INVALID_MAPPOS) // TODO: There seem to be a null-serf in the castle. Maybe delete later?
+            // TODO: There seem to be a null-serf in the castle. Maybe delete later?
+            if (state.Type == Type.None || Position == Constants.INVALID_MAPPOS)
                 return;
 
-            if ((!transporter || GetSerfType() == Type.TransporterInventory) &&
+            if ((!transporter || SerfType == Type.TransporterInventory) &&
                 Position == castlePos)
             {
                 if (transporter)
                 {
-                    SetSerfType(Type.Transporter);
+                    SerfType = Type.Transporter;
                 }
             }
 
@@ -1949,7 +3189,7 @@ namespace Freeserf
 
         void FixNonTransporterState()
         {
-            if (type != Type.Transporter && type != Type.Sailor)
+            if (state.Type != Type.Transporter && state.Type != Type.Sailor)
             {
                 FindInventory();
             }
@@ -1969,21 +3209,21 @@ namespace Freeserf
         {
             byte v8 = reader.ReadByte(); // 0
 
-            Player = (uint)v8 & 3;
-            type = (Type)((v8 >> 2) & 0x1F);
-            sound = ((v8 >> 7) != 0);
+            state.Player = (byte)(v8 & 3);
+            state.Type = (Type)((v8 >> 2) & 0x1F);
+            state.PlayingSfx = ((v8 >> 7) != 0);
 
-            Animation = reader.ReadByte(); // 1
-            Counter = reader.ReadWord(); // 2
-            Position = reader.ReadDWord(); // 4
+            state.Animation = reader.ReadByte(); // 1
+            state.Counter = reader.ReadWord(); // 2
+            state.Position = reader.ReadDWord(); // 4
 
-            if (Position != 0xFFFFFFFF)
+            if (state.Position != 0xFFFFFFFF)
             {
-                Position = Game.Map.PosFromSavedValue(Position);
+                state.Position = Game.Map.PositionFromSavedValue(state.Position);
             }
 
-            tick = reader.ReadWord(); // 8
-            SerfState = (State)reader.ReadByte(); // 10
+            state.Tick = reader.ReadWord(); // 8
+            state.State = (State)reader.ReadByte(); // 10
 
             Log.Verbose.Write("savegame", $"load serf {Index}: {SerfStateNames[(int)SerfState]}");
 
@@ -2165,11 +3405,11 @@ namespace Freeserf
             try
             {
                 Player = reader.Value("owner").ReadUInt();
-                this.type = (Type)type;
+                SerfType = (Type)type;
             }
             catch
             {
-                this.type = (Type)((type >> 2) & 0x1f);
+                SerfType = (Type)((type >> 2) & 0x1f);
                 Player = (uint)type & 3;
             }
 
@@ -2180,7 +3420,7 @@ namespace Freeserf
             uint y = reader.Value("pos")[1].ReadUInt();
 
             Position = Game.Map.Position(x, y);
-            tick = (ushort)reader.Value("tick").ReadUInt();
+            state.Tick = (ushort)reader.Value("state.Tick").ReadUInt();
             SerfState = (State)reader.Value("state").ReadInt();
 
             switch (SerfState)
@@ -2390,13 +3630,13 @@ namespace Freeserf
 
         public void WriteTo(SaveWriterText writer)
         {
-            writer.Value("type").Write((int)type);
+            writer.Value("type").Write((int)SerfType);
             writer.Value("owner").Write(Player);
             writer.Value("animation").Write(Animation);
             writer.Value("counter").Write(Counter);
             writer.Value("pos").Write(Game.Map.PositionColumn(Position));
             writer.Value("pos").Write(Game.Map.PositionRow(Position));
-            writer.Value("tick").Write(tick);
+            writer.Value("state.Tick").Write(state.Tick);
             writer.Value("state").Write((int)SerfState);
 
             switch (SerfState)
@@ -2710,9 +3950,9 @@ namespace Freeserf
                 var otherDirection = Direction.None;
 
                 // Sometimes an idle serf blocks us. This should be avoided.
-                // TODO: Maybe check later why this even happens and look it this helps.
-                if (otherSerf.serfState == State.IdleOnPath ||
-                    otherSerf.serfState == State.WaitIdleOnPath)
+                // TODO: Maybe check later why this even happens and look if this helps.
+                if (otherSerf.SerfState == State.IdleOnPath ||
+                    otherSerf.SerfState == State.WaitIdleOnPath)
                 {
                     // Change direction, not occupied. 
                     map.SetSerfIndex(Position, 0);
@@ -2777,18 +4017,26 @@ namespace Freeserf
 
                 if (s.Walking.Resource == Resource.Type.None)
                 {
-                    // Pick up resource. 
-                    flag.PickUpResource(resourceIndex, ref s.Walking.Resource, ref s.Walking.Destination);
+                    // Pick up resource.
+                    Resource.Type resource = s.Walking.Resource;
+                    MapPos destination = s.Walking.Destination;
+
+                    flag.PickUpResource(resourceIndex, ref resource, ref destination);
+
+                    s.Walking.Resource = resource;
+                    s.Walking.Destination = destination;
                 }
                 else
                 {
-                    // Switch resources and destination. 
-                    var tempResource = s.Walking.Resource;
-                    var tempDestination = s.Walking.Destination;
+                    // Switch resources and destination.
+                    Resource.Type resource = s.Walking.Resource;
+                    MapPos destination = s.Walking.Destination;
 
-                    flag.PickUpResource(resourceIndex, ref s.Walking.Resource, ref s.Walking.Destination);
+                    flag.PickUpResource(resourceIndex, ref resource, ref destination);
+                    flag.DropResource(s.Walking.Resource, s.Walking.Destination);
 
-                    flag.DropResource(tempResource, tempDestination);
+                    s.Walking.Resource = resource;
+                    s.Walking.Destination = destination;
                 }
 
                 // Find next resource to be picked up 
@@ -2898,7 +4146,7 @@ namespace Freeserf
             // TODO ?
             /*serf->s.idleInStock.FieldB = 0;
               serf->s.idleInStock.FieldC = 0;*/
-            s.IdleInStock.InventoryIndex = building.GetInventory().Index;
+            s.IdleInStock.InventoryIndex = building.Inventory.Index;
         }
 
         void DropResource(Resource.Type resourceType)
@@ -2947,7 +4195,7 @@ namespace Freeserf
         void SetFightOutcome(Serf attacker, Serf defender)
         {
             // Calculate "morale" for attacker. 
-            uint expFactor = 1u << (attacker.GetSerfType() - Type.Knight0);
+            uint expFactor = 1u << (attacker.SerfType - Type.Knight0);
             uint landFactor = 0x1000u;
 
             if (attacker.Player != Game.Map.GetOwner(attacker.Position))
@@ -2958,7 +4206,7 @@ namespace Freeserf
             uint morale = (0x400u * expFactor * landFactor) >> 16;
 
             // Calculate "morale" for defender. 
-            uint defenderExpFactor = 1u << (defender.GetSerfType() - Type.Knight0);
+            uint defenderExpFactor = 1u << (defender.SerfType - Type.Knight0);
             uint defenderLandFactor = 0x1000u;
 
             if (defender.Player != Game.Map.GetOwner(defender.Position))
@@ -2977,7 +4225,7 @@ namespace Freeserf
             {
                 playerIndex = defender.Player;
                 value = defenderExpFactor;
-                knightType = defender.GetSerfType();
+                knightType = defender.SerfType;
                 attacker.s.Attacking.AttackerWon = 1;
                 Log.Debug.Write("serf", $"Fight: {morale} vs {defenderMorale} ({result}). Attacker winning.");
             }
@@ -2985,7 +4233,7 @@ namespace Freeserf
             {
                 playerIndex = attacker.Player;
                 value = expFactor;
-                knightType = attacker.GetSerfType();
+                knightType = attacker.SerfType;
                 attacker.s.Attacking.AttackerWon = 0;
                 Log.Debug.Write("serf", $"Fight: {morale} vs {defenderMorale} ({result}). Defender winning.");
             }
@@ -3027,7 +4275,7 @@ namespace Freeserf
                 || inventory.SerfMode == Inventory.Mode.Stop // in, stop 
                 || inventory.GetSerfQueueLength() >= 3)
             {
-                switch (GetSerfType())
+                switch (SerfType)
                 {
                     case Type.Knight0:
                         inventory.KnightTraining(this, 4000);
@@ -3160,7 +4408,7 @@ namespace Freeserf
 
                                 if (flag.HasInventory() && flag.AcceptsSerfs())
                                 {
-                                    loopSerf.PutBackToInventory(flag.GetBuilding().GetInventory());
+                                    loopSerf.PutBackToInventory(flag.GetBuilding().Inventory);
                                     loopSerf.FindInventory();
                                     return;
                                 }
@@ -3198,8 +4446,8 @@ namespace Freeserf
 
         void HandleSerfWalkingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -3322,8 +4570,8 @@ namespace Freeserf
 
         void HandleSerfTransportingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter >= 0)
@@ -3438,7 +4686,7 @@ namespace Freeserf
                     {
                         if (!otherFlag.IsScheduled(otherDirection))
                         {
-                            tick = (ushort)((tick & 0xff00) | (s.Walking.Direction & 0xff));
+                            state.Tick = (ushort)((state.Tick & 0xff00) | (s.Walking.Direction & 0xff));
                             SetState(State.IdleOnPath);
                             s.IdleOnPath.ReverseDirection = reverseDirection;
                             s.IdleOnPath.FlagIndex = flag.Index;
@@ -3467,8 +4715,8 @@ namespace Freeserf
 
         void HandleSerfEnteringBuildingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0 || Counter <= s.EnteringBuilding.SlopeLength)
@@ -3487,7 +4735,7 @@ namespace Freeserf
                 Counter = s.EnteringBuilding.SlopeLength;
                 var map = Game.Map;
 
-                switch (GetSerfType())
+                switch (SerfType)
                 {
                     case Type.Transporter:
                         if (s.EnteringBuilding.FieldB == -2)
@@ -3506,7 +4754,7 @@ namespace Freeserf
 
                             SetState(State.WaitForResourceOut);
                             Counter = 63;
-                            SetSerfType(Type.TransporterInventory);
+                            SerfType = Type.TransporterInventory;
                         }
                         break;
                     case Type.Sailor:
@@ -3524,7 +4772,7 @@ namespace Freeserf
 
                             var building = GetBuildingAtPosition();
                             s.Digging.DigPosition = 6;
-                            s.Digging.TargetHeight = building.GetLevel();
+                            s.Digging.TargetHeight = building.Level;
                             s.Digging.Substate = 1;
                         }
                         break;
@@ -3852,7 +5100,7 @@ namespace Freeserf
                             map.SetSerfIndex(Position, 0);
 
                             var building = GetBuildingAtPosition();
-                            var inventory = building.GetInventory();
+                            var inventory = building.Inventory;
 
                             if (inventory == null)
                             {
@@ -3893,8 +5141,8 @@ namespace Freeserf
                                     Counter = 6000;
 
                                     // Prepend to knight list 
-                                    s.Defending.NextKnight = building.GetFirstKnight();
-                                    building.SetFirstKnight(Index);
+                                    s.Defending.NextKnight = building.FirstKnight;
+                                    building.FirstKnight = Index;
 
                                     Game.GetPlayer(building.Player).IncreaseCastleKnights();
 
@@ -3926,8 +5174,8 @@ namespace Freeserf
                                 Counter = 6000;
 
                                 // Prepend to knight list 
-                                s.Defending.NextKnight = building.GetFirstKnight();
-                                building.SetFirstKnight(Index);
+                                s.Defending.NextKnight = building.FirstKnight;
+                                building.FirstKnight = Index;
                             }
                         }
                         break;
@@ -3940,8 +5188,8 @@ namespace Freeserf
 
         void HandleSerfLeavingBuildingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -4008,7 +5256,7 @@ namespace Freeserf
 
         void HandleSerfReadyToLeaveState()
         {
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
             Counter = 0;
 
             var map = Game.Map;
@@ -4033,8 +5281,8 @@ namespace Freeserf
 
         void HandleSerfDiggingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -4220,8 +5468,8 @@ namespace Freeserf
 
         void HandleSerfBuildingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -4352,7 +5600,7 @@ namespace Freeserf
 
         void HandleSerfBuildingCastleState()
         {
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
 
             var inventory = Game.GetInventory(s.BuildingCastle.InventoryIndex);
             var building = Game.GetBuilding(inventory.Building);
@@ -4367,7 +5615,7 @@ namespace Freeserf
 
         void HandleSerfMoveResourceOutState()
         {
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
             Counter = 0;
 
             var map = Game.Map;
@@ -4396,21 +5644,22 @@ namespace Freeserf
             }
 
             var resource = s.MoveResourceOut.Resource;
-            // var resourceDestination = s.MoveResourceOut.ResourceDestination;
+            var resourceDestination = s.MoveResourceOut.ResourceDestination;
             var nextState = s.MoveResourceOut.NextState;
 
             LeaveBuilding(false);
 
             s.LeavingBuilding.NextState = nextState;
             s.LeavingBuilding.FieldB = (int)resource;
+            s.LeavingBuilding.Destination = resourceDestination;
         }
 
         void HandleSerfWaitForResourceOutState()
         {
             if (Counter != 0)
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 if (Counter >= 0)
@@ -4424,7 +5673,7 @@ namespace Freeserf
             if (building == null)
                 return;
 
-            var inventory = building.GetInventory();
+            var inventory = building.Inventory;
 
             if (inventory.GetSerfQueueLength() > 0 ||
                 !inventory.HasResourceInQueue())
@@ -4464,8 +5713,8 @@ namespace Freeserf
 
         void HandleSerfDeliveringState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -4503,7 +5752,7 @@ namespace Freeserf
 
         void HandleSerfReadyToLeaveInventoryState()
         {
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
             Counter = 0;
 
             var map = Game.Map;
@@ -4595,7 +5844,7 @@ namespace Freeserf
 
             var map = Game.Map;
 
-            switch (GetSerfType())
+            switch (SerfType)
             {
                 case Type.Lumberjack:
                     if (s.FreeWalking.NegDistance1 == -128)
@@ -5398,8 +6647,8 @@ namespace Freeserf
 
         void HandleSerfFreeWalkingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -5410,8 +6659,8 @@ namespace Freeserf
 
         void HandleSerfLoggingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -5452,8 +6701,8 @@ namespace Freeserf
 
         void HandleSerfPlanningLoggingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -5481,8 +6730,8 @@ namespace Freeserf
 
         void HandleSerfPlanningPlantingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -5516,8 +6765,8 @@ namespace Freeserf
 
         void HandleSerfPlantingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -5551,8 +6800,8 @@ namespace Freeserf
 
         void HandleSerfPlanningStonecutting()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -5583,8 +6832,8 @@ namespace Freeserf
 
         void HandleStonecutterFreeWalking()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -5609,8 +6858,8 @@ namespace Freeserf
 
         void HandleSerfStonecuttingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (s.FreeWalking.NegDistance1 == 0)
@@ -5659,7 +6908,7 @@ namespace Freeserf
 
                 Counter = 0;
                 StartWalking(Direction.DownRight, 24, true);
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
 
                 s.FreeWalking.NegDistance1 = 2;
             }
@@ -5676,14 +6925,14 @@ namespace Freeserf
                     s.Sawing.Mode = 1;
                     Animation = 124;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 if (Counter >= 0)
@@ -5703,8 +6952,8 @@ namespace Freeserf
 
         void HandleSerfLostState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -5726,7 +6975,7 @@ namespace Freeserf
                               map.HasOwner(destination) &&
                               map.GetOwner(destination) == Player)
                         {
-                            if (IsKnight())
+                            if (IsKnight)
                             {
                                 SetState(State.KnightFreeWalking);
                             }
@@ -5779,7 +7028,7 @@ namespace Freeserf
                         (map.HasOwner(destination) &&
                         map.GetOwner(destination) == Player)))
                     {
-                        if (GetSerfType() >= Type.Knight0 && GetSerfType() <= Type.Knight4)
+                        if (SerfType >= Type.Knight0 && SerfType <= Type.Knight4)
                         {
                             SetState(State.KnightFreeWalking);
                         }
@@ -5803,8 +7052,8 @@ namespace Freeserf
 
         void HandleLostSailor()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -5865,8 +7114,8 @@ namespace Freeserf
 
         void HandleFreeSailing()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -5889,7 +7138,7 @@ namespace Freeserf
                 Game.Map.SetSerfIndex(Position, (int)Index);
                 Animation = 82;
                 Counter = 0;
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
 
                 SetState(State.Lost);
                 s.Lost.FieldB = 0;
@@ -5910,8 +7159,8 @@ namespace Freeserf
 
         void HandleSerfMiningState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -6072,15 +7321,15 @@ namespace Freeserf
 
                     s.Smelting.Counter = 20;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
 
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6126,8 +7375,8 @@ namespace Freeserf
 
         void HandleSerfPlanningFishingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -6161,8 +7410,8 @@ namespace Freeserf
 
         void HandleSerfFishingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0)
@@ -6230,8 +7479,8 @@ namespace Freeserf
 
         void HandleSerfPlanningFarmingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -6286,8 +7535,8 @@ namespace Freeserf
 
         void HandleSerfFarmingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter >= 0)
@@ -6341,15 +7590,15 @@ namespace Freeserf
                     s.Milling.Mode = 1;
                     Animation = 137;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
 
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6395,15 +7644,15 @@ namespace Freeserf
                     s.Baking.Mode = 1;
                     Animation = 138;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
 
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6453,15 +7702,15 @@ namespace Freeserf
                     s.PigFarming.Mode = 1;
                     Animation = 139;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
 
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6497,7 +7746,7 @@ namespace Freeserf
                             s.PigFarming.Mode = 1;
                             Animation = 139;
                             Counter = CounterFromAnimation[Animation];
-                            tick = Game.Tick;
+                            state.Tick = Game.Tick;
                             Game.Map.SetSerfIndex(Position, (int)Index);
                         }
                         else
@@ -6534,15 +7783,15 @@ namespace Freeserf
                     s.Butchering.Mode = 1;
                     Animation = 140;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
 
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 if (Counter < 0)
@@ -6572,7 +7821,7 @@ namespace Freeserf
                 // Bit 3 is set if a sword has been made and a
                 // shield can be made without more resources.
                 // TODO Use of this bit overlaps with sfx check bit. 
-                if (!building.IsPlayingSfx())
+                if (!building.IsPlayingSfx)
                 {
                     if (!building.UseResourcesInStocks())
                     {
@@ -6585,14 +7834,14 @@ namespace Freeserf
                 s.MakingWeapon.Mode = 1;
                 Animation = 143;
                 Counter = CounterFromAnimation[Animation];
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
 
                 Game.Map.SetSerfIndex(Position, (int)Index);
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6605,9 +7854,9 @@ namespace Freeserf
                         building.StopActivity();
                         Game.Map.SetSerfIndex(Position, 0);
 
-                        var resource = building.IsPlayingSfx() ? Resource.Type.Shield : Resource.Type.Sword;
+                        var resource = building.IsPlayingSfx ? Resource.Type.Shield : Resource.Type.Sword;
 
-                        if (building.IsPlayingSfx())
+                        if (building.IsPlayingSfx)
                         {
                             building.StopPlayingSfx();
                         }
@@ -6645,15 +7894,15 @@ namespace Freeserf
                     s.MakingTool.Mode = 1;
                     Animation = 144;
                     Counter = CounterFromAnimation[Animation];
-                    tick = Game.Tick;
+                    state.Tick = Game.Tick;
 
                     Game.Map.SetSerfIndex(Position, (int)Index);
                 }
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6734,14 +7983,14 @@ namespace Freeserf
                 s.BuildingBoat.Mode = 1;
                 Animation = 146;
                 Counter = CounterFromAnimation[Animation];
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
 
                 map.SetSerfIndex(Position, (int)Index);
             }
             else
             {
-                ushort delta = (ushort)(Game.Tick - tick);
-                tick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.Tick);
+                state.Tick = Game.Tick;
                 Counter -= delta;
 
                 while (Counter < 0)
@@ -6817,7 +8066,7 @@ namespace Freeserf
                         s.FreeWalking.NegDistance1 = -Map.GetSpiralPattern()[2 * distance];
                         s.FreeWalking.NegDistance2 = -Map.GetSpiralPattern()[2 * distance + 1];
                         s.FreeWalking.Flags = 0;
-                        tick = Game.Tick;
+                        state.Tick = Game.Tick;
                         Log.Verbose.Write("serf", $"looking for geo spot: found, dist {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}.");
 
                         return;
@@ -6841,8 +8090,8 @@ namespace Freeserf
 
         void HandleSerfSamplingGeoSpotState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -6924,8 +8173,8 @@ namespace Freeserf
 
         void HandleSerfKnightEngagingBuildingState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -6974,7 +8223,7 @@ namespace Freeserf
                 SetState(State.KnightOccupyEnemyBuilding);
                 Animation = 179;
                 Counter = CounterFromAnimation[Animation];
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
             }
         }
 
@@ -6987,7 +8236,7 @@ namespace Freeserf
                 // Change state of attacker. 
                 SetState(State.KnightAttacking);
                 Counter = 0;
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
 
                 // Change state of defender. 
                 SetOtherState(defendingSerf, State.KnightDefending);
@@ -6999,7 +8248,7 @@ namespace Freeserf
 
         void HandleSerfKnightLeaveForFightState()
         {
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
             Counter = 0;
 
             if (Game.Map.GetSerfIndex(Position) == Index || !Game.Map.HasSerf(Position))
@@ -7040,9 +8289,9 @@ namespace Freeserf
         void HandleKnightAttacking()
         {
             var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
-            defendingSerf.tick = tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
+            defendingSerf.state.Tick = state.Tick;
             Counter -= delta;
             defendingSerf.Counter = Counter;
 
@@ -7064,9 +8313,9 @@ namespace Freeserf
 
                             // Attacker dies. 
                             SetState(State.KnightAttackingDefeatFree);
-                            Animation = 152 + (int)GetSerfType();
+                            Animation = 152 + (int)SerfType;
                             Counter = 255;
-                            SetSerfType(Type.Dead);
+                            SerfType = Type.Dead;
                         }
                         else
                         {
@@ -7075,9 +8324,9 @@ namespace Freeserf
 
                             // Attacker dies. 
                             SetState(State.KnightAttackingDefeat);
-                            Animation = 152 + (int)GetSerfType();
+                            Animation = 152 + (int)SerfType;
                             Counter = 255;
-                            SetSerfType(Type.Dead);
+                            SerfType = Type.Dead;
                         }
                     }
                     else
@@ -7104,10 +8353,10 @@ namespace Freeserf
                         }
 
                         // Defender dies
-                        defendingSerf.tick = Game.Tick;
-                        defendingSerf.Animation = 147 + (int)GetSerfType();
+                        defendingSerf.state.Tick = Game.Tick;
+                        defendingSerf.Animation = 147 + (int)SerfType;
                         defendingSerf.Counter = 255;
-                        defendingSerf.SetSerfType(Type.Dead);
+                        defendingSerf.SerfType = Type.Dead;
                     }
                 }
                 else
@@ -7134,8 +8383,8 @@ namespace Freeserf
         void HandleSerfKnightAttackingVictoryState()
         {
             var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
-            ushort delta = (ushort)(Game.Tick - defendingSerf.tick);
-            defendingSerf.tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - defendingSerf.state.Tick);
+            defendingSerf.state.Tick = Game.Tick;
             defendingSerf.Counter -= delta;
 
             if (defendingSerf.Counter < 0)
@@ -7144,15 +8393,15 @@ namespace Freeserf
                 s.Attacking.DefenderIndex = 0;
 
                 SetState(State.KnightEngagingBuilding);
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
                 Counter = 0;
             }
         }
 
         void HandleSerfKnightAttackingDefeatState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -7164,8 +8413,8 @@ namespace Freeserf
 
         void HandleKnightOccupyEnemyBuilding()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter >= 0)
@@ -7233,8 +8482,8 @@ namespace Freeserf
 
         void HandleStateKnightFreeWalking()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             var map = Game.Map;
@@ -7279,7 +8528,7 @@ namespace Freeserf
                                     return;
                                 }
                             }
-                            else if (otherSerf.SerfState == State.Walking && otherSerf.IsKnight())
+                            else if (otherSerf.SerfState == State.Walking && otherSerf.IsKnight)
                             {
                                 position = map.MoveLeft(position);
 
@@ -7320,8 +8569,8 @@ namespace Freeserf
 
         void HandleStateKnightEngageDefendingFree()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             while (Counter < 0) Counter += 256;
@@ -7329,8 +8578,8 @@ namespace Freeserf
 
         void HandleStateKnightEngageAttackingFree()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -7343,8 +8592,8 @@ namespace Freeserf
 
         void HandleStateKnightEngageAttackingFreeJoin()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -7402,8 +8651,8 @@ namespace Freeserf
 
         void HandleStateKnightPrepareDefendingFree()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -7416,8 +8665,8 @@ namespace Freeserf
         void HandleKnightAttackingVictoryFree()
         {
             var other = Game.GetSerf((uint)s.AttackingVictoryFree.DefenderIndex);
-            ushort delta = (ushort)(Game.Tick - other.tick);
-            other.tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - other.state.Tick);
+            other.state.Tick = Game.Tick;
             other.Counter -= delta;
 
             if (other.Counter < 0)
@@ -7445,7 +8694,7 @@ namespace Freeserf
 
                 Animation = 179;
                 Counter = 127;
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
             }
         }
 
@@ -7457,8 +8706,8 @@ namespace Freeserf
 
         void HandleSerfKnightAttackingDefeatFreeState()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -7478,7 +8727,7 @@ namespace Freeserf
 
                 other.Animation = 179;
                 other.Counter = 0;
-                other.tick = Game.Tick;
+                other.state.Tick = Game.Tick;
 
                 // Remove itself. 
                 Game.Map.SetSerfIndex(Position, (int)other.Index);
@@ -7488,8 +8737,8 @@ namespace Freeserf
 
         void HandleKnightAttackingFreeWait()
         {
-            ushort delta = (ushort)(Game.Tick - tick);
-            tick = Game.Tick;
+            ushort delta = (ushort)(Game.Tick - state.Tick);
+            state.Tick = Game.Tick;
             Counter -= delta;
 
             if (Counter < 0)
@@ -7509,7 +8758,7 @@ namespace Freeserf
 
         void HandleSerfStateKnightLeaveForWalkToFight()
         {
-            tick = Game.Tick;
+            state.Tick = Game.Tick;
             Counter = 0;
 
             var map = Game.Map;
@@ -7588,7 +8837,7 @@ namespace Freeserf
             // Set walking direction in fieldE.
             if (flag.IsScheduled(reverseDirection))
             {
-                s.IdleOnPath.FieldE = (tick & 0xff) + 6;
+                s.IdleOnPath.FieldE = (state.Tick & 0xff) + 6;
             }
             else
             {
@@ -7618,7 +8867,7 @@ namespace Freeserf
                 s.Walking.Resource = Resource.Type.None;
                 s.Walking.WaitCounter = 0;
                 s.Walking.Direction = direction;
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
                 Counter = 0;
             }
             else
@@ -7643,7 +8892,7 @@ namespace Freeserf
                 s.Walking.Resource = Resource.Type.None;
                 s.Walking.WaitCounter = 0;
                 s.Walking.Direction = direction;
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
                 Counter = 0;
             }
         }
@@ -7669,7 +8918,7 @@ namespace Freeserf
 
                 if (map.GetObject(destination) == 0 && map.GetHeight(destination) > 0)
                 {
-                    if (IsKnight())
+                    if (IsKnight)
                     {
                         SetState(State.KnightFreeWalking);
                     }
@@ -7717,10 +8966,10 @@ namespace Freeserf
             {
                 map.ClearIdleSerf(Position);
                 map.SetSerfIndex(Position, (int)Index);
-                tick = Game.Tick;
+                state.Tick = Game.Tick;
                 Counter = 0;
 
-                if (GetSerfType() == Type.Sailor)
+                if (SerfType == Type.Sailor)
                 {
                     SetState(State.LostSailor);
                 }
@@ -7750,13 +8999,13 @@ namespace Freeserf
 
         void HandleSerfDefendingState(int[] trainingParams)
         {
-            switch (GetSerfType())
+            switch (SerfType)
             {
                 case Type.Knight0:
                 case Type.Knight1:
                 case Type.Knight2:
                 case Type.Knight3:
-                    TrainKnight(trainingParams[GetSerfType() - Type.Knight0]);
+                    TrainKnight(trainingParams[SerfType - Type.Knight0]);
                     break;
                 case Type.Knight4: // Cannot train anymore. 
                     break;

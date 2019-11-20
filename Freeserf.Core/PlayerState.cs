@@ -382,49 +382,97 @@ namespace Freeserf
         public bool HasCastle
         {
             get => Flags.HasFlag(PlayerStateFlags.HasCastle);
-            set => Flags |= PlayerStateFlags.HasCastle;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.HasCastle;
+                else
+                    Flags &= ~PlayerStateFlags.HasCastle;
+            }
         }
         [Ignore]
         public bool IsAI
         {
             get => Flags.HasFlag(PlayerStateFlags.IsAI);
-            set => Flags |= PlayerStateFlags.IsAI;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.IsAI;
+                else
+                    Flags &= ~PlayerStateFlags.IsAI;
+            }
         }
         [Ignore]
         public bool EmergencyProgramActive
         {
             get => Flags.HasFlag(PlayerStateFlags.EmergencyProgramActive);
-            set => Flags |= PlayerStateFlags.EmergencyProgramActive;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.EmergencyProgramActive;
+                else
+                    Flags &= ~PlayerStateFlags.EmergencyProgramActive;
+            }
         }
         [Ignore]
         public bool EmergencyProgramWasDeactivatedOnce
         {
             get => Flags.HasFlag(PlayerStateFlags.EmergencyProgramWasDeactivatedOnce);
-            set => Flags |= PlayerStateFlags.EmergencyProgramWasDeactivatedOnce;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.EmergencyProgramWasDeactivatedOnce;
+                else
+                    Flags &= ~PlayerStateFlags.EmergencyProgramWasDeactivatedOnce;
+            }
         }
         [Ignore]
         public bool CanSpawn
         {
             get => Flags.HasFlag(PlayerStateFlags.CanSpawn);
-            set => Flags |= PlayerStateFlags.CanSpawn;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.CanSpawn;
+                else
+                    Flags &= ~PlayerStateFlags.CanSpawn;
+            }
         }
         [Ignore]
         public bool CyclingKnightsInProgress
         {
             get => Flags.HasFlag(PlayerStateFlags.CyclingKnightsInProgress);
-            set => Flags |= PlayerStateFlags.CyclingKnightsInProgress;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.CyclingKnightsInProgress;
+                else
+                    Flags &= ~PlayerStateFlags.CyclingKnightsInProgress;
+            }
         }
         [Ignore]
         public bool CyclingKnightsReducedLevel
         {
             get => Flags.HasFlag(PlayerStateFlags.CyclingKnightsReducedLevel);
-            set => Flags |= PlayerStateFlags.CyclingKnightsReducedLevel;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.CyclingKnightsReducedLevel;
+                else
+                    Flags &= ~PlayerStateFlags.CyclingKnightsReducedLevel;
+            }
         }
         [Ignore]
         public bool CyclingKnightsSecondPhase
         {
             get => Flags.HasFlag(PlayerStateFlags.CyclingKnightsSecondPhase);
-            set => Flags |= PlayerStateFlags.CyclingKnightsSecondPhase;
+            set
+            {
+                if (value)
+                    Flags |= PlayerStateFlags.CyclingKnightsSecondPhase;
+                else
+                    Flags &= ~PlayerStateFlags.CyclingKnightsSecondPhase;
+            }
         }
     }
 }

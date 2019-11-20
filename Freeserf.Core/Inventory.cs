@@ -143,7 +143,7 @@ namespace Freeserf
 
         public bool CallOutSerf(Serf serf)
         {
-            var serfType = serf.GetSerfType();
+            var serfType = serf.SerfType;
 
             if (state.Serfs[serfType] != serf.Index)
             {
@@ -181,12 +181,12 @@ namespace Freeserf
 
         public bool CallInternal(Serf serf)
         {
-            if (state.Serfs[serf.GetSerfType()] != serf.Index)
+            if (state.Serfs[serf.SerfType] != serf.Index)
             {
                 return false;
             }
 
-            state.Serfs[serf.GetSerfType()] = 0;
+            state.Serfs[serf.SerfType] = 0;
 
             return true;
         }
@@ -416,7 +416,7 @@ namespace Freeserf
                         serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
                         state.Serfs[Serf.Type.Generic] = 0;
                         --state.Resources[Resource.Type.Boat];
-                        serf.SetSerfType(Serf.Type.Sailor);
+                        serf.SerfType = Serf.Type.Sailor;
                         --state.GenericCount;
                     }
                     else
@@ -438,7 +438,7 @@ namespace Freeserf
                     {
                         serf = Game.GetSerf(state.Serfs[Serf.Type.Generic]);
                         state.Serfs[Serf.Type.Generic] = 0;
-                        serf.SetSerfType(Serf.Type.Transporter);
+                        serf.SerfType = Serf.Type.Transporter;
                         --state.GenericCount;
                     }
                     else
@@ -456,7 +456,7 @@ namespace Freeserf
 
         public bool PromoteSerfToKnight(Serf serf)
         {
-            if (serf.GetSerfType() != Serf.Type.Generic)
+            if (serf.SerfType != Serf.Type.Generic)
             {
                 return false;
             }
@@ -472,7 +472,7 @@ namespace Freeserf
             --state.GenericCount;
             state.Serfs[Serf.Type.Generic] = 0;
 
-            serf.SetSerfType(Serf.Type.Knight0);
+            serf.SerfType = Serf.Type.Knight0;
 
             return true;
         }
@@ -531,7 +531,7 @@ namespace Freeserf
 
         public bool SpecializeSerf(Serf serf, Serf.Type type)
         {
-            if (serf.GetSerfType() != Serf.Type.Generic)
+            if (serf.SerfType != Serf.Type.Generic)
             {
                 return false;
             }
@@ -570,7 +570,7 @@ namespace Freeserf
                 --state.Resources[ResourcesNeededForSpecializing[(int)type * 2 + 1]];
             }
 
-            serf.SetSerfType(type);
+            serf.SerfType = type;
 
             state.Serfs[type] = serf.Index;
 
@@ -613,14 +613,14 @@ namespace Freeserf
 
         public void SerfIdleInStock(Serf serf)
         {
-            state.Serfs[serf.GetSerfType()] = serf.Index;
+            state.Serfs[serf.SerfType] = serf.Index;
         }
 
-        public void KnightTraining(Serf serf, int p)
+        public void KnightTraining(Serf serf, int probability)
         {
-            var oldType = serf.GetSerfType();
+            var oldType = serf.SerfType;
 
-            if (serf.TrainKnight(p))
+            if (serf.TrainKnight(probability))
             {
                 state.Serfs[oldType] = 0;
             }
