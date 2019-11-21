@@ -322,7 +322,13 @@ namespace Freeserf
         public bool SendStrongest
         {
             get => Flags.HasFlag(PlayerSettingFlags.SendStrongest);
-            set => Flags |= PlayerSettingFlags.SendStrongest;
+            set
+            {
+                if (value)
+                    Flags |= PlayerSettingFlags.SendStrongest;
+                else
+                    Flags &= ~PlayerSettingFlags.SendStrongest;
+            }
         }
     }
 }

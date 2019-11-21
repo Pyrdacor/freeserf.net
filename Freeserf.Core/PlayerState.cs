@@ -111,10 +111,10 @@ namespace Freeserf
         private dword goldDeposited = 0;
         private byte initialSupplies = 0;
         private byte intelligence = 0; // only for AI, otherwise ignored (maybe later for human player penalties?)
-        private word reproductionCounter = 0;
+        private int reproductionCounter = 0;
         private word reproductionReset = 0;
-        private word serfToKnightCounter = 0;
-        private word knightCycleCounter = 0;
+        private int serfToKnightCounter = 0;
+        private int knightCycleCounter = 0;
         private dword totalLandArea = 0;
         private dword totalBuildingScore = 0;
         private dword totalMilitaryScore = 0;
@@ -277,7 +277,7 @@ namespace Freeserf
                 }
             }
         }
-        public word ReproductionCounter
+        public int ReproductionCounter
         {
             get => reproductionCounter;
             set
@@ -301,7 +301,7 @@ namespace Freeserf
                 }
             }
         }
-        public word SerfToKnightCounter
+        public int SerfToKnightCounter
         {
             get => serfToKnightCounter;
             set
@@ -313,7 +313,7 @@ namespace Freeserf
                 }
             }
         }
-        public word KnightCycleCounter
+        public int KnightCycleCounter
         {
             get => knightCycleCounter;
             set
