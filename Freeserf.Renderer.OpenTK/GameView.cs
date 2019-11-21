@@ -143,10 +143,7 @@ namespace Freeserf.Renderer.OpenTK
                         };
                     }
 
-                    // initial we only show the gui + cursor
-                    // TODO: set back to below comment
-                    // TODO: If we really show a map in the background, we will show all layers in the beginning!
-                    renderLayer.Visible = true;// layer == Layer.Gui || layer == Layer.Cursor;
+                    renderLayer.Visible = true;
 
                     AddLayer(renderLayer);
                 }

@@ -68,7 +68,7 @@ namespace Freeserf
             0.97f,  // Gui
             0.97f,  // Gui Buildings
             0.97f,  // Minimap
-            0.99f   // Cursor
+            0.98f   // Cursor
         };
     }
 }

@@ -151,7 +151,7 @@ namespace Freeserf.UI
             mapCursorSprites[5] = new SpriteLocation { Sprite = 32 };
             mapCursorSprites[6] = new SpriteLocation { Sprite = 32 };
 
-            cursorSprite = renderView.SpriteFactory.Create(16, 16, 0, 0, false, false);
+            cursorSprite = renderView.SpriteFactory.Create(16, 16, 0, 0, false, false, 255);
             cursorSprite.Layer = renderView.GetLayer(Freeserf.Layer.Cursor);
             cursorSprite.Visible = true;
 

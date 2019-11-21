@@ -39,7 +39,6 @@ namespace Freeserf.UI
         readonly Map map = null;
         int totalDragX = 0;
         int totalDragY = 0;
-        readonly IRenderLayer cursorLayer = null;
         readonly IRenderLayer buildsLayer = null;
         readonly ILayerSprite[,] builds = null;
         readonly ILayerSprite[] mapCursorSprites = new ILayerSprite[7];
@@ -52,7 +51,6 @@ namespace Freeserf.UI
             this.interf = interf;
             this.map = map;
 
-            cursorLayer = interf.RenderView.GetLayer(Freeserf.Layer.Cursor);
             buildsLayer = interf.RenderView.GetLayer(Freeserf.Layer.Builds);
 
             builds = new ILayerSprite[map.RenderMap.NumVisibleColumns, map.RenderMap.NumVisibleRows];
