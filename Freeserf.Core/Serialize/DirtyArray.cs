@@ -61,7 +61,7 @@ namespace Freeserf.Serialize
         public static implicit operator T[](DirtyArray<T> array)
         {
             // TODO make this readonly/a copy?
-            return array;
+            return array.array;
         }
 
         public IEnumerator<T> GetEnumerator()

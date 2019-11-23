@@ -69,7 +69,7 @@ namespace Freeserf.Serialize
         public static implicit operator Dictionary<TKey, TValue>(DirtyMap<TKey, TValue> map)
         {
             // TODO make this readonly/a copy?
-            return map;
+            return map.map;
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
