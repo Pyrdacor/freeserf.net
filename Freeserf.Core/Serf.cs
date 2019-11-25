@@ -8850,10 +8850,12 @@ namespace Freeserf
 
             if (!map.HasSerf(Position))
             {
-                WaitIdleOnPath(map);
+                // No blocking serf -> start transporting the scheduled resource
+                StartTransporting(map);
             }
             else
             {
+                // Blocking serf -> wait till the serf is gone
                 SetState(State.WaitIdleOnPath);
             }
         }
@@ -8864,11 +8866,12 @@ namespace Freeserf
 
             if (!map.HasSerf(Position))
             {
-                WaitIdleOnPath(map);
+                // No blocking serf -> start transporting the scheduled resource
+                StartTransporting(map);
             }
         }
 
-        void WaitIdleOnPath(Map map)
+        void StartTransporting(Map map)
         {
             map.ClearIdleSerf(Position);
             map.SetSerfIndex(Position, (int)Index);
