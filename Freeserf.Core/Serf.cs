@@ -8850,17 +8850,7 @@ namespace Freeserf
 
             if (!map.HasSerf(Position))
             {
-                map.ClearIdleSerf(Position);
-                map.SetSerfIndex(Position, (int)Index);
-
-                int direction = s.IdleOnPath.FieldE;
-
-                SetState(State.Transporting);
-                s.Walking.Resource = Resource.Type.None;
-                s.Walking.WaitCounter = 0;
-                s.Walking.Direction = direction;
-                state.Tick = Game.Tick;
-                Counter = 0;
+                WaitIdleOnPath(map);
             }
             else
             {
@@ -8874,19 +8864,23 @@ namespace Freeserf
 
             if (!map.HasSerf(Position))
             {
-                // Duplicate code from HandleSerfIdleOnPathState() 
-                map.ClearIdleSerf(Position);
-                map.SetSerfIndex(Position, (int)Index);
-
-                int direction = s.IdleOnPath.FieldE;
-
-                SetState(State.Transporting);
-                s.Walking.Resource = Resource.Type.None;
-                s.Walking.WaitCounter = 0;
-                s.Walking.Direction = direction;
-                state.Tick = Game.Tick;
-                Counter = 0;
+                WaitIdleOnPath(map);
             }
+        }
+
+        void WaitIdleOnPath(Map map)
+        {
+            map.ClearIdleSerf(Position);
+            map.SetSerfIndex(Position, (int)Index);
+
+            int direction = s.IdleOnPath.FieldE;
+
+            SetState(State.Transporting);
+            s.Walking.Resource = Resource.Type.None;
+            s.Walking.WaitCounter = 0;
+            s.Walking.Direction = direction;
+            state.Tick = Game.Tick;
+            Counter = 0;
         }
 
         void HandleScatterState()
