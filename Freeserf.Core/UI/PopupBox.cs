@@ -1890,14 +1890,14 @@ namespace Freeserf.UI
         {
             foreach (var building in player.Game.GetPlayerBuildings(player))
             {
-                if (building.IsBurning() || !building.HasSerf())
+                if (building.IsBurning || !building.HasSerf)
                 {
                     continue;
                 }
 
                 int type = (int)building.BuildingType;
 
-                if (!building.IsDone())
+                if (!building.IsDone)
                     type = 0;
 
                 for (int i = 0; i < Building.MaxStock; ++i)
@@ -2699,7 +2699,7 @@ namespace Freeserf.UI
             // draw picture of serf present
             uint serfSprite = 0xdcu; // minus box
 
-            if (building.HasSerf())
+            if (building.HasSerf)
                 serfSprite = 0x11; // miner
 
             SetIcon(88, 84, serfSprite);
@@ -2733,7 +2733,7 @@ namespace Freeserf.UI
             SetText(16, 13, "Ordered");
             SetText(16, 23, "Building");
 
-            if (building.HasSerf())
+            if (building.HasSerf)
             {
                 if (building.Progress == 0)
                 {
@@ -2773,7 +2773,7 @@ namespace Freeserf.UI
 
             var building = player.Game.GetBuilding(player.tempIndex);
 
-            if (building.IsBurning() || building.Player != player.Index)
+            if (building.IsBurning || building.Player != player.Index)
             {
                 interf.ClosePopup();
                 return;
@@ -2926,7 +2926,7 @@ namespace Freeserf.UI
 
             var building = interf.Game.GetBuilding(interf.GetPlayer().tempIndex);
 
-            if (building.IsBurning())
+            if (building.IsBurning)
             {
                 interf.ClosePopup();
                 return null;
@@ -2977,7 +2977,7 @@ namespace Freeserf.UI
             // draw picture of serf present
             uint serfSprite = 0xdcu; // minus box
 
-            if (building.HasSerf())
+            if (building.HasSerf)
                 serfSprite = MapBuildingSerfSprite[(int)building.BuildingType];
 
             SetIcon(16, 45, serfSprite);

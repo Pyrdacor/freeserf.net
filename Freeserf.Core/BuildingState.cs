@@ -37,7 +37,13 @@ namespace Freeserf
         /// <summary>
         /// Failed to request a serf
         /// </summary>
-        SerfRequestFailed = 0x40
+        SerfRequestFailed = 0x40,
+        /// <summary>
+        /// A sword has been crafted and the next
+        /// shield can be crafted without resources
+        /// Only for weapon makers!
+        /// </summary>
+        FreeShieldPossible = 0x80,
     }
 
     [DataClass]
@@ -321,6 +327,18 @@ namespace Freeserf
                     Flags |= BuildingStateFlags.SerfRequestFailed;
                 else
                     Flags &= ~BuildingStateFlags.SerfRequestFailed;
+            }
+        }
+        [Ignore]
+        public bool FreeShieldPossible
+        {
+            get => Flags.HasFlag(BuildingStateFlags.FreeShieldPossible);
+            set
+            {
+                if (value)
+                    Flags |= BuildingStateFlags.FreeShieldPossible;
+                else
+                    Flags &= ~BuildingStateFlags.FreeShieldPossible;
             }
         }
     }

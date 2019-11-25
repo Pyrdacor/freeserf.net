@@ -33,7 +33,7 @@ namespace Freeserf.AIStates
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
-            if (!game.GetPlayerBuildings(player, Building.Type.Castle).Any(c => c.IsDone()))
+            if (!game.GetPlayerBuildings(player, Building.Type.Castle).Any(c => c.IsDone))
                 return;
 
             Kill(ai); // always kill before pushes!

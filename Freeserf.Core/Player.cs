@@ -611,10 +611,10 @@ namespace Freeserf
 
             buildingAttacked = (int)building.Index;
 
-            if (building.IsDone() &&
+            if (building.IsDone &&
                 building.IsMilitary())
             {
-                if (!building.IsActive() ||
+                if (!building.IsActive ||
                     building.ThreatLevel != 3)
                 {
                     // It is not allowed to attack
@@ -667,8 +667,8 @@ namespace Freeserf
 		{
             var target = Game.GetBuilding((uint)buildingAttacked);
 
-            if (!target.IsDone()   || !target.IsMilitary() ||
-                !target.IsActive() || target.ThreatLevel != 3)
+            if (!target.IsDone   || !target.IsMilitary() ||
+                !target.IsActive || target.ThreatLevel != 3)
             {
                 return;
             }
@@ -679,7 +679,7 @@ namespace Freeserf
             {
                 var building = Game.GetBuilding(attackingBuildings[i]);
 
-                if (building == null || building.IsBurning() || map.GetOwner(building.Position) != Index)
+                if (building == null || building.IsBurning || map.GetOwner(building.Position) != Index)
                 {
                     continue;
                 }
@@ -1114,7 +1114,7 @@ namespace Freeserf
             var buildingType = building.BuildingType;
 
             // Update player fields.
-            if (building.IsDone())
+            if (building.IsDone)
             {
                 state.TotalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
 
@@ -1312,9 +1312,9 @@ namespace Freeserf
                 var sawmills = Game.GetPlayerBuildings(this, Building.Type.Sawmill);
 
                 // Check if all resources are delivered to the construction sites
-                if (lumberjacks.Any(lumberjack => lumberjack.IsDone() || lumberjack.HasAllConstructionMaterialsAtLocation()) &&
-                    stonecutters.Any(stonecutter => stonecutter.IsDone() || stonecutter.HasAllConstructionMaterialsAtLocation()) &&
-                    sawmills.Any(sawmill => sawmill.IsDone() || sawmill.HasAllConstructionMaterialsAtLocation()))
+                if (lumberjacks.Any(lumberjack => lumberjack.IsDone || lumberjack.HasAllConstructionMaterialsAtLocation()) &&
+                    stonecutters.Any(stonecutter => stonecutter.IsDone || stonecutter.HasAllConstructionMaterialsAtLocation()) &&
+                    sawmills.Any(sawmill => sawmill.IsDone || sawmill.HasAllConstructionMaterialsAtLocation()))
                 {
                     EmergencyProgramActive = false;
                     return;
@@ -1363,7 +1363,7 @@ namespace Freeserf
                         // transported resources to non-essential buildings.
                         foreach (var building in Game.GetPlayerBuildings(this).ToArray())
                         {
-                            if (building.IsDone())
+                            if (building.IsDone)
                                 continue;
 
                             if (building.BuildingType != Building.Type.Lumberjack &&
@@ -1712,7 +1712,7 @@ namespace Freeserf
 
             var building = Game.GetBuilding(buildingIndex);
 
-            if (!building.IsDone() || building.IsBurning())
+            if (!building.IsDone || building.IsBurning)
             {
                 return index;
             }

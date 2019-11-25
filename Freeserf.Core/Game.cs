@@ -465,7 +465,7 @@ namespace Freeserf
                 {
                     var building = buildings[Map.GetObjectIndex(adjacentPosition)];
 
-                    if (building.IsLeveling())
+                    if (building.IsLeveling)
                     { 
                         // Leveling in progress 
                         uint height = building.Level;
@@ -1202,7 +1202,7 @@ namespace Freeserf
             if (building.Player != player.Index)
                 return false;
 
-            if (building.IsBurning())
+            if (building.IsBurning)
                 return false;
 
             return DemolishBuilding(position);
@@ -1338,7 +1338,7 @@ namespace Freeserf
                             // Castle has military influence even when not done. 
                             militaryType = 2;
                         }
-                        else if (building.IsDone() && building.IsActive())
+                        else if (building.IsDone && building.IsActive)
                         {
                             switch (building.BuildingType)
                             {
@@ -1349,7 +1349,7 @@ namespace Freeserf
                             }
                         }
 
-                        if (militaryType >= 0 && !building.IsBurning())
+                        if (militaryType >= 0 && !building.IsBurning)
                         {
                             int influenceOffset = 10 * militaryType;
                             int closenessOffset = influenceDiameter * Math.Max(-i, 0) + Math.Max(-j, 0);
@@ -1452,7 +1452,7 @@ namespace Freeserf
                     {
                         var building = buildings[Map.GetObjectIndex(checkPosition)];
 
-                        if (building.IsDone() && building.IsMilitary())
+                        if (building.IsDone && building.IsMilitary())
                         {
                             building.UpdateMilitaryFlagState();
                         }
@@ -2470,7 +2470,7 @@ namespace Freeserf
                 if (buildingList[i].Index > 0u)
                 {
                     // if a building burns we have to update its rendering so ensure that is is updated when visible
-                    if (buildingList[i].IsBurning())
+                    if (buildingList[i].IsBurning)
                     {
                         if (renderBuildings.ContainsKey(buildingList[i]) && renderBuildings[buildingList[i]].Visible)
                         {
@@ -2989,7 +2989,7 @@ namespace Freeserf
 
             var flag = flags[Map.GetObjectIndex(position)];
 
-            if (flag.HasBuilding() && !flag.GetBuilding().IsBurning())
+            if (flag.HasBuilding() && !flag.GetBuilding().IsBurning)
             {
                 throw new ExceptionFreeserf(this, "game", "Failed to demolish flag with building.");
             }
@@ -3723,7 +3723,7 @@ namespace Freeserf
 
                     renderBuildings.Add(building, renderBuilding);
 
-                    if (!building.IsDone() || building.IsBurning())
+                    if (!building.IsDone || building.IsBurning)
                         renderBuildingsInProgress.Add(renderBuilding);
                 }
             }

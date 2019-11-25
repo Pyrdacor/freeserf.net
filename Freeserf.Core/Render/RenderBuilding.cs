@@ -469,7 +469,7 @@ namespace Freeserf.Render
             sprite = spriteFactory.Create(spriteInfo.Width, spriteInfo.Height, 0, 0, true, false);
             shadowSprite = spriteFactory.Create(spriteShadowInfo.Width, spriteShadowInfo.Height, 0, 0, true, false);
 
-            if (!building.IsDone() && building.BuildingType != Building.Type.Castle)
+            if (!building.IsDone && building.BuildingType != Building.Type.Castle)
             {
                 uint frameSpriteIndex = MapBuildingFrameSprite[(int)building.BuildingType];
 
@@ -491,7 +491,7 @@ namespace Freeserf.Render
             for (int i = 0; i < 12; ++i)
                 burningSprites[i] = spriteFactory.Create(0, 0, 0, 0, true, false) as IMaskedSprite;
 
-            if (building.IsDone())
+            if (building.IsDone)
             {
                 var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
@@ -559,7 +559,7 @@ namespace Freeserf.Render
         {
             var offset = textureAtlas.GetOffset(BuildProgressMaskIndex);
 
-            if (building.IsDone())
+            if (building.IsDone)
             {
                 offset.Y += 100;
                 return offset;
@@ -649,7 +649,7 @@ namespace Freeserf.Render
                     planks[i].BaseLineOffset = System.Math.Min(0, (frameSprite.Y + frameSprite.Height + frameSprite.BaseLineOffset - 2) - (planks[i].Y + planks[i].Height));
             }
 
-            if (building.IsBurning())
+            if (building.IsBurning)
             {
                 DrawBurningSprite(renderPosition, tick);
             }
@@ -691,7 +691,7 @@ namespace Freeserf.Render
 
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
 
-            if (building.IsDone())
+            if (building.IsDone)
             {
                 // If the building is finished we no longer need
                 // updates and we no longer need the frame sprites.
@@ -716,7 +716,7 @@ namespace Freeserf.Render
 
                 (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
 
-                if (!building.IsBurning()) // we need updates while burning
+                if (!building.IsBurning) // we need updates while burning
                     return false;
             }
             else
@@ -840,7 +840,7 @@ namespace Freeserf.Render
 
                 int type = 0;
 
-                if (building.IsDone() ||
+                if (building.IsDone ||
                     building.Progress >= 16000)
                 {
                     type = (int)building.BuildingType;
@@ -972,7 +972,7 @@ namespace Freeserf.Render
 
         void UpdateSpecialBuilding(Position renderPosition, int tick)
         {
-            if (!building.IsDone())
+            if (!building.IsDone)
                 return;
 
             if (!sprite.Visible)
@@ -992,7 +992,7 @@ namespace Freeserf.Render
             {
                 case Building.Type.Baker:
                     // draw smoke
-                    if (building.IsActive())
+                    if (building.IsActive)
                     {
                         int i = (tick >> 3) & 7;
 
@@ -1039,7 +1039,7 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.GoldSmelter:
                     // draw smoke
-                    if (building.IsActive())
+                    if (building.IsActive)
                     {
                         int i = (tick >> 3) & 7;
 
@@ -1078,7 +1078,7 @@ namespace Freeserf.Render
                         uint spriteIndex = MapBuildingSprite[(int)Building.Type.Mill];
 
                         // draw the mill rotation
-                        if (building.IsActive())
+                        if (building.IsActive)
                         {
                             if (((tick >> 4) & 3) != 0)
                             {
@@ -1141,7 +1141,7 @@ namespace Freeserf.Render
                 case Building.Type.GoldMine:
                     // TODO: doesn't look perfect yet
                     // draw the elevator
-                    if (building.IsActive())
+                    if (building.IsActive)
                     {
                         uint spriteIndex = 151u;
 
@@ -1188,7 +1188,7 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.SteelSmelter:
                     // draw smoke
-                    if (building.IsActive())
+                    if (building.IsActive)
                     {
                         int i = (tick >> 3) & 7;
 
@@ -1224,7 +1224,7 @@ namespace Freeserf.Render
                     break;
                 case Building.Type.WeaponSmith:
                     // draw smoke
-                    if (building.IsActive())
+                    if (building.IsActive)
                     {
                         int i = (tick >> 3) & 7;
 

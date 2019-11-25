@@ -312,10 +312,10 @@ namespace Freeserf.AIStates
 
             foreach (var building in possibleTargets)
             {
-                if (!building.IsMilitary() || !building.IsDone() || building.IsBurning())
+                if (!building.IsMilitary() || !building.IsDone || building.IsBurning)
                     continue;
 
-                if (!building.IsActive() || building.ThreatLevel != 3)
+                if (!building.IsActive || building.ThreatLevel != 3)
                     continue;
 
                 int score = CheckTargetBuilding(game, player, building.Position);

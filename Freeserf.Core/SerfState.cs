@@ -16,10 +16,6 @@ namespace Freeserf
         /// A sound effect is playing
         /// </summary>
         PlayingSfx = 0x01,
-        /// <summary>
-        /// The counter is elapsed (below zero)
-        /// </summary>
-        CounterElapsed = 0x02,
     }
 
     [DataClass]

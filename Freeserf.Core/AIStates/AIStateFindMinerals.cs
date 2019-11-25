@@ -271,7 +271,7 @@ namespace Freeserf.AIStates
                 if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.Tower) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.Fortress) == 0 &&
-                    !game.GetPlayerBuildings(player).Where(building => building.IsMilitary(false)).Any(b => !b.HasSerf()))
+                    !game.GetPlayerBuildings(player).Where(building => building.IsMilitary(false)).Any(b => !b.HasSerf))
                 {
                     // build only if there are no military buildings in progress or
                     // military buildings that are not occupied yet

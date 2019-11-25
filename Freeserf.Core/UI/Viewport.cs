@@ -510,13 +510,13 @@ namespace Freeserf.UI
                         {
                             interf.OpenPopup(PopupBox.Type.CastleResources);
                         }
-                        else if (!building.IsDone())
+                        else if (!building.IsDone)
                         {
                             interf.OpenPopup(PopupBox.Type.OrderedBld);
                         }
                         else if (building.BuildingType == Building.Type.Stock)
                         {
-                            if (!building.IsActive())
+                            if (!building.IsActive)
                                 return false;
 
                             interf.OpenPopup(PopupBox.Type.CastleResources);

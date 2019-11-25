@@ -4100,7 +4100,7 @@ namespace Freeserf
             {
                 slope = RoadBuildingSlope[(int)building.BuildingType];
 
-                if (!building.IsDone())
+                if (!building.IsDone)
                     slope = 1;
             }
 
@@ -4126,7 +4126,7 @@ namespace Freeserf
             {
                 slope = 31 - RoadBuildingSlope[(int)building.BuildingType];
 
-                if (!building.IsDone())
+                if (!building.IsDone)
                     slope = 30;
             }
 
@@ -4722,7 +4722,7 @@ namespace Freeserf
             if (Counter < 0 || Counter <= s.EnteringBuilding.SlopeLength)
             {
                 if (Game.Map.GetObjectIndex(Position) == 0 ||
-                    GetBuildingAtPosition().IsBurning())
+                    GetBuildingAtPosition().IsBurning)
                 {
                     // Burning 
                     SetState(State.Lost);
@@ -5126,7 +5126,7 @@ namespace Freeserf
                         {
                             var building = GetBuildingAtPosition();
 
-                            if (building.IsBurning())
+                            if (building.IsBurning)
                             {
                                 SetState(State.Lost);
                                 Counter = 0;
@@ -7818,10 +7818,9 @@ namespace Freeserf
             if (s.MakingWeapon.Mode == 0)
             {
                 // One of each resource makes a sword and a shield.
-                // Bit 3 is set if a sword has been made and a
-                // shield can be made without more resources.
-                // TODO Use of this bit overlaps with sfx check bit. 
-                if (!building.IsPlayingSfx)
+                // If a sword has been made a shield can be made
+                // without more resources.
+                if (!building.FreeShieldPossible)
                 {
                     if (!building.UseResourcesInStocks())
                     {
@@ -7854,16 +7853,9 @@ namespace Freeserf
                         building.StopActivity();
                         Game.Map.SetSerfIndex(Position, 0);
 
-                        var resource = building.IsPlayingSfx ? Resource.Type.Shield : Resource.Type.Sword;
+                        var resource = building.FreeShieldPossible ? Resource.Type.Shield : Resource.Type.Sword;
 
-                        if (building.IsPlayingSfx)
-                        {
-                            building.StopPlayingSfx();
-                        }
-                        else
-                        {
-                            building.StartPlayingSfx();
-                        }
+                        building.FreeShieldPossible = !building.FreeShieldPossible;
 
                         SetState(State.MoveResourceOut);
                         s.MoveResourceOut.Resource = 1 + (uint)resource;
@@ -8185,7 +8177,7 @@ namespace Freeserf
                 {
                     var building = Game.GetBuildingAtPosition(map.MoveUpLeft(Position));
 
-                    if (building.IsDone() &&
+                    if (building.IsDone &&
                         building.IsMilitary() &&
                         building.Player != Player &&
                         building.HasKnight())
@@ -8426,7 +8418,7 @@ namespace Freeserf
 
             if (building != null)
             {
-                if (!building.IsBurning() && building.IsMilitary())
+                if (!building.IsBurning && building.IsMilitary())
                 {
                     if (building.Player == Player)
                     {

@@ -368,7 +368,7 @@ namespace Freeserf.Render
 
             uint sprite;
 
-            if (building.IsDone() || Misc.BitTest(building.Progress, 15))
+            if (building.IsDone || Misc.BitTest(building.Progress, 15))
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -389,7 +389,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || building.FrameFinished)
+            if (building.IsDone || building.FrameFinished)
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }
@@ -432,7 +432,7 @@ namespace Freeserf.Render
 
             uint sprite = 0;
 
-            if (building.IsDone() || building.FrameFinished)
+            if (building.IsDone || building.FrameFinished)
             {
                 sprite = RenderBuilding.MapBuildingSprite[(int)building.BuildingType];
             }

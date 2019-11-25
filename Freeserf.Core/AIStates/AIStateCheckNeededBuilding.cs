@@ -345,7 +345,7 @@ namespace Freeserf.AIStates
                 return CheckResult.NotNeeded;
             }
 
-            int numIncompleteBuildings = game.GetPlayerBuildings(player).Count(building => !building.IsDone());
+            int numIncompleteBuildings = game.GetPlayerBuildings(player).Count(building => !building.IsDone);
 
             if (numIncompleteBuildings > 2 + player.GetLandArea() / 200 + ai.GameTime / (20 * Global.TICKS_PER_MIN) + Math.Max(ai.ExpandFocus - 1, ai.BuildingFocus))
                 return CheckResult.NotNeeded;

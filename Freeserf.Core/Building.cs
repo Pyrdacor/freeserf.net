@@ -261,15 +261,9 @@ namespace Freeserf
         }
 
         // Whether construction of the building is finished.
-        public bool IsDone()
-        {
-            return !state.Constructing;
-        }
+        public bool IsDone => !state.Constructing;
 
-        public bool IsLeveling()
-        {
-            return !IsDone() && state.Progress == 0;
-        }
+        public bool IsLeveling => !IsDone && state.Progress == 0;
 
         public void DoneLeveling()
         {
@@ -417,10 +411,7 @@ namespace Freeserf
         }
 
         // Building is active (specifics depend on building type).
-        public bool IsActive()
-        {
-            return state.Active;
-        }
+        public bool IsActive => state.Active;
 
         public void StartActivity()
         {
@@ -433,14 +424,11 @@ namespace Freeserf
         }
 
         // Building is burning.
-        public bool IsBurning()
-        {
-            return state.Burning;
-        }
+        public bool IsBurning => state.Burning;
 
         public bool BurnUp()
         {
-            if (IsBurning())
+            if (IsBurning)
             {
                 return false;
             }
@@ -559,9 +547,13 @@ namespace Freeserf
         }
 
         // Building has an associated serf.
-        public bool HasSerf()
+        public bool HasSerf => state.Holder;
+
+        // Weaponsmith can craft a shield for free.
+        public bool FreeShieldPossible
         {
-            return state.Holder;
+            get => state.FreeShieldPossible;
+            set => state.FreeShieldPossible = value;
         }
 
         // Building has succesfully requested a serf.
@@ -651,7 +643,7 @@ namespace Freeserf
 
         public bool HasAllConstructionMaterials()
         {
-            if (IsDone())
+            if (IsDone)
                 return true;
 
             var numPlanks = state.Stock[0].Available + state.Stock[0].Requested;
@@ -662,7 +654,7 @@ namespace Freeserf
 
         public bool HasAllConstructionMaterialsAtLocation()
         {
-            if (IsDone())
+            if (IsDone)
                 return true;
 
             return state.Stock[0].Available == state.Stock[0].Maximum && state.Stock[1].Available == state.Stock[1].Maximum;
@@ -937,7 +929,7 @@ namespace Freeserf
                     {
                         if (state.Stock[i].Requested == 0)
                         {                            
-                            if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone())
+                            if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone)
                             {
                                 // In emergency program we set the requested amount to zero for most buildings.
                                 // But sometimes the resource might still be delivered. We stop delivery so the
@@ -963,7 +955,7 @@ namespace Freeserf
 
                 // A resource was delivered that is not meant for this building.
                 // This should not happen but for safety reasons we log it and deny delivery.
-                Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone().ToString()}");
+                Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone.ToString()}");
                 return false;
             }
         }
@@ -1177,6 +1169,9 @@ namespace Freeserf
             state.Holder = (v8 & 64) != 0;
             state.SerfRequested = (v8 & 128) != 0;
 
+            if (BuildingType == Building.Type.WeaponSmith && state.PlayingSfx)
+                state.FreeShieldPossible = true;
+
             state.Flag = reader.ReadWord(); // 6
 
             for (int i = 0; i < 2; ++i)
@@ -1196,7 +1191,7 @@ namespace Freeserf
             state.FirstKnight = reader.ReadWord(); // 10
             state.Progress = reader.ReadWord(); // 12
 
-            if (!state.Burning && IsDone() &&
+            if (!state.Burning && IsDone &&
                 (BuildingType == Type.Stock ||
                 BuildingType == Type.Castle))
             {
@@ -1210,7 +1205,7 @@ namespace Freeserf
                 state.Level = reader.ReadWord(); // 14
             }
 
-            if (!IsDone())
+            if (!IsDone)
             {
                 state.Stock[0].Type = Resource.Type.Plank;
                 state.Stock[0].Maximum = reader.ReadByte(); // 16
@@ -1334,6 +1329,30 @@ namespace Freeserf
                 state.SerfRequested = (n & 128) != 0;
             }
 
+            // This is new in freeserf.net
+            try
+            {
+                if (BuildingType == Building.Type.WeaponSmith)
+                {
+                    if (reader.HasValue("free_shield_possible"))
+                        state.FreeShieldPossible = reader.Value("free_shield_possible").ReadBool();
+                    else
+                    {
+                        // In original game the playing sfx bit was
+                        // used for switching between swords and shields.
+                        state.FreeShieldPossible = state.PlayingSfx;
+                    }
+                }
+                else
+                    state.FreeShieldPossible = false;
+            }
+            catch
+            {
+                // In original game the playing sfx bit was
+                // used for switching between swords and shields.
+                state.FreeShieldPossible = state.PlayingSfx;
+            }
+
             state.Flag = (word)reader.Value("flag").ReadUInt();
 
             state.Stock[0].Type = (Resource.Type)reader.Value("stock[0].type").ReadInt();
@@ -1352,7 +1371,7 @@ namespace Freeserf
             state.Progress = (word)reader.Value("progress").ReadUInt();
 
             // Load various values that depend on the building type.
-            if (!state.Burning && (IsDone() || BuildingType == Type.Castle))
+            if (!state.Burning && (IsDone || BuildingType == Type.Castle))
             {
                 if (BuildingType == Type.Stock || BuildingType == Type.Castle)
                 {
@@ -1386,6 +1405,9 @@ namespace Freeserf
             writer.Value("active").Write(state.Active);
             writer.Value("holder").Write(state.Holder);
 
+            // This is new in freeserf.net
+            writer.Value("free_shield_possible").Write((BuildingType == Building.Type.WeaponSmith) ? state.FreeShieldPossible : false);
+
             writer.Value("flag").Write(state.Flag);
 
             writer.Value("stock[0].type").Write((int)state.Stock[0].Type);
@@ -1403,7 +1425,7 @@ namespace Freeserf
             writer.Value("serf_index").Write((uint)state.FirstKnight);
             writer.Value("progress").Write((uint)state.Progress);
 
-            if (!IsBurning() && (IsDone() || BuildingType == Type.Castle))
+            if (!IsBurning && (IsDone || BuildingType == Type.Castle))
             {
                 if (BuildingType == Type.Stock ||
                     BuildingType == Type.Castle)
@@ -1411,7 +1433,7 @@ namespace Freeserf
                     writer.Value("inventory").Write((uint)state.Inventory);
                 }
             }
-            else if (IsBurning())
+            else if (IsBurning)
             {
                 writer.Value("tick").Write((uint)state.Tick);
             }
@@ -1468,7 +1490,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.Stock:
-                        if (!IsActive())
+                        if (!IsActive)
                         {
                             var inventory = Game.CreateInventory();
 

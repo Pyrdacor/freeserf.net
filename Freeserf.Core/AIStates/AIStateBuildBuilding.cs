@@ -942,7 +942,7 @@ namespace Freeserf.AIStates
 
         int UnfinishedMilitaryBuildingsInArea(Map map, uint basePosition, int range, int minDistance = 0, bool includeCastle = true)
         {
-            return map.FindInArea(basePosition, range, FindBuilding, minDistance).Count(building => (building as Building).IsMilitary(includeCastle) && !(building as Building).IsDone());
+            return map.FindInArea(basePosition, range, FindBuilding, minDistance).Count(building => (building as Building).IsMilitary(includeCastle) && !(building as Building).IsDone);
         }
 
         bool IsEmptySpotWithoutMuchMilitary(Map map, uint basePosition)

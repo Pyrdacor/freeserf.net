@@ -779,7 +779,7 @@ namespace Freeserf.UI
             {
                 var building = Game.GetBuildingAtPosition(mapCursorPosition);
 
-                if (building.IsDone() &&
+                if (building.IsDone &&
                     (building.BuildingType == Building.Type.Hut ||
                      building.BuildingType == Building.Type.Tower ||
                      building.BuildingType == Building.Type.Fortress))
@@ -1089,7 +1089,7 @@ namespace Freeserf.UI
             {
                 var building = Game.GetBuildingAtPosition(position);
 
-                if (!building.IsBurning())
+                if (!building.IsBurning)
                 {
                     cursorType = CursorType.Building;
                 }
