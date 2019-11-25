@@ -1433,6 +1433,11 @@ namespace Freeserf
             return gameTiles[(int)position].Serf != 0;
         }
 
+        public bool HasOtherSerf(MapPos position, Serf serf)
+        {
+            return HasSerf(position) && GetSerfIndex(position) != serf.Index;
+        }
+
         public bool HasFlag(MapPos position)
         {
             return (GetObject(position) == Object.Flag);

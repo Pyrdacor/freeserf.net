@@ -1456,14 +1456,14 @@ namespace Freeserf
                 if (data.Flag != null)
                 {
                     Log.Verbose.Write("game", $"dest for flag {Index} res {slot} found: flag {data.Flag.Index}");
-                    var destBuilding = data.Flag.OtherEndPoints[(int)Direction.UpLeft].Building;
+                    var destinationBuilding = data.Flag.OtherEndPoints[(int)Direction.UpLeft].Building;
 
-                    if (!destBuilding.AddRequestedResource(resource, true))
+                    if (!destinationBuilding.AddRequestedResource(resource, true))
                     {
                         throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
                     }
 
-                    state.Slots[slot].DestinationObjectIndex = (word)destBuilding.FlagIndex;
+                    state.Slots[slot].DestinationObjectIndex = (word)destinationBuilding.FlagIndex;
                     state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
 
                     return;
@@ -1528,10 +1528,10 @@ namespace Freeserf
 
         static bool ScheduleKnownDestinationCallback(Flag flag, object data)
         {
-            var destData = data as ScheduleKnownDestinationData;
+            var destinationData = data as ScheduleKnownDestinationData;
 
             return flag.ScheduleKnownDestinationCallback(
-                destData.Source, destData.Destination, destData.Slot);
+                destinationData.Source, destinationData.Destination, destinationData.Slot);
         }
 
         // resourcesWaiting = int[4]

@@ -316,48 +316,6 @@ namespace Freeserf
             return ToEndpointPath(OtherEndpointPaths[(int)direction]);
         }
 
-        public void SetOtherEndpointScheduledResourceSlot(Direction direction, byte scheduledSlot)
-        {
-            byte result = OtherEndpointPaths[(int)direction];
-
-            result &= 0xf8;
-            result |= (byte)(scheduledSlot & 0x07);
-
-            OtherEndpointPaths[(int)direction] = result;
-        }
-
-        public void SetOtherEndpointLeadingBackDirection(Direction direction, Direction leadingBackDirection)
-        {
-            byte result = OtherEndpointPaths[(int)direction];
-
-            result &= 0xc7;
-            result |= (byte)(((byte)leadingBackDirection << 3) & 0x38);
-
-            OtherEndpointPaths[(int)direction] = result;
-        }
-
-        public void SetOtherEndpointResourcePuickupScheduled(Direction direction, bool scheduled)
-        {
-            byte result = OtherEndpointPaths[(int)direction];
-
-            result &= 0x7f;
-
-            if (scheduled)
-                result |= 0x80;
-
-            OtherEndpointPaths[(int)direction] = result;
-        }
-
-        public void SetOtherEndpointPath(Direction direction,
-            byte scheduledSlot, Direction leadingBackDirection,
-            bool scheduled)
-        {
-            OtherEndpointPaths[(int)direction] = (byte)
-                ((scheduledSlot & 0x07) |
-                (((byte)leadingBackDirection << 3) & 0x38) |
-                ((scheduled) ? 0x80 : 0x00));
-        }
-
         public void SetOtherEndpointSlot(Direction direction, byte scheduledSlot)
         {
             OtherEndpointPaths[(int)direction] = (byte)
@@ -432,19 +390,6 @@ namespace Freeserf
                 LeadingBackDirection = (Direction)((value >> 3) & 0x07),
                 ResourcePickupScheduled = ((value >> 7) & 0x01) != 0
             };
-        }
-
-        private static byte FromEndpointPath(OtherEndpointPath value)
-        {
-            byte result = 0;
-
-            result |= (byte)(value.ScheduledResourceSlotIndex & 0x07);
-            result |= (byte)(((byte)value.LeadingBackDirection << 3) & 0x38);
-
-            if (value.ResourcePickupScheduled)
-                result |= 0x80;
-
-            return result;
         }
 
         private static FlagPath ToFlagPath(byte value)

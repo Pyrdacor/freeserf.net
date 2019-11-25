@@ -202,6 +202,11 @@ namespace Freeserf
             return flags[Map.GetObjectIndex(position)];
         }
 
+        public Flag GetFlagForBuildingAtPosition(MapPos position)
+        {
+            return GetFlagAtPosition(Map.MoveDownRight(position));
+        }
+
         public Serf GetSerfAtPosition(MapPos position)
         {
             var serf = serfs[Map.GetSerfIndex(position)];
@@ -2910,8 +2915,8 @@ namespace Freeserf
             if (path1Direction == Direction.None || path2Direction == Direction.None)
                 return; // Should not happen, but to avoid exceptions just stop path splitting if it happens.
 
-            SerfPathInfo path1Data = new SerfPathInfo();
-            SerfPathInfo path2Data = new SerfPathInfo();
+            var path1Data = new SerfPathInfo();
+            var path2Data = new SerfPathInfo();
 
             path1Data.Serfs = new int[16];
             path2Data.Serfs = new int[16];

@@ -3190,9 +3190,7 @@ namespace Freeserf
         void FixNonTransporterState()
         {
             if (state.Type != Type.Transporter && state.Type != Type.Sailor)
-            {
                 FindInventory();
-            }
         }
 
         public static string GetStateName(State state)
@@ -4246,7 +4244,7 @@ namespace Freeserf
             attacker.s.Attacking.Move = Game.RandomInt() & 0x70;
         }
 
-        static bool HandleSerfWalkingStateSearchCB(Flag flag, object data)
+        static bool HandleSerfWalkingStateSearchCallback(Flag flag, object data)
         {
             var serf = data as Serf;
             var destination = flag.Game.GetFlag(serf.s.Walking.Destination);
@@ -4504,7 +4502,7 @@ namespace Freeserf
                             }
                         }
 
-                        if (search.Execute(HandleSerfWalkingStateSearchCB, true, false, this))
+                        if (search.Execute(HandleSerfWalkingStateSearchCallback, true, false, this))
                             continue;
                     }
                 }
@@ -4745,7 +4743,7 @@ namespace Freeserf
                         else
                         {
                             map.SetSerfIndex(Position, 0);
-                            var flag = Game.GetFlagAtPosition(map.MoveDownRight(Position));
+                            var flag = Game.GetFlagForBuildingAtPosition(Position);
 
                             // Mark as inventory accepting resources and serfs. 
                             flag.SetHasInventory();
@@ -5620,7 +5618,8 @@ namespace Freeserf
 
             var map = Game.Map;
 
-            if ((map.GetSerfIndex(Position) != Index && map.HasSerf(Position)) || map.HasSerf(map.MoveDownRight(Position)))
+            if (map.HasSerf(map.MoveDownRight(Position)) ||
+                map.HasOtherSerf(Position, this))
             {
                 // Occupied by serf, wait 
                 Animation = 82;
@@ -5629,7 +5628,7 @@ namespace Freeserf
                 return;
             }
 
-            var flag = Game.GetFlagAtPosition(map.MoveDownRight(Position));
+            var flag = Game.GetFlagForBuildingAtPosition(Position);
 
             if (flag == null)
                 return;
@@ -5766,7 +5765,7 @@ namespace Freeserf
 
             // Check if there is a serf that waits to approach the flag.
             // If so, we wait inside.
-            var inventoryFlag = Game.GetFlagAtPosition(map.MoveDownRight(Position));
+            var inventoryFlag = Game.GetFlagForBuildingAtPosition(Position);
 
             if (inventoryFlag != null)
             {

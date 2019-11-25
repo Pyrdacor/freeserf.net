@@ -237,7 +237,7 @@ namespace Freeserf
 
                     Game.GetPlayer(Player).AddNotification(Notification.Type.KnightOccupied, Position, militaryType);
 
-                    var flag = Game.GetFlagAtPosition(Game.Map.MoveDownRight(Position));
+                    var flag = Game.GetFlagForBuildingAtPosition(Position);
                     flag.ClearFlags();
                     StockInit(1, Resource.Type.GoldBar, maxGold);
                     Game.BuildingCaptured(this);
