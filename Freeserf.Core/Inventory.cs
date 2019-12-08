@@ -315,7 +315,7 @@ namespace Freeserf
 
             if (state.Resources[type] == 0)
             {
-                throw new ExceptionFreeserf(Game, "inventory", "No state.Resource with type.");
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Inventory, "No state.Resource with type.");
             }
 
             --state.Resources[type];

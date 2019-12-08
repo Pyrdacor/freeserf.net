@@ -107,12 +107,12 @@ namespace Freeserf
             // TODO: email configurable
             commandLine.SetComment("Please report bugs to <robert.schneckenhaus@web.de>");
 
-            Log.Info.Write("main", EXTENDED_VERSION);
+            Log.Info.Write(ErrorSystemType.Application, EXTENDED_VERSION);
 
             if (!commandLine.Process(args))
             {
                 if (args.Length > 0)
-                    Log.Warn.Write("main", "Invalid command line options");
+                    Log.Warn.Write(ErrorSystemType.Application, "Invalid command line options");
 
                 return new InitInfo(); // default values
             }

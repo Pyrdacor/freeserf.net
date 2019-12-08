@@ -3062,7 +3062,7 @@ namespace Freeserf.UI
                     var serfType = serf.SerfType;
 
                     if (serfType < Serf.Type.Knight0 || serfType > Serf.Type.Knight4)
-                        throw new ExceptionFreeserf(interf.Game, "gui", "Not a knight among the castle defenders.");
+                        throw new ExceptionFreeserf(interf.Game, ErrorSystemType.UI, "Not a knight among the castle defenders.");
 
                     ++knights[serfType - Serf.Type.Knight0];
 
@@ -4158,7 +4158,7 @@ namespace Freeserf.UI
                     break;
                 // TODO ...
                 default:
-                    Log.Warn.Write("popup", "unhandled action " + action.ToString());
+                    Log.Warn.Write(ErrorSystemType.UI, "unhandled action " + action.ToString());
                     break;
             }
 		}

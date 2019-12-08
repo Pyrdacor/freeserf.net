@@ -45,7 +45,7 @@ namespace Freeserf
             {
                 try
                 {
-                    Log.Debug.Write("debug", "Null exception raised.");
+                    Log.Debug.Write(ErrorSystemType.Application, "Null exception raised.");
                 }
                 catch
                 {

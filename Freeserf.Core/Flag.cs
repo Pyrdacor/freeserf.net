@@ -387,7 +387,7 @@ namespace Freeserf
         {
             if (fromSlot >= Constants.FLAG_MAX_RES_COUNT)
             {
-                throw new ExceptionFreeserf(Game, "flag", "Wrong flag slot index.");
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Wrong flag slot index.");
             }
 
             if (state.Slots[fromSlot].Type == Resource.Type.None)
@@ -410,7 +410,7 @@ namespace Freeserf
         {
             if (resource < Resource.Type.MinValue || resource > Resource.Type.MaxValue)
             {
-                throw new ExceptionFreeserf(Game, "flag", "Wrong resource type.");
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Wrong resource type.");
             }
 
             for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
@@ -979,7 +979,7 @@ namespace Freeserf
             }
             catch (Exception ex)
             {
-                throw new ExceptionFreeserf(Game, "flag", ex);
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, ex);
             }
         }
 
@@ -1455,12 +1455,12 @@ namespace Freeserf
 
                 if (data.Flag != null)
                 {
-                    Log.Verbose.Write("game", $"dest for flag {Index} res {slot} found: flag {data.Flag.Index}");
+                    Log.Verbose.Write(ErrorSystemType.Game, $"dest for flag {Index} res {slot} found: flag {data.Flag.Index}");
                     var destinationBuilding = data.Flag.OtherEndPoints[(int)Direction.UpLeft].Building;
 
                     if (!destinationBuilding.AddRequestedResource(resource, true))
                     {
-                        throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
+                        throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Failed to request resource.");
                     }
 
                     state.Slots[slot].DestinationObjectIndex = (word)destinationBuilding.FlagIndex;
@@ -1501,7 +1501,7 @@ namespace Freeserf
 
                     if (direction < Direction.Right || direction > Direction.Up)
                     {
-                        throw new ExceptionFreeserf(Game, "flag", "Failed to request resource.");
+                        throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Failed to request resource.");
                     }
 
                     if (!IsScheduled(direction))

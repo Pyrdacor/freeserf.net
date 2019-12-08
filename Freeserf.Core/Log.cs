@@ -126,7 +126,7 @@ namespace Freeserf
                 ApplyLevel();
             }
 
-            public virtual void Write(string subsystem, string text)
+            public virtual void Write(ErrorSystemType subsystem, string text)
             {
                 var stream = this[subsystem];
 
@@ -139,7 +139,7 @@ namespace Freeserf
                 this.stream.Flush();
             }
 
-            public virtual Stream this[string subsystem]
+            public virtual Stream this[ErrorSystemType subsystem]
             {
                 get
                 {
@@ -148,7 +148,7 @@ namespace Freeserf
 
                     var stream = new Stream(this.stream);
 
-                    stream += prefix + ": [" + subsystem + "] ";
+                    stream += prefix + ": [" + subsystem.ToString() + "] ";
 
                     return stream;
                 }

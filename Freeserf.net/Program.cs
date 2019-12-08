@@ -149,7 +149,7 @@ namespace Freeserf
             }
             catch (Exception ex)
             {
-                Log.Error.Write("main", "Exception: " + ex.Message);
+                Log.Error.Write(ErrorSystemType.Application, "Exception: " + ex.Message);
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -158,11 +158,11 @@ namespace Freeserf
         {
             if (e.ExceptionObject is Exception)
             {
-                Log.Error.Write("unhandled", "Exception: " + (e.ExceptionObject as Exception).Message);
+                Log.Error.Write(ErrorSystemType.Application, "Exception: " + (e.ExceptionObject as Exception).Message);
             }
             else
             {
-                Log.Error.Write("unhandled", "Unknown exception type");
+                Log.Error.Write(ErrorSystemType.Application, "Unknown exception type");
             }
         }
     }

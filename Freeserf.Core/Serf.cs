@@ -2006,11 +2006,11 @@ namespace Freeserf
         {
             try
             {
-                Log.Verbose.Write("serf", $"serf {Index} ({SerfTypeNames[(int)state.Type]}): state {SerfStateNames[(int)SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"serf {Index} ({SerfTypeNames[(int)state.Type]}): state {SerfStateNames[(int)SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
             }
             catch
             {
-                Log.Verbose.Write("serf", $"Missing serf type name or serf state name: serf type name index = {(int)state.Type}, serf state name index = {(int)SerfState}");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"Missing serf type name or serf state name: serf type name index = {(int)state.Type}, serf state name index = {(int)SerfState}");
             }
 
             SerfState = newState;
@@ -2020,11 +2020,11 @@ namespace Freeserf
         {
             try
             {
-                Log.Verbose.Write("serf", $"serf {otherSerf.Index} ({SerfTypeNames[(int)otherSerf.state.Type]}): state {SerfStateNames[(int)otherSerf.SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"serf {otherSerf.Index} ({SerfTypeNames[(int)otherSerf.state.Type]}): state {SerfStateNames[(int)otherSerf.SerfState]} -> {SerfStateNames[(int)newState]} ({function}:{lineNumber})");
             }
             catch
             {
-                Log.Verbose.Write("serf", $"Missing other serf type name or other serf state name: serf type name index = {(int)otherSerf.state.Type}, serf state name index = {(int)otherSerf.SerfState}");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"Missing other serf type name or other serf state name: serf type name index = {(int)otherSerf.state.Type}, serf state name index = {(int)otherSerf.SerfState}");
             }
 
             otherSerf.SerfState = newState;
@@ -3176,14 +3176,14 @@ namespace Freeserf
                         HandleSerfDefendingCastleState();
                         break;
                     default:
-                        Log.Debug.Write("serf", $"Serf state {SerfState} isn't processed");
+                        Log.Debug.Write(ErrorSystemType.Serf, $"Serf state {SerfState} isn't processed");
                         SerfState = State.Null;
                         break;
                 }
             }
             catch (Exception ex)
             {
-                throw new ExceptionFreeserf(Game, "serf", ex);
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, ex);
             }
         }
 
@@ -3223,7 +3223,7 @@ namespace Freeserf
             state.Tick = reader.ReadWord(); // 8
             state.State = (State)reader.ReadByte(); // 10
 
-            Log.Verbose.Write("savegame", $"load serf {Index}: {SerfStateNames[(int)SerfState]}");
+            Log.Verbose.Write(ErrorSystemType.Savegame, $"load serf {Index}: {SerfStateNames[(int)SerfState]}");
 
             switch (SerfState)
             {
@@ -3418,7 +3418,7 @@ namespace Freeserf
             uint y = reader.Value("pos")[1].ReadUInt();
 
             Position = Game.Map.Position(x, y);
-            state.Tick = (ushort)reader.Value("state.Tick").ReadUInt();
+            state.Tick = (ushort)reader.Value("state.tick").ReadUInt();
             SerfState = (State)reader.Value("state").ReadInt();
 
             switch (SerfState)
@@ -3634,7 +3634,7 @@ namespace Freeserf
             writer.Value("counter").Write(Counter);
             writer.Value("pos").Write(Game.Map.PositionColumn(Position));
             writer.Value("pos").Write(Game.Map.PositionRow(Position));
-            writer.Value("state.Tick").Write(state.Tick);
+            writer.Value("state.tick").Write(state.Tick);
             writer.Value("state").Write((int)SerfState);
 
             switch (SerfState)
@@ -3997,7 +3997,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    Log.Debug.Write("serf", "unhandled jump to 31B82.");
+                    Log.Debug.Write(ErrorSystemType.Serf, "unhandled jump to 31B82.");
                 }
             }
         }
@@ -4225,7 +4225,7 @@ namespace Freeserf
                 value = defenderExpFactor;
                 knightType = defender.SerfType;
                 attacker.s.Attacking.AttackerWon = 1;
-                Log.Debug.Write("serf", $"Fight: {morale} vs {defenderMorale} ({result}). Attacker winning.");
+                Log.Debug.Write(ErrorSystemType.Serf, $"Fight: {morale} vs {defenderMorale} ({result}). Attacker winning.");
             }
             else
             {
@@ -4233,7 +4233,7 @@ namespace Freeserf
                 value = expFactor;
                 knightType = attacker.SerfType;
                 attacker.s.Attacking.AttackerWon = 0;
-                Log.Debug.Write("serf", $"Fight: {morale} vs {defenderMorale} ({result}). Defender winning.");
+                Log.Debug.Write(ErrorSystemType.Serf, $"Fight: {morale} vs {defenderMorale} ({result}). Defender winning.");
             }
 
             var player = Game.GetPlayer(playerIndex);
@@ -4251,7 +4251,7 @@ namespace Freeserf
 
             if (flag == destination)
             {
-                Log.Verbose.Write("serf", " dest found: " + destination.SearchDirection);
+                Log.Verbose.Write(ErrorSystemType.Serf, " dest found: " + destination.SearchDirection);
                 serf.ChangeDirection(destination.SearchDirection, false);
                 return true;
             }
@@ -4342,7 +4342,7 @@ namespace Freeserf
 
                 if (flag == null)
                 {
-                    throw new ExceptionFreeserf(Game, "serf", "Flag expected as destination of walking serf.");
+                    throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Flag expected as destination of walking serf.");
                 }
 
                 var direction = (Direction)s.Walking.Direction1;
@@ -4350,7 +4350,7 @@ namespace Freeserf
 
                 if (otherFlag == null)
                 {
-                    throw new ExceptionFreeserf(Game, "serf", "Path has no other end flag in selected dir.");
+                    throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Path has no other end flag in selected dir.");
                 }
 
                 var otherDirection = flag.GetOtherEndDirection(direction);
@@ -5102,7 +5102,7 @@ namespace Freeserf
 
                             if (inventory == null)
                             {
-                                throw new ExceptionFreeserf(Game, "serf", "Not inventory.");
+                                throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Not inventory.");
                             }
 
                             inventory.SerfComeBack();
@@ -5232,7 +5232,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    Log.Debug.Write("serf", "unhandled next state when leaving building.");
+                    Log.Debug.Write(ErrorSystemType.Serf, "unhandled next state when leaving building.");
                 }
             }
         }
@@ -5291,7 +5291,7 @@ namespace Freeserf
 
                 if (s.Digging.Substate < 0)
                 {
-                    Log.Verbose.Write("serf", "substate -1: wait for serf.");
+                    Log.Verbose.Write(ErrorSystemType.Serf, "substate -1: wait for serf.");
 
                     int digPosition = s.Digging.DigPosition;
                     var direction = (digPosition == 0) ? Direction.Up : (Direction)(6 - digPosition);
@@ -5354,7 +5354,7 @@ namespace Freeserf
                     // 34CD6: Change height, head back to center 
                     int height = (int)map.GetHeight(Position);
                     height += ((s.Digging.HeightIndex & 1) != 0) ? -1 : 1;
-                    Log.Verbose.Write("serf", "substate 1: change height " + (((s.Digging.HeightIndex & 1) != 0) ? "down." : "up."));
+                    Log.Verbose.Write(ErrorSystemType.Serf, "substate 1: change height " + (((s.Digging.HeightIndex & 1) != 0) ? "down." : "up."));
                     map.SetHeight(Position, (uint)height);
 
                     if (s.Digging.DigPosition == 0)
@@ -5369,7 +5369,7 @@ namespace Freeserf
                 }
                 else if (s.Digging.Substate > 1)
                 {
-                    Log.Verbose.Write("serf", "substate 2: dig.");
+                    Log.Verbose.Write(ErrorSystemType.Serf, "substate 2: dig.");
                     // 34E89 
                     Animation = 88 - (s.Digging.HeightIndex & 1);
                     Counter += 383;
@@ -5377,7 +5377,7 @@ namespace Freeserf
                 else
                 {
                     // 34CDC: Looking for a place to dig 
-                    Log.Verbose.Write("serf", $"substate 0: looking for place to dig {s.Digging.DigPosition}, {s.Digging.HeightIndex}");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"substate 0: looking for place to dig {s.Digging.DigPosition}, {s.Digging.HeightIndex}");
 
                     do
                     {
@@ -5412,7 +5412,7 @@ namespace Freeserf
                                     continue;
                                 }
 
-                                Log.Verbose.Write("serf", $"  found at: {s.Digging.DigPosition}.");
+                                Log.Verbose.Write(ErrorSystemType.Serf, $"  found at: {s.Digging.DigPosition}.");
 
                                 // Digging spot found 
                                 if (map.HasSerf(newPosition))
@@ -5703,7 +5703,7 @@ namespace Freeserf
 
             if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Resource - 1), s.MoveResourceOut.ResourceDestination))
             {
-                throw new ExceptionFreeserf(Game, "serf", "Failed to drop resource.");
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Failed to drop resource.");
             }
 
             SetState(State.ReadyToEnter);
@@ -6122,13 +6122,13 @@ namespace Freeserf
             // A suitable direction has been found; walk.
             if (direction < Direction.Right)
             {
-                throw new ExceptionFreeserf(Game, "serf", "Wrong direction.");
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Wrong direction.");
             }
 
             int distanceX = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
             int distanceY = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-            Log.Verbose.Write("serf", $"serf {Index}: free walking: dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
+            Log.Verbose.Write(ErrorSystemType.Serf, $"serf {Index}: free walking: dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
 
             s.FreeWalking.DistanceX -= distanceX;
             s.FreeWalking.DistanceY -= distanceY;
@@ -6176,7 +6176,7 @@ namespace Freeserf
                 int distanceX = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
                 int distanceY = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-                Log.Verbose.Write("serf", $"free walking (switch): dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"free walking (switch): dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
 
                 s.FreeWalking.DistanceX -= distanceX;
                 s.FreeWalking.DistanceY -= distanceY;
@@ -6589,7 +6589,7 @@ namespace Freeserf
                                         // TODO ?
                                         // int dir = otherSerf.s.Walking.Direction;
                                         // if (dir < 0) dir += 6;
-                                        Log.Debug.Write("serf", $"TODO remove {otherSerf.Index} from path");
+                                        Log.Debug.Write(ErrorSystemType.Serf, $"TODO remove {otherSerf.Index} from path");
                                     }
 
                                     otherSerf.SetLostState();
@@ -6718,7 +6718,7 @@ namespace Freeserf
                     s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
                     s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning logging: tree found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning logging: tree found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -6753,7 +6753,7 @@ namespace Freeserf
                     s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
                     s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning planting: free space found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning planting: free space found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -6820,7 +6820,7 @@ namespace Freeserf
                     s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
                     s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.StoneCutterFreeWalking;
-                    Log.Verbose.Write("serf", $"planning stonecutting: stone found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning stonecutting: stone found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -7168,7 +7168,7 @@ namespace Freeserf
             {
                 var building = GetBuildingAtPosition();
 
-                Log.Verbose.Write("serf", $"mining substate: {s.Mining.Substate}.");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"mining substate: {s.Mining.Substate}.");
 
                 switch (s.Mining.Substate)
                 {
@@ -7398,7 +7398,7 @@ namespace Freeserf
                     s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
                     s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning fishing: lake found, dist {s.LeavingBuilding.FieldB},{s.LeavingBuilding.Destination}");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning fishing: lake found, dist {s.LeavingBuilding.FieldB},{s.LeavingBuilding.Destination}");
 
                     return;
                 }
@@ -7523,7 +7523,7 @@ namespace Freeserf
                     s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
                     s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
                     s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write("serf", $"planning farming: field spot found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning farming: field spot found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -8058,7 +8058,7 @@ namespace Freeserf
                         s.FreeWalking.NegDistance2 = -Map.GetSpiralPattern()[2 * distance + 1];
                         s.FreeWalking.Flags = 0;
                         state.Tick = Game.Tick;
-                        Log.Verbose.Write("serf", $"looking for geo spot: found, dist {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}.");
+                        Log.Verbose.Write(ErrorSystemType.Serf, $"looking for geo spot: found, dist {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}.");
 
                         return;
                     }

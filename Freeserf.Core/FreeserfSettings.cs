@@ -24,7 +24,6 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using Freeserf.Data;
 
 namespace Freeserf
 {
@@ -70,7 +69,7 @@ namespace Freeserf
                 case 8:
                     break;
                 default:
-                    throw new ExceptionFreeserf("data", "Data type");
+                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Data type");
             }
 
             return (T)Convert.ChangeType(ul, typeof(T));

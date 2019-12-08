@@ -39,7 +39,7 @@ namespace Freeserf.Renderer.OpenTK.Audio
             musicPlayer = null;
             soundPlayer = null;
 
-            Log.Info.Write("audio", "No audio device available. Sound is deactivated.");
+            Log.Info.Write(ErrorSystemType.Audio, "No audio device available. Sound is deactivated.");
         }
 
         public override Freeserf.Audio.Audio.Player GetMusicPlayer()

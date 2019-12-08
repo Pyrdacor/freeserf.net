@@ -544,7 +544,7 @@ namespace Freeserf.Data
             {
                 if (mask.Width > width)
                 {
-                    throw new ExceptionFreeserf("data", "Failed to apply mask");
+                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Failed to apply mask");
                 }
 
                 SpriteAmiga masked = new SpriteAmiga(mask.Width, mask.Height);
@@ -703,11 +703,11 @@ namespace Freeserf.Data
             {
                 var cp = path + '/' + fileName;
 
-                Log.Info.Write("data", $"Looking for game data in '{cp}'...");
+                Log.Info.Write(ErrorSystemType.Data, $"Looking for game data in '{cp}'...");
 
                 if (!CheckFile(cp))
                 {
-                    Log.Info.Write("data", $"File '{cp}' not found.");
+                    Log.Info.Write(ErrorSystemType.Data, $"File '{cp}' not found.");
 
                     found = false;
                     break;
@@ -718,18 +718,18 @@ namespace Freeserf.Data
             {
                 var adfFiles = Directory.GetFiles(path, "*.adf");
 
-                Log.Info.Write("data", $"Looking for ADF files in '{path}'...");
+                Log.Info.Write(ErrorSystemType.Data, $"Looking for ADF files in '{path}'...");
 
                 if (adfFiles.Length == 0)
                 {
-                    Log.Info.Write("data", "No ADF files found.");
+                    Log.Info.Write(ErrorSystemType.Data, "No ADF files found.");
 
                     return false;
                 }
 
                 try
                 {
-                    Log.Info.Write("data", "ADF files found. Trying to extract them...");
+                    Log.Info.Write(ErrorSystemType.Data, "ADF files found. Trying to extract them...");
 
                     ADFReader.ExtractADFs(path, adfFiles);
 
@@ -737,11 +737,11 @@ namespace Freeserf.Data
                     {
                         var cp = path + '/' + fileName;
 
-                        Log.Info.Write("data", $"Looking for game data again in '{cp}'...");
+                        Log.Info.Write(ErrorSystemType.Data, $"Looking for game data again in '{cp}'...");
 
                         if (!CheckFile(cp))
                         {
-                            Log.Info.Write("data", $"File '{cp}' not found.");
+                            Log.Info.Write(ErrorSystemType.Data, $"File '{cp}' not found.");
 
                             return false;
                         }
@@ -749,7 +749,7 @@ namespace Freeserf.Data
                 }
                 catch (Exception ex)
                 {
-                    Log.Debug.Write("data", "Exception while extracting ADF files: " + ex.Message);
+                    Log.Debug.Write(ErrorSystemType.Data, "Exception while extracting ADF files: " + ex.Message);
 
                     return false;
                 }
@@ -766,11 +766,11 @@ namespace Freeserf.Data
                 gfxFast = Decode(gfxFast);
                 gfxFast = Unpack(gfxFast);
 
-                Log.Debug.Write("data", $"Data file 'gfxfast' loaded (size = {gfxFast.Size})");
+                Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxfast' loaded (size = {gfxFast.Size})");
             }
             catch (Exception)
             {
-                Log.Debug.Write("data", "Failed to load 'gfxfast'");
+                Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxfast'");
                 return false;
             }
 
@@ -779,11 +779,11 @@ namespace Freeserf.Data
                 gfxChip = new Buffer(path + "/gfxchip", Endian.Endianess.Big);
                 gfxChip = Decode(gfxChip);
                 gfxChip = Unpack(gfxChip);
-                Log.Debug.Write("data", $"Data file 'gfxchip' loaded (size = {gfxChip.Size})");
+                Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxchip' loaded (size = {gfxChip.Size})");
             }
             catch (Exception)
             {
-                Log.Debug.Write("data", "Failed to load 'gfxchip'");
+                Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxchip'");
                 return false;
             }
 
@@ -795,7 +795,7 @@ namespace Freeserf.Data
             }
             catch (Exception)
             {
-                Log.Debug.Write("data", "Failed to load 'gfxheader'");
+                Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxheader'");
                 return false;
             }
 
@@ -852,7 +852,7 @@ namespace Freeserf.Data
             }
             catch (Exception)
             {
-                Log.Warn.Write("data", "Failed to load 'sounds'");
+                Log.Warn.Write(ErrorSystemType.Data, "Failed to load 'sounds'");
                 sound = null;
             }
 
@@ -870,11 +870,11 @@ namespace Freeserf.Data
                     pictures[i] = Unpack(pictures[i]);
                 }
 
-                Log.Debug.Write("data", $"Data file 'gfxpics' loaded (size = {gfxPics.Size})");
+                Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxpics' loaded (size = {gfxPics.Size})");
             }
             catch (Exception)
             {
-                Log.Warn.Write("data", "Failed to load 'gfxpics'");
+                Log.Warn.Write(ErrorSystemType.Data, "Failed to load 'gfxpics'");
             }
 
             loaded = LoadAnimationTable(dataPointers[1].GetSubBuffer(0, 30528));
@@ -1279,7 +1279,7 @@ namespace Freeserf.Data
 
             if (data == null)
             {
-                Log.Error.Write("data", $"Sound sample with index {index} not present.");
+                Log.Error.Write(ErrorSystemType.Data, $"Sound sample with index {index} not present.");
                 return null;
             }
 
@@ -1303,7 +1303,7 @@ namespace Freeserf.Data
             }
             catch
             {
-                Log.Warn.Write("data", "Failed to load 'music'");
+                Log.Warn.Write(ErrorSystemType.Data, "Failed to load 'music'");
                 return null;
             }
 

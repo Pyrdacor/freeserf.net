@@ -396,18 +396,18 @@ namespace Freeserf.Render
         {
             if (((left - height) < -4) || ((left - height) > 4))
             {
-                throw new ExceptionFreeserf("render", "Failed to draw triangle up (1).");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "Failed to draw triangle up (1).");
             }
             if (((right - height) < -4) || ((right - height) > 4))
             {
-                throw new ExceptionFreeserf("render", "Failed to draw triangle up (2).");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "Failed to draw triangle up (2).");
             }
 
             int mask = 4 + height - left + 9 * (4 + height - right);
 
             if (TileMaskUp[mask] < 0)
             {
-                throw new ExceptionFreeserf("render", "Failed to draw triangle up (3).");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "Failed to draw triangle up (3).");
             }
 
             var terrain = map.TypeUp(map.MoveUp(position));
@@ -423,18 +423,18 @@ namespace Freeserf.Render
         {
             if (((left - height) < -4) || ((left - height) > 4))
             {
-                throw new ExceptionFreeserf("render", "Failed to draw triangle down (1).");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "Failed to draw triangle down (1).");
             }
             if (((right - height) < -4) || ((right - height) > 4))
             {
-                throw new ExceptionFreeserf("render", "Failed to draw triangle down (2).");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "Failed to draw triangle down (2).");
             }
 
             int mask = 4 + left - height + 9 * (4 + right - height);
 
             if (TileMaskDown[mask] < 0)
             {
-                throw new ExceptionFreeserf("render", "Failed to draw triangle down (3).");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "Failed to draw triangle down (3).");
             }
 
             var terrain = map.TypeDown(map.MoveUpLeft(position));

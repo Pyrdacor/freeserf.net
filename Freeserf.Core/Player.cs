@@ -1024,7 +1024,7 @@ namespace Freeserf
 
             if (state.SerfCounts[(int)type] == 0)
             {
-                throw new ExceptionFreeserf(Game, "player", "Failed to decrease serf count");
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Player, "Failed to decrease serf count");
             }
 
             --state.SerfCounts[(int)type];
@@ -1295,7 +1295,7 @@ namespace Freeserf
             }
             catch (Exception ex)
             {
-                throw new ExceptionFreeserf(Game, "player", ex);
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Player, ex);
             }
         }
 

@@ -87,7 +87,7 @@ namespace Freeserf.Renderer.OpenTK
             context = new Context(VirtualScreen.Size.Width, VirtualScreen.Size.Height);
 
             if (dataSource == null || !dataSource.IsLoaded)
-                throw new ExceptionFreeserf("data", "Given data source is not useable.");
+                throw new ExceptionFreeserf(ErrorSystemType.Data, "Given data source is not useable.");
 
             DataSource = dataSource;
 
@@ -149,7 +149,7 @@ namespace Freeserf.Renderer.OpenTK
                 }
                 catch (Exception ex)
                 {
-                    throw new ExceptionFreeserf("render", $"Unable to create layer '{layer.ToString()}': {ex.Message}");
+                    throw new ExceptionFreeserf(ErrorSystemType.Render, $"Unable to create layer '{layer.ToString()}': {ex.Message}");
                 }
             }
 

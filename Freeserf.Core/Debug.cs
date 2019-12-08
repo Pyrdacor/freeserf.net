@@ -26,6 +26,27 @@ using System.Runtime.CompilerServices;
 
 namespace Freeserf
 {
+    public enum ErrorSystemType
+    {
+        None,
+        Config,
+        Data,
+        Game,
+        Map,
+        Render,
+        Textures,
+        Savegame,
+        Building,
+        Flag,
+        Serf,
+        Player,
+        Inventory,
+        AI,
+        UI,
+        Audio,
+        Application
+    }
+
     public class ExceptionFreeserf : Exception
     {
         public string Description
@@ -34,7 +55,7 @@ namespace Freeserf
             protected set;
         }
 
-        public virtual string System { get; private set; } = null;
+        public virtual ErrorSystemType System { get; private set; } = ErrorSystemType.None;
 
         public string SourceFile { get; }
         public int SourceLineNumber { get; }
@@ -48,7 +69,7 @@ namespace Freeserf
             SourceLineNumber = lineNumber;
         }
 
-        public ExceptionFreeserf(string system, string description,
+        public ExceptionFreeserf(ErrorSystemType system, string description,
             [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string file = "")
         {
             System = system;
@@ -66,7 +87,7 @@ namespace Freeserf
             Game = game;
         }
 
-        public ExceptionFreeserf(Game game, string system, string description,
+        public ExceptionFreeserf(Game game, ErrorSystemType system, string description,
             [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string file = "")
         {
             System = system;
@@ -89,7 +110,7 @@ namespace Freeserf
             Game = game;
         }
 
-        public ExceptionFreeserf(Game game, string system, Exception inner, [CallerLineNumber] int lineNumber = 0,
+        public ExceptionFreeserf(Game game, ErrorSystemType system, Exception inner, [CallerLineNumber] int lineNumber = 0,
             [CallerFilePath] string file = "")
             : base(inner.Message, inner)
         {
@@ -114,7 +135,7 @@ namespace Freeserf
             return Message;
         }
 
-        public override string Message => System == null ? Description : "[" + System + "] " + Description;
+        public override string Message => System == ErrorSystemType.None ? Description : "[" + System.ToString() + "] " + Description;
 
         public override string StackTrace => InnerException == null ? base.StackTrace : InnerException.StackTrace;
     }
@@ -126,7 +147,7 @@ namespace Freeserf
         public static void NotReached([CallerLineNumber] int lineNumber = 0,
             [CallerFilePath] string file = "")
         {
-            Log.Error.Write("debug", "NOT_REACHED at line " + lineNumber + " of " + Path.GetFileName(file) + ".");
+            Log.Error.Write(ErrorSystemType.Application, $"NOT_REACHED at line {lineNumber} of {Path.GetFileName(file)}.");
             Environment.Exit(6);
         }
 #else

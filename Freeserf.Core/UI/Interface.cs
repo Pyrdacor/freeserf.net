@@ -267,7 +267,7 @@ namespace Freeserf.UI
                     if (game.Map == null)
                     {
                         SetGame(null);
-                        Log.Debug.Write("game", "Internal error. Map is null.");
+                        Log.Debug.Write(ErrorSystemType.Game, "Internal error. Map is null.");
                         return;
                     }
 
@@ -1403,7 +1403,7 @@ namespace Freeserf.UI
                         {
                             uint index = Game.GetNextPlayer(player).Index;
                             SetPlayer(index);
-                            Log.Info.Write("main", "Switched to player #" + index);
+                            Log.Info.Write(ErrorSystemType.Game, "Switched to player #" + index);
                         }
 
                         break;

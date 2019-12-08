@@ -34,7 +34,7 @@ namespace Freeserf.Audio
 
         public virtual string Platform => "Abstract";
 
-        public override string System => "audio";
+        public override ErrorSystemType System => ErrorSystemType.Audio;
 
         public override string Message => "[" + System + ":" + Platform + "]" + Description;
     }

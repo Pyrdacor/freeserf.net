@@ -266,12 +266,12 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             var music = dataSource.GetMusic((uint)trackID);
 
             if (music == null)
-                throw new ExceptionFreeserf("data", $"Error loading music track {trackID}");
+                throw new ExceptionFreeserf(ErrorSystemType.Data, $"Error loading music track {trackID}");
 
             if (DataSource.DosMusic(dataSource))
                 return new XMI(music);
 
-            throw new ExceptionFreeserf("data", $"Only DOS data uses MIDI music");
+            throw new ExceptionFreeserf(ErrorSystemType.Data, $"Only DOS data uses MIDI music");
         }
 
         public override void Stop()
@@ -488,14 +488,14 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
             internal static bool ResetPlaybackDevice(IntPtr handle)
             {
-                Log.Verbose.Write("audio", "MIDI Reset");
+                Log.Verbose.Write(ErrorSystemType.Audio, "MIDI Reset");
 
                 return midiOutReset(handle) == 0;
             }
 
             internal static bool SendPlaybackDeviceMessage(IntPtr handle, uint message)
             {
-                Log.Verbose.Write("audio", string.Format("MIDI Message {0:x2} {1:x2} {2:x2}", message & 0xff, (message >> 8) & 0xff, (message >> 16) & 0xff));
+                Log.Verbose.Write(ErrorSystemType.Audio, string.Format("MIDI Message {0:x2} {1:x2} {2:x2}", message & 0xff, (message >> 8) & 0xff, (message >> 16) & 0xff));
 
                 return midiOutShortMsg(handle, message) == 0;
             }

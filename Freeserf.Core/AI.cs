@@ -951,7 +951,7 @@ namespace Freeserf
                         return new AIStates.AIStateDestroyUselessBuildings((uint)param);
             }
 
-            throw new ExceptionFreeserf(player.Game, "ai", "Unknown AI state");
+            throw new ExceptionFreeserf(player.Game, ErrorSystemType.AI, "Unknown AI state");
         }
 
         /// <summary>

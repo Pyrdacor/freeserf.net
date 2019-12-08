@@ -299,7 +299,7 @@ namespace Freeserf.Render
                 return 43u;
 
             return 42u; // Invalid characters are printed as '?'
-            //throw new ExceptionFreeserf("render", "Unsupported character: " + encoding.GetString(new byte[1] { ch }));
+            //throw new ExceptionFreeserf(ErrorSystemType.Render, "Unsupported character: " + encoding.GetString(new byte[1] { ch }));
         }
 
         void SetTextToSprites(List<SpriteInfo> sprites, string text, bool useSpecialDigits)

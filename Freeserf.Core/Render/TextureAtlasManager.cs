@@ -39,7 +39,7 @@ namespace Freeserf.Render
         public uint GetGuiTypeOffset(Data.Resource type)
         {
             if (!guiResourceOffsets.ContainsKey(type))
-                throw new ExceptionFreeserf("textures", "The given resource type is not part of the gui.");
+                throw new ExceptionFreeserf(ErrorSystemType.Textures, "The given resource type is not part of the gui.");
 
             return guiResourceOffsets[type];
         }
@@ -47,13 +47,13 @@ namespace Freeserf.Render
         public void AddSprite(Layer layer, uint spriteIndex, Sprite sprite)
         {
             if (factory == null)
-                throw new ExceptionFreeserf("textures", "No TextureAtlasBuilderFactory was registered.");
+                throw new ExceptionFreeserf(ErrorSystemType.Textures, "No TextureAtlasBuilderFactory was registered.");
 
             if (layer == Layer.GuiBuildings)
-                throw new ExceptionFreeserf("textures", "Adding sprites for layer GuiBuildings is not allowed.");
+                throw new ExceptionFreeserf(ErrorSystemType.Textures, "Adding sprites for layer GuiBuildings is not allowed.");
 
             if (atlas.ContainsKey(layer))
-                throw new ExceptionFreeserf("textures", "Texture atlas already created.");
+                throw new ExceptionFreeserf(ErrorSystemType.Textures, "Texture atlas already created.");
 
             if (!atlasBuilders.ContainsKey(layer))
                 atlasBuilders.Add(layer, factory.Create());

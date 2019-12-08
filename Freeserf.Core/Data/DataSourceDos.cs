@@ -35,14 +35,14 @@ namespace Freeserf.Data
         {
             if (buffer.Size < 8)
             {
-                throw new ExceptionFreeserf("data", "Data is not a TPWM archive");
+                throw new ExceptionFreeserf(ErrorSystemType.Data, "Data is not a TPWM archive");
             }
 
             Buffer id = buffer.Pop(4);
 
             if (id.ToString(4) != "TPWM")
             {
-                throw new ExceptionFreeserf("data", "Data is not a TPWM archive");
+                throw new ExceptionFreeserf(ErrorSystemType.Data, "Data is not a TPWM archive");
             }
         }
 
@@ -80,12 +80,12 @@ namespace Freeserf.Data
             }
             catch
             {
-                throw new ExceptionFreeserf("data", "TPWM source data corrupted");
+                throw new ExceptionFreeserf(ErrorSystemType.Data, "TPWM source data corrupted");
             }
 
             if (result.Size != resSize)
             {
-                throw new ExceptionFreeserf("data", "TPWM source data corrupted");
+                throw new ExceptionFreeserf(ErrorSystemType.Data, "TPWM source data corrupted");
             }
 
             return result;
@@ -183,7 +183,7 @@ namespace Freeserf.Data
             {
                 if (data.Size < 10)
                 {
-                    throw new ExceptionFreeserf("data", "Failed to extract DOS sprite");
+                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Failed to extract DOS sprite");
                 }
 
                 deltaX = data.Pop<sbyte>();
@@ -204,7 +204,7 @@ namespace Freeserf.Data
 
                 if (size != (width * height + 10))
                 {
-                    throw new ExceptionFreeserf("data", "Failed to extract DOS solid sprite");
+                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Failed to extract DOS solid sprite");
                 }
 
                 MutableBuffer result = new MutableBuffer(Endian.Endianess.Big);
@@ -335,7 +335,7 @@ namespace Freeserf.Data
             {
                 string filePath = path + '/' + fileName;
 
-                Log.Info.Write("data", $"Looking for game data in '{filePath}'...");
+                Log.Info.Write(ErrorSystemType.Data, $"Looking for game data in '{filePath}'...");
 
                 if (CheckFile(filePath))
                 {
@@ -366,11 +366,11 @@ namespace Freeserf.Data
             {
                 UnpackerTPWM unpacker = new UnpackerTPWM(spae);
                 spae = unpacker.Convert();
-                Log.Verbose.Write("data", "Data file is compressed");
+                Log.Verbose.Write(ErrorSystemType.Data, "Data file is compressed");
             }
             catch
             {
-                Log.Verbose.Write("data", "Data file is not compressed");
+                Log.Verbose.Write(ErrorSystemType.Data, "Data file is not compressed");
             }
 
             // Read the number of entries in the index table.
@@ -396,7 +396,7 @@ namespace Freeserf.Data
 
             if (size != anim.Pop<uint>())
             {
-                Log.Error.Write("data", "Could not extract animation table.");
+                Log.Error.Write(ErrorSystemType.Data, "Could not extract animation table.");
                 return false;
             }
 
@@ -537,7 +537,7 @@ namespace Freeserf.Data
 
             if (data == null)
             {
-                Log.Error.Write("data", "Could not extract SFX clip: #" + index);
+                Log.Error.Write(ErrorSystemType.Data, $"Could not extract SFX clip: #{index}.");
                 return null;
             }
 
@@ -550,7 +550,7 @@ namespace Freeserf.Data
 
             if (data == null)
             {
-                Log.Error.Write("data", "Could not extract XMI clip: #" + index);
+                Log.Error.Write(ErrorSystemType.Data, $"Could not extract XMI clip: #{index}.");
                 return null;
             }
 

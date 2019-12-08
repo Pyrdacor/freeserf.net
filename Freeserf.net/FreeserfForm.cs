@@ -567,7 +567,7 @@ namespace Freeserf
             if (FrameTimer != null && FrameTimer.Enabled)
                 FrameTimer.Stop();
 
-            Log.Error.Write(source, exception.Message);
+            Log.Error.Write(ErrorSystemType.Application, $"{source}: {exception.Message}");
 
             SetFullscreen(false, false);
 

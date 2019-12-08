@@ -704,7 +704,7 @@ namespace Freeserf
             {
                 if (state.Stock[inStock].Requested == 0)
                 {
-                    throw new ExceptionFreeserf(Game, "building", "Failed to cancel unrequested resource delivery.");
+                    throw new ExceptionFreeserf(Game, ErrorSystemType.Building, "Failed to cancel unrequested resource delivery.");
                 }
 
                 --state.Stock[inStock].Requested;
@@ -713,7 +713,7 @@ namespace Freeserf
             {
                 if (!HasInventory())
                 {
-                    throw new ExceptionFreeserf(Game, "building", "Not inventory");
+                    throw new ExceptionFreeserf(Game, ErrorSystemType.Building, "Not inventory");
                 }
             }
         }
@@ -940,7 +940,7 @@ namespace Freeserf
                             else
                             {
                                 // We did not request the resource at all
-                                Log.Debug.Write("building", $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
+                                Log.Debug.Write(ErrorSystemType.Building, $"Delivered more resources than requested. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}");
                                 return false;
                             }
                         }
@@ -955,7 +955,7 @@ namespace Freeserf
 
                 // A resource was delivered that is not meant for this building.
                 // This should not happen but for safety reasons we log it and deny delivery.
-                Log.Debug.Write("building", $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone.ToString()}");
+                Log.Debug.Write(ErrorSystemType.Building, $"Delivered unexpected resource. Index {Index}, Type {BuildingType.ToString()}, Resource {resource.ToString()}, Finished {IsDone.ToString()}");
                 return false;
             }
         }
@@ -1837,7 +1837,7 @@ namespace Freeserf
 
                     if (serf == null)
                     {
-                        throw new ExceptionFreeserf(Game, "building", "Index of nonexistent serf in the queue.");
+                        throw new ExceptionFreeserf(Game, ErrorSystemType.Building, "Index of nonexistent serf in the queue.");
                     }
 
                     if (bestKnight == null || serf.SerfType < bestKnight.SerfType)
@@ -2020,7 +2020,7 @@ namespace Freeserf
 
                     if (serf == null)
                     {
-                        throw new ExceptionFreeserf(Game, "building", "Index of nonexistent serf in the queue.");
+                        throw new ExceptionFreeserf(Game, ErrorSystemType.Building, "Index of nonexistent serf in the queue.");
                     }
 
                     if (leavingSerf == null || serf.SerfType < leavingSerf.SerfType)

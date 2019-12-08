@@ -38,7 +38,7 @@ namespace Freeserf
         {
             if (!File.Exists(path))
             {
-                Log.Error.Write("config", $"Failed to open config file '{path}'");
+                Log.Error.Write(ErrorSystemType.Config, $"Failed to open config file '{path}'.");
                 return false;
             }
 
@@ -61,7 +61,7 @@ namespace Freeserf
             }
             catch
             {
-                Log.Error.Write("config", $"Failed to open config file '{path}'");
+                Log.Error.Write(ErrorSystemType.Config, $"Failed to open config file '{path}'.");
                 return false;
             }
         }
@@ -93,7 +93,7 @@ namespace Freeserf
 
                     if (end == -1)
                     {
-                        Log.Error.Write("config", $"Failed to parse config file ({lineNumber})");
+                        Log.Error.Write(ErrorSystemType.Config, $"Failed to parse config file ({lineNumber})");
                         return false;
                     }
 
@@ -101,7 +101,7 @@ namespace Freeserf
 
                     if (string.IsNullOrWhiteSpace(name))
                     {
-                        Log.Error.Write("config", $"Failed to parse config file ({lineNumber})");
+                        Log.Error.Write(ErrorSystemType.Config, $"Failed to parse config file ({lineNumber})");
                         return false;
                     }
 

@@ -56,7 +56,7 @@ namespace Freeserf
         public byte ReadByte()
         {
             if (!HasDataLeft(1))
-                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
+                throw new SavegameDataParseException("Invalid read past end.");
 
             return reader.ReadByte();
         }
@@ -64,7 +64,7 @@ namespace Freeserf
         public ushort ReadWord()
         {
             if (!HasDataLeft(2))
-                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
+                throw new SavegameDataParseException("Invalid read past end.");
 
             return reader.ReadUInt16();
         }
@@ -72,7 +72,7 @@ namespace Freeserf
         public uint ReadDWord()
         {
             if (!HasDataLeft(4))
-                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
+                throw new SavegameDataParseException("Invalid read past end.");
 
             return reader.ReadUInt32();
         }
@@ -91,7 +91,7 @@ namespace Freeserf
         {
             if (!HasDataLeft(size))
             {
-                throw new ExceptionFreeserf("savegame", "Invalid extract past end.");
+                throw new SavegameDataParseException("Invalid extract past end.");
             }
 
             var subStream = new SubStream(this.reader.BaseStream, size);
@@ -105,7 +105,7 @@ namespace Freeserf
         public byte[] Read(uint size)
         {
             if (!HasDataLeft(size))
-                throw new ExceptionFreeserf("savegame", "Invalid read past end.");
+                throw new SavegameDataParseException("Invalid read past end.");
 
             return reader.ReadBytes((int)size);
         }
@@ -278,7 +278,7 @@ namespace Freeserf
                 }
                 catch
                 {
-                    throw new ExceptionFreeserf("savegame", "Failed to create folder");
+                    throw new ExceptionFreeserf(ErrorSystemType.Savegame, "Failed to create folder");
                 }
             }
         }
@@ -353,7 +353,7 @@ namespace Freeserf
                 if (!File.Exists(path))
                 {
                     LastOperationResult = LastOperationStatus.LoadFail;
-                    Log.Error.Write("savegame", $"Unable to open save game file: '{path}'");
+                    Log.Error.Write(ErrorSystemType.Savegame, $"Unable to open save game file: '{path}'");
                     return false;
                 }
 
@@ -369,8 +369,8 @@ namespace Freeserf
                     {
                         readerText.Close();
 
-                        Log.Warn.Write("savegame", "Unable to load save game: " + ex1.Message);
-                        Log.Warn.Write("savegame", "Trying compatibility mode...");
+                        Log.Warn.Write(ErrorSystemType.Savegame, "Unable to load save game: " + ex1.Message);
+                        Log.Warn.Write(ErrorSystemType.Savegame, "Trying compatibility mode...");
 
                         stream.Position = 0;
 
@@ -381,7 +381,7 @@ namespace Freeserf
                         catch (ExceptionFreeserf ex2)
                         {
                             LastOperationResult = LastOperationStatus.LoadFail;
-                            Log.Error.Write("savegame", "Failed to load save game: " + ex2.Message);
+                            Log.Error.Write(ErrorSystemType.Savegame, "Failed to load save game: " + ex2.Message);
                             return false;
                         }
                     }
@@ -403,7 +403,7 @@ namespace Freeserf
             catch (Exception ex)
             {
                 LastOperationResult = LastOperationStatus.LoadFail;
-                Log.Error.Write("savegame", "Failed to load save game: " + ex.Message);
+                Log.Error.Write(ErrorSystemType.Savegame, "Failed to load save game: " + ex.Message);
                 return false;
             }
         }
@@ -620,7 +620,7 @@ namespace Freeserf
         {
             if (!values.ContainsKey(name))
             {
-                throw new ExceptionFreeserf("savegame", "Failed to load value: " + name);
+                throw new ExceptionFreeserf(ErrorSystemType.Savegame, "Failed to load value: " + name);
             }
 
             return values[name];
@@ -628,7 +628,7 @@ namespace Freeserf
 
         public override Readers GetSections(string name)
         {
-            throw new ExceptionFreeserf("savegame", "Recursive sections are not allowed");
+            throw new ExceptionFreeserf(ErrorSystemType.Savegame, "Recursive sections are not allowed");
         }
 
         public override bool HasValue(string name)
@@ -674,7 +674,7 @@ namespace Freeserf
         {
             if (!values.ContainsKey(name))
             {
-                throw new ExceptionFreeserf("savegame", "Failed to load value: " + name);
+                throw new ExceptionFreeserf(ErrorSystemType.Savegame, "Failed to load value: " + name);
             }
 
             return values[name];

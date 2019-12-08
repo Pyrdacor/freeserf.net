@@ -165,7 +165,7 @@ namespace Freeserf.Audio
 
                 tempo = (uint)high << 16 | (uint)mid << 8 | low;
 
-                Log.Verbose.Write("audio", $"XMI Tempo Changed: {tempo} microseconds per quarter note.");
+                Log.Verbose.Write(ErrorSystemType.Audio, $"XMI Tempo Changed: {tempo} microseconds per quarter note.");
             }
             else if (type == 0x58)
             {
@@ -177,7 +177,7 @@ namespace Freeserf.Audio
                 int numMidiClocks = data.Pop<byte>();
                 int num32InQuarterNote = data.Pop<byte>();
 
-                Log.Verbose.Write("audio", $"XMI Time Signature: {numerator}/{denominator} ({numMidiClocks} MIDI Clocks, {num32InQuarterNote} 32nd-notes in quarter note.");
+                Log.Verbose.Write(ErrorSystemType.Audio, $"XMI Time Signature: {numerator}/{denominator} ({numMidiClocks} MIDI Clocks, {num32InQuarterNote} 32nd-notes in quarter note.");
             }
             else
             {

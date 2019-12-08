@@ -46,7 +46,7 @@ namespace Freeserf.Renderer.OpenTK
 
             if (firstFree == int.MaxValue)
             {
-                throw new ExceptionFreeserf("render", "No free index available.");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "No free index available.");
             }
 
             return firstFree++;

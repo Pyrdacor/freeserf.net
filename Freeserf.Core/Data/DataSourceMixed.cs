@@ -59,11 +59,11 @@ namespace Freeserf.Data
             {
                 case DataUsage.ForceAmiga:
                     if (!amigaOk)
-                        throw new ExceptionFreeserf("data", "Amiga music data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga music data not available.");
                     return amiga.GetMusic(index);
                 case DataUsage.ForceDos:
                     if (!dosOk)
-                        throw new ExceptionFreeserf("data", "DOS music data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS music data not available.");
                     return dos.GetMusic(index);
                 case DataUsage.PreferAmiga:
                 default:
@@ -85,11 +85,11 @@ namespace Freeserf.Data
             {
                 case DataUsage.ForceAmiga:
                     if (!amigaOk)
-                        throw new ExceptionFreeserf("data", "Amiga sound data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga sound data not available.");
                     return amiga.GetSound(index);
                 case DataUsage.ForceDos:
                     if (!dosOk)
-                        throw new ExceptionFreeserf("data", "DOS sound data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS sound data not available.");
                     return dos.GetSound(index);
                 case DataUsage.PreferAmiga:
                     if (amigaOk)
@@ -111,11 +111,11 @@ namespace Freeserf.Data
             {
                 case DataUsage.ForceAmiga:
                     if (!amigaOk)
-                        throw new ExceptionFreeserf("data", "Amiga graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetSpriteParts(resource, index);
                 case DataUsage.ForceDos:
                     if (!dosOk)
-                        throw new ExceptionFreeserf("data", "DOS graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetSpriteParts(resource, index);
                 case DataUsage.PreferAmiga:
                     if (amigaOk)
@@ -137,11 +137,11 @@ namespace Freeserf.Data
             {
                 case DataUsage.ForceAmiga:
                     if (!amigaOk)
-                        throw new ExceptionFreeserf("data", "Amiga graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetSprite(resource, index, color);
                 case DataUsage.ForceDos:
                     if (!dosOk)
-                        throw new ExceptionFreeserf("data", "DOS graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetSprite(resource, index, color);
                 case DataUsage.PreferAmiga:
                     if (amigaOk)
@@ -163,11 +163,11 @@ namespace Freeserf.Data
             {
                 case DataUsage.ForceAmiga:
                     if (!amigaOk)
-                        throw new ExceptionFreeserf("data", "Amiga graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetAnimation(animation, phase);
                 case DataUsage.ForceDos:
                     if (!dosOk)
-                        throw new ExceptionFreeserf("data", "DOS graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetAnimation(animation, phase);
                 case DataUsage.PreferAmiga:
                     if (amigaOk)
@@ -189,11 +189,11 @@ namespace Freeserf.Data
             {
                 case DataUsage.ForceAmiga:
                     if (!amigaOk)
-                        throw new ExceptionFreeserf("data", "Amiga graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetAnimationPhaseCount(animation);
                 case DataUsage.ForceDos:
                     if (!dosOk)
-                        throw new ExceptionFreeserf("data", "DOS graphic data not available.");
+                        throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetAnimationPhaseCount(animation);
                 case DataUsage.PreferAmiga:
                     if (amigaOk)
@@ -217,11 +217,11 @@ namespace Freeserf.Data
                 {
                     case DataUsage.ForceAmiga:
                         if (!amigaOk)
-                            throw new ExceptionFreeserf("data", "Amiga graphic data not available.");
+                            throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                         return amiga.BPP;
                     case DataUsage.ForceDos:
                         if (!dosOk)
-                            throw new ExceptionFreeserf("data", "DOS graphic data not available.");
+                            throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                         return dos.BPP;
                     case DataUsage.PreferAmiga:
                         if (amigaOk)
@@ -246,11 +246,11 @@ namespace Freeserf.Data
                 {
                     case DataUsage.ForceAmiga:
                         if (!amigaOk)
-                            throw new ExceptionFreeserf("data", "Amiga graphic data not available.");
+                            throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                         return amiga.Scale;
                     case DataUsage.ForceDos:
                         if (!dosOk)
-                            throw new ExceptionFreeserf("data", "DOS graphic data not available.");
+                            throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                         return dos.Scale;
                     case DataUsage.PreferAmiga:
                         if (amigaOk)

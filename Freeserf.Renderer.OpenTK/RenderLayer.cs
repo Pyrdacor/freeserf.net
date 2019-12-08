@@ -182,13 +182,13 @@ namespace Freeserf.Renderer.OpenTK
         public void TestNode(IRenderNode node)
         {
             if (!(node is Node))
-                throw new ExceptionFreeserf("render", "The given render node is not valid for this renderer.");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "The given render node is not valid for this renderer.");
 
             if ((node as Node).Shape != renderBuffer.Shape)
-                throw new ExceptionFreeserf("render", $"Only nodes with shape {Enum.GetName(typeof(Shape), renderBuffer.Shape)} are allowed for this layer.");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, $"Only nodes with shape {Enum.GetName(typeof(Shape), renderBuffer.Shape)} are allowed for this layer.");
 
             if (node is ColoredRect && renderBufferColorRects == null)
-                throw new ExceptionFreeserf("render", "This layer does not support colored rects.");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "This layer does not support colored rects.");
         }
     }
 
@@ -197,12 +197,12 @@ namespace Freeserf.Renderer.OpenTK
         public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Render.Color colorKey = null)
         {
             if (!(texture is Texture))
-                throw new ExceptionFreeserf("render", "The given texture is not valid for this renderer.");
+                throw new ExceptionFreeserf(ErrorSystemType.Render, "The given texture is not valid for this renderer.");
 
             switch (layer)
             {
                 case Layer.None:
-                    throw new ExceptionFreeserf("render", $"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
+                    throw new ExceptionFreeserf(ErrorSystemType.Render, $"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
                 default:
                     return new RenderLayer(layer, texture as Texture, supportColoredRects, colorKey);
             }

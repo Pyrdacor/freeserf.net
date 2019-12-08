@@ -335,7 +335,7 @@ namespace Freeserf.Render
             {
                 if (lo >= AppearanceIndex2.Length)
                 {
-                    Log.Error.Write("rendering", "Invalid serf body sprite index");
+                    Log.Error.Write(ErrorSystemType.Render, "Invalid serf body sprite index");
                     return -1;
                 }
 
@@ -345,7 +345,7 @@ namespace Freeserf.Render
             {
                 if (lo >= AppearanceIndex2.Length - 1)
                 {
-                    Log.Error.Write("rendering", "Invalid serf body sprite index");
+                    Log.Error.Write(ErrorSystemType.Render, "Invalid serf body sprite index");
                     return -1;
                 }
 
@@ -478,7 +478,7 @@ namespace Freeserf.Render
 
                     if (defendingSerf.Animation < 0 || defendingSerf.Animation > 199 || defendingSerf.Counter < 0)
                     {
-                        Log.Error.Write("viewport", $"bad animation for serf #{defendingSerf.Index} ({Serf.GetStateName(defendingSerf.SerfState)}): {defendingSerf.Animation},{defendingSerf.Counter}");
+                        Log.Error.Write(ErrorSystemType.UI, $"bad animation for serf #{defendingSerf.Index} ({Serf.GetStateName(defendingSerf.SerfState)}): {defendingSerf.Animation},{defendingSerf.Counter});
                         return;
                     }
 
@@ -513,7 +513,7 @@ namespace Freeserf.Render
 
                     if (serf.Animation < 0 || serf.Animation > 199 || serf.Counter < 0)
                     {
-                        Log.Error.Write("viewport", $"bad animation for serf #{serf.Index} ({Serf.GetStateName(serf.SerfState)}): {serf.Animation},{serf.Counter}");
+                        Log.Error.Write(ErrorSystemType.UI, $"bad animation for serf #{serf.Index} ({Serf.GetStateName(serf.SerfState)}): {serf.Animation},{serf.Counter}");
                         return;
                     }
 
