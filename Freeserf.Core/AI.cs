@@ -1178,11 +1178,11 @@ namespace Freeserf
         public static AI Read(SaveReaderText reader, Game game, bool firstAI)
         {
             var player = game.GetPlayer(reader.Value("player").ReadUInt());
-            var character = reader.Value("character").ReadUInt();
+            var character = reader.Value("character").ReadEnum<PlayerFace>();
             var supplies = reader.Value("supplies").ReadUInt();
             var intelligence = reader.Value("intelligence").ReadUInt();
             var reproduction = reader.Value("reproduction").ReadUInt();
-            var playerInfo = new PlayerInfo((PlayerFace)character, PlayerInfo.PlayerColors[player.Index], intelligence, supplies, reproduction);
+            var playerInfo = new PlayerInfo(character, PlayerInfo.PlayerColors[player.Index], intelligence, supplies, reproduction);
 
             var ai = new AI(player, playerInfo);
 
@@ -1257,7 +1257,7 @@ namespace Freeserf
         public void WriteTo(SaveWriterText writer, bool firstAI)
         {
             writer.Value("player").Write(player.Index);
-            writer.Value("character").Write(playerInfo.Face);
+            writer.Value("character").Write((int)playerInfo.Face);
             writer.Value("supplies").Write(playerInfo.Supplies);
             writer.Value("intelligence").Write(playerInfo.Intelligence);
             writer.Value("reproduction").Write(playerInfo.Reproduction);

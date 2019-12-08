@@ -25,6 +25,10 @@ Non-working code:
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
 - Wrong sounds are played sometimes
+- When loading a game and there is an exception during loading (in AI loading at end) the background intro game seem to be drawn messed up.
+  I guess because map and stuff are loaded but then are discarded?
+- On/Off button for 4th player in demo game is missing.
+- Minimap scrolling is slow as hell
 
 
 AI:
