@@ -72,7 +72,7 @@ namespace Freeserf.Renderer.OpenTK
         public event EventHandler KeyPress;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
 
-        public GameView(DataSource dataSource, Size virtualScreenSize,
+        public GameView(DataSource dataSource, Size virtualScreenSize, string assetPath,
             DeviceType deviceType = DeviceType.Desktop, 
             SizingPolicy sizingPolicy = SizingPolicy.FitRatio, 
             OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
@@ -102,7 +102,7 @@ namespace Freeserf.Renderer.OpenTK
 
             var textureAtlas = TextureAtlasManager.Instance;
 
-            textureAtlas.AddAll(dataSource);
+            textureAtlas.AddAll(dataSource, assetPath);
 
             foreach (Layer layer in Enum.GetValues(typeof(Layer)))
             {
@@ -134,6 +134,31 @@ namespace Freeserf.Renderer.OpenTK
                         {
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
                             float factorY = (float)VirtualScreen.Size.Height / 480.0f;
+
+                            // don't scale a dimension of 0
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY);
+
+                            return new Size(width, height);
+                        };
+                    }
+                    else if (layer == Layer.GuiFont) // UI Font needs different scaling
+                    {
+                        // we use 32x32 per char but the UI works best with 8x8 chars
+                        // therefore we scale the size by 0.25, the position is not scaled though
+
+                        renderLayer.PositionTransformation = (Position position) =>
+                        {
+                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
+                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
+
+                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                        };
+
+                        renderLayer.SizeTransformation = (Size size) =>
+                        {
+                            float factorX = 0.25f * (float)VirtualScreen.Size.Width / 640.0f;
+                            float factorY = 0.25f * (float)VirtualScreen.Size.Height / 480.0f;
 
                             // don't scale a dimension of 0
                             int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);

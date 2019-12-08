@@ -27,14 +27,14 @@ namespace Freeserf.UI
         int index = -1;
         string text = "";
         byte displayLayerOffset = 0;
-        bool useSpecialDigits = false;
+        Render.TextRenderType renderType = Render.TextRenderType.Legacy;
         int characterGapSize = 8;
 
-        public TextField(Interface interf, byte displayLayerOffset, int characterGapSize = 8, bool useSpecialDigits = false)
+        public TextField(Interface interf, byte displayLayerOffset, int characterGapSize = 8, Render.TextRenderType renderType = Render.TextRenderType.Legacy)
             : base(interf)
         {
             textRenderer = interf.TextRenderer;
-            this.useSpecialDigits = useSpecialDigits;
+            this.renderType = renderType;
             this.displayLayerOffset = displayLayerOffset;
             this.characterGapSize = characterGapSize;
         }
@@ -44,7 +44,7 @@ namespace Freeserf.UI
             base.Displayed = false;
 
             if (index != -1)
-                textRenderer.DestroyText(index);
+                textRenderer.DestroyText(renderType, index);
 
             text = "";
             index = -1;
@@ -65,13 +65,13 @@ namespace Freeserf.UI
 
                 if (index == -1)
                 {
-                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), renderType, new Position(TotalX, TotalY), characterGapSize);
 
                     if (Displayed)
-                        textRenderer.ShowText(index, true);
+                        textRenderer.ShowText(renderType, index, true);
                 }
                 else
-                    textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), characterGapSize);
+                    textRenderer.ChangeText(index, text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), renderType, characterGapSize);
 
                 if (text.Length == 0)
                     SetSize(0, 0);
@@ -101,21 +101,21 @@ namespace Freeserf.UI
             if (Visible)
             {
                 if (index == -1)
-                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), useSpecialDigits, new Position(TotalX, TotalY), characterGapSize);
+                    index = textRenderer.CreateText(text, (byte)(BaseDisplayLayer + displayLayerOffset + 1), renderType, new Position(TotalX, TotalY), characterGapSize);
 
-                textRenderer.ShowText(index, true);
+                textRenderer.ShowText(renderType, index, true);
             }
             else
             {
                 if (index != -1)
-                    textRenderer.ShowText(index, false);
+                    textRenderer.ShowText(renderType, index, false);
             }
         }
 
         protected override void InternalDraw()
         {
             if (index != -1)
-                textRenderer.SetPosition(index, new Position(TotalX, TotalY), characterGapSize);
+                textRenderer.SetPosition(renderType, index, new Position(TotalX, TotalY), characterGapSize);
         }
 
         protected override void InternalHide()
@@ -123,7 +123,7 @@ namespace Freeserf.UI
             base.InternalHide();
 
             if (index != -1)
-                textRenderer.ShowText(index, false);
+                textRenderer.ShowText(renderType, index, false);
         }
 
         protected internal override void UpdateParent()
@@ -131,18 +131,18 @@ namespace Freeserf.UI
             base.UpdateParent();
 
             if (index != -1)
-                textRenderer.ChangeDisplayLayer(index, (byte)(BaseDisplayLayer + displayLayerOffset));
+                textRenderer.ChangeDisplayLayer(renderType, index, (byte)(BaseDisplayLayer + displayLayerOffset));
         }
 
-        public void UseSpecialDigits(bool use)
+        public void SetRenderType(Render.TextRenderType type)
         {
-            if (useSpecialDigits == use)
+            if (renderType == type)
                 return;
 
-            useSpecialDigits = use;
+            renderType = type;
 
             if (index != -1)
-                textRenderer.UseSpecialDigits(index, use);
+                textRenderer.SetRenderType(index, type);
         }
     }
 }

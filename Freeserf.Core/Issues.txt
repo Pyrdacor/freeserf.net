@@ -4,7 +4,7 @@
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
   It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
 - Sometimes borders remain from the last game (not deleted properly?)
-- In rare cases a flag seem to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
+- In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
 	- This is fixed but remains true for military building white flags
 - Saw a stonecutter building with the burning flames behind it.
 - Sometimes a serf is drawn that is inside the castle (leaving the castle).
@@ -27,7 +27,7 @@ Non-working code:
 - Wrong sounds are played sometimes
 - When loading a game and there is an exception during loading (in AI loading at end) the background intro game seem to be drawn messed up.
   I guess because map and stuff are loaded but then are discarded?
-- On/Off button for 4th player in demo game is missing.
+- On/Off button for players are missing when in last game on the spot was no player.
 - Minimap scrolling is slow as hell
 
 

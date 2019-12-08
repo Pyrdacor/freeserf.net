@@ -31,8 +31,12 @@ namespace Freeserf.UI
     {
         public static Position GetTextureAtlasOffset(Data.Resource resourceType, uint spriteIndex)
         {
-            var layer = (resourceType == Data.Resource.MapObject) ?
-                Freeserf.Layer.GuiBuildings : Freeserf.Layer.Gui;
+            var layer = Freeserf.Layer.Gui;
+
+            if (resourceType == Data.Resource.MapObject)
+                layer = Freeserf.Layer.GuiBuildings;
+            else if (resourceType == Data.Resource.UIText)
+                layer = Freeserf.Layer.GuiFont;
 
             var textureAtlasManager = Render.TextureAtlasManager.Instance;
             var textureAtlas = textureAtlasManager.GetOrCreate(layer);

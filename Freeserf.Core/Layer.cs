@@ -48,8 +48,9 @@ namespace Freeserf
         Builds = 1 << 6,
         Gui = 1 << 7,
         GuiBuildings = 1 << 8, // we have to display buildings inside some windows (e.g. build menu)
-        Minimap = 1 << 9,
-        Cursor = 1 << 10
+        GuiFont = 1 << 9, // new UI fonts
+        Minimap = 1 << 10,
+        Cursor = 1 << 11
     }
 
     public partial class Global
@@ -67,6 +68,7 @@ namespace Freeserf
             0.96f,  // Builds
             0.97f,  // Gui
             0.97f,  // Gui Buildings
+            0.97f,  // Gui Font
             0.97f,  // Minimap
             0.98f   // Cursor
         };

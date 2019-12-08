@@ -125,7 +125,8 @@ namespace Freeserf.Data
             FrameSplit,
             Sound,
             Music,
-            Cursor
+            Cursor,
+            UIText // new UI text font
         }
 
         protected DataSource dataSource = null;

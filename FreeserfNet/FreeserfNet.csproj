@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,6 +10,12 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>Freeserf</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="OpenTK\**" />
+    <EmbeddedResource Remove="OpenTK\**" />
+    <None Remove="OpenTK\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="log.txt" />

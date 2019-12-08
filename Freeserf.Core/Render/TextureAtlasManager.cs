@@ -72,7 +72,7 @@ namespace Freeserf.Render
             return atlas[layer];
         }
 
-        public void AddAll(DataSource data)
+        public void AddAll(DataSource data, string assetPath)
         {
             uint i;
             Layer atlasIndex;
@@ -442,28 +442,28 @@ namespace Freeserf.Render
 
             // game init box background
             // we add a compound background of sprites 290-293 with a bigger size
-            var bgSprites = new Sprite[5];
-            bgSprites[0] = data.GetSprite(Data.Resource.Icon, 290u, color);
-            bgSprites[1] = data.GetSprite(Data.Resource.Icon, 291u, color);
-            bgSprites[2] = data.GetSprite(Data.Resource.Icon, 292u, color);
-            bgSprites[3] = data.GetSprite(Data.Resource.Icon, 293u, color);
-            bgSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, color);
-            var bgCompoundSprite = new Sprite(320u, 184u);
+            var backgroundSprites = new Sprite[5];
+            backgroundSprites[0] = data.GetSprite(Data.Resource.Icon, 290u, color);
+            backgroundSprites[1] = data.GetSprite(Data.Resource.Icon, 291u, color);
+            backgroundSprites[2] = data.GetSprite(Data.Resource.Icon, 292u, color);
+            backgroundSprites[3] = data.GetSprite(Data.Resource.Icon, 293u, color);
+            backgroundSprites[4] = data.GetSprite(Data.Resource.Icon, 294u, color);
+            var backgroundCompoundSprite = new Sprite(320u, 184u);
 
             for (int row = 0; row < 23; ++row) // 23 rows with 8 pixels each = 184 pixels
             {
                 for (int column = 0; column < 8; ++column) // 8 columns with 40 pixels each = 320 pixels
                 {
-                    bgCompoundSprite.Add(column * 40, row * 8, bgSprites[row % 5]);
+                    backgroundCompoundSprite.Add(column * 40, row * 8, backgroundSprites[row % 5]);
                 }
             }
 
             // index is now 318 inside the icons
-            AddSprite(Layer.Gui, index++, bgCompoundSprite);
+            AddSprite(Layer.Gui, index++, backgroundCompoundSprite);
 
             // notification box background
             // we add a compound background of sprites 314 with a bigger size
-            bgCompoundSprite = new Sprite(128u, 144u);
+            backgroundCompoundSprite = new Sprite(128u, 144u);
             sprite = data.GetSprite(Data.Resource.Icon, 314u, color);
 
             // 9 rows, 8 columns with 16x16 pixels = 128x144
@@ -471,12 +471,12 @@ namespace Freeserf.Render
             {
                 for (int column = 0; column < 8; ++column)
                 {
-                    bgCompoundSprite.Add(column * 16, row * 16, sprite);
+                    backgroundCompoundSprite.Add(column * 16, row * 16, sprite);
                 }
             }
 
             // index is now 319 inside the icons
-            AddSprite(Layer.Gui, index++, bgCompoundSprite);
+            AddSprite(Layer.Gui, index++, backgroundCompoundSprite);
 
             // popup backgrounds
             var popupBackgrounds = Enum.GetValues(typeof(PopupBox.BackgroundPattern));
@@ -486,7 +486,7 @@ namespace Freeserf.Render
                 if (popupBackground >= PopupBox.BackgroundPattern.OverallComparison && popupBackground <= PopupBox.BackgroundPattern.Shield)
                     continue; // these are compound backgrounds that are handled internal
 
-                bgCompoundSprite = new Sprite(128u, 144u);
+                backgroundCompoundSprite = new Sprite(128u, 144u);
                 sprite = data.GetSprite(Data.Resource.Icon, (uint)popupBackground, color);
 
                 // 9 rows, 8 columns with 16x16 pixels = 128x144
@@ -494,12 +494,12 @@ namespace Freeserf.Render
                 {
                     for (int column = 0; column < 8; ++column)
                     {
-                        bgCompoundSprite.Add(column * 16, row * 16, sprite);
+                        backgroundCompoundSprite.Add(column * 16, row * 16, sprite);
                     }
                 }
 
                 // index is now (320 + popup box background pattern index) inside the icons
-                AddSprite(Layer.Gui, index + (uint)popupBackground, bgCompoundSprite);
+                AddSprite(Layer.Gui, index + (uint)popupBackground, backgroundCompoundSprite);
             }
 
             // we create a compound icon for game type load
@@ -508,6 +508,18 @@ namespace Freeserf.Render
             loadIcon.Add(14, 5, data.GetSprite(Data.Resource.Icon, 93u, color));
 
             AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 500u, loadIcon);
+
+            #endregion
+
+
+            #region UI Font
+
+            // add new UI font
+            guiResourceOffsets.Add(Data.Resource.UIText, guiResourceOffsets[Data.Resource.Icon] + 1000u);
+            AddSprite(Layer.GuiFont, guiResourceOffsets[Data.Resource.UIText], Sprite.CreateFromFile(
+                assetPath.TrimEnd(new char[] { '/', '\\' }) + "/ui_font.png",
+                new Sprite.Color() { Red = 0, Green = 0, Blue = 0 }
+            ));
 
             #endregion
 

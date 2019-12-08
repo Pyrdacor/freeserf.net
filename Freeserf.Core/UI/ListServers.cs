@@ -24,13 +24,17 @@ namespace Freeserf.UI
     internal class ListServers : ListBox<string>
     {
         public ListServers(Interface interf)
-            : base(interf)
+            : base(interf, Render.TextRenderType.NewUI)
         {
             // TODO
-            items.Add("Test Server 1");
-            items.Add("Roberts Server");
+            AddServer("Test Server", "localhost", 1, 4);
 
             Init(interf);
+        }
+
+        public void AddServer(string serverName, string hostName, int currentCount, int maxPlayers = 4)
+        {
+            items.Add($"{serverName} | {hostName} | {currentCount}/{maxPlayers}");
         }
     }
 }

@@ -86,13 +86,13 @@ namespace Freeserf
         public struct Preset
         {
             public Preset(uint character, uint intelligence, uint supplies,
-                uint reproduction, Position castlePos)
+                uint reproduction, Position castlePosition)
             {
                 Character = Characters[character];
                 Intelligence = intelligence;
                 Supplies = supplies;
                 Reproduction = reproduction;
-                Castle = castlePos;
+                Castle = castlePosition;
             }
 
             public Character Character;
@@ -108,9 +108,6 @@ namespace Freeserf
         public PlayerFace Face { get; private set; }
         public Color Color { get; set; }
         public Position CastlePosition { get; set; }
-
-        string name = "";
-        string characterization = "";
 
         public PlayerInfo(Random random)
         {
@@ -129,6 +126,7 @@ namespace Freeserf
         {
             SetCharacter(character);
 
+            Color = color;
             Intelligence = intelligence;
             Supplies = supplies;
             Reproduction = reproduction;
@@ -138,8 +136,6 @@ namespace Freeserf
         public void SetCharacter(PlayerFace character)
         {
             Face = Characters[(int)character].Face;
-            name = Characters[(int)character].Name;
-            characterization = Characters[(int)character].Characterization;
         }
 
         public bool HasCastle => CastlePosition.Column >= 0;

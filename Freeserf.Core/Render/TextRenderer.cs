@@ -6,9 +6,17 @@ namespace Freeserf.Render
 {
     using Data = Data.Data;
 
+    internal enum TextRenderType
+    {
+        Legacy,
+        LegacySpecialDigits,
+        NewUI
+    }
+
     internal class TextRenderer
     {
         static readonly Encoding encoding = Encoding.GetEncoding("iso-8859-1");
+        // this are the valid input characters
         public static readonly byte[] ValidCharacters = encoding.GetBytes("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-:?%äÄöÖüÜ");
 
         class SpriteInfo
@@ -42,7 +50,7 @@ namespace Freeserf.Render
                 get;
             } = new Position();
 
-            public bool UseSpecialDigits
+            public TextRenderType TextRenderType
             {
                 get;
                 set;
@@ -53,21 +61,21 @@ namespace Freeserf.Render
                 Text = text;
             }
 
-            public void UpdatePositions(int charGapSize)
+            public void UpdatePositions(int characterGapSize)
             {
                 int x = 0;
-                int charIndex = 0;
+                int characterIndex = 0;
 
                 foreach (var character in Text)
                 {
                     if (character != ' ')
                     {
-                        Characters[charIndex].Sprite.X = Position.X + x;
-                        Characters[charIndex].Sprite.Y = Position.Y;
-                        ++charIndex;
+                        Characters[characterIndex].Sprite.X = Position.X + x;
+                        Characters[characterIndex].Sprite.Y = Position.Y;
+                        ++characterIndex;
                     }
 
-                    x += charGapSize;
+                    x += characterGapSize;
                 }
             }
 
@@ -80,38 +88,45 @@ namespace Freeserf.Render
             }
         }
 
-        readonly IRenderLayer layer = null;
+        readonly IRenderLayer layerLegacy = null;
+        readonly IRenderLayer layerNewFont = null;
         readonly ISpriteFactory spriteFactory = null;
-        readonly Size characterSize = null;
-        readonly List<RenderText> renderTexts = new List<RenderText>();
-        readonly List<SpriteInfo> characterSprites = new List<SpriteInfo>(); // shared by all texts
-        readonly ITextureAtlas textureAtlas = null;
+        readonly Size characterSizeLegacy = null;
+        readonly Size characterSizeNew = null;
+        readonly List<RenderText> renderTextsLegacy = new List<RenderText>();
+        readonly List<RenderText> renderTextsNew = new List<RenderText>();
+        readonly List<SpriteInfo> characterSpritesLegacy = new List<SpriteInfo>(); // shared by all texts
+        readonly List<SpriteInfo> characterSpritesNew = new List<SpriteInfo>(); // shared by all texts
 
         public TextRenderer(IRenderView renderView)
         {
             spriteFactory = renderView.SpriteFactory;
-            layer = renderView.GetLayer(Layer.Gui);
+            layerLegacy = renderView.GetLayer(Layer.Gui);
+            layerNewFont = renderView.GetLayer(Layer.GuiFont);
 
             // original size is 8x8 pixels
-            characterSize = new Size(8, 8);
-
-            textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Gui);
+            characterSizeLegacy = new Size(8, 8);
+            // new font uses 32x32
+            characterSizeNew = new Size(32, 32);
         }
 
-        public int CreateText(string text, byte displayLayer, bool specialDigits, Position position = null, int characterGapSize = 8)
+        public int CreateText(string text, byte displayLayer, TextRenderType renderType, Position position = null, int characterGapSize = 8)
         {
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
+            var characterSprites = renderType == TextRenderType.NewUI ? characterSpritesNew : characterSpritesLegacy;
+
             // look if we have an unused render text
             int index = renderTexts.FindIndex(checkText => checkText == null);
             var spritePool = characterSprites.Where(sprite => !sprite.InUse);
-            int numAvailableChars = spritePool.Count();
+            int numAvailableCharacters = spritePool.Count();
             int lengthWithoutSpaces = text.Replace(" ", "").Length;
 
             List<SpriteInfo> sprites;
 
-            if (numAvailableChars < lengthWithoutSpaces)
+            if (numAvailableCharacters < lengthWithoutSpaces)
             {
                 sprites = new List<SpriteInfo>(spritePool);
-                sprites.AddRange(AddCharSprites(lengthWithoutSpaces - numAvailableChars));
+                sprites.AddRange(AddCharacterSprites(lengthWithoutSpaces - numAvailableCharacters, renderType));
             }
             else
             {
@@ -124,7 +139,7 @@ namespace Freeserf.Render
 
             var renderText = new RenderText(text);
 
-            renderText.UseSpecialDigits = specialDigits;
+            renderText.TextRenderType = renderType;
             renderText.Characters = sprites;
 
             if (position != null)
@@ -133,7 +148,7 @@ namespace Freeserf.Render
                 renderText.Position.Y = position.Y;
             }
 
-            SetTextToSprites(renderText.Characters, text, renderText.UseSpecialDigits);
+            SetTextToSprites(renderText.Characters, text, renderText.TextRenderType);
             renderText.UpdatePositions(characterGapSize);
             renderText.UpdateDisplayLayer(displayLayer);
 
@@ -150,8 +165,9 @@ namespace Freeserf.Render
             return index;
         }
 
-        public void ShowText(int index, bool show)
+        public void ShowText(TextRenderType renderType, int index, bool show)
         {
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
             var renderText = renderTexts[index];
 
             if (renderText.Visible == show)
@@ -163,8 +179,10 @@ namespace Freeserf.Render
             renderText.Visible = show;
         }
 
-        public void ChangeText(int index, string newText, byte displayLayer, int characterGapSize = 8)
+        public void ChangeText(int index, string newText, byte displayLayer, TextRenderType renderType, int characterGapSize = 8)
         {
+            var characterSprites = renderType == TextRenderType.NewUI ? characterSpritesNew : characterSpritesLegacy;
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
             var renderText = renderTexts[index];
 
             if (renderText.Text == newText)
@@ -184,7 +202,7 @@ namespace Freeserf.Render
                 if (numAvailableChars < numAdditionalChars)
                 {
                     sprites = new List<SpriteInfo>(spritePool);
-                    sprites.AddRange(AddCharSprites(numAdditionalChars - numAvailableChars));
+                    sprites.AddRange(AddCharacterSprites(numAdditionalChars - numAvailableChars, renderType));
                 }
                 else
                 {
@@ -208,7 +226,7 @@ namespace Freeserf.Render
                 renderText.Characters.RemoveRange(newLengthWithoutSpaces, renderText.Characters.Count - newLengthWithoutSpaces);
             }
 
-            SetTextToSprites(renderText.Characters, newText, renderText.UseSpecialDigits);
+            SetTextToSprites(renderText.Characters, newText, renderText.TextRenderType);
             renderText.Text = newText;
 
             renderText.UpdatePositions(characterGapSize);
@@ -219,8 +237,9 @@ namespace Freeserf.Render
                 character.Sprite.Visible = renderText.Visible;
         }
 
-        public void DestroyText(int index)
+        public void DestroyText(TextRenderType renderType, int index)
         {
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
             var renderText = renderTexts[index];
 
             foreach (var character in renderText.Characters)
@@ -232,16 +251,18 @@ namespace Freeserf.Render
             renderTexts[index] = null;
         }
 
-        public void ChangeDisplayLayer(int index, byte displayLayer)
+        public void ChangeDisplayLayer(TextRenderType renderType, int index, byte displayLayer)
         {
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
             var renderText = renderTexts[index];
 
             foreach (var character in renderText.Characters)
                 character.Sprite.DisplayLayer = displayLayer;
         }
 
-        public void SetPosition(int index, Position position, int characterGapSize = 8)
+        public void SetPosition(TextRenderType renderType, int index, Position position, int characterGapSize = 8)
         {
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
             var renderText = renderTexts[index];
 
             if (position == renderText.Position)
@@ -253,27 +274,37 @@ namespace Freeserf.Render
             renderText.UpdatePositions(characterGapSize);
         }
 
-        public void UseSpecialDigits(int index, bool use)
+        /// <summary>
+        /// This is only used for legacy types
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="type"></param>
+        public void SetRenderType(int index, TextRenderType type)
         {
-            var renderText = renderTexts[index];
+            if (type == TextRenderType.NewUI)
+                throw new ExceptionFreeserf("Switching to new UI font is not supported.");
 
-            if (use == renderText.UseSpecialDigits)
+            var renderText = renderTextsLegacy[index];
+
+            if (type == renderText.TextRenderType)
                 return;
 
-            renderText.UseSpecialDigits = use;
+            renderText.TextRenderType = type;
 
-            SetTextToSprites(renderText.Characters, renderText.Text, renderText.UseSpecialDigits);
+            SetTextToSprites(renderText.Characters, renderText.Text, renderText.TextRenderType);
         }
 
-        public bool IsVisible(int index)
+        public bool IsVisible(TextRenderType renderType, int index)
         {
+            var renderTexts = renderType == TextRenderType.NewUI ? renderTextsNew : renderTextsLegacy;
+
             if (renderTexts[index] == null)
                 return false;
 
             return renderTexts[index].Visible;
         }
 
-        uint MapCharToSpriteIndex(byte ch)
+        uint MapCharacterToSpriteIndex(byte ch)
         {
             if (ch >= 'A' && ch <= 'Z')
                 return (uint)(ch - 'A');
@@ -302,7 +333,7 @@ namespace Freeserf.Render
             //throw new ExceptionFreeserf(ErrorSystemType.Render, "Unsupported character: " + encoding.GetString(new byte[1] { ch }));
         }
 
-        void SetTextToSprites(List<SpriteInfo> sprites, string text, bool useSpecialDigits)
+        void SetTextToSprites(List<SpriteInfo> sprites, string text, TextRenderType renderType)
         {
             var bytes = encoding.GetBytes(text);
             int charIndex = 0;
@@ -312,19 +343,37 @@ namespace Freeserf.Render
             {
                 if (bytes[i] != 32) // space
                 {
-                    if (useSpecialDigits && bytes[i] >= '0' && bytes[i] <= '9')
-                        sprites[charIndex++].Sprite.TextureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 78u + (uint)(bytes[i] - '0'));
+                    if (renderType == TextRenderType.NewUI)
+                    {
+                        if (bytes[i] >= 128)
+                            bytes[i] = 0; // map to unsupported character
+
+                        var textureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.UIText, 0);
+                        textureAtlasOffset.X += (bytes[i] % 16) * 32; // 16 chars per line, 32 pixels width per char
+                        textureAtlasOffset.Y += (bytes[i] / 16) * 32; // 32 pixels height per char
+                        sprites[charIndex].Sprite.Layer = layerNewFont;
+                        sprites[charIndex++].Sprite.TextureAtlasOffset = textureAtlasOffset;                        
+                    }
                     else
-                        sprites[charIndex++].Sprite.TextureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharToSpriteIndex(bytes[i]));
+                    {
+                        sprites[charIndex].Sprite.Layer = layerLegacy;
+
+                        if (renderType == TextRenderType.LegacySpecialDigits && bytes[i] >= '0' && bytes[i] <= '9')
+                            sprites[charIndex++].Sprite.TextureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.Icon, 78u + (uint)(bytes[i] - '0'));
+                        else
+                            sprites[charIndex++].Sprite.TextureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.Font, MapCharacterToSpriteIndex(bytes[i]));
+                    }
                 }
             }
         }
 
-        List<SpriteInfo> AddCharSprites(int num)
+        List<SpriteInfo> AddCharacterSprites(int number, TextRenderType renderType)
         {
-            List<SpriteInfo> sprites = new List<SpriteInfo>(num);
+            var characterSprites = renderType == TextRenderType.NewUI ? characterSpritesNew : characterSpritesLegacy;
+            var characterSize = renderType == TextRenderType.NewUI ? characterSizeNew : characterSizeLegacy;
+            List<SpriteInfo> sprites = new List<SpriteInfo>(number);
 
-            for (int i = 0; i < num; ++i)
+            for (int i = 0; i < number; ++i)
             {
                 var spriteInfo = new SpriteInfo()
                 {
@@ -332,7 +381,7 @@ namespace Freeserf.Render
                     InUse = false
                 };
 
-                spriteInfo.Sprite.Layer = layer;
+                spriteInfo.Sprite.Layer = renderType == TextRenderType.NewUI ? layerNewFont : layerLegacy;
 
                 sprites.Add(spriteInfo);
             }

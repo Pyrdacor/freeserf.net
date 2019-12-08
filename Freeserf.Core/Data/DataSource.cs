@@ -22,6 +22,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -79,6 +81,94 @@ namespace Freeserf.Data
         public Sprite(uint width, uint height)
         {
             Create(width, height);
+        }
+
+        public static Sprite CreateFromFile(string filename, Color? colorkey = null)
+        {
+            using (var stream = File.OpenRead(filename))
+            {
+                return CreateFromStream(stream, colorkey);
+            }
+        }
+
+        public static Sprite CreateFromStream(Stream stream, Color? colorkey = null)
+        {
+            var image = new Bitmap(stream);
+            var sprite = new Sprite();
+
+            if (image.PixelFormat != PixelFormat.Format32bppArgb &&
+                image.PixelFormat != PixelFormat.Format24bppRgb)
+                throw new NotSupportedException("Invalid image format: " + image.PixelFormat.ToString());
+
+            sprite.width = (uint)image.Width;
+            sprite.height = (uint)image.Height;
+            sprite.data = GetImageData(image, colorkey);
+
+            return sprite;
+        }
+
+        private static byte[] GetImageData(Bitmap image, Color? colorkey = null)
+        {
+            Rectangle area = new Rectangle(0, 0, image.Width, image.Height);
+            var imageData = image.LockBits(area, ImageLockMode.ReadOnly, image.PixelFormat);
+            int bytesPerPixel = image.PixelFormat == PixelFormat.Format32bppArgb ? 4 : 3;
+            byte[] data = new byte[image.Width * image.Height * bytesPerPixel];
+
+            try
+            {
+                IntPtr dataPointer = imageData.Scan0;
+                Marshal.Copy(dataPointer, data, 0, data.Length);
+            }
+            finally
+            {
+                image.UnlockBits(imageData);
+            }
+
+            if (bytesPerPixel == 3)
+            {
+                byte[] temp = new byte[image.Width * image.Height * 4];
+
+                for (int i = 0; i < data.Length / 3; ++i)
+                {
+                    if (colorkey != null &&
+                        data[i * 3 + 0] == colorkey.Value.Blue &&
+                        data[i * 3 + 1] == colorkey.Value.Green &&
+                        data[i * 3 + 2] == colorkey.Value.Red)
+                    {
+                        temp[i * 4 + 0] = 0;
+                        temp[i * 4 + 1] = 0;
+                        temp[i * 4 + 2] = 0;
+                        temp[i * 4 + 3] = 0;
+                    }
+                    else
+                    {
+                        temp[i * 4 + 0] = data[i * 3 + 0];
+                        temp[i * 4 + 1] = data[i * 3 + 1];
+                        temp[i * 4 + 2] = data[i * 3 + 2];
+                        temp[i * 4 + 3] = 255;
+                    }
+                }
+
+                data = temp;
+            }
+            else if (colorkey != null)
+            {
+                for (int i = 0; i < data.Length / 4; ++i)
+                {
+                    if (colorkey != null &&
+                        data[i * 4 + 0] == colorkey.Value.Blue &&
+                        data[i * 4 + 1] == colorkey.Value.Green &&
+                        data[i * 4 + 2] == colorkey.Value.Red)
+                    {
+                        data[i * 4 + 0] = 0;
+                        data[i * 4 + 1] = 0;
+                        data[i * 4 + 2] = 0;
+                        data[i * 4 + 3] = 0;
+                    }
+                }
+            }
+
+            return data;
         }
 
         public virtual byte[] GetData()

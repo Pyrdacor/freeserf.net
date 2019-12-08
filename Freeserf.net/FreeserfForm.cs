@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Windows.Forms;
 using Freeserf.Renderer.OpenTK;
 using Orientation = Freeserf.Renderer.OpenTK.Orientation;
-using Freeserf.Data;
 
 namespace Freeserf
 {
@@ -131,7 +130,7 @@ namespace Freeserf
 
                 SetClientSize(initInfo.ScreenWidth, initInfo.ScreenHeight);
 
-                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), Program.ExecutablePath + "/assets", DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
 
                 gameView.Resize(RenderControl.Width, RenderControl.Height, Orientation.LandscapeLeftRight);

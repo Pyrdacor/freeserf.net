@@ -36,21 +36,21 @@ namespace Freeserf.UI
         Render.Color colorFocus = new Render.Color(0x00, 0x8b, 0x47);
         Render.Color colorText = Render.Color.Green;
         Render.Color colorBackground = Render.Color.Black;
-        bool drawFocus = true;
+        private bool drawFocus = true;
         Render.IColoredRect background = null;
         readonly List<TextField> textLines = new List<TextField>();
         readonly Interface interf = null;
-        int characterGapSize = 9;
-        bool useSpecialDigits = false;
+        private int characterGapSize = 9;
+        Render.TextRenderType renderType = Render.TextRenderType.Legacy;
         
-        public TextInput(Interface interf, int characterGapSize = 9, bool useSpecialDigits = false)
+        public TextInput(Interface interf, int characterGapSize = 9, Render.TextRenderType renderType = Render.TextRenderType.Legacy)
             : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
             background.Layer = Layer;
             this.interf = interf;
             this.characterGapSize = characterGapSize;
-            this.useSpecialDigits = useSpecialDigits;
+            this.renderType = renderType;
         }
 
         public Render.Color BackgroundColor
@@ -157,22 +157,22 @@ namespace Freeserf.UI
                 background.Color = colorBackground;
 
             int numMaxCharsPerLine = (Width - Padding.X < 8) ? 0 : 1 + (Width - Padding.X - 8) / characterGapSize;
-            string str = text;
+            string textString = text;
             int cx = Padding.X;
             int cy = Padding.Y;
 
             int textLineIndex = 0;
 
-            while (str.Length > 0)
+            while (textString.Length > 0)
             {
-                int numChars = Math.Min(str.Length, numMaxCharsPerLine);
+                int numCharacters = Math.Min(textString.Length, numMaxCharsPerLine);
 
-                string substr = str.Substring(0, numChars);
-                str = str.Remove(0, numChars);
+                string subString = textString.Substring(0, numCharacters);
+                textString = textString.Remove(0, numCharacters);
 
                 if (textLineIndex == textLines.Count)
                 {
-                    var newLine = new TextField(interf, 2, characterGapSize, useSpecialDigits);
+                    var newLine = new TextField(interf, 2, characterGapSize, renderType);
 
                     textLines.Add(newLine);
                     AddChild(newLine, cx, cy);
@@ -182,7 +182,7 @@ namespace Freeserf.UI
                     AddChild(textLines[textLineIndex], cx, cy);
                 }
 
-                textLines[textLineIndex].Text = substr; // TODO: we need a possibility to set a color for textured sprites
+                textLines[textLineIndex].Text = subString; // TODO: we need a possibility to set a color for textured sprites
                 textLines[textLineIndex].Displayed = true;
                 // TODO: set color to colorText
 

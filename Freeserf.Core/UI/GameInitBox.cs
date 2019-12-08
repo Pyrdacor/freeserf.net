@@ -32,7 +32,7 @@ namespace Freeserf.UI
         string savedText = "";
 
         public RandomInput(Interface interf)
-            : base(interf, 9, true)
+            : base(interf, 9, Render.TextRenderType.LegacySpecialDigits)
         {
             BackgroundColor = new Render.Color(0x23, 0x43, 0x00);
             BackgroundFocusColor = new Render.Color(0x23, 0x43, 0x00);
@@ -670,8 +670,7 @@ namespace Freeserf.UI
                 case GameType.MultiplayerClient:
                 case GameType.MultiplayerServer:
                 case GameType.MultiplayerJoined:
-                    string header = "";
-
+                    string header;
                     switch (gameType)
                     {
                         case GameType.Custom:
@@ -962,7 +961,7 @@ namespace Freeserf.UI
                                     customMission = new GameInfo(new Random(), false);
                                     mission = customMission;
                                     mission.RemoveAllPlayers();
-                                    mission.AddPlayer(12u, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
+                                    mission.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
                                     randomInput.Displayed = true;
                                     randomInput.Enabled = false;
                                     randomInput.SetRandom(customMission.RandomBase);

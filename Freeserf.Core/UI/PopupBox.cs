@@ -913,11 +913,11 @@ namespace Freeserf.UI
             }
             else
             {
-                SetText(x, y, number.ToString(), true);
+                SetText(x, y, number.ToString(), Render.TextRenderType.LegacySpecialDigits);
             }
         }
 
-        TextField SetText(int x, int y, string text, bool useSpecialDigits = false)
+        TextField SetText(int x, int y, string text, Render.TextRenderType renderType = Render.TextRenderType.Legacy)
         {
             // check if there is a free text
             foreach (var textField in texts.Keys.ToList())
@@ -926,14 +926,14 @@ namespace Freeserf.UI
                 {
                     textField.Text = text;
                     textField.MoveTo(x, y);
-                    textField.UseSpecialDigits(useSpecialDigits);
+                    textField.SetRenderType(renderType);
                     textField.Displayed = Displayed;
                     texts[textField] = true;
                     return textField;
                 }
             }
 
-            var newText = new TextField(interf, 1, 8, useSpecialDigits);
+            var newText = new TextField(interf, 1, 8, renderType);
 
             newText.Text = text;
             newText.Displayed = Displayed;

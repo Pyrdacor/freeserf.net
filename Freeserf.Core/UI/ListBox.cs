@@ -36,12 +36,13 @@ namespace Freeserf.UI
         int selectedItem = -1;
         Action<T> selectionHandler = null;
         protected readonly List<T> items = new List<T>();
+        TextRenderType renderType = TextRenderType.Legacy;
 
         readonly IColoredRect background = null;
         readonly IColoredRect selectionBackground = null;
         readonly List<TextField> textEntries = new List<TextField>();
 
-        public ListBox(Interface interf)
+        public ListBox(Interface interf, TextRenderType renderType = TextRenderType.Legacy)
             : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
@@ -49,6 +50,7 @@ namespace Freeserf.UI
 
             selectionBackground = interf.RenderView.ColoredRectFactory.Create(0, 0, colorFocus, (byte)(BaseDisplayLayer + 1));
             selectionBackground.Layer = Layer;
+            this.renderType = renderType;
         }
 
         public override bool Displayed
@@ -69,7 +71,7 @@ namespace Freeserf.UI
 
             foreach (var item in items)
             {
-                var textField = new TextField(interf, 1);
+                var textField = new TextField(interf, 1, 8, renderType);
 
                 AddChild(textField, 3, y, true);
                 textEntries.Add(textField);
@@ -86,7 +88,7 @@ namespace Freeserf.UI
             {
                 if (i == textEntries.Count)
                 {
-                    var textField = new TextField(interf, 1);
+                    var textField = new TextField(interf, 1, 8, renderType);
 
                     AddChild(textField, 3, y, true);
                     textEntries.Add(textField);
