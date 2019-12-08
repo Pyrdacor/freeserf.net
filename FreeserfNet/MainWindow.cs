@@ -203,14 +203,13 @@ namespace Freeserf
             if (clickWaitTimer != null && clickWaitTimer.Enabled)
                 clickWaitTimer.Stop();
 
-            Log.Error.Write(source, exception.Message);
+            Log.Error.Write(ErrorSystemType.Application, $"{source}: {exception.Message}");
 
             SetFullscreen(false, false);
 
             // TODO: how to implement crash handle window?
             //if (crashHandlerForm.RaiseException(exception) == UI.CrashReaction.Restart)
             //    Process.Start(Assembly.GetEntryAssembly().Location);
-            Log.Error.Write(source, exception.Message);
 
             Exit();
         }

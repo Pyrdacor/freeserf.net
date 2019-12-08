@@ -62,7 +62,7 @@ namespace Freeserf
             }
             catch (Exception ex)
             {
-                Log.Error.Write("main", "Exception: " + ex.Message);
+                Log.Error.Write(ErrorSystemType.Application, "Exception: " + ex.Message);
                 Console.WriteLine("Error: " + ex.Message);
             }
         }
