@@ -26,7 +26,7 @@ namespace Freeserf
 
             if (FileSystem.Paths.IsWindows())
             {
-                if (assemblyDirectory.EndsWith(@"\Debug") || assemblyDirectory.EndsWith(@"\Release"))
+                if (assemblyDirectory.EndsWith(@"Debug") || assemblyDirectory.EndsWith(@"Release"))
                 {
                     string projectFile = Path.GetFileNameWithoutExtension(assemblyPath) + ".csproj";
 

@@ -6,4 +6,13 @@
     <StartProgram>
     </StartProgram>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'MacDebug|AnyCPU'">
+    <StartArguments>-d 1 -c</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WindowsDebug|AnyCPU'">
+    <StartArguments>-d 1 -c</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'LinuxDebug|AnyCPU'">
+    <StartArguments>-d 1 -c</StartArguments>
+  </PropertyGroup>
 </Project>

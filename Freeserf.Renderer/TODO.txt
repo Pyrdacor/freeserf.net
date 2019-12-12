@@ -1,0 +1,2 @@
+﻿The buffers share a lot of code.
+This should be outsourced into a base class etc.

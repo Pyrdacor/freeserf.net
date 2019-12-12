@@ -353,7 +353,7 @@ namespace Freeserf
             }
             else
             {
-                remoteInterface.GetPlayerUpdate(remoteInterface.GetPlayer().Index);
+                remoteInterface.GetPlayerUpdate(remoteInterface.Player.Index);
             }
 
             remoteInterface.Update();

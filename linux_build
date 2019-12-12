@@ -1,12 +1,7 @@
 #!/bin/sh
 
-mkbundle -v --deps --simple Freeserf.net/bin/Release/Freeserf.net.exe -o freeserf.net \
-	-L /usr/lib/mono/xbuild/Microsoft/Microsoft.NET.Build.Extensions/net461/lib/ \
-	-L ~/.nuget/packages/opentk/3.0.1/lib/net20/ \
-	-L ~/.nuget/packages/opentk.glcontrol/3.0.1/lib/net20/ \
-	-L /usr/lib/mono/4.6.1-api/Facades/ \
-	-L Freeserf.Renderer.OpenTK/bin/Release/netstandard2.0/ \
-    -L Freeserf.Network/bin/Release/netstandard2.0/ \
-   	-L Freeserf.Core/bin/Release/netstandard2.0/ \
-	--config /etc/mono/config \
-	--machine-config /etc/mono/4.5/machine.config
+mkbundle -v --deps --simple Freeserf.net/bin/LinuxRelease/Freeserf.net.exe -o freeserf.net \
+	-L ~/.nuget/packages/silk.net/1.0.0-preview3/lib/net20/ \
+	-L Freeserf.Renderer/bin/LinuxRelease/netstandard2.0/ \
+    -L Freeserf.Network/bin/LinuxRelease/netstandard2.0/ \
+   	-L Freeserf.Core/bin/LinuxRelease/netstandard2.0/

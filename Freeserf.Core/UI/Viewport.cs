@@ -229,13 +229,13 @@ namespace Freeserf.UI
                     // Draw possible building 
                     int sprite = -1;
 
-                    if (game.CanBuildCastle(position, interf.GetPlayer()))
+                    if (game.CanBuildCastle(position, interf.Player))
                     {
                         sprite = 49;
                     }
-                    else if (game.CanPlayerBuild(position, interf.GetPlayer()) &&
+                    else if (game.CanPlayerBuild(position, interf.Player) &&
                              Map.MapSpaceFromObject[(int)map.GetObject(position)] == Map.Space.Open &&
-                             (game.CanBuildFlag(map.MoveDownRight(position), interf.GetPlayer()) || map.HasFlag(map.MoveDownRight(position))))
+                             (game.CanBuildFlag(map.MoveDownRight(position), interf.Player) || map.HasFlag(map.MoveDownRight(position))))
                     {
                         if (game.CanBuildMine(position))
                         {
@@ -423,7 +423,7 @@ namespace Freeserf.UI
 
             var position = new Position(x, y);
             var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             if (interf.IsBuildingRoad())
             {

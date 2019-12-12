@@ -4,11 +4,60 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>Freeserf</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WindowsDebug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MacDebug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;MAC</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;LINUX</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WindowsRelease|AnyCPU'">
+    <DefineConstants>WINDOWS</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MacRelease|AnyCPU'">
+    <DefineConstants>MAC</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|AnyCPU'">
+    <DefineConstants>LINUX</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>WINDOWS</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,13 +72,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
+    <PackageReference Include="glfw" Version="3.3.0.1">
+      <CopyToOutputDirectory>build\native\bin\dynamic\v142\x64\*</CopyToOutputDirectory>
+    </PackageReference>
+    <PackageReference Include="Silk.NET" Version="1.0.0-preview3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
     <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
-    <ProjectReference Include="..\Freeserf.Renderer.OpenTK\Freeserf.Renderer.OpenTK.csproj" />
+    <ProjectReference Include="..\Freeserf.Renderer\Freeserf.Renderer.csproj" />
   </ItemGroup>
+
+  <Target Name="CopyPackages" BeforeTargets="BeforeCompile">
+    <ItemGroup>
+      <PackageReferenceFiles
+        Condition="%(PackageReference.CopyToOutputDirectory) != ''"
+        Include="$(NugetPackageRoot)\%(PackageReference.FileName)\%(PackageReference.Version)\%(PackageReference.CopyToOutputDirectory)" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(PackageReferenceFiles)"
+      DestinationFolder="$(OutDir)"
+    />
+  </Target>
 
 </Project>

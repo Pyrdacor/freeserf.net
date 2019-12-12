@@ -540,10 +540,7 @@ namespace Freeserf.UI
             }
         }
 
-        public Player GetPlayer()
-        {
-            return player;
-        }
+        public Player Player => player;
 
         public void SetPlayer(uint player)
         {

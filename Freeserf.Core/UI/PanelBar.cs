@@ -287,7 +287,7 @@ namespace Freeserf.UI
         // Draw buttons in action panel. 
         void DrawPanelButtons()
         {
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             // Blinking message icon. 
             DrawMessageNotify(player != null && player.HasNotification && blinkTrigger && Enabled);
@@ -320,7 +320,10 @@ namespace Freeserf.UI
 
         void DrawPlayerColor()
         {
-            var playerColor = interf.GetPlayer().Color;
+            var playerColor = interf.Player?.Color;
+
+            if (playerColor == null)
+                return;
 
             playerColorIndicator.DisplayLayer = 0;
             playerColorIndicator.X = TotalX - 1;
@@ -381,7 +384,7 @@ namespace Freeserf.UI
                     case Interface.CursorType.None:
                         SetButton(0, ButtonId.BuildInactive);
 
-                        if (interf.GetPlayer().HasCastle)
+                        if (interf.Player == null || interf.Player.HasCastle)
                         {
                             SetButton(1, ButtonId.DestroyInactive);
                         }
@@ -417,7 +420,7 @@ namespace Freeserf.UI
                         {
                             SetButton(0, ButtonId.BuildInactive);
 
-                            if (interf.GetPlayer().HasCastle)
+                            if (interf.Player == null || interf.Player.HasCastle)
                             {
                                 SetButton(1, ButtonId.DestroyInactive);
                             }
@@ -439,7 +442,7 @@ namespace Freeserf.UI
                     case Interface.CursorType.Clear:
                         SetButton(0, ButtonTypeFromBuildPossibility(buildPossibility));
 
-                        if (interf.GetPlayer() != null && interf.GetPlayer().HasCastle)
+                        if (interf.Player != null && interf.Player.HasCastle)
                         {
                             SetButton(1, ButtonId.DestroyInactive);
                         }
@@ -671,7 +674,7 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.DestroyRoad:
                     {
-                        bool result = interf.GetPlayer().Game.DemolishRoad(interf.GetMapCursorPosition(), interf.GetPlayer());
+                        bool result = interf.Player.Game.DemolishRoad(interf.GetMapCursorPosition(), interf.Player);
 
                         if (!result)
                         {
@@ -770,7 +773,7 @@ namespace Freeserf.UI
                     timerLength = 60 * 60;
                 }
 
-                interf.GetPlayer().AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPosition());
+                interf.Player.AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPosition());
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             }

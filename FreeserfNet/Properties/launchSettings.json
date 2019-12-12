@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FreeserfNet": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "WINDOWS": "1"
+      }
+    }
+  }
+}

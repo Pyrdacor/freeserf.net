@@ -1,29 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Timers;
-using OpenTK;
-using Freeserf.Renderer.OpenTK;
-using Orientation = Freeserf.Renderer.OpenTK.Orientation;
-using Freeserf.Data;
-using System.ComponentModel;
-using OpenTK.Input;
+using Freeserf.Renderer;
+using Orientation = Freeserf.Renderer.Orientation;
+using Silk.NET.Input;
+using Silk.NET.Input.Common;
+using Silk.NET.Windowing;
+using Silk.NET.Windowing.Common;
+using KeyModifiers = Silk.NET.GLFW.KeyModifiers;
 
 namespace Freeserf
 {
     // TODO: The Render event is called independently of input events. This can cause problem if the input events change something while the render/update events work with something.
     // TODO: This has to be fixed in a way that this event behavior is valid (e.g. locking mutexes inside the viewers, gui or interface).
-    class MainWindow : GameWindow
+    class MainWindow : IDisposable
     {
+        enum MouseButtonIndex
+        {
+            Left = 0,
+            Middle = 1,
+            Right = 2
+        }
+
+        IWindow window = null;
         GameView gameView = null;
         bool fullscreen = false;
         bool[] pressedMouseButtons = new bool[3];
         bool[] keysDown = new bool[256];
+        PointF lastMousePosition = PointF.Empty;
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
+        float lastWheelValue = 0.0f;
         static Timer clickWaitTimer = new Timer();
-        static MouseEventArgs clickWaitTimerArgs = null;
+        static IMouse clickWaitTimerArgs = null;
         Global.InitInfo initInfo = null;
+        Data.DataSource dataSource = null;
 
         internal MainWindow(string[] args)
         {
@@ -31,14 +44,21 @@ namespace Freeserf
             Log.SetLevel(Log.Level.Error);
 
             initInfo = Global.Init(args); // this may change the log level
+
+            Init();
         }
 
-        protected override void OnLoad(EventArgs e)
+        private string Title { get; set; } = "";
+        private Point Position { get; set; } = Point.Empty;
+        private int Width { get; set; } = 0;
+        private int Height { get; set; } = 0;
+        private WindowState State { get; set; } = WindowState.Normal;
+
+
+        private void Init()
         {
             try
             {
-                base.OnLoad(e);
-
                 Title = Global.VERSION;
 
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
@@ -61,7 +81,7 @@ namespace Freeserf
                     return;
                 }
 
-                var dataSource = data.GetDataSource();
+                dataSource = data.GetDataSource();
 
                 // TODO: use the rest of the command line and maybe extend the command line
 
@@ -124,9 +144,47 @@ namespace Freeserf
                 UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
                 UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
 
-                Width = initInfo.ScreenWidth;
-                Height = initInfo.ScreenHeight;
+                State = (initInfo.Fullscreen.HasValue && initInfo.Fullscreen.Value) ? WindowState.Fullscreen : WindowState.Normal;
 
+                Window.Init();
+
+                var options = new WindowOptions(
+                    true,
+                    true,
+                    Position,
+                    new System.Drawing.Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
+                    50.0,
+                    50.0,
+                    GraphicsAPI.Default,
+                    Title,
+                    State,
+                    State == WindowState.Normal ? WindowBorder.Fixed : WindowBorder.Hidden,
+                    VSyncMode.Off,
+                    10,
+                    false
+                );
+
+                window = Window.Create(options);
+                window.Load += Window_Load;
+
+                Width = initInfo.ScreenWidth;
+                Height = initInfo.ScreenHeight;                
+            }
+            catch (Exception ex)
+            {
+                ReportException("Init", ex);
+            }
+        }
+
+        public void Run()
+        {
+            window?.Run();
+        }
+
+        private void Window_Load()
+        {
+            try
+            {
                 gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), Program.ExecutablePath + "/assets", DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
 
@@ -151,7 +209,14 @@ namespace Freeserf
                         volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
                 }
 
-                gameView.Closed += GameView_Closed; ;
+                gameView.Closed += GameView_Closed;
+                window.Closing += Window_Closing;
+                window.Render += Window_Render;
+                window.Update += Window_Update;
+                window.Resize += Window_Resize;
+                window.StateChanged += Window_StateChanged;
+
+                InitInputEvents();
 
                 clickWaitTimer.Elapsed += ClickWaitTimer_Elapsed;
                 clickWaitTimer.Interval = 130;
@@ -162,20 +227,43 @@ namespace Freeserf
             }
         }
 
+        private void Exit()
+        {
+            window?.Close();
+        }
+
+        private void InitInputEvents()
+        {
+            var input = window.GetInput();
+            var mouse = input.Mice.FirstOrDefault(m => m.IsConnected);
+            var keyboard = input.Keyboards.FirstOrDefault(k => k.IsConnected);
+
+            if (mouse != null)
+            {
+                lastWheelValue = mouse.ScrollWheels.FirstOrDefault().Y;
+                lastMousePosition = mouse.Position;
+
+                mouse.MouseDown += GameView_MouseDown;
+                mouse.MouseUp += GameView_MouseUp;
+                mouse.MouseMove += GameView_MouseMove;
+                mouse.Scroll += GameView_Scroll;
+            }
+
+            if (keyboard != null)
+            {
+                keyboard.KeyDown += GameView_KeyDown;
+                keyboard.KeyUp += GameView_KeyUp;
+                keyboard.KeyChar += GameView_KeyChar;
+            }
+        }
+
         private void GameView_Closed(object sender, EventArgs e)
         {
             Exit();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected void Window_Closing()
         {
-            base.OnClosed(e);
-        }
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            base.OnClosing(e);
-
             // TODO: Ask for saving?
 
             if (clickWaitTimer.Enabled)
@@ -185,7 +273,7 @@ namespace Freeserf
             //if (debugConsole != null)
             //    debugConsole.Close();
 
-            Cursor = MouseCursor.Default;
+            // Cursor = MouseCursor.Default;
 
             try
             {
@@ -220,7 +308,10 @@ namespace Freeserf
 
             try
             {
-                gameView?.NotifyClick(clickWaitTimerArgs.X, clickWaitTimerArgs.Y, ConvertMouseButton(clickWaitTimerArgs.Mouse));
+                int x = (int)Math.Round(clickWaitTimerArgs.Position.X);
+                int y = (int)Math.Round(clickWaitTimerArgs.Position.Y);
+
+                gameView?.NotifyClick(x, y, ConvertMouseButton(clickWaitTimerArgs));
             }
             catch (Exception ex)
             {
@@ -234,7 +325,7 @@ namespace Freeserf
             {
                 this.fullscreen = fullscreen;
 
-                WindowState = (fullscreen) ? WindowState.Fullscreen : WindowState.Normal;
+                State = (fullscreen) ? WindowState.Fullscreen : WindowState.Normal;
             }
 
             return true;
@@ -274,11 +365,14 @@ namespace Freeserf
                 gameView.Zoom -= 0.5f;
         }
 
-        protected override void OnRenderFrame(FrameEventArgs e)
+        private void Window_Resize(System.Drawing.Size size)
         {
-            base.OnRenderFrame(e);
+            // not used for now, window should not be resizable
+        }
 
-            MakeCurrent();
+        private void Window_Render(double delta)
+        {
+            window.MakeCurrent();
 
             try
             {
@@ -290,75 +384,177 @@ namespace Freeserf
                 return;
             }
 
-            SwapBuffers();
+            window.SwapBuffers();
         }
 
-        protected override void OnUpdateFrame(FrameEventArgs e)
+        private void Window_Update(double delta)
         {
-            base.OnUpdateFrame(e);
+            // not used for now
         }
 
-        protected override void OnWindowStateChanged(EventArgs e)
+        private void Window_StateChanged(WindowState state)
         {
-            if (WindowState == WindowState.Maximized)
+            State = state;
+
+            if (State == WindowState.Maximized)
             {
                 SetFullscreen(true, true);
                 return;
             }
-
-            base.OnWindowStateChanged(e);
         }
 
-        static Event.Button ConvertMouseButton(MouseState state)
+        static Event.Button ConvertMouseButton(IMouse mouse)
         {
-            if (state.LeftButton == ButtonState.Pressed)
+            if (mouse.IsButtonPressed(MouseButton.Left))
                 return Event.Button.Left;
-            else if (state.MiddleButton == ButtonState.Pressed)
+            else if (mouse.IsButtonPressed(MouseButton.Middle))
                 return Event.Button.Middle;
-            else if (state.RightButton == ButtonState.Pressed)
+            else if (mouse.IsButtonPressed(MouseButton.Right))
                 return Event.Button.Right;
             else
                 return Event.Button.None;
         }
 
-        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        private void GameView_KeyUp(IKeyboard keyboard, Key key, int mods)
         {
-            base.OnMouseWheel(e);
+            keysDown[(int)key] = false;
+        }
+
+        private void GameView_KeyDown(IKeyboard keyboard, Key key, int mods)
+        {
+            var modifiers = (KeyModifiers)mods;
 
             try
             {
-                if (e.Delta < 0)
-                    ZoomOut();
-                else if (e.Delta > 0)
-                    ZoomIn();
+                keysDown[(int)key] = true;
+
+                if (modifiers.HasFlag(KeyModifiers.Control) && key == Key.F)
+                {
+                    ToggleFullscreen();
+                    return;
+                }
+
+                switch (key)
+                {
+                    case Key.Left:
+                        gameView?.NotifyKeyPressed((char)key, 0);
+                        HandleKeyDrag();
+                        break;
+                    case Key.Right:
+                        gameView?.NotifyKeyPressed((char)key, 0);
+                        HandleKeyDrag();
+                        break;
+                    case Key.Up:
+                        gameView?.NotifyKeyPressed((char)key, 0);
+                        HandleKeyDrag();
+                        break;
+                    case Key.Down:
+                        gameView?.NotifyKeyPressed((char)key, 0);
+                        HandleKeyDrag();
+                        break;
+                    case Key.F10:
+                        gameView?.NotifyKeyPressed('n', 1);
+                        break;
+                    case Key.F11:
+                        ToggleFullscreen();
+                        break;
+                    case Key.Enter:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Return, 0);
+                        break;
+                    case Key.Backspace:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, 0);
+                        break;
+                    case Key.Delete:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
+                        break;
+                    default:
+                        {
+                            if ((int)key < 128) // only valid ascii characters
+                            {
+                                byte modifier = 0;
+
+                                if (modifiers.HasFlag(KeyModifiers.Control))
+                                    modifier |= 1;
+                                if (modifiers.HasFlag(KeyModifiers.Shift))
+                                    modifier |= 2;
+                                if (modifiers.HasFlag(KeyModifiers.Alt))
+                                    modifier |= 4;
+
+                                gameView?.NotifyKeyPressed((char)key, modifier);
+                            }
+                        }
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                ReportException("MouseWheel", ex);
+                ReportException("KeyDown", ex);
             }
         }
 
-        protected override void OnMouseMove(MouseMoveEventArgs e)
+        private void GameView_KeyChar(IKeyboard keyboard, char keyChar)
         {
-            base.OnMouseMove(e);
+            try
+            {
+                switch (keyChar)
+                {
+                    case '<':
+                        ZoomOut();
+                        break;
+                    case '>':
+                        ZoomIn();
+                        break;
+                    case '+':
+                    case '-':
+                    case 'ä':
+                    case 'Ä':
+                    case 'ö':
+                    case 'Ö':
+                    case 'ü':
+                    case 'Ü':
+                        // TODO: Encoding
+                        gameView?.NotifyKeyPressed(keyChar, 0);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                ReportException("KeyPress", ex);
+            }
+        }
 
+        private void GameView_MouseMove(IMouse mouse, PointF position)
+        {
             if (gameView == null)
                 return;
 
             try
             {
-                gameView.SetCursorPosition(e.X, e.Y);
+                int lastX = (int)Math.Round(lastMousePosition.X);
+                int lastY = (int)Math.Round(lastMousePosition.Y);
+                int x = (int)Math.Round(position.X);
+                int y = (int)Math.Round(position.Y);
 
-                UpdateMouseState(e.Mouse);
+                if (x == lastX && y == lastY)
+                    return;
 
-                if (e.Mouse.LeftButton == ButtonState.Pressed || e.Mouse.RightButton == ButtonState.Pressed)
+                CheckMouseEnterOrLeave(
+                    window.PointToClient(new Point(x, y)),
+                    window.PointToClient(new Point(lastX, lastY))
+                );
+
+                gameView.SetCursorPosition(x, y);
+
+                UpdateMouseState(mouse);
+
+                if (mouse.IsButtonPressed(MouseButton.Left) || mouse.IsButtonPressed(MouseButton.Right))
                 {
                     if (lastDragX == int.MinValue)
                         return;
 
-                    gameView.NotifyDrag(e.X, e.Y, lastDragX - e.X, lastDragY - e.Y, ConvertMouseButton(e.Mouse));
-                    lastDragX = e.X;
-                    lastDragY = e.Y;
+                    gameView.NotifyDrag(x, y, lastDragX - x, lastDragY - y, ConvertMouseButton(mouse));
+                    lastDragX = x;
+                    lastDragY = y;
                 }
                 else
                 {
@@ -372,44 +568,93 @@ namespace Freeserf
             }
         }
 
-        protected override void OnMouseDown(MouseButtonEventArgs e)
+        private void GameView_MouseUp(IMouse mouse, MouseButton button)
         {
-            base.OnMouseDown(e);
+            UpdateMouseState(mouse);
+            OnMouseClick(mouse);
+        }
 
-            if (e.Mouse.LeftButton == ButtonState.Pressed || e.Mouse.RightButton == ButtonState.Pressed)
+        private void GameView_MouseDoubleClick(int x, int y, Event.Button button)
+        {
+            clickWaitTimer.Stop();
+
+            try
             {
-                lastDragX = e.X;
-                lastDragY = e.Y;
+                gameView?.NotifyDoubleClick(x, y, button);
+            }
+            catch (Exception ex)
+            {
+                ReportException("MouseDoubleClick", ex);
+            }
+        }
 
-                clickWaitTimerArgs = e;
+        private void GameView_MouseDown(IMouse mouse, MouseButton button)
+        {
+            int x = (int)Math.Round(mouse.Position.X);
+            int y = (int)Math.Round(mouse.Position.Y);
+
+            if (button == MouseButton.Left || button == MouseButton.Right)
+            {
+                lastDragX = x;
+                lastDragY = y;
+
+                if (button == MouseButton.Left)
+                {
+                    if (clickWaitTimer.Enabled) // click timer is still running -> waiting for a double-click
+                    {
+                        GameView_MouseDoubleClick(x, y, Event.Button.Left);
+                    }
+                    else
+                    {
+                        // normal click, start the wait timer
+                        clickWaitTimerArgs = mouse;
+                        clickWaitTimer.Start();
+                    }
+
+                }
+                else // right
+                {
+                    gameView?.NotifyClick(x, y, Event.Button.Right);
+                }
             }
 
-            UpdateMouseState(e.Mouse);
+            UpdateMouseState(mouse);
 
-            if (pressedMouseButtons[0] && pressedMouseButtons[2]) // left + right
+            if (pressedMouseButtons[(int)MouseButtonIndex.Left] && pressedMouseButtons[(int)MouseButtonIndex.Right]) // left + right
             {
                 try
                 {
-                    gameView?.NotifySpecialClick(e.X, e.Y);
+                    gameView?.NotifySpecialClick(x, y);
                 }
                 catch (Exception ex)
                 {
                     ReportException("MouseDown", ex);
                 }
 
-                pressedMouseButtons[0] = false;
-                pressedMouseButtons[2] = false;
+                pressedMouseButtons[(int)MouseButtonIndex.Left] = false;
+                pressedMouseButtons[(int)MouseButtonIndex.Right] = false;
             }
         }
 
-        protected override void OnMouseUp(MouseButtonEventArgs e)
+        private void GameView_Scroll(IMouse mouse, ScrollWheel wheel)
         {
-            UpdateMouseState(e.Mouse);
+            try
+            {
+                float delta = wheel.Y - lastWheelValue;
+                lastWheelValue = wheel.Y;
 
-            OnMouseClick(e);
+                if (delta < 0)
+                    ZoomOut();
+                else if (delta > 0)
+                    ZoomIn();
+            }
+            catch (Exception ex)
+            {
+                ReportException("MouseWheel", ex);
+            }
         }
 
-        void OnMouseClick(MouseButtonEventArgs e)
+        void OnMouseClick(IMouse mouse)
         {
             if (clickWaitTimer.Enabled)
             {
@@ -417,7 +662,10 @@ namespace Freeserf
 
                 try
                 {
-                    gameView?.NotifyDoubleClick(e.X, e.Y, ConvertMouseButton(clickWaitTimerArgs.Mouse));
+                    int x = (int)Math.Round(mouse.Position.X);
+                    int y = (int)Math.Round(mouse.Position.Y);
+
+                    gameView?.NotifyDoubleClick(x, y, ConvertMouseButton(clickWaitTimerArgs));
                 }
                 catch (Exception ex)
                 {
@@ -430,11 +678,11 @@ namespace Freeserf
             clickWaitTimer.Start();
         }
 
-        void UpdateMouseState(MouseState state)
+        void UpdateMouseState(IMouse state)
         {
-            pressedMouseButtons[0] = state.LeftButton == ButtonState.Pressed;
-            pressedMouseButtons[1] = state.MiddleButton == ButtonState.Pressed;
-            pressedMouseButtons[2] = state.RightButton == ButtonState.Pressed;
+            pressedMouseButtons[(int)MouseButtonIndex.Left] = state.IsButtonPressed(MouseButton.Left);
+            pressedMouseButtons[(int)MouseButtonIndex.Middle] = state.IsButtonPressed(MouseButton.Middle);
+            pressedMouseButtons[(int)MouseButtonIndex.Right] = state.IsButtonPressed(MouseButton.Right);
         }
 
         void HandleKeyDrag()
@@ -461,132 +709,62 @@ namespace Freeserf
             }
         }
 
-        protected override void OnKeyUp(KeyboardKeyEventArgs e)
+        // Positions are in client coordinates
+        private void CheckMouseEnterOrLeave(Point currentPosition, Point lastPosition)
         {
-            base.OnKeyUp(e);
+            bool currentOutside =   currentPosition.X < 0 || currentPosition.X >= Width ||
+                                    currentPosition.Y < 0 || currentPosition.Y >= Height;
+            bool lastOutside =      lastPosition.X < 0 || lastPosition.X >= Width ||
+                                    lastPosition.Y < 0 || lastPosition.Y >= Height;
 
-            keysDown[(int)e.Key] = false;
-        }
-
-        protected override void OnKeyDown(KeyboardKeyEventArgs e)
-        {
-            try
+            if (currentOutside && !lastOutside) // leave
             {
-                base.OnKeyDown(e);
-
-                keysDown[(int)e.Key] = true;
-
-                if (e.Control && e.Key == Key.F)
-                {
-                    ToggleFullscreen();
-                    return;
-                }
-
-                switch (e.Key)
-                {
-                    case Key.Left:
-                        gameView?.NotifyKeyPressed((char)e.ScanCode, 0);
-                        HandleKeyDrag();
-                        break;
-                    case Key.Right:
-                        gameView?.NotifyKeyPressed((char)e.ScanCode, 0);
-                        HandleKeyDrag();
-                        break;
-                    case Key.Up:
-                        gameView?.NotifyKeyPressed((char)e.ScanCode, 0);
-                        HandleKeyDrag();
-                        break;
-                    case Key.Down:
-                        gameView?.NotifyKeyPressed((char)e.ScanCode, 0);
-                        HandleKeyDrag();
-                        break;
-                    case Key.F10:
-                        gameView?.NotifyKeyPressed('n', 1);
-                        break;
-                    case Key.F11:
-                        ToggleFullscreen();
-                        break;
-                    case Key.Enter:
-                        gameView?.NotifyKeyPressed(Event.SystemKeys.Return, 0);
-                        break;
-                    case Key.BackSpace:
-                        gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, 0);
-                        break;
-                    case Key.Delete:
-                        gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
-                        break;
-                    default:
-                        {
-                            if (e.ScanCode < 128) // only valid ascii characters
-                            {
-                                byte modifier = 0;
-
-                                if (e.Control)
-                                    modifier |= 1;
-                                if (e.Shift)
-                                    modifier |= 2;
-                                if (e.Alt)
-                                    modifier |= 4;
-
-                                gameView?.NotifyKeyPressed((char)e.ScanCode, modifier);
-                            }
-                        }
-                        break;
-                }
+                OnMouseLeave();
             }
-            catch (Exception ex)
+            else if (!currentOutside && lastOutside) // enter
             {
-                ReportException("KeyDown", ex);
+                OnMouseEnter();
             }
         }
 
-        protected override void OnKeyPress(KeyPressEventArgs e)
+        private void OnMouseEnter()
         {
-            try
-            {
-                base.OnKeyPress(e);
-
-                switch (e.KeyChar)
-                {
-                    case '<':
-                        ZoomOut();
-                        break;
-                    case '>':
-                        ZoomIn();
-                        break;
-                    case '+':
-                    case '-':
-                    case 'ä':
-                    case 'Ä':
-                    case 'ö':
-                    case 'Ö':
-                    case 'ü':
-                    case 'Ü':
-                        // TODO: Encoding
-                        gameView?.NotifyKeyPressed(e.KeyChar, 0);
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                ReportException("KeyPress", ex);
-            }
-        }
-
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-
             //Cursor = MouseCursor.Empty;
-            CursorVisible = false;
+            // CursorVisible = false;
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        private void OnMouseLeave()
         {
-            base.OnMouseLeave(e);
-
             //Cursor = MouseCursor.Default;
-            CursorVisible = true;
+            // CursorVisible = true;
         }
+
+
+        #region IDisposable
+
+        private bool disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed resources
+                }
+
+                // TODO: dispose unmanaged resources
+
+                disposed = true;
+            }
+        }
+
+        void IDisposable.Dispose()
+        {
+            Dispose(true);
+        }
+
+        #endregion
+
     }
 }

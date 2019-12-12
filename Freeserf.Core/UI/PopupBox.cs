@@ -556,7 +556,7 @@ namespace Freeserf.UI
                 return;
             }
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             uint realAmount = (uint)slideBars[index].Fill * SlideBarFactor;
 
             switch (Box)
@@ -862,7 +862,7 @@ namespace Freeserf.UI
         void SetFlag(int index, int x, int y)
         {
             var data = interf.RenderView.DataSource;
-            var playerIndex = interf.GetPlayer().Index;
+            var playerIndex = interf.Player.Index;
 
             buildings[index].Tag = Map.Object.Flag;
 
@@ -970,7 +970,7 @@ namespace Freeserf.UI
 
         void SetFlagIcon(int x, int y)
         {
-            var playerIndex = interf.GetPlayer().Index;
+            var playerIndex = interf.Player.Index;
 
             SetBuildingIcon(x, y, 128u + playerIndex);
         }
@@ -1111,7 +1111,7 @@ namespace Freeserf.UI
             SetBuilding(index++, 40, 86, Building.Type.IronMine);
             SetBuilding(index++, 88, 86, Building.Type.GoldMine);
 
-            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.GetPlayer()))
+            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.Player))
             {
                 SetFlag(index, 24, 123);
                 ++num;
@@ -1140,7 +1140,7 @@ namespace Freeserf.UI
             SetBuilding(index++, 24, 94, Building.Type.Mill);
             SetBuilding(index++, 88, 96, Building.Type.Boatbuilder);
 
-            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.GetPlayer()))
+            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.Player))
             {
                 SetFlag(index, 72, 117);
                 ++num;
@@ -1362,14 +1362,14 @@ namespace Freeserf.UI
 
         void DrawResourceStatsBox()
 		{
-            DrawResourcesBox(interf.GetPlayer().GetStatsResources());
+            DrawResourcesBox(interf.Player.GetStatsResources());
 
             SetButton(120, 137, 60u, Action.ShowStatMenu);
         }
 
         void DrawBuildingCount(int x, int y, Building.Type type)
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             uint numComplete = player.GetCompletedBuildingCount(type);
 
@@ -1516,7 +1516,7 @@ namespace Freeserf.UI
             int maxValue = 0;
             int index = interf.Game.GetResourceHistoryIndex();
             Resource.Type resource = (Resource.Type)(currentResourceForStatistics - 1);
-            var resourceCountHistory = interf.GetPlayer().GetResourceCountHistory(resource);
+            var resourceCountHistory = interf.Player.GetResourceCountHistory(resource);
 
             for (int i = 0; i < 112; ++i)
             {
@@ -1967,7 +1967,7 @@ namespace Freeserf.UI
 
             uint[,,] values = new uint[24, Building.MaxStock, 2];
 
-            CalculateGaugeValues(interf.GetPlayer(), values);
+            CalculateGaugeValues(interf.Player, values);
 
             DrawGaugeBalance(88, 9, values, Building.Type.Mill, 0);
             DrawGaugeBalance(24, 9, values, Building.Type.Baker, 0);
@@ -2029,7 +2029,7 @@ namespace Freeserf.UI
 
             uint[,,] values = new uint[24, Building.MaxStock, 2];
 
-            CalculateGaugeValues(interf.GetPlayer(), values);
+            CalculateGaugeValues(interf.Player, values);
 
             DrawGaugeBalance(56, 9, values, Building.Type.GoldSmelter, 1);
             DrawGaugeBalance(56, 25, values, Building.Type.GoldSmelter, 0);
@@ -2059,7 +2059,7 @@ namespace Freeserf.UI
 
         void DrawSerfCountBox()
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             int total = 0;
 
             for (int i = 0; i < 27; i++)
@@ -2117,7 +2117,7 @@ namespace Freeserf.UI
 
         void DrawIdleAndPotentialSerfsBox()
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             var serfs = player.GetStatsSerfsIdle();
             var serfsPotential = player.GetStatsSerfsPotential();
 
@@ -2207,7 +2207,7 @@ namespace Freeserf.UI
             SetTree(72, 51, 0x8);
             SetTree(104, 51, 0xf);
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             var building = interf.Game.GetBuilding((uint)player.buildingAttacked);
 
             int y = 0;
@@ -2325,7 +2325,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(16, 17, 295u, Action.DefaultFoodDistribution); // reset values button
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             slideBars[0].MoveTo(40, 30);
             slideBars[0].Displayed = Displayed;
@@ -2357,7 +2357,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(112, 17, 295u, Action.DefaultPlanksAndSteelDistribution); // reset values button
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             slideBars[0].MoveTo(8, 35);
             slideBars[0].Displayed = Displayed;
@@ -2394,7 +2394,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(16, 69, 295u, Action.DefaultCoalAndWheatDistribution); // reset values button
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             slideBars[0].MoveTo(8, 48);
             slideBars[0].Displayed = Displayed;
@@ -2452,7 +2452,7 @@ namespace Freeserf.UI
 
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             for (int i = 0; i < 4; ++i)
             {
@@ -2478,7 +2478,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
             SetButton(112, 17, 295u, Action.DefaultToolmakerPriorities); // reset values button
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             var locations = new int[9]
             {
@@ -2548,12 +2548,12 @@ namespace Freeserf.UI
             if (Box == Type.TransportPriorities)
             {
                 SetIcon(56, 129, 33u + CurrentTransportPriorityItem);
-                DrawPopupResourceStairs(interf.GetPlayer().GetFlagPriorities());
+                DrawPopupResourceStairs(interf.Player.GetFlagPriorities());
             }
             else
             {
                 SetIcon(56, 129, 33u + CurrentInventoryPriorityItem);
-                DrawPopupResourceStairs(interf.GetPlayer().GetInventoryPriorities());
+                DrawPopupResourceStairs(interf.Player.GetInventoryPriorities());
             }
         }
 
@@ -2763,7 +2763,7 @@ namespace Freeserf.UI
 
         void DrawDefendersBox()
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             if (player.tempIndex == 0)
             {
@@ -2867,13 +2867,13 @@ namespace Freeserf.UI
         // flag menu
         void DrawTransportInfoBox()
 		{
-            if (interf.GetPlayer().tempIndex == 0)
+            if (interf.Player.tempIndex == 0)
             {
                 interf.ClosePopup();
                 return;
             }
 
-            var flag = interf.Game.GetFlag(interf.GetPlayer().tempIndex);
+            var flag = interf.Game.GetFlag(interf.Player.tempIndex);
 
             SetFlagIcon(72, 49);
 
@@ -2918,13 +2918,13 @@ namespace Freeserf.UI
 
         Building TryToOpenBuildingPopup()
         {
-            if (interf.GetPlayer().tempIndex == 0)
+            if (interf.Player.tempIndex == 0)
             {
                 interf.ClosePopup();
                 return null;
             }
 
-            var building = interf.Game.GetBuilding(interf.GetPlayer().tempIndex);
+            var building = interf.Game.GetBuilding(interf.Player.tempIndex);
 
             if (building.IsBurning)
             {
@@ -3133,7 +3133,7 @@ namespace Freeserf.UI
 
         void DrawKnightSettingsBox()
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             // serf to knight rate setting
             SetIcon(24, 17, 9u); // settler
@@ -3276,7 +3276,7 @@ namespace Freeserf.UI
 
         void ActivateTransportItem(int index)
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             int i;
 
             if (Box == Type.TransportPriorities)
@@ -3303,7 +3303,7 @@ namespace Freeserf.UI
 
         void MoveTransportItem(bool up, bool toEnd)
 		{
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             byte[] priorities;
             int current;
 
@@ -3364,7 +3364,7 @@ namespace Freeserf.UI
 		{
             SetRedraw();
 
-            var player = interf.GetPlayer();
+            var player = interf.Player;
             bool spectator = interf.AccessRights != Viewer.Access.Player;
 
             // TODO
@@ -4433,7 +4433,7 @@ namespace Freeserf.UI
 
         void PromoteKnights(int number)
         {
-            var player = interf.GetPlayer();
+            var player = interf.Player;
 
             if (player.PromoteSerfsToKnights(number) == 0)
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
@@ -4443,7 +4443,7 @@ namespace Freeserf.UI
 
         void SetInventoryMode(Action action)
         {
-            var building = interf.Game.GetBuilding(interf.GetPlayer().tempIndex);
+            var building = interf.Game.GetBuilding(interf.Player.tempIndex);
             var inventory = building.Inventory;
 
             switch (action)

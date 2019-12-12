@@ -20,7 +20,7 @@ namespace Freeserf
 
             if (FileSystem.Paths.IsWindows())
             {
-                if (assemblyDirectory.EndsWith(@"\Debug") || assemblyDirectory.EndsWith(@"\Release"))
+                if (assemblyDirectory.EndsWith(@"Debug") || assemblyDirectory.EndsWith(@"Release"))
                 {
                     string projectFile = Path.GetFileNameWithoutExtension(assemblyPath) + ".csproj";
 
@@ -57,7 +57,7 @@ namespace Freeserf
             {
                 using (var mainWindow = new MainWindow(args))
                 {
-                    mainWindow.Run(20.0, 20.0);
+                    mainWindow.Run();
                 }
             }
             catch (Exception ex)
