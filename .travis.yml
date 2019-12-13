@@ -1,7 +1,8 @@
-dist: bionic
+dist: xenial
 language: csharp
 mono: none
-dotnet: 2.2.0
+sudo: required
+dotnet: 2.2
 
 git:
     depth: 3
@@ -11,7 +12,7 @@ solution: FreeserfNet.sln
 script:
   - dotnet --version
   - dotnet nuget restore
-  - msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
+  - dotnet msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
   - ./linux_build
 
 stages:
