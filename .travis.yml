@@ -1,5 +1,6 @@
-dist: xenial
+dist: bionic
 language: csharp
+mono: none
 
 git:
     depth: 3
@@ -7,6 +8,7 @@ git:
 
 solution: FreeserfNet.sln
 script:
+  - dotnet --version
   - nuget restore
   - msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
   - ./linux_build
