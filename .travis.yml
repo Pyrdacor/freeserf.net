@@ -5,10 +5,10 @@ git:
     depth: 3
     quiet: true
 
-solution: Freeserf.net.sln
+solution: FreeserfNet.sln
 script:
   - nuget restore
-  - msbuild /p:Configuration=LinuxRelease Freeserf.net.sln
+  - msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
   - ./linux_build
 
 stages:
