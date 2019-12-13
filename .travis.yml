@@ -1,4 +1,4 @@
-dist: bionic
+dist: disco
 language: csharp
 mono: none
 dotnet: 3.0
