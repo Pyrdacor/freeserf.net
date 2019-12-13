@@ -1,7 +1,7 @@
-dist: disco
+dist: bionic
 language: csharp
 mono: none
-dotnet: 3.0
+dotnet: 2.2.0
 
 git:
     depth: 3
