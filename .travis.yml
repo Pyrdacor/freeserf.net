@@ -1,6 +1,7 @@
 dist: bionic
 language: csharp
 mono: none
+dotnet: 3.0
 
 git:
     depth: 3
@@ -9,7 +10,7 @@ git:
 solution: FreeserfNet.sln
 script:
   - dotnet --version
-  - nuget restore
+  - dotnet nuget restore
   - msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
   - ./linux_build
 
