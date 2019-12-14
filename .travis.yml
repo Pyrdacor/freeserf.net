@@ -34,13 +34,14 @@ stages:
     if: branch = master AND type = push AND os = linux
 
 before_deploy:
-  - mkdir deploy
-  - cp FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/* deploy
-  - cp FreeserfNet/assets/* deploy
-  - cp changelog.txt deploy/changelog
-  - cd deploy
+  - mkdir deploy/FreeserfNet
+  - cp FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/* deploy/FreeserfNet/
+  - cp FreeserfNet/assets/* deploy/FreeserfNet/
+  - cp changelog.txt deploy/FreeserfNet/changelog
+  - cd deploy/FreeserfNet
   - chmod +x FreeserfNet
-  - tar -cvzf ../Freeserf.net-Linux.tar.gz .
+  - cd ..
+  - tar -czf ../Freeserf.net-Linux.tar.gz FreeserfNet
 
 deploy:
     provider: releases
