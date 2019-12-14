@@ -8,8 +8,8 @@ configuration: Release
 
 install:
   - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-  - nuget restore -verbosity detailed
-  - msbuild -t:restore
+  - nuget restore Freeserf.net.sln -verbosity detailed
+  - msbuild -t:restore Freeserf.net.sln
 
 build:
   project: Freeserf.net.sln
