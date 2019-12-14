@@ -1008,6 +1008,13 @@ namespace Freeserf.UI
                         gameType = GameType.Custom;
                     }
 
+                    // TODO we remove multiplayer as long as it isn't finished
+                    // TODO remove the following if then
+                    if (gameType == GameType.MultiplayerClient)
+                    {
+                        ++gameType;
+                    }
+
                     UpdateGameType();                    
                     break;
                 case Action.ShowOptions:
