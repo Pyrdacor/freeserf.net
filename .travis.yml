@@ -2,11 +2,25 @@ dist: xenial
 language: csharp
 mono: none
 sudo: required
-dotnet: 2.2
 
 git:
     depth: 3
     quiet: true
+
+addons:
+    snaps:
+      - name: dotnet-sdk
+        confinement: classic
+        channel: 3.1/stable
+
+install:
+    - export PATH="$PATH:/home/travis/.dotnet/tools"
+    - export PATH="$PATH:$HOME/.local/bin"
+    - sudo snap alias dotnet-sdk.dotnet dotnet
+
+global:
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+    - DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 solution: FreeserfNet.sln
 script:
