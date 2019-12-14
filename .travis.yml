@@ -25,7 +25,7 @@ global:
 solution: FreeserfNet.sln
 script:
   - dotnet --version
-  - dotnet nuget restore
+  - dotnet restore
   - dotnet msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
   - ./linux_build
 
