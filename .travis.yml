@@ -40,8 +40,7 @@ before_deploy:
   - cp changelog.txt deploy/changelog
   - cd deploy
   - chmod +x FreeserfNet
-  - tar -cvzf Freeserf.net-Linux.tar.gz .
-  - mv Freeserf.net-Linux.tar.gz ../Freeserf.net-Linux.tar.gz
+  - tar -cvzf ../Freeserf.net-Linux.tar.gz .
 
 deploy:
     provider: releases
