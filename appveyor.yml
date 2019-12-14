@@ -1,4 +1,4 @@
-image: Visual Studio 2017
+image: Visual Studio 2019
 
 environment:
   WINDOWS: 1
@@ -10,6 +10,9 @@ install:
   - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
   - nuget restore -verbosity detailed
   - msbuild -t:restore
+
+build:
+  project: Freeserf.net.sln
 
 artifacts:
   - path: Freeserf.net-Windows.zip
