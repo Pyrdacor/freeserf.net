@@ -1,7 +1,0 @@
-#!/bin/sh
-
-mkbundle -v --deps --simple Freeserf.net/bin/LinuxRelease/Freeserf.net.exe -o freeserf.net \
-	-L ~/.nuget/packages/silk.net/1.0.0-preview3/lib/net20/ \
-	-L Freeserf.Renderer/bin/LinuxRelease/netstandard2.0/ \
-    -L Freeserf.Network/bin/LinuxRelease/netstandard2.0/ \
-   	-L Freeserf.Core/bin/LinuxRelease/netstandard2.0/

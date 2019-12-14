@@ -27,14 +27,14 @@ script:
   - dotnet --version
   - dotnet restore FreeserfNet.sln
   - dotnet msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
-  - ./linux_build
+  - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj
 
 stages:
   - name: deploy
     if: branch = master AND type = push AND os = linux
 
 before_deploy:
-  - tar -cvzf Freeserf.net-Linux.tar.gz freeserf.net changelog.txt
+  - tar -cvzf Freeserf.net-Linux.tar.gz FreeserfNet/bin/LinuxRelease/publish/* changelog.txt
 
 deploy:
     provider: releases
