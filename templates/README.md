@@ -6,30 +6,21 @@ To avoid copyright issues I won't provide any copyrighted data from the original
 
 Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
 
-| Windows | Linux/Mono |
+| Windows | Linux |
 | ---- | ---- |
 | [![Build status](https://ci.appveyor.com/api/projects/status/mfja74779tdsajv7?svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net) | [![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net) |
 
 ## Download the game
 
-| Windows | Linux/Mono |
+| Windows | Linux |
 | ---- | ---- |
-| [v{BUILD_VERSION}](https://github.com/Pyrdacor/freeserf.net/releases/download/v{BUILD_VERSION}/Freeserf.net-Windows.zip "Windows v{BUILD_VERSION}") | [v{BUILD_VERSION}](https://github.com/Pyrdacor/freeserf.net/releases/download/v{BUILD_VERSION}/Freeserf.net-Linux.tar.gz "Linux v{BUILD_VERSION}") |
+| [v{BUILD_VERSION}](https://github.com/Pyrdacor/freeserf.net/releases/download/v{BUILD_VERSION}/Freeserf.net-Windows.zip "Windows v{BUILD_VERSION}") | [v{BUILD_VERSION}](https://github.com/Pyrdacor/freeserf.net/releases/download/{BUILD_VERSION}/Freeserf.net-Linux.tar.gz "Linux v{BUILD_VERSION}") |
 
 Builds for other platforms will follow later.
 
 Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. It is not included in the zip file. Amiga support is in progress but doesn't work correctly yet. But you can give it a shot if you want.
 
 For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
-
-
-## Patches
-
-Since version 1.7 there is a patcher for the Windows assembly which will allow me to provide fast patches for the game. This will ease bugfixing and testing without the need to download a new version manually. If you don't want to receive patches you may run the game with the command line option "--no-updates".
-
-Moreover the patcher will ask you to confirm patch download so you can also skip it.
-
-This feature may be removed later if it bothers people but in this phase it really helps to get rid of bugs and provide patches for testers that can't compile the game by theirselves.
 
 
 ## Support development
@@ -47,9 +38,11 @@ Thank you very much.
 
 ## Current State
 
-**Update 25.10.2019: Currently I am working on multiplayer support.**
+**Update 14.12.2019: Currently I am working on multiplayer support and trying to deploy a playable Linux version that depends on netcore3.1 instead of Mono.**
 
 Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
+
+For netcore3.1 there is a new renderer based on Silk.net which should be suitable for Windows and Linux.
 
 Things that are missing are some minor parts of AI logic and tutorial games. Serf fighting is not fully tested yet.
 Multiplayer support is prepared but not really implemented yet. But I'm working on this now.
@@ -60,6 +53,15 @@ The game is playable for most parts. If you find any bugs please report it in th
 ![Mission](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_2.png "Start a mission")
 ![Ingame](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_3.png "Build your settlement")
 ![Menus](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_4.png "Change settings")
+
+
+## Patches
+
+Since version 1.7 there is a patcher for the Windows assembly which will allow me to provide fast patches for the game. This will ease bugfixing and testing without the need to download a new version manually. If you don't want to receive patches you may run the game with the command line option "--no-updates".
+
+Moreover the patcher will ask you to confirm patch download so you can also skip it.
+
+This feature may be removed later if it bothers people but in this phase it really helps to get rid of bugs and provide patches for testers that can't compile the game by theirselves.
 
 
 ## Roadmap

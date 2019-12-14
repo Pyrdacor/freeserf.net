@@ -41,7 +41,8 @@ before_deploy:
   - cp -r FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/. deploy/FreeserfNet/
   - cp -r FreeserfNet/assets deploy/FreeserfNet/assets
   - cp changelog.txt deploy/FreeserfNet/changelog
-  - cd deploy/FreeserfNet
+  - cd deploy
+  - cd FreeserfNet
   - chmod +x FreeserfNet
   - cd ..
   - tar -czf ../Freeserf.net-Linux.tar.gz FreeserfNet
