@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 
 namespace Freeserf
 {
@@ -15,7 +14,7 @@ namespace Freeserf
 
         static Program()
         {
-            var assemblyPath = Assembly.GetEntryAssembly().Location;
+            var assemblyPath = Process.GetCurrentProcess().MainModule.FileName;
             var assemblyDirectory = Path.GetDirectoryName(assemblyPath);
 
             if (FileSystem.Paths.IsWindows())

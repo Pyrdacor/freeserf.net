@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
@@ -37,21 +37,29 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WindowsRelease|AnyCPU'">
     <DefineConstants>WINDOWS</DefineConstants>
     <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MacRelease|AnyCPU'">
     <DefineConstants>MAC</DefineConstants>
     <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|AnyCPU'">
     <DefineConstants>LINUX</DefineConstants>
     <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>WINDOWS</DefineConstants>
     <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -86,14 +94,9 @@
 
   <Target Name="CopyPackages" BeforeTargets="BeforeCompile">
     <ItemGroup>
-      <PackageReferenceFiles
-        Condition="%(PackageReference.CopyToOutputDirectory) != ''"
-        Include="$(NugetPackageRoot)\%(PackageReference.FileName)\%(PackageReference.Version)\%(PackageReference.CopyToOutputDirectory)" />
+      <PackageReferenceFiles Condition="%(PackageReference.CopyToOutputDirectory) != ''" Include="$(NugetPackageRoot)\%(PackageReference.FileName)\%(PackageReference.Version)\%(PackageReference.CopyToOutputDirectory)" />
     </ItemGroup>
-    <Copy
-      SourceFiles="@(PackageReferenceFiles)"
-      DestinationFolder="$(OutDir)"
-    />
+    <Copy SourceFiles="@(PackageReferenceFiles)" DestinationFolder="$(OutDir)" />
   </Target>
 
 </Project>
