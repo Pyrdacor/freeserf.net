@@ -45,6 +45,7 @@ before_deploy:
   - chmod +x FreeserfNet
   - cd ..
   - tar -czf ../Freeserf.net-Linux.tar.gz FreeserfNet
+  - cd ..
 
 deploy:
     provider: releases

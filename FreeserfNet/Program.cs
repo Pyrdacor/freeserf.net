@@ -43,9 +43,9 @@ namespace Freeserf
                     ExecutablePath = assemblyDirectory;
                 }
             }
-            else if (string.IsNullOrWhiteSpace(ExecutablePath)) // this could be caused by mono mkbundle
+            else
             {
-                ExecutablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath ?? "");
+                ExecutablePath = assemblyDirectory;
             }
         }
 

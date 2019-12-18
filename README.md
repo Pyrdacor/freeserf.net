@@ -18,13 +18,9 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 Builds for other platforms will follow later.
 
-Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. It is not included in the zip file. Amiga support is in progress but doesn't work correctly yet.
+Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. It is not included in the zip file. Amiga support is in progress but doesn't work correctly yet. But you can give it a shot if you want.
 
-You have to install .NET Framework 4.6.1 to run the game. For Windows you can download directly from Microsoft. Here is the link: https://www.microsoft.com/download/details.aspx?id=49982.
-
-Since April 25, 2019 there is another project inside the solution which uses netcore2.1 and does no longer require .NET Framework nor WinForms. Moreover it uses the netstandard version of OpenTK.
-
-Since May 4, 2019 the game is running on ubuntu.
+For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
 
 
 ## Patches
