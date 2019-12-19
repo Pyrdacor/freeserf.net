@@ -39,7 +39,7 @@ before_deploy:
   - mkdir FreeserfNet
   - cd ..
   - cp -r FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/. deploy/FreeserfNet/
-  - cp -r FreeserfNet/assets/. deploy/FreeserfNet/
+  - cp -r FreeserfNet/assets deploy/FreeserfNet/assets
   - cp changelog.txt deploy/FreeserfNet/changelog
   - cd deploy/FreeserfNet
   - chmod +x FreeserfNet
