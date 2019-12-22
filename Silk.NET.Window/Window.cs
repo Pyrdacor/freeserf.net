@@ -15,8 +15,8 @@ namespace Silk.NET.Window
         (
             true,
             true,
-            Point.Empty,
-            Size.Empty,
+            new Point(-1, -1),
+            new Size(1024, 768),
             60.0,
             60.0,
             GraphicsAPI.Default,
@@ -69,17 +69,18 @@ namespace Silk.NET.Window
         {
             Load += () =>
             {
-                InitKeyboardEvents();
-                InitMouseEvents();
+                var input = this.GetInput();
+                InitKeyboardEvents(input);
+                InitMouseEvents(input);
             };
         }
 
 
         #region Keyboard Events
 
-        private void InitKeyboardEvents()
+        private void InitKeyboardEvents(IInputContext input)
         {
-            var keyboard = this.GetInput().Keyboards.FirstOrDefault(k => k.IsConnected);
+            var keyboard = input.Keyboards.FirstOrDefault(k => k.IsConnected);
 
             if (keyboard != null)
             {
@@ -149,9 +150,9 @@ namespace Silk.NET.Window
 
         #region Mouse Events
 
-        private void InitMouseEvents()
+        private void InitMouseEvents(IInputContext input)
         {
-            var mouse = this.GetInput().Mice.FirstOrDefault(m => m.IsConnected);
+            var mouse = input.Mice.FirstOrDefault(m => m.IsConnected);
 
             if (mouse != null)
             {
