@@ -54,6 +54,14 @@ namespace Freeserf.Renderer
             Recreate(); // ensure that the data is up to date
         }
 
+        public void Unbind()
+        {
+            if (disposed)
+                return;
+
+            State.Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+        }
+
         void Recreate() // is only called when the buffer is bound (see Bind())
         {
             if (!changedSinceLastCreation || buffer == null)

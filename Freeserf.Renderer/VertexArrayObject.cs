@@ -121,7 +121,7 @@ namespace Freeserf.Renderer
 
                 foreach (var buffer in indexBuffers)
                 {
-                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                    buffer.Value.Bind();
                 }
 
                 buffersAreBound = true;
@@ -164,8 +164,7 @@ namespace Freeserf.Renderer
 
                 foreach (var buffer in indexBuffers)
                 {
-                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                    bufferLocations[buffer.Key] = -1;
+                    buffer.Value.Unbind();
                 }
 
                 buffersAreBound = false;

@@ -25,7 +25,7 @@ namespace Freeserf
         GameView gameView = null;
         bool fullscreen = false;
         bool[] pressedMouseButtons = new bool[3];
-        bool[] keysDown = new bool[256];
+        bool[] keysDown = new bool[(int)Key.LastKey + 1];
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
         static Global.InitInfo initInfo = null;
