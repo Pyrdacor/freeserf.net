@@ -175,7 +175,6 @@ namespace Silk.NET.Window
         private Rectangle doubleClickArea = new Rectangle(0, 0, 4, 4);
         private int doubleClickTime = 200;
         private Timer doubleClickTimer = new Timer();
-        private bool doubleClickCancelled = false;
         private MouseButtons firstClickButton = MouseButtons.None;
         private bool isFirstClick = true;
         private PointF lastMousePosition = PointF.Empty;
@@ -254,8 +253,13 @@ namespace Silk.NET.Window
 
         protected void CancelDoubleClick()
         {
-            doubleClickCancelled = true;
-            doubleClickTimer.Stop();
+            if (doubleClickTimer.Enabled)
+            {
+                doubleClickTimer.Stop();
+                OnClick(GetFirstClickPosition(), firstClickButton);                
+            }
+
+            isFirstClick = true;
         }
 
         private void DoubleClickTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -269,28 +273,42 @@ namespace Silk.NET.Window
             var position = ConvertMousePosition(mouse.Position);
             var button = ConvertMouseButton(mouseButton);
 
-            doubleClickCancelled = false;
-
             // doubleClickCancelled is only used if CancelDoubleClick is called in OnMouseDown
             OnMouseDown(position, button);
 
             if (isFirstClick || firstClickButton != button)
             {
                 doubleClickTimer.Stop();
-                isFirstClick = false;
-                firstClickButton = button;
-                AdjustDoubleClickPosition(mouse.Position);
-                doubleClickTimer.Start();
+                FirstClick(position, button);
             }
             else
             {
-                if (!doubleClickCancelled &&
-                    !doubleClickTimer.Enabled &&
-                    doubleClickArea.Contains(position))
+                if (doubleClickTimer.Enabled)
                 {
-                    OnDoubleClick(position, button);
-                }
+                    doubleClickTimer.Stop();
+
+                    if (doubleClickArea.Contains(position))
+                    {
+                        isFirstClick = true;
+                        OnDoubleClick(position, button);
+                    }
+                    else
+                    {
+                        OnClick(GetFirstClickPosition(), firstClickButton);
+                        FirstClick(position, button);
+                    }
+
+                    isFirstClick = true;
+                }                    
             }
+        }
+
+        private void FirstClick(Point position, MouseButtons button)
+        {
+            isFirstClick = false;
+            firstClickButton = button;
+            AdjustDoubleClickPosition(position);
+            doubleClickTimer.Start();
         }
 
         private void OnMouseUp(IMouse mouse, MouseButton mouseButton)
