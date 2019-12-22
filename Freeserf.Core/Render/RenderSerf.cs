@@ -267,23 +267,14 @@ namespace Freeserf.Render
         {
             base.Delete();
 
-            if (headSprite != null)
-            {
-                headSprite.Delete();
-                headSprite = null;
-            }
+            headSprite?.Delete();
+            headSprite = null;
 
-            if (fightingEnemy != null)
-            {
-                fightingEnemy.Delete();
-                fightingEnemy = null;
-            }
+            fightingEnemy?.Delete();
+            fightingEnemy = null;
 
-            if (fightingFlash != null)
-            {
-                fightingFlash.Delete();
-                fightingFlash = null;
-            }
+            fightingFlash?.Delete();
+            fightingFlash = null;
         }
 
         static void InitOffsets(DataSource dataSource)

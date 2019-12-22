@@ -89,16 +89,16 @@ namespace Freeserf.UI
             {
                 for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
                 {
-                    if (builds[column, row] != null)
-                        builds[column, row].Delete();
+                    builds[column, row]?.Delete();
+                    builds[column, row] = null;
                 }
             }
 
             // destroy map cursor sprites
             for (int i = 0; i < 7; ++i)
             {
-                if (mapCursorSprites[i] != null)
-                    mapCursorSprites[i].Delete();
+                mapCursorSprites[i]?.Delete();
+                mapCursorSprites[i] = null;
             }
         }
 

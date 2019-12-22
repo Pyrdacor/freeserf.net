@@ -970,7 +970,7 @@ namespace Freeserf.UI
         {
             if (buildingRoadSegments.Count > 0)
             {
-                buildingRoadSegments.Pop().Delete();
+                buildingRoadSegments.Pop()?.Delete();
             }
         }
 
@@ -986,7 +986,7 @@ namespace Freeserf.UI
         {
             while (buildingRoadSegments.Count > 0)
             {
-                buildingRoadSegments.Pop().Delete();
+                buildingRoadSegments.Pop()?.Delete();
             }
         }
 

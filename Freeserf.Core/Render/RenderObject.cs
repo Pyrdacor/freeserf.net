@@ -68,17 +68,11 @@ namespace Freeserf.Render
 
         public virtual void Delete()
         {
-            if (sprite != null)
-            {
-                sprite.Delete();
-                sprite = null;
-            }
+            sprite?.Delete();
+            sprite = null;
 
-            if (shadowSprite != null)
-            {
-                shadowSprite.Delete();
-                shadowSprite = null;
-            }
+            shadowSprite?.Delete();
+            shadowSprite = null;
         }
 
         public bool IsVisibleIn(Rect rect)

@@ -107,11 +107,8 @@ namespace Freeserf.Render
 
             for (int i = 0; i < 8; ++i)
             {
-                if (resources[i] != null)
-                {
-                    resources[i].Delete();
-                    resources[i] = null;
-                }
+                resources[i]?.Delete();
+                resources[i] = null;
             }
         }
 
@@ -176,11 +173,8 @@ namespace Freeserf.Render
                 }
                 else
                 {
-                    if (resources[i] != null)
-                    {
-                        resources[i].Delete();
-                        resources[i] = null;
-                    }
+                    resources[i]?.Delete();
+                    resources[i] = null;
                 }
             }
         }

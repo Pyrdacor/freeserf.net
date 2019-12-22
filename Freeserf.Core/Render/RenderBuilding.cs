@@ -503,54 +503,39 @@ namespace Freeserf.Render
         {
             base.Delete();
 
-            if (frameSprite != null)
-            {
-                frameSprite.Delete();
-                frameSprite = null;
-            }
+            frameSprite?.Delete();
+            frameSprite = null;
 
-            if (frameShadowSprite != null)
-            {
-                frameShadowSprite.Delete();
-                frameShadowSprite = null;
-            }
+            frameShadowSprite?.Delete();
+            frameShadowSprite = null;
 
-            if (crossOrStoneSprite != null)
-            {
-                crossOrStoneSprite.Delete();
-                crossOrStoneSprite = null;
-            }
+            crossOrStoneSprite?.Delete();
+            crossOrStoneSprite = null;
 
             if (burningSprites != null)
             {
                 for (int i = 0; i < burningSprites.Length; ++i)
-                    burningSprites[i].Delete();
+                    burningSprites[i]?.Delete();
 
                 burningSprites = null;
             }
 
             for (int i = 0; i < stones.Count; ++i)
             {
-                if (stones[i] != null)
-                {
-                    stones[i].Delete();
-                    stones[i] = null;
-                }
+                stones[i]?.Delete();
+                stones[i] = null;
             }
 
             for (int i = 0; i < planks.Count; ++i)
             {
-                if (planks[i] != null)
-                {
-                    planks[i].Delete();
-                    planks[i] = null;
-                }
+                planks[i]?.Delete();
+                planks[i] = null;
             }
 
             foreach (var sprite in additionalSprites)
-                sprite.Delete();
+                sprite?.Delete();
 
-            additionalSprites.Clear();
+            additionalSprites?.Clear();
 
             building = null;
         }
@@ -696,23 +681,14 @@ namespace Freeserf.Render
                 // If the building is finished we no longer need
                 // updates and we no longer need the frame sprites.
 
-                if (frameSprite != null)
-                {
-                    frameSprite.Delete();
-                    frameSprite = null;
-                }
+                frameSprite?.Delete();
+                frameSprite = null;
 
-                if (frameShadowSprite != null)
-                {
-                    frameShadowSprite.Delete();
-                    frameShadowSprite = null;
-                }
+                frameShadowSprite?.Delete();
+                frameShadowSprite = null;
 
-                if (crossOrStoneSprite != null)
-                {
-                    crossOrStoneSprite.Delete();
-                    crossOrStoneSprite = null;
-                }
+                crossOrStoneSprite?.Delete();
+                crossOrStoneSprite = null;
 
                 (sprite as IMaskedSprite).MaskTextureAtlasOffset = GetBuildingMaskOffset(textureAtlas, sprite.Height);
 
@@ -743,7 +719,7 @@ namespace Freeserf.Render
                         crossOrStoneSprite.TextureAtlasOffset = textureAtlas.GetOffset(CornerStoneSprite);
                     else if (crossOrStoneSprite != null)
                     {
-                        crossOrStoneSprite.Delete();
+                        crossOrStoneSprite?.Delete();
                         crossOrStoneSprite = null;
                     }
 
@@ -780,7 +756,7 @@ namespace Freeserf.Render
 
                     for (int i = stones.Count - 1; i >= stone; --i) // remove stones that are not present anymore
                     {
-                        stones[i].Delete();
+                        stones[i]?.Delete();
                         stones.RemoveAt(i);
                     }
 
@@ -797,7 +773,7 @@ namespace Freeserf.Render
 
                     for (int i = planks.Count - 1; i >= plank; --i) // remove stones that are not present anymore
                     {
-                        planks[i].Delete();
+                        planks[i]?.Delete();
                         planks.RemoveAt(i);
                     }
 
