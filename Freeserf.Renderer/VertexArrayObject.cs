@@ -21,7 +21,7 @@
 
 using System;
 using System.Collections.Generic;
-using Silk.NET.OpenGL;
+using System.Threading;
 
 namespace Freeserf.Renderer
 {
@@ -38,6 +38,7 @@ namespace Freeserf.Renderer
         bool disposed = false;
         bool buffersAreBound = false;
         ShaderProgram program = null;
+        object vaoLock = new object();
 
         public static VertexArrayObject ActiveVAO { get; private set; } = null;
 
@@ -51,6 +52,16 @@ namespace Freeserf.Renderer
         void Create()
         {
             index = State.Gl.GenVertexArray();
+        }
+
+        public void Lock()
+        {
+            Monitor.Enter(vaoLock);
+        }
+
+        public void Unlock()
+        {
+            Monitor.Exit(vaoLock);
         }
 
         public void AddBuffer(string name, PositionBuffer buffer)
@@ -83,35 +94,38 @@ namespace Freeserf.Renderer
             if (buffersAreBound)
                 return;
 
-            program.Use();
-            InternalBind(true);
-
-            foreach (var buffer in positionBuffers)
+            lock (vaoLock)
             {
-                bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
-            }
+                program.Use();
+                InternalBind(true);
 
-            foreach (var buffer in baseLineBuffers)
-            {
-                bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
-            }
+                foreach (var buffer in positionBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
 
-            foreach (var buffer in colorBuffers)
-            {
-                bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
-            }
+                foreach (var buffer in baseLineBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
 
-            foreach (var buffer in layerBuffers)
-            {
-                bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
-            }
+                foreach (var buffer in colorBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
 
-            foreach (var buffer in indexBuffers)
-            {
-                bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
-            }
+                foreach (var buffer in layerBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
 
-            buffersAreBound = true;
+                foreach (var buffer in indexBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
+
+                buffersAreBound = true;
+            }
         }
 
         public void UnbindBuffers()
@@ -119,40 +133,43 @@ namespace Freeserf.Renderer
             if (!buffersAreBound)
                 return;
 
-            program.Use();
-            InternalBind(true);            
-
-            foreach (var buffer in positionBuffers)
+            lock (vaoLock)
             {
-                program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                bufferLocations[buffer.Key] = -1;
-            }
+                program.Use();
+                InternalBind(true);
 
-            foreach (var buffer in baseLineBuffers)
-            {
-                program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                bufferLocations[buffer.Key] = -1;
-            }
+                foreach (var buffer in positionBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
 
-            foreach (var buffer in colorBuffers)
-            {
-                program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                bufferLocations[buffer.Key] = -1;
-            }
+                foreach (var buffer in baseLineBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
 
-            foreach (var buffer in layerBuffers)
-            {
-                program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                bufferLocations[buffer.Key] = -1;
-            }
+                foreach (var buffer in colorBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
 
-            foreach (var buffer in indexBuffers)
-            {
-                program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                bufferLocations[buffer.Key] = -1;
-            }
+                foreach (var buffer in layerBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
 
-            buffersAreBound = false;
+                foreach (var buffer in indexBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
+
+                buffersAreBound = false;
+            }
         }
 
         public void Bind()
@@ -162,55 +179,58 @@ namespace Freeserf.Renderer
 
         void InternalBind(bool bindOnly)
         {
-            if (ActiveVAO != this)
+            lock (vaoLock)
             {
-                State.Gl.BindVertexArray(index);
-                program.Use();
+                if (ActiveVAO != this)
+                {
+                    State.Gl.BindVertexArray(index);
+                    program.Use();
+                }
+
+                if (!bindOnly)
+                {
+                    bool buffersChanged = false;
+
+                    // ensure that all buffers are up to date
+                    foreach (var buffer in positionBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in baseLineBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in colorBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in layerBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in indexBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    if (buffersChanged)
+                    {
+                        UnbindBuffers();
+                        BindBuffers();
+                    }
+                }
+
+                ActiveVAO = this;
             }
-
-            if (!bindOnly)
-            {
-                bool buffersChanged = false;
-
-                // ensure that all buffers are up to date
-                foreach (var buffer in positionBuffers)
-                {
-                    if (buffer.Value.RecreateUnbound())
-                        buffersChanged = true;
-                }
-
-                foreach (var buffer in baseLineBuffers)
-                {
-                    if (buffer.Value.RecreateUnbound())
-                        buffersChanged = true;
-                }
-
-                foreach (var buffer in colorBuffers)
-                {
-                    if (buffer.Value.RecreateUnbound())
-                        buffersChanged = true;
-                }
-
-                foreach (var buffer in layerBuffers)
-                {
-                    if (buffer.Value.RecreateUnbound())
-                        buffersChanged = true;
-                }
-
-                foreach (var buffer in indexBuffers)
-                {
-                    if (buffer.Value.RecreateUnbound())
-                        buffersChanged = true;
-                }
-
-                if (buffersChanged)
-                {
-                    UnbindBuffers();
-                    BindBuffers();
-                }
-            }
-
-            ActiveVAO = this;
         }
 
         public static void Bind(VertexArrayObject vao)

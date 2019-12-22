@@ -398,7 +398,16 @@ namespace Freeserf.Renderer
 
             unsafe
             {
-                State.Gl.DrawElements(PrimitiveType.Triangles, (uint)indexBuffer.Size, DrawElementsType.UnsignedInt, (void*)0);
+                vertexArrayObject.Lock();
+
+                try
+                {
+                    State.Gl.DrawElements(PrimitiveType.Triangles, (uint)indexBuffer.Size, DrawElementsType.UnsignedInt, (void*)0);
+                }
+                finally
+                {
+                    vertexArrayObject.Unlock();
+                }
             }
         }
     }
