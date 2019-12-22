@@ -54,9 +54,11 @@ namespace Freeserf
         {
             try
             {
-                using (var mainWindow = new MainWindow(args))
+                Silk.NET.Windowing.Window.Init();
+                using (var mainWindow = MainWindow.Create(args))
                 {
-                    mainWindow.Run();
+                    if (mainWindow != null)
+                        mainWindow.Run();
                 }
             }
             catch (Exception ex)
