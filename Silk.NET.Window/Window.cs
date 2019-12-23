@@ -273,7 +273,6 @@ namespace Silk.NET.Window
             var position = ConvertMousePosition(mouse.Position);
             var button = ConvertMouseButton(mouseButton);
 
-            // doubleClickCancelled is only used if CancelDoubleClick is called in OnMouseDown
             OnMouseDown(position, button);
 
             if (isFirstClick || firstClickButton != button)
@@ -297,8 +296,6 @@ namespace Silk.NET.Window
                         OnClick(GetFirstClickPosition(), firstClickButton);
                         FirstClick(position, button);
                     }
-
-                    isFirstClick = true;
                 }                    
             }
         }
