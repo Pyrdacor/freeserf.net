@@ -518,23 +518,32 @@ namespace Freeserf
             UpdateMouseState(button, true);
 
             // left + right = special click
-            if ((button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right)) &&
-                pressedMouseButtons[(int)MouseButtonIndex.Left] &&
-                pressedMouseButtons[(int)MouseButtonIndex.Right])
+            if ((button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right)))
             {
-                CancelDoubleClick();
-
-                try
+                if (
+                    pressedMouseButtons[(int)MouseButtonIndex.Left] &&
+                    pressedMouseButtons[(int)MouseButtonIndex.Right]
+                )
                 {
-                    gameView?.NotifySpecialClick(position.X, position.Y);
-                }
-                catch (Exception ex)
-                {
-                    ReportException("MouseDown", ex);
-                }
+                    CancelDoubleClick();
 
-                pressedMouseButtons[(int)MouseButtonIndex.Left] = false;
-                pressedMouseButtons[(int)MouseButtonIndex.Right] = false;
+                    try
+                    {
+                        gameView?.NotifySpecialClick(position.X, position.Y);
+                    }
+                    catch (Exception ex)
+                    {
+                        ReportException("MouseDown", ex);
+                    }
+
+                    pressedMouseButtons[(int)MouseButtonIndex.Left] = false;
+                    pressedMouseButtons[(int)MouseButtonIndex.Right] = false;
+                }
+                else
+                {
+                    lastDragX = position.X;
+                    lastDragY = position.Y;
+                }
             }
 
             base.OnMouseDown(position, button);
