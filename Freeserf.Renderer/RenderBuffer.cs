@@ -404,6 +404,10 @@ namespace Freeserf.Renderer
                 {
                     State.Gl.DrawElements(PrimitiveType.Triangles, (uint)indexBuffer.Size, DrawElementsType.UnsignedInt, (void*)0);
                 }
+                catch
+                {
+                    // ignore for now
+                }
                 finally
                 {
                     vertexArrayObject.Unlock();

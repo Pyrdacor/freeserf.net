@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Timers;
+using System.Threading.Tasks;
 using Silk.NET.Input;
 using Silk.NET.Input.Common;
 using Silk.NET.Windowing.Common;
@@ -39,16 +40,18 @@ namespace Silk.NET.Window
             return options;
         }
 
+        private readonly List<Delegate> timerTasks = new List<Delegate>();
+
         public Window()
             : base(DefaultOptions)
         {
-            InitInputEvents();
+            InitEvents();
         }
 
         public Window(string title, Point position, Size size)
             : base(CreateOptions(title, position, size))
         {
-            InitInputEvents();
+            InitEvents();
         }
 
         public Window(string title, Size size)
@@ -60,20 +63,44 @@ namespace Silk.NET.Window
         public Window(WindowOptions options)
             : base(options)
         {
-            InitInputEvents();
+            InitEvents();
         }
 
         public Rectangle ClientRectangle => new Rectangle(Position, Size);
 
-        private void InitInputEvents()
+        public bool Initialized { get; private set; } = false;
+
+        private void InitEvents()
         {
             Load += () =>
             {
+                Update += Window_TimerUpdate;
                 var input = this.GetInput();
                 InitKeyboardEvents(input);
                 InitMouseEvents(input);
+                Initialized = true;
             };
         }
+
+
+        #region Timers
+
+        internal void InvokeTimerTask(Delegate task)
+        {
+            timerTasks.Add(task);
+        }
+
+        private void Window_TimerUpdate(double obj)
+        {
+            var tasksCopy = new List<Delegate>(timerTasks);
+
+            foreach (var timerTask in tasksCopy)
+                timerTask.DynamicInvoke(this, EventArgs.Empty);
+
+            timerTasks.Clear();
+        }
+
+        #endregion
 
 
         #region Keyboard Events
@@ -156,8 +183,9 @@ namespace Silk.NET.Window
 
             if (mouse != null)
             {
+                doubleClickTimer = new Timer(this);
                 doubleClickTimer.Interval = doubleClickTime;
-                doubleClickTimer.AutoReset = true;
+                doubleClickTimer.AutoReset = false;
                 doubleClickTimer.Elapsed += DoubleClickTimer_Elapsed;
                 lastMousePosition = mouse.Position;
                 ScrollWheel? firstWheel = mouse.ScrollWheels.Count > 0 ? mouse.ScrollWheels.First() : (ScrollWheel?)null;
@@ -174,7 +202,8 @@ namespace Silk.NET.Window
 
         private Rectangle doubleClickArea = new Rectangle(0, 0, 4, 4);
         private int doubleClickTime = 200;
-        private Timer doubleClickTimer = new Timer();
+        private Timer doubleClickTimer = null;
+        private bool doubleClickTimerStopped = false;
         private MouseButtons firstClickButton = MouseButtons.None;
         private bool isFirstClick = true;
         private PointF lastMousePosition = PointF.Empty;
@@ -253,8 +282,9 @@ namespace Silk.NET.Window
 
         protected void CancelDoubleClick()
         {
-            if (doubleClickTimer.Enabled)
+            if (doubleClickTimer.Running)
             {
+                doubleClickTimerStopped = true;
                 doubleClickTimer.Stop();
                 OnClick(GetFirstClickPosition(), firstClickButton);                
             }
@@ -262,8 +292,14 @@ namespace Silk.NET.Window
             isFirstClick = true;
         }
 
-        private void DoubleClickTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void DoubleClickTimer_Elapsed(object sender, EventArgs e)
         {
+            if (doubleClickTimerStopped)
+            {
+                doubleClickTimerStopped = false;
+                return;
+            }
+
             isFirstClick = true;
             OnClick(GetFirstClickPosition(), firstClickButton);
         }
@@ -277,13 +313,15 @@ namespace Silk.NET.Window
 
             if (isFirstClick || firstClickButton != button)
             {
+                doubleClickTimerStopped = true;
                 doubleClickTimer.Stop();
                 FirstClick(position, button);
             }
             else
             {
-                if (doubleClickTimer.Enabled)
+                if (doubleClickTimer.Running)
                 {
+                    doubleClickTimerStopped = true;
                     doubleClickTimer.Stop();
 
                     if (doubleClickArea.Contains(position))
@@ -305,6 +343,7 @@ namespace Silk.NET.Window
             isFirstClick = false;
             firstClickButton = button;
             AdjustDoubleClickPosition(position);
+            doubleClickTimerStopped = false;
             doubleClickTimer.Start();
         }
 

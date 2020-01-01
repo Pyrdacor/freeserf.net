@@ -47,7 +47,7 @@ namespace Freeserf.Data
 
         public override Buffer Convert()
         {
-            uint resSize = buffer.Pop<ushort>();
+            uint resultSize = buffer.Pop<ushort>();
             MutableBuffer result = new MutableBuffer(Endian.Endianess.Big);
 
             try
@@ -82,7 +82,7 @@ namespace Freeserf.Data
                 throw new ExceptionFreeserf(ErrorSystemType.Data, "TPWM source data corrupted");
             }
 
-            if (result.Size != resSize)
+            if (result.Size != resultSize)
             {
                 throw new ExceptionFreeserf(ErrorSystemType.Data, "TPWM source data corrupted");
             }

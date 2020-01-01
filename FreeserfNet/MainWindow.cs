@@ -313,6 +313,9 @@ namespace Freeserf
 
         private void MainWindow_Render(double delta)
         {
+            if (!Initialized)
+                return;
+
             MakeCurrent();
 
             try

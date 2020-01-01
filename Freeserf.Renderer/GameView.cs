@@ -431,6 +431,8 @@ namespace Freeserf.Renderer
 
             if (layers[Layer.Gui].Visible)
             {
+                // TODO gui.Draw draws/prepares everything at the moment
+                // TODO separate rendering from game logic/update
                 gui.Draw(); // this will prepare gui components for rendering
                 gui.DrawCursor(cursorPosition.X, cursorPosition.Y);
             }

@@ -32,8 +32,6 @@ namespace Freeserf.Renderer
         Shader vertexShader = null;
         bool disposed = false;
         string fragmentColorOutputName = "color";
-        readonly Dictionary<string, int> uniformLocations = new Dictionary<string, int>();
-        readonly Dictionary<string, int> attributeLocations = new Dictionary<string, int>();
 
         public uint ProgramIndex { get; private set; } = 0;
         public bool Loaded { get; private set; } = false;

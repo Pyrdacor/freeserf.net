@@ -2326,7 +2326,7 @@ namespace Freeserf
 
         void UpdateBorders()
         {
-            foreach (var renderBorderSegment in renderBorderSegments.ToList())
+            foreach (var renderBorderSegment in renderBorderSegments.ToArray())
                 renderBorderSegment.Value.Update(Map.RenderMap);
         }
 
