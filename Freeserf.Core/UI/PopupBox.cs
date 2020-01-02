@@ -1742,7 +1742,7 @@ namespace Freeserf.UI
             var game = interf.Game;
             int index = game.GetPlayerHistoryIndex(scale);
             byte[] chartData = new byte[112 * 100 * 4];
-            uint numPlayers = (uint)game.GetPlayerCount();
+            uint numPlayers = (uint)game.PlayerCount;
 
             for (uint i = 0; i < numPlayers; ++i)
             {
@@ -3193,7 +3193,7 @@ namespace Freeserf.UI
 
         void DrawPlayerFacesBox()
 		{
-            int numPlayers = interf.Game.GetPlayerCount();
+            int numPlayers = interf.Game.PlayerCount;
             int width = (Width - 16) / 2;
             int height = (Height - 16) / 2;
 

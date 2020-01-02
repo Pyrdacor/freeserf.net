@@ -86,7 +86,7 @@ namespace Freeserf.AIStates
             }
 
             uint spot = 0;
-            int maxGeologists = ai.HardTimes() ? 2 : 2 + (int)(ai.GameTime / ((45 - Misc.Max(ai.GoldFocus, ai.SteelFocus) * 5) * Global.TICKS_PER_MIN));
+            int maxGeologists = ai.HardTimes ? 2 : 2 + (int)(ai.GameTime / ((45 - Misc.Max(ai.GoldFocus, ai.SteelFocus) * 5) * Global.TICKS_PER_MIN));
             var mineType = MineTypes[(int)mineralType - 1];
             var largeSpots = AI.GetMemorizedMineralSpots(mineralType, true)
                 .Where(mineralSpot => game.Map.HasOwner(mineralSpot) && game.Map.GetOwner(mineralSpot) == player.Index).ToList();
@@ -94,7 +94,7 @@ namespace Freeserf.AIStates
                 .Where(mineralSpot => game.Map.HasOwner(mineralSpot) && game.Map.GetOwner(mineralSpot) == player.Index && !largeSpots.Contains(mineralSpot)).ToList();
             bool considerSmallSpots = (ai.GameTime > 120 * Global.TICKS_PER_MIN + playerInfo.Intelligence * 30 * Global.TICKS_PER_MIN) || ai.StupidDecision();
 
-            if (ai.HardTimes() && ((smallSpots.Count > 0 && ai.GameTime >= 60 * Global.TICKS_PER_MIN) || (smallSpots.Count > 3 && ai.GameTime >= 35 * Global.TICKS_PER_MIN)))
+            if (ai.HardTimes && ((smallSpots.Count > 0 && ai.GameTime >= 60 * Global.TICKS_PER_MIN) || (smallSpots.Count > 3 && ai.GameTime >= 35 * Global.TICKS_PER_MIN)))
                 considerSmallSpots = true;
 
             while (true)

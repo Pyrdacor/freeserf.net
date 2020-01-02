@@ -87,17 +87,41 @@ namespace Silk.NET.Window
 
         internal void InvokeTimerTask(Delegate task)
         {
-            timerTasks.Add(task);
+            lock (timerTasks)
+            {
+                timerTasks.Add(task);
+            }
         }
 
         private void Window_TimerUpdate(double obj)
         {
-            var tasksCopy = new List<Delegate>(timerTasks);
+            var exceptions = new List<Exception>();
+            List<Delegate> tasksCopy;
+
+            lock (timerTasks)
+            {
+                tasksCopy = new List<Delegate>(timerTasks);
+            }
 
             foreach (var timerTask in tasksCopy)
-                timerTask.DynamicInvoke(this, EventArgs.Empty);
+            {
+                try
+                {
+                    timerTask.DynamicInvoke(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
 
-            timerTasks.Clear();
+            lock (timerTasks)
+            {
+                timerTasks.Clear();
+            }
+
+            if (exceptions.Count > 0)
+                throw exceptions[0];
         }
 
         #endregion

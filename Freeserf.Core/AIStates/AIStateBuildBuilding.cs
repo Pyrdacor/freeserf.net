@@ -75,13 +75,13 @@ namespace Freeserf.AIStates
             MapPos position;
 
             // find a nice spot
-            if (!IsEssentialBuilding(game, player) && !IsResourceNeedingBuilding() && ai.StupidDecision()) // no stupid decisions for essential buildings and buildings that need resources!
+            if (!IsEssentialBuilding(game, player) && !IsResourceNeedingBuilding && ai.StupidDecision()) // no stupid decisions for essential buildings and buildings that need resources!
                 position = FindRandomSpot(game, player, false);
             else
             {
                 position = FindSpot(ai, game, player, (int)playerInfo.Intelligence);
 
-                if (position == Constants.INVALID_MAPPOS && !IsResourceNeedingBuilding() && (!ai.HardTimes() || type == Building.Type.Sawmill || type == Building.Type.ToolMaker))
+                if (position == Constants.INVALID_MAPPOS && !IsResourceNeedingBuilding && (!ai.HardTimes || type == Building.Type.Sawmill || type == Building.Type.ToolMaker))
                     position = FindRandomSpot(game, player, true);
             }
 
@@ -143,7 +143,7 @@ namespace Freeserf.AIStates
 
                     // If this was a toolmaker and we are in hard times we set planks to half for toolmaker.
                     // Also we decide which tool to craft first.
-                    if (type == Building.Type.ToolMaker && ai.HardTimes())
+                    if (type == Building.Type.ToolMaker && ai.HardTimes)
                     {
                         player.PlanksToolmaker = ushort.MaxValue / 2;
 
@@ -191,22 +191,25 @@ namespace Freeserf.AIStates
             }
         }
 
-        bool IsResourceNeedingBuilding()
+        bool IsResourceNeedingBuilding
         {
-            switch (type)
+            get
             {
-                // For these buildings we will not choose a random spot if there is no valid spot.
-                // It would not make sense to do so as they need resources around them.
-                case Building.Type.CoalMine:
-                case Building.Type.Fisher:
-                case Building.Type.GoldMine:
-                case Building.Type.IronMine:
-                case Building.Type.Lumberjack:
-                case Building.Type.Stonecutter:
-                case Building.Type.StoneMine:
-                    return true;
-                default:
-                    return false;
+                switch (type)
+                {
+                    // For these buildings we will not choose a random spot if there is no valid spot.
+                    // It would not make sense to do so as they need resources around them.
+                    case Building.Type.CoalMine:
+                    case Building.Type.Fisher:
+                    case Building.Type.GoldMine:
+                    case Building.Type.IronMine:
+                    case Building.Type.Lumberjack:
+                    case Building.Type.Stonecutter:
+                    case Building.Type.StoneMine:
+                        return true;
+                    default:
+                        return false;
+                }
             }
         }
 
@@ -264,7 +267,7 @@ namespace Freeserf.AIStates
                 case Building.Type.Farm:
                     return FindSpotWithSpace(game, player, intelligence, 1 + ai.FoodFocus);
                 case Building.Type.Fisher:
-                    if (ai.HardTimes())
+                    if (ai.HardTimes)
                     {
                         // we need to find fish in territory or near territory
                         var spot = game.Map.FindFirstInTerritory(player.Index, FindFishInTerritory);
@@ -294,7 +297,7 @@ namespace Freeserf.AIStates
                 case Building.Type.Tower:
                 case Building.Type.Fortress:
                     {
-                        if (ai.HardTimes() && type == Building.Type.Hut)
+                        if (ai.HardTimes && type == Building.Type.Hut)
                         {
                             Func<Map, uint, bool> targetFunc = null;
                             int searchRange = 0;

@@ -303,7 +303,7 @@ namespace Freeserf.UI
             var position = new Position(x, y);
             var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
 
-            if (interf.IsBuildingRoad())
+            if (interf.IsBuildingRoad)
             {
                 int distanceX = map.DistanceX(interf.GetMapCursorPosition(), mapPosition) + 1;
                 int distanceY = map.DistanceY(interf.GetMapCursorPosition(), mapPosition) + 1;
@@ -425,7 +425,7 @@ namespace Freeserf.UI
             var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
             var player = interf.Player;
 
-            if (interf.IsBuildingRoad())
+            if (interf.IsBuildingRoad)
             {
                 if (mapPosition != interf.GetMapCursorPosition())
                 {

@@ -1829,10 +1829,7 @@ namespace Freeserf
             return players[index];
         }
 
-        public int GetPlayerCount()
-        {
-            return players.Count();
-        }
+        public int PlayerCount => players.Count();
 
         public int GetFreeKnightCount(Player player)
         {
@@ -2020,11 +2017,11 @@ namespace Freeserf
         {
             uint enemyScore = 0;
 
-            foreach (Player p in players)
+            foreach (Player enemy in players)
             {
-                if (player.Index != p.Index)
+                if (player.Index != enemy.Index)
                 {
-                    enemyScore += p.GetTotalMilitaryScore();
+                    enemyScore += enemy.TotalMilitaryScore;
                 }
             }
 
@@ -2039,7 +2036,7 @@ namespace Freeserf
 
             foreach (var player in players)
             {
-                landBefore[(int)player.Index] = player.GetLandArea();
+                landBefore[(int)player.Index] = player.LandArea;
                 buildingsBefore[(int)player.Index] = player.BuildingScore;
             }
 
@@ -2055,7 +2052,7 @@ namespace Freeserf
                                            building.Position,
                                            building.Player);
                 }
-                else if (landBefore[(int)player.Index] > player.GetLandArea())
+                else if (landBefore[(int)player.Index] > player.LandArea)
                 {
                     player.AddNotification(Notification.Type.LostLand,
                                            building.Position,
@@ -2615,7 +2612,7 @@ namespace Freeserf
                 // Store land area stats in history. 
                 foreach (var player in players)
                 {
-                    values[player.Index] = player.GetLandArea();
+                    values[player.Index] = player.LandArea;
                 }
 
                 RecordPlayerHistory(updateLevel, 1, playerHistoryIndex, values);

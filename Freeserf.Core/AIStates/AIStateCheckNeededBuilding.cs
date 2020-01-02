@@ -250,7 +250,7 @@ namespace Freeserf.AIStates
 
         bool TestBuilding(int count, AI ai, Game game, Player player, int spawnEveryMinutes, int spawnEveryTotalLand, int chance = 100)
         {
-            return ai.GameTime > (count + 1) * spawnEveryMinutes * Global.TICKS_PER_MIN && player.GetLandArea() > (count + 1) * spawnEveryTotalLand && ai.Chance(chance);
+            return ai.GameTime > (count + 1) * spawnEveryMinutes * Global.TICKS_PER_MIN && player.LandArea > (count + 1) * spawnEveryTotalLand && ai.Chance(chance);
         }
 
         CheckResult CheckBuilding(AI ai, Game game, Player player, int intelligence, Building.Type type)
@@ -276,7 +276,7 @@ namespace Freeserf.AIStates
 
             // Our focus must be to get a coal and iron mine running as we need steel.
             // We also need a food source.
-            if (ai.HardTimes())
+            if (ai.HardTimes)
             {
                 switch (type)
                 {
@@ -347,7 +347,7 @@ namespace Freeserf.AIStates
 
             int numIncompleteBuildings = game.GetPlayerBuildings(player).Count(building => !building.IsDone);
 
-            if (numIncompleteBuildings > 2 + player.GetLandArea() / 200 + ai.GameTime / (20 * Global.TICKS_PER_MIN) + Math.Max(ai.ExpandFocus - 1, ai.BuildingFocus))
+            if (numIncompleteBuildings > 2 + player.LandArea / 200 + ai.GameTime / (20 * Global.TICKS_PER_MIN) + Math.Max(ai.ExpandFocus - 1, ai.BuildingFocus))
                 return CheckResult.NotNeeded;
 
             // If we can't produce knights and don't have any left, we won't build
@@ -437,7 +437,7 @@ namespace Freeserf.AIStates
 
                         float gameTimeFactor = ai.GameTime / (20.0f * Global.TICKS_PER_MIN);
 
-                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.GetLandArea() - 250) / (225 - Math.Min(80, 5 + Misc.Round(gameTimeFactor * gameTimeFactor))) + (focus + 1) * ai.GameTime / (560 * Global.TICKS_PER_SEC) - 1 &&
+                        if (CanBuildMilitary(ai, game, player) && count < (focus * 20 + player.LandArea - 250) / (225 - Math.Min(80, 5 + Misc.Round(gameTimeFactor * gameTimeFactor))) + (focus + 1) * ai.GameTime / (560 * Global.TICKS_PER_SEC) - 1 &&
                             ai.GameTime > (90 - intelligence - focus * 15) * Global.TICKS_PER_SEC)
                         {
                             return NeedBuilding(ai, game, player, type);
@@ -571,7 +571,7 @@ namespace Freeserf.AIStates
                         return CheckResult.NotNeeded;
 
                     if (count < (game.Map.Size + 1) / 2 + ai.BuildingFocus &&
-                        count < ((int)player.GetLandArea() + ai.BuildingFocus * 100) / 1000 && ai.GameTime > 40 * Global.TICKS_PER_MIN &&
+                        count < ((int)player.LandArea + ai.BuildingFocus * 100) / 1000 && ai.GameTime > 40 * Global.TICKS_PER_MIN &&
                         player.GetCompletedBuildingCount(Building.Type.WeaponSmith) > count)
                         return NeedBuilding(ai, game, player, type);
                     break;

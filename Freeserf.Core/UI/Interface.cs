@@ -582,7 +582,7 @@ namespace Freeserf.UI
         {
             mapCursorPosition = position;
 
-            if (IsBuildingRoad())
+            if (IsBuildingRoad)
             {
                 DetermineMapCursorTypeRoad();
             }
@@ -594,10 +594,7 @@ namespace Freeserf.UI
             UpdateInterface();
         }
 
-        public bool IsBuildingRoad()
-        {
-            return buildingRoad != null && buildingRoad.Valid;
-        }
+        public bool IsBuildingRoad => buildingRoad != null && buildingRoad.Valid;
 
         public Road GetBuildingRoad()
         {
@@ -1155,7 +1152,7 @@ namespace Freeserf.UI
         // Set the appropriate sprites for the panel buttons and the map cursor. 
         void UpdateInterface()
         {
-            if (!IsBuildingRoad())
+            if (!IsBuildingRoad)
             {
                 switch (mapCursorType)
                 {
@@ -1330,7 +1327,7 @@ namespace Freeserf.UI
                         {
                             ClosePopup();
                         }
-                        else if (IsBuildingRoad())
+                        else if (IsBuildingRoad)
                         {
                             BuildRoadEnd();
                         }
@@ -1463,7 +1460,7 @@ namespace Freeserf.UI
                     client.SendPlayerStateUpdate(player);
             }
 
-            for (uint i = 0; i < Game.GetPlayerCount(); ++i)
+            for (uint i = 0; i < Game.PlayerCount; ++i)
                 Game.GetPlayer(i).ResetDirtyFlag();
         }
     }

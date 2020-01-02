@@ -8181,7 +8181,7 @@ namespace Freeserf
                         building.Player != Player &&
                         building.HasKnight())
                     {
-                        if (building.IsUnderAttack())
+                        if (building.IsUnderAttack)
                         {
                             var player = Game.GetPlayer(building.Player);
 
@@ -8429,7 +8429,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            if (building.IsEnoughPlaceForKnight())
+                            if (building.IsEnoughPlaceForKnight)
                             {
                                 // Enter building 
                                 EnterBuilding(-1, false);

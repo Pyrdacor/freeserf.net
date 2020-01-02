@@ -222,14 +222,12 @@ namespace Freeserf
             return state.SerfCounts[(int)type];
         }
 
-        public uint GetTotalKnightCount()
-        {
-            return GetSerfCount(Serf.Type.Knight0) +
-                   GetSerfCount(Serf.Type.Knight1) +
-                   GetSerfCount(Serf.Type.Knight2) +
-                   GetSerfCount(Serf.Type.Knight3) +
-                   GetSerfCount(Serf.Type.Knight4);
-        }
+        public uint TotalKnightCount =>
+            GetSerfCount(Serf.Type.Knight0) +
+            GetSerfCount(Serf.Type.Knight1) +
+            GetSerfCount(Serf.Type.Knight2) +
+            GetSerfCount(Serf.Type.Knight3) +
+            GetSerfCount(Serf.Type.Knight4);
 
         public int GetFlagPriority(Resource.Type resource)
         {
@@ -1192,10 +1190,7 @@ namespace Freeserf
             return settings.InventoryPriorities;
         }
 
-        public uint GetTotalMilitaryScore()
-        {
-            return state.TotalMilitaryScore;
-        }
+        public uint TotalMilitaryScore => state.TotalMilitaryScore;
 
         // Update player game state as part of the game progression.
         public void Update()
@@ -1453,10 +1448,7 @@ namespace Freeserf
             state.MilitaryMaxGold = 0;
         }
 
-        public uint GetLandArea()
-        {
-            return state.TotalLandArea;
-        }
+        public uint LandArea => state.TotalLandArea;
 
         public void IncreaseLandArea()
         {

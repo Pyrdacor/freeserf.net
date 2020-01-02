@@ -279,7 +279,7 @@ namespace Freeserf
                 client.SendGameStateUpdate(game);
                 client.SendMapStateUpdate(game.Map);
 
-                for (uint i = 0; i < game.GetPlayerCount(); ++i)
+                for (uint i = 0; i < game.PlayerCount; ++i)
                     client.SendPlayerStateUpdate(game.GetPlayer(i));
             }
         }
@@ -348,7 +348,7 @@ namespace Freeserf
 
             if (AccessRights == Access.Spectator)
             {
-                for (uint i = 0; i < remoteInterface.Game.GetPlayerCount(); ++i)
+                for (uint i = 0; i < remoteInterface.Game.PlayerCount; ++i)
                     remoteInterface.GetPlayerUpdate(i);
             }
             else

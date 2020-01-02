@@ -386,7 +386,7 @@ namespace Freeserf
                         }
                     }
 
-                    for (int i = 0; i < game.GetPlayerCount(); ++i)
+                    for (int i = 0; i < game.PlayerCount; ++i)
                     {
                         var player = game.GetPlayer((uint)i);
 

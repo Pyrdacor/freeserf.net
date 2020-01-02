@@ -213,7 +213,7 @@ namespace Freeserf.Network
         {
             sendData = rawData;
 
-            if (rawData.Length == 0)
+            if (rawData.Length == 2)
                 throw new ExceptionFreeserf("Empty lobby data received.");
             else if (rawData.Length < MIN_DATA_SIZE)
                 throw new ExceptionFreeserf("Invalid lobby data received.");

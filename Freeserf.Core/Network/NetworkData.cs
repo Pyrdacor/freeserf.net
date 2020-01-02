@@ -42,6 +42,9 @@ namespace Freeserf.Network
     {
         public static INetworkData Parse(byte[] rawData)
         {
+            if (rawData.Length < 2)
+                throw new ExceptionFreeserf("Unknown network data.");
+
             NetworkDataType type = (NetworkDataType)BitConverter.ToUInt16(rawData, 2);
 
             switch (type)

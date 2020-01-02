@@ -617,7 +617,7 @@ namespace Freeserf
                 currentState.Kill(this);
             }
 
-            if (HardTimes())
+            if (HardTimes)
             {
                 var game = player.Game;
 
@@ -640,7 +640,7 @@ namespace Freeserf
 
                 if (tool != Resource.Type.Scythe && player.GetSerfCount(Serf.Type.Farmer) == 0 && !game.HasAnyOfResource(player, Resource.Type.Scythe))
                 {
-                    player.SetFullToolPriority(Resource.Type.Hammer);
+                    player.SetFullToolPriority(Resource.Type.Scythe);
                     return;
                 }
 
@@ -1022,7 +1022,7 @@ namespace Freeserf
 
         internal bool StupidDecision()
         {
-            if (HardTimes()) // no stupid decisions in hard times (the game would be quickly over otherwise)
+            if (HardTimes) // no stupid decisions in hard times (the game would be quickly over otherwise)
                 return false;
 
             return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
@@ -1071,49 +1071,52 @@ namespace Freeserf
 
         // This is the case if the AI has to do everything right to survive.
         // Especially if starting with very few supplies.
-        internal bool HardTimes()
+        internal bool HardTimes
         {
-            if (GameTime < nextHardTimeCheck)
-                return lastHardTime;
-
-            var game = player.Game;
-
-            uint numMiners = player.GetSerfCount(Serf.Type.Miner);
-            uint numPicks = game.GetResourceAmountInInventories(player, Resource.Type.Pick);
-            uint numWeaponSmiths = player.GetSerfCount(Serf.Type.WeaponSmith);
-
-            if (game.GetPossibleFreeKnightCount(player) >= 10 && numPicks > 0 &&
-                game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 12 &&
-                game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 8)
+            get
             {
-                UpdateHardTimes(false);
-                return false;
-            }
+                if (GameTime < nextHardTimeCheck)
+                    return lastHardTime;
 
-            if (numMiners + numPicks > 2 && numWeaponSmiths > 0)
-            {
-                UpdateHardTimes(false);
-                return false;
-            }
+                var game = player.Game;
 
-            bool hasCoalMines = player.GetTotalBuildingCount(Building.Type.CoalMine) != 0;
-            bool hasIronMines = player.GetTotalBuildingCount(Building.Type.IronMine) != 0;
+                uint numMiners = player.GetSerfCount(Serf.Type.Miner);
+                uint numPicks = game.GetResourceAmountInInventories(player, Resource.Type.Pick);
+                uint numWeaponSmiths = player.GetSerfCount(Serf.Type.WeaponSmith);
 
-            if (hasCoalMines && hasIronMines && numMiners >= 2)
-            {
-                bool hasFoodSource = player.GetTotalBuildingCount(Building.Type.Fisher) != 0 ||
-                    player.GetSerfCount(Serf.Type.Farmer) != 0;
-
-                if (hasFoodSource && numWeaponSmiths != 0)
+                if (game.GetPossibleFreeKnightCount(player) >= 10 && numPicks > 0 &&
+                    game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= 12 &&
+                    game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= 8)
                 {
                     UpdateHardTimes(false);
                     return false;
                 }
+
+                if (numMiners + numPicks > 2 && numWeaponSmiths > 0)
+                {
+                    UpdateHardTimes(false);
+                    return false;
+                }
+
+                bool hasCoalMines = player.GetTotalBuildingCount(Building.Type.CoalMine) != 0;
+                bool hasIronMines = player.GetTotalBuildingCount(Building.Type.IronMine) != 0;
+
+                if (hasCoalMines && hasIronMines && numMiners >= 2)
+                {
+                    bool hasFoodSource = player.GetTotalBuildingCount(Building.Type.Fisher) != 0 ||
+                        player.GetSerfCount(Serf.Type.Farmer) != 0;
+
+                    if (hasFoodSource && numWeaponSmiths != 0)
+                    {
+                        UpdateHardTimes(false);
+                        return false;
+                    }
+                }
+
+                UpdateHardTimes(true);
+
+                return true;
             }
-
-            UpdateHardTimes(true);
-
-            return true;
         }
 
         #endregion

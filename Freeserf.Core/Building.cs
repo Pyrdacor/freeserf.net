@@ -384,10 +384,7 @@ namespace Freeserf
             state.Progress |= (word)Misc.BitU(0);
         }
 
-        public bool IsUnderAttack()
-        {
-            return Misc.BitTest(state.Progress, 0);
-        }
+        public bool IsUnderAttack =>Misc.BitTest(state.Progress, 0);
 
         /// <summary>
         /// The threat level of the building. Higher values mean that
@@ -1044,26 +1041,29 @@ namespace Freeserf
             }
         }
 
-        public bool IsEnoughPlaceForKnight()
+        public bool IsEnoughPlaceForKnight
         {
-            int maxCapacity = -1;
-
-            switch (BuildingType)
+            get
             {
-                case Type.Hut: maxCapacity = 3; break;
-                case Type.Tower: maxCapacity = 6; break;
-                case Type.Fortress: maxCapacity = 12; break;
-                default: Debug.NotReached(); break;
+                int maxCapacity = -1;
+
+                switch (BuildingType)
+                {
+                    case Type.Hut: maxCapacity = 3; break;
+                    case Type.Tower: maxCapacity = 6; break;
+                    case Type.Fortress: maxCapacity = 12; break;
+                    default: Debug.NotReached(); break;
+                }
+
+                var totalKnights = state.Stock[0].Requested + state.Stock[0].Available;
+
+                return totalKnights < maxCapacity;
             }
-
-            var totalKnights = state.Stock[0].Requested + state.Stock[0].Available;
-
-            return totalKnights < maxCapacity;
         }
 
         public bool KnightComeBackFromFight(Serf knight)
         {
-            if (IsEnoughPlaceForKnight())
+            if (IsEnoughPlaceForKnight)
             {
                 ++state.Stock[0].Available;
                 var serf = Game.GetSerf(state.FirstKnight);

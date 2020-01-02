@@ -363,7 +363,7 @@ namespace Freeserf.UI
                         break;
                 }
             }
-            else if (interf.IsBuildingRoad())
+            else if (interf.IsBuildingRoad)
             {
                 SetButton(0, ButtonId.BuildRoadStarred);
                 SetButton(1, ButtonId.BuildInactive);
@@ -587,7 +587,7 @@ namespace Freeserf.UI
                 case ButtonId.BuildRoadStarred:
                     PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
 
-                    if (interf.IsBuildingRoad())
+                    if (interf.IsBuildingRoad)
                     {
                         interf.BuildRoadEnd();
                     }

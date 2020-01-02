@@ -303,7 +303,7 @@ namespace Freeserf.AIStates
 
             if (keepDistanceToEnemies > 0 && numTries < 1000)
             {
-                for (uint i = 0; i < game.GetPlayerCount(); ++i)
+                for (uint i = 0; i < game.PlayerCount; ++i)
                 {
                     var enemy = game.GetPlayer(i);
 

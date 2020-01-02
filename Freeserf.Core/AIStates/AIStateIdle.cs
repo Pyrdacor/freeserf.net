@@ -171,7 +171,7 @@ namespace Freeserf.AIStates
             }
 
             // check for attacking
-            if (ai.CanAttack && !ai.HardTimes() && game.GetPossibleFreeKnightCount(player) > (15 - ai.Aggressivity * 3))
+            if (ai.CanAttack && !ai.HardTimes && game.GetPossibleFreeKnightCount(player) > (15 - ai.Aggressivity * 3))
             {
                 int attackCheckInterval = (80 - (int)playerInfo.Intelligence / 5 - 18 * Math.Max(ai.Aggressivity, (ai.MilitaryFocus + 1) / 2)) * Global.TICKS_PER_SEC;
 

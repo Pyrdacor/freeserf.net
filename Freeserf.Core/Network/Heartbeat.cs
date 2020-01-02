@@ -46,11 +46,14 @@ namespace Freeserf.Network
 
         public INetworkData Parse(byte[] rawData)
         {
+            if (rawData.Length == 2)
+                throw new ExceptionFreeserf("Empty heartbeat data received.");
+
             if (rawData.Length != Size)
                 throw new ExceptionFreeserf($"Heartbeat length must be {Size}.");
 
-            Number = rawData[0];
-            Last = DateTime.FromBinary(BitConverter.ToInt64(rawData, 1));
+            Number = rawData[2];
+            Last = DateTime.FromBinary(BitConverter.ToInt64(rawData, 3));
             PlayerId = rawData[Size - 1];
 
             return this;

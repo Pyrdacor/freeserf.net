@@ -53,7 +53,7 @@ namespace Freeserf.AIStates
 
             int defendingOrientation = Misc.Max(0, ai.DefendFocus - (ai.ExpandFocus + ai.Aggressivity + 1) / 2);
 
-            if (highKnightOccupationPreference == 0 || ai.HardTimes())
+            if (highKnightOccupationPreference == 0 || ai.HardTimes)
             {
                 player.SetLowKnightOccupation();
             }
@@ -67,7 +67,7 @@ namespace Freeserf.AIStates
             }
 
             // castle knights
-            if (ai.HardTimes() || (game.GetPossibleFreeKnightCount(player) == 0 && player.GetTotalBuildingCount(Building.Type.WeaponSmith) == 0))
+            if (ai.HardTimes || (game.GetPossibleFreeKnightCount(player) == 0 && player.GetTotalBuildingCount(Building.Type.WeaponSmith) == 0))
                 player.SetCastleKnightsWanted(1u);
             else
             {
@@ -98,14 +98,14 @@ namespace Freeserf.AIStates
             // food distribution
             player.ResetFoodPriority();
 
-            if (ai.HardTimes())
+            if (ai.HardTimes)
             {
                 player.FoodCoalmine = ushort.MaxValue;
                 player.FoodGoldmine = ushort.MinValue;
                 player.FoodIronmine = ushort.MaxValue;
                 player.FoodStonemine = ushort.MinValue;
             }
-            else if ((ai.GoldFocus >= ai.SteelFocus || ai.ConstructionMaterialFocus >= ai.SteelFocus) && player.GetTotalKnightCount() < 15 && game.GetPossibleFreeKnightCount(player) < 5)
+            else if ((ai.GoldFocus >= ai.SteelFocus || ai.ConstructionMaterialFocus >= ai.SteelFocus) && player.TotalKnightCount < 15 && game.GetPossibleFreeKnightCount(player) < 5)
             {
                 // If gold or stone focus is higher than coal/iron focus and we don't have many knights yet and need some more,
                 // we will distribute the food to iron and coal mines a bit longer.
@@ -134,7 +134,7 @@ namespace Freeserf.AIStates
             uint numBoats = game.GetResourceAmountInInventories(player, Resource.Type.Boat);
             uint numPlanks = game.GetResourceAmountInInventories(player, Resource.Type.Plank);
 
-            if (!ai.HardTimes()) // In hard times this is set directly when planning a tool.
+            if (!ai.HardTimes) // In hard times this is set directly when planning a tool.
             {
                 if (numPlanks < 10)
                 {
@@ -165,7 +165,7 @@ namespace Freeserf.AIStates
             // steel distribution
             player.ResetSteelPriority();
 
-            if (ai.HardTimes())
+            if (ai.HardTimes)
             {
                 // in hard times distribute all steel to the toolmaker
                 player.SteelToolmaker = ushort.MaxValue;
@@ -181,7 +181,7 @@ namespace Freeserf.AIStates
             // coal distribution
             player.ResetCoalPriority();
 
-            if (ai.HardTimes() || (ai.GameTime < 30 * Global.TICKS_PER_MIN && game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0))
+            if (ai.HardTimes || (ai.GameTime < 30 * Global.TICKS_PER_MIN && game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0))
             {
                 // in hard times distribute all coal to the steelsmelter
                 player.CoalGoldsmelter = 0u;

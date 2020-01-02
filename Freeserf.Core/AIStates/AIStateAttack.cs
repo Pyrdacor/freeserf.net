@@ -39,7 +39,7 @@ namespace Freeserf.AIStates
             List<int> humanPlayers = new List<int>(3);
             List<int> aiPlayers = new List<int>(3);
 
-            for (int i = 0; i < game.GetPlayerCount(); ++i)
+            for (int i = 0; i < game.PlayerCount; ++i)
             {
                 if (i != selfIndex)
                 {
@@ -72,11 +72,11 @@ namespace Freeserf.AIStates
                     {
                         Player weakestPlayer = null;
 
-                        for (int i = 0; i < game.GetPlayerCount(); ++i)
+                        for (int i = 0; i < game.PlayerCount; ++i)
                         {
                             var player = game.GetPlayer((uint)i);
 
-                            if (weakestPlayer == null || weakestPlayer.GetTotalMilitaryScore() > player.GetTotalMilitaryScore())
+                            if (weakestPlayer == null || weakestPlayer.TotalMilitaryScore > player.TotalMilitaryScore)
                                 weakestPlayer = player;
                         }
 
@@ -86,7 +86,7 @@ namespace Freeserf.AIStates
                     {
                         Player worst = null;
 
-                        for (int i = 0; i < game.GetPlayerCount(); ++i)
+                        for (int i = 0; i < game.PlayerCount; ++i)
                         {
                             var player = game.GetPlayer((uint)i);
 
@@ -154,7 +154,7 @@ namespace Freeserf.AIStates
                         {
                             var player = game.GetPlayer((uint)i);
 
-                            if (weakestPlayer == null || weakestPlayer.GetTotalMilitaryScore() > player.GetTotalMilitaryScore())
+                            if (weakestPlayer == null || weakestPlayer.TotalMilitaryScore > player.TotalMilitaryScore)
                                 weakestPlayer = player;
                         }
 
