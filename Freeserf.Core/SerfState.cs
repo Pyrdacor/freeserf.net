@@ -25,7 +25,7 @@ namespace Freeserf
         private byte player = 0;
         private byte animation = 0;
         private int counter = 0;
-        private MapPos position = Constants.INVALID_MAPPOS;
+        private MapPos position = Global.INVALID_MAPPOS;
         private word tick = 0;
         private SerfStateFlags flags = SerfStateFlags.None;
         private byte stateIndex = 0;

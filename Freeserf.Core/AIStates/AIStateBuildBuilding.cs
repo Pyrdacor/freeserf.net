@@ -39,7 +39,7 @@ namespace Freeserf.AIStates
     class AIStateBuildBuilding : AIState
     {
         Building.Type type = Building.Type.None;
-        uint builtPosition = Constants.INVALID_MAPPOS;
+        uint builtPosition = Global.INVALID_MAPPOS;
         int tries = 0;
         AI ai = null;
         Game game = null;
@@ -81,11 +81,11 @@ namespace Freeserf.AIStates
             {
                 position = FindSpot(ai, game, player, (int)playerInfo.Intelligence);
 
-                if (position == Constants.INVALID_MAPPOS && !IsResourceNeedingBuilding && (!ai.HardTimes || type == Building.Type.Sawmill || type == Building.Type.ToolMaker))
+                if (position == Global.INVALID_MAPPOS && !IsResourceNeedingBuilding && (!ai.HardTimes || type == Building.Type.Sawmill || type == Building.Type.ToolMaker))
                     position = FindRandomSpot(game, player, true);
             }
 
-            if (position != Constants.INVALID_MAPPOS && game.CanBuildBuilding(position, type, player) && ai.CanLinkFlag(game.Map.MoveDownRight(position)))
+            if (position != Global.INVALID_MAPPOS && game.CanBuildBuilding(position, type, player) && ai.CanLinkFlag(game.Map.MoveDownRight(position)))
             {
                 // military buildings could not be built too close to others
                 if ((type != Building.Type.Hut && type != Building.Type.Tower && type != Building.Type.Fortress) || !game.Map.HasAnyInArea(position, 3, FindMilitary, 1))
@@ -97,7 +97,7 @@ namespace Freeserf.AIStates
                 searching = false;
             }
 
-            if (builtPosition == Constants.INVALID_MAPPOS && ++tries > 10 + playerInfo.Intelligence / 5)
+            if (builtPosition == Global.INVALID_MAPPOS && ++tries > 10 + playerInfo.Intelligence / 5)
                 Kill(ai); // not able to build the building
         }
 
@@ -135,7 +135,7 @@ namespace Freeserf.AIStates
             this.player = player;
             this.playerInfo = playerInfo;
 
-            if (builtPosition != Constants.INVALID_MAPPOS)
+            if (builtPosition != Global.INVALID_MAPPOS)
             {
                 if (game.BuildBuilding(builtPosition, type, player))
                 {
@@ -227,13 +227,13 @@ namespace Freeserf.AIStates
                     {
                         spot = FindSpotNearBuilding(game, player, 40, Building.Type.Hut);
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindSpotNearBuilding(game, player, 40, Building.Type.Tower);
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindSpotNearBuilding(game, player, 40, Building.Type.Fortress);
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindSpotNearBuilding(game, player, 40, Building.Type.Castle);
 
                         return spot;
@@ -280,7 +280,7 @@ namespace Freeserf.AIStates
                         if (spot != null)
                             return FindSpotNear(game, player, (MapPos)spot, 4);
 
-                        return Constants.INVALID_MAPPOS;
+                        return Global.INVALID_MAPPOS;
                     }
                     else
                         return FindSpotWithFish(game, player, intelligence, 1 + ai.FoodFocus);
@@ -288,7 +288,7 @@ namespace Freeserf.AIStates
                     {
                         var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Lumberjack, 1 + ai.ConstructionMaterialFocus);
 
-                        if (spot != Constants.INVALID_MAPPOS)
+                        if (spot != Global.INVALID_MAPPOS)
                             return spot;
                         else
                             return FindSpotWithSpace(game, player, intelligence, 1 + ai.ConstructionMaterialFocus);
@@ -314,7 +314,7 @@ namespace Freeserf.AIStates
                                 searchRange = 50; // this may take a while but we really need that fish!
                             }
 
-                            var bestSpot = Constants.INVALID_MAPPOS;
+                            var bestSpot = Global.INVALID_MAPPOS;
                             int bestDist = int.MaxValue;
 
                             Func<Map, MapPos, uint> costFunction = (Map map, MapPos position) =>
@@ -355,7 +355,7 @@ namespace Freeserf.AIStates
                             {
                                 var target = Pathfinder.FindNearestSpot(game.Map, building.Position, targetFunc, costFunction, searchRange);
 
-                                if (target != Constants.INVALID_MAPPOS)
+                                if (target != Global.INVALID_MAPPOS)
                                 {
                                     var spot = building.Position;
 
@@ -364,7 +364,7 @@ namespace Freeserf.AIStates
 
                                     spot = game.Map.FindSpotNear(spot, 3, checkSpotFunc, rateSpotFunc);
 
-                                    if (spot != Constants.INVALID_MAPPOS && game.Map.Distance(building.Position, spot) < bestDist)
+                                    if (spot != Global.INVALID_MAPPOS && game.Map.Distance(building.Position, spot) < bestDist)
                                     {
                                         bestSpot = spot;
                                         bestDist = game.Map.Distance(building.Position, target);
@@ -372,7 +372,7 @@ namespace Freeserf.AIStates
                                 }
                             }
 
-                            if (bestSpot != Constants.INVALID_MAPPOS)
+                            if (bestSpot != Global.INVALID_MAPPOS)
                             {
                                 return bestSpot;
                             }
@@ -384,39 +384,39 @@ namespace Freeserf.AIStates
 
                         if (game.RandomInt() % 100 < defendChance)
                         {
-                            var spot = Constants.INVALID_MAPPOS;
+                            var spot = Global.INVALID_MAPPOS;
 
                             if (ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldSmelter, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.IronMine, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldMine, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.SteelSmelter, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Sawmill, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS && ai.Chance(10))
+                            if (spot == Global.INVALID_MAPPOS && ai.Chance(10))
                                 spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Castle, 1 + ai.DefendFocus);
 
-                            if (spot == Constants.INVALID_MAPPOS)
+                            if (spot == Global.INVALID_MAPPOS)
                                 spot = FindSpotNearBorder(game, player, intelligence, 1 + Math.Min(2, (ai.MilitaryFocus + ai.ExpandFocus + ai.DefendFocus) / 2));
 
                             return spot;
@@ -430,10 +430,10 @@ namespace Freeserf.AIStates
                     {
                         var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.GoldMine, 2 + ai.GoldFocus);
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 2 + ai.GoldFocus);
 
-                        if (spot != Constants.INVALID_MAPPOS)
+                        if (spot != Global.INVALID_MAPPOS)
                             return spot;
                         else
                             return FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 2 + ai.GoldFocus);
@@ -445,10 +445,10 @@ namespace Freeserf.AIStates
                     {
                         var spot = FindSpotWithTrees(game, player, intelligence, i, 1 + ai.ConstructionMaterialFocus);
 
-                        if (spot != Constants.INVALID_MAPPOS)
+                        if (spot != Global.INVALID_MAPPOS)
                             return spot;
                     }
-                    return Constants.INVALID_MAPPOS;
+                    return Global.INVALID_MAPPOS;
                 case Building.Type.Mill:
                     return FindSpotNearBuilding(game, player, intelligence, Building.Type.Farm, 1 + ai.FoodFocus);
                 case Building.Type.PigFarm:
@@ -459,17 +459,17 @@ namespace Freeserf.AIStates
                     {
                         var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.IronMine, 2 + Math.Max(ai.SteelFocus, ai.MilitaryFocus));
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.CoalMine, 2 + Math.Max(ai.SteelFocus, ai.MilitaryFocus));
 
-                        if (spot != Constants.INVALID_MAPPOS)
+                        if (spot != Global.INVALID_MAPPOS)
                             return spot;
                         else if (ai.MilitaryFocus >= ai.SteelFocus)
                             spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.WeaponSmith, 2 + ai.MilitaryFocus);
                         else
                             spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.ToolMaker, 2 + ai.SteelFocus);
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindRandomSpot(game, player, true);
 
                         return spot;
@@ -480,8 +480,8 @@ namespace Freeserf.AIStates
                     {
                         var spot = FindSpotWithStones(game, player, intelligence, 1 + Math.Min(1, ai.ConstructionMaterialFocus));
 
-                        if (spot != Constants.INVALID_MAPPOS && BuildingsInArea(game.Map, spot, 7, Building.Type.Stonecutter, FindBuilding, 1) > 0)
-                            spot = Constants.INVALID_MAPPOS; // don't build two stonecutters near each other
+                        if (spot != Global.INVALID_MAPPOS && BuildingsInArea(game.Map, spot, 7, Building.Type.Stonecutter, FindBuilding, 1) > 0)
+                            spot = Global.INVALID_MAPPOS; // don't build two stonecutters near each other
 
                         return spot;
                     }
@@ -493,12 +493,12 @@ namespace Freeserf.AIStates
                     {
                         var spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.SteelSmelter, 2 + ai.MilitaryFocus);
 
-                        if (spot != Constants.INVALID_MAPPOS)
+                        if (spot != Global.INVALID_MAPPOS)
                             return spot;
                         else
                             spot = FindSpotNearBuilding(game, player, intelligence, Building.Type.Stock, 2 + ai.MilitaryFocus);
 
-                        if (spot == Constants.INVALID_MAPPOS)
+                        if (spot == Global.INVALID_MAPPOS)
                             spot = FindRandomSpot(game, player, true);
 
                         return spot;
@@ -522,7 +522,7 @@ namespace Freeserf.AIStates
                 spots.Remove(spot);
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotNearBuilding(Game game, Player player, int intelligence, Building.Type buildingType, int maxInArea = int.MaxValue)
@@ -539,7 +539,7 @@ namespace Freeserf.AIStates
                 buildings.Remove(randomBuilding);
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotWithMinerals(Game game, Player player, int intelligence, Map.Minerals mineral, int maxInArea = int.MaxValue)
@@ -578,13 +578,13 @@ namespace Freeserf.AIStates
                 buildings.Remove(randomBuilding);
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotWithSpace(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
             // TODO
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotWithFish(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
@@ -620,7 +620,7 @@ namespace Freeserf.AIStates
                 buildings.Remove(randomBuilding);
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotWithTrees(Game game, Player player, int intelligence, int minTrees = 6, int maxInArea = int.MaxValue)
@@ -662,7 +662,7 @@ namespace Freeserf.AIStates
                 buildings.Remove(randomBuilding);
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotWithStones(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
@@ -698,7 +698,7 @@ namespace Freeserf.AIStates
                 buildings.Remove(randomBuilding);
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         uint FindSpotNearBorder(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
@@ -748,7 +748,7 @@ namespace Freeserf.AIStates
 
             var spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMilitary, game.GetRandom(), 5);
 
-            if (spot == Constants.INVALID_MAPPOS)
+            if (spot == Global.INVALID_MAPPOS)
                 spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 4);
 
             return spot;
@@ -786,7 +786,7 @@ namespace Freeserf.AIStates
             }
 
             int bestBuildingInventoryDist = 0;
-            var bestBuildingPosition = Constants.INVALID_MAPPOS;
+            var bestBuildingPosition = Global.INVALID_MAPPOS;
             var inventories = game.GetPlayerInventories(player);
 
             foreach (var building in possibleBaseBuildings)
@@ -811,7 +811,7 @@ namespace Freeserf.AIStates
                 }
             }
 
-            if (bestBuildingPosition == Constants.INVALID_MAPPOS)
+            if (bestBuildingPosition == Global.INVALID_MAPPOS)
             {
                 return bestBuildingPosition;
             }

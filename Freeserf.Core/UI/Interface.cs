@@ -566,7 +566,7 @@ namespace Freeserf.UI
                 else
                     PanelBar.Displayed = false;
 
-                if (this.player.CastlePosition != Constants.INVALID_MAPPOS)
+                if (this.player.CastlePosition != Global.INVALID_MAPPOS)
                     initialPosition = this.player.CastlePosition;
             }
             else

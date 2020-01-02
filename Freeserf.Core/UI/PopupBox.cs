@@ -2907,7 +2907,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
 
             // draw resources
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 if (flag.GetResourceAtSlot(i) != Resource.Type.None)
                 {
@@ -4150,7 +4150,7 @@ namespace Freeserf.UI
                     {
                         var castlePos = interf.Game.GetPlayer((uint)(action - Action.JumpToPlayer1)).CastlePosition;
 
-                        if (castlePos != Constants.INVALID_MAPPOS)
+                        if (castlePos != Global.INVALID_MAPPOS)
                             interf.Viewport.MoveToMapPosition(castlePos, true);
 
                         SetBox(Type.PlayerStatistics);

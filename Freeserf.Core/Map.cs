@@ -82,7 +82,7 @@ namespace Freeserf
 
         public Road()
         {
-            Source = Constants.INVALID_MAPPOS;
+            Source = Global.INVALID_MAPPOS;
         }
 
         public static Road CreateBuildingRoad(MapPos flagPosition)
@@ -148,7 +148,7 @@ namespace Freeserf
             return road;
         }
 
-        public bool Valid => Source != Constants.INVALID_MAPPOS;
+        public bool Valid => Source != Global.INVALID_MAPPOS;
         public MapPos Source { get; private set; } = 0u;
         public Directions Directions { get; } = new Directions();
         public uint Length => (uint)Directions.Count;
@@ -158,7 +158,7 @@ namespace Freeserf
 
         public void Invalidate()
         {
-            Source = Constants.INVALID_MAPPOS;
+            Source = Global.INVALID_MAPPOS;
             Directions.Clear();
             Cost = 0;
         }
@@ -202,7 +202,7 @@ namespace Freeserf
 
         public bool Extend(Direction direction)
         {
-            if (Source == Constants.INVALID_MAPPOS)
+            if (Source == Global.INVALID_MAPPOS)
             {
                 return false;
             }
@@ -214,7 +214,7 @@ namespace Freeserf
 
         public bool Extend(Map map, Road road)
         {
-            if (Source == Constants.INVALID_MAPPOS || road == null || !road.Valid)
+            if (Source == Global.INVALID_MAPPOS || road == null || !road.Valid)
             {
                 return false;
             }
@@ -232,7 +232,7 @@ namespace Freeserf
 
         public bool Undo()
         {
-            if (Source == Constants.INVALID_MAPPOS)
+            if (Source == Global.INVALID_MAPPOS)
             {
                 return false;
             }
@@ -241,7 +241,7 @@ namespace Freeserf
 
             if (Length == 0)
             {
-                Source = Constants.INVALID_MAPPOS;
+                Source = Global.INVALID_MAPPOS;
             }
 
             return true;
@@ -1157,13 +1157,13 @@ namespace Freeserf
                 }
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         public MapPos FindNearest(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc, int minDistance)
         {
             if (searchRange <= 0)
-                return Constants.INVALID_MAPPOS;
+                return Global.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
@@ -1182,7 +1182,7 @@ namespace Freeserf
                     return position;
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         /// <summary>
@@ -1197,7 +1197,7 @@ namespace Freeserf
         public MapPos FindBest(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc, Func<Map, MapPos, int> rateFunc, int minDistance)
         {
             if (searchRange <= 0)
-                return Constants.INVALID_MAPPOS;
+                return Global.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
@@ -1207,7 +1207,7 @@ namespace Freeserf
             int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
             int spiralNum = 1 + sum * 6;
 
-            var bestPosition = Constants.INVALID_MAPPOS;
+            var bestPosition = Global.INVALID_MAPPOS;
             int bestValue = int.MaxValue;
 
             for (int i = spiralOffset; i < spiralNum; ++i)
@@ -1307,7 +1307,7 @@ namespace Freeserf
             Func<Map, MapPos, int> rateFunc, int minDistance = 0)
         {
             if (searchRange <= 0)
-                return Constants.INVALID_MAPPOS;
+                return Global.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
@@ -1327,9 +1327,9 @@ namespace Freeserf
             }
 
             if (spots.Count == 0)
-                return Constants.INVALID_MAPPOS;
+                return Global.INVALID_MAPPOS;
 
-            var bestSpot = Constants.INVALID_MAPPOS;
+            var bestSpot = Global.INVALID_MAPPOS;
             int bestRating = int.MaxValue;
 
             foreach (var spot in spots)
@@ -1343,7 +1343,7 @@ namespace Freeserf
                 }
             }
 
-            if (bestSpot == Constants.INVALID_MAPPOS) // all spots have worst rating -> return the first one
+            if (bestSpot == Global.INVALID_MAPPOS) // all spots have worst rating -> return the first one
                 return spots[0];
 
             return bestSpot;
@@ -1353,7 +1353,7 @@ namespace Freeserf
             Func<Map, MapPos, bool> searchFunc, Random random, int minDistance = 0)
         {
             if (searchRange <= 0)
-                return Constants.INVALID_MAPPOS;
+                return Global.INVALID_MAPPOS;
 
             if (searchRange > 9)
                 searchRange = 9;
@@ -1373,7 +1373,7 @@ namespace Freeserf
             }
 
             if (spots.Count == 0)
-                return Constants.INVALID_MAPPOS;
+                return Global.INVALID_MAPPOS;
 
             return spots[random.Next() % spots.Count];
         }

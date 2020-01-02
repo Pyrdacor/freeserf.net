@@ -177,7 +177,7 @@ namespace Freeserf
     [DataClass]
     internal class FlagState : State
     {
-        private MapPos position = Constants.INVALID_MAPPOS;
+        private MapPos position = Global.INVALID_MAPPOS;
         private Direction searchDirection = Direction.None;
         private word searchNumber = 0;
         private byte pathConnections = 0;
@@ -192,7 +192,7 @@ namespace Freeserf
             OtherEndpointPaths.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(OtherEndpointPaths)); };
             Slots.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(Slots)); };
 
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
                 Slots[i] = new ResourceSlot();
         }
 
@@ -296,7 +296,7 @@ namespace Freeserf
         public DirtyArray<byte> FlagPaths { get; } = new DirtyArray<byte>(6);
         public DirtyArray<word> OtherEndpoints { get; } = new DirtyArray<word>(6);
         public DirtyArray<byte> OtherEndpointPaths { get; } = new DirtyArray<byte>(6);
-        public DirtyArray<ResourceSlot> Slots { get; } = new DirtyArray<ResourceSlot>(Constants.FLAG_MAX_RES_COUNT);
+        public DirtyArray<ResourceSlot> Slots { get; } = new DirtyArray<ResourceSlot>(Global.FLAG_MAX_RES_COUNT);
 
         [Ignore]
         public PathConnectionFlags PathConnectionFlags

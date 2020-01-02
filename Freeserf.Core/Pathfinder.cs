@@ -199,7 +199,7 @@ namespace Freeserf
             while (open.Count != 0)
             {
                 if ((DateTime.Now - startTime).TotalMilliseconds > 2 * Global.TICK_LENGTH)
-                    return Constants.INVALID_MAPPOS; // tried too long
+                    return Global.INVALID_MAPPOS; // tried too long
 
                 node = open.Pop();
 
@@ -260,7 +260,7 @@ namespace Freeserf
                 }
             }
 
-            return Constants.INVALID_MAPPOS;
+            return Global.INVALID_MAPPOS;
         }
 
         /// <summary>

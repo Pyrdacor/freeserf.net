@@ -868,7 +868,7 @@ namespace Freeserf
 
             var paths = game.Map.FindInArea(flag.Position, maxLength, FindPath, 2);
             Road bestRoad = null;
-            uint bestRoadEndPosition = Constants.INVALID_MAPPOS;
+            uint bestRoadEndPosition = Global.INVALID_MAPPOS;
 
             foreach (var path in paths)
             {

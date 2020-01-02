@@ -1,5 +1,5 @@
 ﻿/*
- * Constants.cs - Some basic constants
+ * Global.cs - Some basic constants
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -24,7 +24,8 @@ using System;
 namespace Freeserf
 {
     using MapPos = UInt32;
-    public static class Constants
+
+    public static partial class Global
     {
         public const int NUM_RESOURCE_TYPES = 26;
         public const int NUM_TOOL_TYPES = 9;

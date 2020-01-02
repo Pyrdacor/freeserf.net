@@ -50,7 +50,7 @@ namespace Freeserf
     internal class BuildingState : State
     {
         private Building.Type type = Building.Type.None;
-        private MapPos position = Constants.INVALID_MAPPOS;
+        private MapPos position = Global.INVALID_MAPPOS;
         private word flag = 0;
         private byte player = 0;
         private BuildingStateFlags flags = BuildingStateFlags.Constructing; // new buildings are unfinished

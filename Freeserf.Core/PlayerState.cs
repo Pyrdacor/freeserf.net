@@ -103,7 +103,7 @@ namespace Freeserf
         private PlayerStateFlags flags = PlayerStateFlags.None;
         private PlayerFace face = PlayerFace.None;
         private Color color = new Color();
-        private MapPos castlePosition = Constants.INVALID_MAPPOS;
+        private MapPos castlePosition = Global.INVALID_MAPPOS;
         private dword castleInventoryIndex = 0;
         private sbyte castleScore = 0;
         private byte castleKnights = 0;
@@ -118,10 +118,10 @@ namespace Freeserf
         private dword totalLandArea = 0;
         private dword totalBuildingScore = 0;
         private dword totalMilitaryScore = 0;
-        private readonly DirtyArray<dword> serfCounts = new DirtyArray<dword>(Constants.NUM_SERF_TYPES);
-        private readonly DirtyArray<dword> resourceCounts = new DirtyArray<dword>(Constants.NUM_RESOURCE_TYPES);
-        private readonly DirtyArray<dword> completedBuildingCount = new DirtyArray<dword>(Constants.NUM_BUILDING_TYPES);
-        private readonly DirtyArray<dword> incompleteBuildingCount = new DirtyArray<dword>(Constants.NUM_BUILDING_TYPES);
+        private readonly DirtyArray<dword> serfCounts = new DirtyArray<dword>(Global.NUM_SERF_TYPES);
+        private readonly DirtyArray<dword> resourceCounts = new DirtyArray<dword>(Global.NUM_RESOURCE_TYPES);
+        private readonly DirtyArray<dword> completedBuildingCount = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
+        private readonly DirtyArray<dword> incompleteBuildingCount = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
         private dword militaryMaxGold = 0;
 
         public PlayerState()

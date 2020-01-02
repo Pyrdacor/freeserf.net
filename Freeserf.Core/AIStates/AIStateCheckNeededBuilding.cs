@@ -740,7 +740,7 @@ namespace Freeserf.AIStates
 
             return new Map.FindData()
             {
-                Success = foundPosition != Constants.INVALID_MAPPOS,
+                Success = foundPosition != Global.INVALID_MAPPOS,
                 Data = foundPosition
             };
         }

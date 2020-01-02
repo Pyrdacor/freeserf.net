@@ -1947,7 +1947,7 @@ namespace Freeserf
             {
                 if (flag.HasResources())
                 {
-                    for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+                    for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
                     {
                         if (flag.GetResourceAtSlot(i) == type)
                             ++count;
@@ -1978,7 +1978,7 @@ namespace Freeserf
             {
                 if (flag.HasResources())
                 {
-                    for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+                    for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
                     {
                         if (flag.GetResourceAtSlot(i) == type)
                             return true;

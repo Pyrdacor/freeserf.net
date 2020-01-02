@@ -263,7 +263,7 @@ namespace Freeserf
             lastUnderAttackNotificationTimes[position] = Game.GameTime;
         }
 
-        public GameTime GetMostRecentUnderAttackNotificationTime(uint position = Constants.INVALID_MAPPOS)
+        public GameTime GetMostRecentUnderAttackNotificationTime(uint position = Global.INVALID_MAPPOS)
         {
             return lastUnderAttackNotificationTimes.ContainsKey(position)
                 ? lastUnderAttackNotificationTimes[position]

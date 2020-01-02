@@ -37,7 +37,7 @@ namespace Freeserf.UI
         protected readonly Interface interf = null;
         readonly ILayerSprite sprite = null;
         protected Map map = null;
-        MapPos mapOffset = Constants.INVALID_MAPPOS;
+        MapPos mapOffset = Global.INVALID_MAPPOS;
         int scale = 1; // 1-8
         protected static readonly Color GridColor = new Color(0x01, 0x01, 0x01);
 

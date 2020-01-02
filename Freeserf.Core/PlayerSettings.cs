@@ -57,10 +57,10 @@ namespace Freeserf
     internal class PlayerSettings : State
     {
         private PlayerSettingFlags flags = PlayerSettingFlags.None;
-        private DirtyArray<word> toolPriorities = new DirtyArray<word>(Constants.NUM_TOOL_TYPES);
-        private DirtyArray<byte> flagPriorities = new DirtyArray<byte>(Constants.NUM_RESOURCE_TYPES);
-        private DirtyArray<byte> inventoryPriorities = new DirtyArray<byte>(Constants.NUM_RESOURCE_TYPES);
-        private DirtyArray<byte> knightOccupation = new DirtyArray<byte>(Constants.NUM_TREATMENT_LEVEL_TYPES);
+        private DirtyArray<word> toolPriorities = new DirtyArray<word>(Global.NUM_TOOL_TYPES);
+        private DirtyArray<byte> flagPriorities = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
+        private DirtyArray<byte> inventoryPriorities = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
+        private DirtyArray<byte> knightOccupation = new DirtyArray<byte>(Global.NUM_TREATMENT_LEVEL_TYPES);
         private word serfToKnightRate = 0;
         private byte castleKnightsWanted = 3;
         private word foodStonemine = 0;

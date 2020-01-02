@@ -218,7 +218,7 @@ namespace Freeserf.AIStates
         {
             position = game.Map.FindSpotNear(position, 9, FindMountainWithFlag, game.GetRandom(), 1);
 
-            if (position == Constants.INVALID_MAPPOS || game.Map.GetOwner(position) != player.Index)
+            if (position == Global.INVALID_MAPPOS || game.Map.GetOwner(position) != player.Index)
                 position = game.Map.FindSpotNear(position, 9, FindMountain, game.GetRandom(), 1);
         }
 
@@ -250,7 +250,7 @@ namespace Freeserf.AIStates
             // search for mountains near military buildings
             foreach (var building in militaryBuildings)
             {
-                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetRandom(), 1) != Constants.INVALID_MAPPOS)
+                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetRandom(), 1) != Global.INVALID_MAPPOS)
                 {
                     possibleSpots.Add(game.Map.MoveDownRight(building.Position));
                     continue;
@@ -259,7 +259,7 @@ namespace Freeserf.AIStates
                 var position = building.Position;
                 FindNearbyMountain(game, player, ref position);
 
-                if (position != Constants.INVALID_MAPPOS)
+                if (position != Global.INVALID_MAPPOS)
                 {
                     possibleSpots.Add(position);
                 }

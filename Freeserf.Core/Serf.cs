@@ -2520,7 +2520,7 @@ namespace Freeserf
         public void CastleDeleted(MapPos castlePos, bool transporter)
         {
             // TODO: There seem to be a null-serf in the castle. Maybe delete later?
-            if (state.Type == Type.None || Position == Constants.INVALID_MAPPOS)
+            if (state.Type == Type.None || Position == Global.INVALID_MAPPOS)
                 return;
 
             if ((!transporter || SerfType == Type.TransporterInventory) &&

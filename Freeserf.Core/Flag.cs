@@ -237,7 +237,7 @@ namespace Freeserf
             int resourceNext = -1;
             int resourcePriority = -1;
 
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 if (state.Slots[i].Type != Resource.Type.None)
                 {
@@ -385,7 +385,7 @@ namespace Freeserf
 
         public bool PickUpResource(uint fromSlot, ref Resource.Type resource, ref uint destination)
         {
-            if (fromSlot >= Constants.FLAG_MAX_RES_COUNT)
+            if (fromSlot >= Global.FLAG_MAX_RES_COUNT)
             {
                 throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Wrong flag slot index.");
             }
@@ -413,7 +413,7 @@ namespace Freeserf
                 throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Wrong resource type.");
             }
 
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 if (state.Slots[i].Type == Resource.Type.None)
                 {
@@ -436,7 +436,7 @@ namespace Freeserf
 
         public void RemoveAllResources()
         {
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 var resource = state.Slots[i].Type;
 
@@ -644,7 +644,7 @@ namespace Freeserf
                 state.OtherEndpointPaths[(int)direction] = (byte)reader.Value("other_end_dir")[(int)direction].ReadInt();
             }
 
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 state.Slots[i].Type = reader.Value("slot.type")[i].ReadResource();
                 state.Slots[i].Direction = reader.Value("slot.dir")[i].ReadDirection();
@@ -701,7 +701,7 @@ namespace Freeserf
                 writer.Value("other_end_dir").Write((int)state.OtherEndpointPaths[(int)direction]);
             }
 
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 writer.Value("slot.type").Write((int)state.Slots[i].Type);
                 writer.Value("slot.dir").Write((int)state.Slots[i].Direction);
@@ -724,7 +724,7 @@ namespace Freeserf
 
         public void ResetTransport(Flag other)
         {
-            for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; ++slot)
+            for (int slot = 0; slot < Global.FLAG_MAX_RES_COUNT; ++slot)
             {
                 if (other.state.Slots[slot].Type != Resource.Type.None &&
                     other.state.Slots[slot].DestinationObjectIndex == Index)
@@ -745,7 +745,7 @@ namespace Freeserf
 
         public void ResetDestinationOfStolenResources()
         {
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 if (state.Slots[i].Type != Resource.Type.None)
                 {
@@ -778,7 +778,7 @@ namespace Freeserf
 
         public void InvalidateResourcePath(Direction direction)
         {
-            for (int i = 0; i < Constants.FLAG_MAX_RES_COUNT; ++i)
+            for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
                 if (state.Slots[i].Type != Resource.Type.None && state.Slots[i].Direction == direction)
                 {
@@ -883,7 +883,7 @@ namespace Freeserf
                 // have strictly more than 0,1,2,3 slots waiting.
                 var resourcesWaiting = new int[4] { 0, 0, 0, 0 };
 
-                for (int j = 0; j < Constants.FLAG_MAX_RES_COUNT; ++j)
+                for (int j = 0; j < Global.FLAG_MAX_RES_COUNT; ++j)
                 {
                     if (state.Slots[j].Type != Resource.Type.None && state.Slots[j].Direction != Direction.None)
                     {
@@ -907,7 +907,7 @@ namespace Freeserf
                 {
                     state.EndPointFlags &= ~EndPointFlags.HasUnscheduledResources;
 
-                    for (int slot = 0; slot < Constants.FLAG_MAX_RES_COUNT; ++slot)
+                    for (int slot = 0; slot < Global.FLAG_MAX_RES_COUNT; ++slot)
                     {
                         if (state.Slots[slot].Type != Resource.Type.None)
                         {

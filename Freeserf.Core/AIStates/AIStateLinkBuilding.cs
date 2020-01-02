@@ -25,7 +25,7 @@ namespace Freeserf.AIStates
 {
     class AIStateLinkBuilding : AIState
     {
-        uint buildingPosition = Constants.INVALID_MAPPOS;
+        uint buildingPosition = Global.INVALID_MAPPOS;
 
         public AIStateLinkBuilding(uint buildingPosition)
             : base(AI.State.LinkBuilding)

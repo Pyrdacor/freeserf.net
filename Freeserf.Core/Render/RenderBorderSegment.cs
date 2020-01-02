@@ -9,7 +9,7 @@ namespace Freeserf.Render
     internal class RenderBorderSegment : RenderObject
     {
         readonly Map map = null;
-        readonly MapPos position = Constants.INVALID_MAPPOS;
+        readonly MapPos position = Global.INVALID_MAPPOS;
         readonly Direction direction = Direction.None;
         int offsetX = 0;
         int offsetY = 0;
