@@ -488,12 +488,12 @@ namespace Freeserf.Render
                 if (map.HasSerf(position) && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf
                 {
                     if (serf.SerfState == Serf.State.Mining &&
-                        (serf.GetMiningSubstate() == 0 ||
-                        serf.GetMiningSubstate() == 2 ||
-                        serf.GetMiningSubstate() == 5 ||
-                        serf.GetMiningSubstate() == 6 ||
-                        serf.GetMiningSubstate() == 7 ||
-                        serf.GetMiningSubstate() == 8))
+                        (serf.MiningSubstate == 0 ||
+                        serf.MiningSubstate == 2 ||
+                        serf.MiningSubstate == 5 ||
+                        serf.MiningSubstate == 6 ||
+                        serf.MiningSubstate == 7 ||
+                        serf.MiningSubstate == 8))
                     {
                         sprite.Visible = false;
                         headSprite.Visible = false;
@@ -622,7 +622,7 @@ namespace Freeserf.Render
                 {
                     SetBaseLineOffset(12);
                 }
-                else if (serf.SerfState == Serf.State.Mining && serf.GetMiningSubstate() == 1)
+                else if (serf.SerfState == Serf.State.Mining && serf.MiningSubstate == 1)
                 {
                     int baseLine = GetBuildingBaseLine(building, dataSource, map);
 
@@ -635,7 +635,7 @@ namespace Freeserf.Render
                 {
                     // adjust baseline when walking around a building
                     if (map.HasBuilding(map.MoveLeft(position)) ||
-                        (serf.SerfState == Serf.State.Mining && (serf.GetMiningSubstate() == 3 || serf.GetMiningSubstate() == 10)))
+                        (serf.SerfState == Serf.State.Mining && (serf.MiningSubstate == 3 || serf.MiningSubstate == 10)))
                     {
                         building = game.GetBuildingAtPosition(map.MoveLeft(position));
 
@@ -678,7 +678,7 @@ namespace Freeserf.Render
             if ((serf.SerfState == Serf.State.KnightAttacking || serf.SerfState == Serf.State.KnightAttackingFree) &&
                 animation.Sprite >= 0x80 && animation.Sprite < 0xc0)
             {
-                int index = serf.GetAttackingDefIndex();
+                int index = serf.AttackingDefenderIndex;
 
                 if (index != 0)
                 {
@@ -686,11 +686,11 @@ namespace Freeserf.Render
 
                     if (serf.Animation >= 146 && serf.Animation < 156)
                     {
-                        if ((serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4) && serf.Counter < 32)
+                        if ((serf.AttackingFieldD == 0 || serf.AttackingFieldD == 4) && serf.Counter < 32)
                         {
                             int fightAnimation;
 
-                            if (serf.GetAttackingFieldD() == 0)
+                            if (serf.AttackingFieldD == 0)
                             {
                                 fightAnimation = serf.Animation - 147;
                             }
@@ -735,7 +735,7 @@ namespace Freeserf.Render
                 serf.SerfState == Serf.State.KnightAttackingVictoryFree ||
                 serf.SerfState == Serf.State.KnightAttackingDefeatFree)
             {
-                int index = serf.GetAttackingDefIndex();
+                int index = serf.AttackingDefenderIndex;
 
                 if (index != 0)
                 {
@@ -761,7 +761,7 @@ namespace Freeserf.Render
             if ((serf.SerfState == Serf.State.KnightAttacking || serf.SerfState == Serf.State.KnightAttackingFree) &&
                 animation.Sprite >= 0x80 && animation.Sprite < 0xc0)
             {
-                int index = serf.GetAttackingDefIndex();
+                int index = serf.AttackingDefenderIndex;
 
                 if (index != 0)
                 {
@@ -769,11 +769,11 @@ namespace Freeserf.Render
 
                     if (serf.Animation >= 146 && serf.Animation < 156)
                     {
-                        if ((serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4) && serf.Counter < 32)
+                        if ((serf.AttackingFieldD == 0 || serf.AttackingFieldD == 4) && serf.Counter < 32)
                         {
                             int fightAnimation;
 
-                            if (serf.GetAttackingFieldD() == 0)
+                            if (serf.AttackingFieldD == 0)
                             {
                                 fightAnimation = serf.Animation - 147;
                             }
@@ -971,8 +971,8 @@ namespace Freeserf.Render
                     if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.FreeWalking &&
-                            serf.GetFreeWalkingNegDist1() == -128 &&
-                            serf.GetFreeWalkingNegDist2() == 1)
+                            serf.FreeWalkingNegDistance1 == -128 &&
+                            serf.FreeWalkingNegDistance2 == 1)
                         {
                             bodySprite += 0x1000;
                         }
@@ -988,7 +988,7 @@ namespace Freeserf.Render
                         PlaySound(Audio.Audio.TypeSfx.AxeBlow);
                         /* TODO Dangerous reference to unknown state vars.
                            It is probably free walking. */
-                        if (serf.GetFreeWalkingNegDist2() == 0 &&
+                        if (serf.FreeWalkingNegDistance2 == 0 &&
                             serf.Counter < 64)
                         {
                             PlaySound(Audio.Audio.TypeSfx.TreeFall);
@@ -1006,7 +1006,7 @@ namespace Freeserf.Render
                     if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.LeavingBuilding &&
-                            serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                            serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
                             bodySprite += 0x1700;
                         }
@@ -1049,10 +1049,10 @@ namespace Freeserf.Render
                     if (bodySprite < 0x80)
                     {
                         if ((serf.SerfState == Serf.State.FreeWalking &&
-                             serf.GetFreeWalkingNegDist1() == -128 &&
-                             serf.GetFreeWalkingNegDist2() == 1) ||
+                             serf.FreeWalkingNegDistance1 == -128 &&
+                             serf.FreeWalkingNegDistance2 == 1) ||
                             (serf.SerfState == Serf.State.StoneCutting &&
-                             serf.GetFreeWalkingNegDist1() == 2))
+                             serf.FreeWalkingNegDistance1 == 2))
                         {
                             bodySprite += 0x1200;
                         }
@@ -1094,9 +1094,9 @@ namespace Freeserf.Render
                     if (bodySprite < 0x80)
                     {
                         if ((serf.SerfState != Serf.State.Mining ||
-                             serf.GetMiningRes() == 0) &&
+                             serf.MiningResource == 0) &&
                             (serf.SerfState != Serf.State.LeavingBuilding ||
-                             serf.GetLeavingBuildingNextState() !=
+                             serf.LeavingBuildingNextState !=
                              Serf.State.DropResourceOut))
                         {
                             bodySprite += 0x1800;
@@ -1108,10 +1108,10 @@ namespace Freeserf.Render
                             switch (serf.SerfState)
                             {
                                 case Serf.State.Mining:
-                                    resource = (Resource.Type)(serf.GetMiningRes() - 1);
+                                    resource = (Resource.Type)(serf.MiningResource - 1);
                                     break;
                                 case Serf.State.LeavingBuilding:
-                                    resource = (Resource.Type)(serf.GetLeavingBuildingFieldB() - 1);
+                                    resource = (Resource.Type)(serf.LeavingBuildingFieldB - 1);
                                     break;
                                 default:
                                     Debug.NotReached();
@@ -1136,9 +1136,9 @@ namespace Freeserf.Render
                 case Serf.Type.Smelter:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
-                            if (serf.GetLeavingBuildingFieldB() == 1 + (int)Resource.Type.Steel)
+                            if (serf.LeavingBuildingFieldB == 1 + (int)Resource.Type.Steel)
                             {
                                 bodySprite += 0x2900;
                             }
@@ -1162,8 +1162,8 @@ namespace Freeserf.Render
                     if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.FreeWalking &&
-                            serf.GetFreeWalkingNegDist1() == -128 &&
-                            serf.GetFreeWalkingNegDist2() == 1)
+                            serf.FreeWalkingNegDistance1 == -128 &&
+                            serf.FreeWalkingNegDistance2 == 1)
                         {
                             bodySprite += 0x2f00;
                         }
@@ -1180,7 +1180,7 @@ namespace Freeserf.Render
                         }
 
                         // TODO no check for state 
-                        if (serf.GetFreeWalkingNegDist2() == 1)
+                        if (serf.FreeWalkingNegDistance2 == 1)
                         {
                             bodySprite += 0x2d80;
                         }
@@ -1193,7 +1193,7 @@ namespace Freeserf.Render
                 case Serf.Type.PigFarmer:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
                             bodySprite += 0x3400;
                         }
@@ -1210,7 +1210,7 @@ namespace Freeserf.Render
                 case Serf.Type.Butcher:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
                             bodySprite += 0x3a00;
                         }
@@ -1239,8 +1239,8 @@ namespace Freeserf.Render
                     if (bodySprite < 0x80)
                     {
                         if (serf.SerfState == Serf.State.FreeWalking &&
-                            serf.GetFreeWalkingNegDist1() == -128 &&
-                            serf.GetFreeWalkingNegDist2() == 1)
+                            serf.FreeWalkingNegDistance1 == -128 &&
+                            serf.FreeWalkingNegDistance2 == 1)
                         {
                             bodySprite += 0x4000;
                         }
@@ -1252,7 +1252,7 @@ namespace Freeserf.Render
                     else
                     {
                         // TODO access to state without state check 
-                        if (serf.GetFreeWalkingNegDist1() == 0)
+                        if (serf.FreeWalkingNegDistance1 == 0)
                         {
                             bodySprite += 0x3d80;
                         }
@@ -1272,7 +1272,7 @@ namespace Freeserf.Render
                 case Serf.Type.Miller:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
                             bodySprite += 0x4500;
                         }
@@ -1290,7 +1290,7 @@ namespace Freeserf.Render
                 case Serf.Type.Baker:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
                             bodySprite += 0x4a00;
                         }
@@ -1308,7 +1308,7 @@ namespace Freeserf.Render
                 case Serf.Type.BoatBuilder:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
                             bodySprite += 0x5000;
                         }
@@ -1336,9 +1336,9 @@ namespace Freeserf.Render
                 case Serf.Type.Toolmaker:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
-                            switch ((Resource.Type)(serf.GetLeavingBuildingFieldB() - 1))
+                            switch ((Resource.Type)(serf.LeavingBuildingFieldB - 1))
                             {
                                 case Resource.Type.Shovel: bodySprite += 0x5a00; break;
                                 case Resource.Type.Hammer: bodySprite += 0x5b00; break;
@@ -1381,9 +1381,9 @@ namespace Freeserf.Render
                 case Serf.Type.WeaponSmith:
                     if (bodySprite < 0x80)
                     {
-                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.GetLeavingBuildingNextState() == Serf.State.DropResourceOut)
+                        if (serf.SerfState == Serf.State.LeavingBuilding && serf.LeavingBuildingNextState == Serf.State.DropResourceOut)
                         {
-                            if (serf.GetLeavingBuildingFieldB() == 1 + (int)Resource.Type.Sword)
+                            if (serf.LeavingBuildingFieldB == 1 + (int)Resource.Type.Sword)
                             {
                                 bodySprite += 0x5500;
                             }
@@ -1469,11 +1469,11 @@ namespace Freeserf.Render
                                 {
                                     serf.StartPlayingSfx();
 
-                                    if (serf.GetAttackingFieldD() == 0 || serf.GetAttackingFieldD() == 4)
+                                    if (serf.AttackingFieldD == 0 || serf.AttackingFieldD == 4)
                                     {
                                         PlaySound(Audio.Audio.TypeSfx.Fight01);
                                     }
-                                    else if (serf.GetAttackingFieldD() == 2)
+                                    else if (serf.AttackingFieldD == 2)
                                     {
                                         // TODO when is TypeSfxFight02 played? 
                                         PlaySound(Audio.Audio.TypeSfx.Fight03);

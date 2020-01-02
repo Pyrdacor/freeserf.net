@@ -144,7 +144,7 @@ namespace Freeserf
 
         public uint GetCostToNearestInventory(bool inventorySupportsResIn, bool inventorySupportsResOut)
         {
-            var player = Game.GetPlayer(GetOwner());
+            var player = Game.GetPlayer(Player);
             uint bestCost = uint.MaxValue;
 
             foreach (var inventory in Game.GetPlayerInventories(player).ToList())
@@ -261,21 +261,14 @@ namespace Freeserf
         }
 
         // Owner of this flag.
-        public uint GetOwner()
+        public uint Player
         {
-            return state.OwnerIndex;
-        }
-
-        public void SetOwner(uint owner)
-        {
-            state.OwnerIndex = (byte)owner;
+            get => state.OwnerIndex;
+            set => state.OwnerIndex = (byte)value;
         }
 
         // Bitmap showing whether the outgoing paths are land paths.
-        public int LandPaths()
-        {
-            return (int)state.EndPointFlags & 0x3f;
-        }
+        public int LandPaths => (int)state.EndPointFlags & 0x3f;
 
         // Whether the path in the given direction is a water path.
         public bool IsWaterPath(Direction direction)
@@ -285,23 +278,14 @@ namespace Freeserf
 
         // Whether a building is connected to this flag. If so, the pointer to
         // the other endpoint is a valid building pointer. (Always at UP LEFT direction).
-        public bool HasBuilding()
-        {
-            return state.EndPointFlags.HasFlag(EndPointFlags.HasConnectedBuilding);
-        }
+        public bool HasBuilding => state.EndPointFlags.HasFlag(EndPointFlags.HasConnectedBuilding);
 
         // Whether resources exist that are not yet scheduled.
-        public bool HasResources()
-        {
-            return state.EndPointFlags.HasFlag(EndPointFlags.HasUnscheduledResources);
-        }
+        public bool HasResources => state.EndPointFlags.HasFlag(EndPointFlags.HasUnscheduledResources);
 
         // Bitmap showing whether the outgoing paths have transporters
         // servicing them.
-        public int Transporters()
-        {
-            return (int)state.TransporterFlags & 0x3f;
-        }
+        public int Transporters => (int)state.TransporterFlags & 0x3f;
 
         // Whether the path in the given direction has a transporter
         // serving it.
@@ -311,10 +295,7 @@ namespace Freeserf
         }
 
         // Whether this flag has tried to request a transporter without success.
-        public bool SerfRequestFail()
-        {
-            return state.TransporterFlags.HasFlag(TransporterFlags.SerfRequestFailed);
-        }
+        public bool SerfRequestFail => state.TransporterFlags.HasFlag(TransporterFlags.SerfRequestFailed);
 
         public void SerfRequestClear()
         {
@@ -538,7 +519,7 @@ namespace Freeserf
                 int offset = (int)reader.ReadDWord();
 
                 // Other endpoint could be a building in direction up left. 
-                if (j == Direction.UpLeft && HasBuilding())
+                if (j == Direction.UpLeft && HasBuilding)
                 {
                     OtherEndPoints[(int)j].Building = Game.CreateBuilding(offset / 18);
                     OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, j);
@@ -573,7 +554,7 @@ namespace Freeserf
 
             byte priority = reader.ReadByte(); // 67
 
-            if (HasBuilding())
+            if (HasBuilding)
             {
                 OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(0, priority);
             }
@@ -584,7 +565,7 @@ namespace Freeserf
 
             priority = reader.ReadByte(); // 69
 
-            if (HasBuilding())
+            if (HasBuilding)
             {
                 OtherEndPoints[(int)Direction.UpLeft].Building.SetPriorityInStock(1, priority);
             }
@@ -603,10 +584,8 @@ namespace Freeserf
         /// </summary>
         public void ReadFrom(SaveReaderText reader)
         {
-            uint x = 0;
-            uint y = 0;
-            x = reader.Value("pos")[0].ReadUInt();
-            y = reader.Value("pos")[1].ReadUInt();
+            uint x = reader.Value("pos")[0].ReadUInt();
+            uint y = reader.Value("pos")[1].ReadUInt();
             state.Position = Game.Map.Position(x, y);
             state.SearchNumber = (word)reader.Value("search_num").ReadInt();
             state.SearchDirection = reader.Value("search_dir").ReadDirection();
@@ -621,7 +600,7 @@ namespace Freeserf
                 state.FlagPaths[(int)direction] = (byte)reader.Value("length")[(int)direction].ReadUInt();
                 int objectIndex = reader.Value("other_endpoint")[(int)direction].ReadInt();
 
-                if (direction == Direction.UpLeft && HasBuilding())
+                if (direction == Direction.UpLeft && HasBuilding)
                 {
                     OtherEndPoints[(int)direction].Building = Game.CreateBuilding(objectIndex);
                     OtherEndPoints[(int)direction].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
@@ -682,7 +661,7 @@ namespace Freeserf
             {
                 writer.Value("length").Write((uint)state.FlagPaths[(int)direction]);
 
-                if (direction == Direction.UpLeft && HasBuilding())
+                if (direction == Direction.UpLeft && HasBuilding)
                 {
                     writer.Value("other_endpoint").Write(OtherEndPoints[(int)direction].Building.Index);
                 }
@@ -735,7 +714,7 @@ namespace Freeserf
                     if (other.state.Slots[slot].Direction != Direction.None)
                     {
                         var direction = other.state.Slots[slot].Direction;
-                        var otherPlayer = Game.GetPlayer(other.GetOwner());
+                        var otherPlayer = Game.GetPlayer(other.Player);
 
                         other.PrioritizePickup(direction, otherPlayer);
                     }
@@ -771,10 +750,7 @@ namespace Freeserf
             ClearFlags();
         }
 
-        public Building GetBuilding()
-        {
-            return OtherEndPoints[(int)Direction.UpLeft].Building;
-        }
+        public Building Building => OtherEndPoints[(int)Direction.UpLeft].Building;
 
         public void InvalidateResourcePath(Direction direction)
         {
@@ -817,7 +793,7 @@ namespace Freeserf
 
             if (flag.AcceptsSerfs())
             {
-                var building = flag.GetBuilding();
+                var building = flag.Building;
 
                 destinationIndex.Value = (int)building.FlagIndex;
 
@@ -903,7 +879,7 @@ namespace Freeserf
                 // Count of total resources waiting at flag
                 int waitingCount = 0;
 
-                if (HasResources())
+                if (HasResources)
                 {
                     state.EndPointFlags &= ~EndPointFlags.HasUnscheduledResources;
 
@@ -959,7 +935,7 @@ namespace Freeserf
                         {
                             int maxTransporters = MaxTransporters[LengthCategory(direction)];
 
-                            if (FreeTransporterCount(direction) < (uint)maxTransporters && !SerfRequestFail())
+                            if (FreeTransporterCount(direction) < (uint)maxTransporters && !SerfRequestFail)
                             {
                                 if (!CallTransporter(direction, IsWaterPath(direction)))
                                     state.TransporterFlags |= TransporterFlags.SerfRequestFailed;
@@ -1223,9 +1199,9 @@ namespace Freeserf
             {
                 var serf = game.GetSerfAtPosition(position);
 
-                if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
+                if (serf.SerfState == Serf.State.Transporting && serf.WalkingWaitCounter != -1)
                 {
-                    int walkingDirection = serf.GetWalkingDirection();
+                    int walkingDirection = serf.WalkingDirection;
 
                     if (walkingDirection < 0)
                         walkingDirection += 6;
@@ -1277,7 +1253,7 @@ namespace Freeserf
                 {
                     var serf = game.GetSerfAtPosition(position);
 
-                    if (serf.SerfState == Serf.State.Transporting && serf.GetWalkingWaitCounter() != -1)
+                    if (serf.SerfState == Serf.State.Transporting && serf.WalkingWaitCounter != -1)
                     {
                         serf.SetWalkingWaitCounter(0);
                         data.Serfs[serfCounter++] = (int)serf.Index;
@@ -1291,10 +1267,10 @@ namespace Freeserf
                 var serf = game.GetSerfAtPosition(position);
 
                 if ((serf.SerfState == Serf.State.Transporting &&
-                    serf.GetWalkingWaitCounter() != -1) ||
+                    serf.WalkingWaitCounter != -1) ||
                     serf.SerfState == Serf.State.Delivering)
                 {
-                    int walkingDirection = serf.GetWalkingDirection();
+                    int walkingDirection = serf.WalkingDirection;
 
                     if (walkingDirection < 0)
                         walkingDirection += 6;
@@ -1335,9 +1311,9 @@ namespace Freeserf
         {
             var destinationData = data as ScheduleUnknownDestinationData;
 
-            if (flag.HasBuilding())
+            if (flag.HasBuilding)
             {
-                var building = flag.GetBuilding();
+                var building = flag.Building;
                 int buildingPriority = building.GetMaxPriorityForResource(destinationData.Resource);
 
                 if (buildingPriority > destinationData.MaxPriority)
@@ -1371,7 +1347,7 @@ namespace Freeserf
                     }
                     else
                     {
-                        var player = Game.GetPlayer(GetOwner());
+                        var player = Game.GetPlayer(Player);
                         var otherSlot = state.GetOtherEndpointPath(state.SearchDirection).ScheduledResourceSlotIndex;
                         int priorityOld = player.GetFlagPriority(source.state.Slots[otherSlot].Type);
                         int priorityNew = player.GetFlagPriority(source.state.Slots[slot].Type);
@@ -1481,7 +1457,7 @@ namespace Freeserf
                 // resource is already at destination.
                 // In the latter case we need to move it
                 // forth and back once before it can be delivered.
-                if (Transporters() == 0)
+                if (Transporters == 0)
                 {
                     state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
                 }
@@ -1541,7 +1517,7 @@ namespace Freeserf
 
             state.SearchNumber = (word)search.ID;
             state.SearchDirection = Direction.None;
-            int transporters = Transporters();
+            int transporters = Transporters;
             int sources = 0;
 
             // Directions where transporters are idle (zero slots waiting)
@@ -1649,9 +1625,9 @@ namespace Freeserf
                     {
                         var flag = Game.GetFlag(state.Slots[slot].DestinationObjectIndex);
 
-                        if (flag != null && flag.HasBuilding())
+                        if (flag != null && flag.HasBuilding)
                         {
-                            var building = flag.GetBuilding();
+                            var building = flag.Building;
 
                             if (building != null && building.GetRequested(state.Slots[slot].Type) > 0)
                                 cancel = true;
@@ -1687,7 +1663,7 @@ namespace Freeserf
             if (flag.HasInventory())
             {
                 // Inventory reached
-                var building = flag.GetBuilding();
+                var building = flag.Building;
                 var inventory = building.Inventory;
 
                 if (!roadData.Water)

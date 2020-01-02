@@ -508,7 +508,7 @@ namespace Freeserf
                     while (serfIndex != 0)
                     {
                         var serf = Game.GetSerf(serfIndex);
-                        serfIndex = serf.GetNextKnight();
+                        serfIndex = serf.NextKnight;
 
                         serf.CastleDeleted(Position, false);
                     }
@@ -1846,7 +1846,7 @@ namespace Freeserf
                     }
 
                     lastKnight = serf;
-                    nextSerfIndex = serf.GetNextKnight();
+                    nextSerfIndex = serf.NextKnight;
                 }
 
                 if (bestKnight != null)
@@ -1916,7 +1916,7 @@ namespace Freeserf
 
                 var serfIndex = state.FirstKnight;
                 var serf = Game.GetSerf(serfIndex);
-                state.FirstKnight = (word)serf.GetNextKnight();
+                state.FirstKnight = (word)serf.NextKnight;
 
                 serf.StayIdleInStock(state.Inventory);
             }
@@ -2028,7 +2028,7 @@ namespace Freeserf
                         leavingSerf = serf;
                     }
 
-                    serfIndex = serf.GetNextKnight();
+                    serfIndex = serf.NextKnight;
                 }
 
                 if (leavingSerf != null)
@@ -2036,7 +2036,7 @@ namespace Freeserf
                     // Remove leaving serf from list.
                     if (leavingSerf.Index == state.FirstKnight)
                     {
-                        state.FirstKnight = (word)leavingSerf.GetNextKnight();
+                        state.FirstKnight = (word)leavingSerf.NextKnight;
                     }
                     else
                     {
@@ -2046,13 +2046,13 @@ namespace Freeserf
                         {
                             var serf = Game.GetSerf(serfIndex);
 
-                            if (serf.GetNextKnight() == leavingSerf.Index)
+                            if (serf.NextKnight == leavingSerf.Index)
                             {
-                                serf.SetNextKnight(leavingSerf.GetNextKnight());
+                                serf.SetNextKnight(leavingSerf.NextKnight);
                                 break;
                             }
 
-                            serfIndex = serf.GetNextKnight();
+                            serfIndex = serf.NextKnight;
                         }
                     }
 

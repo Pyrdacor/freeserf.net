@@ -920,7 +920,7 @@ namespace Freeserf
 
             var flag = flags[Map.GetObjectIndex(position)];
 
-            if (flag.HasBuilding())
+            if (flag.HasBuilding)
             {
                 return false;
             }
@@ -928,7 +928,7 @@ namespace Freeserf
             if (Map.Paths(position) == 0)
                 return true;
 
-            if (flag.GetOwner() != player.Index)
+            if (flag.Player != player.Index)
                 return false;
 
             return flag.CanDemolish();
@@ -1007,7 +1007,7 @@ namespace Freeserf
             if (flag == null)
                 return false;
 
-            flag.SetOwner(player.Index);
+            flag.Player = player.Index;
             flag.Position = position;
             Map.SetObject(position, Map.Object.Flag, (int)flag.Index);
 
@@ -1067,7 +1067,7 @@ namespace Freeserf
 
             if (Map.GetObject(flagPosition) != Map.Object.Flag)
             {
-                flag.SetOwner(player.Index);
+                flag.Player = player.Index;
                 splitPath = Map.Paths(flagPosition) != 0;
             }
             else
@@ -1147,7 +1147,7 @@ namespace Freeserf
             castle.Player = player.Index;
             castle.StartBuilding(Building.Type.Castle);
 
-            flag.SetOwner(player.Index);
+            flag.Player = player.Index;
             flag.SetAcceptsSerfs(true);
             flag.SetHasInventory();
             flag.SetAcceptsResources(true);
@@ -1547,7 +1547,7 @@ namespace Freeserf
                 }
 
                 // Change owner of flag. 
-                flag.SetOwner(playerIndex);
+                flag.Player = playerIndex;
 
                 // Reset destination of stolen resources. 
                 flag.ResetDestinationOfStolenResources();
@@ -1582,12 +1582,12 @@ namespace Freeserf
 
             var flag = flags[destination];
 
-            if (!flag.HasBuilding())
+            if (!flag.HasBuilding)
             {
                 throw new ExceptionFreeserf(this, ErrorSystemType.Game, "Failed to cancel transported resource.");
             }
 
-            flag.GetBuilding().CancelTransportedResource(type);
+            flag.Building.CancelTransportedResource(type);
         }
 
         /// <summary>
@@ -1618,9 +1618,9 @@ namespace Freeserf
         {
             Building building = null;
 
-            if (destination.HasBuilding())
+            if (destination.HasBuilding)
             {
-                building = destination.GetBuilding();
+                building = destination.Building;
             }
 
             int serfType = (int)type;
@@ -1877,12 +1877,12 @@ namespace Freeserf
 
         public IEnumerable<Flag> GetPlayerFlags(Player player)
         {
-            return flags.Where(flag => flag.GetOwner() == player.Index);
+            return flags.Where(flag => flag.Player == player.Index);
         }
 
         public IEnumerable<Serf> GetSerfsInInventory(Inventory inventory)
         {
-            return serfs.Where(serf => serf.SerfState == Serf.State.IdleInStock && inventory.Index == serf.GetIdleInStockInventoryIndex());
+            return serfs.Where(serf => serf.SerfState == Serf.State.IdleInStock && inventory.Index == serf.IdleInStockInventoryIndex);
         }
 
         internal List<Serf> GetSerfsRelatedTo(uint destination, Direction direction)
@@ -1945,7 +1945,7 @@ namespace Freeserf
 
             foreach (var flag in GetPlayerFlags(player))
             {
-                if (flag.HasResources())
+                if (flag.HasResources)
                 {
                     for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
                     {
@@ -1959,7 +1959,7 @@ namespace Freeserf
 
             foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Transporter))
             {
-                if (transporter.GetTransportedResource() == type)
+                if (transporter.TransportedResource == type)
                     ++count;
             }
 
@@ -1976,7 +1976,7 @@ namespace Freeserf
 
             foreach (var flag in GetPlayerFlags(player))
             {
-                if (flag.HasResources())
+                if (flag.HasResources)
                 {
                     for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
                     {
@@ -1990,7 +1990,7 @@ namespace Freeserf
 
             foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Transporter))
             {
-                if (transporter.GetTransportedResource() == type)
+                if (transporter.TransportedResource == type)
                     return true;
             }
 
@@ -2107,9 +2107,9 @@ namespace Freeserf
             var updateData = data as UpdateInventoriesData;
             int index = (int)flag.Tag;
 
-            if (updateData.MaxPriority[index] < 255 && flag.HasBuilding())
+            if (updateData.MaxPriority[index] < 255 && flag.HasBuilding)
             {
-                var building = flag.GetBuilding();
+                var building = flag.Building;
                 int buildingPriority = building.GetMaxPriorityForResource(updateData.Resource, 16);
 
                 if (buildingPriority > updateData.MaxPriority[index])
@@ -2281,7 +2281,7 @@ namespace Freeserf
                             Log.Verbose.Write(ErrorSystemType.Game, $" dest for inventory {i} found");
                             var resource = resources[arrayIndex];
 
-                            var destinationBuilding = flags[i].GetBuilding();
+                            var destinationBuilding = flags[i].Building;
 
                             if (!destinationBuilding.AddRequestedResource(resource, false))
                             {
@@ -2368,7 +2368,7 @@ namespace Freeserf
             var sendData = data as SendSerfToFlagData;
 
             // Inventory reached
-            var building = flag.GetBuilding();
+            var building = flag.Building;
             var inventory = building.Inventory;
 
             int type = sendData.SerfType;
@@ -2428,7 +2428,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            var destinationBuilding = flag.Game.flags[(uint)sendData.DestIndex].GetBuilding();
+                            var destinationBuilding = flag.Game.flags[(uint)sendData.DestIndex].Building;
                             destinationBuilding.SerfRequestGranted();
                             mode = -1;
                         }
@@ -2799,7 +2799,7 @@ namespace Freeserf
                         // Handle serf close to flag, where
                         // it should only be lost if walking
                         // in the wrong direction.
-                        int walkingDirection = serf.GetWalkingDirection();
+                        int walkingDirection = serf.WalkingDirection;
 
                         if (walkingDirection < 0)
                             walkingDirection += 6;
@@ -2991,7 +2991,7 @@ namespace Freeserf
 
             var flag = flags[Map.GetObjectIndex(position)];
 
-            if (flag.HasBuilding() && !flag.GetBuilding().IsBurning)
+            if (flag.HasBuilding && !flag.Building.IsBurning)
             {
                 throw new ExceptionFreeserf(this, ErrorSystemType.Game, "Failed to demolish flag with building.");
             }

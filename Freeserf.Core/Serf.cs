@@ -2137,7 +2137,7 @@ namespace Freeserf
                 else if (s.Walking.Direction1 == -1)
                 {
                     var flag = Game.GetFlag(s.Walking.Destination);
-                    var building = flag.GetBuilding();
+                    var building = flag.Building;
                     building.RequestedSerfLost();
                 }
 
@@ -2194,7 +2194,7 @@ namespace Freeserf
                 else if (s.Walking.Direction1 == -1)
                 {
                     var flag = Game.GetFlag(s.Walking.Destination);
-                    var building = flag.GetBuilding();
+                    var building = flag.Building;
                     building.RequestedSerfLost();
                 }
             }
@@ -2692,75 +2692,36 @@ namespace Freeserf
             return resource;
         }
 
-        internal int GetFreeWalkingNegDist1()
-        {
-            return s.FreeWalking.NegDistance1;
-        }
+        internal int FreeWalkingNegDistance1 => s.FreeWalking.NegDistance1;
 
-        internal int GetFreeWalkingNegDist2()
-        {
-            return s.FreeWalking.NegDistance2;
-        }
+        internal int FreeWalkingNegDistance2 => s.FreeWalking.NegDistance2;
 
-        internal State GetLeavingBuildingNextState()
-        {
-            return s.LeavingBuilding.NextState;
-        }
+        internal State LeavingBuildingNextState => s.LeavingBuilding.NextState;
 
-        internal int GetLeavingBuildingFieldB()
-        {
-            return s.LeavingBuilding.FieldB;
-        }
+        internal int LeavingBuildingFieldB => s.LeavingBuilding.FieldB;
 
-        internal uint GetMiningRes()
-        {
-            return s.Mining.Resource;
-        }
+        internal uint MiningResource => s.Mining.Resource;
 
-        internal Resource.Type GetTransportedResource()
-        {
-            return s.Walking.Resource;
-        }
+        internal Resource.Type TransportedResource => s.Walking.Resource;
 
-        internal uint GetTransportDestination()
-        {
-            return s.Walking.Destination;
-        }
+        internal uint TransportDestination => s.Walking.Destination;
 
-        internal int GetAttackingFieldD()
-        {
-            return s.Attacking.FieldD;
-        }
+        internal int AttackingFieldD => s.Attacking.FieldD;
 
-        internal int GetAttackingDefIndex()
-        {
-            return s.Attacking.DefenderIndex;
-        }
+        internal int AttackingDefenderIndex => s.Attacking.DefenderIndex;
 
-        internal int GetWalkingWaitCounter()
-        {
-            return s.Walking.WaitCounter;
-        }
+        internal int WalkingWaitCounter => s.Walking.WaitCounter;
 
         internal void SetWalkingWaitCounter(int newCounter)
         {
             s.Walking.WaitCounter = newCounter;
         }
 
-        internal int GetWalkingDirection()
-        {
-            return s.Walking.Direction;
-        }
+        internal int WalkingDirection => s.Walking.Direction;
 
-        internal uint GetIdleInStockInventoryIndex()
-        {
-            return s.IdleInStock.InventoryIndex;
-        }
+        internal uint IdleInStockInventoryIndex => s.IdleInStock.InventoryIndex;
 
-        internal int GetMiningSubstate()
-        {
-            return (int)s.Mining.Substate;
-        }
+        internal int MiningSubstate => (int)s.Mining.Substate;
 
         public Serf ExtractLastKnightFromList()
         {
@@ -2820,10 +2781,7 @@ namespace Freeserf
             s.Defending.NextKnight = knight.Index;
         }
 
-        internal uint GetNextKnight()
-        {
-            return s.Defending.NextKnight;
-        }
+        internal uint NextKnight => s.Defending.NextKnight;
 
         internal void SetNextKnight(uint nextKnightIndex)
         {
@@ -4166,7 +4124,7 @@ namespace Freeserf
             {
                 var flag = GetFlagAtPosition();
 
-                if ((flag.LandPaths() != 0 ||
+                if ((flag.LandPaths != 0 ||
                     (flag.HasInventory() && flag.AcceptsSerfs())) &&
                     map.GetOwner(Position) == Player)
                 {
@@ -4406,7 +4364,7 @@ namespace Freeserf
 
                                 if (flag.HasInventory() && flag.AcceptsSerfs())
                                 {
-                                    loopSerf.PutBackToInventory(flag.GetBuilding().Inventory);
+                                    loopSerf.PutBackToInventory(flag.Building.Inventory);
                                     loopSerf.FindInventory();
                                     return;
                                 }
@@ -4547,7 +4505,7 @@ namespace Freeserf
                     }
 
                     var flag = Game.GetFlag(s.Walking.Destination);
-                    var building = flag.GetBuilding();
+                    var building = flag.Building;
 
                     building.RequestedSerfLost();
                 }
@@ -5798,9 +5756,9 @@ namespace Freeserf
             {
                 var flag = Game.GetFlag(s.ReadyToLeaveInventory.Destination);
 
-                if (flag.HasBuilding())
+                if (flag.HasBuilding)
                 {
-                    var building = flag.GetBuilding();
+                    var building = flag.Building;
 
                     if (map.HasSerf(building.Position))
                     {
@@ -6969,7 +6927,7 @@ namespace Freeserf
                     {
                         var flag = Game.GetFlagAtPosition(destination);
 
-                        if ((flag.LandPaths() != 0 ||
+                        if ((flag.LandPaths != 0 ||
                              (flag.HasInventory() && flag.AcceptsSerfs())) &&
                               map.HasOwner(destination) &&
                               map.GetOwner(destination) == Player)
@@ -7068,7 +7026,7 @@ namespace Freeserf
                     {
                         var flag = Game.GetFlagAtPosition(destination);
 
-                        if (flag.LandPaths() != 0 &&
+                        if (flag.LandPaths != 0 &&
                             map.HasOwner(destination) &&
                             map.GetOwner(destination) == Player)
                         {
@@ -8536,7 +8494,7 @@ namespace Freeserf
                                     Counter = 255;
 
                                     var destination = Game.GetFlag(otherSerf.s.Walking.Destination);
-                                    var building = destination.GetBuilding();
+                                    var building = destination.Building;
 
                                     if (building != null && !building.HasInventory())
                                     {

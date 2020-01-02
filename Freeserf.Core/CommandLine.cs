@@ -59,10 +59,7 @@ namespace Freeserf
                 return parameters.Count > 0;
             }
 
-            public string GetComment()
-            {
-                return comment;
-            }
+            public string Comment => comment;
 
             public void ShowHelp()
             {
@@ -122,7 +119,7 @@ namespace Freeserf
         }
 
         protected string path = "";
-        protected string progname = "";
+        protected string programName = "";
         protected string comment = "";
         Dictionary<char, Option> options = new Dictionary<char, Option>();
 
@@ -177,15 +174,9 @@ namespace Freeserf
             return options[key];
         }
 
-        public string GetPath()
-        {
-            return path;
-        }
+        public string Path => path;
 
-        public string GetProgName()
-        {
-            return progname;
-        }
+        public string ProgramName => programName;
 
         public void SetComment(string comment)
         {

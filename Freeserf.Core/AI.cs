@@ -791,7 +791,7 @@ namespace Freeserf
             uint bestRoadTotalCost = uint.MaxValue;
             uint costAdd = 0;
             var game = player.Game;
-            var buildingType = flag.HasBuilding() ? flag.GetBuilding().BuildingType : Building.Type.None;
+            var buildingType = flag.HasBuilding ? flag.Building.BuildingType : Building.Type.None;
 
             var flags = (maxLength < 10)
                 ? game.Map.FindInArea(flag.Position, maxLength, FindFlag, 2).Select(position => game.GetFlagAtPosition((MapPos)position))
@@ -825,7 +825,7 @@ namespace Freeserf
                     if (!allowWater && road.IsWaterPath(game.Map))
                         continue;
 
-                    if (buildingType != Building.Type.None && otherFlag.HasBuilding() && CheckLinkedBuildings(buildingType, otherFlag.GetBuilding().BuildingType))
+                    if (buildingType != Building.Type.None && otherFlag.HasBuilding && CheckLinkedBuildings(buildingType, otherFlag.Building.BuildingType))
                     {
                         if (bestRoad != null && flagCost + road.Cost >= bestRoadTotalCost + costAdd)
                             continue;

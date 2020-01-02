@@ -312,30 +312,33 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
             return this;
         }
 
-        public float GetVolume()
+        public float Volume
         {
+            get
+            {
 #if WINDOWS
-            uint volume = WinMMNatives.GetVolume(handle);
-            uint left = volume & 0xffff;
-            uint right = volume >> 16;
-            float result = 0.0f;
+                uint volume = WinMMNatives.GetVolume(handle);
+                uint left = volume & 0xffff;
+                uint right = volume >> 16;
+                float result = 0.0f;
 
-            if (left != right)
-            {
-                volume = Math.Max(left, right);
-                result = (float)volume / (float)0xffff;
-                SetVolume(result);
-            }
-            else
-            {
-                volume = left;
-                result = (float)volume / (float)0xffff;
-            }
+                if (left != right)
+                {
+                    volume = Math.Max(left, right);
+                    result = (float)volume / (float)0xffff;
+                    SetVolume(result);
+                }
+                else
+                {
+                    volume = left;
+                    result = (float)volume / (float)0xffff;
+                }
 
-            return result;
+                return result;
 #else
-            return 0.0f;
+                return 0.0f;
 #endif // WINDOWS
+            }
         }
 
         public void SetVolume(float volume)
@@ -356,12 +359,12 @@ namespace Freeserf.Renderer.OpenTK.Audio.Windows
 
         public void VolumeDown()
         {
-            SetVolume(GetVolume() - 0.1f);
+            SetVolume(Volume - 0.1f);
         }
 
         public void VolumeUp()
         {
-            SetVolume(GetVolume() + 0.1f);
+            SetVolume(Volume + 0.1f);
         }
 
         void Init()

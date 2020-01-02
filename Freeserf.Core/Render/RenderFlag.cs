@@ -118,7 +118,7 @@ namespace Freeserf.Render
             uint offset = (tick >> 3) & 3;
             uint spriteIndex = 128u + offset;
 
-            uint flagSpriteIndex = spriteIndex + flag.GetOwner() * 16u; // player colors
+            uint flagSpriteIndex = spriteIndex + flag.Player * 16u; // player colors
 
             var renderPosition = map.CoordinateSpace.TileSpaceToViewSpace(position);
 
@@ -154,9 +154,9 @@ namespace Freeserf.Render
                     }
 
                     // resource at slot 2 may be hidden by castle/stock so adjust baseline in this case
-                    if (i == 2 && flag.HasBuilding())
+                    if (i == 2 && flag.HasBuilding)
                     {
-                        switch (flag.GetBuilding().BuildingType)
+                        switch (flag.Building.BuildingType)
                         {
                             case Building.Type.Castle:
                             case Building.Type.Stock:

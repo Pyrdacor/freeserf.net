@@ -57,15 +57,18 @@ namespace Freeserf.Renderer.OpenTK.Audio
             return this;
         }
 
-        public float GetVolume()
+        public float Volume
         {
-            if (musicPlayer?.GetVolumeController() != null)
-                return musicPlayer.GetVolumeController().GetVolume();
+            get
+            {
+                if (musicPlayer?.GetVolumeController() != null)
+                    return musicPlayer.GetVolumeController().Volume;
 
-            if (soundPlayer?.GetVolumeController() != null)
-                return soundPlayer.GetVolumeController().GetVolume();
+                if (soundPlayer?.GetVolumeController() != null)
+                    return soundPlayer.GetVolumeController().Volume;
 
-            return 0.0f;
+                return 0.0f;
+            }
         }
 
         public void SetVolume(float volume)
@@ -79,12 +82,12 @@ namespace Freeserf.Renderer.OpenTK.Audio
 
         public void VolumeUp()
         {
-            SetVolume(GetVolume() + 0.1f);
+            SetVolume(Volume + 0.1f);
         }
 
         public void VolumeDown()
         {
-            SetVolume(GetVolume() - 0.1f);
+            SetVolume(Volume - 0.1f);
         }
     }
 

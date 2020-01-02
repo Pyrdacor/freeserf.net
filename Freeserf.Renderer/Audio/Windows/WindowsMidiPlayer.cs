@@ -309,26 +309,29 @@ namespace Freeserf.Renderer.Audio.Windows
             return this;
         }
 
-        public float GetVolume()
+        public float Volume
         {
-            uint volume = WinMMNatives.GetVolume(handle);
-            uint left = volume & 0xffff;
-            uint right = volume >> 16;
-            float result = 0.0f;
-
-            if (left != right)
+            get
             {
-                volume = Math.Max(left, right);
-                result = (float)volume / (float)0xffff;
-                SetVolume(result);
-            }
-            else
-            {
-                volume = left;
-                result = (float)volume / (float)0xffff;
-            }
+                uint volume = WinMMNatives.GetVolume(handle);
+                uint left = volume & 0xffff;
+                uint right = volume >> 16;
+                float result = 0.0f;
 
-            return result;
+                if (left != right)
+                {
+                    volume = Math.Max(left, right);
+                    result = (float)volume / (float)0xffff;
+                    SetVolume(result);
+                }
+                else
+                {
+                    volume = left;
+                    result = (float)volume / (float)0xffff;
+                }
+
+                return result;
+            }
         }
 
         public void SetVolume(float volume)
@@ -347,12 +350,12 @@ namespace Freeserf.Renderer.Audio.Windows
 
         public void VolumeDown()
         {
-            SetVolume(GetVolume() - 0.1f);
+            SetVolume(Volume - 0.1f);
         }
 
         public void VolumeUp()
         {
-            SetVolume(GetVolume() + 0.1f);
+            SetVolume(Volume + 0.1f);
         }
 
         void Init()

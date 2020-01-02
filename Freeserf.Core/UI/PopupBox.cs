@@ -2639,7 +2639,7 @@ namespace Freeserf.UI
 
             if (volumeController != null)
             {
-                volume = 99.0f * volumeController.GetVolume();
+                volume = 99.0f * volumeController.Volume;
             }
 
             SetNumberText(72, 63, (uint)Misc.Round(volume));
@@ -2845,7 +2845,7 @@ namespace Freeserf.UI
 
                 SetIcon(32 + 32 * (i % 3), 81 + 16 * (i / 3), 7u + (uint)knight.SerfType);
 
-                nextKnight = knight.GetNextKnight();
+                nextKnight = knight.NextKnight;
             }
 
             SetText(8, 137, "State:");
@@ -3066,7 +3066,7 @@ namespace Freeserf.UI
 
                     ++knights[serfType - Serf.Type.Knight0];
 
-                    serfIndex = serf.GetNextKnight();
+                    serfIndex = serf.NextKnight;
                 }
 
                 // 5 knight types
@@ -4041,7 +4041,7 @@ namespace Freeserf.UI
                         if (volumeControl != null)
                         {
                             volumeControl.VolumeDown();
-                            UserConfig.Audio.Volume = volumeControl.GetVolume();
+                            UserConfig.Audio.Volume = volumeControl.Volume;
                             SetRedraw();
                         }
                         else
@@ -4057,7 +4057,7 @@ namespace Freeserf.UI
                         if (volumeControl != null)
                         {
                             volumeControl.VolumeUp();
-                            UserConfig.Audio.Volume = volumeControl.GetVolume();
+                            UserConfig.Audio.Volume = volumeControl.Volume;
                             SetRedraw();
                         }
                         else

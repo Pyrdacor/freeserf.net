@@ -525,7 +525,7 @@ namespace Freeserf
                 if (serf.SerfState == Serf.State.IdleInStock &&
                     serf.SerfType == Serf.Type.Generic)
                 {
-                    var inventory = Game.GetInventory(serf.GetIdleInStockInventoryIndex());
+                    var inventory = Game.GetInventory(serf.IdleInStockInventoryIndex);
 
                     if (inventory.PromoteSerfToKnight(serf))
                     {
@@ -735,7 +735,7 @@ namespace Freeserf
                             }
                         }
 
-                        knightIndex = knight.GetNextKnight();
+                        knightIndex = knight.NextKnight;
                     }
 
                     var defendingSerf = building.CallAttackerOut(bestIndex);

@@ -188,7 +188,7 @@ namespace Freeserf.AIStates
                     if (!connectTriesPerFlag.ContainsKey(flag))
                         connectTriesPerFlag[flag] = 0;
 
-                    if ((flag.LandPaths() == 0 || flag.FindNearestInventoryForSerf() == -1) && ++connectTriesPerFlag[flag] < 3)
+                    if ((flag.LandPaths == 0 || flag.FindNearestInventoryForSerf() == -1) && ++connectTriesPerFlag[flag] < 3)
                     {
                         LinkFlag(ai, flag, 9, false, tick);
                         return;
@@ -199,9 +199,9 @@ namespace Freeserf.AIStates
                 {
                     bool finishedLinking = false;
 
-                    if (flag.HasBuilding())
+                    if (flag.HasBuilding)
                     {
-                        var building = flag.GetBuilding();
+                        var building = flag.Building;
 
                         // don't link flags of foresters and farms more than necessary as they need space for their work
                         if (building.BuildingType == Building.Type.Forester || building.BuildingType == Building.Type.Farm)

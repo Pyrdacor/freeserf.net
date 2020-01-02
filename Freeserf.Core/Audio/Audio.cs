@@ -96,7 +96,7 @@ namespace Freeserf.Audio
 
         public interface IVolumeController
         {
-            float GetVolume();
+            float Volume { get; }
             void SetVolume(float volume);
             void VolumeUp();
             void VolumeDown();
