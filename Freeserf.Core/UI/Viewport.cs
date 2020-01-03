@@ -284,6 +284,9 @@ namespace Freeserf.UI
                 case Event.Type.KeyPressed:
                     result = HandleKeyPressed((char)e.Dx, e.Dy);
                     break;
+                case Event.Type.SystemKeyPressed:
+                    result = HandleSystemKeyPressed((Event.SystemKey)e.Dx, e.Dy);
+                    break;
                 default:
                     break;
             }

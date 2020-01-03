@@ -27,7 +27,7 @@ namespace Freeserf.UI
         Interface interf = null;
 
         public ListSavedFiles(Interface interf)
-            : base(interf)
+            : base(interf, Render.TextRenderType.NewUI)
         {
             saveGame = GameStore.Instance;
 

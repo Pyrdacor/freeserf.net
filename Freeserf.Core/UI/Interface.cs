@@ -1298,6 +1298,30 @@ namespace Freeserf.UI
 
         bool IsRemote => this is RemoteInterface;
 
+        protected override bool HandleSystemKeyPressed(Event.SystemKey key, int modifier)
+        {
+            if (!Ingame)
+                return false;
+
+            if (key == Event.SystemKey.Escape)
+            {
+                if (NotificationBox != null && NotificationBox.Displayed)
+                {
+                    CloseMessage();
+                }
+                else if (PopupBox != null && PopupBox.Displayed)
+                {
+                    ClosePopup();
+                }
+                else if (IsBuildingRoad)
+                {
+                    BuildRoadEnd();
+                }
+            }
+
+            return true;
+        }
+
         protected override bool HandleKeyPressed(char key, int modifier)
         {
             if (!Ingame)
@@ -1318,24 +1342,6 @@ namespace Freeserf.UI
                         }
                         break;
                     }
-                case Event.SystemKeys.Escape:
-                    {
-                        if (NotificationBox != null && NotificationBox.Displayed)
-                        {
-                            CloseMessage();
-                        }
-                        else if (PopupBox != null && PopupBox.Displayed)
-                        {
-                            ClosePopup();
-                        }
-                        else if (IsBuildingRoad)
-                        {
-                            BuildRoadEnd();
-                        }
-
-                        break;
-                    }
-
                 // Game speed 
                 case '+':
                     {
@@ -1429,7 +1435,6 @@ namespace Freeserf.UI
                         PanelBar.Demolish();
                     }
                     break;
-
                 default:
                     return false;
             }

@@ -70,6 +70,7 @@ namespace Freeserf.Renderer
         public event EventHandler SpecialClick;
         public event EventHandler Drag;
         public event EventHandler KeyPress;
+        public event EventHandler SystemKeyPress;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
@@ -143,10 +144,7 @@ namespace Freeserf.Renderer
                         };
                     }
                     else if (layer == Layer.GuiFont) // UI Font needs different scaling
-                    {
-                        // we use 32x32 per char but the UI works best with 8x8 chars
-                        // therefore we scale the size by 0.25, the position is not scaled though
-
+                    {                      
                         renderLayer.PositionTransformation = (Position position) =>
                         {
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
@@ -157,8 +155,10 @@ namespace Freeserf.Renderer
 
                         renderLayer.SizeTransformation = (Size size) =>
                         {
-                            float factorX = 0.25f * (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = 0.25f * (float)VirtualScreen.Size.Height / 480.0f;
+                            // The UI expects 8x8 characters but we may use different sizes.
+                            // So we adjust the scale factors accordingly.
+                            float factorX = (8.0f / Global.UIFontCharacterWidth) * (float)VirtualScreen.Size.Width / 640.0f;
+                            float factorY = (8.0f / Global.UIFontCharacterHeight) * (float)VirtualScreen.Size.Height / 480.0f;
 
                             // don't scale a dimension of 0
                             int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
@@ -572,6 +572,11 @@ namespace Freeserf.Renderer
         public bool NotifyKeyPressed(char key, byte modifier)
         {
             return RunHandler(KeyPress, new EventArgs(EventType.KeyPressed, 0, 0, (byte)key, modifier));
+        }
+
+        public bool NotifySystemKeyPressed(SystemKey key, byte modifier)
+        {
+            return RunHandler(SystemKeyPress, new EventArgs(EventType.SystemKeyPressed, 0, 0, (int)key, modifier));
         }
     }
 }

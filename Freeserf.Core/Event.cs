@@ -28,7 +28,8 @@ namespace Freeserf.Event
         DoubleClick,
         SpecialClick, // Left + right button
         Drag,
-        KeyPressed
+        KeyPressed,
+        SystemKeyPressed
     }
 
     public enum Button
@@ -39,17 +40,24 @@ namespace Freeserf.Event
         Right
     }
 
+    public enum SystemKey
+    {
+        Unknown = -1,
+        Escape,
+        PageUp,
+        PageDown,
+        Up,
+        Down,
+        Left,
+        Right
+    }
+
     public static class SystemKeys
     {
         public const char Backspace = (char)8;
         public const char Delete = (char)24;
         public const char Return = '\n';
         public const char Tab = '\t';
-        public const char Escape = (char)27;
-        public const char PageUp = (char)33;
-        public const char PageDown = (char)34;
-        public const char Up = (char)38;
-        public const char Down = (char)40;
     }
 
     public class EventArgs : System.EventArgs
@@ -99,5 +107,6 @@ namespace Freeserf.Event
         event EventHandler SpecialClick;
         event EventHandler Drag;
         event EventHandler KeyPress;
+        event EventHandler SystemKeyPress;
     }
 }

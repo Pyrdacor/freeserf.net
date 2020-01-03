@@ -380,23 +380,29 @@ namespace Freeserf
                 switch (key)
                 {
                     case Key.Left:
-                        gameView?.NotifyKeyPressed((char)key, 0);
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.Left, 0);
                         HandleKeyDrag();
                         break;
                     case Key.Right:
-                        gameView?.NotifyKeyPressed((char)key, 0);
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.Right, 0);
                         HandleKeyDrag();
                         break;
                     case Key.Up:
-                        gameView?.NotifyKeyPressed((char)key, 0);
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.Up, 0);
                         HandleKeyDrag();
                         break;
                     case Key.Down:
-                        gameView?.NotifyKeyPressed((char)key, 0);
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.Down, 0);
                         HandleKeyDrag();
                         break;
-                    case Key.F10:
-                        gameView?.NotifyKeyPressed('n', 1);
+                    case Key.PageUp:
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.PageUp, 0);
+                        break;
+                    case Key.PageDown:
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.PageDown, 0);
+                        break;
+                    case Key.Escape:
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.Escape, 0);
                         break;
                     case Key.F11:
                         ToggleFullscreen();
@@ -412,7 +418,7 @@ namespace Freeserf
                         break;
                     default:
                         {
-                            if ((int)key < 128) // only valid ascii characters
+                            if ((int)key >= 32 && (int)key < 128) // only valid ascii characters
                             {
                                 byte modifier = 0;
 
