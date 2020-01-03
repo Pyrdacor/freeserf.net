@@ -12,7 +12,7 @@ namespace Freeserf
 {
     // TODO: The Render event is called independently of input events. This can cause problem if the input events change something while the render/update events work with something.
     // TODO: This has to be fixed in a way that this event behavior is valid (e.g. locking mutexes inside the viewers, gui or interface).
-    class MainWindow : Silk.NET.Window.Window, IDisposable
+    class MainWindow : Window, IDisposable
     {
         enum MouseButtonIndex
         {
