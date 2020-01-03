@@ -590,46 +590,41 @@ namespace Freeserf.UI
                 playerBoxes[i].Visible = false;
         }
 
-        string[] GetSelectedServer()
+        ServerInfo GetSelectedServer()
         {
-            var serverInfo = serverList.GetSelected()?.Trim();
-
-            if (string.IsNullOrEmpty(serverInfo))
-                return new string[4] { "", "", "", "" };
-
-            return serverInfo.Split();
+            return serverList.GetSelected();
         }
 
         string GetServerName()
         {
             var serverInfo = GetSelectedServer();
 
-            if (serverInfo.Length == 0)
+            if (serverInfo == null)
                 return "";
 
-            return serverInfo[0];
+            return serverInfo.Name;
         }
 
         string GetServerHostname()
         {
             var serverInfo = GetSelectedServer();
 
-            if (serverInfo.Length < 2)
+            if (serverInfo == null)
                 return "";
 
-            return serverInfo[1];
+            return serverInfo.HostName;
         }
 
         int GetServerCurrentPlayers()
         {
             var serverInfo = GetSelectedServer();
 
-            if (serverInfo.Length < 3)
+            if (serverInfo == null)
                 return 0;
 
             try
             {
-                return Math.Max(1, int.Parse(serverInfo[2]));
+                return Math.Max(1, serverInfo.CurrentPlayers);
             }
             catch
             {
@@ -641,12 +636,12 @@ namespace Freeserf.UI
         {
             var serverInfo = GetSelectedServer();
 
-            if (serverInfo.Length < 4)
+            if (serverInfo == null)
                 return 0;
 
             try
             {
-                return Math.Min(3, int.Parse(serverInfo[3]));
+                return Math.Min(4, serverInfo.MaxPlayers);
             }
             catch
             {
@@ -1006,13 +1001,6 @@ namespace Freeserf.UI
                     if (++gameType > GameType.AIvsAI)
                     {
                         gameType = GameType.Custom;
-                    }
-
-                    // TODO we remove multiplayer as long as it isn't finished
-                    // TODO remove the following if then
-                    if (gameType == GameType.MultiplayerClient)
-                    {
-                        ++gameType;
                     }
 
                     UpdateGameType();                    
