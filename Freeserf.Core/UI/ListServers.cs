@@ -19,9 +19,24 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Collections.Generic;
+
 namespace Freeserf.UI
 {
-    internal class ListServers : ListBox<string>
+    internal class ServerInfo
+    {
+        public string Name = "";
+        public string HostName = "";
+        public int CurrentPlayers = 0;
+        public int MaxPlayers = 4;
+
+        public override string ToString()
+        {
+            return $"{Name} | {HostName} | {CurrentPlayers}/{MaxPlayers}";
+        }
+    }
+
+    internal class ListServers : ListBox<ServerInfo>
     {
         public ListServers(Interface interf)
             : base(interf, Render.TextRenderType.NewUI)
@@ -32,9 +47,15 @@ namespace Freeserf.UI
             Init(interf);
         }
 
-        public void AddServer(string serverName, string hostName, int currentCount, int maxPlayers = 4)
+        public void AddServer(string serverName, string hostName, int currentPlayers, int maxPlayers = 4)
         {
-            items.Add($"{serverName} | {hostName} | {currentCount}/{maxPlayers}");
+            items.Add(new ServerInfo()
+            {
+                Name = serverName,
+                HostName = hostName,
+                CurrentPlayers = currentPlayers,
+                MaxPlayers = maxPlayers
+            });
         }
     }
 }
