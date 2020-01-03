@@ -518,7 +518,12 @@ namespace Freeserf.Render
             guiResourceOffsets.Add(Data.Resource.UIText, guiResourceOffsets[Data.Resource.Icon] + 1000u);
             AddSprite(Layer.GuiFont, guiResourceOffsets[Data.Resource.UIText], Sprite.CreateFromFile(
                 assetPath.TrimEnd(new char[] { '/', '\\' }) + "/ui_font.png",
-                new Sprite.Color() { Red = 0, Green = 0, Blue = 0 }
+                new Sprite.Color() { Red = 0, Green = 0, Blue = 0 }, // black color key
+                new KeyValuePair<Sprite.Color, Sprite.Color>
+                (
+                    new Sprite.Color() { Red = 255, Green = 255, Blue = 255 }, // replace white color
+                    new Sprite.Color() { Red = 115, Green = 179, Blue = 67 } // with green color
+                )
             ));
 
             #endregion

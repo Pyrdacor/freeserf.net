@@ -83,15 +83,15 @@ namespace Freeserf.Data
             Create(width, height);
         }
 
-        public static Sprite CreateFromFile(string filename, Color? colorkey = null)
+        public static Sprite CreateFromFile(string filename, Color? colorkey = null, KeyValuePair<Color, Color>? colorReplacing = null)
         {
             using (var stream = File.OpenRead(filename))
             {
-                return CreateFromStream(stream, colorkey);
+                return CreateFromStream(stream, colorkey, colorReplacing);
             }
         }
 
-        public static Sprite CreateFromStream(Stream stream, Color? colorkey = null)
+        public static Sprite CreateFromStream(Stream stream, Color? colorkey = null, KeyValuePair<Color, Color>? colorReplacing = null)
         {
             var image = new Bitmap(stream);
             var sprite = new Sprite();
@@ -102,12 +102,12 @@ namespace Freeserf.Data
 
             sprite.width = (uint)image.Width;
             sprite.height = (uint)image.Height;
-            sprite.data = GetImageData(image, colorkey);
+            sprite.data = GetImageData(image, colorkey, colorReplacing);
 
             return sprite;
         }
 
-        private static byte[] GetImageData(Bitmap image, Color? colorkey = null)
+        private static byte[] GetImageData(Bitmap image, Color? colorkey, KeyValuePair<Color, Color>? colorReplacing)
         {
             Rectangle area = new Rectangle(0, 0, image.Width, image.Height);
             var imageData = image.LockBits(area, ImageLockMode.ReadOnly, image.PixelFormat);
@@ -140,6 +140,16 @@ namespace Freeserf.Data
                         temp[i * 4 + 2] = 0;
                         temp[i * 4 + 3] = 0;
                     }
+                    else if (colorReplacing != null &&
+                        data[i * 3 + 0] == colorReplacing.Value.Key.Blue &&
+                        data[i * 3 + 1] == colorReplacing.Value.Key.Green &&
+                        data[i * 3 + 2] == colorReplacing.Value.Key.Red)
+                    {
+                        temp[i * 4 + 0] = colorReplacing.Value.Value.Blue;
+                        temp[i * 4 + 1] = colorReplacing.Value.Value.Green;
+                        temp[i * 4 + 2] = colorReplacing.Value.Value.Red;
+                        temp[i * 4 + 3] = 255;
+                    }
                     else
                     {
                         temp[i * 4 + 0] = data[i * 3 + 0];
@@ -164,6 +174,17 @@ namespace Freeserf.Data
                         data[i * 4 + 1] = 0;
                         data[i * 4 + 2] = 0;
                         data[i * 4 + 3] = 0;
+                    }
+                    else if (colorReplacing != null &&
+                        data[i * 4 + 0] == colorReplacing.Value.Key.Blue &&
+                        data[i * 4 + 1] == colorReplacing.Value.Key.Green &&
+                        data[i * 4 + 2] == colorReplacing.Value.Key.Red &&
+                        data[i * 4 + 3] == colorReplacing.Value.Key.Alpha)
+                    {
+                        data[i * 4 + 0] = colorReplacing.Value.Value.Blue;
+                        data[i * 4 + 1] = colorReplacing.Value.Value.Green;
+                        data[i * 4 + 2] = colorReplacing.Value.Value.Red;
+                        data[i * 4 + 3] = colorReplacing.Value.Value.Alpha;
                     }
                 }
             }

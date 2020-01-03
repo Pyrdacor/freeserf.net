@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using Freeserf.Event;
 using Freeserf.Render;
 
 namespace Freeserf.UI
@@ -36,13 +37,13 @@ namespace Freeserf.UI
         int selectedItem = -1;
         Action<T> selectionHandler = null;
         protected readonly List<T> items = new List<T>();
-        TextRenderType renderType = TextRenderType.Legacy;
+        TextRenderType renderType = TextRenderType.NewUI;
 
         readonly IColoredRect background = null;
         readonly IColoredRect selectionBackground = null;
         readonly List<TextField> textEntries = new List<TextField>();
 
-        public ListBox(Interface interf, TextRenderType renderType = TextRenderType.Legacy)
+        public ListBox(Interface interf, TextRenderType renderType = TextRenderType.NewUI)
             : base(interf)
         {
             background = interf.RenderView.ColoredRectFactory.Create(0, 0, colorBackground, BaseDisplayLayer);
@@ -65,13 +66,19 @@ namespace Freeserf.UI
             }
         }
 
+        protected int CharacterGapSize
+        {
+            get;
+            set;
+        } = 6;
+
         protected void Init(Interface interf)
         {
             int y = 3;
 
             foreach (var item in items)
             {
-                var textField = new TextField(interf, 1, 8, renderType);
+                var textField = new TextField(interf, 1, CharacterGapSize, renderType);
 
                 AddChild(textField, 3, y, true);
                 textEntries.Add(textField);
@@ -88,7 +95,7 @@ namespace Freeserf.UI
             {
                 if (i == textEntries.Count)
                 {
-                    var textField = new TextField(interf, 1, 8, renderType);
+                    var textField = new TextField(interf, 1, CharacterGapSize, renderType);
 
                     AddChild(textField, 3, y, true);
                     textEntries.Add(textField);
@@ -178,12 +185,12 @@ namespace Freeserf.UI
 
         string TrimText(string text)
         {
-            int width = text.Length * 8;
+            int width = text.Length * CharacterGapSize;
 
             if (width <= Width - 3)
                 return text;
 
-            int maxLength = (Width - 3) / 8;
+            int maxLength = (Width - 3) / CharacterGapSize;
 
             return text.Substring(0, maxLength - 2) + "..";
         }
@@ -236,8 +243,50 @@ namespace Freeserf.UI
             return true;
         }
 
-        protected override bool HandleKeyPressed(char key, int modifier)
+        private void SelectAndScroll(int index)
         {
+            int lastPossibleFirstVisibleItem = Math.Max(0, items.Count + 1 - (Height + 8) / 9);
+            int newFirstVisibleItem = Math.Min(index, lastPossibleFirstVisibleItem);            
+
+            if (firstVisibleItem != newFirstVisibleItem)
+            {
+                firstVisibleItem = newFirstVisibleItem;
+            }
+
+            if (selectedItem != index)
+                Select(index);
+            else
+                SetRedraw(); // we need a redraw cause we may have changed firstVisibleItem
+        }
+
+        protected override bool HandleSystemKeyPressed(SystemKey key, int modifier)
+        {
+            if (items.Count != 0)
+            {
+                if (key == SystemKey.PageUp) // page up
+                {
+                    SelectAndScroll(0);                    
+                }
+                else if (key == SystemKey.PageDown) // page down
+                {
+                    SelectAndScroll(items.Count - 1);
+                }
+                else if (key == SystemKey.Up) // up
+                {
+                    if (selectedItem > 0)
+                    {
+                        SelectAndScroll(selectedItem - 1);
+                    }
+                }
+                else if (key == SystemKey.Down) // down
+                {
+                    if (selectedItem < items.Count - 1)
+                    {
+                        SelectAndScroll(selectedItem + 1);
+                    }
+                }
+            }
+
             return focused;
         }
 
