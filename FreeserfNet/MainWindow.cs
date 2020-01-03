@@ -54,8 +54,15 @@ namespace Freeserf
             if (mainWindow != null)
                 throw new ExceptionFreeserf(ErrorSystemType.Application, "A main window can not be created twice.");
 
-            Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
-            Log.SetLevel(Log.Level.Error);
+            try
+            {
+                Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+                Log.SetLevel(Log.Level.Error);
+            }
+            catch (IOException)
+            {
+                // TODO: logging not possible
+            }            
 
             initInfo = Global.Init(args); // this may change the log level
 
