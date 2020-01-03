@@ -1168,26 +1168,26 @@ namespace Freeserf.UI
             return true;
         }
 
-        protected override bool HandleKeyPressed(char key, int modifier)
+        protected override bool HandleSystemKeyPressed(SystemKey key, int modifier)
         {
-            if (key == SystemKeys.PageUp) // page up
+            if (key == SystemKey.PageUp) // page up
             {
                 HandleAction(Action.IncrementLarge);
             }
-            else if (key == SystemKeys.PageDown) // page down
+            else if (key == SystemKey.PageDown) // page down
             {
                 HandleAction(Action.DecrementLarge);
             }
-            else if (key == SystemKeys.Up) // up
+            else if (key == SystemKey.Up) // up
             {
                 HandleAction(Action.Increment);
             }
-            else if (key == SystemKeys.Down) // down
+            else if (key == SystemKey.Down) // down
             {
                 HandleAction(Action.Decrement);
             }
 
-            return base.HandleKeyPressed(key, modifier);
+            return base.HandleSystemKeyPressed(key, modifier);
         }
 
         bool PlayerFaceAlreadyTaken(uint playerIndex, PlayerFace face)

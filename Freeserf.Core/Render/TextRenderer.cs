@@ -2,6 +2,17 @@
 using System.Linq;
 using System.Text;
 
+namespace Freeserf
+{
+    public static partial class Global
+    {
+        public const int UIFontCharacterWidth = 16;
+        public const int UIFontCharacterHeight = 16;
+        public const int UIFontCharactersPerLine = 16;
+        public const int UIFontCharacterLines = 16;
+    }
+}
+
 namespace Freeserf.Render
 {
     using Data = Data.Data;
@@ -106,8 +117,8 @@ namespace Freeserf.Render
 
             // original size is 8x8 pixels
             characterSizeLegacy = new Size(8, 8);
-            // new font uses 32x32
-            characterSizeNew = new Size(32, 32);
+            // new font uses a different size
+            characterSizeNew = new Size(Global.UIFontCharacterWidth, Global.UIFontCharacterHeight);
         }
 
         public int CreateText(string text, byte displayLayer, TextRenderType renderType, Position position = null, int characterGapSize = 8)
@@ -349,8 +360,8 @@ namespace Freeserf.Render
                             bytes[i] = 0; // map to unsupported character
 
                         var textureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.UIText, 0);
-                        textureAtlasOffset.X += (bytes[i] % 16) * 32; // 16 chars per line, 32 pixels width per char
-                        textureAtlasOffset.Y += (bytes[i] / 16) * 32; // 32 pixels height per char
+                        textureAtlasOffset.X += (bytes[i] % Global.UIFontCharactersPerLine) * Global.UIFontCharacterWidth;
+                        textureAtlasOffset.Y += (bytes[i] / Global.UIFontCharactersPerLine) * Global.UIFontCharacterHeight; 
                         sprites[charIndex].Sprite.Layer = layerNewFont;
                         sprites[charIndex++].Sprite.TextureAtlasOffset = textureAtlasOffset;                        
                     }
