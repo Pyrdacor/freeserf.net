@@ -210,6 +210,11 @@ namespace Freeserf.UI
             return false;
         }
 
+        protected virtual bool HandleSystemKeyPressed(Event.SystemKey key, int modifier)
+        {
+            return false;
+        }
+
         protected virtual bool HandleFocusLoose()
         {
             return false;
@@ -381,6 +386,9 @@ namespace Freeserf.UI
                 case Event.Type.KeyPressed:
                     result = HandleKeyPressed((char)e.Dx, e.Dy);
                     break;
+                case Event.Type.SystemKeyPressed:
+                    result = HandleSystemKeyPressed((Event.SystemKey)e.Dx, e.Dy);
+                    break;
                 default:
                   break;
             }
@@ -424,6 +432,7 @@ namespace Freeserf.UI
             renderView.SpecialClick += RenderView_DoubleClick;
             renderView.Drag += RenderView_Drag;
             renderView.KeyPress += RenderView_KeyPress;
+            renderView.SystemKeyPress += RenderView_SystemKeyPress;
         }
 
         void RenderView_ZoomChanged(object sender, EventArgs e)
@@ -491,6 +500,11 @@ namespace Freeserf.UI
         }
 
         private bool RenderView_KeyPress(object sender, Event.EventArgs args)
+        {
+            return viewer.SendEvent(args);
+        }
+
+        private bool RenderView_SystemKeyPress(object sender, Event.EventArgs args)
         {
             return viewer.SendEvent(args);
         }
