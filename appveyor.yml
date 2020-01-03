@@ -4,22 +4,22 @@ environment:
   WINDOWS: 1
 
 platform: Any CPU
-configuration: Release
+configuration: WindowsRelease
 
 install:
   - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-  - nuget restore Freeserf.net.sln -verbosity detailed
-  - msbuild -t:restore Freeserf.net.sln
+  - nuget restore FreeserfNet.sln -verbosity detailed
+  - msbuild /p:Configuration=WindowsRelease -t:restore FreeserfNet.sln
 
 build:
-  project: Freeserf.net.sln
+  project: FreeserfNet.sln
 
 artifacts:
   - path: Freeserf.net-Windows.zip
     name: Freeserf.net-Windows
 
 after_build:
-  - 7z a Freeserf.net-Windows.zip %APPVEYOR_BUILD_FOLDER%\Freeserf.net\bin\Release\Freeserf.net.exe %APPVEYOR_BUILD_FOLDER%\changelog.txt
+  - 7z a Freeserf.net-Windows.zip %APPVEYOR_BUILD_FOLDER%\FreeserfNet\bin\WindowsRelease\FreeserfNet.exe %APPVEYOR_BUILD_FOLDER%\changelog.txt
 
 test: off
 
