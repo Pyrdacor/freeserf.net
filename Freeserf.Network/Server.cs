@@ -21,7 +21,9 @@ namespace Freeserf.Network
         public LocalServer(string name, GameInfo gameInfo)
         {
             Name = name;
-            Ip = GetLocalIpAddress();
+            Ip = IPAddress.Loopback;
+            // TODO switch to local ip
+            // Ip = GetLocalIpAddress();
             GameInfo = gameInfo;
         }
 
