@@ -19,7 +19,7 @@ artifacts:
     name: Freeserf.net-Windows
 
 after_build:
-  - 7z a Freeserf.net-Windows.zip %APPVEYOR_BUILD_FOLDER%\Freeserf.net\bin\Release\Freeserf.net.exe %APPVEYOR_BUILD_FOLDER%\changelog.txt
+  - 7z a Freeserf.net-Windows.zip %APPVEYOR_BUILD_FOLDER%\Freeserf.net\bin\Release\Freeserf.net.exe %APPVEYOR_BUILD_FOLDER%\Freeserf.net\assets %APPVEYOR_BUILD_FOLDER%\changelog.txt
 
 test: off
 
