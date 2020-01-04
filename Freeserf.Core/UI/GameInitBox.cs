@@ -622,14 +622,7 @@ namespace Freeserf.UI
             if (serverInfo == null)
                 return 0;
 
-            try
-            {
-                return Math.Max(1, serverInfo.CurrentPlayers);
-            }
-            catch
-            {
-                return 0;
-            }
+            return Math.Max(1, serverInfo.CurrentPlayers);
         }
 
         int GetServerMaxPlayers()
@@ -639,14 +632,7 @@ namespace Freeserf.UI
             if (serverInfo == null)
                 return 0;
 
-            try
-            {
-                return Math.Min(4, serverInfo.MaxPlayers);
-            }
-            catch
-            {
-                return 0;
-            }
+            return Math.Min(4, serverInfo.MaxPlayers);
         }
 
         protected override void InternalDraw()
