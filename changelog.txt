@@ -1,3 +1,10 @@
+Version 1.9.28:
+===============
+
+- Fixed linux build
+- Added netcore/Silk.net window/renderer
+
+
 Version 1.9.27:
 ===============
 
