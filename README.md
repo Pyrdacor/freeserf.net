@@ -38,11 +38,13 @@ Thank you very much.
 
 ## Current State
 
-**Update 14.12.2019: Currently I am working on multiplayer support and trying to deploy a playable Linux version that depends on netcore3.1 instead of Mono.**
+**Update 04.01.2020: Currently I am working on multiplayer support. This will be version 2.0.**
 
-Most of the code is ported or re-implemented. There is a working OpenTK renderer and a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
+All the code from freeserf was ported or re-implemented. AI logic was added in addition.
 
-For netcore3.1 there is a new renderer based on Silk.net which should be suitable for Windows and Linux.
+The renderer is using [Silk.net](https://github.com/Ultz/Silk.NET) and netcore 3.1.
+
+There is a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
 
 Things that are missing are some minor parts of AI logic and tutorial games. Serf fighting is not fully tested yet.
 Multiplayer support is prepared but not really implemented yet. But I'm working on this now.
@@ -53,15 +55,6 @@ The game is playable for most parts. If you find any bugs please report it in th
 ![Mission](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_2.png "Start a mission")
 ![Ingame](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_3.png "Build your settlement")
 ![Menus](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_4.png "Change settings")
-
-
-## Patches
-
-Since version 1.7 there is a patcher for the Windows assembly which will allow me to provide fast patches for the game. This will ease bugfixing and testing without the need to download a new version manually. If you don't want to receive patches you may run the game with the command line option "--no-updates".
-
-Moreover the patcher will ask you to confirm patch download so you can also skip it.
-
-This feature may be removed later if it bothers people but in this phase it really helps to get rid of bugs and provide patches for testers that can't compile the game by theirselves.
 
 
 ## Roadmap
@@ -95,12 +88,10 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 ## Implementation details
 
-The core is implemented as a .NET Standard 2.0 DLL. The renderer is also a .NET Standard 2.0 DLL and uses OpenTK for rendering. The sound engine is only implemented for Windows at the moment and uses the WinMM.dll with its WAVE and MIDI functionality.
-
-There are now two versions of the main executable. One (`Freeserf.net`) is a .NET Framework 4.6.1 project that depends on OpenTK and OpenTK.GLControl. The other one (`FreeserfNet`) is a netcore project that depends on OpenTK.NetStandard. It is easy to create another executable project with a different .NET version as the project only contains a basic OpenTK window and forwards input events.
-
-You can even implement your own renderer if you want. There are a bunch of interfaces in the Freeserf.Render namespace inside the core project that you can use for that.
+The core is implemented as a .NET Standard 2.0 DLL. The renderer is also a .NET Standard 2.0 DLL and uses Silk.net for rendering. The sound engine is only implemented for Windows at the moment and uses the WinMM.dll with its WAVE and MIDI functionality.
 
 At the moment the sound engine is part of the renderer. This will change in the future. But you can implement your own sound engine independent of the renderer already if you want.
+
+The main program is based on netcore 3.1 and should run at least on Windows and Ubuntu.
 
 If you need help or want to help developing, just [contact me](mailto:trobt@web.de). You can also contact me via [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues) by adding a new issue and tag it as question.

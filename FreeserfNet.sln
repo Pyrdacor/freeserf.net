@@ -21,11 +21,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{30896AA8-06B4-46B1-8AE3-338394431D7C}"
-	ProjectSection(SolutionItems) = preProject
-		templates\README.md = templates\README.md
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Renderer", "Freeserf.Renderer\Freeserf.Renderer.csproj", "{93AD316F-2A18-48E8-8865-75E9EC01093C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Silk.NET.Window", "Silk.NET.Window\Silk.NET.Window.csproj", "{BB8FA6E1-F9DB-4F39-B53D-0BFD92CF554F}"
@@ -301,9 +296,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{30896AA8-06B4-46B1-8AE3-338394431D7C} = {2ACA94E3-5288-4E69-B92F-74AADD92CE12}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EEF4E2FF-59E8-4CAE-B02E-483B404B59FB}
