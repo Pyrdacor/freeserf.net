@@ -60,7 +60,7 @@ namespace Freeserf.Network
 
     public interface IRemoteServer : IServer, IRemote
     {
-        event ReceivedDataHandler RequestReceived;
+        event ReceivedDataHandler DataReceived;
     }
 
     public interface IServerFactory
