@@ -9,6 +9,24 @@ using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
+    class Server
+    {
+        internal static byte[] ReadData(NetworkStream stream)
+        {
+            List<byte> largeBuffer = new List<byte>(4);
+            byte[] buffer = new byte[1024];
+            int numRead;
+
+            do
+            {
+                numRead = stream.Read(buffer, 0, buffer.Length);
+                largeBuffer.AddRange(buffer.Take(numRead));
+            } while (numRead == buffer.Length);
+
+            return largeBuffer.ToArray();
+        }
+    }
+
     public class LocalServer : ILocalServer
     {
         bool acceptClients = true;
@@ -17,6 +35,7 @@ namespace Freeserf.Network
         TcpListener listener = null;
         LobbyServerInfo lobbyServerInfo = null;
         readonly List<LobbyPlayerInfo> lobbyPlayerInfo = new List<LobbyPlayerInfo>();
+        readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
 
         public LocalServer(string name, GameInfo gameInfo)
         {
@@ -56,7 +75,7 @@ namespace Freeserf.Network
                 if (!acceptClients)
                     cancelTokenSource.Cancel();
             }
-        } 
+        }
 
         public string Error
         {
@@ -69,7 +88,7 @@ namespace Freeserf.Network
             get;
         }
 
-        public List<IRemoteClient> Clients { get; } = new List<IRemoteClient>();        
+        public List<IRemoteClient> Clients => clients.Keys.ToList();
 
         public static IPAddress GetLocalIpAddress()
         {
@@ -119,7 +138,8 @@ namespace Freeserf.Network
                 : null;
         }
 
-        public void Run(bool useServerValues, bool useSameValues, string mapSeed, CancellationToken cancellationToken)
+        public void Run(bool useServerValues, bool useSameValues, string mapSeed,
+            IEnumerable<PlayerInfo> players, CancellationToken cancellationToken)
         {
             Error = "";
 
@@ -140,18 +160,51 @@ namespace Freeserf.Network
 
             State = ServerState.Lobby;
             lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSeed);
+            lobbyPlayerInfo.Clear();
+            bool isHost = true;
+            foreach (var player in players)
+            {
+                lobbyPlayerInfo.Add(new LobbyPlayerInfo
+                (
+                    "127.0.0.1", // TODO: has to be a valid IP
+                    isHost,
+                    (int)player.Face,
+                    (int)player.Supplies,
+                    (int)player.Intelligence,
+                    (int)player.Reproduction
+                ));
+                isHost = false;
+            }
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     TcpClient client = listener.AcceptTcpClient();
-                    uint playerIndex = (GameInfo.PlayerCount == 4) ? 0 : GameInfo.PlayerCount;
+                    // TODO: password protected games
+
+                    // if someone connects during game or outside lobby, we will ignore it and disconnect the client
+                    if (State != ServerState.Lobby)
+                    {
+                        RejectClient(client);
+                        AcceptClients = false; // this will also cancel the listener (no more clients are able to connect)
+                        return;
+                    }
+                    // Note: We can not just stop the listener if there are 4 players in the lobby
+                    // because players may disconnect or may be removed by the server. If the listener
+                    // would be stopped no other client may connect then.
+                    else if (GameInfo.PlayerCount == 4) // TODO: spectators
+                    {
+                        RejectClient(client);
+                        continue;
+                    }
+
+                    uint playerIndex = GameInfo.PlayerCount;
                     var remoteClient = new RemoteClient(playerIndex, this, client);
 
-                    Clients.Add(remoteClient);
-                    
-                    HandleClient(remoteClient, client, cancellationToken).ContinueWith((task) => client.Dispose());
+                    clients.Add(remoteClient, client);
+
+                    HandleClient(remoteClient, client, cancellationToken).ContinueWith((task) => client.Close());
                 }
                 catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -176,20 +229,58 @@ namespace Freeserf.Network
             }
         }
 
-        byte[] ReadData(NetworkStream stream)
+        public void LoadGame()
         {
-            List<byte> largeBuffer = new List<byte>(4);
-            byte[] buffer = new byte[1024];
+            State = ServerState.Loading;
+        }
 
-            int numRead = 0;
+        public void EnterGame()
+        {
+            State = ServerState.Game;
+        }
 
-            do
+        public void ShowOutro()
+        {
+            State = ServerState.Outro;
+        }
+
+        Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
+        {
+            if (State != ServerState.Lobby)
             {
-                numRead = stream.Read(buffer, 0, buffer.Length);
-                largeBuffer.AddRange(buffer.Take(numRead));
-            } while (numRead == buffer.Length);
+                throw new ExceptionFreeserf("Expected server to be in lobby.");
+            }
 
-            return largeBuffer.ToArray();
+            // initially send the lobby data to the client
+            lock (lobbyServerInfo)
+            lock (lobbyPlayerInfo)
+            {
+                new LobbyData(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo).Send(client);
+            }
+
+            return Task.Run(() =>
+            {
+                byte[] buffer = new byte[1024];
+
+                using (var stream = tcpClient.GetStream())
+                {
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        if (!stream.DataAvailable)
+                        {
+                            Thread.Sleep(5);
+                            continue;
+                        }
+
+                        var data = Server.ReadData(stream);
+
+                        if (data.Length > 0)
+                        {
+                            HandleData(client, data);
+                        }
+                    }
+                }
+            });
         }
 
         void HandleData(RemoteClient client, byte[] data)
@@ -219,7 +310,6 @@ namespace Freeserf.Network
                     }
                 case ServerState.Loading:
                     throw new ExceptionFreeserf("No message expected during loading."); // TODO maybe just ignore?
-                    break;
                 case ServerState.Game:
                     {
                         if (networkData.Type == NetworkDataType.Request)
@@ -308,21 +398,127 @@ namespace Freeserf.Network
             }
         }
 
-        Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
+        public void Close()
         {
-            if (State != ServerState.Lobby)
+            State = ServerState.Offline;
+
+            if (listener != null)
             {
-                throw new ExceptionFreeserf("Expected server to be in lobby.");
+                listener.Stop();
             }
 
-            // initially send the lobby data to the client
-            new LobbyData(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo).Send(client);
+            cancelTokenSource.Cancel();            
 
+            if (listenerTask != null)
+            {
+                listenerTask.Wait();
+                listenerTask = null;
+            }
+        }
+
+        public void RejectClient(TcpClient client)
+        {
+            new RemoteClient(uint.MaxValue, this, client).SendDisconnect();
+            client?.Close();
+        }
+
+        public void DisconnectClient(IRemoteClient client)
+        {
+            client.SendDisconnect();
+
+            if (clients.ContainsKey(client))
+            {
+                clients[client]?.Close();
+                clients.Remove(client);
+            }
+
+            switch (State)
+            {
+                case ServerState.Lobby:
+                    GameInfo.RemovePlayer(client.PlayerIndex);
+                    break;
+                case ServerState.Game:
+                    // TODO: let AI continue the players settlement or keep it at this state?
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void Init(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players)
+        {
+            State = ServerState.Offline;
+            listenerTask = Task.Run(() => Run(useServerValues, useSameValues, mapSeed, players, cancelTokenSource.Token), cancelTokenSource.Token);
+        }
+
+        public void Update(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players)
+        {
+            lock (lobbyServerInfo)
+            {
+                lobbyServerInfo.UseServerValues = useServerValues;
+                lobbyServerInfo.UseSameValues = useSameValues;
+                lobbyServerInfo.MapSeed = mapSeed;
+            }
+
+            lock (lobbyPlayerInfo)
+            {
+                lobbyPlayerInfo.Clear();
+                bool isHost = true;
+
+                foreach (var player in players.ToList())
+                {
+                    lobbyPlayerInfo.Add(new LobbyPlayerInfo(
+                        "127.0.0.1", // TODO: has to be a valid IP
+                        isHost,
+                        (int)player.Face,
+                        (int)player.Supplies,
+                        (int)player.Intelligence,
+                        (int)player.Reproduction
+                    ));
+
+                    isHost = false;
+                }
+            }
+        }
+    }
+
+    public class RemoteServer : IRemoteServer
+    {
+        private TcpClient localClient = null;
+        private Task receiveTask = null;
+        private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+
+        public RemoteServer(string name, IPAddress ip, TcpClient localClient)
+        {
+            Name = name;
+            Ip = ip;
+            State = ServerState.Lobby; // when joining we are in lobby
+            this.localClient = localClient;
+
+            receiveTask = Task.Run(() => Run(cancelTokenSource.Token), cancelTokenSource.Token);
+        }
+
+        public void Close()
+        {
+            localClient = null;
+            State = ServerState.Offline;
+
+            cancelTokenSource.Cancel();
+
+            if (receiveTask != null)
+            {
+                receiveTask.Wait();
+                receiveTask = null;
+            }
+        }
+
+        Task Run(CancellationToken cancellationToken)
+        {
             return Task.Run(() =>
             {
                 byte[] buffer = new byte[1024];
 
-                using (var stream = tcpClient.GetStream())
+                using (var stream = localClient.GetStream())
                 {
                     while (!cancellationToken.IsCancellationRequested)
                     {
@@ -332,70 +528,15 @@ namespace Freeserf.Network
                             continue;
                         }
 
-                        var data = ReadData(stream);                        
+                        var data = Server.ReadData(stream);
 
                         if (data.Length > 0)
                         {
-                            HandleData(client, data);
+                            RequestReceived?.Invoke(this, data);
                         }
                     }
                 }
             });
-        }
-
-        public void Close()
-        {
-            if (listener != null)
-            {
-                listener.Stop();
-            }
-
-            cancelTokenSource.Cancel();
-            
-
-            if (listenerTask != null)
-            {
-                listenerTask.Wait();
-                listenerTask = null;
-            }
-        }
-
-        public void ConnectClient(IRemoteClient client)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisconnectClient(IRemoteClient client)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Init(bool useServerValues, bool useSameValues, string mapSeed)
-        {
-            listenerTask = Task.Run(() => Run(useServerValues, useSameValues, mapSeed, cancelTokenSource.Token), cancelTokenSource.Token);
-        }
-
-        public void Update(bool useServerValues, bool useSameValues, string mapSeed)
-        {
-            lock (lobbyServerInfo)
-            {
-                lobbyServerInfo.UseServerValues = useServerValues;
-                lobbyServerInfo.UseSameValues = useSameValues;
-                lobbyServerInfo.MapSeed = mapSeed;
-            }
-        }
-    }
-
-    public class RemoteServer : IRemoteServer
-    {
-        private TcpClient localClient = null;
-
-        public RemoteServer(string name, IPAddress ip, TcpClient localClient)
-        {
-            Name = name;
-            Ip = ip;
-            State = ServerState.Lobby; // when joining we are in lobby
-            this.localClient = localClient;
         }
 
         public string Name
@@ -411,6 +552,7 @@ namespace Freeserf.Network
         public ServerState State
         {
             get;
+            private set;
         }
 
         public IPAddress GetIP()
@@ -418,17 +560,7 @@ namespace Freeserf.Network
             return Ip;
         }
 
-        public event EventHandler RequestReceived;
-
-        public void HandleRequest()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Respond()
-        {
-            throw new NotImplementedException();
-        }
+        public event ReceivedDataHandler RequestReceived;
 
         public void Send(byte[] rawData)
         {

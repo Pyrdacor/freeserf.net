@@ -16,30 +16,59 @@ namespace Freeserf.Network
 
         }
 
+        // TODO: get from server and set it here
         public uint PlayerIndex
         {
             get;
         }
 
+        // TODO: needed
         public Game Game
         {
             get;
             set;
         }
 
-        public IRemoteServer Server
+        public IRemoteServer Server => server;
+
+        public LobbyData LobbyData
         {
             get;
+            private set;
+        } = null;
+
+        public event EventHandler LobbyDataUpdated;
+
+        public void Disconnect()
+        {
+            try
+            {
+                SendDisconnect();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            client?.Close();
+            server?.Close();
         }
 
         public bool JoinServer(string name, IPAddress ip)
         {
+            // if already connected to another server, first disconnect
+            if (server != null || client != null)
+            {
+                Disconnect();
+            }
+
             try
             {
                 client = new TcpClient();
                 client.Connect(ip, Global.NetworkPort);
 
                 server = new RemoteServer(name, ip, client);
+                server.RequestReceived += Server_RequestReceived;
 
                 return true;
             }
@@ -47,6 +76,30 @@ namespace Freeserf.Network
             {
                 return false;
             }
+        }
+
+        private void Server_RequestReceived(IRemoteServer server, byte[] data)
+        {
+            var request = NetworkDataParser.Parse(data);
+            
+            switch (request.Type)
+            {
+                case NetworkDataType.Heartbeat:
+                    break;
+                case NetworkDataType.LobbyData:
+                    UpdateLobbyData(request as LobbyData);
+                    break;
+                // TODO: other data
+                default:
+                    // TODO: ignore? track safely?
+                    throw new ExceptionFreeserf("Unknown server data");
+            }
+        }
+
+        private void UpdateLobbyData(LobbyData data)
+        {
+            LobbyData = data;
+            LobbyDataUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public byte RequestLobbyStateUpdate()
