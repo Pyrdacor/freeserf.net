@@ -45,7 +45,7 @@ namespace Freeserf.Network
             if (rawData.Length < 2)
                 throw new ExceptionFreeserf("Unknown network data.");
 
-            NetworkDataType type = (NetworkDataType)BitConverter.ToUInt16(rawData, 2);
+            NetworkDataType type = (NetworkDataType)BitConverter.ToUInt16(rawData, 0);
 
             switch (type)
             {
@@ -88,6 +88,8 @@ namespace Freeserf.Network
             Marshal.StructureToPtr(data, ptr, true);
             Marshal.Copy(ptr, buffer, offset, size);
             Marshal.FreeHGlobal(ptr);
+
+            offset += size;
         }
 
         public static T FromBytes(byte[] data, ref int offset)
@@ -106,6 +108,8 @@ namespace Freeserf.Network
             obj = (T)Marshal.PtrToStructure(ptr, obj.GetType());
 
             Marshal.FreeHGlobal(ptr);
+
+            offset += size;
 
             return obj;
         }

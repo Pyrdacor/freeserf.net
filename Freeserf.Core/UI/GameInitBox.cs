@@ -21,6 +21,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace Freeserf.UI
 {
@@ -869,9 +870,8 @@ namespace Freeserf.UI
                     fileList.Displayed = false;
                     serverList.Displayed = false;
                     SetRedraw();
-                    server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", customMission);
-                    server.AcceptClients = true;
-                    server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, randomInput.Text);
+                    server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", customMission); // TODO: name should be editable
+                    server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, randomInput.Text, mission.Players);
                     break;
                 case Action.StartGame:
                 {
@@ -922,33 +922,34 @@ namespace Freeserf.UI
                                 break;
                             case GameType.MultiplayerClient:
                                 {
-                                    // TODO for now we always use localhost as server
-                                    var client = Network.Network.DefaultClientFactory.CreateLocal();
-
-                                    if (!client.JoinServer("TODO", System.Net.IPAddress.Loopback))
+                                    if (client == null)
                                     {
-                                        // TODO error
-                                        return;
+                                        client = Network.Network.DefaultClientFactory.CreateLocal();
+                                        client.LobbyDataUpdated += Client_LobbyDataUpdated;
                                     }
 
-                                    // TODO do not block main thread while waiting for data
+                                    lock (client)
+                                    {
+                                        // TODO for now we always use localhost as server
+                                        if (!client.JoinServer("TODO", System.Net.IPAddress.Loopback))
+                                        {
+                                            // TODO error
+                                            return;
+                                        }
 
-                                    client.RequestLobbyStateUpdate();
-                                    // TODO
-    
-                                    gameType = GameType.MultiplayerJoined;
-                                    
-                                    // TODO get data from server
-                                    customMission = new GameInfo(new Random(), false);
-                                    mission = customMission;
-                                    mission.RemoveAllPlayers();
-                                    mission.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
-                                    randomInput.Displayed = true;
-                                    randomInput.Enabled = false;
-                                    randomInput.SetRandom(customMission.RandomBase);
-                                    fileList.Displayed = false;
-                                    serverList.Displayed = false;
-                                    SetRedraw();
+                                        gameType = GameType.MultiplayerJoined;
+
+                                        customMission = new GameInfo(new Random(), false);
+                                        mission = customMission;
+                                        mission.RemoveAllPlayers();
+                                        randomInput.Displayed = true;
+                                        randomInput.Enabled = false;
+                                        randomInput.SetRandom(customMission.RandomBase);
+                                        fileList.Displayed = false;
+                                        serverList.Displayed = false;
+                                        SetRedraw();
+                                    }
+
                                     break;
                                 }
                             case GameType.MultiplayerJoined:
@@ -1009,6 +1010,8 @@ namespace Freeserf.UI
                                 return;
                             customMission.MapSize = customMission.MapSize + 1u;
                             SetRedraw();
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
                             break;
                     }
                     break;
@@ -1027,6 +1030,8 @@ namespace Freeserf.UI
                                 return;
                             customMission.MapSize = customMission.MapSize - 1u;
                             SetRedraw();
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
                             break;
                     }
                     break;
@@ -1045,6 +1050,8 @@ namespace Freeserf.UI
                                 return;
                             customMission.MapSize = Math.Min(9u, customMission.MapSize + 2u);
                             SetRedraw();
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
                             break;
                     }
                     break;
@@ -1063,6 +1070,8 @@ namespace Freeserf.UI
                                 return;
                             customMission.MapSize = Math.Max(3u, customMission.MapSize - 2u);
                             SetRedraw();
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
                             break;
                     }
                     break;
@@ -1073,6 +1082,10 @@ namespace Freeserf.UI
                         randomInput.Enabled = true; // was disabled in MultiplayerJoined
                         gameType = GameType.MultiplayerClient;
                         UpdateGameType();
+                        if (gameType == GameType.MultiplayerServer)
+                            server.Close();
+                        else
+                            client.Disconnect();
                         break;
                     }
                     else
@@ -1098,7 +1111,19 @@ namespace Freeserf.UI
                             // in a multiplayer game this will only affect the map, not the players
                             if (gameType == GameType.MultiplayerServer)
                             {
-                                // TODO
+                                var players = new List<PlayerInfo>(mission.Players);
+                                mission = customMission;
+                                mission.RemoveAllPlayers();
+
+                                foreach (var player in players)
+                                {
+                                    mission.AddPlayer(player);
+                                }
+
+                                randomInput.SetRandom(customMission.RandomBase);
+                                SetRedraw();
+
+                                ServerUpdate();
                             }
                             else
                             {
@@ -1111,6 +1136,34 @@ namespace Freeserf.UI
                     }
                 default:
                     break;
+            }
+        }
+
+        private void ServerUpdate()
+        {
+            server.Update(checkBoxSameValues.Checked, checkBoxServerValues.Checked, randomInput.Text, mission.Players);
+        }
+
+        private void Client_LobbyDataUpdated(object sender, System.EventArgs e)
+        {
+            lock (client)
+            {
+                var serverInfo = client.LobbyData.ServerInfo;
+                var players = client.LobbyData.Players;
+
+                customMission = new GameInfo(new Random(serverInfo.MapSeed), false);
+                mission = customMission;
+                mission.RemoveAllPlayers();
+
+                for (int i = 0; i < players.Count; ++i)
+                {
+                    mission.AddPlayer((PlayerFace)players[i].Face, PlayerInfo.PlayerColors[i],
+                        (uint)players[i].Intelligence, (uint)players[i].Supplies, (uint)players[i].Reproduction);
+                }
+
+                randomInput.SetRandom(customMission.RandomBase);
+
+                SetRedraw();
             }
         }
 
@@ -1217,6 +1270,9 @@ namespace Freeserf.UI
                             playerIsAI[playerIndex] = false;
                             SetRedraw();
                         }
+
+                        if (gameType == GameType.MultiplayerServer)
+                            ServerUpdate();
                     }
                 }
 
@@ -1241,7 +1297,7 @@ namespace Freeserf.UI
                 if (!canNotChange)
                 {
                     // Face 
-                    bool inUse = false;
+                    bool inUse;
 
                     do
                     {
@@ -1264,6 +1320,9 @@ namespace Freeserf.UI
                         }
 
                     } while (inUse);
+
+                    if (gameType == GameType.MultiplayerServer)
+                        ServerUpdate();
                 }
             }
             else if (cx >= 8 + 32 && cx < 8 + 32 + 8 && cy >= 8 && cy < 24) // click on copy values button
@@ -1284,6 +1343,9 @@ namespace Freeserf.UI
                     }
 
                     SetRedraw();
+
+                    if (gameType == GameType.MultiplayerServer)
+                        ServerUpdate();
                 }
 
                 return true;
@@ -1326,6 +1388,9 @@ namespace Freeserf.UI
                             {
                                 player.Supplies = value;
                             }
+
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
                         }
                     }
                     else if (cx >= 6 && cx < 12)
@@ -1343,7 +1408,12 @@ namespace Freeserf.UI
 
                         // Intelligence 
                         if (!canNotChange)
+                        {
                             player.Intelligence = value;
+
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
+                        }
                     }
                     else if (cx >= 12 && cx < 18)
                     {
@@ -1370,6 +1440,9 @@ namespace Freeserf.UI
                             {
                                 player.Reproduction = value;
                             }
+
+                            if (gameType == GameType.MultiplayerServer)
+                                ServerUpdate();
                         }
                     }
                 }

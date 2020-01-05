@@ -383,6 +383,7 @@ namespace Freeserf
         public Random RandomBase { get; private set; }
 
         public uint PlayerCount => (uint)players.Count;
+        public IReadOnlyList<PlayerInfo> Players => players.AsReadOnly();
 
         readonly List<PlayerInfo> players = new List<PlayerInfo>(4);
         readonly string name = "";
@@ -422,7 +423,7 @@ namespace Freeserf
 
         public void SetRandomBase(Random randomBase, bool aiPlayersOnly)
         {
-            var random = randomBase;
+            var random = new Random(randomBase);
             RandomBase = randomBase;
 
             players.Clear();
