@@ -44,20 +44,23 @@ namespace Freeserf.Network
         string Name { get; }
         IPAddress Ip { get; }
         ServerState State { get; }
+        void Close();
     }
 
     public interface ILocalServer : IServer
     {
-        void Init(bool useServerValues, bool useSameValues, string mapSeed);
-        void Close();
+        void Init(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players);
+        void Update(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players);
 
         List<IRemoteClient> Clients { get; }
         bool AcceptClients { get; set; }
     }
 
+    public delegate void ReceivedDataHandler(IRemoteServer server, byte[] data);
+
     public interface IRemoteServer : IServer, IRemote
     {
-
+        event ReceivedDataHandler RequestReceived;
     }
 
     public interface IServerFactory

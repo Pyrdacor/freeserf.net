@@ -35,7 +35,10 @@ namespace Freeserf.Network
     public interface ILocalClient : IClient
     {
         Game Game { get; set; }
+        LobbyData LobbyData { get; }
         IRemoteServer Server { get; }
+
+        event EventHandler LobbyDataUpdated;
 
         byte RequestLobbyStateUpdate();
         byte RequestPlayerStateUpdate(uint playerIndex);
@@ -43,6 +46,7 @@ namespace Freeserf.Network
         byte RequestGameStateUpdate();
 
         bool JoinServer(string name, IPAddress ip);
+        void Disconnect();
     }
 
     public interface IRemoteClient : IClient, IRemote

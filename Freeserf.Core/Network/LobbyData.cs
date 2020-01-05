@@ -68,9 +68,9 @@ namespace Freeserf.Network
         internal int GetDataSize()
         {
             return Marshal.SizeOf(typeof(LobbyPlayerData)) +
-                Identification == null ?
+                (Identification == null ?
                     Marshal.SizeOf(typeof(LobbyAIPlayerData)) :
-                    Marshal.SizeOf(typeof(LobbyHumanPlayerData));
+                    Marshal.SizeOf(typeof(LobbyHumanPlayerData)));
         }
     }
 
@@ -117,7 +117,7 @@ namespace Freeserf.Network
             if (players.Count > 4)
                 throw new ExceptionFreeserf("Player count must not exceed 4.");
 
-            int dataSize = MIN_DATA_SIZE + players.Select(p => p.GetDataSize()).Aggregate((a, b) => a + b);
+            int dataSize = MIN_DATA_SIZE + (players.Count == 0 ? 0 : players.Select(p => p.GetDataSize()).Aggregate((a, b) => a + b));
 
             if (dataSize > 255)
                 throw new ExceptionFreeserf("Lobby data length must not exceed 255.");

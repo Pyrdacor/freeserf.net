@@ -101,7 +101,7 @@ namespace Freeserf.Network
             rawData.Add(Number);
             rawData.Add((byte)Request);
 
-            destination.Send(rawData.ToArray());
+            destination?.Send(rawData.ToArray());
         }
     }
 }
