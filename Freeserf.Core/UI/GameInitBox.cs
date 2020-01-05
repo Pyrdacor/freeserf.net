@@ -925,6 +925,7 @@ namespace Freeserf.UI
                                     if (client == null)
                                     {
                                         client = Network.Network.DefaultClientFactory.CreateLocal();
+                                        client.Disconnected += Client_Disconnected;
                                         client.LobbyDataUpdated += Client_LobbyDataUpdated;
                                     }
 
@@ -957,6 +958,11 @@ namespace Freeserf.UI
                                 // TODO the server starts the game
                                 // GameManager.Instance.CloseGame();
                                 // interf.Viewer.ChangeTo(Viewer.Type.Client);
+                                if (client != null)
+                                {
+                                    client.Disconnected -= Client_Disconnected;
+                                    client.LobbyDataUpdated -= Client_LobbyDataUpdated;
+                                }
                                 break;
                             case GameType.MultiplayerServer:
                                 GameManager.Instance.CloseGame();
@@ -1142,6 +1148,15 @@ namespace Freeserf.UI
         private void ServerUpdate()
         {
             server.Update(checkBoxSameValues.Checked, checkBoxServerValues.Checked, randomInput.Text, mission.Players);
+        }
+
+        private void Client_Disconnected(object sender, System.EventArgs e)
+        {
+            if (gameType == GameType.MultiplayerJoined)
+            {
+                gameType = GameType.MultiplayerClient;
+                UpdateGameType();
+            }
         }
 
         private void Client_LobbyDataUpdated(object sender, System.EventArgs e)

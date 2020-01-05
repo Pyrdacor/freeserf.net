@@ -37,6 +37,7 @@ namespace Freeserf.Network
             private set;
         } = null;
 
+        public event EventHandler Disconnected;
         public event EventHandler LobbyDataUpdated;
 
         public void Disconnect()
@@ -52,6 +53,7 @@ namespace Freeserf.Network
 
             client?.Close();
             server?.Close();
+            Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
         public bool JoinServer(string name, IPAddress ip)
@@ -68,7 +70,7 @@ namespace Freeserf.Network
                 client.Connect(ip, Global.NetworkPort);
 
                 server = new RemoteServer(name, ip, client);
-                server.RequestReceived += Server_RequestReceived;
+                server.DataReceived += Server_DataReceived;
 
                 return true;
             }
@@ -78,22 +80,55 @@ namespace Freeserf.Network
             }
         }
 
-        private void Server_RequestReceived(IRemoteServer server, byte[] data)
+        private void Server_DataReceived(IRemoteServer server, byte[] data)
         {
-            var request = NetworkDataParser.Parse(data);
+            var parsedData = NetworkDataParser.Parse(data);
             
-            switch (request.Type)
+            switch (parsedData.Type)
             {
+                case NetworkDataType.Request:
+                    HandleRequest(parsedData as RequestData);
+                    break;
                 case NetworkDataType.Heartbeat:
                     break;
                 case NetworkDataType.LobbyData:
-                    UpdateLobbyData(request as LobbyData);
+                    UpdateLobbyData(parsedData as LobbyData);
                     break;
                 // TODO: other data
                 default:
                     // TODO: ignore? track safely?
                     throw new ExceptionFreeserf("Unknown server data");
             }
+        }
+
+        private void HandleRequest(RequestData request)
+        {
+            switch (request.Request)
+            {
+                case Request.Disconnect:
+                    // server closed or kicked player
+                    client?.Close();
+                    server?.Close();
+                    Disconnected?.Invoke(this, EventArgs.Empty);
+                    break;
+                case Request.Heartbeat:
+                    // TODO
+                    break;
+                default:
+                    // all other requests can not be send to a client
+                    throw new ExceptionFreeserf(ErrorSystemType.Network, $"Request {request.ToString()} can not be send to client.");
+            }
+
+            RespondToRequest(request);
+        }
+
+        private void RespondToRequest(RequestData request)
+        {
+            if (request.Number == Global.SpontaneousMessage)
+                return; // spontaneous messages don't need a response
+
+            // TODO
+            // ...
         }
 
         private void UpdateLobbyData(LobbyData data)

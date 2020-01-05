@@ -532,7 +532,7 @@ namespace Freeserf.Network
 
                         if (data.Length > 0)
                         {
-                            RequestReceived?.Invoke(this, data);
+                            DataReceived?.Invoke(this, data);
                         }
                     }
                 }
@@ -560,7 +560,7 @@ namespace Freeserf.Network
             return Ip;
         }
 
-        public event ReceivedDataHandler RequestReceived;
+        public event ReceivedDataHandler DataReceived;
 
         public void Send(byte[] rawData)
         {
