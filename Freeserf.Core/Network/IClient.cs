@@ -38,6 +38,7 @@ namespace Freeserf.Network
         LobbyData LobbyData { get; }
         IRemoteServer Server { get; }
 
+        event EventHandler Disconnected;
         event EventHandler LobbyDataUpdated;
 
         byte RequestLobbyStateUpdate();

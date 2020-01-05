@@ -36,6 +36,7 @@ namespace Freeserf.Network
         // Bit 2-7: Unused
         public byte Flags;
         public fixed byte MapSeed[16]; // 16 bytes
+        // TODO: Add map size!
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

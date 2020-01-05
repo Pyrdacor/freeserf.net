@@ -44,7 +44,8 @@ namespace Freeserf
         AI,
         UI,
         Audio,
-        Application
+        Application,
+        Network
     }
 
     public class ExceptionFreeserf : Exception
