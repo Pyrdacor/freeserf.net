@@ -871,7 +871,7 @@ namespace Freeserf.UI
                     serverList.Displayed = false;
                     SetRedraw();
                     server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", customMission); // TODO: name should be editable
-                    server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, randomInput.Text, mission.Players);
+                    server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, customMission.MapSize, randomInput.Text, mission.Players);
                     break;
                 case Action.StartGame:
                 {
@@ -1147,7 +1147,13 @@ namespace Freeserf.UI
 
         private void ServerUpdate()
         {
-            server.Update(checkBoxSameValues.Checked, checkBoxServerValues.Checked, randomInput.Text, mission.Players);
+            server.Update(
+                checkBoxSameValues.Checked,
+                checkBoxServerValues.Checked,
+                customMission.MapSize,
+                randomInput.Text,
+                mission.Players
+            );
         }
 
         private void Client_Disconnected(object sender, System.EventArgs e)
@@ -1167,6 +1173,7 @@ namespace Freeserf.UI
                 var players = client.LobbyData.Players;
 
                 customMission = new GameInfo(new Random(serverInfo.MapSeed), false);
+                customMission.MapSize = serverInfo.MapSize;
                 mission = customMission;
                 mission.RemoveAllPlayers();
 
