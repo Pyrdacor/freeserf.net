@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
-    class Server
+    internal class HostNetwork
     {
         internal static byte[] ReadData(NetworkStream stream)
         {
@@ -25,6 +25,54 @@ namespace Freeserf.Network
 
             return largeBuffer.ToArray();
         }
+
+        internal static IPAddress GetLocalIpAddress()
+        {
+            UnicastIPAddressInformation mostSuitableIp = null;
+
+            var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+            foreach (var network in networkInterfaces)
+            {
+                if (network.OperationalStatus != OperationalStatus.Up)
+                    continue;
+
+                var properties = network.GetIPProperties();
+
+                if (properties.GatewayAddresses.Count == 0)
+                    continue;
+
+                foreach (var address in properties.UnicastAddresses)
+                {
+                    if (address.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
+
+                    if (IPAddress.IsLoopback(address.Address))
+                        continue;
+
+                    if (!address.IsDnsEligible)
+                    {
+                        if (mostSuitableIp == null)
+                            mostSuitableIp = address;
+                        continue;
+                    }
+
+                    // The best IP is the IP got from DHCP server
+                    if (address.PrefixOrigin != PrefixOrigin.Dhcp)
+                    {
+                        if (mostSuitableIp == null || !mostSuitableIp.IsDnsEligible)
+                            mostSuitableIp = address;
+                        continue;
+                    }
+
+                    return address.Address;
+                }
+            }
+
+            return mostSuitableIp != null
+                ? mostSuitableIp.Address
+                : null;
+        }
     }
 
     public class LocalServer : ILocalServer
@@ -36,13 +84,12 @@ namespace Freeserf.Network
         LobbyServerInfo lobbyServerInfo = null;
         readonly List<LobbyPlayerInfo> lobbyPlayerInfo = new List<LobbyPlayerInfo>();
         readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
+        readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
 
         public LocalServer(string name, GameInfo gameInfo)
         {
             Name = name;
-            Ip = IPAddress.Loopback;
-            // TODO switch to local ip
-            // Ip = GetLocalIpAddress();
+            Ip = HostNetwork.GetLocalIpAddress();
             GameInfo = gameInfo;
         }
 
@@ -93,54 +140,6 @@ namespace Freeserf.Network
         public event ClientJoinedHandler ClientJoined;
         public event ClientLeftHandler ClientLeft;
 
-        public static IPAddress GetLocalIpAddress()
-        {
-            UnicastIPAddressInformation mostSuitableIp = null;
-
-            var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-
-            foreach (var network in networkInterfaces)
-            {
-                if (network.OperationalStatus != OperationalStatus.Up)
-                    continue;
-
-                var properties = network.GetIPProperties();
-
-                if (properties.GatewayAddresses.Count == 0)
-                    continue;
-
-                foreach (var address in properties.UnicastAddresses)
-                {
-                    if (address.Address.AddressFamily != AddressFamily.InterNetwork)
-                        continue;
-
-                    if (IPAddress.IsLoopback(address.Address))
-                        continue;
-
-                    if (!address.IsDnsEligible)
-                    {
-                        if (mostSuitableIp == null)
-                            mostSuitableIp = address;
-                        continue;
-                    }
-
-                    // The best IP is the IP got from DHCP server
-                    if (address.PrefixOrigin != PrefixOrigin.Dhcp)
-                    {
-                        if (mostSuitableIp == null || !mostSuitableIp.IsDnsEligible)
-                            mostSuitableIp = address;
-                        continue;
-                    }
-
-                    return address.Address;
-                }
-            }
-
-            return mostSuitableIp != null
-                ? mostSuitableIp.Address
-                : null;
-        }
-
         public void Run(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed,
             IEnumerable<PlayerInfo> players, CancellationToken cancellationToken)
         {
@@ -164,19 +163,30 @@ namespace Freeserf.Network
             State = ServerState.Lobby;
             lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSize, mapSeed);
             lobbyPlayerInfo.Clear();
-            bool isHost = true;
+            uint playerIndex = 0u;
             foreach (var player in players)
             {
+                string identification = null;
+
+                if (player.Face >= PlayerFace.You) // human
+                {
+                    if (playerIndex == 0u) // host
+                        identification = Ip.ToString();
+                    else
+                        identification = playerClients[playerIndex].Ip.ToString();
+                }
+
                 lobbyPlayerInfo.Add(new LobbyPlayerInfo
                 (
-                    player.Face < PlayerFace.You ? null : "127.0.0.1", // TODO: has to be a valid IP
-                    isHost,
+                    identification,
+                    playerIndex == 0u,
                     (int)player.Face,
                     (int)player.Supplies,
                     (int)player.Intelligence,
                     (int)player.Reproduction
                 ));
-                isHost = false;
+
+                ++playerIndex;
             }
 
             while (!cancellationToken.IsCancellationRequested)
@@ -202,10 +212,10 @@ namespace Freeserf.Network
                         continue;
                     }
 
-                    uint playerIndex = GameInfo.PlayerCount;
-                    var remoteClient = new RemoteClient(playerIndex, this, client);
+                    var remoteClient = new RemoteClient(GameInfo.PlayerCount, this, client);
 
-                    clients.Add(remoteClient, client);
+                    playerClients.Add(GameInfo.PlayerCount, remoteClient);
+                    clients.Add(remoteClient, client);                    
 
                     HandleClient(remoteClient, client, cancellationToken).ContinueWith((task) => client.Close());
                 }
@@ -270,7 +280,7 @@ namespace Freeserf.Network
                                 continue;
                             }
 
-                            var data = Server.ReadData(stream);
+                            var data = HostNetwork.ReadData(stream);
 
                             if (data.Length > 0)
                             {
@@ -481,20 +491,30 @@ namespace Freeserf.Network
             lock (lobbyPlayerInfo)
             {
                 lobbyPlayerInfo.Clear();
-                bool isHost = true;
+                uint playerIndex = 0u;
 
                 foreach (var player in players.ToList())
                 {
+                    string identification = null;
+
+                    if (player.Face >= PlayerFace.You) // human
+                    {
+                        if (playerIndex == 0u) // host
+                            identification = Ip.ToString();
+                        else
+                            identification = playerClients[playerIndex].Ip.ToString();
+                    }
+
                     lobbyPlayerInfo.Add(new LobbyPlayerInfo(
-                        player.Face < PlayerFace.You ? null : "127.0.0.1", // TODO: has to be a valid IP
-                        isHost,
+                        identification,
+                        playerIndex == 0u,
                         (int)player.Face,
                         (int)player.Supplies,
                         (int)player.Intelligence,
                         (int)player.Reproduction
                     ));
 
-                    isHost = false;
+                    ++playerIndex;
                 }
             }
 
@@ -590,17 +610,27 @@ namespace Freeserf.Network
                 {
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        if (!stream.DataAvailable)
+                        try
                         {
-                            Thread.Sleep(5);
-                            continue;
+                            if (!stream.DataAvailable)
+                            {
+                                Thread.Sleep(5);
+                                continue;
+                            }
+
+                            var data = HostNetwork.ReadData(stream);
+
+                            if (data.Length > 0)
+                            {
+                                DataReceived?.Invoke(this, data);
+                            }
                         }
-
-                        var data = Server.ReadData(stream);
-
-                        if (data.Length > 0)
+                        catch (ObjectDisposedException)
                         {
-                            DataReceived?.Invoke(this, data);
+                            if (localClient.Connected)
+                            {
+                                // TODO: connected but disposed? should not happen.
+                            }
                         }
                     }
                 }

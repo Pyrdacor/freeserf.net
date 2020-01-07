@@ -27,6 +27,7 @@ namespace Freeserf.Network
 {
     public interface IClient
     {
+        IPAddress Ip { get; }
         uint PlayerIndex { get; }
         
         void SendHeartbeat();
