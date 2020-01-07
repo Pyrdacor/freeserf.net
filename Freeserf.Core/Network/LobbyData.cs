@@ -35,8 +35,8 @@ namespace Freeserf.Network
         // Bit 1: Same Values
         // Bit 2-7: Unused
         public byte Flags;
+        public byte MapSize;
         public fixed byte MapSeed[16]; // 16 bytes
-        // TODO: Add map size!
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -77,15 +77,17 @@ namespace Freeserf.Network
 
     public class LobbyServerInfo
     {
-        public LobbyServerInfo(bool useServerValues, bool useSameValues, string mapSeed)
+        public LobbyServerInfo(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed)
         {
             UseServerValues = useServerValues;
             UseSameValues = useSameValues;
+            MapSize = mapSize;
             MapSeed = mapSeed;
         }
 
         public bool UseServerValues { get; set; }
         public bool UseSameValues { get; set; }
+        public uint MapSize { get; set; }
         public string MapSeed { get; set; }
     }
 
@@ -132,6 +134,8 @@ namespace Freeserf.Network
                 serverSettings.Flags |= 0x01;
             if (serverInfo.UseSameValues)
                 serverSettings.Flags |= 0x02;
+
+            serverSettings.MapSize = (byte)serverInfo.MapSize;
 
             byte[] mapSeed = Encoding.ASCII.GetBytes(serverInfo.MapSeed);
 
@@ -231,8 +235,12 @@ namespace Freeserf.Network
 
             byte[] mapSeed = new byte[16];
             Marshal.Copy((IntPtr)serverSettings.MapSeed, mapSeed, 0, 16);
-            ServerInfo = new LobbyServerInfo((serverSettings.Flags & 0x01) != 0,
-                (serverSettings.Flags & 0x02) != 0, Encoding.ASCII.GetString(mapSeed));
+            ServerInfo = new LobbyServerInfo(
+                (serverSettings.Flags & 0x01) != 0,
+                (serverSettings.Flags & 0x02) != 0,
+                serverSettings.MapSize,
+                Encoding.ASCII.GetString(mapSeed)
+            );
 
             for (int i = 0; i < header.PlayerCount; ++i)
             {

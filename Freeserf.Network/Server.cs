@@ -138,7 +138,7 @@ namespace Freeserf.Network
                 : null;
         }
 
-        public void Run(bool useServerValues, bool useSameValues, string mapSeed,
+        public void Run(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed,
             IEnumerable<PlayerInfo> players, CancellationToken cancellationToken)
         {
             Error = "";
@@ -159,7 +159,7 @@ namespace Freeserf.Network
             cancellationToken.Register(listener.Stop);
 
             State = ServerState.Lobby;
-            lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSeed);
+            lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSize, mapSeed);
             lobbyPlayerInfo.Clear();
             bool isHost = true;
             foreach (var player in players)
@@ -445,18 +445,21 @@ namespace Freeserf.Network
             }
         }
 
-        public void Init(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players)
+        public void Init(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players)
         {
             State = ServerState.Offline;
-            listenerTask = Task.Run(() => Run(useServerValues, useSameValues, mapSeed, players, cancelTokenSource.Token), cancelTokenSource.Token);
+            listenerTask = Task.Run(() => Run(
+                useServerValues, useSameValues, mapSize, mapSeed, players, cancelTokenSource.Token), cancelTokenSource.Token
+            );
         }
 
-        public void Update(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players)
+        public void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players)
         {
             lock (lobbyServerInfo)
             {
                 lobbyServerInfo.UseServerValues = useServerValues;
                 lobbyServerInfo.UseSameValues = useSameValues;
+                lobbyServerInfo.MapSize = mapSize;
                 lobbyServerInfo.MapSeed = mapSeed;
             }
 
