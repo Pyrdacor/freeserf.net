@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Freeserf.Network
@@ -54,6 +55,7 @@ namespace Freeserf.Network
     {
         ILocalServer Server { get; }
 
+        void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players);
         void SendGameStateUpdate(Game game);
         void SendPlayerStateUpdate(Player player);
         void SendMapStateUpdate(Map map);
