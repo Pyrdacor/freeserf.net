@@ -114,7 +114,7 @@ namespace Freeserf.Renderer
             if (quadIndex >= uint.MaxValue / 4)
                 throw new OutOfMemoryException("Too many polygons to render.");
 
-            int arrayIndex = quadIndex * 6; // 2 triangles á 3 vertices
+            int arrayIndex = quadIndex * 6; // 2 triangles with 3 vertices each
             uint vertexIndex = (uint)(quadIndex * 4); // 4 different vertices form a quad
 
             if (size <= arrayIndex + 6)

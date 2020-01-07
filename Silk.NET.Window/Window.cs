@@ -408,7 +408,7 @@ namespace Silk.NET.Window
             // therefore we explicitely check the value of the first wheel
             if (mouse.ScrollWheels.Count > 0)
             {
-                float firstWheelPosition = mouse.ScrollWheels[0].Y;
+                float firstWheelPosition = mouse.ScrollWheels.First().Y;
 
                 if (lastMouseWheelPosition != firstWheelPosition)
                 {

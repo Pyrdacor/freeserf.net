@@ -402,7 +402,7 @@ namespace Freeserf.Renderer
 
                 try
                 {
-                    State.Gl.DrawElements(PrimitiveType.Triangles, (uint)indexBuffer.Size, DrawElementsType.UnsignedInt, (void*)0);
+                    State.Gl.DrawElements(PrimitiveType.Triangles, (uint)positionBuffer.Size / 4 * 3, DrawElementsType.UnsignedInt, (void*)0);
                 }
                 catch
                 {
