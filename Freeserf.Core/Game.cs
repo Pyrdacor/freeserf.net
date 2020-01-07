@@ -2301,7 +2301,7 @@ namespace Freeserf
 
         void UpdateMapObjects()
         {
-            foreach (var renderObject in renderObjects)
+            foreach (var renderObject in renderObjects.ToArray())
                 renderObject.Value.Update(Tick, Map.RenderMap, renderObject.Key);
         }
 
@@ -2311,15 +2311,15 @@ namespace Freeserf
             {
                 flag.Update();
 
-                if (flag.Index > 0u)
-                    renderFlags[flag].Update(Tick, Map.RenderMap, flag.Position);
+                if (flag.Index > 0u && renderFlags.ContainsKey(flag))
+                    renderFlags[flag]?.Update(Tick, Map.RenderMap, flag.Position);
             }
         }
 
         void UpdateRoads()
         {
             foreach (var renderRoadSegment in renderRoadSegments.ToArray())
-                renderRoadSegment.Value.Update(Map.RenderMap);
+                renderRoadSegment.Value?.Update(Map.RenderMap);
         }
 
         void UpdateBorders()

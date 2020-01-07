@@ -1104,12 +1104,12 @@ namespace Freeserf.UI
                         gameType == GameType.MultiplayerJoined)
                     {
                         randomInput.Enabled = true; // was disabled in MultiplayerJoined
-                        gameType = GameType.MultiplayerClient;
-                        UpdateGameType();
                         if (gameType == GameType.MultiplayerServer)
                             server.Close();
                         else
                             client.Disconnect();
+                        gameType = GameType.MultiplayerClient;
+                        UpdateGameType();
                         break;
                     }
                     else
