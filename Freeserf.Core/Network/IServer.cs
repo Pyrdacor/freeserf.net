@@ -49,8 +49,8 @@ namespace Freeserf.Network
 
     public interface ILocalServer : IServer
     {
-        void Init(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players);
-        void Update(bool useServerValues, bool useSameValues, string mapSeed, IEnumerable<PlayerInfo> players);
+        void Init(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
+        void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
 
         List<IRemoteClient> Clients { get; }
         bool AcceptClients { get; set; }
