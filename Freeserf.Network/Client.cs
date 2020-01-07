@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
@@ -20,6 +20,7 @@ namespace Freeserf.Network
         public uint PlayerIndex
         {
             get;
+            private set;
         }
 
         // TODO: needed
@@ -53,6 +54,8 @@ namespace Freeserf.Network
 
             client?.Close();
             server?.Close();
+            client = null;
+            server = null;
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
@@ -109,6 +112,8 @@ namespace Freeserf.Network
                     // server closed or kicked player
                     client?.Close();
                     server?.Close();
+                    client = null;
+                    server = null;
                     Disconnected?.Invoke(this, EventArgs.Empty);
                     break;
                 case Request.Heartbeat:
@@ -133,6 +138,17 @@ namespace Freeserf.Network
 
         private void UpdateLobbyData(LobbyData data)
         {
+            for (int i = 0; i < data.Players.Count; ++i)
+            {
+                // TODO
+                // if (data.Players[i].Identification == this.Ip)
+                if (!data.Players[i].IsHost && data.Players[i].Identification != null)
+                {
+                    PlayerIndex = (uint)i;
+                    break;
+                }
+            }
+
             LobbyData = data;
             LobbyDataUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -222,7 +238,18 @@ namespace Freeserf.Network
 
         public void Send(byte[] rawData)
         {
-            client.GetStream().Write(rawData, 0, rawData.Length);
+            if (client != null && client.Connected)
+            {
+                try
+                {
+                    client.GetStream().Write(rawData, 0, rawData.Length);
+                }
+                catch (System.IO.IOException)
+                {
+                    if (client.Connected)
+                        throw;
+                }
+            }            
         }
 
         public void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players)
