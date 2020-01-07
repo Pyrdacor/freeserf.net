@@ -1125,7 +1125,7 @@ namespace Freeserf.UI
                     sprite = 44; // undo 
                     validDirection |= Misc.Bit((int)direction);
                 }
-                else if (map.IsRoadSegmentValid(position, direction))
+                else if (map.IsRoadSegmentValid(position, direction, true))
                 {
                     if (buildingRoad.IsValidExtension(map, direction))
                     {

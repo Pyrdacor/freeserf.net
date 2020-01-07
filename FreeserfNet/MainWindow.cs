@@ -151,7 +151,6 @@ namespace Freeserf
                 UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
 
                 var state = (initInfo.Fullscreen.HasValue && initInfo.Fullscreen.Value) ? WindowState.Fullscreen : WindowState.Normal;
-
                 var options = new WindowOptions(
                     true,
                     true,

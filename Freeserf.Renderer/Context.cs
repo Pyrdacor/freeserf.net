@@ -43,10 +43,6 @@ namespace Freeserf.Renderer
 
             State.Gl.Enable(EnableCap.DepthTest);
             State.Gl.DepthFunc(DepthFunction.Lequal);
-            State.Gl.DepthRange(0, 1);
-            // TODO was this important?
-            //State.GlEnable(EnableCap.AlphaTest);
-            //State.GlAlphaFunc(AlphaFunction.Greater, 0);
 
             State.Gl.Enable(EnableCap.Blend);
             State.Gl.BlendEquationSeparate(BlendEquationModeEXT.FuncAdd, BlendEquationModeEXT.FuncAdd);

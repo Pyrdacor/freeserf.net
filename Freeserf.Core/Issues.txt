@@ -21,6 +21,9 @@ Rendering:
 - Sometimes a serf is drawn that is inside the castle (leaving the castle).
 - On/Off button for players are missing when in last game on the spot was no player.
   This happens nearly every time. The visible state is correct though (even of the internal sprite). But nothing is drawn.
+- Since switching to Silk.NET some parts are not drawn (especially some building frames and the corner stones).
+    - Seems to be related to depth testing (maybe depth buffer is not large enough?).
+- Cursor is visible as Silk.NET not supporting hiding it yet
 
 
 Non-working code:
@@ -29,7 +32,9 @@ Non-working code:
 	- This also hinders road building sometimes
 - Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
-- After game loading the game freezes for some time (few seconds) and then running normally
+- After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
+- Dragging the minimap will reset the position in most cases
+- Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
 - Click positions in water (no height) are a bit off (this already worked previously!).
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 - Wrong sounds are played sometimes
