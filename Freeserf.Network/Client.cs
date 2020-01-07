@@ -225,6 +225,11 @@ namespace Freeserf.Network
             client.GetStream().Write(rawData, 0, rawData.Length);
         }
 
+        public void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players)
+        {
+            new LobbyData(messageIndex, serverInfo, players).Send(this);
+        }
+
         public void SendGameStateUpdate(Game game)
         {
             throw new NotImplementedException();
