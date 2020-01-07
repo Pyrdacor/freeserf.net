@@ -494,7 +494,16 @@ namespace Freeserf.UI
         private void CheckBoxServerValues_CheckedChanged(object sender, System.EventArgs e)
         {
             if (checkBoxServerValues.Checked)
-                checkBoxSameValues.Checked = false;
+            {
+                if (checkBoxSameValues.Checked)
+                {
+                    // TODO: is this necessary?
+                    checkBoxSameValues.Checked = false; // this will trigger the server update in this case
+                    return;
+                }
+            }
+
+            ServerUpdate();
         }
 
         private void CheckBoxSameValues_CheckedChanged(object sender, System.EventArgs e)
@@ -509,9 +518,14 @@ namespace Freeserf.UI
                 {
                     var player = mission.GetPlayer(i);
 
-                    playerBoxes[i].SetPlayerValues(player1.Supplies, player.Intelligence, player1.Reproduction);
+                    player.Supplies = player1.Supplies;
+                    player.Reproduction = player1.Reproduction;
+
+                    playerBoxes[i].SetPlayerValues(player.Supplies, player.Intelligence, player.Reproduction);
                 }
             }
+
+            ServerUpdate();
         }
 
         private void ButtonCreateServer_Clicked(object sender, Button.ClickEventArgs args)

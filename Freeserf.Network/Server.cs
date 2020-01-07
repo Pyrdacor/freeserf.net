@@ -166,7 +166,7 @@ namespace Freeserf.Network
             {
                 lobbyPlayerInfo.Add(new LobbyPlayerInfo
                 (
-                    "127.0.0.1", // TODO: has to be a valid IP
+                    player.Face < PlayerFace.You ? null : "127.0.0.1", // TODO: has to be a valid IP
                     isHost,
                     (int)player.Face,
                     (int)player.Supplies,
@@ -255,7 +255,7 @@ namespace Freeserf.Network
             lock (lobbyServerInfo)
             lock (lobbyPlayerInfo)
             {
-                new LobbyData(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo).Send(client);
+                client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
             }
 
             return Task.Run(() =>
@@ -356,7 +356,7 @@ namespace Freeserf.Network
                     lock (lobbyServerInfo)
                     lock (lobbyPlayerInfo)
                     {
-                        new LobbyData(messageIndex, lobbyServerInfo, lobbyPlayerInfo).Send(client);
+                        client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
                     }
                     break;
                 case Request.MapData:
@@ -471,7 +471,7 @@ namespace Freeserf.Network
                 foreach (var player in players.ToList())
                 {
                     lobbyPlayerInfo.Add(new LobbyPlayerInfo(
-                        "127.0.0.1", // TODO: has to be a valid IP
+                        player.Face < PlayerFace.You ? null : "127.0.0.1", // TODO: has to be a valid IP
                         isHost,
                         (int)player.Face,
                         (int)player.Supplies,
@@ -482,6 +482,55 @@ namespace Freeserf.Network
                     isHost = false;
                 }
             }
+
+            BroadcastLobbyData();
+        }
+
+        private delegate void BroadcastMethod(IRemoteClient client);
+
+        private void Broadcast(BroadcastMethod method)
+        {
+            foreach (var client in clients.ToList())
+            {
+                method(client.Key);
+            }
+        }
+
+        private void BroadcastLobbyData()
+        {
+            Broadcast((client) =>
+            {
+                lock (lobbyServerInfo)
+                lock (lobbyPlayerInfo)
+                {
+                    client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
+                }
+            });
+        }
+
+        private void BroadcastDisconnect()
+        {
+            Broadcast((client) => client.SendDisconnect());
+        }
+
+        private void BroadcastGameStateUpdate(Game game)
+        {
+            Broadcast((client) => client.SendGameStateUpdate(game));
+        }
+
+        private void BroadcastHeartbeat()
+        {
+            Broadcast((client) => client.SendHeartbeat());
+        }
+
+        private void BroadcastMapStateUpdate(Map map)
+        {
+            Broadcast((client) => client.SendMapStateUpdate(map));
+        }
+
+        private void BroadcastPlayerStateUpdate(Player player)
+        {
+            Broadcast((client) => client.SendPlayerStateUpdate(player));
         }
     }
 
