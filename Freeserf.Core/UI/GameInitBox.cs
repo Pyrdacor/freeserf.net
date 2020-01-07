@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf.UI
 {
@@ -178,6 +179,7 @@ namespace Freeserf.UI
 
         // used only for multiplayer games
         readonly bool[] playerIsAI = new bool[4];
+        readonly Dictionary<uint, Network.IRemoteClient> playerClientMapping = new Dictionary<uint, Network.IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
         public GameInfo ServerGameInfo => mission;
 
@@ -886,6 +888,8 @@ namespace Freeserf.UI
                     SetRedraw();
                     server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", customMission); // TODO: name should be editable
                     server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, customMission.MapSize, randomInput.Text, mission.Players);
+                    server.ClientJoined += Server_ClientJoined;
+                    server.ClientLeft += Server_ClientLeft;
                     break;
                 case Action.StartGame:
                 {
@@ -1159,6 +1163,45 @@ namespace Freeserf.UI
             }
         }
 
+        private void Server_ClientLeft(Network.ILocalServer server, Network.IRemoteClient client)
+        {
+            lock (mission)
+            {
+                mission.RemovePlayer(client.PlayerIndex);
+                playerClientMapping.Remove(client.PlayerIndex);
+                SetRedraw();
+            }
+
+            ServerUpdate();
+        }
+
+        private void Server_ClientJoined(Network.ILocalServer server, Network.IRemoteClient client)
+        {
+            lock (mission)
+            {
+                while (mission.PlayerCount >= 4)
+                {
+                    // joined too late -> kick player
+                    server.DisconnectClient(client);
+                }
+
+                uint supplies = checkBoxSameValues.Checked ? mission.GetPlayer(0u).Supplies : 20u;
+                uint reproduction = checkBoxSameValues.Checked ? mission.GetPlayer(0u).Reproduction : 20u;
+                uint playerIndex = mission.PlayerCount;
+
+                // TODO: every face < PlayerFace.You is treated as AI so we only can have 2 human players (= 1 client) for now
+                //       we should add two more human player faces later
+                var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
+
+                mission.AddPlayer(playerInfo);
+                playerIsAI[playerIndex] = false;
+                playerClientMapping.Add(playerIndex, client);
+                SetRedraw();
+            }
+
+            ServerUpdate();
+        }
+
         private void ServerUpdate()
         {
             server.Update(
@@ -1302,6 +1345,12 @@ namespace Freeserf.UI
                         }
                         else // remove
                         {
+                            if (gameType == GameType.MultiplayerServer && !playerIsAI[playerIndex])
+                            {
+                                // kick player
+                                server.DisconnectClient(playerClientMapping[playerIndex]);
+                            }
+
                             mission.RemovePlayer(playerIndex);
                             playerIsAI[playerIndex] = false;
                             SetRedraw();
@@ -1325,7 +1374,7 @@ namespace Freeserf.UI
             if (cx < 8 + 32 && cy < 72) // click on face
             {
                 bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
-                                    (playerIndex == 1 && gameType == GameType.MultiplayerClient) ||
+                                    gameType == GameType.MultiplayerJoined || // TODO: maybe later choose between some special faces
                                     gameType == GameType.Mission ||
                                     gameType == GameType.Tutorial ||
                                     gameType == GameType.Load;
@@ -1409,6 +1458,13 @@ namespace Freeserf.UI
                         {
                             canNotChange = true;
                         }
+                        else if (gameType == GameType.MultiplayerJoined)
+                        {
+                            canNotChange =
+                                playerIndex != client.PlayerIndex ||
+                                client.LobbyData.ServerInfo.UseSameValues ||
+                                client.LobbyData.ServerInfo.UseServerValues;
+                        }
 
                         // Supplies 
                         if (!canNotChange)
@@ -1432,6 +1488,7 @@ namespace Freeserf.UI
                     else if (cx >= 6 && cx < 12)
                     {
                         bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
+                                            gameType == GameType.MultiplayerJoined ||
                                             gameType == GameType.Mission ||
                                             gameType == GameType.Tutorial ||
                                             gameType == GameType.Load;
@@ -1460,6 +1517,13 @@ namespace Freeserf.UI
                         if (gameType == GameType.MultiplayerServer && playerIndex != 0 && !checkBoxServerValues.Checked && !checkBoxSameValues.Checked && !playerIsAI[playerIndex])
                         {
                             canNotChange = true;
+                        }
+                        else if (gameType == GameType.MultiplayerJoined)
+                        {
+                            canNotChange =
+                                playerIndex != client.PlayerIndex ||
+                                client.LobbyData.ServerInfo.UseSameValues ||
+                                client.LobbyData.ServerInfo.UseServerValues;
                         }
 
                         // Reproduction 

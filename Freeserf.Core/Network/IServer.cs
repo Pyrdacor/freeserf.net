@@ -47,10 +47,17 @@ namespace Freeserf.Network
         void Close();
     }
 
+    public delegate void ClientJoinedHandler(ILocalServer server, IRemoteClient client);
+    public delegate void ClientLeftHandler(ILocalServer server, IRemoteClient client);
+
     public interface ILocalServer : IServer
     {
         void Init(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
         void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
+        void DisconnectClient(IRemoteClient client);
+
+        event ClientJoinedHandler ClientJoined;
+        event ClientLeftHandler ClientLeft;
 
         List<IRemoteClient> Clients { get; }
         bool AcceptClients { get; set; }

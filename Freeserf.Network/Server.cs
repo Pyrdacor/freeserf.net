@@ -90,6 +90,9 @@ namespace Freeserf.Network
 
         public List<IRemoteClient> Clients => clients.Keys.ToList();
 
+        public event ClientJoinedHandler ClientJoined;
+        public event ClientLeftHandler ClientLeft;
+
         public static IPAddress GetLocalIpAddress()
         {
             UnicastIPAddressInformation mostSuitableIp = null;
@@ -251,14 +254,7 @@ namespace Freeserf.Network
                 throw new ExceptionFreeserf("Expected server to be in lobby.");
             }
 
-            // initially send the lobby data to the client
-            lock (lobbyServerInfo)
-            lock (lobbyPlayerInfo)
-            {
-                client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
-            }
-
-            return Task.Run(() =>
+            var clientReceiveTask = Task.Run(() =>
             {
                 byte[] buffer = new byte[1024];
 
@@ -266,21 +262,38 @@ namespace Freeserf.Network
                 {
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        if (!stream.DataAvailable)
+                        try
                         {
-                            Thread.Sleep(5);
-                            continue;
+                            if (!stream.DataAvailable)
+                            {
+                                Thread.Sleep(5);
+                                continue;
+                            }
+
+                            var data = Server.ReadData(stream);
+
+                            if (data.Length > 0)
+                            {
+                                HandleData(client, data);
+                            }
                         }
-
-                        var data = Server.ReadData(stream);
-
-                        if (data.Length > 0)
+                        catch (ObjectDisposedException)
                         {
-                            HandleData(client, data);
+                            if (tcpClient.Connected)
+                            {
+                                // TODO: connected but disposed? should not happen.
+                            }
                         }
                     }
                 }
             });
+
+            // this should add the player to the game in lobby
+            // moreover it should trigger a server update and
+            // therefore broadcasts the lobby data to all clients (including this one)
+            ClientJoined?.Invoke(this, client);
+
+            return clientReceiveTask;
         }
 
         void HandleData(RemoteClient client, byte[] data)
@@ -344,7 +357,9 @@ namespace Freeserf.Network
             switch (request)
             {
                 case Request.Disconnect:
-                    // TODO
+                    ClientLeft?.Invoke(this, client);
+                    DisconnectClient(client);
+                    // TODO response
                     break;
                 case Request.GameData:
                     // TODO
@@ -435,7 +450,7 @@ namespace Freeserf.Network
             switch (State)
             {
                 case ServerState.Lobby:
-                    GameInfo.RemovePlayer(client.PlayerIndex);
+                    // Note: GameInitBox removes the player
                     break;
                 case ServerState.Game:
                     // TODO: let AI continue the players settlement or keep it at this state?
@@ -559,7 +574,8 @@ namespace Freeserf.Network
 
             if (receiveTask != null)
             {
-                receiveTask.Wait();
+                if (receiveTask.Status == TaskStatus.Running)
+                    receiveTask.Wait();
                 receiveTask = null;
             }
         }
