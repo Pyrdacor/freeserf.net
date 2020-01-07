@@ -168,7 +168,7 @@ namespace Freeserf
                     false
                 );
 
-                return new MainWindow(options);             
+                return mainWindow = new MainWindow(options);
             }
             catch (Exception ex)
             {
