@@ -33,6 +33,7 @@ namespace Freeserf
     // Builds
     // Gui
     // Gui Buildings
+    // Gui Font
     // Minimap
     // Cursor
 
@@ -61,7 +62,7 @@ namespace Freeserf
         {
             0.01f,  // Landscape
             0.02f,  // Waves
-            0.04f,  // Paths
+            0.03f,  // Paths
             0.05f,  // Objects
             0.05f,  // Serfs
             0.05f,  // Buildings

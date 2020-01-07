@@ -13,4 +13,4 @@ virtual screen and independent of the real screen resolution.
 For input events that need a position (like mouse clicks) the render view provides the methods "ScreenToView" to
 convert screen coordinates to view coordinates.
 
-There will be an OpenTK renderer which will show the implementation of a renderer with modern OpenGL and shaders.
+There is a Silk.net renderer which shows the implementation of a renderer with modern OpenGL and shaders.
