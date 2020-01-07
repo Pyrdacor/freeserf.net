@@ -13,7 +13,12 @@ namespace Freeserf.Network
 
         public LocalClient()
         {
+            Ip = HostNetwork.GetLocalIpAddress();
+        }
 
+        public IPAddress Ip
+        {
+            get;
         }
 
         // TODO: get from server and set it here
@@ -69,8 +74,12 @@ namespace Freeserf.Network
 
             try
             {
-                client = new TcpClient();
-                client.Connect(ip, Global.NetworkPort);
+                client = new TcpClient(new IPEndPoint(Ip, 0));
+
+                if (IPAddress.IsLoopback(ip))
+                    client.Connect(HostNetwork.GetLocalIpAddress(), Global.NetworkPort);
+                else
+                    client.Connect(ip, Global.NetworkPort);
 
                 server = new RemoteServer(name, ip, client);
                 server.DataReceived += Server_DataReceived;
@@ -140,9 +149,7 @@ namespace Freeserf.Network
         {
             for (int i = 0; i < data.Players.Count; ++i)
             {
-                // TODO
-                // if (data.Players[i].Identification == this.Ip)
-                if (!data.Players[i].IsHost && data.Players[i].Identification != null)
+                if (!data.Players[i].IsHost && data.Players[i].Identification == Ip.ToString())
                 {
                     PlayerIndex = (uint)i;
                     break;
@@ -206,9 +213,15 @@ namespace Freeserf.Network
 
         public RemoteClient(uint playerIndex, ILocalServer server, TcpClient client)
         {
+            Ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
             PlayerIndex = playerIndex;
             Server = server;
             this.client = client;
+        }
+
+        public IPAddress Ip
+        {
+            get;
         }
 
         public uint PlayerIndex
