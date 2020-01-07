@@ -106,7 +106,8 @@ namespace Freeserf.UI
         public void Update()
         {
             // update map zoom factor
-            map.RenderMap.ZoomFactor = 1.0f + interf.RenderView.Zoom * 0.5f;
+            if (map?.RenderMap != null && interf?.RenderView != null)
+                map.RenderMap.ZoomFactor = 1.0f + interf.RenderView.Zoom * 0.5f;
 
             // view redraw the viewport permanently
             SetRedraw();
@@ -136,6 +137,9 @@ namespace Freeserf.UI
 
         protected override void InternalDraw()
         {
+            if (map.RenderMap == null) // no more viewport rendering
+                return;
+
             DrawMapCursor();
         }
 
