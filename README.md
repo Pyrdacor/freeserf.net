@@ -1,6 +1,6 @@
 # Freeserf.net
 
-Freeserf.net is an authentic remake of the game **The Settlers I** from BlueByte.
+Freeserf.net is an authentic remake of the game **The Settlers I** by BlueByte.
 
 To avoid copyright issues I won't provide any copyrighted data from the original game like music or graphics. To play the game you will therefore need the original DOS or Amiga data files.
 
