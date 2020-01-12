@@ -8,6 +8,7 @@ namespace Freeserf.Network
     {
         None = 0,
         Heartbeat,
+        StartGame,
         Disconnect,
         LobbyData,
         PlayerData,

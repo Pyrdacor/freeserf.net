@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Freeserf.UI
 {
@@ -128,7 +127,8 @@ namespace Freeserf.UI
             Tutorial = 4,
             AIvsAI = 5,
             MultiplayerServer = 6,
-            MultiplayerJoined = 7
+            MultiplayerJoined = 7,
+            MultiplayerLoading = 8
         }
 
         static readonly uint[] GameTypeSprites = new uint[]
@@ -139,6 +139,7 @@ namespace Freeserf.UI
             263u,
             261u,
             264u,
+            263u,
             263u,
             263u
         };
@@ -182,8 +183,9 @@ namespace Freeserf.UI
         readonly Dictionary<uint, Network.IRemoteClient> playerClientMapping = new Dictionary<uint, Network.IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
         public GameInfo ServerGameInfo => mission;
+        readonly Dictionary<uint, MultiplayerStatus> playerStatus = new Dictionary<uint, MultiplayerStatus>(); // key: playerIndex, value: status
 
-        class PlayerBox
+        internal class PlayerBox
         {
             readonly Render.ILayerSprite[] borders = new Render.ILayerSprite[5];
             readonly Render.ILayerSprite playerImage = null;
@@ -668,6 +670,7 @@ namespace Freeserf.UI
                 case GameType.MultiplayerClient:
                 case GameType.MultiplayerServer:
                 case GameType.MultiplayerJoined:
+                case GameType.MultiplayerLoading:
                     string header;
                     switch (gameType)
                     {
@@ -686,6 +689,9 @@ namespace Freeserf.UI
                             break;
                         case GameType.MultiplayerJoined:
                             header = "Multiplayer Join";
+                            break;
+                        case GameType.MultiplayerLoading:
+                            header = "Starting Game";
                             break;
                     }
 
@@ -715,16 +721,16 @@ namespace Freeserf.UI
 
                         buttonUp.Displayed = false;
                         buttonDown.Displayed = false;
-                        buttonMapSize.Displayed = gameType != GameType.MultiplayerJoined;
+                        buttonMapSize.Displayed = gameType != GameType.MultiplayerJoined && gameType != GameType.MultiplayerLoading;
                         buttonCreateServer.Displayed = false;
                     }                    
 
                     for (int i = 0; i < 4; ++i)
                     {
-                        if (i > 0 || gameType == GameType.AIvsAI)
-                            playerBoxes[i].ShowActivationButton = true;
+                        if (i > 0)
+                            playerBoxes[i].ShowActivationButton = gameType != GameType.MultiplayerLoading;
 
-                        playerBoxes[i].ShowCopyValueButton = true;
+                        playerBoxes[i].ShowCopyValueButton = gameType != GameType.MultiplayerLoading;
                     }
                     break;
                 case GameType.Mission:
@@ -811,6 +817,8 @@ namespace Freeserf.UI
 
         void UpdateGameType()
         {
+            buttonStart.Enabled = true;
+
             switch (gameType)
             {
                 case GameType.Mission:
@@ -920,7 +928,9 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        if (gameType != GameType.MultiplayerClient)
+                        if (gameType != GameType.MultiplayerClient &&
+                            gameType != GameType.MultiplayerJoined &&
+                            gameType != GameType.MultiplayerServer)
                             interf.CloseGameInit();
 
                         switch (gameType)
@@ -966,6 +976,7 @@ namespace Freeserf.UI
                                         randomInput.SetRandom(customMission.RandomBase);
                                         fileList.Displayed = false;
                                         serverList.Displayed = false;
+                                        buttonStart.Enabled = false;
                                         SetRedraw();
                                     }
 
@@ -973,24 +984,53 @@ namespace Freeserf.UI
                                 }
                             case GameType.MultiplayerJoined:
                                 // TODO: client or remote spectator depending on settings
-                                // TODO the server starts the game
-                                // GameManager.Instance.CloseGame();
-                                // interf.Viewer.ChangeTo(Viewer.Type.Client);
                                 if (client != null)
                                 {
                                     client.Disconnected -= Client_Disconnected;
                                     client.LobbyDataUpdated -= Client_LobbyDataUpdated;
                                 }
-                                break;
-                            case GameType.MultiplayerServer:
                                 GameManager.Instance.CloseGame();
-                                interf.Viewer.ChangeTo(Viewer.Type.Server);
+                                interf.Viewer.ChangeTo(Viewer.Type.Client);
+                                gameType = GameType.MultiplayerLoading;
+                                SetRedraw();
                                 break;
                         }
 
-                        if (!GameManager.Instance.StartGame(mission, interf.RenderView, interf.AudioInterface))
+                        if (gameType == GameType.MultiplayerServer)
                         {
-                            return;
+                            GameManager.Instance.CloseGame();
+                            interf.Viewer.ChangeTo(Viewer.Type.Server);
+
+                            playerStatus.Clear();
+                            playerStatus.Add(0u, MultiplayerStatus.Ready); // server
+                            foreach (var client in playerClientMapping)
+                            {
+                                playerStatus.Add(client.Key, MultiplayerStatus.Unknown); // clients
+                            }
+
+                            gameType = GameType.MultiplayerLoading;
+
+                            var game = GameManager.Instance.PrepareMultiplayerGame(mission, interf.RenderView, interf.AudioInterface);
+
+                            if (game == null)
+                            {
+                                // TODO: notify clients before closing the server?
+                                server.Close();
+                                gameType = GameType.MultiplayerClient;
+                                UpdateGameType();
+                                return;
+                            }
+
+                            SetRedraw();
+
+                            server.StartGame(game); // the game is not really started yet, we have to call GameManager.Instance.StartMultiplayerGame later
+                        }
+                        else
+                        {
+                            if (!GameManager.Instance.StartGame(mission, interf.RenderView, interf.AudioInterface))
+                            {
+                                return;
+                            }
                         }
                     }
 

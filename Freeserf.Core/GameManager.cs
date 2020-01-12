@@ -93,6 +93,32 @@ namespace Freeserf
             return true;
         }
 
+        public Game PrepareMultiplayerGame(GameInfo gameInfo, Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
+        {
+            var newGame = gameInfo.Instantiate(renderView, audioInterface);
+
+            if (newGame == null)
+            {
+                return null;
+            }
+
+            return newGame;
+        }
+
+        public bool StartMultiplayerGame(Game game)
+        {
+            if (game == null)
+            {
+                return false;
+            }
+
+            lastSaveTime = DateTime.MinValue;
+            currentGameSaveFile = null;
+            SetCurrentGame(game);
+
+            return true;
+        }
+
         public void CloseGame()
         {
             if (currentGame == null)

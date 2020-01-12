@@ -85,6 +85,7 @@ namespace Freeserf.Network
         readonly List<LobbyPlayerInfo> lobbyPlayerInfo = new List<LobbyPlayerInfo>();
         readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
         readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
+        readonly Dictionary<IRemoteClient, MultiplayerStatus> clientStatus = new Dictionary<IRemoteClient, MultiplayerStatus>();
 
         public LocalServer(string name, GameInfo gameInfo)
         {
@@ -139,6 +140,7 @@ namespace Freeserf.Network
 
         public event ClientJoinedHandler ClientJoined;
         public event ClientLeftHandler ClientLeft;
+        public event GameReadyHandler GameReady;
 
         public void Run(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed,
             IEnumerable<PlayerInfo> players, CancellationToken cancellationToken)
@@ -215,7 +217,8 @@ namespace Freeserf.Network
                     var remoteClient = new RemoteClient(GameInfo.PlayerCount, this, client);
 
                     playerClients.Add(GameInfo.PlayerCount, remoteClient);
-                    clients.Add(remoteClient, client);                    
+                    clients.Add(remoteClient, client);
+                    clientStatus.Add(remoteClient, MultiplayerStatus.Unknown);
 
                     HandleClient(remoteClient, client, cancellationToken).ContinueWith((task) => client.Close());
                 }
@@ -332,7 +335,21 @@ namespace Freeserf.Network
                         break;
                     }
                 case ServerState.Loading:
-                    throw new ExceptionFreeserf("No message expected during loading."); // TODO maybe just ignore?
+                    {
+                        if (networkData.Type != NetworkDataType.Request)
+                            throw new ExceptionFreeserf("Request expected.");
+
+                        var request = networkData as RequestData;
+
+                        if (request.Request == Request.StartGame)
+                        {
+                            // client sends this when he is ready
+                            ClientReady(client);
+                            break;
+                        }
+                        else
+                            throw new ExceptionFreeserf("Unexpected request during loading."); // TODO maybe just ignore?
+                    }
                 case ServerState.Game:
                     {
                         if (networkData.Type == NetworkDataType.Request)
@@ -362,6 +379,20 @@ namespace Freeserf.Network
             }
         }
 
+        void ClientReady(IRemoteClient client)
+        {
+            clientStatus[client] = MultiplayerStatus.Ready;
+            CheckGameReady();
+        }
+
+        void CheckGameReady()
+        {
+            // all clients ready or disconnected?
+            GameReady?.Invoke(
+                clientStatus.Count(c => c.Value == MultiplayerStatus.Ready) == playerClients.Count
+            );
+        }
+
         void HandleLobbyRequest(RemoteClient client, byte messageIndex, Request request)
         {
             switch (request)
@@ -371,6 +402,8 @@ namespace Freeserf.Network
                     DisconnectClient(client);
                     // TODO response
                     break;
+                case Request.StartGame:
+
                 case Request.GameData:
                     // TODO
                     break;
@@ -441,6 +474,13 @@ namespace Freeserf.Network
             }
         }
 
+        public void StartGame(Game game)
+        {
+            BroadcastStartGameRequest();
+            BroadcastGameStateUpdate(game);
+            LoadGame();
+        }
+
         public void RejectClient(TcpClient client)
         {
             new RemoteClient(uint.MaxValue, this, client).SendDisconnect();
@@ -455,6 +495,13 @@ namespace Freeserf.Network
             {
                 clients[client]?.Close();
                 clients.Remove(client);
+                playerClients.Remove(client.PlayerIndex);
+                clientStatus.Remove(client);
+
+                if (State == ServerState.Loading)
+                {
+                    CheckGameReady();
+                }
             }
 
             switch (State)
@@ -529,6 +576,11 @@ namespace Freeserf.Network
             {
                 method(client.Key);
             }
+        }
+
+        private void BroadcastStartGameRequest()
+        {
+            Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client));
         }
 
         private void BroadcastLobbyData()

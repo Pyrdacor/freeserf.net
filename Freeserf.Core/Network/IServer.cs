@@ -39,6 +39,14 @@ namespace Freeserf.Network
         Outro
     }
 
+    public enum MultiplayerStatus
+    {
+        Unknown,
+        Loading,
+        Disconnected,
+        Ready
+    }
+
     public interface IServer
     {
         string Name { get; }
@@ -49,15 +57,19 @@ namespace Freeserf.Network
 
     public delegate void ClientJoinedHandler(ILocalServer server, IRemoteClient client);
     public delegate void ClientLeftHandler(ILocalServer server, IRemoteClient client);
+    public delegate void GameReadyHandler(bool ready);
 
     public interface ILocalServer : IServer
     {
         void Init(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
         void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
+
+        void StartGame(Game game);
         void DisconnectClient(IRemoteClient client);
 
         event ClientJoinedHandler ClientJoined;
         event ClientLeftHandler ClientLeft;
+        event GameReadyHandler GameReady;
 
         List<IRemoteClient> Clients { get; }
         bool AcceptClients { get; set; }
