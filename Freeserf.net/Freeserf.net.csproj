@@ -192,6 +192,6 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)env/Freeserf.BuildVersion.exe" "$(TargetPath)" "$(SolutionDir)templates" "$(SolutionDir)\" $(ConfigurationName)</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)Freeserf.BuildVersion.exe" "$(TargetPath)" "$(SolutionDir)templates" "$(SolutionDir)\" $(ConfigurationName)</PostBuildEvent>
   </PropertyGroup>
 </Project>

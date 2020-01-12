@@ -1,3 +1,54 @@
+Version 1.9.30:
+===============
+
+- Fixed stonecutter bug
+- Fixed build system for Windows
+
+
+Version 1.9.29:
+===============
+
+- Fixed serf states
+- This fixes many game related bugs
+
+
+Version 1.9.28:
+===============
+
+- Fixed linux build
+- Added netcore/Silk.net window/renderer
+
+
+Version 1.9.27:
+===============
+
+- Fixed savegame bugs
+
+
+Version 1.9.26:
+===============
+
+- Fixed stack overflow crash
+
+
+Version 1.9.25:
+===============
+
+- Fixed invisible cursor bug
+
+
+Version 1.9.24:
+===============
+
+- Fixed data loading bug
+
+
+Version 1.9.23:
+===============
+
+- Fixed click event bugs
+
+
 Version 1.9.22:
 ===============
 

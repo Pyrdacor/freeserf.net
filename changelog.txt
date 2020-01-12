@@ -1,3 +1,10 @@
+Version 1.9.30:
+===============
+
+- Fixed stonecutter bug
+- Fixed build system for Windows
+
+
 Version 1.9.29:
 ===============
 

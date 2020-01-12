@@ -831,7 +831,7 @@ namespace Freeserf
 
             // States: FreeWalking, Logging, Planting, Stonecutting, Fishing,
             // Farming, SamplingGeoSpot, KnightFreeWalking, KnightAttackingFree,
-            // KnightAttackingFreeWait, FreeSailing
+            // KnightAttackingFreeWait, FreeSailing, StonecutterFreeWalking
             public class StateDataFreeWalking : StateDataBase
             {
                 private int distanceX; // B
@@ -919,7 +919,8 @@ namespace Freeserf
                             serf.SerfState != State.KnightFreeWalking &&
                             serf.SerfState != State.KnightAttackingFree &&
                             serf.SerfState != State.KnightAttackingFreeWait &&
-                            serf.SerfState != State.FreeSailing)
+                            serf.SerfState != State.FreeSailing &&
+                            serf.SerfState != State.StoneCutterFreeWalking)
                         {
                             return new StateDataFreeWalking(null);
                         }

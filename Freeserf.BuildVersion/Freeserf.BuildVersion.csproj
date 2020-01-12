@@ -116,4 +116,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetPath)" "$(SolutionDir)$(TargetFileName)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

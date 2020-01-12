@@ -19,7 +19,7 @@ namespace Freeserf.BuildVersion
                 return;
             }
 
-            if (args[3] != "Release")
+            if (args[3] != "Release" && args[3] != "WindowsRelease")
             {
                 Console.WriteLine("Skipping debug build version.");
                 Environment.Exit(0);
