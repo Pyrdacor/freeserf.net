@@ -3805,5 +3805,31 @@ namespace Freeserf
             if (renderRoadSegments.TryRemove(index, out Render.RenderRoadSegment renderRoadSegment) && renderRoadSegment != null)
                 renderRoadSegment.Delete();
         }
+
+        public Flag TracePathAndGetFlagAtEnd(MapPos position, Direction direction, out Direction endFlagReverseDirection)
+        {
+            var nextPosition = Map.Move(position, direction);
+
+            if (Map.HasFlag(nextPosition))
+            {
+                endFlagReverseDirection = direction.Reverse();
+                return GetFlagAtPosition(nextPosition);
+            }
+            else
+            {
+                // cycle through all directions except for reverse of the one we've gone
+                var cycle = new DirectionCycleCW((Direction)(((int)direction.Reverse() + 1) % 6), 5u);
+
+                foreach (var nextDirection in cycle)
+                {
+                    if (Map.HasPath(nextPosition, nextDirection))
+                        return TracePathAndGetFlagAtEnd(nextPosition, nextDirection, out endFlagReverseDirection);
+                }
+
+                endFlagReverseDirection = Direction.None;
+
+                return null; // none found, should not happen
+            }
+        }
     }
 }
