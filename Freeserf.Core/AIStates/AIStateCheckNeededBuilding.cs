@@ -153,25 +153,25 @@ namespace Freeserf.AIStates
                         {
                             var neededForBuilding = Building.Requests[(int)type];
 
-                            if (neededForBuilding.ResType2 == Resource.Type.None)
+                            if (neededForBuilding.ResourceType2 == Resource.Type.None)
                             {
-                                GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType1);
+                                GoToState(ai, AI.State.CraftTool, neededForBuilding.ResourceType1);
                                 return;
                             }
                             else
                             {
                                 // TODO: The tools may be in different inventories. We have to optimize this later.
 
-                                if (game.GetTotalResourceCount(player, neededForBuilding.ResType1) != 0)
+                                if (game.GetTotalResourceCount(player, neededForBuilding.ResourceType1) != 0)
                                 {
                                     // We only need the second one
-                                    GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType2);
+                                    GoToState(ai, AI.State.CraftTool, neededForBuilding.ResourceType2);
                                     return;
                                 }
-                                else if (game.GetTotalResourceCount(player, neededForBuilding.ResType2) != 0)
+                                else if (game.GetTotalResourceCount(player, neededForBuilding.ResourceType2) != 0)
                                 {
                                     // We only need the first one
-                                    GoToState(ai, AI.State.CraftTool, neededForBuilding.ResType1);
+                                    GoToState(ai, AI.State.CraftTool, neededForBuilding.ResourceType1);
                                     return;
                                 }
 
@@ -179,8 +179,8 @@ namespace Freeserf.AIStates
                                 Kill(ai);
                                 ai.PushStates
                                 (
-                                    ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType1),
-                                    ai.CreateState(AI.State.CraftTool, neededForBuilding.ResType2)
+                                    ai.CreateState(AI.State.CraftTool, neededForBuilding.ResourceType1),
+                                    ai.CreateState(AI.State.CraftTool, neededForBuilding.ResourceType2)
                                 );
 
                                 return;
@@ -220,7 +220,7 @@ namespace Freeserf.AIStates
             else
             {
                 inventory = game.FindInventoryWithValidSpecialist(player, neededForBuilding.SerfType,
-                    neededForBuilding.ResType1, neededForBuilding.ResType2);
+                    neededForBuilding.ResourceType1, neededForBuilding.ResourceType2);
             }
 
             if (inventory != -1)
@@ -231,8 +231,8 @@ namespace Freeserf.AIStates
                 return CheckResult.Needed;
             }
 
-            if (game.HasAnyOfResource(player, neededForBuilding.ResType1) &&
-                (neededForBuilding.ResType2 == Resource.Type.None || game.HasAnyOfResource(player, neededForBuilding.ResType2)))
+            if (game.HasAnyOfResource(player, neededForBuilding.ResourceType1) &&
+                (neededForBuilding.ResourceType2 == Resource.Type.None || game.HasAnyOfResource(player, neededForBuilding.ResourceType2)))
                 return CheckResult.Needed;
 
             return CheckResult.NeededButNoSpecialistOrRes;

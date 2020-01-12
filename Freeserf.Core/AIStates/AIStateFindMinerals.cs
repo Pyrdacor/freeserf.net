@@ -101,6 +101,12 @@ namespace Freeserf.AIStates
             {
                 bool canBuild = CanBuild(game, player);
 
+                if (!canBuild)
+                {
+                    ai.PushState(ai.CreateState(AI.State.CraftTool, Resource.Type.Pick));
+                    break;
+                }
+
                 // look for memorized large spot
                 if (canBuild && largeSpots.Count > 0)
                 {
