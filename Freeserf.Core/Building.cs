@@ -750,7 +750,7 @@ namespace Freeserf
 
             // Unlink knight from list.
             var firstSerf = Game.GetSerf(state.FirstKnight);
-            uint firstKnight = 0;
+            uint firstKnight = state.FirstKnight;
 
             var result = firstSerf.ExtractKnightFromList(knightIndex, ref firstKnight);
 

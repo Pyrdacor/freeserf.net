@@ -4230,6 +4230,7 @@ namespace Freeserf
             {
                 slope = 1;
                 SetLostState(); // try to enter a building that is no longer there
+                return;
             }
             else
             {
@@ -4284,15 +4285,20 @@ namespace Freeserf
             s.IdleInStock.InventoryIndex = building.Inventory.Index;
         }
 
-        void DropResource(Resource.Type resourceType)
+        bool DropResource(Resource.Type resourceType)
         {
             var flag = GetFlagAtPosition();
+
+            if (flag == null)
+                return false;
 
             // Resource is lost if no free slot is found 
             if (flag.DropResource(resourceType, 0))
             {
                 Game.GetPlayer(Player).IncreaseResourceCount(resourceType);
             }
+
+            return true;
         }
 
         void FindInventory()
@@ -5985,14 +5991,26 @@ namespace Freeserf
                 case Type.Lumberjack:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Lumber);
+                            if (!DropResource(Resource.Type.Lumber))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -6026,14 +6044,26 @@ namespace Freeserf
                 case Type.Stonecutter:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Stone);
+                            if (!DropResource(Resource.Type.Stone))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -6091,19 +6121,31 @@ namespace Freeserf
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
-                    }
+                    }             
                     break;
                 case Type.Fisher:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Fish);
+                            if (!DropResource(Resource.Type.Fish))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -6148,14 +6190,26 @@ namespace Freeserf
                 case Type.Farmer:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Wheat);
+                            if (!DropResource(Resource.Type.Wheat))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
