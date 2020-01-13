@@ -1582,12 +1582,13 @@ namespace Freeserf
 
             var flag = flags[destination];
 
-            if (!flag.HasBuilding)
+            if (flag == null || !flag.HasBuilding)
             {
-                throw new ExceptionFreeserf(this, ErrorSystemType.Game, "Failed to cancel transported resource.");
+                // the flag and/or building might have gone
+                return;
             }
 
-            flag.Building.CancelTransportedResource(type);
+            flag.Building?.CancelTransportedResource(type);
         }
 
         /// <summary>

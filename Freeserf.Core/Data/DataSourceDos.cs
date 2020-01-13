@@ -27,6 +27,15 @@ namespace Freeserf.Data
 {
     using MaskImage = Tuple<Sprite, Sprite>;
 
+    public class TPWMException : ExceptionFreeserf
+    {
+        public TPWMException(ErrorSystemType type, string message)
+            : base(type, message)
+        {
+
+        }
+    }
+
     class UnpackerTPWM : Converter
     {
         public UnpackerTPWM(Buffer buffer)
@@ -34,14 +43,14 @@ namespace Freeserf.Data
         {
             if (buffer.Size < 8)
             {
-                throw new ExceptionFreeserf(ErrorSystemType.Data, "Data is not a TPWM archive");
+                throw new TPWMException(ErrorSystemType.Data, "Data is not a TPWM archive");
             }
 
             Buffer id = buffer.Pop(4);
 
             if (id.ToString(4) != "TPWM")
             {
-                throw new ExceptionFreeserf(ErrorSystemType.Data, "Data is not a TPWM archive");
+                throw new TPWMException(ErrorSystemType.Data, "Data is not a TPWM archive");
             }
         }
 

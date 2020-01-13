@@ -702,12 +702,9 @@ namespace Freeserf
 
             if (inStock >= 0)
             {
-                if (state.Stock[inStock].Requested == 0)
-                {
-                    throw new ExceptionFreeserf(Game, ErrorSystemType.Building, "Failed to cancel unrequested resource delivery.");
-                }
-
-                --state.Stock[inStock].Requested;
+                if (state.Stock[inStock].Requested > 0)
+                    --state.Stock[inStock].Requested;
+                // TODO: else log error
             }
             else
             {
