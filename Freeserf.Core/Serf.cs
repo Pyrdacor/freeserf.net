@@ -9052,9 +9052,14 @@ namespace Freeserf
             var flag = Game.GetFlag(s.IdleOnPath.FlagIndex);
             var reverseDirection = s.IdleOnPath.ReverseDirection;
 
-            // Set walking direction in fieldE.
-            if (flag.IsScheduled(reverseDirection))
+            if (flag == null) // flag has gone
             {
+                SetLostState();
+                return;
+            }
+            else if (flag.IsScheduled(reverseDirection))
+            {
+                // Set walking direction in fieldE.
                 s.IdleOnPath.FieldE = (state.Tick & 0xff) + 6;
             }
             else
