@@ -1656,7 +1656,7 @@ namespace Freeserf
             public bool Water;
         }
 
-        static bool SendSerfToRoadSearchCB(Flag flag, object data)
+        static bool SendSerfToRoadSearchCallback(Flag flag, object data)
         {
             var roadData = data as SendSerfToRoadData;
 
@@ -1711,7 +1711,7 @@ namespace Freeserf
                 Water = water
             };
 
-            search.Execute(SendSerfToRoadSearchCB, true, false, data);
+            search.Execute(SendSerfToRoadSearchCallback, true, false, data);
 
             var inventory = data.Inventory;
 
