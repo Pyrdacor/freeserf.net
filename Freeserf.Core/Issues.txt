@@ -31,6 +31,12 @@ Non-working code:
 - Minimap scrolling is slow as hell
 
 
+Long AI Games:
+
+- Fights come to a still -> both knights keep their static image and don't move and they block other serfs
+- Sometimes no more builders are sent to construction site
+
+
 AI:
 
 Flags / buildings / roads:

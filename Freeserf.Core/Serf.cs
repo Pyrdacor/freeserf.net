@@ -8520,6 +8520,7 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
+                            s.AttackingVictoryFree.DefenderIndex = (int)defendingSerf.Index;
                             s.AttackingVictoryFree.Move = defendingSerf.s.DefendingFree.FieldD;
                             s.AttackingVictoryFree.DistanceColumn = defendingSerf.s.DefendingFree.OtherDistanceColumn;
                             s.AttackingVictoryFree.DistanceRow = defendingSerf.s.DefendingFree.OtherDistanceRow;
