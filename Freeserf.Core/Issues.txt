@@ -1,4 +1,15 @@
-﻿Rendering:
+﻿Must-Fix 1.9:
+
+- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice.
+- After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
+- Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
+- When scrolling Minimap and releasing, the selected area moves so that the wrong area is centered.
+- Dragging the minimap will reset the position in most cases
+- When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
+- If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
+
+
+Rendering:
 
 - Improve grid drawing in minimap?
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
@@ -8,6 +19,8 @@
 	- This is fixed but remains true for military building white flags
 - Saw a stonecutter building with the burning flames behind it.
 - Sometimes a serf is drawn that is inside the castle (leaving the castle).
+- On/Off button for players are missing when in last game on the spot was no player.
+  This happens nearly every time. The visible state is correct though (even of the internal sprite). But nothing is drawn.
 
 
 Non-working code:
@@ -17,18 +30,11 @@ Non-working code:
 - Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After game loading the game freezes for some time (few seconds) and then running normally
-- After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- Dragging the minimap will reset the position in most cases
-- Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
-- Building a road does not allow to end it at the riverside if it is a water path.
 - Click positions in water (no height) are a bit off (this already worked previously!).
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
-- When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
 - Wrong sounds are played sometimes
 - When loading a game and there is an exception during loading (in AI loading at end) the background intro game seem to be drawn messed up.
   I guess because map and stuff are loaded but then are discarded?
-- On/Off button for players are missing when in last game on the spot was no player.
-- Minimap scrolling is slow as hell
 
 
 Long AI Games:
@@ -42,20 +48,19 @@ AI:
 Flags / buildings / roads:
 - Linking flags should also allow for merging paths
 - AIs with much resources build so much buildings at a time that no one is finished in a reasonable time. Maybe limit the number of constructed buildings. This will also relax traffic a bit.
-- AIs that prefer farms seem to build unlimited (at least way too much) farms. (seems to be fixed)
-- First stock is build too early
-- Buildings military buildings is either to slow for expansion or not well placed. In any case the territory is too full most of the time.
+- Building military buildings is either to slow for expansion or not well placed. In any case the territory is too full most of the time and expansion very slow.
 - There are too much mines at the same mountain after some time.
 - At some territory size the AIs will stop building military buildings and therefore expansion stops
-- Stonecutters should not be placed near other stonecutters
-- Mines should not be built without miners/picks
 - Mine amount should be limited in relation to food sources. Saw games with dozens of mines but only one fisher. This should not happen.
 - Sometimes the AI tries very hard to build something in a non-linkable place and burns it down and rebuilds it forever (e.g. a fisher behind the pond).
 - Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have all).
 - Rarely captured buildings are not connected to own road system
 - Positions for stocks are not so good any time. It should be far away from other stocks and near some production that needs to store goods in a stock (e.g. weapon, gold bars, tools, planks, food, etc).
+- Sometimes additional paths should be built to avoid congestions
 
-Misc:  
+Misc:
+- Higher characters should be smarter in general than lower characters
+- Non-hard-times AIs with low materials should not plan many buildings and then all materials are gone
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
@@ -81,7 +86,6 @@ Performance:
 
 Logic:
 
-- If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
 - A transporter first walks to the last flag and then goes back to the beginning of the road to go to idle mode.
   - I think in original game the transporter went straight to idle mode when he was at the right location.
   - Is this maybe caused by wrong road building direction? This is often seen in AIs. Maybe the linking of roads is reversed there?!

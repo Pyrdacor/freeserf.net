@@ -4156,10 +4156,16 @@ namespace Freeserf
                     Resource.Type resource = s.Walking.Resource;
                     MapPos destination = s.Walking.Destination;
 
-                    flag.PickUpResource(resourceIndex, ref resource, ref destination);
-
-                    s.Walking.Resource = resource;
-                    s.Walking.Destination = destination;
+                    if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
+                    {
+                        s.Walking.Resource = resource;
+                        s.Walking.Destination = destination;
+                    }
+                    else
+                    {
+                        s.Walking.Resource = Resource.Type.None;
+                        s.Walking.Destination = 0u;
+                    }
                 }
                 else
                 {
@@ -4167,11 +4173,12 @@ namespace Freeserf
                     Resource.Type resource = s.Walking.Resource;
                     MapPos destination = s.Walking.Destination;
 
-                    flag.PickUpResource(resourceIndex, ref resource, ref destination);
-                    flag.DropResource(s.Walking.Resource, s.Walking.Destination);
-
-                    s.Walking.Resource = resource;
-                    s.Walking.Destination = destination;
+                    if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
+                    {
+                        flag.DropResource(s.Walking.Resource, s.Walking.Destination);
+                        s.Walking.Resource = resource;
+                        s.Walking.Destination = destination;
+                    }
                 }
 
                 // Find next resource to be picked up 
@@ -4599,7 +4606,6 @@ namespace Freeserf
                     continue;
                 }
 
-                // 301F0 
                 if (Game.Map.HasFlag(Position))
                 {
                     // Serf has reached a flag.
@@ -4651,7 +4657,6 @@ namespace Freeserf
                 }
                 else
                 {
-                    // 30A37 
                     // Serf is not at a flag. Just follow the road. 
                     var paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Direction);
                     var direction = Direction.None;
@@ -4726,7 +4731,6 @@ namespace Freeserf
             {
                 var map = Game.Map;
 
-                // 31549 
                 if (map.HasFlag(Position))
                 {
                     // Current position occupied by waiting transporter 
@@ -4743,7 +4747,6 @@ namespace Freeserf
 
                     var flag = GetFlagAtPosition();
 
-                    // 31590 
                     if (s.Walking.Resource != Resource.Type.None &&
                         map.GetObjectIndex(Position) == s.Walking.Destination &&
                         (!flag.HasInventory() || flag.AcceptsResources()))
@@ -4756,11 +4759,6 @@ namespace Freeserf
                         Animation = 3 + (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position) +
                                     ((int)Direction.UpLeft + 6) * 9;
                         Counter = CounterFromAnimation[Animation];
-                        /* TODO next call is actually into the middle of
-                           handleSerfDeliveringState().
-                           Why is a nice and clean state switch not enough???
-                           Just ignore this call and we'll be safe, I think... */
-                        // handleSerfDeliveringState(serf); 
                         return;
                     }
 

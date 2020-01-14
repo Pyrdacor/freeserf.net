@@ -56,16 +56,17 @@ namespace Freeserf.AIStates
             }
 
             var flagPosition = game.Map.MoveDownRight(buildingPosition);
+            var flag = game.GetFlagAtPosition(flagPosition);
 
             // don't link if already linked
-            if (game.Map.Paths(flagPosition) > 0 && game.GetFlagAtPosition(flagPosition).FindNearestInventoryForSerf() != -1)
+            if (game.Map.Paths(flagPosition) > 0 && flag.FindNearestInventoryForSerf() != -1)
             {
                 Kill(ai);
                 return;
             }
 
             // if we cannot link the building, we will demolish it
-            if (!ai.LinkFlag(game.GetFlagAtPosition(flagPosition)))
+            if (!ai.LinkFlag(flag))
             {
                 game.DemolishBuilding(buildingPosition, player);
 

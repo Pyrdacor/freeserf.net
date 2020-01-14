@@ -136,6 +136,7 @@ namespace Freeserf
             get => state.SearchDirection;
             set => state.SearchDirection = value;
         }
+        public int ResourceCount => state.Slots.Count(s => s.Type != Resource.Type.None);
 
         public void ResetDirtyFlag()
         {
@@ -239,14 +240,13 @@ namespace Freeserf
 
             for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
             {
-                if (state.Slots[i].Type != Resource.Type.None)
+                if (state.Slots[i].Type != Resource.Type.None &&
+                    state.Slots[i].Direction == direction)
                 {
-                    // Use flag_prio to prioritize resource pickup.
-                    var resourceDirection = state.Slots[i].Direction;
                     var resourceType = state.Slots[i].Type;
                     var flagPriority = player.GetFlagPriority(resourceType);
 
-                    if (resourceDirection == direction && flagPriority > resourcePriority)
+                    if (flagPriority > resourcePriority)
                     {
                         resourceNext = i;
                         resourcePriority = flagPriority;
@@ -254,10 +254,10 @@ namespace Freeserf
                 }
             }
 
-            state.OtherEndpointPaths[(int)direction] &= 0x78;
-
             if (resourceNext > -1)
                 state.ScheduleOtherEndpoint(direction, (byte)resourceNext);
+            else
+                state.OtherEndpointPaths[(int)direction] &= 0x78;
         }
 
         // Owner of this flag.
@@ -941,7 +941,7 @@ namespace Freeserf
                                     state.TransporterFlags |= TransporterFlags.SerfRequestFailed;
                             }
 
-                            if (waitingCount >= 7)
+                            if (waitingCount >= 7 && Misc.BitTest(resourcesWaiting[2], (int)direction))
                             {
                                 state.TransporterFlags &= direction.ToTransporterFlag();
                             }
