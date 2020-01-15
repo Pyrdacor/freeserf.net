@@ -38,7 +38,7 @@ namespace Freeserf.AIStates
         {
             NotNeeded,
             Needed,
-            NeededButNoSpecialistOrRes,
+            NeededButNoSpecialistOrResources,
             NeededButNoGenerics
         }
 
@@ -133,7 +133,7 @@ namespace Freeserf.AIStates
                         // TODO: Maybe lower the "generic to knights" ratio? Only if knights are not the needed serfs.
                         continue;
                     }
-                    else if (result == CheckResult.NeededButNoSpecialistOrRes)
+                    else if (result == CheckResult.NeededButNoSpecialistOrResources)
                     {
                         // Move the building to the end later
                         moveToEnd.Add(type);
@@ -215,7 +215,7 @@ namespace Freeserf.AIStates
                 if (game.GetFreeKnightCount(player) != 0)
                     return CheckResult.Needed;
                 else
-                    return CheckResult.NeededButNoSpecialistOrRes;
+                    return CheckResult.NeededButNoSpecialistOrResources;
             }
             else
             {
@@ -235,7 +235,7 @@ namespace Freeserf.AIStates
                 (neededForBuilding.ResourceType2 == Resource.Type.None || game.HasAnyOfResource(player, neededForBuilding.ResourceType2)))
                 return CheckResult.Needed;
 
-            return CheckResult.NeededButNoSpecialistOrRes;
+            return CheckResult.NeededButNoSpecialistOrResources;
         }
 
         bool CanBuildMilitary(AI ai, Game game, Player player)
@@ -274,6 +274,31 @@ namespace Freeserf.AIStates
             if (player.EmergencyProgramActive)
                 return CheckResult.NotNeeded;
 
+            // Ensure there is a source for planks and stones before building more
+            if (player.GetCompletedBuildingCount(Building.Type.Sawmill) == 0 ||
+                player.GetCompletedBuildingCount(Building.Type.Lumberjack) == 0)
+            {
+                if ((ai.HardTimes && game.GetResourceAmountInInventories(player, Resource.Type.Plank) < 5) ||
+                    player.GetIncompleteBuildingCount(Building.Type.Sawmill) == 0 ||
+                    player.GetIncompleteBuildingCount(Building.Type.Lumberjack) == 0)
+                    return CheckResult.NotNeeded;
+            }
+            if (player.GetCompletedBuildingCount(Building.Type.Stonecutter) == 0 &&
+                player.GetCompletedBuildingCount(Building.Type.StoneMine) == 0)
+            {
+                if ((ai.HardTimes && game.GetResourceAmountInInventories(player, Resource.Type.Plank) < 3) ||
+                    (player.GetIncompleteBuildingCount(Building.Type.Stonecutter) == 0 &&
+                    player.GetIncompleteBuildingCount(Building.Type.StoneMine) == 0))
+                {
+                    if (game.Map.FindInTerritory(player.Index, FindStoneNear).Count > 0)
+                        return CheckResult.NotNeeded;
+                }
+            }
+
+            // Don't build more than x building at the same time (x is 3 ~ 15)
+            if (player.IncompleteBuildingCount > 3 + ai.BuildingFocus + Math.Min(10, ai.GameTime / (30 * Global.TICKS_PER_MIN)))
+                return CheckResult.NotNeeded;
+
             // Our focus must be to get a coal and iron mine running as we need steel.
             // We also need a food source.
             if (ai.HardTimes)
@@ -286,12 +311,13 @@ namespace Freeserf.AIStates
                             return CheckResult.Needed;
                         break;
                     case Building.Type.Farm:
-                        if (count == 0 && player.GetTotalBuildingCount(Building.Type.Fisher) == 0)
+                        if (count == 0)
                         {
                             if (game.HasAnyOfResource(player, Resource.Type.Scythe) ||
                                 player.GetSerfCount(Serf.Type.Farmer) != 0)
                                 return CheckResult.Needed;
-                            else if (game.Map.FindInTerritory(player.Index, FindFishNear).Count == 0) // no fish
+                            else if (player.GetTotalBuildingCount(Building.Type.Fisher) == 0 &&
+                                     game.Map.FindInTerritory(player.Index, FindFishNear).Count == 0) // no fish
                             {
                                 // First check if we can expand the territory.
                                 // If not trying to craft a scythe is our last hope.
@@ -299,9 +325,17 @@ namespace Freeserf.AIStates
                                 // there is a piece of coal and iron on the way to
                                 // make a piece of steel.
                                 if (game.GetPossibleFreeKnightCount(player) == 0)
-                                    return CheckResult.NeededButNoSpecialistOrRes;
+                                    return CheckResult.NeededButNoSpecialistOrResources;
                             }
                         }
+                        break;
+                    case Building.Type.Mill:
+                        if (count == 0 && player.GetCompletedBuildingCount(Building.Type.Farm) != 0)
+                            return CheckResult.Needed;
+                        break;
+                    case Building.Type.Baker:
+                        if (count == 0 && player.GetTotalBuildingCount(Building.Type.Mill) != 0)
+                            return CheckResult.Needed;
                         break;
                     case Building.Type.Hut:
                         if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
@@ -743,6 +777,23 @@ namespace Freeserf.AIStates
         static Map.FindData FindFishNear(Map map, MapPos position)
         {
             var foundPosition = map.FindSpotNear(position, 4, FindFish, new Random());
+
+            return new Map.FindData()
+            {
+                Success = foundPosition != Global.INVALID_MAPPOS,
+                Data = foundPosition
+            };
+        }
+
+        static bool FindStone(Map map, MapPos position)
+        {
+            return map.GetObject(position) >= Map.Object.Stone0 &&
+                   map.GetObject(position) <= Map.Object.Stone7;
+        }
+
+        static Map.FindData FindStoneNear(Map map, MapPos position)
+        {
+            var foundPosition = map.FindSpotNear(position, 4, FindStone, new Random());
 
             return new Map.FindData()
             {

@@ -1,12 +1,11 @@
 ﻿Must-Fix 1.9:
 
-- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice.
+- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice at all.
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
 - Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
 - When scrolling Minimap and releasing, the selected area moves so that the wrong area is centered.
 - Dragging the minimap will reset the position in most cases
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
-- If a flag is full of resources and the transporters too, they won't exchange the resources at the flag and so there is a deadlock.
 
 
 Rendering:

@@ -1155,6 +1155,8 @@ namespace Freeserf
             return GetCompletedBuildingCount(type) + GetIncompleteBuildingCount(type);
         }
 
+        public uint IncompleteBuildingCount => state.IncompleteBuildingCount.Aggregate((a, b) => a + b);
+
         public int GetToolPriority(int type)
         {
             return settings.ToolPriorities[type];

@@ -215,7 +215,7 @@ namespace Freeserf.AIStates
                 if (treeCount < 5 || stoneCount < 2)
                     return -1;
 
-                if (numTries < 1000) // after 1000 tries, just place it somewhere
+                if (numTries < 500) // after 500 tries, just place it somewhere
                 {
                     if (mountainCountNear > 7) // too close to mountain
                         return -1;
@@ -226,7 +226,7 @@ namespace Freeserf.AIStates
                     if (waterCount > 8) // too much water
                         return -1;
 
-                    if (player.InitialSupplies < 5)
+                    if (player.InitialSupplies < 3) // with 3 or more we have 1 iron ore and 1 coal
                     {
                         if (fishCount == 0 || stoneCount < 2 || treeCount < 5)
                             return -1;

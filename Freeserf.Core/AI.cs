@@ -660,8 +660,11 @@ namespace Freeserf
             player.ResetToolPriority();
         }
 
-        static bool CheckLinkedBuildings(Building.Type type1, Building.Type type2)
+        static bool CheckLinkedBuildings(Building.Type type1, Building.Type type2, uint distance)
         {
+            if (distance < 6 && type2 == Building.Type.Castle)
+                return true; // prioritize a nearby castle
+
             switch (type1)
             {
                 case Building.Type.Baker:
@@ -825,7 +828,7 @@ namespace Freeserf
                     if (!allowWater && road.IsWaterPath(game.Map))
                         continue;
 
-                    if (buildingType != Building.Type.None && otherFlag.HasBuilding && CheckLinkedBuildings(buildingType, otherFlag.Building.BuildingType))
+                    if (buildingType != Building.Type.None && otherFlag.HasBuilding && CheckLinkedBuildings(buildingType, otherFlag.Building.BuildingType, road.Length))
                     {
                         if (bestRoad != null && flagCost + road.Cost >= bestRoadTotalCost + costAdd)
                             continue;

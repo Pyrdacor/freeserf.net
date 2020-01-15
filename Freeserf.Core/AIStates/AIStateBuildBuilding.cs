@@ -584,7 +584,7 @@ namespace Freeserf.AIStates
         uint FindSpotWithSpace(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
             // TODO
-            return Global.INVALID_MAPPOS;
+            return FindRandomSpot(game, player, true);
         }
 
         uint FindSpotWithFish(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
