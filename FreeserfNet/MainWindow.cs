@@ -63,7 +63,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    Log.SetStream(File.Create("/var/log/freeserf.net/log.txt"));
+                    Log.SetStream(Console.OpenStandardOutput());
                 }
                 Log.SetLevel(Log.Level.Error);
             }
