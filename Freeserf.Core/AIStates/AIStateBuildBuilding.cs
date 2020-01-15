@@ -478,7 +478,7 @@ namespace Freeserf.AIStates
                     return FindSpotForStock(game, player, intelligence, 1 + ai.BuildingFocus);
                 case Building.Type.Stonecutter:
                     {
-                        var spot = FindSpotWithStones(game, player, intelligence, 1 + Math.Min(1, ai.ConstructionMaterialFocus));
+                        var spot = FindSpotWithStones(game, player, intelligence, 1 + Math.Min(1, ai.ConstructionMaterialFocus / 2));
 
                         if (spot != Global.INVALID_MAPPOS && BuildingsInArea(game.Map, spot, 7, Building.Type.Stonecutter, FindBuilding, 1) > 0)
                             spot = Global.INVALID_MAPPOS; // don't build two stonecutters near each other

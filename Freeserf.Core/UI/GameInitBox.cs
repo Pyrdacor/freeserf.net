@@ -721,7 +721,7 @@ namespace Freeserf.UI
 
                     for (int i = 0; i < 4; ++i)
                     {
-                        if (i > 0)
+                        if (i > 0 || gameType == GameType.AIvsAI)
                             playerBoxes[i].ShowActivationButton = true;
 
                         playerBoxes[i].ShowCopyValueButton = true;

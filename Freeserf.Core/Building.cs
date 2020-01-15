@@ -702,12 +702,9 @@ namespace Freeserf
 
             if (inStock >= 0)
             {
-                if (state.Stock[inStock].Requested == 0)
-                {
-                    throw new ExceptionFreeserf(Game, ErrorSystemType.Building, "Failed to cancel unrequested resource delivery.");
-                }
-
-                --state.Stock[inStock].Requested;
+                if (state.Stock[inStock].Requested > 0)
+                    --state.Stock[inStock].Requested;
+                // TODO: else log error
             }
             else
             {
@@ -750,7 +747,7 @@ namespace Freeserf
 
             // Unlink knight from list.
             var firstSerf = Game.GetSerf(state.FirstKnight);
-            uint firstKnight = 0;
+            uint firstKnight = state.FirstKnight;
 
             var result = firstSerf.ExtractKnightFromList(knightIndex, ref firstKnight);
 
@@ -2089,13 +2086,13 @@ namespace Freeserf
             public Request(Serf.Type serfType, Resource.Type resourceType1, Resource.Type resourceType2)
             {
                 SerfType = serfType;
-                ResType1 = resourceType1;
-                ResType2 = resourceType2;
+                ResourceType1 = resourceType1;
+                ResourceType2 = resourceType2;
             }
 
             public Serf.Type SerfType;
-            public Resource.Type ResType1;
-            public Resource.Type ResType2;
+            public Resource.Type ResourceType1;
+            public Resource.Type ResourceType2;
         }
 
         internal static readonly Request[] Requests = new Request[] 
@@ -2136,8 +2133,8 @@ namespace Freeserf
                 if (Requests[type].SerfType != Serf.Type.None)
                 {
                     state.SerfRequestFailed = !SendSerfToBuilding(Requests[type].SerfType,
-                                                                  Requests[type].ResType1,
-                                                                  Requests[type].ResType2);
+                                                                  Requests[type].ResourceType1,
+                                                                  Requests[type].ResourceType2);
                 }
             }
         }

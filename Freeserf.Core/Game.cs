@@ -286,7 +286,7 @@ namespace Freeserf
             Map.Update(Tick, random);
 
             // Update players 
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 player.Update();
             }
@@ -310,7 +310,7 @@ namespace Freeserf
             }
 
             // AI related updates 
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 if (player.IsAI)
                 {
@@ -1227,7 +1227,7 @@ namespace Freeserf
                 // for this inventory.
                 var destination = flag.Index;
 
-                foreach (var serf in serfs)
+                foreach (var serf in serfs.ToList())
                 {
                     serf.ClearDestination2(destination);
                 }
@@ -1251,7 +1251,7 @@ namespace Freeserf
                 // Clear destination of serfs destined for this inventory. 
                 var destination = flag.Index;
 
-                foreach (var serf in serfs)
+                foreach (var serf in serfs.ToList())
                 {
                     serf.ClearDestination(destination);
                 }
@@ -1270,7 +1270,7 @@ namespace Freeserf
         // Initialize land ownership for whole map. 
         void InitLandOwnership()
         {
-            foreach (var building in buildings)
+            foreach (var building in buildings.ToList())
             {
                 if (building.IsMilitary())
                 {
@@ -1396,7 +1396,7 @@ namespace Freeserf
                     int maxValue = 0;
                     int playerIndex = -1;
 
-                    foreach (var player in players)
+                    foreach (var player in players.ToList())
                     {
                         int arrayIndex = (int)player.Index * calculateDiameter * calculateDiameter +
                           calculateDiameter * (i + calculateRadius) + (j + calculateRadius);
@@ -1582,12 +1582,13 @@ namespace Freeserf
 
             var flag = flags[destination];
 
-            if (!flag.HasBuilding)
+            if (flag == null || !flag.HasBuilding)
             {
-                throw new ExceptionFreeserf(this, ErrorSystemType.Game, "Failed to cancel transported resource.");
+                // the flag and/or building might have gone
+                return;
             }
 
-            flag.Building.CancelTransportedResource(type);
+            flag.Building?.CancelTransportedResource(type);
         }
 
         /// <summary>
@@ -1829,7 +1830,7 @@ namespace Freeserf
             return players[index];
         }
 
-        public int PlayerCount => players.Count();
+        public int PlayerCount => players.Size;
 
         public int GetFreeKnightCount(Player player)
         {
@@ -1862,27 +1863,27 @@ namespace Freeserf
 
         public IEnumerable<Serf> GetPlayerSerfs(Player player)
         {
-            return serfs.Where(serf => serf.Player == player.Index);
+            return serfs.Where(serf => serf.Player == player.Index).ToList();
         }
 
         public IEnumerable<Building> GetPlayerBuildings(Player player)
         {
-            return buildings.Where(building => building.Player == player.Index);
+            return buildings.Where(building => building.Player == player.Index).ToList();
         }
 
         public IEnumerable<Building> GetPlayerBuildings(Player player, Building.Type type)
         {
-            return GetPlayerBuildings(player).Where(building => building.BuildingType == type);
+            return GetPlayerBuildings(player).Where(building => building.BuildingType == type).ToList();
         }
 
         public IEnumerable<Flag> GetPlayerFlags(Player player)
         {
-            return flags.Where(flag => flag.Player == player.Index);
+            return flags.Where(flag => flag.Player == player.Index).ToList();
         }
 
         public IEnumerable<Serf> GetSerfsInInventory(Inventory inventory)
         {
-            return serfs.Where(serf => serf.SerfState == Serf.State.IdleInStock && inventory.Index == serf.IdleInStockInventoryIndex);
+            return serfs.Where(serf => serf.SerfState == Serf.State.IdleInStock && inventory.Index == serf.IdleInStockInventoryIndex).ToList();
         }
 
         internal List<Serf> GetSerfsRelatedTo(uint destination, Direction direction)
@@ -1892,12 +1893,12 @@ namespace Freeserf
 
         public IEnumerable<Inventory> GetPlayerInventories(Player player)
         {
-            return inventories.Where(inventory => inventory.Player == player.Index);
+            return inventories.Where(inventory => inventory.Player == player.Index).ToList();
         }
 
         public IEnumerable<Serf> GetSerfsAtPosition(MapPos position)
         {
-            return serfs.Where(serf => serf.Position == position);
+            return serfs.Where(serf => serf.Position == position).ToList();
         }
 
         public int FindInventoryWithValidSpecialist(Player player, Serf.Type serfType, Resource.Type resource1, Resource.Type resource2)
@@ -2001,12 +2002,12 @@ namespace Freeserf
         {
             bool next = false;
 
-            foreach (var p in players)
+            foreach (var nextPlayer in players.ToList())
             {
                 if (next)
-                    return p;
+                    return nextPlayer;
 
-                if (p == player)
+                if (nextPlayer == player)
                     next = true;
             }
 
@@ -2017,7 +2018,7 @@ namespace Freeserf
         {
             uint enemyScore = 0;
 
-            foreach (Player enemy in players)
+            foreach (var enemy in players.ToList())
             {
                 if (player.Index != enemy.Index)
                 {
@@ -2034,7 +2035,7 @@ namespace Freeserf
             var landBefore = new Dictionary<int, uint>();
             var buildingsBefore = new Dictionary<int, uint>();
 
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 landBefore[(int)player.Index] = player.LandArea;
                 buildingsBefore[(int)player.Index] = player.BuildingScore;
@@ -2044,7 +2045,7 @@ namespace Freeserf
             UpdateLandOwnership(building.Position);
 
             // Create notifications for lost land and buildings 
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 if (buildingsBefore[(int)player.Index] > player.BuildingScore)
                 {
@@ -2063,7 +2064,7 @@ namespace Freeserf
 
         void ClearSearchId()
         {
-            foreach (var flag in flags)
+            foreach (var flag in flags.ToList())
             {
                 flag.ClearSearchId();
             }
@@ -2076,12 +2077,12 @@ namespace Freeserf
         /// </summary>
         protected void ClearSerfRequestFailure()
         {
-            foreach (var building in buildings)
+            foreach (var building in buildings.ToList())
             {
                 building.ClearSerfRequestFailure();
             }
 
-            foreach (var flag in flags)
+            foreach (var flag in flags.ToList())
             {
                 flag.SerfRequestClear();
             }
@@ -2089,7 +2090,7 @@ namespace Freeserf
 
         protected void UpdateKnightMorale()
         {
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 player.UpdateKnightMorale();
             }
@@ -2195,12 +2196,12 @@ namespace Freeserf
 
             while (resources[arrayIndex] != Resource.Type.None)
             {
-                foreach (var player in players)
+                foreach (var player in players.ToList())
                 {
                     var sourceInventories = new Inventory[256];
                     int sourceInventoryIndex = 0;
 
-                    foreach (var inventory in inventories)
+                    foreach (var inventory in inventories.ToList())
                     {
                         if (inventory.Player == player.Index && !inventory.IsQueueFull())
                         {
@@ -2306,7 +2307,7 @@ namespace Freeserf
 
         void UpdateFlags()
         {
-            foreach (var flag in flags.ToArray())
+            foreach (var flag in flags.ToList())
             {
                 flag.Update();
 
@@ -2562,6 +2563,8 @@ namespace Freeserf
         // Update statistics of the game. 
         protected void UpdateGameStats()
         {
+            var playerList = players.ToList();
+
             if ((int)gameStatsCounter > tickDifference)
             {
                 gameStatsCounter -= (uint)tickDifference;
@@ -2610,7 +2613,7 @@ namespace Freeserf
                 var values = new Values();
 
                 // Store land area stats in history. 
-                foreach (var player in players)
+                foreach (var player in playerList)
                 {
                     values[player.Index] = player.LandArea;
                 }
@@ -2623,7 +2626,7 @@ namespace Freeserf
                     playerScoreLeader |= Misc.Bit(clearWinner);
 
                 // Store building stats in history. 
-                foreach (var player in players)
+                foreach (var player in playerList)
                 {
                     values[player.Index] = player.BuildingScore;
                 }
@@ -2631,7 +2634,7 @@ namespace Freeserf
                 RecordPlayerHistory(updateLevel, 2, playerHistoryIndex, values);
 
                 // Store military stats in history. 
-                foreach (var player in players)
+                foreach (var player in playerList)
                 {
                     values[player.Index] = player.MilitaryScore;
                 }
@@ -2644,7 +2647,7 @@ namespace Freeserf
                     playerScoreLeader |= Misc.Bit(clearWinner) << 4;
 
                 // Store condensed score of all aspects in history. 
-                foreach (var player in players)
+                foreach (var player in playerList)
                 {
                     values[player.Index] = player.Score;
                 }
@@ -2666,7 +2669,7 @@ namespace Freeserf
 
                 for (int resource = 0; resource < 26; ++resource)
                 {
-                    foreach (var player in players)
+                    foreach (var player in playerList)
                     {
                         player.UpdateStats(resource);
                     }
@@ -2732,19 +2735,19 @@ namespace Freeserf
         internal void FlagResetTransport(Flag flag)
         {
             // Clear destination for any serf with resources for this flag. 
-            foreach (var serf in serfs)
+            foreach (var serf in serfs.ToList())
             {
                 serf.ResetTransport(flag);
             }
 
             // Flag. 
-            foreach (var otherFlag in flags)
+            foreach (var otherFlag in flags.ToList())
             {
                 flag.ResetTransport(otherFlag);
             }
 
             // Inventories
-            foreach (var inventory in inventories)
+            foreach (var inventory in inventories.ToList())
             {
                 inventory.ResetQueueForDest(flag);
             }
@@ -2752,7 +2755,7 @@ namespace Freeserf
 
         protected void BuildingRemovePlayerRefs(Building building)
         {
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 if (player.tempIndex == building.Index)
                 {
@@ -2764,7 +2767,7 @@ namespace Freeserf
         protected bool PathSerfIdleToWaitState(MapPos position)
         {
             // Look through serf array for the corresponding serf. 
-            foreach (var serf in serfs)
+            foreach (var serf in serfs.ToList())
             {
                 if (serf.IdleToWaitState(position))
                 {
@@ -2927,7 +2930,7 @@ namespace Freeserf
 
             if (flag2.SerfRequested(direction2))
             {
-                foreach (var serf in serfs)
+                foreach (var serf in serfs.ToList())
                 {
                     if (serf.PathSplited((uint)path1Data.FlagIndex, path1Data.FlagDirection,
                                          (uint)path2Data.FlagIndex, path2Data.FlagDirection,
@@ -2971,7 +2974,7 @@ namespace Freeserf
 
         protected void FlagRemovePlayerRefs(Flag flag)
         {
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 if (player.tempIndex == flag.Index)
                 {
@@ -3002,7 +3005,7 @@ namespace Freeserf
             flag.MergePaths(position);
 
             // Update serfs with reference to this flag. 
-            foreach (var serf in serfs)
+            foreach (var serf in serfs.ToList())
             {
                 serf.PathMerged(flag);
             }
@@ -3327,7 +3330,7 @@ namespace Freeserf
             }
 
             // Restore idle serf flag
-            foreach (var serf in serfs)
+            foreach (var serf in serfs.ToList())
             {
                 if (serf.Index == 0)
                     continue;
@@ -3357,7 +3360,7 @@ namespace Freeserf
             }
 
             // Restore building index
-            foreach (var building in buildings)
+            foreach (var building in buildings.ToList())
             {
                 if (building.Index == 0)
                     continue;
@@ -3374,7 +3377,7 @@ namespace Freeserf
             }
 
             // Restore flag index
-            foreach (var flag in flags)
+            foreach (var flag in flags.ToList())
             {
                 if (flag.Index == 0)
                     continue;
@@ -3457,14 +3460,14 @@ namespace Freeserf
             writer.Value("update_state.initial_pos").Write(Map.PositionColumn(updateState.InitialPosition));
             writer.Value("update_state.initial_pos").Write(Map.PositionRow(updateState.InitialPosition));
 
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 var playerWriter = writer.AddSection("player", player.Index);
                 
                 player.WriteTo(playerWriter);
             }
 
-            foreach (var flag in flags)
+            foreach (var flag in flags.ToList())
             {
                 if (flag.Index == 0)
                     continue;
@@ -3473,7 +3476,7 @@ namespace Freeserf
                 flag.WriteTo(flagWriter);
             }
 
-            foreach (var building in buildings)
+            foreach (var building in buildings.ToList())
             {
                 if (building.Index == 0)
                     continue;
@@ -3482,13 +3485,13 @@ namespace Freeserf
                 building.WriteTo(buildingWriter);
             }
 
-            foreach (var inventory in inventories)
+            foreach (var inventory in inventories.ToList())
             {
                 var inventoryWriter = writer.AddSection("inventory", inventory.Index);
                 inventory.WriteTo(inventoryWriter);
             }
 
-            foreach (var serf in serfs)
+            foreach (var serf in serfs.ToList())
             {
                 if (serf.Index == 0)
                     continue;
@@ -3502,7 +3505,7 @@ namespace Freeserf
             // store AI
             bool firstAI = true;
 
-            foreach (var player in players)
+            foreach (var player in players.ToList())
             {
                 if (player.IsAI)
                 {

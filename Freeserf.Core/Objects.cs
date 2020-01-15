@@ -175,6 +175,14 @@ namespace Freeserf
             return GetEnumerator();
         }
 
+        public List<T> ToList()
+        {
+            lock (objectsLock)
+            {
+                return new List<T>(objects.Values);
+            }
+        }
+
         public T First => (objects.Count == 0) ? null : objects.First().Value;
 
         public int Size => objects.Count;

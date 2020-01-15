@@ -65,6 +65,7 @@ namespace Freeserf
                 {
                     Log.SetStream(Console.OpenStandardOutput());
                 }
+
                 Log.SetLevel(Log.Level.Error);
             }
             catch (IOException)

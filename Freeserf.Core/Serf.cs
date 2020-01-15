@@ -831,7 +831,7 @@ namespace Freeserf
 
             // States: FreeWalking, Logging, Planting, Stonecutting, Fishing,
             // Farming, SamplingGeoSpot, KnightFreeWalking, KnightAttackingFree,
-            // KnightAttackingFreeWait, FreeSailing
+            // KnightAttackingFreeWait, FreeSailing, StonecutterFreeWalking
             public class StateDataFreeWalking : StateDataBase
             {
                 private int distanceX; // B
@@ -919,7 +919,8 @@ namespace Freeserf
                             serf.SerfState != State.KnightFreeWalking &&
                             serf.SerfState != State.KnightAttackingFree &&
                             serf.SerfState != State.KnightAttackingFreeWait &&
-                            serf.SerfState != State.FreeSailing)
+                            serf.SerfState != State.FreeSailing &&
+                            serf.SerfState != State.StoneCutterFreeWalking)
                         {
                             return new StateDataFreeWalking(null);
                         }
@@ -4155,10 +4156,16 @@ namespace Freeserf
                     Resource.Type resource = s.Walking.Resource;
                     MapPos destination = s.Walking.Destination;
 
-                    flag.PickUpResource(resourceIndex, ref resource, ref destination);
-
-                    s.Walking.Resource = resource;
-                    s.Walking.Destination = destination;
+                    if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
+                    {
+                        s.Walking.Resource = resource;
+                        s.Walking.Destination = destination;
+                    }
+                    else
+                    {
+                        s.Walking.Resource = Resource.Type.None;
+                        s.Walking.Destination = 0u;
+                    }
                 }
                 else
                 {
@@ -4166,11 +4173,12 @@ namespace Freeserf
                     Resource.Type resource = s.Walking.Resource;
                     MapPos destination = s.Walking.Destination;
 
-                    flag.PickUpResource(resourceIndex, ref resource, ref destination);
-                    flag.DropResource(s.Walking.Resource, s.Walking.Destination);
-
-                    s.Walking.Resource = resource;
-                    s.Walking.Destination = destination;
+                    if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
+                    {
+                        flag.DropResource(s.Walking.Resource, s.Walking.Destination);
+                        s.Walking.Resource = resource;
+                        s.Walking.Destination = destination;
+                    }
                 }
 
                 // Find next resource to be picked up 
@@ -4229,6 +4237,7 @@ namespace Freeserf
             {
                 slope = 1;
                 SetLostState(); // try to enter a building that is no longer there
+                return;
             }
             else
             {
@@ -4283,15 +4292,20 @@ namespace Freeserf
             s.IdleInStock.InventoryIndex = building.Inventory.Index;
         }
 
-        void DropResource(Resource.Type resourceType)
+        bool DropResource(Resource.Type resourceType)
         {
             var flag = GetFlagAtPosition();
+
+            if (flag == null)
+                return false;
 
             // Resource is lost if no free slot is found 
             if (flag.DropResource(resourceType, 0))
             {
                 Game.GetPlayer(Player).IncreaseResourceCount(resourceType);
             }
+
+            return true;
         }
 
         void FindInventory()
@@ -4592,7 +4606,6 @@ namespace Freeserf
                     continue;
                 }
 
-                // 301F0 
                 if (Game.Map.HasFlag(Position))
                 {
                     // Serf has reached a flag.
@@ -4644,7 +4657,6 @@ namespace Freeserf
                 }
                 else
                 {
-                    // 30A37 
                     // Serf is not at a flag. Just follow the road. 
                     var paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Direction);
                     var direction = Direction.None;
@@ -4719,7 +4731,6 @@ namespace Freeserf
             {
                 var map = Game.Map;
 
-                // 31549 
                 if (map.HasFlag(Position))
                 {
                     // Current position occupied by waiting transporter 
@@ -4736,7 +4747,6 @@ namespace Freeserf
 
                     var flag = GetFlagAtPosition();
 
-                    // 31590 
                     if (s.Walking.Resource != Resource.Type.None &&
                         map.GetObjectIndex(Position) == s.Walking.Destination &&
                         (!flag.HasInventory() || flag.AcceptsResources()))
@@ -4749,11 +4759,6 @@ namespace Freeserf
                         Animation = 3 + (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position) +
                                     ((int)Direction.UpLeft + 6) * 9;
                         Counter = CounterFromAnimation[Animation];
-                        /* TODO next call is actually into the middle of
-                           handleSerfDeliveringState().
-                           Why is a nice and clean state switch not enough???
-                           Just ignore this call and we'll be safe, I think... */
-                        // handleSerfDeliveringState(serf); 
                         return;
                     }
 
@@ -5984,14 +5989,26 @@ namespace Freeserf
                 case Type.Lumberjack:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Lumber);
+                            if (!DropResource(Resource.Type.Lumber))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -6025,14 +6042,26 @@ namespace Freeserf
                 case Type.Stonecutter:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Stone);
+                            if (!DropResource(Resource.Type.Stone))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -6090,19 +6119,31 @@ namespace Freeserf
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
-                    }
+                    }             
                     break;
                 case Type.Fisher:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Fish);
+                            if (!DropResource(Resource.Type.Fish))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -6147,14 +6188,26 @@ namespace Freeserf
                 case Type.Farmer:
                     if (s.FreeWalking.NegDistance1 == -128)
                     {
+                        bool flagHasGone = false;
+
                         if (s.FreeWalking.NegDistance2 > 0)
                         {
-                            DropResource(Resource.Type.Wheat);
+                            if (!DropResource(Resource.Type.Wheat))
+                            {
+                                flagHasGone = true;
+                            }
                         }
 
-                        SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
-                        Counter = 0;
+                        if (flagHasGone)
+                        {
+                            SetLostState();
+                        }
+                        else
+                        {
+                            SetState(State.ReadyToEnter);
+                            s.ReadyToEnter.FieldB = 0;
+                            Counter = 0;
+                        }
                     }
                     else
                     {
@@ -8465,6 +8518,7 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
+                            s.AttackingVictoryFree.DefenderIndex = (int)defendingSerf.Index;
                             s.AttackingVictoryFree.Move = defendingSerf.s.DefendingFree.FieldD;
                             s.AttackingVictoryFree.DistanceColumn = defendingSerf.s.DefendingFree.OtherDistanceColumn;
                             s.AttackingVictoryFree.DistanceRow = defendingSerf.s.DefendingFree.OtherDistanceRow;
@@ -8996,9 +9050,14 @@ namespace Freeserf
             var flag = Game.GetFlag(s.IdleOnPath.FlagIndex);
             var reverseDirection = s.IdleOnPath.ReverseDirection;
 
-            // Set walking direction in fieldE.
-            if (flag.IsScheduled(reverseDirection))
+            if (flag == null) // flag has gone
             {
+                SetLostState();
+                return;
+            }
+            else if (flag.IsScheduled(reverseDirection))
+            {
+                // Set walking direction in fieldE.
                 s.IdleOnPath.FieldE = (state.Tick & 0xff) + 6;
             }
             else
