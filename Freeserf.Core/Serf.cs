@@ -160,6 +160,13 @@ namespace Freeserf
             [Data]
             public StateDataBase Data { get; private set; } = null;
 
+            private readonly Serf serf;
+
+            public StateData(Serf serf)
+            {
+                this.serf = serf;
+            }
+
             public class StateDataBase
             {
                 private readonly StateData parent;
@@ -171,7 +178,7 @@ namespace Freeserf
 
                 protected void MarkAsDirty()
                 {
-                    parent.MarkPropertyAsDirty(nameof(Data));
+                    parent?.MarkPropertyAsDirty(nameof(Data));
                 }
             }
 
@@ -200,6 +207,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataIdleInStock))
                     {
+                        if (serf.SerfState != State.IdleInStock)
+                        {
+                            return new StateDataIdleInStock(null);
+                        }
+
                         Data = new StateDataIdleInStock(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -213,7 +225,7 @@ namespace Freeserf
             public class StateDataWalking : StateDataBase
             {
                 private int direction1; // newly added 
-                private Resource.Type resource; // B 
+                private Resource.Type resource = Freeserf.Resource.Type.None; // B 
                 private uint destination; // C 
                 private int direction; // E 
                 private int waitCounter; // F 
@@ -287,6 +299,13 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataWalking))
                     {
+                        if (serf.SerfState != State.Walking &&
+                            serf.SerfState != State.Transporting &&
+                            serf.SerfState != State.Delivering)
+                        {
+                            return new StateDataWalking(null);
+                        }
+
                         Data = new StateDataWalking(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -334,6 +353,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataEnteringBuilding))
                     {
+                        if (serf.SerfState != State.EnteringBuilding)
+                        {
+                            return new StateDataEnteringBuilding(null);
+                        }
+
                         Data = new StateDataEnteringBuilding(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -420,6 +444,13 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataLeavingBuilding))
                     {
+                        if (serf.SerfState != State.LeavingBuilding &&
+                            serf.SerfState != State.ReadyToLeave &&
+                            serf.SerfState != State.KnightLeaveForFight)
+                        {
+                            return new StateDataLeavingBuilding(null);
+                        }
+
                         Data = new StateDataLeavingBuilding(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -453,6 +484,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataReadyToEnter))
                     {
+                        if (serf.SerfState != State.ReadyToEnter)
+                        {
+                            return new StateDataReadyToEnter(null);
+                        }
+
                         Data = new StateDataReadyToEnter(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -531,6 +567,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataDigging))
                     {
+                        if (serf.SerfState != State.Digging)
+                        {
+                            return new StateDataDigging(null);
+                        }
+
                         Data = new StateDataDigging(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -605,6 +646,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataBuilding))
                     {
+                        if (serf.SerfState != State.Building)
+                        {
+                            return new StateDataBuilding(null);
+                        }
+
                         Data = new StateDataBuilding(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -638,6 +684,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataBuildingCastle))
                     {
+                        if (serf.SerfState != State.BuildingCastle)
+                        {
+                            return new StateDataBuildingCastle(null);
+                        }
+
                         Data = new StateDataBuildingCastle(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -698,6 +749,12 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataMoveResourceOut))
                     {
+                        if (serf.SerfState != State.MoveResourceOut &&
+                            serf.SerfState != State.DropResourceOut)
+                        {
+                            return new StateDataMoveResourceOut(null);
+                        }
+
                         Data = new StateDataMoveResourceOut(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -759,6 +816,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataReadyToLeaveInventory))
                     {
+                        if (serf.SerfState != State.ReadyToLeaveInventory)
+                        {
+                            return new StateDataReadyToLeaveInventory(null);
+                        }
+
                         Data = new StateDataReadyToLeaveInventory(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -769,7 +831,7 @@ namespace Freeserf
 
             // States: FreeWalking, Logging, Planting, Stonecutting, Fishing,
             // Farming, SamplingGeoSpot, KnightFreeWalking, KnightAttackingFree,
-            // KnightAttackingFreeWait
+            // KnightAttackingFreeWait, FreeSailing
             public class StateDataFreeWalking : StateDataBase
             {
                 private int distanceX; // B
@@ -847,6 +909,21 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataFreeWalking))
                     {
+                        if (serf.SerfState != State.FreeWalking &&
+                            serf.SerfState != State.Logging &&
+                            serf.SerfState != State.Planting &&
+                            serf.SerfState != State.StoneCutting &&
+                            serf.SerfState != State.Fishing &&
+                            serf.SerfState != State.Farming &&
+                            serf.SerfState != State.SamplingGeoSpot &&
+                            serf.SerfState != State.KnightFreeWalking &&
+                            serf.SerfState != State.KnightAttackingFree &&
+                            serf.SerfState != State.KnightAttackingFreeWait &&
+                            serf.SerfState != State.FreeSailing)
+                        {
+                            return new StateDataFreeWalking(null);
+                        }
+
                         Data = new StateDataFreeWalking(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -883,6 +960,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataSawing))
                     {
+                        if (serf.SerfState != State.Sawing)
+                        {
+                            return new StateDataSawing(null);
+                        }
+
                         Data = new StateDataSawing(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -916,6 +998,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataLost))
                     {
+                        if (serf.SerfState != State.Lost)
+                        {
+                            return new StateDataLost(null);
+                        }
+
                         Data = new StateDataLost(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -975,6 +1062,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataMining))
                     {
+                        if (serf.SerfState != State.Mining)
+                        {
+                            return new StateDataMining(null);
+                        }
+
                         Data = new StateDataMining(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1035,6 +1127,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataSmelting))
                     {
+                        if (serf.SerfState != State.Smelting)
+                        {
+                            return new StateDataSmelting(null);
+                        }
+
                         Data = new StateDataSmelting(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1070,6 +1167,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataMilling))
                     {
+                        if (serf.SerfState != State.Milling)
+                        {
+                            return new StateDataMilling(null);
+                        }
+
                         Data = new StateDataMilling(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1103,6 +1205,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataBaking))
                     {
+                        if (serf.SerfState != State.Baking)
+                        {
+                            return new StateDataBaking(null);
+                        }
+
                         Data = new StateDataBaking(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1136,6 +1243,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataPigFarming))
                     {
+                        if (serf.SerfState != State.PigFarming)
+                        {
+                            return new StateDataPigFarming(null);
+                        }
+
                         Data = new StateDataPigFarming(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1169,6 +1281,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataButchering))
                     {
+                        if (serf.SerfState != State.Butchering)
+                        {
+                            return new StateDataButchering(null);
+                        }
+
                         Data = new StateDataButchering(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1202,6 +1319,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataMakingWeapon))
                     {
+                        if (serf.SerfState != State.MakingWeapon)
+                        {
+                            return new StateDataMakingWeapon(null);
+                        }
+
                         Data = new StateDataMakingWeapon(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1235,6 +1357,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataMakingTool))
                     {
+                        if (serf.SerfState != State.MakingTool)
+                        {
+                            return new StateDataMakingTool(null);
+                        }
+
                         Data = new StateDataMakingTool(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1268,6 +1395,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataBuildingBoat))
                     {
+                        if (serf.SerfState != State.BuildingBoat)
+                        {
+                            return new StateDataBuildingBoat(null);
+                        }
+
                         Data = new StateDataBuildingBoat(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1346,6 +1478,18 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataAttacking))
                     {
+                        if (serf.SerfState != State.KnightEngagingBuilding &&
+                            serf.SerfState != State.KnightPrepareAttacking &&
+                            serf.SerfState != State.KnightPrepareDefendingFreeWait &&
+                            serf.SerfState != State.KnightAttackingDefeatFree &&
+                            serf.SerfState != State.KnightAttacking &&
+                            serf.SerfState != State.KnightAttackingVictory &&
+                            serf.SerfState != State.KnightEngageAttackingFree &&
+                            serf.SerfState != State.KnightEngageAttackingFreeJoin)
+                        {
+                            return new StateDataAttacking(null);
+                        }
+
                         Data = new StateDataAttacking(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1419,6 +1563,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataAttackingVictoryFree))
                     {
+                        if (serf.SerfState != State.KnightAttackingVictoryFree)
+                        {
+                            return new StateDataAttackingVictoryFree(null);
+                        }
+
                         Data = new StateDataAttackingVictoryFree(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1505,6 +1654,12 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataDefendingFree))
                     {
+                        if (serf.SerfState != State.KnightDefendingFree &&
+                            serf.SerfState != State.KnightEngageDefendingFree)
+                        {
+                            return new StateDataDefendingFree(null);
+                        }
+
                         Data = new StateDataDefendingFree(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1590,6 +1745,11 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataLeaveForWalkToFight))
                     {
+                        if (serf.SerfState != State.KnightLeaveForWalkToFight)
+                        {
+                            return new StateDataLeaveForWalkToFight(null);
+                        }
+
                         Data = new StateDataLeaveForWalkToFight(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1651,6 +1811,14 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataIdleOnPath))
                     {
+                        if (serf.SerfState != State.IdleOnPath &&
+                            serf.SerfState != State.WaitIdleOnPath &&
+                            serf.SerfState != State.WakeAtFlag &&
+                            serf.SerfState != State.WakeOnPath)
+                        {
+                            return new StateDataIdleOnPath(null);
+                        }
+
                         Data = new StateDataIdleOnPath(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1688,6 +1856,14 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataDefending))
                     {
+                        if (serf.SerfState != State.DefendingHut &&
+                            serf.SerfState != State.DefendingTower &&
+                            serf.SerfState != State.DefendingFortress &&
+                            serf.SerfState != State.DefendingCastle)
+                        {
+                            return new StateDataDefending(null);
+                        }
+
                         Data = new StateDataDefending(this);
                         MarkPropertyAsDirty(nameof(Data));
                     }
@@ -1937,12 +2113,12 @@ namespace Freeserf
 
         [Data]
         private SerfState state = new SerfState();
-        readonly StateData s = new StateData();
+        readonly StateData s = null;
 
         public Serf(Game game, uint index)
             : base(game, index)
         {
-
+            s = new StateData(this);
         }
 
         public bool Dirty => state.Dirty;
@@ -2651,7 +2827,7 @@ namespace Freeserf
         public bool IdleToWaitState(MapPos position)
         {
             if (Position == position &&
-              (SerfState == State.IdleOnPath || SerfState == State.WaitIdleOnPath ||
+               (SerfState == State.IdleOnPath || SerfState == State.WaitIdleOnPath ||
                SerfState == State.WakeAtFlag || SerfState == State.WakeOnPath))
             {
                 SetState(State.WakeAtFlag);
@@ -3379,6 +3555,8 @@ namespace Freeserf
             state.Tick = (ushort)reader.Value("state.tick").ReadUInt();
             SerfState = (State)reader.Value("state").ReadInt();
 
+            // TODO: Legacy loading seems to miss several states like FreeSailing or several attacking states
+
             switch (SerfState)
             {
                 case State.IdleInStock:
@@ -3544,7 +3722,7 @@ namespace Freeserf
                         s.AttackingVictoryFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
                     else
                         s.AttackingVictoryFree.DistanceRow = reader.Value("state.field_c").ReadInt();
-                    s.Attacking.DefenderIndex = reader.Value("state.def_index").ReadInt();
+                    s.AttackingVictoryFree.DefenderIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
                 case State.KnightDefendingFree:
@@ -8780,6 +8958,41 @@ namespace Freeserf
 
         void HandleSerfIdleOnPathState()
         {
+            var map = Game.Map;
+
+            if (s.IdleOnPath.FlagIndex == 0)
+            {
+                // this should not happen, but if it happens we should fix it
+                var cycle = DirectionCycleCW.CreateDefault();                
+                var firstDirection = Direction.None;
+
+                foreach (Direction direction in cycle)
+                {
+                    if (map.HasPath(Position, direction))
+                    {
+                        firstDirection = direction;
+                        break;
+                    }
+                }
+
+                if (firstDirection == Direction.None)
+                {
+                    // something went wrong really bad, we can't fix it unfortunately
+                    throw new ExceptionFreeserf(ErrorSystemType.Serf, "Corrupt serf state was found");
+                }
+
+                var firstFlag = Game.TracePathAndGetFlagAtEnd(Position, firstDirection, out Direction firstFlagReverseDirection);
+
+                if (firstFlag == null || firstFlag.Index == 0)
+                {
+                    // something went wrong really bad, we can't fix it unfortunately
+                    throw new ExceptionFreeserf(ErrorSystemType.Serf, "Corrupt serf state was found");
+                }
+
+                s.IdleOnPath.FlagIndex = firstFlag.Index;
+                s.IdleOnPath.ReverseDirection = firstFlagReverseDirection;
+            }
+
             var flag = Game.GetFlag(s.IdleOnPath.FlagIndex);
             var reverseDirection = s.IdleOnPath.ReverseDirection;
 
@@ -8802,8 +9015,6 @@ namespace Freeserf
                     return;
                 }
             }
-
-            var map = Game.Map;
 
             if (!map.HasSerf(Position))
             {

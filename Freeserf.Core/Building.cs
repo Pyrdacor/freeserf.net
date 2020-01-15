@@ -208,6 +208,9 @@ namespace Freeserf
             {
                 state.FirstKnight = (word)value;
 
+                if (state.FirstKnight == 0)
+                    throw new ExceptionFreeserf(ErrorSystemType.Building, "First knight was set to 0.");
+
                 // Test whether building is already occupied by knights
                 if (!state.Active)
                 {
