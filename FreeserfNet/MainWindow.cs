@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Timers;
 using Freeserf.Renderer;
 using Orientation = Freeserf.Renderer.Orientation;
@@ -56,12 +57,20 @@ namespace Freeserf
 
             try
             {
-                Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+                }
+                else
+                {
+                    Log.SetStream(File.Create("/var/log/freeserf.net/log.txt"));
+                }
                 Log.SetLevel(Log.Level.Error);
             }
             catch (IOException)
             {
                 // TODO: logging not possible
+                // TODO: write permission denial currently blocks on Linux.
             }            
 
             initInfo = Global.Init(args); // this may change the log level

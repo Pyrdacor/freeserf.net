@@ -80,7 +80,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="glfw" Version="3.3.0.1">
+    <PackageReference Include="glfw" Version="3.3.1">
       <CopyToOutputDirectory>build\native\bin\dynamic\v142\x64\*</CopyToOutputDirectory>
     </PackageReference>
     <PackageReference Include="Silk.NET.Core" Version="1.0.0-preview3" />

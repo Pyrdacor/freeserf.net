@@ -144,22 +144,19 @@ namespace Freeserf.Data
 
         // Try to load data file from given path or standard paths.
         //
-        // Return true if successful. Standard paths will be searched only if the
-        // given path is an empty string.
+        // Return true if successful.
         public bool Load(string path, DataSourceMixed.DataUsage graphicDataUsage = DataSourceMixed.DataUsage.PreferDos,
             DataSourceMixed.DataUsage soundDataUsage = DataSourceMixed.DataUsage.PreferDos,
             DataSourceMixed.DataUsage musicDataUsage = DataSourceMixed.DataUsage.PreferAmiga)
         {
             List<string> searchPaths = new List<string>();
 
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                searchPaths = GetStandardSearchPaths();
-            }
-            else
+            if (!string.IsNullOrWhiteSpace(path))
             {
                 searchPaths.Add(path);
             }
+            
+            searchPaths.AddRange( GetStandardSearchPaths());
 
             foreach (var searchPath in searchPaths)
             {
