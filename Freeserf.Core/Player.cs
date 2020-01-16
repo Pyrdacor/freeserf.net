@@ -44,8 +44,6 @@ namespace Freeserf
         [Data]
         private PlayerState state = new PlayerState();
         
-        uint[] attackingBuildings = new uint[64];
-
         // Those are only saved locally
         ushort lastTick = 0;
         bool notificationFlag = false;
@@ -61,13 +59,38 @@ namespace Freeserf
         uint[,] playerStatHistory = new uint[16,112];
         uint[,] resourceCountHistory = new uint[26,120];
 
-        // TODO: remove it to UI
-        public int buildingAttacked = 0;
-        public int knightsAttacking = 0;
-        public int attackingBuildingCount = 0;
-        public int[] attackingKnights = new int[4];
-        public int totalAttackingKnights = 0;
-        public uint tempIndex = 0; // used by Game.BuildingRemovePlayerRefs and so on
+        /// <summary>
+        /// Target building that should be attacked.
+        /// Used in start attack gui window.
+        /// </summary>
+        public int BuildingToAttack { get; set; } = 0;
+        /// <summary>
+        /// The amount of knights that should be send to fight.
+        /// Used in start attack gui window.
+        /// </summary>
+        public int TotalKnightsAttacking { get; set; } = 0;
+        /// <summary>
+        /// Number of buildings that provide knights for the attack.
+        /// </summary>
+        public int AttackingBuildingCount { get; set; } = 0;
+        /// <summary>
+        /// Indices of the attacking buildings.
+        /// </summary>
+        private uint[] attackingBuildings = new uint[64];
+        /// <summary>
+        /// Maximum knights per distance level that can be send to fight.
+        /// Used in start attack gui window.
+        /// </summary>
+        public int[] MaxAttackingKnightsByDistance { get; set; } = new int[4];
+        /// <summary>
+        /// Maximum knights that can be send to fight.
+        /// Used in start attack gui window.
+        /// </summary>
+        public int MaxAttackingKnights { get; set; } = 0;
+        /// <summary>
+        /// The currently selected building or flag.
+        /// </summary>
+        public uint SelectedObjectIndex { get; set; } = 0;
 
         public AI AI { get; set; } = null;
 
@@ -545,7 +568,7 @@ namespace Freeserf
             // Reset counters. 
             for (int i = 0; i < 4; ++i)
             {
-                attackingKnights[i] = 0;
+                MaxAttackingKnightsByDistance[i] = 0;
             }
 
             int count = 0;
@@ -592,22 +615,22 @@ namespace Freeserf
                 }
             }
 
-            attackingBuildingCount = count;
-            totalAttackingKnights = 0;
+            AttackingBuildingCount = count;
+            MaxAttackingKnights = 0;
 
             for (int i = 0; i < 4; ++i)
             {
-                totalAttackingKnights += attackingKnights[i];
+                MaxAttackingKnights += MaxAttackingKnightsByDistance[i];
             }
 
-            return totalAttackingKnights;
+            return MaxAttackingKnights;
         }
 
         public bool PrepareAttack(uint targetPosition, int maxKnights = -1)
         {
             var building = Game.GetBuildingAtPosition(targetPosition);
 
-            buildingAttacked = (int)building.Index;
+            BuildingToAttack = (int)building.Index;
 
             if (building.IsDone &&
                 building.IsMilitary())
@@ -653,7 +676,7 @@ namespace Freeserf
                 }
 
                 int knights = KnightsAvailableForAttack(building.Position);
-                knightsAttacking = Math.Min(knights, maxKnights);
+                TotalKnightsAttacking = Math.Min(knights, maxKnights);
 
                 return true;
             }
@@ -663,7 +686,7 @@ namespace Freeserf
 
         public void StartAttack()
 		{
-            var target = Game.GetBuilding((uint)buildingAttacked);
+            var target = Game.GetBuilding((uint)BuildingToAttack);
 
             if (!target.IsDone   || !target.IsMilitary() ||
                 !target.IsActive || target.ThreatLevel != 3)
@@ -673,7 +696,7 @@ namespace Freeserf
 
             var map = Game.Map;
 
-            for (int i = 0; i < attackingBuildingCount; i++)
+            for (int i = 0; i < AttackingBuildingCount; i++)
             {
                 var building = Game.GetBuilding(attackingBuildings[i]);
 
@@ -749,7 +772,7 @@ namespace Freeserf
                     // Send this serf off to fight. 
                     defendingSerf.SendOffToFight(distanceColumn, distanceRow);
 
-                    if (--knightsAttacking == 0)
+                    if (--TotalKnightsAttacking == 0)
                         return;
                 }
             }
@@ -1681,7 +1704,7 @@ namespace Freeserf
         static readonly int[] minLevelTower = new int[] { 1, 2, 3, 4, 6 };
         static readonly int[] minLevelFortress = new int[] { 1, 3, 6, 9, 12 };
 
-        int AvailableKnightsAtPosition(MapPos position, int index, int distance)
+        int AvailableKnightsAtPosition(MapPos position, int buildingCount, int distance)
         {
             var map = Game.Map;
 
@@ -1691,16 +1714,16 @@ namespace Freeserf
                 map.GetObject(position) < Map.Object.SmallBuilding ||
                 map.GetObject(position) > Map.Object.Castle)
             {
-                return index;
+                return buildingCount;
             }
 
             var buildingIndex = map.GetObjectIndex(position);
 
-            for (int i = 0; i < index; ++i)
+            for (int i = 0; i < buildingCount; ++i)
             {
                 if (attackingBuildings[i] == buildingIndex)
                 {
-                    return index; // TODO: is index right here? not i?
+                    return buildingCount;
                 }
             }
 
@@ -1708,7 +1731,7 @@ namespace Freeserf
 
             if (!building.IsDone || building.IsBurning)
             {
-                return index;
+                return buildingCount;
             }
 
             int[] minLevel;
@@ -1718,22 +1741,22 @@ namespace Freeserf
                 case Building.Type.Hut: minLevel = minLevelHut; break;
                 case Building.Type.Tower: minLevel = minLevelTower; break;
                 case Building.Type.Fortress: minLevel = minLevelFortress; break;
-                default: return index;
+                default: return buildingCount;
             }
 
-            if (index >= 64)
-                return index;
+            if (buildingCount >= 64)
+                return buildingCount;
 
-            attackingBuildings[index] = buildingIndex;
+            attackingBuildings[buildingCount] = buildingIndex;
 
             var threatLevel = building.ThreatLevel;
             var knightsPresent = building.KnightCount;
             int toSend = (int)knightsPresent - minLevel[settings.KnightOccupation[threatLevel] & 0xf];
 
             if (toSend > 0)
-                attackingKnights[distance] += toSend;
+                MaxAttackingKnightsByDistance[distance] += toSend;
 
-            return index + 1;
+            return buildingCount + 1;
         }
 
         public static readonly Color[] DefaultPlayerColors = new Color[4]
@@ -1833,16 +1856,16 @@ namespace Freeserf
             settings.SerfToKnightRate = reader.ReadWord(); // 420
             state.SerfToKnightCounter = reader.ReadWord(); // 422
 
-            attackingBuildingCount = reader.ReadWord(); // 424
+            AttackingBuildingCount = reader.ReadWord(); // 424
 
             for (int j = 0; j < 4; ++j)
             {
-                attackingKnights[j] = reader.ReadWord(); // 426
+                MaxAttackingKnightsByDistance[j] = reader.ReadWord(); // 426
             }
 
-            totalAttackingKnights = reader.ReadWord(); // 434
-            buildingAttacked = reader.ReadWord(); // 436
-            knightsAttacking = reader.ReadWord(); // 438
+            MaxAttackingKnights = reader.ReadWord(); // 434
+            BuildingToAttack = reader.ReadWord(); // 436
+            TotalKnightsAttacking = reader.ReadWord(); // 438
 
             settings.FoodStonemine = reader.ReadWord(); // 448
             settings.FoodCoalmine = reader.ReadWord(); // 450
@@ -1907,7 +1930,7 @@ namespace Freeserf
             for (int i = 0; i < 4; ++i)
             {
                 settings.KnightOccupation[i] = (byte)reader.Value("knight_occupation")[i].ReadUInt();
-                attackingKnights[i] = reader.Value("attacking_knights")[i].ReadInt();
+                MaxAttackingKnightsByDistance[i] = reader.Value("attacking_knights")[i].ReadInt();
             }
 
             for (int i = 0; i < 23; ++i)
@@ -1930,10 +1953,10 @@ namespace Freeserf
             state.ReproductionReset = (word)reader.Value("reproduction_reset").ReadUInt();
             settings.SerfToKnightRate = (word)reader.Value("serf_to_knight_rate").ReadInt();
             state.SerfToKnightCounter = (word)reader.Value("serf_to_knight_counter").ReadUInt();
-            attackingBuildingCount = reader.Value("attacking_building_count").ReadInt();
-            totalAttackingKnights = reader.Value("total_attacking_knights").ReadInt();
-            buildingAttacked = reader.Value("building_attacked").ReadInt();
-            knightsAttacking = reader.Value("knights_attacking").ReadInt();
+            AttackingBuildingCount = reader.Value("attacking_building_count").ReadInt();
+            MaxAttackingKnights = reader.Value("total_attacking_knights").ReadInt();
+            BuildingToAttack = reader.Value("building_attacked").ReadInt();
+            TotalKnightsAttacking = reader.Value("knights_attacking").ReadInt();
             settings.FoodStonemine = (word)reader.Value("food_stonemine").ReadUInt();
             settings.FoodCoalmine = (word)reader.Value("food_coalmine").ReadUInt();
             settings.FoodIronmine = (word)reader.Value("food_ironmine").ReadUInt();
@@ -2002,7 +2025,7 @@ namespace Freeserf
             for (int i = 0; i < 4; ++i)
             {
                 writer.Value("knight_occupation").Write(settings.KnightOccupation[i]);
-                writer.Value("attacking_knights").Write(attackingKnights[i]);
+                writer.Value("attacking_knights").Write(MaxAttackingKnightsByDistance[i]);
             }
 
             for (int i = 0; i < 23; ++i)
@@ -2029,10 +2052,10 @@ namespace Freeserf
             writer.Value("serf_to_knight_rate").Write(settings.SerfToKnightRate);
             writer.Value("serf_to_knight_counter").Write(state.SerfToKnightCounter);
 
-            writer.Value("attacking_building_count").Write(attackingBuildingCount);
-            writer.Value("total_attacking_knights").Write(totalAttackingKnights);
-            writer.Value("building_attacked").Write(buildingAttacked);
-            writer.Value("knights_attacking").Write(knightsAttacking);
+            writer.Value("attacking_building_count").Write(AttackingBuildingCount);
+            writer.Value("total_attacking_knights").Write(MaxAttackingKnights);
+            writer.Value("building_attacked").Write(BuildingToAttack);
+            writer.Value("knights_attacking").Write(TotalKnightsAttacking);
 
             writer.Value("food_stonemine").Write(FoodStonemine);
             writer.Value("food_coalmine").Write(FoodCoalmine);

@@ -317,7 +317,7 @@ namespace Freeserf.UI
             ShowPlayerFaces,
             MinimapScale,
             CloseGroundAnalysis,
-            UnknownTpInfoFlag,
+            MergePaths,
             DecreaseCastleKnights,
             IncreaseCastleKnights,
             OptionsMusic,
@@ -616,7 +616,8 @@ namespace Freeserf.UI
                 action == Action.ResourceModeOut ||
                 action == Action.SerfModeIn ||
                 action == Action.SerfModeStop ||
-                action == Action.SerfModeOut)
+                action == Action.SerfModeOut ||
+                action == Action.MergePaths)
                 return; // needs double click
 
             HandleAction(action, x, y);
@@ -632,7 +633,8 @@ namespace Freeserf.UI
                 action != Action.ResourceModeOut &&
                 action != Action.SerfModeIn &&
                 action != Action.SerfModeStop &&
-                action != Action.SerfModeOut)
+                action != Action.SerfModeOut &&
+                action != Action.MergePaths)
                 return; // needs single click
 
             HandleAction(action, x, y);
@@ -2208,7 +2210,7 @@ namespace Freeserf.UI
             SetTree(104, 51, 0xf);
 
             var player = interf.Player;
-            var building = interf.Game.GetBuilding((uint)player.buildingAttacked);
+            var building = interf.Game.GetBuilding((uint)player.BuildingToAttack);
 
             int y = 0;
 
@@ -2239,10 +2241,10 @@ namespace Freeserf.UI
             // draw number of knights at each distance
             for (int i = 0; i < 4; ++i)
             {
-                SetNumberText(16 + i * 32, 105, (uint)player.attackingKnights[i]);
+                SetNumberText(16 + i * 32, 105, (uint)player.MaxAttackingKnightsByDistance[i]);
             }
 
-            SetNumberText(64, 125, (uint)player.knightsAttacking);
+            SetNumberText(64, 125, (uint)player.TotalKnightsAttacking);
         }
 
         // Translate resource amount to text
@@ -2765,13 +2767,13 @@ namespace Freeserf.UI
 		{
             var player = interf.Player;
 
-            if (player.tempIndex == 0)
+            if (player.SelectedObjectIndex == 0)
             {
                 interf.ClosePopup();
                 return;
             }
 
-            var building = player.Game.GetBuilding(player.tempIndex);
+            var building = player.Game.GetBuilding(player.SelectedObjectIndex);
 
             if (building.IsBurning || building.Player != player.Index)
             {
@@ -2867,17 +2869,21 @@ namespace Freeserf.UI
         // flag menu
         void DrawTransportInfoBox()
 		{
-            if (interf.Player.tempIndex == 0)
+            if (interf.Player.SelectedObjectIndex == 0)
             {
                 interf.ClosePopup();
                 return;
             }
 
-            var flag = interf.Game.GetFlag(interf.Player.tempIndex);
+            var flag = interf.Game.GetFlag(interf.Player.SelectedObjectIndex);
+
+            if (flag.CanMergeNearbyPaths())
+                SetButton(64, 60, 0x135, Action.MergePaths);
 
             SetFlagIcon(72, 49);
 
             var cycle = DirectionCycleCW.CreateDefault();
+            List<Direction> nearbyPathPositions = new List<Direction>();
 
             foreach (var direction in cycle)
             {
@@ -2887,6 +2893,8 @@ namespace Freeserf.UI
 
                 if (flag.HasPath(direction))
                 {
+                    nearbyPathPositions.Add(direction);
+
                     uint sprite = 0xdcu; // minus box
 
                     if (flag.HasTransporter(direction))
@@ -2895,9 +2903,6 @@ namespace Freeserf.UI
                     SetIcon(x, y, sprite);
                 }
             }
-
-            // TODO show path merge button. 
-            // if (r == 0) draw_popup_icon(7, 51, 0x135); 
 
             SetText(8, 13, "Transport Info:");
 
@@ -2918,13 +2923,13 @@ namespace Freeserf.UI
 
         Building TryToOpenBuildingPopup()
         {
-            if (interf.Player.tempIndex == 0)
+            if (interf.Player.SelectedObjectIndex == 0)
             {
                 interf.ClosePopup();
                 return null;
             }
 
-            var building = interf.Game.GetBuilding(interf.Player.tempIndex);
+            var building = interf.Game.GetBuilding(interf.Player.SelectedObjectIndex);
 
             if (building.IsBurning)
             {
@@ -3957,10 +3962,31 @@ namespace Freeserf.UI
                         }
                     }
                     break;
-                case Action.StartAttack:
-                    if (!spectator && player.knightsAttacking > 0)
+                case Action.MergePaths:
+                    if (spectator)
                     {
-                        if (player.attackingBuildingCount > 0)
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
+                    }
+                    else
+                    {
+                        var position = interf.GetMapCursorPosition();
+                        var flag = interf.Game.GetFlagAtPosition(position);
+
+                        if (!flag.MergeNearbyPaths())
+                        {
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
+                        }
+                        else
+                        {
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                            interf.ClosePopup();
+                        }
+                    }
+                    break;
+                case Action.StartAttack:
+                    if (!spectator && player.TotalKnightsAttacking > 0)
+                    {
+                        if (player.AttackingBuildingCount > 0)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             player.StartAttack();
@@ -3974,28 +4000,28 @@ namespace Freeserf.UI
                     }
                     break;
                 case Action.AttackingSelectAll1:
-                    player.knightsAttacking = player.attackingKnights[0];
+                    player.TotalKnightsAttacking = player.MaxAttackingKnightsByDistance[0];
                     break;
                 case Action.AttackingSelectAll2:
-                    player.knightsAttacking = player.attackingKnights[0] +
-                                              player.attackingKnights[1];
+                    player.TotalKnightsAttacking = player.MaxAttackingKnightsByDistance[0] +
+                                              player.MaxAttackingKnightsByDistance[1];
                     break;
                 case Action.AttackingSelectAll3:
-                    player.knightsAttacking = player.attackingKnights[0] +
-                                              player.attackingKnights[1] +
-                                              player.attackingKnights[2];
+                    player.TotalKnightsAttacking = player.MaxAttackingKnightsByDistance[0] +
+                                              player.MaxAttackingKnightsByDistance[1] +
+                                              player.MaxAttackingKnightsByDistance[2];
                     break;
                 case Action.AttackingSelectAll4:
-                    player.knightsAttacking = player.attackingKnights[0] +
-                                              player.attackingKnights[1] +
-                                              player.attackingKnights[2] +
-                                              player.attackingKnights[3];
+                    player.TotalKnightsAttacking = player.MaxAttackingKnightsByDistance[0] +
+                                              player.MaxAttackingKnightsByDistance[1] +
+                                              player.MaxAttackingKnightsByDistance[2] +
+                                              player.MaxAttackingKnightsByDistance[3];
                     break;
                 case Action.AttackingKnightsDec:
-                    player.knightsAttacking = Math.Max(player.knightsAttacking - 1, 0);
+                    player.TotalKnightsAttacking = Math.Max(player.TotalKnightsAttacking - 1, 0);
                     break;
                 case Action.AttackingKnightsInc:
-                    player.knightsAttacking = Math.Min(player.knightsAttacking + 1, Math.Min(player.totalAttackingKnights, 100));
+                    player.TotalKnightsAttacking = Math.Min(player.TotalKnightsAttacking + 1, Math.Min(player.MaxAttackingKnights, 100));
                     break;
                 case Action.OptionsFullscreen:
                     interf.RenderView.Fullscreen = !interf.RenderView.Fullscreen;
@@ -4443,7 +4469,7 @@ namespace Freeserf.UI
 
         void SetInventoryMode(Action action)
         {
-            var building = interf.Game.GetBuilding(interf.Player.tempIndex);
+            var building = interf.Game.GetBuilding(interf.Player.SelectedObjectIndex);
             var inventory = building.Inventory;
 
             switch (action)

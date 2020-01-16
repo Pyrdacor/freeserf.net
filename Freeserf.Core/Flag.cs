@@ -1066,6 +1066,52 @@ namespace Freeserf
             return false;
         }
 
+        public bool CanMergeNearbyPaths()
+        {
+            var cycle = DirectionCycleCW.CreateDefault();
+            var map = Game.Map;
+
+            foreach (var direction in cycle)
+            {
+                var otherPosition = map.Move(Position, direction);
+
+                if (map.Paths(otherPosition) != 0 &&
+                    !map.HasPath(Position, direction))
+                {
+                    var cycleAtOtherPosition = DirectionCycleCW.CreateWithout(direction.Reverse());
+                    bool failed = false;
+
+                    foreach (var otherPositionDirection in cycleAtOtherPosition)
+                    {
+                        var testPosition = map.Move(otherPosition, otherPositionDirection);
+
+                        if (otherPositionDirection == direction && map.Paths(testPosition) != 0)
+                        {
+                            failed = true;
+                            break;
+                        }
+
+                        if (map.HasFlag(testPosition))
+                        {
+                            failed = true;
+                            break;
+                        }
+                    }
+
+                    if (!failed)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool MergeNearbyPaths()
+        {
+            // TODO
+            return false;
+        }
+
         public void MergePaths(MapPos position)
         {
             var map = Game.Map;

@@ -2757,9 +2757,9 @@ namespace Freeserf
         {
             foreach (var player in players.ToList())
             {
-                if (player.tempIndex == building.Index)
+                if (player.SelectedObjectIndex == building.Index)
                 {
-                    player.tempIndex = 0;
+                    player.SelectedObjectIndex = 0;
                 }
             }
         }
@@ -2976,9 +2976,9 @@ namespace Freeserf
         {
             foreach (var player in players.ToList())
             {
-                if (player.tempIndex == flag.Index)
+                if (player.SelectedObjectIndex == flag.Index)
                 {
-                    player.tempIndex = 0;
+                    player.SelectedObjectIndex = 0;
                 }
             }
         }

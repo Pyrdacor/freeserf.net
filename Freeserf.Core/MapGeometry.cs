@@ -256,6 +256,11 @@ namespace Freeserf
             return new DirectionCycleCW(Direction.Right, 6);
         }
 
+        public static DirectionCycleCW CreateWithout(Direction direction)
+        {
+            return new DirectionCycleCW((Direction)(((int)direction + 1) % 6), 5);
+        }
+
         public IteratorCW Begin()
         {
             return new IteratorCW(this, 0);

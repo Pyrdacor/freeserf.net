@@ -494,7 +494,7 @@ namespace Freeserf.UI
                         interf.OpenPopup(PopupBox.Type.TransportInfo);
                     }
 
-                    player.tempIndex = map.GetObjectIndex(mapPosition);
+                    player.SelectedObjectIndex = map.GetObjectIndex(mapPosition);
                     PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 }
                 else
@@ -539,7 +539,7 @@ namespace Freeserf.UI
                             interf.OpenPopup(PopupBox.Type.BuildingStock);
                         }
 
-                        player.tempIndex = map.GetObjectIndex(mapPosition);
+                        player.SelectedObjectIndex = map.GetObjectIndex(mapPosition);
                     }
                     else
                     {
