@@ -135,8 +135,8 @@ namespace Freeserf.Renderer
 
                 buffer[arrayIndex++] = vertexIndex + 0;
                 buffer[arrayIndex++] = vertexIndex + 1;
-                buffer[arrayIndex++] = vertexIndex + 2;
-                buffer[arrayIndex++] = vertexIndex + 0;
+                buffer[arrayIndex++] = vertexIndex + 3;
+                buffer[arrayIndex++] = vertexIndex + 1;
                 buffer[arrayIndex++] = vertexIndex + 2;
                 buffer[arrayIndex++] = vertexIndex + 3;
 
