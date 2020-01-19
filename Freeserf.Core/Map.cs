@@ -85,6 +85,15 @@ namespace Freeserf
             Source = Global.INVALID_MAPPOS;
         }
 
+        public Road Copy()
+        {
+            var copy = new Road();
+            copy.Source = Source;
+            copy.Directions = new Directions(Directions.Reverse()); // enumerator of stack is reversed order
+            copy.Cost = Cost;
+            return copy;
+        }
+
         public static Road CreateBuildingRoad(MapPos flagPosition)
         {
             var road = new Road();
@@ -150,7 +159,7 @@ namespace Freeserf
 
         public bool Valid => Source != Global.INVALID_MAPPOS;
         public MapPos Source { get; private set; } = 0u;
-        public Directions Directions { get; } = new Directions();
+        public Directions Directions { get; private set; } = new Directions();
         public uint Length => (uint)Directions.Count;
         public Direction Last => Directions.Peek();
         public bool Extendable => Length < MaxLength;

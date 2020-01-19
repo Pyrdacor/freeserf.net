@@ -674,7 +674,7 @@ namespace Freeserf.UI
             if (Game.Map.GetObject(destination) == Map.Object.Flag)
             {
                 // Existing flag at destination, try to connect. 
-                if (!Game.BuildRoad(buildingRoad, player, true))
+                if (!Game.BuildRoad(buildingRoad.Copy(), player, true))
                 {
                     BuildRoadEnd();
                     return -1;
@@ -849,7 +849,7 @@ namespace Freeserf.UI
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildRoad(buildingRoad, player))
+            if (!Game.BuildRoad(buildingRoad.Copy(), player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 Game.DemolishFlag(mapCursorPosition, player);

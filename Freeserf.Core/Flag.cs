@@ -1078,27 +1078,10 @@ namespace Freeserf
                 if (map.Paths(otherPosition) != 0 &&
                     !map.HasPath(Position, direction))
                 {
-                    var cycleAtOtherPosition = DirectionCycleCW.CreateWithout(direction.Reverse());
-                    bool failed = false;
+                    var road = Game.GetRoadFromPathAtPosition(otherPosition);
 
-                    foreach (var otherPositionDirection in cycleAtOtherPosition)
-                    {
-                        var testPosition = map.Move(otherPosition, otherPositionDirection);
-
-                        if (otherPositionDirection == direction && map.Paths(testPosition) != 0)
-                        {
-                            failed = true;
-                            break;
-                        }
-
-                        if (map.HasFlag(testPosition))
-                        {
-                            failed = true;
-                            break;
-                        }
-                    }
-
-                    if (!failed)
+                    // if the road contains our flag already, we won't merge
+                    if (!road.HasPosition(map, Position))
                         return true;
                 }
             }
@@ -1108,8 +1091,94 @@ namespace Freeserf
 
         public bool MergeNearbyPaths()
         {
-            // TODO
-            return false;
+            var cycle = DirectionCycleCW.CreateDefault();
+            var map = Game.Map;
+            var pathsToMerge = new Dictionary<Road, List<MapPos>>();
+            var connectDirections = new Dictionary<MapPos, Direction>();
+
+            foreach (var direction in cycle)
+            {
+                var otherPosition = map.Move(Position, direction);
+
+                if (map.Paths(otherPosition) != 0 &&
+                    !map.HasPath(Position, direction))
+                {
+                    var road = Game.GetRoadFromPathAtPosition(otherPosition);
+
+                    // if the road contains our flag already, we won't merge
+                    if (road.HasPosition(map, Position))
+                        continue;
+
+                    connectDirections.Add(otherPosition, direction.Reverse());
+
+                    if (!pathsToMerge.ContainsKey(road))
+                        pathsToMerge.Add(road, new List<MapPos> { otherPosition });
+                    else
+                        pathsToMerge[road].Add(otherPosition);
+                }
+            }
+
+            var newRoads = new List<Road>();
+
+            foreach (var pathEntry in pathsToMerge)
+            {
+                var road = pathEntry.Key;
+                var flag1 = Game.GetFlagAtPosition(road.Source);
+                var flag2 = Game.GetFlagAtPosition(road.GetEnd(Game.Map));
+
+                // build two new roads from the old roads (one from each end flag)
+                var roadDirections = road.Directions.ToList();
+                var roadInverseDirections = new List<Direction>(roadDirections);
+                
+                for (int i = 0; i < roadInverseDirections.Count; ++i)
+                {
+                    roadInverseDirections[i] = roadInverseDirections[i].Reverse();
+                }
+
+                var position = flag1.Position;
+                var newRoad1 = new Road();
+                newRoad1.Start(position);
+
+                foreach (var direction in roadDirections)
+                {
+                    position = map.Move(position, direction);
+                    newRoad1.Extend(direction);
+
+                    if (pathEntry.Value.Contains(position))
+                    {
+                        newRoad1.Extend(connectDirections[position]);
+                        break;
+                    }                    
+                }
+
+                position = flag2.Position;
+                var newRoad2 = new Road();
+                newRoad2.Start(position);
+
+                foreach (var direction in roadInverseDirections)
+                {
+                    position = map.Move(position, direction);
+                    newRoad2.Extend(direction);
+
+                    if (pathEntry.Value.Contains(position))
+                    {
+                        newRoad2.Extend(connectDirections[position]);
+                        break;
+                    }
+                }
+
+                // delete the old road
+                Game.RemoveRoad(road);
+
+                var player = Game.GetPlayer(Player);
+
+                // build new roads
+                if (!Game.BuildRoad(newRoad1, player, true) ||
+                    !Game.BuildRoad(newRoad2, player, true))
+                    return false;
+            }
+
+            return true;
         }
 
         public void MergePaths(MapPos position)

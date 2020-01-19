@@ -2816,6 +2816,9 @@ namespace Freeserf
 
                 if (Map.HasFlag(position))
                 {
+                    if (inDirection == Direction.None)
+                        inDirection = direction;
+
                     var flag = flags[Map.GetObjectIndex(position)];
                     flag.DeletePath(inDirection.Reverse());
                     break;
@@ -2826,6 +2829,18 @@ namespace Freeserf
                 inDirection = direction;
                 direction = Map.RemoveRoadSegment(ref position, direction);
             }
+        }
+
+        internal void RemoveRoad(Road road)
+        {
+            if (!road.Valid)
+                return;
+
+            // NOTE: This will not remove the end flags!
+
+            // move one path away from start flag and then call DemolishRoad which
+            // will remove a whole road when given an inside path segment position
+            DemolishRoad(Map.Move(road.Source, road.Directions.Pop()));
         }
 
         protected bool DemolishRoad(MapPos position)
@@ -3807,6 +3822,27 @@ namespace Freeserf
 
             if (renderRoadSegments.TryRemove(index, out Render.RenderRoadSegment renderRoadSegment) && renderRoadSegment != null)
                 renderRoadSegment.Delete();
+        }
+
+        public Road GetRoadFromPathAtPosition(MapPos position)
+        {
+            var cycle = DirectionCycleCW.CreateDefault();
+            Flag flag = null;
+            var endDirection = Direction.None;
+
+            foreach (var direction in cycle)
+            {
+                if (Map.HasPath(position, direction))
+                {
+                    flag = TracePathAndGetFlagAtEnd(position, direction, out endDirection);
+                    break;
+                }
+            }
+
+            if (flag == null)
+                return null;
+
+            return flag.GetRoad(endDirection);
         }
 
         public Flag TracePathAndGetFlagAtEnd(MapPos position, Direction direction, out Direction endFlagReverseDirection)
