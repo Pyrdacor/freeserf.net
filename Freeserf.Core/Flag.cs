@@ -534,7 +534,11 @@ namespace Freeserf
                     else
                     {
                         OtherEndPoints[(int)j].Flag = Game.CreateFlag(offset / 70);
-                        OtherEndPoints[(int)j].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, j);
+                        // Re-use the road from the other flag to this flag if possible
+                        var newRoad = Road.CreateRoadFromMapPath(Game.Map, state.Position, j);
+                        var otherFlagOutDir = newRoad.Last.Reverse();
+                        var otherFlagOutRoad = OtherEndPoints[(int)j].Flag.GetRoad(otherFlagOutDir);
+                        OtherEndPoints[(int)j].Road = otherFlagOutRoad != null ? otherFlagOutRoad : newRoad;
                     }
                 }
             }
@@ -615,9 +619,18 @@ namespace Freeserf
                     }
 
                     OtherEndPoints[(int)direction].Flag = otherFlag;
-                    OtherEndPoints[(int)direction].Road = otherFlag == null
-                        ? null
-                        : Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
+                    if (otherFlag != null)
+                    {
+                        // Re-use the road from the other flag to this flag if possible
+                        var newRoad = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
+                        var otherFlagOutDir = newRoad.Last.Reverse();
+                        var otherFlagOutRoad = OtherEndPoints[(int)direction].Flag.GetRoad(otherFlagOutDir);
+                        OtherEndPoints[(int)direction].Road = otherFlagOutRoad != null ? otherFlagOutRoad : newRoad;
+                    }
+                    else
+                    {
+                        OtherEndPoints[(int)direction].Road = null;
+                    }
                 }
 
                 state.OtherEndpointPaths[(int)direction] = (byte)reader.Value("other_end_dir")[(int)direction].ReadInt();
@@ -738,7 +751,7 @@ namespace Freeserf
         public void LinkBuilding(Building building)
         {
             OtherEndPoints[(int)Direction.UpLeft].Building = building;
-            OtherEndPoints[(int)Direction.UpLeft].Road = Road.CreateBuildingRoad(Game.Map.MoveDownRight(building.Position));
+            OtherEndPoints[(int)Direction.UpLeft].Road = Road.CreateBuildingRoad(Game.Map, Game.Map.MoveDownRight(building.Position));
             state.EndPointFlags |= EndPointFlags.HasConnectedBuilding;
         }
 
@@ -847,7 +860,7 @@ namespace Freeserf
             destinationFlag.OtherEndPoints[(int)inDirection].Flag = this;
             OtherEndPoints[(int)outDirection].Flag = destinationFlag;
 
-            destinationFlag.OtherEndPoints[(int)inDirection].Road = road.Reverse(Game.Map);
+            destinationFlag.OtherEndPoints[(int)inDirection].Road = road;
             OtherEndPoints[(int)outDirection].Road = road;
         }
 
@@ -997,7 +1010,7 @@ namespace Freeserf
             otherFlag.OtherEndPoints[(int)otherDirection].Flag = this;
 
             OtherEndPoints[(int)direction].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
-            otherFlag.OtherEndPoints[(int)otherDirection].Road = OtherEndPoints[(int)direction].Road.Reverse(Game.Map);
+            otherFlag.OtherEndPoints[(int)otherDirection].Road = OtherEndPoints[(int)direction].Road;
 
             int maxSerfs = maxPathSerfs[roadLength];
 
@@ -1070,6 +1083,7 @@ namespace Freeserf
         {
             var cycle = DirectionCycleCW.CreateDefault();
             var map = Game.Map;
+            var pathsToMerge = new List<Road>();
 
             foreach (var direction in cycle)
             {
@@ -1081,8 +1095,13 @@ namespace Freeserf
                     var road = Game.GetRoadFromPathAtPosition(otherPosition);
 
                     // if the road contains our flag already, we won't merge
-                    if (!road.HasPosition(map, Position))
-                        return true;
+                    if (road.StartPosition != Position && road.EndPosition != Position)
+                    {
+                        if (!pathsToMerge.Contains(road))
+                            pathsToMerge.Add(road);
+                        else
+                            return true; // we need at least two points on that road
+                    }
                 }
             }
 
@@ -1106,7 +1125,7 @@ namespace Freeserf
                     var road = Game.GetRoadFromPathAtPosition(otherPosition);
 
                     // if the road contains our flag already, we won't merge
-                    if (road.HasPosition(map, Position))
+                    if (road.StartPosition == Position || road.EndPosition == Position)
                         continue;
 
                     connectDirections.Add(otherPosition, direction.Reverse());
@@ -1118,18 +1137,20 @@ namespace Freeserf
                 }
             }
 
-            var newRoads = new List<Road>();
-
             foreach (var pathEntry in pathsToMerge)
             {
+                if (pathEntry.Value.Count < 2)
+                    continue;
+
                 var road = pathEntry.Key;
-                var flag1 = Game.GetFlagAtPosition(road.Source);
-                var flag2 = Game.GetFlagAtPosition(road.GetEnd(Game.Map));
+                var flag1 = Game.GetFlagAtPosition(road.StartPosition);
+                var flag2 = Game.GetFlagAtPosition(road.EndPosition);
 
                 // build two new roads from the old roads (one from each end flag)
-                var roadDirections = road.Directions.ToList();
-                var roadInverseDirections = new List<Direction>(roadDirections);
-                
+                var roadInverseDirections = road.Directions.ToList();
+                var roadDirections = new List<Direction>(roadInverseDirections);
+                roadDirections.Reverse();
+
                 for (int i = 0; i < roadInverseDirections.Count; ++i)
                 {
                     roadInverseDirections[i] = roadInverseDirections[i].Reverse();
@@ -1142,11 +1163,11 @@ namespace Freeserf
                 foreach (var direction in roadDirections)
                 {
                     position = map.Move(position, direction);
-                    newRoad1.Extend(direction);
+                    newRoad1.Extend(map, direction);
 
                     if (pathEntry.Value.Contains(position))
                     {
-                        newRoad1.Extend(connectDirections[position]);
+                        newRoad1.Extend(map, connectDirections[position]);
                         break;
                     }                    
                 }
@@ -1158,11 +1179,11 @@ namespace Freeserf
                 foreach (var direction in roadInverseDirections)
                 {
                     position = map.Move(position, direction);
-                    newRoad2.Extend(direction);
+                    newRoad2.Extend(map, direction);
 
                     if (pathEntry.Value.Contains(position))
                     {
-                        newRoad2.Extend(connectDirections[position]);
+                        newRoad2.Extend(map, connectDirections[position]);
                         break;
                     }
                 }
@@ -1243,7 +1264,7 @@ namespace Freeserf
             flag1.state.TransporterFlags &= ~direction1.ToTransporterFlag();
             flag2.state.TransporterFlags &= ~direction2.ToTransporterFlag();
 
-            uint roadLength = Flag.GetRoadLengthValue((uint)(path1Data.PathLength + path2Data.PathLength));
+            uint roadLength = GetRoadLengthValue((uint)(path1Data.PathLength + path2Data.PathLength));
             flag1.state.ResetRoadLength(direction1, (byte)roadLength);
             flag2.state.ResetRoadLength(direction2, (byte)roadLength);
 

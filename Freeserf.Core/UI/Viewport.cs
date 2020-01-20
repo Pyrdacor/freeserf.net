@@ -429,7 +429,7 @@ namespace Freeserf.UI
             {
                 if (mapPosition != interf.GetMapCursorPosition())
                 {
-                    var roadEndPosition = interf.GetBuildingRoad().GetEnd(map);
+                    var roadEndPosition = interf.GetBuildingRoad().EndPosition;
                     var road = Pathfinder.FindShortestPath(map, roadEndPosition, mapPosition, interf.GetBuildingRoad());
 
                     if (road.Length != 0)

@@ -847,7 +847,7 @@ namespace Freeserf
         {
             // Follow along path to other flag. Test along the way
             // whether the path is on ground or in water.
-            var position = road.Source;
+            var position = road.StartPosition;
             int test = 0;
 
             if (!Map.HasOwner(position) || Map.GetOwner(position) != player.Index || !Map.HasFlag(position))
@@ -986,7 +986,7 @@ namespace Freeserf
                 return false;
 
             // Connect flags 
-            var sourceFlag = GetFlagAtPosition(road.Source);
+            var sourceFlag = GetFlagAtPosition(road.StartPosition);
             var destinationFlag = GetFlagAtPosition(destination);
 
             sourceFlag.LinkWithFlag(destinationFlag, waterPath, inDirection, outDirection, road);
@@ -2840,7 +2840,7 @@ namespace Freeserf
 
             // move one path away from start flag and then call DemolishRoad which
             // will remove a whole road when given an inside path segment position
-            DemolishRoad(Map.Move(road.Source, road.Directions.Pop()));
+            DemolishRoad(Map.Move(road.StartPosition, road.Directions.Last()));
         }
 
         protected bool DemolishRoad(MapPos position)

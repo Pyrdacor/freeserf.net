@@ -74,33 +74,33 @@ namespace Freeserf
     using MapPos = UInt32;
     using Directions = Stack<Direction>;
     using ChangeHandlers = List<Map.Handler>;
-    using System.Collections;
 
-    public class Road
+    public class Road : IEquatable<Road>
     {
         const uint MaxLength = 256;
 
         public Road()
         {
-            Source = Global.INVALID_MAPPOS;
+            StartPosition = Global.INVALID_MAPPOS;
         }
 
         public Road Copy()
         {
             var copy = new Road();
-            copy.Source = Source;
+            copy.StartPosition = StartPosition;
+            copy.EndPosition = EndPosition;
             copy.Directions = new Directions(Directions.Reverse()); // enumerator of stack is reversed order
             copy.Cost = Cost;
             return copy;
         }
 
-        public static Road CreateBuildingRoad(MapPos flagPosition)
+        public static Road CreateBuildingRoad(Map map, MapPos flagPosition)
         {
             var road = new Road();
 
             // these roads will have a cost of 0
             road.Start(flagPosition);
-            road.Extend(Direction.UpLeft);
+            road.Extend(map, Direction.UpLeft);
 
             return road;
         }
@@ -119,7 +119,7 @@ namespace Freeserf
             do
             {
                 road.Cost += Pathfinder.ActualCost(map, position, direction);
-                road.Extend(direction);
+                road.Extend(map, direction);
                 position = map.Move(position, direction);
 
                 var cycle = DirectionCycleCW.CreateDefault();
@@ -145,20 +145,19 @@ namespace Freeserf
         {
             var road = new Road();
 
-            road.Start(GetEnd(map));
+            road.Start(EndPosition);
 
-            var directions = Directions.ToList();
-
-            for (int i = directions.Count - 1; i >= 0; --i)
-                road.Extend(directions[i].Reverse());
+            foreach (var direction in Directions.ToList())
+                road.Extend(map, direction.Reverse());
 
             road.Cost = Cost;
 
             return road;
         }
 
-        public bool Valid => Source != Global.INVALID_MAPPOS;
-        public MapPos Source { get; private set; } = 0u;
+        public bool Valid => StartPosition != Global.INVALID_MAPPOS && EndPosition != Global.INVALID_MAPPOS;
+        public MapPos StartPosition { get; private set; } = Global.INVALID_MAPPOS;
+        public MapPos EndPosition { get; private set; } = Global.INVALID_MAPPOS;
         public Directions Directions { get; private set; } = new Directions();
         public uint Length => (uint)Directions.Count;
         public Direction Last => Directions.Peek();
@@ -167,14 +166,16 @@ namespace Freeserf
 
         public void Invalidate()
         {
-            Source = Global.INVALID_MAPPOS;
+            StartPosition = Global.INVALID_MAPPOS;
+            EndPosition = Global.INVALID_MAPPOS;
             Directions.Clear();
             Cost = 0;
         }
 
         public void Start(MapPos start)
         {
-            Source = start;
+            StartPosition = start;
+            EndPosition = start;
             Cost = 0;
         }
         
@@ -186,22 +187,8 @@ namespace Freeserf
             }
 
             // Check that road does not cross itself. 
-            var extendedEnd = map.Move(GetEnd(map), direction);
-            var position = Source;
-            bool valid = true;
-
-            foreach (var nextDirection in Directions.Reverse())
-            {
-                position = map.Move(position, nextDirection);
-
-                if (position == extendedEnd)
-                {
-                    valid = false;
-                    break;
-                }
-            }
-
-            return valid;
+            var extendedEnd = map.Move(EndPosition, direction);
+            return !HasPosition(map, extendedEnd);
         }
 
         public bool IsUndo(Direction direction)
@@ -209,13 +196,22 @@ namespace Freeserf
             return Length > 0 && Last == direction.Reverse();
         }
 
-        public bool Extend(Direction direction)
+        public bool Extend(Map map, Direction direction)
         {
-            if (Source == Global.INVALID_MAPPOS)
+            if (StartPosition == Global.INVALID_MAPPOS)
             {
                 return false;
             }
 
+            if (EndPosition == Global.INVALID_MAPPOS)
+            {
+                if (Length != 0)
+                    throw new ExceptionFreeserf(ErrorSystemType.Map, "Invalid road data");
+
+                EndPosition = StartPosition;
+            }
+
+            EndPosition = map.Move(EndPosition, direction);
             Directions.Push(direction);
 
             return true;
@@ -223,54 +219,51 @@ namespace Freeserf
 
         public bool Extend(Map map, Road road)
         {
-            if (Source == Global.INVALID_MAPPOS || road == null || !road.Valid)
+            if (StartPosition == Global.INVALID_MAPPOS || road == null || !road.Valid)
             {
                 return false;
             }
 
-            if (GetEnd(map) != road.Source)
+            if (StartPosition == road.StartPosition) // road may be reversed
+            {
+                road = road.Reverse(map);
+            }
+
+            if (EndPosition != road.StartPosition)
             {
                 return false;
             }
 
             foreach (var direction in road.Directions)
+            {
+                EndPosition = map.Move(EndPosition, direction);
                 Directions.Push(direction);
+            }
 
             return true;
         }
 
-        public bool Undo()
+        public bool Undo(Map map)
         {
-            if (Source == Global.INVALID_MAPPOS)
+            if (StartPosition == Global.INVALID_MAPPOS)
             {
                 return false;
             }
 
-            Directions.Pop();
+            EndPosition = map.Move(EndPosition, Directions.Pop().Reverse());
 
             if (Length == 0)
             {
-                Source = Global.INVALID_MAPPOS;
+                StartPosition = Global.INVALID_MAPPOS;
+                EndPosition = Global.INVALID_MAPPOS;
             }
 
             return true;
         }
 
-        public MapPos GetEnd(Map map)
-        {
-            var result = Source;
-
-            foreach (var direction in Directions.Reverse())
-            {
-                result = map.Move(result, direction);
-            }
-
-            return result;
-        }
-
         public bool HasPosition(Map map, MapPos position)
         {
-            var result = Source;
+            var result = StartPosition;
 
             foreach (var direction in Directions.Reverse())
             {
@@ -290,9 +283,19 @@ namespace Freeserf
             if (!Valid || Directions.Count == 0)
                 return false;
 
-            var secondPosition = map.Move(Source, Directions.Peek());
+            var secondPosition = map.Move(StartPosition, Directions.Peek());
 
             return map.IsInWater(secondPosition);
+        }
+
+        public bool Equals(Road other)
+        {
+            if (other == null)
+                return false;
+
+            return StartPosition == other.StartPosition &&
+                   EndPosition == other.EndPosition &&
+                   Length == other.Length;
         }
     }
 
@@ -1840,7 +1843,7 @@ namespace Freeserf
         // Actually place road segments 
         public bool PlaceRoadSegments(Road road)
         {
-            var position = road.Source;
+            var position = road.StartPosition;
             var directions = road.Directions.Reverse().ToList();
 
             for (int i = 0; i < directions.Count; ++i)

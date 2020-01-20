@@ -312,7 +312,7 @@ namespace Freeserf
                     while (node.Parent != null)
                     {
                         var direction = node.Direction;
-                        solution.Extend(direction.Reverse());
+                        solution.Extend(map, direction.Reverse());
                         node = node.Parent;
                     }
 

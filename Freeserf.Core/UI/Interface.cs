@@ -656,10 +656,10 @@ namespace Freeserf.UI
                 return -1;
             }
 
-            buildingRoad.Cost += Pathfinder.ActualCost(Game.Map, buildingRoad.GetEnd(Game.Map), direction);
+            buildingRoad.Cost += Pathfinder.ActualCost(Game.Map, buildingRoad.EndPosition, direction);
 
-            AddBuildingRoadSegment(buildingRoad.GetEnd(Game.Map), direction);
-            buildingRoad.Extend(direction);
+            AddBuildingRoadSegment(buildingRoad.EndPosition, direction);
+            buildingRoad.Extend(Game.Map, direction);
 
             MapPos destination = 0;
             bool water = false;
@@ -705,10 +705,10 @@ namespace Freeserf.UI
 
         public int RemoveRoadSegment()
         {
-            var destination = buildingRoad.Source;
+            var destination = buildingRoad.StartPosition;
             int result = 0;
             bool water = false;
-            buildingRoad.Undo();
+            buildingRoad.Undo(Game.Map);
             RemoveLastBuildingRoadSegment();
 
             if (buildingRoad.Length == 0 ||
