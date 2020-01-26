@@ -4,7 +4,15 @@ using System.Collections.Generic;
 
 namespace Freeserf.Serialize
 {
-    public class DirtyMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IComparable where TValue : IComparable
+    internal interface IDirtyMap : IEnumerable
+    {
+        bool Dirty { get; }
+        int Count { get; }
+        event EventHandler GotDirty;
+        void Initialize(Array values);
+    }
+
+    public class DirtyMap<TKey, TValue> : IDirtyMap, IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IComparable where TValue : IComparable
     {
         Dictionary<TKey, TValue> map = null;
 
@@ -64,6 +72,17 @@ namespace Freeserf.Serialize
         public bool TryGetValue(TKey key, out TValue value)
         {
             return map.TryGetValue(key, out value);
+        }
+
+        public void Initialize(Array values)
+        {
+            map.Clear();
+
+            foreach (var value in values)
+            {
+                var entry = (KeyValuePair<object, object>)value;
+                map.Add((TKey)entry.Key, (TValue)entry.Value);
+            }
         }
 
         public static implicit operator Dictionary<TKey, TValue>(DirtyMap<TKey, TValue> map)

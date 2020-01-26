@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using Freeserf.Network;
 
 namespace Freeserf.UI
 {

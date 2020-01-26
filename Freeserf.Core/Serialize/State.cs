@@ -22,6 +22,9 @@ namespace Freeserf.Serialize
             private set;
         }
 
+        [Ignore]
+        public IReadOnlyList<string> DirtyProperties => dirtyProperties.AsReadOnly();
+
         protected void MarkPropertyAsDirty(string name)
         {
             lock (dirtyLock)
