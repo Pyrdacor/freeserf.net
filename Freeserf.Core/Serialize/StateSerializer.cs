@@ -33,6 +33,38 @@ namespace Freeserf.Serialize
 
     internal static class StateSerializer
     {
+        /**
+         * The property map is used to compress property names for serialization.
+         * Instead of transferring the whole name (which can become quiet long)
+         * only the first letter plus a 8-bit number is transferred. This number
+         * represents the index of the sorted properties starting with this letter.
+         * 
+         * Example:
+         * 
+         * Property names are: foo, bar and baz
+         * 
+         * The name "foo" is transferred as 'f' and 0.
+         * The name "bar" is transferred as 'b' and 0.
+         * The name "baz" is transferred as 'b' and 1.
+         * 
+         * So any property name can be compressed to 2 bytes regardless of its length.
+         * We limit the property names to ASCII (7 bit) for simplicity.
+         * 
+         * There are a few limitations though:
+         * - As mentioned we only support ASCII in property names (hence 1 byte per letter).
+         * - The number of properties with the same starting letter is limited to 256.
+         * - Each side (server and client) need the same version of the data classes.
+         * 
+         * The first limitation isn't a hard one. Property names should be ASCII anyway.
+         * 
+         * The second limit should not matter as this rare case won't happen and if so
+         * there is an exception thrown in that case, so the mechanism could be adjusted
+         * later (e.g. increasing the number range to a 16bit value -> 65536 possibilities).
+         * 
+         * The third limit is secured by transferring a data version which must match
+         * on both sides. Otherwise an exception is thrown. Clients and servers have to
+         * use the same data version to be able to communicate properly.
+         */
         private class PropertyMap
         {
             private readonly Dictionary<char, List<string>> map = new Dictionary<char, List<string>>();
@@ -111,7 +143,15 @@ namespace Freeserf.Serialize
         }
 
         private static readonly Dictionary<State, PropertyMap> propertyMapCache = new Dictionary<State, PropertyMap>();
+        /// <summary>
+        /// Major data version.
+        /// This is part of the data version a communication partner uses.
+        /// </summary>
         private const byte DATA_MAJOR_VERSION = 0;
+        /// <summary>
+        /// Minor data version.
+        /// This is part of the data version a communication partner uses.
+        /// </summary>
         private const byte DATA_MINOR_VERSION = 0;
 
         public static void Serialize(Stream stream, State state, bool full)
