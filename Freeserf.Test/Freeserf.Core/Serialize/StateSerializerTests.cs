@@ -58,7 +58,7 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
             stream.Write(new byte[1] { 0 }, 0, 1); // overwrite 'F' with 0
 
             Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize<TestState>(stream),
-                "Manipulated serialized state header did not throw exception on deserialization.");
+                "Manipulated serialized state header does not throw exception on deserialization.");
         }
 
         [TestMethod]
@@ -75,7 +75,41 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
                 state.TestProperty1 == null && resultingState.TestProperty1 == "" &&
                 state.ArrayTestProperty == null && resultingState.ArrayTestProperty != null && resultingState.ArrayTestProperty.Length == 0 &&
                 state.MapTestProperty == null && resultingState.MapTestProperty != null && resultingState.MapTestProperty.Count == 0,
-                "Deserialized state does not match previously serialized state.");
+                "Deserialized state does not convert null values to empty values.");
+        }
+
+        [TestMethod]
+        public void InvalidTestState_UnsupportedPropertyType_ShouldThrowExceptionOnSerialization()
+        {
+            using var stream = new MemoryStream();
+            var state = new InvalidTestState_UnsupportedPropertyType();
+
+            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Serialize(stream, state, true, true),
+                "Invalid state does not throw exception on serialization.");
+        }
+
+        [TestMethod]
+        public void InvalidTestState_InvalidPropertyName_ShouldThrowExceptionOnSerialization()
+        {
+            using var stream = new MemoryStream();
+            var state = new InvalidTestState_InvalidPropertyName();
+
+            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Serialize(stream, state, true, true),
+                "Invalid state does not throw exception on serialization.");
+        }
+
+        [TestMethod]
+        public void InvalidTestState_UnsupportedArrayElementType_ShouldThrowExceptionOnSerialization()
+        {
+            using var stream = new MemoryStream();
+            var state = new InvalidTestState_UnsupportedArrayElementType();
+            state.Property2 = new DirtyArray<InvalidDirtyArray>();
+
+            StateSerializer.Serialize(stream, state, true, true);
+            stream.Position = 0;
+
+            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize<InvalidTestState_UnsupportedArrayElementType>(stream),
+                "Invalid state does not throw exception on deserialization.");
         }
     }
 }

@@ -283,8 +283,8 @@ namespace Freeserf.Serialize
             {
                 var elementType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
 
-                if (elementType.IsSubclassOf(typeof(IDirtyArray)) ||
-                    elementType.IsSubclassOf(typeof(IDirtyMap)))
+                if (typeof(IDirtyArray).IsAssignableFrom(elementType) ||
+                    typeof(IDirtyMap).IsAssignableFrom(elementType))
                     throw new ExceptionFreeserf("DirtyArray and DirtyMap are not supported as elements of a DirtyArray.");
 
                 int length = reader.ReadInt32();
@@ -306,11 +306,11 @@ namespace Freeserf.Serialize
                 var keyType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
                 var valueType = type.IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
 
-                if (keyType.IsSubclassOf(typeof(IDirtyArray)) ||
-                    keyType.IsSubclassOf(typeof(IDirtyMap)))
+                if (typeof(IDirtyArray).IsAssignableFrom(keyType) ||
+                    typeof(IDirtyMap).IsAssignableFrom(keyType))
                     throw new ExceptionFreeserf("DirtyArray and DirtyMap are not supported as keys of a DirtyMap.");
-                if (valueType.IsSubclassOf(typeof(IDirtyArray)) ||
-                    valueType.IsSubclassOf(typeof(IDirtyMap)))
+                if (typeof(IDirtyArray).IsAssignableFrom(valueType) ||
+                    typeof(IDirtyMap).IsAssignableFrom(valueType))
                     throw new ExceptionFreeserf("DirtyArray and DirtyMap are not supported as values of a DirtyMap.");
 
                 int count = reader.ReadInt32();
