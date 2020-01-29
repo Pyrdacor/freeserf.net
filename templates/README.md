@@ -8,7 +8,7 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 | Windows | Linux |
 | ---- | ---- |
-| [![Build status](https://ci.appveyor.com/api/projects/status/mfja74779tdsajv7?svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master) | [![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net/branches) |
+| [![Build status](https://ci.appveyor.com/api/projects/status/github/pyrdacor/freeserf.net?branch=master&svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master) | [![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net/branches) |
 
 ## Download the game
 
