@@ -25,9 +25,9 @@ global:
 solution: FreeserfNet.sln
 script:
   - dotnet --version
-  - dotnet restore FreeserfNet.sln
+  - dotnet restore FreeserfNet.sln --verbosity normal
   - dotnet msbuild /p:Configuration=LinuxRelease FreeserfNet.sln
-  - dotnet test FreeserfNet.sln -c LinuxRelease --no-build -v normal
+  - dotnet test FreeserfNet.sln -c LinuxRelease --no-build --verbosity normal
   - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj /p:PublishSingleFile=true -r ubuntu-x64
 
 stages:
