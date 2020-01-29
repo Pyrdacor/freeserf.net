@@ -10,6 +10,7 @@ install:
   - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
   - nuget restore FreeserfNet.sln -verbosity detailed
   - msbuild /p:Configuration=WindowsRelease -t:restore FreeserfNet.sln
+  - dotnet test FreeserfNet.sln -c WindowsRelease --no-build -v normal
 
 build:
   project: FreeserfNet.sln
