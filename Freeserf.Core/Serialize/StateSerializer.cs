@@ -103,12 +103,11 @@ namespace Freeserf.Serialize
             public static PropertyMap Create(Type stateType)
             {
                 var map = new PropertyMap();
-                var properties = stateType.GetProperties()
-                    .Where(property => property.GetCustomAttribute(typeof(IgnoreAttribute)) == null);
+                var properties = GetSerializableProperties(stateType);
 
                 foreach (var property in properties)
                 {
-                    map.AddProperty(property.Name);
+                    map.AddProperty(property.Key);
                 }
 
                 map.Sort();
@@ -155,6 +154,74 @@ namespace Freeserf.Serialize
         /// </summary>
         private const byte DATA_MINOR_VERSION = 0;
 
+        /// <summary>
+        /// If a class has the DataClass attribute, each public property and field
+        /// of the class is serializable. Except for those which have the Ignore attribute.
+        /// Properties without public getter or setter are not serializable as well.
+        /// 
+        /// Otherwise single properties and fields may have the Data attribute.
+        /// </summary>
+        /// <param name="stateType"></param>
+        /// <returns></returns>
+        private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(Type stateType)
+        {
+            if (stateType.GetCustomAttribute(typeof(DataClassAttribute)) != null)
+            {
+                var properties = stateType.GetProperties()
+                    .Where(property =>
+                        property.GetCustomAttribute(typeof(IgnoreAttribute)) == null &&
+                        property.GetGetMethod() != null &&
+                        property.GetSetMethod() != null
+                    )
+                    .Select(property => new KeyValuePair<string, bool>(property.Name, true));
+                var fields = stateType.GetFields()
+                    .Where(field =>
+                        field.GetCustomAttribute(typeof(IgnoreAttribute)) == null
+                    )
+                    .Select(field => new KeyValuePair<string, bool>(field.Name, false));
+                return Enumerable.Concat(properties, fields);
+            }
+            else
+            {
+                var properties = stateType.GetProperties()
+                    .Where(property =>
+                        property.GetCustomAttribute(typeof(DataAttribute)) != null &&
+                        property.GetGetMethod() != null &&
+                        property.GetSetMethod() != null
+                    )
+                    .Select(property => new KeyValuePair<string, bool>(property.Name, true));
+                var fields = stateType.GetFields()
+                    .Where(field =>
+                        field.GetCustomAttribute(typeof(DataAttribute)) != null
+                    )
+                    .Select(field => new KeyValuePair<string, bool>(field.Name, false));
+                return Enumerable.Concat(properties, fields);
+            }
+        }
+
+        /// <summary>
+        /// Public fields and properties are understand as "Properties" here.
+        /// 
+        /// The results are key-value-pairs where the key is the property or field name
+        /// and the value is a boolean that is true for real properties and false for
+        /// fields.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="onlyDirtyProperties"></param>
+        /// <returns></returns>
+        private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(State state, bool onlyDirtyProperties)
+        {
+            if (onlyDirtyProperties && state.DirtyProperties.Count == 0)
+                return new KeyValuePair<string, bool>[0];
+
+            var allProperties = GetSerializableProperties(state.GetType());
+
+            if (onlyDirtyProperties)
+                return allProperties.Where(property => state.DirtyProperties.Contains(property.Key));
+
+            return allProperties;
+        }
+
         public static void Serialize(Stream stream, State state, bool full, bool leaveOpen = false)
         {
             using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen))
@@ -175,18 +242,29 @@ namespace Freeserf.Serialize
             }
 
             var propertyMap = PropertyMap.Create(state.GetType());
-            var properties = full ? state.GetType().GetProperties()
-                .Where(property => property.GetCustomAttribute(typeof(IgnoreAttribute)) == null)
-                .Select(property => property.Name) : state.DirtyProperties;
+            var properties = GetSerializableProperties(state, !full);
 
-            foreach (var propertyName in properties)
+            foreach (var property in properties)
             {
-                propertyMap.SerializePropertyName(writer, propertyName);
-                var property = state.GetType().GetProperty(propertyName);
-                var propertyValue = property.GetValue(state);
+                propertyMap.SerializePropertyName(writer, property.Key);
+                object propertyValue;
+                Type propertyType;
+
+                if (property.Value) // real property
+                {
+                    var propertyInfo = state.GetType().GetProperty(property.Key);
+                    propertyValue = propertyInfo.GetValue(state);
+                    propertyType = propertyInfo.PropertyType;
+                }
+                else // field
+                {
+                    var fieldInfo = state.GetType().GetField(property.Key);
+                    propertyValue = fieldInfo.GetValue(state);
+                    propertyType = fieldInfo.FieldType;
+                }
 
                 if (propertyValue == null)
-                    SerializePropertyNullValue(writer, property.PropertyType);
+                    SerializePropertyNullValue(writer, propertyType);
                 else
                     SerializePropertyValue(writer, propertyValue, full);
             }
@@ -226,7 +304,16 @@ namespace Freeserf.Serialize
 
                 var property = type.GetProperty(propertyName);
 
-                property.SetValue(obj, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(obj)));
+                if (property != null)
+                {
+                    property.SetValue(obj, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(obj)));
+                }
+                else // possibly a field
+                {
+                    var field = type.GetField(propertyName);
+
+                    field.SetValue(obj, DeserializePropertyValue(reader, field.FieldType, field.GetValue(obj)));
+                }                
             }
 
             return obj;
@@ -255,9 +342,17 @@ namespace Freeserf.Serialize
             {
                 return reader.ReadInt32();
             }
+            else if (type == typeof(sbyte))
+            {
+                return reader.ReadSByte();
+            }
             else if (type == typeof(byte))
             {
                 return reader.ReadByte();
+            }
+            else if (type == typeof(short))
+            {
+                return reader.ReadInt16();
             }
             else if (type == typeof(word))
             {
@@ -266,6 +361,10 @@ namespace Freeserf.Serialize
             else if (type == typeof(dword))
             {
                 return reader.ReadUInt32();
+            }
+            else if (type == typeof(long))
+            {
+                return reader.ReadInt64();
             }
             else if (type == typeof(qword))
             {
@@ -278,6 +377,17 @@ namespace Freeserf.Serialize
             else if (type == typeof(double))
             {
                 return reader.ReadDouble();
+            }
+            else if (type == typeof(decimal))
+            {
+                return reader.ReadDecimal();
+            }
+            else if (type.IsEnum)
+            {
+                var baseType = Enum.GetUnderlyingType(type);
+                var value = DeserializePropertyValue(reader, baseType, null);
+
+                return Enum.ToObject(type, value);
             }
             else if (typeof(IDirtyArray).IsAssignableFrom(type))
             {
@@ -379,9 +489,17 @@ namespace Freeserf.Serialize
             {
                 writer.Write((int)value);
             }
+            else if (value is sbyte)
+            {
+                writer.Write((sbyte)value);
+            }
             else if (value is byte)
             {
                 writer.Write((byte)value);
+            }
+            else if (value is short)
+            {
+                writer.Write((short)value);
             }
             else if (value is word)
             {
@@ -390,6 +508,10 @@ namespace Freeserf.Serialize
             else if (value is dword)
             {
                 writer.Write((dword)value);
+            }
+            else if (value is long)
+            {
+                writer.Write((long)value);
             }
             else if (value is qword)
             {
@@ -402,6 +524,16 @@ namespace Freeserf.Serialize
             else if (value is double)
             {
                 writer.Write((double)value);
+            }
+            else if (value is decimal)
+            {
+                writer.Write((decimal)value);
+            }
+            else if (value.GetType().IsEnum)
+            {
+                var baseType = Enum.GetUnderlyingType(value.GetType());
+
+                SerializePropertyValue(writer, Convert.ChangeType(value, baseType), false);
             }
             else if (value is IDirtyArray)
             {

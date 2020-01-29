@@ -41,13 +41,13 @@ namespace Freeserf
 
     public class Flag : GameObject, IState
     {
-        internal class ResourceSlot : IComparable
+        internal class ResourceSlot : State, IComparable
         {
-            public Resource.Type Type = Resource.Type.None;
-            public Direction Direction;
-            public word DestinationObjectIndex;
+            public Resource.Type Type { get; set; } = Resource.Type.None;
+            public Direction Direction { get; set; }
+            public word DestinationObjectIndex { get; set; }
 
-            public int CompareTo(object other)
+            public override int CompareTo(object other)
             {
                 if (other is ResourceSlot)
                 {

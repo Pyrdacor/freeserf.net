@@ -818,7 +818,8 @@ namespace Freeserf.UI
 
         void UpdateGameType()
         {
-            buttonStart.Enabled = true;
+            if (buttonStart != null)
+                buttonStart.Enabled = true;
 
             switch (gameType)
             {

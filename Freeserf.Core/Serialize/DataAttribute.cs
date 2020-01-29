@@ -27,7 +27,7 @@ namespace Freeserf.Serialize
     internal class DataAttribute : Attribute
     {
         /// <summary>
-        /// Mark a member as serializable data.
+        /// Marks a member as serializable data.
         /// </summary>
         /// <param name="dataName">The serialized name</param>
         public DataAttribute(string dataName = null)
@@ -46,7 +46,7 @@ namespace Freeserf.Serialize
     internal class DataClassAttribute : Attribute
     {
         /// <summary>
-        /// Mark a class or struct as serializable.
+        /// Marks a class or struct as serializable.
         /// Each public field or property is marked as serializable data
         /// as long as it is not marked with the Ignore attribute.
         /// </summary>

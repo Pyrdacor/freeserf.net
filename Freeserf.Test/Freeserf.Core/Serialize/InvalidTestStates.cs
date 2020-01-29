@@ -1,15 +1,18 @@
 ﻿using Freeserf.Serialize;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Freeserf.Test.Freeserf.Core.Serialize
 {
+    [DataClass]
     class InvalidTestState_UnsupportedPropertyType : State
     {
         public int Property1 { get; set; }
-        public sbyte Property2 { get; set; } // should not be supported by StateSerializer
+        public List<int> Property2 { get; set; } // should not be supported by StateSerializer
     }
 
+    [DataClass]
     class InvalidTestState_InvalidPropertyName : State
     {
         public int Property1 { get; set; }
@@ -43,6 +46,7 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
         }
     }
 
+    [DataClass]
     class InvalidTestState_UnsupportedArrayElementType : State
     {
         public int Property1 { get; set; }

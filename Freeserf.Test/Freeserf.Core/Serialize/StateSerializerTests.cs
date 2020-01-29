@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.IO;
 using Freeserf.Serialize;
 
@@ -110,6 +111,60 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize<InvalidTestState_UnsupportedArrayElementType>(stream),
                 "Invalid state does not throw exception on deserialization.");
+        }
+
+        [TestMethod]
+        public void FlagState_SerializeAndDeserialize_ShouldNotThrowException()
+        {
+            using var stream = new MemoryStream();
+            var state = new FlagState();
+
+            try
+            {
+                StateSerializer.Serialize(stream, state, true, true);
+                stream.Position = 0;
+                StateSerializer.Deserialize<FlagState>(stream);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Exception of type ({ex.GetType().Name}) thrown: {ex.Message}");
+            }
+        }
+
+        [TestMethod]
+        public void TestState_DataAttribute_ShouldBeSerialized()
+        {
+            using var stream = new MemoryStream();
+            var state = new TestState_DataAttribute();
+            state.Serialized = 100;
+            state.NotSerialized = 100;
+
+            StateSerializer.Serialize(stream, state, true, true);
+            stream.Position = 0;
+            var resultingState = StateSerializer.Deserialize<TestState_DataAttribute>(stream);
+
+            Assert.IsTrue(state.Serialized == resultingState.Serialized,
+                "Public field with Data attribute is not serialized.");
+            Assert.IsTrue(resultingState.NotSerialized == 0,
+                "Public field without Data attribute is serialized.");
+        }
+
+        [TestMethod]
+        public void TestState_IgnoreAttribute_ShouldNotBeSerialized()
+        {
+            using var stream = new MemoryStream();
+            var state = new TestState_IgnoreAttribute();
+            state.Serialized = 100;
+            state.NotSerialized = 100;
+
+            StateSerializer.Serialize(stream, state, true, true);
+            stream.Position = 0;
+            var resultingState = StateSerializer.Deserialize<TestState_IgnoreAttribute>(stream);
+
+            Assert.IsTrue(state.Serialized == resultingState.Serialized,
+                "Public field in DataClass without Ignore attribute is not serialized.");
+            Assert.IsTrue(resultingState.NotSerialized == 0,
+                "Public field in DataClass with Ignore attribute is serialized.");
         }
     }
 }

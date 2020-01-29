@@ -8,8 +8,10 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
     using dword = UInt32;
     using qword = UInt64;
 
+    [DataClass]
     class TestState : State, IEquatable<TestState>
     {
+        [DataClass]
         public class InnerState : State, IComparable
         {
             public qword InnerTestProperty { get; set; }
@@ -108,5 +110,22 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             return true;
         }
+    }
+
+    class TestState_DataAttribute : State
+    {
+        [Data]
+        public int Serialized = 0;
+
+        public int NotSerialized = 0;
+    }
+
+    [DataClass]
+    class TestState_IgnoreAttribute : State
+    {
+        public int Serialized = 0;
+
+        [Ignore]
+        public int NotSerialized = 0;
     }
 }
