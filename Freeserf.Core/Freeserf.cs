@@ -22,7 +22,10 @@
 
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Freeserf.Data;
+
+[assembly: InternalsVisibleTo("Freeserf.Test")]
 
 namespace Freeserf
 {

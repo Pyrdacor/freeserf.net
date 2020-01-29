@@ -52,7 +52,7 @@ namespace Freeserf.Serialize
             get => map[key];
             set
             {
-                if ((map[key] == null && value != null) || map[key].CompareTo(value) != 0)
+                if ((map[key] == null && value != null) || value is State || map[key].CompareTo(value) != 0)
                 {
                     map[key] = value;
 

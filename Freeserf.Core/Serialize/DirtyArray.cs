@@ -38,6 +38,11 @@ namespace Freeserf.Serialize
     {
         T[] array = null;
 
+        public DirtyArray()
+        {
+            array = new T[0];
+        }
+
         public DirtyArray(int size)
         {
             array = new T[size];
@@ -89,7 +94,9 @@ namespace Freeserf.Serialize
 
         public void Initialize(Array values)
         {
-            if (array.Length != values.Length)
+            if (array == null || array.Length == 0)
+                array = new T[values.Length];
+            else if (array.Length != values.Length)
                 throw new ExceptionFreeserf("Invalid number of dirty array elements");
 
             for (int i = 0; i < values.Length; ++i)

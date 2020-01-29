@@ -31,7 +31,7 @@ namespace Freeserf.Serialize
     }
 
 
-    internal abstract class State : IState
+    internal abstract class State : IState, System.IComparable
     {
         private readonly List<string> dirtyProperties = new List<string>();
         protected object dirtyLock = new object();
@@ -68,6 +68,16 @@ namespace Freeserf.Serialize
         {
             dirtyProperties.Clear();
             Dirty = false;
+        }
+
+        public virtual int CompareTo(object obj)
+        {
+            if (obj == null)
+                return 1;
+
+            // we only support reference comparison here
+            // its only purpose is to be useable in DirtyArray and DirtyMap values
+            return this == obj ? 0 : GetHashCode().CompareTo(obj.GetHashCode());
         }
     }
 }

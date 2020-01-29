@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Freeserf.Serialize
 {
@@ -154,9 +155,9 @@ namespace Freeserf.Serialize
         /// </summary>
         private const byte DATA_MINOR_VERSION = 0;
 
-        public static void Serialize(Stream stream, State state, bool full)
+        public static void Serialize(Stream stream, State state, bool full, bool leaveOpen = false)
         {
-            using (var writer = new BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen))
             {
                 // "FS" -> Freeserf State
                 writer.Write(new byte[] { (byte)'F', (byte)'S', DATA_MAJOR_VERSION, DATA_MINOR_VERSION });
@@ -178,19 +179,25 @@ namespace Freeserf.Serialize
                 .Where(property => property.GetCustomAttribute(typeof(IgnoreAttribute)) == null)
                 .Select(property => property.Name) : state.DirtyProperties;
 
-            foreach (var property in properties)
+            foreach (var propertyName in properties)
             {
-                propertyMap.SerializePropertyName(writer, property);
-                SerializePropertyValue(writer, state.GetType().GetProperty(property).GetValue(state), full);
+                propertyMap.SerializePropertyName(writer, propertyName);
+                var property = state.GetType().GetProperty(propertyName);
+                var propertyValue = property.GetValue(state);
+
+                if (propertyValue == null)
+                    SerializePropertyNullValue(writer, property.PropertyType);
+                else
+                    SerializePropertyValue(writer, propertyValue, full);
             }
 
             // end of state data marker
             SerializePropertyValue(writer, 0, false);
         }
 
-        public static T Deserialize<T>(Stream stream) where T : State, new()
+        public static T Deserialize<T>(Stream stream, bool leaveOpen = false) where T : State, new()
         {
-            using (var reader = new BinaryReader(stream))
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen))
             {
                 byte[] header = reader.ReadBytes(4);
 
@@ -272,7 +279,7 @@ namespace Freeserf.Serialize
             {
                 return reader.ReadDouble();
             }
-            else if (type.IsSubclassOf(typeof(IDirtyArray)))
+            else if (typeof(IDirtyArray).IsAssignableFrom(type))
             {
                 var elementType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
 
@@ -287,11 +294,14 @@ namespace Freeserf.Serialize
                 for (int i = 0; i < length; ++i)
                     array.SetValue(DeserializePropertyValue(reader, elementType, null), i);
 
+                if (dirtyArray == null)
+                    dirtyArray = (IDirtyArray)Activator.CreateInstance(type);
+
                 dirtyArray.Initialize(array);
 
                 return dirtyArray;
             }
-            else if (type.IsSubclassOf(typeof(IDirtyMap)))
+            else if (typeof(IDirtyMap).IsAssignableFrom(type))
             {
                 var keyType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
                 var valueType = type.IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
@@ -314,6 +324,9 @@ namespace Freeserf.Serialize
                     map.SetValue(new KeyValuePair<object, object>(key, value), i);
                 }
 
+                if (dirtyMap == null)
+                    dirtyMap = (IDirtyMap)Activator.CreateInstance(type);
+
                 dirtyMap.Initialize(map);
 
                 return dirtyMap;
@@ -321,6 +334,30 @@ namespace Freeserf.Serialize
             else
             {
                 throw new ExceptionFreeserf("Unsupport data type for state deserialization: " + type.Name);
+            }
+        }
+
+        private static void SerializePropertyNullValue(BinaryWriter writer, Type propertyType)
+        {
+            if (propertyType.IsSubclassOf(typeof(State)))
+            {
+                SerializePropertyValue(writer, 0, false);
+            }
+            else if (propertyType == typeof(string))
+            {
+                writer.Write("");
+            }
+            else if (typeof(IDirtyArray).IsAssignableFrom(propertyType))
+            {
+                writer.Write(0); // length of zero
+            }
+            else if (typeof(IDirtyMap).IsAssignableFrom(propertyType))
+            {
+                writer.Write(0); // count of zero
+            }
+            else
+            {
+                throw new ExceptionFreeserf("Unsupport data type for state serialization: " + propertyType.Name);
             }
         }
 
@@ -387,9 +424,10 @@ namespace Freeserf.Serialize
                         element.GetType().GetGenericTypeDefinition() != typeof(KeyValuePair<,>))
                         throw new ExceptionFreeserf("Invalid dirty map class");
 
-                    dynamic entry = element;
-                    SerializePropertyValue(writer, entry.Key, full);
-                    SerializePropertyValue(writer, entry.Value, full);
+                    var elementKey = element.GetType().GetProperty("Key").GetValue(element);
+                    var elementValue = element.GetType().GetProperty("Value").GetValue(element);
+                    SerializePropertyValue(writer, elementKey, full);
+                    SerializePropertyValue(writer, elementValue, full);
                 }
             }
             else
