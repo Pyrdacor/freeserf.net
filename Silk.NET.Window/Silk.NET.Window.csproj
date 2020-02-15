@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Silk.NET.Window</RootNamespace>
     <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
@@ -70,8 +70,10 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Silk.NET.Input" Version="1.0.0-preview3" />
-    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.0.0-preview3" />
+    <PackageReference Include="Silk.NET.GLFW" Version="1.0.0-preview4" />
+    <PackageReference Include="Silk.NET.Input" Version="1.0.0-preview4" />
+    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.0.0-preview4" />
+    <PackageReference Include="Silk.NET.Windowing" Version="1.0.0-preview4" />
   </ItemGroup>
 
 </Project>

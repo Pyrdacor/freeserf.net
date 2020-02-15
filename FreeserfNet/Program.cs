@@ -54,7 +54,6 @@ namespace Freeserf
         {
             try
             {
-                Silk.NET.Windowing.Window.Init();
                 using (var mainWindow = MainWindow.Create(args))
                 {
                     if (mainWindow != null)

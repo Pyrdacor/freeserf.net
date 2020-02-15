@@ -10,7 +10,7 @@ using Silk.NET.Windowing.Desktop;
 
 namespace Silk.NET.Window
 {
-    public class Window : GlfwWindow
+    public class Window
     {
         private static WindowOptions DefaultOptions = new WindowOptions
         (
@@ -26,8 +26,14 @@ namespace Silk.NET.Window
             WindowBorder.Resizable,
             VSyncMode.Adaptive,
             10,
-            false
+            false,
+            new VideoMode(),
+            24
         );
+
+        IWindow window = null;
+        IMouse mouse = null;
+        bool cursorVisible = true;
 
         private static WindowOptions CreateOptions(string title, Point position, Size size)
         {
@@ -43,15 +49,15 @@ namespace Silk.NET.Window
         private readonly List<Delegate> timerTasks = new List<Delegate>();
 
         public Window()
-            : base(DefaultOptions)
         {
+            window = Windowing.Window.Create(DefaultOptions);
             InitEvents();
         }
 
         public Window(string title, Point position, Size size)
-            : base(CreateOptions(title, position, size))
+            : this(CreateOptions(title, position, size))
         {
-            InitEvents();
+
         }
 
         public Window(string title, Size size)
@@ -61,21 +67,124 @@ namespace Silk.NET.Window
         }
 
         public Window(WindowOptions options)
-            : base(options)
-        {
+        {           
+            window = Windowing.Window.Create(options);
             InitEvents();
+        }
+
+        public Point Position
+        {
+            get => window.Position;
+            set => window.Position = value;
+        }
+
+        public Size Size
+        {
+            get => window.Size;
+            set => window.Size = value;
+        }
+
+        public WindowState WindowState
+        {
+            get => window.WindowState;
+            set => window.WindowState = value;
+        }
+
+        // TODO: change when real hiding is possible in Silk.NET
+        public bool CursorVisible
+        {
+            get => mouse == null || cursorVisible;
+            set
+            {
+                if (cursorVisible == value)
+                    return;
+
+                cursorVisible = value;
+
+                if (mouse != null)
+                {
+                    if (cursorVisible)
+                    {
+                        mouse.Cursor.Type = CursorType.Standard;
+                        mouse.Cursor.StandardCursor = StandardCursor.Default;
+                    }
+                    else
+                    {
+                        mouse.Cursor.Type = CursorType.Custom;
+                        mouse.Cursor.Width = 1;
+                        mouse.Cursor.Height = 1;
+                        mouse.Cursor.Pixels = new byte[4] { 0x00, 0x00, 0x00, 0x01 }; // alpha = 0x00 will not work
+                    }
+                }
+            }
         }
 
         public Rectangle ClientRectangle => new Rectangle(Position, Size);
 
         public bool Initialized { get; private set; } = false;
 
+        public event Action Load
+        {
+            add { window.Load += value; }
+            remove { window.Load -= value; }
+        }
+
+        public event Action<double> Update
+        {
+            add { window.Update += value; }
+            remove { window.Update -= value; }
+        }
+
+        public event Action<double> Render
+        {
+            add { window.Render += value; }
+            remove { window.Render -= value; }
+        }
+
+        public event Action Closing
+        {
+            add { window.Closing += value; }
+            remove { window.Closing -= value; }
+        }
+
+        public event Action<Size> Resize
+        {
+            add { window.Resize += value; }
+            remove { window.Resize -= value; }
+        }
+
+        public event Action<WindowState> StateChanged
+        {
+            add { window.StateChanged += value; }
+            remove { window.StateChanged -= value; }
+        }
+
+        public void Run()
+        {
+            window?.Run();
+        }
+
+        public void Close()
+        {
+            window?.Close();
+        }
+
+        public void MakeCurrent()
+        {
+            window?.MakeCurrent();
+        }
+
+        public void SwapBuffers()
+        {
+            window?.SwapBuffers();
+        }
+
         private void InitEvents()
         {
             Load += () =>
             {
                 Update += Window_TimerUpdate;
-                var input = this.GetInput();
+                var input = window.CreateInput();
                 InitKeyboardEvents(input);
                 InitMouseEvents(input);
                 Initialized = true;
@@ -203,7 +312,7 @@ namespace Silk.NET.Window
 
         private void InitMouseEvents(IInputContext input)
         {
-            var mouse = input.Mice.FirstOrDefault(m => m.IsConnected);
+            mouse = input.Mice.FirstOrDefault(m => m.IsConnected);
 
             if (mouse != null)
             {

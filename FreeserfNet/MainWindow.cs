@@ -154,7 +154,7 @@ namespace Freeserf
                 var options = new WindowOptions(
                     true,
                     true,
-                    new Point(-1, -1),
+                    new Point(20, 40),
                     new System.Drawing.Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     50.0,
                     50.0,
@@ -164,7 +164,9 @@ namespace Freeserf
                     state == WindowState.Normal ? WindowBorder.Fixed : WindowBorder.Hidden,
                     VSyncMode.Off,
                     10,
-                    false
+                    false,
+                    new VideoMode(),
+                    24
                 );
 
                 return mainWindow = new MainWindow(options);
@@ -174,11 +176,6 @@ namespace Freeserf
                 ReportException("Init", ex);
                 return null;
             }
-        }
-
-        public void Run()
-        {
-            (this as IWindow).Run();
         }
 
         private void MainWindow_Load()
@@ -209,6 +206,8 @@ namespace Freeserf
                     if (volumeController != null)
                         volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
                 }
+
+                CursorVisible = false; // hide cursor
 
                 gameView.Closed += GameView_Closed;
                 Closing += MainWindow_Closing;
