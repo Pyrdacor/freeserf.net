@@ -1,3 +1,10 @@
+Version 1.9.35:
+===============
+
+- UI font is now an embedded resource
+  and no external file anymore
+
+
 Version 1.9.34:
 ===============
 
