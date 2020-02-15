@@ -179,7 +179,8 @@ namespace Freeserf
         {
             try
             {
-                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight), Program.ExecutablePath + "/assets", DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
+                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
+                    DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
 
                 gameView.Resize(Width, Height, Orientation.LandscapeLeftRight);

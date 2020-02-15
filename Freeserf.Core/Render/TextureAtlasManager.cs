@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Freeserf.UI;
 using Freeserf.Data;
 
@@ -72,7 +73,7 @@ namespace Freeserf.Render
             return atlas[layer];
         }
 
-        public void AddAll(DataSource data, string assetPath)
+        public void AddAll(DataSource data)
         {
             uint i;
             Layer atlasIndex;
@@ -516,8 +517,8 @@ namespace Freeserf.Render
 
             // add new UI font
             guiResourceOffsets.Add(Data.Resource.UIText, guiResourceOffsets[Data.Resource.Icon] + 1000u);
-            AddSprite(Layer.GuiFont, guiResourceOffsets[Data.Resource.UIText], Sprite.CreateFromFile(
-                assetPath.TrimEnd(new char[] { '/', '\\' }) + "/ui_font.png",
+            AddSprite(Layer.GuiFont, guiResourceOffsets[Data.Resource.UIText], Sprite.CreateFromStream(
+                Assembly.GetExecutingAssembly().GetManifestResourceStream("Freeserf.assets.ui_font.png"),
                 new Sprite.Color() { Red = 0, Green = 0, Blue = 0 }
             ));
 

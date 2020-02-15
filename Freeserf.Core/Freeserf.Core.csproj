@@ -69,6 +69,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="assets\ui_font.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />

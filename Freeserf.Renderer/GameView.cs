@@ -72,7 +72,7 @@ namespace Freeserf.Renderer
         public event EventHandler KeyPress;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
 
-        public GameView(DataSource dataSource, Size virtualScreenSize, string assetPath,
+        public GameView(DataSource dataSource, Size virtualScreenSize,
             DeviceType deviceType = DeviceType.Desktop, 
             SizingPolicy sizingPolicy = SizingPolicy.FitRatio, 
             OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
@@ -102,7 +102,7 @@ namespace Freeserf.Renderer
 
             var textureAtlas = TextureAtlasManager.Instance;
 
-            textureAtlas.AddAll(dataSource, assetPath);
+            textureAtlas.AddAll(dataSource);
 
             foreach (Layer layer in Enum.GetValues(typeof(Layer)))
             {
