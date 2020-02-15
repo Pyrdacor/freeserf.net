@@ -2,9 +2,6 @@
 
 - Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice at all.
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
-- When scrolling Minimap and releasing, the selected area moves so that the wrong area is centered.
-- Dragging the minimap will reset the position in most cases
 - When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
 
 
@@ -20,6 +17,7 @@ Rendering:
 - Sometimes a serf is drawn that is inside the castle (leaving the castle).
 - On/Off button for players are missing when in last game on the spot was no player.
   This happens nearly every time. The visible state is correct though (even of the internal sprite). But nothing is drawn.
+  Maybe this is the same bug as the following.
 - Since switching to Silk.NET some parts are not drawn (especially some building frames and the corner stones).
     - Seems to be related to depth testing (maybe depth buffer is not large enough?).
 - Cursor is visible as Silk.NET not supporting hiding it yet
@@ -137,9 +135,10 @@ Nice to have:
 - After closing a game the GameInitBox should display the last started game settings.
   This way a map can be played again or the RNG number can be memorized.
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
-- Custom games and AIvsAI should share the map size setting.
-- When switching player in AIvsAI (e.g. with key 'j') the open menu should be updated.
-- Later avoid the tactic to demolish a hut when own knights lose and the opponent is capturing it.
+  Maybe just add a directory called ".." in every directory inside the savegame list which performs a "up" operation.
+- Custom games and AIvsAI should share the map size setting. And other options like the seed.
+- When switching player in AIvsAI (e.g. with key 'j') the currently opened menu should be updated.
+- Later think of a strategy to avoid the tactic to demolish a hut when own knights lose and the opponent is capturing it. Players could do this to get a better fight outcome.
 
 
 TODO:
