@@ -220,7 +220,7 @@ namespace Freeserf
         /// <summary>
         /// Whether a notification is queued for this player.
         /// </summary>
-        public bool HasNotification => notificationFlag && notifications.Count > 0;
+        public bool HasNotifications => notificationFlag;
         public void DropNotifications()
         {
             notificationFlag = false;
@@ -275,6 +275,8 @@ namespace Freeserf
 
             notifications.Enqueue(notification);
         }
+
+        public bool HasAnyNotification => notifications.Count > 0;
 
         public bool HasNotificationOfType(Notification.Type type)
         {

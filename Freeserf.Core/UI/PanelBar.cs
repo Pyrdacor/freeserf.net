@@ -290,7 +290,7 @@ namespace Freeserf.UI
             var player = interf.Player;
 
             // Blinking message icon. 
-            DrawMessageNotify(player != null && player.HasNotification && blinkTrigger && Enabled);
+            DrawMessageNotify(player != null && player.HasAnyNotification && blinkTrigger && Enabled);
 
             // Return arrow icon. 
             DrawReturnArrow(interf.GetMsgFlag(3) && Enabled);

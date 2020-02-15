@@ -106,8 +106,9 @@ namespace Freeserf.UI
         // Bit 5: Very important messages. Is set for at least message setting "few"
         // Bit 6: Pathway scrolling
         // Bit 7: Fast map click
+        // TODO: Create constants/flag enum values
         int config = 0x39;
-        int msgFlags;
+        int msgFlags; // TODO: Create constants/flag enum values for all bits and document possible values
 
         SpriteLocation[] mapCursorSprites = new SpriteLocation[7];
 
@@ -425,7 +426,7 @@ namespace Freeserf.UI
         // Open box for next message in the message queue 
         public void OpenMessage()
         {
-            if (!player.HasNotification)
+            if (!player.HasAnyNotification)
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 return;
@@ -900,11 +901,11 @@ namespace Freeserf.UI
                 }
 
                 // Handle newly enqueued messages 
-                if (player != null && player.HasNotification)
+                if (player != null && player.HasNotifications)
                 {
                     player.DropNotifications();
 
-                    while (player.HasNotification)
+                    while (player.HasAnyNotification)
                     {
                         var notification = player.PeekNotification();
 
@@ -925,7 +926,7 @@ namespace Freeserf.UI
 
                     while (true)
                     {
-                        if (!player.HasNotification)
+                        if (!player.HasAnyNotification)
                         {
                             msgFlags &= ~Misc.Bit(0);
                             break;
