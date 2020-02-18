@@ -97,8 +97,9 @@ namespace Freeserf.Data
             var sprite = new Sprite();
 
             if (image.PixelFormat != PixelFormat.Format32bppArgb &&
-                image.PixelFormat != PixelFormat.Format24bppRgb)
-                throw new NotSupportedException("Invalid image format: " + image.PixelFormat.ToString());
+                image.PixelFormat != PixelFormat.Format24bppRgb &&
+                image.PixelFormat != PixelFormat.Format8bppIndexed)
+                throw new NotSupportedException("Unsupported image format: " + image.PixelFormat.ToString());
 
             sprite.width = (uint)image.Width;
             sprite.height = (uint)image.Height;
@@ -111,7 +112,13 @@ namespace Freeserf.Data
         {
             Rectangle area = new Rectangle(0, 0, image.Width, image.Height);
             var imageData = image.LockBits(area, ImageLockMode.ReadOnly, image.PixelFormat);
-            int bytesPerPixel = image.PixelFormat == PixelFormat.Format32bppArgb ? 4 : 3;
+            int bytesPerPixel = image.PixelFormat switch
+            {
+                PixelFormat.Format32bppArgb => 4,
+                PixelFormat.Format24bppRgb => 3,
+                PixelFormat.Format8bppIndexed => 1,
+                _ => throw new NotSupportedException("Unsupported image format: " + image.PixelFormat.ToString())
+            };
             byte[] data = new byte[image.Width * image.Height * bytesPerPixel];
 
             try
@@ -124,7 +131,25 @@ namespace Freeserf.Data
                 image.UnlockBits(imageData);
             }
 
-            if (bytesPerPixel == 3)
+            if (bytesPerPixel == 1)
+            {
+                if (image.Palette == null)
+                    throw new InvalidDataException("No palette provided.");
+
+                byte[] temp = new byte[image.Width * image.Height * 4];
+
+                for (int i = 0; i < data.Length; ++i)
+                {
+                    var color = image.Palette.Entries[data[i]];
+                    temp[i * 4 + 0] = color.B;
+                    temp[i * 4 + 1] = color.G;
+                    temp[i * 4 + 2] = color.R;
+                    temp[i * 4 + 3] = color.A;
+                }
+
+                data = temp;
+            }
+            else if (bytesPerPixel == 3)
             {
                 byte[] temp = new byte[image.Width * image.Height * 4];
 
