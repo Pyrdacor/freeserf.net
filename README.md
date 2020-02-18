@@ -14,6 +14,7 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 | Windows | Linux |
 | ---- | ---- |
+| [v2.0.0-pre](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-pre/Freeserf.net-Windows.zip "Windows v2.0.0 Pre-Release") | [v2.0.0-pre](https://github.com/Pyrdacor/freeserf.net/releases/download/2.0.0-pre/Freeserf.net-Linux.tar.gz "Linux v2.0.0 Pre-Release") |
 | [v1.9.35](https://github.com/Pyrdacor/freeserf.net/releases/download/v1.9.35/Freeserf.net-Windows.zip "Windows v1.9.35") | [v1.9.35](https://github.com/Pyrdacor/freeserf.net/releases/download/1.9.35/Freeserf.net-Linux.tar.gz "Linux v1.9.35") |
 
 Builds for other platforms will follow later.
@@ -38,7 +39,9 @@ Thank you very much.
 
 ## Current State
 
-**Update 04.01.2020: Currently I am working on multiplayer support. This will be version 2.0.**
+19.02.2020: Release 2.0.0-pre which is no longer dependent of .NET Framework nor Mono and will run on Windows and Ubuntu.
+
+Currently I am working on multiplayer support.
 
 All the code from freeserf was ported or re-implemented. AI logic was added in addition.
 
@@ -46,8 +49,7 @@ The renderer is using [Silk.net](https://github.com/Ultz/Silk.NET) and netcore 3
 
 There is a small sound engine for Windows. Sound for other platforms will follow later. The sound system is not perfect yet.
 
-Things that are missing are some minor parts of AI logic and tutorial games. Serf fighting is not fully tested yet.
-Multiplayer support is prepared but not really implemented yet. But I'm working on this now.
+Things that are missing are some minor parts of AI logic and tutorial games.
 
 The game is playable for most parts. If you find any bugs please report it in the [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues). You can also look for open issues there.
 
@@ -64,7 +66,7 @@ The game is playable for most parts. If you find any bugs please report it in th
 The first step is to port everything from C++ to C# and ensure that the game runs.
 There may be some quick&dirty implementations or things that could be done better.
 
-### Phase 2: Optimizing (85%) - <span style="color:seagreen">[Active]</span>
+### Phase 2: Optimizing (90%) - <span style="color:seagreen">[Active]</span>
 
 This includes bug fixing and C#-specific optimizations.
 Moreover this includes performance and stability optimizations if needed.
@@ -88,7 +90,7 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 ## Implementation details
 
-The core is implemented as a .NET Standard 2.0 DLL. The renderer is also a .NET Standard 2.0 DLL and uses Silk.net for rendering. The sound engine is only implemented for Windows at the moment and uses the WinMM.dll with its WAVE and MIDI functionality.
+The core is implemented as a .NET Standard 2.1 DLL. The renderer is also a .NET Standard 2.1 DLL and uses Silk.NET for rendering. The sound engine is only implemented for Windows at the moment and uses the WinMM.dll with its WAVE and MIDI functionality.
 
 At the moment the sound engine is part of the renderer. This will change in the future. But you can implement your own sound engine independent of the renderer already if you want.
 
