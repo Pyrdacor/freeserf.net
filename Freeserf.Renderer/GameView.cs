@@ -118,7 +118,9 @@ namespace Freeserf.Renderer
                         textureAtlas.GetOrCreate(layer).Texture as Texture;
 
                     var renderLayer = Create(layer, texture,
-                        layer == Layer.Gui); // only the gui supports colored rects
+                        layer == Layer.Gui, // only the gui supports colored rects
+                        null, // no color key for now
+                        layer == Layer.GuiFont ? new Render.Color(115, 179, 67, 255) : null); // UI font uses green color overlay
 
                     if (layer == Layer.Gui || layer == Layer.GuiBuildings || layer == Layer.Minimap)
                     {

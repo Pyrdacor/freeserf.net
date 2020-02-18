@@ -32,6 +32,7 @@ namespace Freeserf.Renderer
         {
             GetFragmentShaderHeader(),
             $"uniform vec3 {DefaultColorKeyName} = vec3(1, 0, 1);",
+            $"uniform vec4 {DefaultColorOverlayName} = vec4(1, 1, 1, 1);",
             $"uniform sampler2D {DefaultSamplerName};",
             $"{GetInName(true)} vec2 varTexCoord;",
             $"{GetInName(true)} vec2 varMaskTexCoord;",
@@ -49,6 +50,7 @@ namespace Freeserf.Renderer
             $"        pixelColor.g *= maskColor.g;",
             $"        pixelColor.b *= maskColor.b;",
             $"        pixelColor.a *= maskColor.a;",
+            $"        pixelColor *= {DefaultColorOverlayName};",
             $"    }}",
             $"    ",
             $"    if (pixelColor.a < 0.5)",
@@ -86,17 +88,17 @@ namespace Freeserf.Renderer
 
         MaskedTriangleShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName,
-                  DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName,
+                  DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultColorOverlayName,
                   DefaultAtlasSizeName, DefaultMaskTexCoordName, MaskedTriangleFragmentShader, MaskedTriangleVertexShader)
         {
 
         }
 
         MaskedTriangleShader(string modelViewMatrixName, string projectionMatrixName, string zName,
-            string positionName, string texCoordName, string samplerName, string colorKeyName,
+            string positionName, string texCoordName, string samplerName, string colorKeyName, string colorOverlayName,
             string atlasSizeName, string maskTexCoordName, string[] fragmentShaderLines, string[] vertexShaderLines)
-            : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName,
-                  samplerName, colorKeyName, atlasSizeName, DefaultLayerName, fragmentShaderLines, vertexShaderLines)
+            : base(modelViewMatrixName, projectionMatrixName, zName, positionName, texCoordName, samplerName,
+                  colorKeyName, colorOverlayName, atlasSizeName, DefaultLayerName, fragmentShaderLines, vertexShaderLines)
         {
             this.maskTexCoordName = maskTexCoordName;
         }

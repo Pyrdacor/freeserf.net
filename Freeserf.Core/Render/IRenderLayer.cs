@@ -53,6 +53,6 @@ namespace Freeserf.Render
 
     public interface IRenderLayerFactory
     {
-        IRenderLayer Create(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null);
+        IRenderLayer Create(Layer layer, Texture texture, bool supportColoredRects = false, Color colorKey = null, Color colorOverlay = null);
     }
 }

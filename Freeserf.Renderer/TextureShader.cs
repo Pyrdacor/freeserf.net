@@ -27,17 +27,20 @@ namespace Freeserf.Renderer
         internal static readonly string DefaultTexCoordName = "texCoord";
         internal static readonly string DefaultSamplerName = "sampler";
         internal static readonly string DefaultColorKeyName = "colorKey";
+        internal static readonly string DefaultColorOverlayName = "color";
         internal static readonly string DefaultAtlasSizeName = "atlasSize";
 
         readonly string texCoordName;
         readonly string samplerName;
         readonly string colorKeyName;
+        readonly string colorOverlayName;
         readonly string atlasSizeName;
 
         static readonly string[] TextureFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
             $"uniform vec3 {DefaultColorKeyName} = vec3(1, 0, 1);",
+            $"uniform vec4 {DefaultColorOverlayName} = vec4(1, 1, 1, 1);",
             $"uniform sampler2D {DefaultSamplerName};",
             $"{GetInName(true)} vec2 varTexCoord;",
             $"",
@@ -47,6 +50,8 @@ namespace Freeserf.Renderer
             $"    ",
             $"    if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
             $"        pixelColor.a = 0;",
+            $"    else",
+            $"        pixelColor *= {DefaultColorOverlayName};",
             $"    ",
             $"    if (pixelColor.a < 0.5)",
             $"        discard;",
@@ -80,20 +85,21 @@ namespace Freeserf.Renderer
 
         TextureShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
-                  DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName,
+                  DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultColorOverlayName,
                   DefaultAtlasSizeName, DefaultLayerName, TextureFragmentShader, TextureVertexShader)
         {
 
         }
 
         protected TextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
-            string positionName, string texCoordName, string samplerName, string colorKeyName,
+            string positionName, string texCoordName, string samplerName, string colorKeyName, string colorOverlayName,
             string atlasSizeName, string layerName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, layerName, fragmentShaderLines, vertexShaderLines)
         {
             this.texCoordName = texCoordName;
             this.samplerName = samplerName;
             this.colorKeyName = colorKeyName;
+            this.colorOverlayName = colorOverlayName;
             this.atlasSizeName = atlasSizeName;
         }
 
@@ -105,6 +111,11 @@ namespace Freeserf.Renderer
         public void SetColorKey(float r, float g, float b)
         {
             shaderProgram.SetInputVector3(colorKeyName, r, g, b);
+        }
+
+        public void SetColorOverlay(float r, float g, float b, float a)
+        {
+            shaderProgram.SetInputVector4(colorOverlayName, r, g, b, a);
         }
 
         public void SetAtlasSize(uint width, uint height)

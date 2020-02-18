@@ -35,6 +35,12 @@ namespace Freeserf.Renderer
             set;
         } = null;
 
+        public Render.Color ColorOverlay
+        {
+            get;
+            set;
+        } = null;
+
         public bool Visible
         {
             get;
@@ -58,7 +64,7 @@ namespace Freeserf.Renderer
         readonly Texture texture = null;
         readonly int layerIndex = 0;
 
-        public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Render.Color colorKey = null)
+        public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Render.Color colorKey = null, Render.Color colorOverlay = null)
         {
             var shape = (layer == Layer.Landscape || layer == Layer.Waves) ? Shape.Triangle : Shape.Rect;
             bool masked = layer == Layer.Landscape || layer == Layer.Waves || layer == Layer.Buildings || layer == Layer.Paths; // we need the mask for slope display and drawing of building progress
@@ -72,6 +78,7 @@ namespace Freeserf.Renderer
             Layer = layer;
             this.texture = texture;
             ColorKey = colorKey;
+            ColorOverlay = colorOverlay;
             layerIndex = Misc.Round(Math.Log((int)layer, 2.0));
         }
 
@@ -124,7 +131,12 @@ namespace Freeserf.Renderer
             if (ColorKey == null)
                 shader.SetColorKey(1.0f, 0.0f, 1.0f);
             else
-                shader.SetColorKey(ColorKey.R, ColorKey.G, ColorKey.B);
+                shader.SetColorKey(ColorKey.R / 255.0f, ColorKey.G / 255.0f, ColorKey.B / 255.0f);
+
+            if (ColorOverlay == null)
+                shader.SetColorOverlay(1.0f, 1.0f, 1.0f, 1.0f);
+            else
+                shader.SetColorOverlay(ColorOverlay.R / 255.0f, ColorOverlay.G / 255.0f, ColorOverlay.B / 255.0f, ColorOverlay.A / 255.0f);
 
             renderBuffer.Render();
         }
@@ -194,7 +206,7 @@ namespace Freeserf.Renderer
 
     public class RenderLayerFactory : IRenderLayerFactory
     {
-        public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Render.Color colorKey = null)
+        public IRenderLayer Create(Layer layer, Render.Texture texture, bool supportColoredRects = false, Render.Color colorKey = null, Render.Color colorOverlay = null)
         {
             if (!(texture is Texture))
                 throw new ExceptionFreeserf(ErrorSystemType.Render, "The given texture is not valid for this renderer.");
@@ -204,7 +216,7 @@ namespace Freeserf.Renderer
                 case Layer.None:
                     throw new ExceptionFreeserf(ErrorSystemType.Render, $"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
                 default:
-                    return new RenderLayer(layer, texture as Texture, supportColoredRects, colorKey);
+                    return new RenderLayer(layer, texture as Texture, supportColoredRects, colorKey, colorOverlay);
             }
         }
     }
