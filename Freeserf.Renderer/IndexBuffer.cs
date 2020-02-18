@@ -49,7 +49,7 @@ namespace Freeserf.Renderer
             if (disposed)
                 throw new Exception("Tried to bind a disposed buffer.");
 
-            State.Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, index);
 
             Recreate(); // ensure that the data is up to date
         }
@@ -59,7 +59,7 @@ namespace Freeserf.Renderer
             if (disposed)
                 return;
 
-            State.Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+            State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
         }
 
         void Recreate() // is only called when the buffer is bound (see Bind())
@@ -73,8 +73,8 @@ namespace Freeserf.Renderer
                 {
                     fixed (uint* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(BufferTargetARB.ElementArrayBuffer, (uint)(Size * sizeof(uint)),
-                            ptr, BufferUsageARB.StaticDraw);
+                        State.Gl.BufferData(GLEnum.ElementArrayBuffer, (uint)(Size * sizeof(uint)),
+                            ptr, GLEnum.StaticDraw);
                     }
                 }
             }
@@ -90,7 +90,7 @@ namespace Freeserf.Renderer
             if (disposed)
                 throw new Exception("Tried to recreate a disposed buffer.");
 
-            State.Gl.BindBuffer(BufferTargetARB.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
 
             lock (bufferLock)
             {
@@ -98,8 +98,8 @@ namespace Freeserf.Renderer
                 {
                     fixed (uint* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(Size * sizeof(uint)),
-                            ptr, BufferUsageARB.StaticDraw);
+                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(uint)),
+                            ptr, GLEnum.StaticDraw);
                     }
                 }
             }
@@ -111,7 +111,7 @@ namespace Freeserf.Renderer
 
         public void InsertQuad(int quadIndex)
         {
-            if (quadIndex >= uint.MaxValue / 4)
+            if (quadIndex >= int.MaxValue / 6)
                 throw new OutOfMemoryException("Too many polygons to render.");
 
             int arrayIndex = quadIndex * 6; // 2 triangles with 3 vertices each
@@ -135,10 +135,10 @@ namespace Freeserf.Renderer
 
                 buffer[arrayIndex++] = vertexIndex + 0;
                 buffer[arrayIndex++] = vertexIndex + 1;
-                buffer[arrayIndex++] = vertexIndex + 3;
-                buffer[arrayIndex++] = vertexIndex + 1;
                 buffer[arrayIndex++] = vertexIndex + 2;
                 buffer[arrayIndex++] = vertexIndex + 3;
+                buffer[arrayIndex++] = vertexIndex + 0;
+                buffer[arrayIndex++] = vertexIndex + 2;
 
                 size = arrayIndex;
                 changedSinceLastCreation = true;
@@ -156,7 +156,7 @@ namespace Freeserf.Renderer
             {
                 if (disposing)
                 {
-                    State.Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+                    State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
 
                     if (index != 0)
                     {

@@ -33,7 +33,7 @@ namespace Freeserf.Renderer
         int size; // count of values
         readonly IndexPool indices = new IndexPool();
         bool changedSinceLastCreation = true;
-        readonly BufferUsageARB usageHint = BufferUsageARB.DynamicDraw;
+        readonly GLEnum usageHint = GLEnum.DynamicDraw;
 
         public override int Size => size;
 
@@ -46,7 +46,7 @@ namespace Freeserf.Renderer
             index = State.Gl.GenBuffer();
 
             if (staticData)
-                usageHint = BufferUsageARB.StaticDraw;
+                usageHint = GLEnum.StaticDraw;
         }
 
         public int Add(Render.Color color, int index = -1)
@@ -143,7 +143,7 @@ namespace Freeserf.Renderer
             {
                 if (disposing)
                 {
-                    State.Gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+                    State.Gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
                     if (index != 0)
                     {
@@ -171,7 +171,7 @@ namespace Freeserf.Renderer
             if (disposed)
                 throw new Exception("Tried to bind a disposed buffer.");
 
-            State.Gl.BindBuffer(BufferTargetARB.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
 
             Recreate(); // ensure that the data is up to date
         }
@@ -187,7 +187,7 @@ namespace Freeserf.Renderer
                 {
                     fixed (byte* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(Size * sizeof(byte)),
+                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(byte)),
                             ptr, usageHint);
                     }
                 }
@@ -204,7 +204,7 @@ namespace Freeserf.Renderer
             if (disposed)
                 throw new Exception("Tried to recreate a disposed buffer.");
 
-            State.Gl.BindBuffer(BufferTargetARB.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
 
             lock (bufferLock)
             {
@@ -212,7 +212,7 @@ namespace Freeserf.Renderer
                 {
                     fixed (byte* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(Size * sizeof(byte)),
+                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(byte)),
                             ptr, usageHint);
                     }
                 }
