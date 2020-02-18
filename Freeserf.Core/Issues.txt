@@ -1,11 +1,4 @@
-﻿Must-Fix 1.9:
-
-- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice at all.
-- After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
-
-
-Rendering:
+﻿Rendering:
 
 - Improve grid drawing in minimap?
 - There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
@@ -98,6 +91,8 @@ Logic:
 	- I guess this happens when the emergency program gets active at a specific time.
 	- The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
 - Seen a knight that was turning left and right on the same map spot (either it was only a display bug or a logic bug). It was after capturing a building.
+- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice at all.
+- When the castle is blocked by fighting knights, the transporter will go back to the castle and won't ever come back
 
 
 Notification Box:
