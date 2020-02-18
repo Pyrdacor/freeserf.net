@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Robert Schneckenhaus")]
 [assembly: AssemblyProduct("Freeserf.net")]
-[assembly: AssemblyCopyright("Copyright © Robert Schneckenhaus 2018-2019")]
+[assembly: AssemblyCopyright("Copyright © Robert Schneckenhaus 2018-2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -14,5 +14,5 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("ea9340ab-cdd1-40ee-b242-f405c0e1f6f9")]
 
-[assembly: AssemblyVersion("1.9.35.0")]
-[assembly: AssemblyFileVersion("1.9.35.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
