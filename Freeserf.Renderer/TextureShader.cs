@@ -48,7 +48,10 @@ namespace Freeserf.Renderer
             $"    if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
             $"        pixelColor.a = 0;",
             $"    ",
-            $"    {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = pixelColor;",
+            $"    if (pixelColor.a < 0.5)",
+            $"        discard;",
+            $"    else",
+            $"        {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = pixelColor;",
             $"}}"
         };
 
