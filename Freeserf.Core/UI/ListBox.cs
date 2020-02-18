@@ -158,7 +158,7 @@ namespace Freeserf.UI
 
             selectionBackground.Resize(Width - 4, 9);
             selectionBackground.X = TotalX + 2;
-            selectionBackground.Y = TotalY + 2 + (selectedItem - firstVisibleItem) * 9;
+            selectionBackground.Y = TotalY + 3 + (selectedItem - firstVisibleItem) * 9;
 
             for (int i = 0; i < textEntries.Count; ++i)
             {
