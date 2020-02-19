@@ -11,7 +11,7 @@ install:
   - dotnet restore FreeserfNet.sln --verbosity normal
   - dotnet msbuild /p:Configuration=WindowsRelease FreeserfNet.sln
   - dotnet test FreeserfNet.sln -c WindowsRelease --no-build --verbosity normal
-  - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj /p:PublishSingleFile=true /p:AllowUnsafeCode=true -r win-x64
+  - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj /p:PublishSingleFile=true /unsafe -r win-x64
 
 build:
   project: FreeserfNet.sln
