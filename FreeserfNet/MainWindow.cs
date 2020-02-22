@@ -229,7 +229,11 @@ namespace Freeserf
 
         private void GameView_Closed(object sender, EventArgs e)
         {
-            Exit();
+            if (gameView != null)
+            {
+                gameView = null;
+                Exit();
+            }
         }
 
         protected void MainWindow_Closing()
@@ -241,6 +245,14 @@ namespace Freeserf
             //    debugConsole.Close();
 
             // Cursor = MouseCursor.Default;
+
+            if (gameView != null)
+            {
+                var view = gameView;
+                gameView = null;
+                view.Close();
+                return;
+            }
 
             try
             {
@@ -326,7 +338,7 @@ namespace Freeserf
 
             try
             {
-                gameView.Render();
+                gameView?.Render();
             }
             catch (Exception ex)
             {
@@ -673,6 +685,8 @@ namespace Freeserf
             {
                 if (disposing)
                 {
+                    gameView?.Dispose();
+
                     // TODO: dispose managed resources
                 }
 

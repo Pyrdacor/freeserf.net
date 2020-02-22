@@ -25,7 +25,7 @@ using Freeserf.Render;
 
 namespace Freeserf.Renderer
 {
-    public class RenderLayer : IRenderLayer
+    public class RenderLayer : IRenderLayer, IDisposable
     {
         public Layer Layer { get; } = Layer.None;
 
@@ -63,6 +63,7 @@ namespace Freeserf.Renderer
         readonly RenderBuffer renderBufferColorRects = null;
         readonly Texture texture = null;
         readonly int layerIndex = 0;
+        bool disposed = false;
 
         public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Render.Color colorKey = null, Render.Color colorOverlay = null)
         {
@@ -201,6 +202,27 @@ namespace Freeserf.Renderer
 
             if (node is ColoredRect && renderBufferColorRects == null)
                 throw new ExceptionFreeserf(ErrorSystemType.Render, "This layer does not support colored rects.");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    renderBuffer?.Dispose();
+                    renderBufferColorRects?.Dispose();
+                    texture?.Dispose();
+                    Visible = false;
+
+                    disposed = true;
+                }
+            }
         }
     }
 

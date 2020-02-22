@@ -37,12 +37,13 @@ namespace Freeserf.Renderer
 
     public delegate bool FullscreenRequestHandler(bool fullscreen);
 
-    public class GameView : RenderLayerFactory, IRenderView, IAudioInterface
+    public class GameView : RenderLayerFactory, IRenderView, IAudioInterface, IDisposable
     {
         // these two lines are fore the background map at start
         int mapScrollTicks = 0;
         Random mapScrollRandom = new Random();
 
+        bool disposed = false;
         Context context;
         Rect virtualScreenDisplay;
         readonly SizingPolicy sizingPolicy;
@@ -189,6 +190,8 @@ namespace Freeserf.Renderer
 
             if (game != null)
                 game.Close();
+
+            Dispose();
 
             Closed?.Invoke(this, System.EventArgs.Empty);
         }
@@ -413,6 +416,9 @@ namespace Freeserf.Renderer
 
         public void Render()
         {
+            if (disposed)
+                return;
+
             context.SetRotation(rotation);
 
             State.Gl.Clear((uint)ClearBufferMask.ColorBufferBit | (uint)ClearBufferMask.DepthBufferBit);
@@ -579,6 +585,27 @@ namespace Freeserf.Renderer
         public bool NotifySystemKeyPressed(SystemKey key, byte modifier)
         {
             return RunHandler(SystemKeyPress, new EventArgs(EventType.SystemKeyPressed, 0, 0, (int)key, modifier));
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    foreach (var layer in layers.Values)
+                        layer?.Dispose();
+
+                    layers.Clear();
+
+                    disposed = true;
+                }
+            }
         }
     }
 }

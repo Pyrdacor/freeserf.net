@@ -19,6 +19,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using Silk.NET.OpenGL;
 
 namespace Freeserf.Renderer
@@ -31,11 +32,12 @@ namespace Freeserf.Renderer
 
     // Note: If we have different sprites per layer (e.g. those with masked tex coords and those without)
     // the indices will not fit inside the different buffers. We can't use different sprite types per layer!
-    public class RenderBuffer
+    public class RenderBuffer : IDisposable
     {
         public Shape Shape { get; } = Shape.Rect;
         public bool Masked { get; } = false;
         bool supportAnimations = false;
+        bool disposed = false;
 
         readonly VertexArrayObject vertexArrayObject = null;
         readonly PositionBuffer positionBuffer = null;
@@ -394,6 +396,9 @@ namespace Freeserf.Renderer
 
         public void Render()
         {
+            if (disposed)
+                return;
+
             vertexArrayObject.Bind();
 
             unsafe
@@ -411,6 +416,31 @@ namespace Freeserf.Renderer
                 finally
                 {
                     vertexArrayObject.Unlock();
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    vertexArrayObject?.Dispose();
+                    positionBuffer?.Dispose();
+                    textureAtlasOffsetBuffer?.Dispose();
+                    maskTextureAtlasOffsetBuffer?.Dispose();
+                    baseLineBuffer?.Dispose();
+                    colorBuffer?.Dispose();
+                    layerBuffer?.Dispose();
+                    indexBuffer?.Dispose();
+
+                    disposed = true;
                 }
             }
         }
