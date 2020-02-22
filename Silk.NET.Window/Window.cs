@@ -87,34 +87,40 @@ namespace Silk.NET.Window
         public WindowState WindowState
         {
             get => window.WindowState;
-            set => window.WindowState = value;
+            set
+            {
+                window.WindowState = value;
+
+                if (mouse != null && !CursorVisible)
+                {
+                    mouse.Cursor.CursorMode = WindowState == WindowState.Fullscreen ? CursorMode.Disabled : CursorMode.Hidden;
+                }
+            }
         }
 
-        // TODO: change when real hiding is possible in Silk.NET
         public bool CursorVisible
         {
             get => mouse == null || cursorVisible;
             set
             {
+                if (mouse == null)
+                {
+                    cursorVisible = false;
+                    return;
+                }
+
                 if (cursorVisible == value)
                     return;
 
                 cursorVisible = value;
 
-                if (mouse != null)
+                if (cursorVisible)
                 {
-                    if (cursorVisible)
-                    {
-                        mouse.Cursor.Type = CursorType.Standard;
-                        mouse.Cursor.StandardCursor = StandardCursor.Default;
-                    }
-                    else
-                    {
-                        mouse.Cursor.Type = CursorType.Custom;
-                        mouse.Cursor.Width = 1;
-                        mouse.Cursor.Height = 1;
-                        mouse.Cursor.Pixels = new byte[4] { 0x00, 0x00, 0x00, 0x01 }; // alpha = 0x00 will not work
-                    }
+                    mouse.Cursor.CursorMode = CursorMode.Normal;
+                }
+                else
+                {
+                    mouse.Cursor.CursorMode = WindowState == WindowState.Fullscreen ? CursorMode.Disabled : CursorMode.Hidden;
                 }
             }
         }
