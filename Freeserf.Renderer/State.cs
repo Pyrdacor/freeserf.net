@@ -38,7 +38,7 @@ namespace Freeserf.Renderer
         {
             Gl = GL.GetApi();
 
-            var openGLVersion = Gl.GetStringS(StringName.Version).TrimStart();
+            var openGLVersion = Gl.GetString(StringName.Version).TrimStart();
 
             Regex versionRegex = new Regex(@"([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
 
@@ -54,7 +54,7 @@ namespace Freeserf.Renderer
 
             if (OpenGLVersionMajor >= 2) // glsl is supported since OpenGL 2.0
             {
-                var glslVersion = Gl.GetStringS(StringName.ShadingLanguageVersion);
+                var glslVersion = Gl.GetString(StringName.ShadingLanguageVersion);
 
                 match = versionRegex.Match(glslVersion);
 

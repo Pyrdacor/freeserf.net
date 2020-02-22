@@ -68,7 +68,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Silk.NET.OpenGL" Version="1.0.0-preview4" />
+    <PackageReference Include="Silk.NET.OpenGL" Version="1.0.0-preview5" />
   </ItemGroup>
 
   <ItemGroup>
