@@ -27,7 +27,6 @@ using Freeserf.Data;
 using Freeserf.Event;
 using Freeserf.Render;
 using Freeserf.Renderer;
-using Freeserf.Audio;
 
 namespace Freeserf
 {

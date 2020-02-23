@@ -9,9 +9,9 @@ configuration: WindowsRelease
 install:
   - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
   - dotnet restore FreeserfNet.sln --verbosity normal
-  - dotnet msbuild /p:Configuration=WindowsRelease FreeserfNet.sln
+  - dotnet msbuild -p:Configuration=WindowsRelease -p:DefineConstants=WINDOWS FreeserfNet.sln
   - dotnet test FreeserfNet.sln -c WindowsRelease --no-build --verbosity normal
-  - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj /p:PublishSingleFile=true -r win-x64
+  - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=WINDOWS -p:PublishSingleFile=true -r win-x64
 
 build:
   project: FreeserfNet.sln
