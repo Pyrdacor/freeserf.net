@@ -1,7 +1,14 @@
-﻿namespace Freeserf.Audio.Linux
+﻿using Freeserf.Data;
+
+namespace Freeserf.Audio.Linux
 {
     internal class ModPlayer : IModPlayer
     {
+        public ModPlayer(DataSource dataSource)
+        {
+            // TODO: implement
+        }
+
         public bool Available => false;
 
         public bool Enabled { get => false; set { /* TODO: implement */ } }
