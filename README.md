@@ -6,9 +6,9 @@ To avoid copyright issues I won't provide any copyrighted data from the original
 
 Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
 
-| Windows | Linux |
-| ---- | ---- |
-| [![Build status](https://ci.appveyor.com/api/projects/status/github/pyrdacor/freeserf.net?branch=master&svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master) | [![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net/branches) |
+| AppVeyor (Windows) | Travis (Linux) | Azure Pipelines (Windows) |
+| ---- | ---- | ---- |
+| [![Build status](https://ci.appveyor.com/api/projects/status/github/pyrdacor/freeserf.net?branch=master&svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master) | [![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net/branches) | [![Build Status](https://dev.azure.com/Pyrdacor/Freeserf.net/_apis/build/status/Pyrdacor.freeserf.net?branchName=master)](https://dev.azure.com/Pyrdacor/Freeserf.net/_build/latest?definitionId=2&branchName=master) |
 
 ## Download the game
 
