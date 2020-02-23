@@ -5,28 +5,9 @@ using Freeserf.Data;
 namespace Freeserf.Audio.Windows
 {
 #if WINDOWS
-    internal class WindowsModPlayerFactory : IModPlayerFactory
+    internal class ModPlayer : WavePlayer, IModPlayer
     {
-        public WindowsModPlayerFactory(DataSource dataSource)
-        {
-            this.dataSource = dataSource;
-        }
-
-        DataSource dataSource = null;
-        static IModPlayer player = null;
-
-        public IModPlayer GetModPlayer()
-        {
-            if (player == null)
-                player = new WindowsModPlayer(dataSource);
-
-            return player;
-        }
-    }
-
-    internal class WindowsModPlayer : WindowsWavePlayer, IModPlayer
-    {
-        public WindowsModPlayer(DataSource dataSource)
+        public ModPlayer(DataSource dataSource)
             : base(dataSource)
         {
 

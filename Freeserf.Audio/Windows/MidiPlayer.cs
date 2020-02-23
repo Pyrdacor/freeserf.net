@@ -3,32 +3,12 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
-using Freeserf.Audio;
 using Freeserf.Data;
 
 namespace Freeserf.Audio.Windows
 {
 #if WINDOWS
-    internal class WindowsMidiPlayerFactory : IMidiPlayerFactory
-    {
-        public WindowsMidiPlayerFactory(DataSource dataSource)
-        {
-            this.dataSource = dataSource;
-        }
-
-        DataSource dataSource = null;
-        static IMidiPlayer player = null;
-
-        public IMidiPlayer GetMidiPlayer()
-        {
-            if (player == null)
-                player = new WindowsMidiPlayer(dataSource);
-
-            return player;
-        }
-    }
-
-    internal class WindowsMidiPlayer : Audio.Player, Audio.IVolumeController, IMidiPlayer, IDisposable
+    internal class MidiPlayer : Audio.Player, Audio.IVolumeController, IMidiPlayer, IDisposable
     {
         IntPtr handle = IntPtr.Zero;
         readonly Timer eventTimer = new Timer();
@@ -43,7 +23,7 @@ namespace Freeserf.Audio.Windows
         bool runningStateChanged = false;
         bool playingEvents = false;
 
-        public WindowsMidiPlayer(DataSource dataSource)
+        public MidiPlayer(DataSource dataSource)
         {
             this.dataSource = dataSource;
 
@@ -562,7 +542,7 @@ namespace Freeserf.Audio.Windows
             }
         }
 
-         ~WindowsMidiPlayer()
+         ~MidiPlayer()
         {
             Dispose(false);
         }

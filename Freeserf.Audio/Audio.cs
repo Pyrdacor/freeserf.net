@@ -11,18 +11,9 @@ namespace Freeserf.Audio
         {
             try
             {
-                IMidiPlayerFactory midiPlayerFactory;
-                IWavePlayerFactory wavePlayerFactory;
-                IModPlayerFactory modPlayerFactory;
-
-#if WINDOWS
-                midiPlayerFactory = new Windows.WindowsMidiPlayerFactory(dataSource);
-                wavePlayerFactory = new Windows.WindowsWavePlayerFactory(dataSource);
-                modPlayerFactory = new Windows.WindowsModPlayerFactory(dataSource);
-#else
-                throw new ExceptionAudio("Unsupported platform.");
-                // TODO: other platforms
-#endif
+                IMidiPlayerFactory midiPlayerFactory = new MidiPlayerFactory(dataSource);
+                IWavePlayerFactory wavePlayerFactory = new WavePlayerFactory(dataSource);
+                IModPlayerFactory modPlayerFactory = new ModPlayerFactory(dataSource);
 
                 musicPlayer = DataSource.DosMusic(dataSource) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
                 soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
@@ -53,6 +44,9 @@ namespace Freeserf.Audio
 
         public override IVolumeController GetVolumeController()
         {
+            if (musicPlayer == null && soundPlayer == null)
+                return null;
+
             return this;
         }
 
@@ -93,7 +87,7 @@ namespace Freeserf.Audio
     public class AudioFactory : IAudioFactory
     {
         AudioImpl audio = null;
-        DataSource dataSource = null;
+        readonly DataSource dataSource = null;
 
         public AudioFactory(DataSource dataSource)
         {

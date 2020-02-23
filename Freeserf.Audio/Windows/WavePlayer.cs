@@ -8,38 +8,19 @@ using Freeserf.Data;
 namespace Freeserf.Audio.Windows
 {
 #if WINDOWS
-    internal class WindowsWavePlayerFactory : IWavePlayerFactory
-    {
-        public WindowsWavePlayerFactory(DataSource dataSource)
-        {
-            this.dataSource = dataSource;
-        }
-
-        DataSource dataSource = null;
-        static IWavePlayer player = null;
-
-        public IWavePlayer GetWavePlayer()
-        {
-            if (player == null)
-                player = new WindowsWavePlayer(dataSource);
-
-            return player;
-        }
-    }
-
-    internal class WindowsWavePlayer : Audio.Player, Audio.IVolumeController, IWavePlayer, IDisposable
+    internal class WavePlayer : Audio.Player, Audio.IVolumeController, IWavePlayer, IDisposable
     {
         IntPtr handle = IntPtr.Zero;
         protected DataSource dataSource = null;
         WinMMNatives.Wave wave = null;
 
-        public WindowsWavePlayer(DataSource dataSource)
+        public WavePlayer(DataSource dataSource)
         {
             this.dataSource = dataSource;
 
             var device = FindBestDevice();
 
-            uint samplesPerSec = (this is WindowsModPlayer) ? 44100 : 8000u; // sfx uses 8kHz, mod uses 44.1kHz
+            uint samplesPerSec = (this is ModPlayer) ? 44100 : 8000u; // sfx uses 8kHz, mod uses 44.1kHz
 
             if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device, samplesPerSec, 1))
                 throw new ExceptionAudio("Unable to create wave output.");
@@ -58,8 +39,8 @@ namespace Freeserf.Audio.Windows
 
             public void Play(Freeserf.Audio.Audio.Player player)
             {
-                if (player is WindowsWavePlayer)
-                    (player as WindowsWavePlayer).Play(data);
+                if (player is WavePlayer)
+                    (player as WavePlayer).Play(data);
             }
         }
 
@@ -486,7 +467,7 @@ namespace Freeserf.Audio.Windows
             }
         }
 
-        ~WindowsWavePlayer()
+        ~WavePlayer()
         {
             Dispose(false);
         }
