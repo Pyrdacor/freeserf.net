@@ -26,14 +26,16 @@ using Freeserf.Audio;
 using Freeserf.Data;
 using Freeserf.Event;
 using Freeserf.Render;
-using Freeserf.Renderer.Audio;
+using Freeserf.Renderer;
+using Freeserf.Audio;
 
-namespace Freeserf.Renderer
+namespace Freeserf
 {
     using EventArgs = Event.EventArgs;
     using EventHandler = Event.EventHandler;
     using EventType = Event.Type;
     using Data = Data.Data;
+    using Texture = Freeserf.Renderer.Texture;
 
     public delegate bool FullscreenRequestHandler(bool fullscreen);
 

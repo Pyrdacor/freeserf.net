@@ -1,14 +1,13 @@
 ﻿using Freeserf.Data;
-using Freeserf.Audio;
 
-namespace Freeserf.Renderer.Audio
+namespace Freeserf.Audio
 {
-    public class Audio : Freeserf.Audio.Audio, Freeserf.Audio.Audio.IVolumeController
+    internal class AudioImpl : Audio, Audio.IVolumeController
     {
         Player musicPlayer = null;
         Player soundPlayer = null;
 
-        internal Audio(DataSource dataSource)
+        internal AudioImpl(DataSource dataSource)
         {
             try
             {
@@ -42,7 +41,7 @@ namespace Freeserf.Renderer.Audio
             Log.Info.Write(ErrorSystemType.Audio, "No audio device available. Sound is deactivated.");
         }
 
-        public override Freeserf.Audio.Audio.Player GetMusicPlayer()
+        public override Audio.Player GetMusicPlayer()
         {
             return musicPlayer;
         }
@@ -93,18 +92,18 @@ namespace Freeserf.Renderer.Audio
 
     public class AudioFactory : IAudioFactory
     {
-        static Audio audio = null;
+        AudioImpl audio = null;
         DataSource dataSource = null;
 
-        internal AudioFactory(DataSource dataSource)
+        public AudioFactory(DataSource dataSource)
         {
             this.dataSource = dataSource;
         }
 
-        public Freeserf.Audio.Audio GetAudio()
+        public Audio GetAudio()
         {
             if (audio == null)
-                audio = new Audio(dataSource);
+                audio = new AudioImpl(dataSource);
 
             return audio;
         }

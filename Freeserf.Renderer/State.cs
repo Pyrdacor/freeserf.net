@@ -26,7 +26,7 @@ using Silk.NET.OpenGL;
 
 namespace Freeserf.Renderer
 {
-    internal static class State
+    public static class State
     {
         public static readonly int OpenGLVersionMajor = 0;
         public static readonly int OpenGLVersionMinor = 0;

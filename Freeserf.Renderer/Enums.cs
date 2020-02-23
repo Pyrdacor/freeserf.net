@@ -55,7 +55,7 @@ namespace Freeserf.Renderer
         Support180DegreeRotation
     }
 
-    internal enum Rotation
+    public enum Rotation
     {
         None,
         Deg90,

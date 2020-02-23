@@ -6,7 +6,7 @@ using System.Timers;
 using Freeserf.Audio;
 using Freeserf.Data;
 
-namespace Freeserf.Renderer.Audio.Windows
+namespace Freeserf.Audio.Windows
 {
 #if WINDOWS
     internal class WindowsMidiPlayerFactory : IMidiPlayerFactory

@@ -96,6 +96,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Freeserf.Audio\Freeserf.Audio.csproj" />
     <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
     <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
     <ProjectReference Include="..\Freeserf.Renderer\Freeserf.Renderer.csproj" />

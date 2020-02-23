@@ -24,7 +24,7 @@ using Silk.NET.OpenGL;
 
 namespace Freeserf.Renderer
 {
-    internal class Context
+    public class Context
     {
         int width = -1;
         int height = -1;
