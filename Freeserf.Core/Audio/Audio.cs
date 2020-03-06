@@ -84,6 +84,7 @@ namespace Freeserf.Audio
             Unknown29 = 88
         }
 
+        // Only track 0 is used at the moment? What's with the other ones?
         public enum TypeMidi
         {
             None = -1,

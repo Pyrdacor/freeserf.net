@@ -314,12 +314,7 @@ namespace Freeserf.UI
 
         public void PlaySound(Audio.Audio.TypeSfx sound)
         {
-            var soundPlayer = Audio?.GetSoundPlayer();
-
-            if (soundPlayer != null)
-            {
-                soundPlayer.PlayTrack((int)sound);
-            }
+            Audio?.GetSoundPlayer()?.PlayTrack((int)sound);
         }
 
         public static int GuiGetSliderClickValue(int x)

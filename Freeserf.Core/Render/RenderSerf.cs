@@ -837,12 +837,7 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.Audio.TypeSfx type)
         {
-            var soundPlayer = audio?.GetSoundPlayer();
-
-            if (soundPlayer != null)
-            {
-                soundPlayer.PlayTrack((int)type);
-            }
+            audio?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 
         // Extracted from obsolete update_map_serf_rows(). 
