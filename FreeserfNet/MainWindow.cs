@@ -549,8 +549,6 @@ namespace Freeserf
                     pressedMouseButtons[(int)MouseButtonIndex.Right]
                 )
                 {
-                    CancelDoubleClick();
-
                     try
                     {
                         gameView?.NotifySpecialClick(position.X, position.Y);
@@ -573,7 +571,7 @@ namespace Freeserf
             base.OnMouseDown(position, button);
         }
 
-        protected override void OnClick(Point position, MouseButtons button)
+        protected override void OnMouseClick(Point position, MouseButtons button)
         {
             try
             {
@@ -587,7 +585,7 @@ namespace Freeserf
             base.OnClick(position, button);
         }
 
-        protected override void OnDoubleClick(Point position, MouseButtons button)
+        protected override void OnMouseDoubleClick(Point position, MouseButtons button)
         {
             try
             {

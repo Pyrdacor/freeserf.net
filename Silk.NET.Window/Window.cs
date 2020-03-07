@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 using Silk.NET.Input;
 using Silk.NET.Input.Common;
 using Silk.NET.Windowing.Common;
-using Silk.NET.Windowing.Desktop;
 
 namespace Silk.NET.Window
 {
@@ -45,8 +42,6 @@ namespace Silk.NET.Window
 
             return options;
         }
-
-        private readonly List<Delegate> timerTasks = new List<Delegate>();
 
         public Window()
         {
@@ -189,57 +184,12 @@ namespace Silk.NET.Window
         {
             Load += () =>
             {
-                Update += Window_TimerUpdate;
                 var input = window.CreateInput();
                 InitKeyboardEvents(input);
                 InitMouseEvents(input);
                 Initialized = true;
             };
         }
-
-
-        #region Timers
-
-        internal void InvokeTimerTask(Delegate task)
-        {
-            lock (timerTasks)
-            {
-                timerTasks.Add(task);
-            }
-        }
-
-        private void Window_TimerUpdate(double obj)
-        {
-            var exceptions = new List<Exception>();
-            List<Delegate> tasksCopy;
-
-            lock (timerTasks)
-            {
-                tasksCopy = new List<Delegate>(timerTasks);
-            }
-
-            foreach (var timerTask in tasksCopy)
-            {
-                try
-                {
-                    timerTask.DynamicInvoke(this, EventArgs.Empty);
-                }
-                catch (Exception ex)
-                {
-                    exceptions.Add(ex);
-                }
-            }
-
-            lock (timerTasks)
-            {
-                timerTasks.Clear();
-            }
-
-            if (exceptions.Count > 0)
-                throw exceptions[0];
-        }
-
-        #endregion
 
 
         #region Keyboard Events
@@ -322,31 +272,26 @@ namespace Silk.NET.Window
 
             if (mouse != null)
             {
-                doubleClickTimer = new Timer(this);
-                doubleClickTimer.Interval = doubleClickTime;
-                doubleClickTimer.AutoReset = false;
-                doubleClickTimer.Elapsed += DoubleClickTimer_Elapsed;
-                lastMousePosition = mouse.Position;
                 ScrollWheel? firstWheel = mouse.ScrollWheels.Count > 0 ? mouse.ScrollWheels.First() : (ScrollWheel?)null;
                 lastMouseWheelPosition = firstWheel != null ? firstWheel.Value.Y : 0.0f;
+                lastMousePosition = mouse.Position;
 
-                Closing += doubleClickTimer.Stop; // stop double click timer when window is closing
+                mouse.DoubleClickTime = DoubleClickTime;
+                mouse.DoubleClickRange = DoubleClickRange;
 
                 mouse.MouseDown += OnMouseDown;
                 mouse.MouseUp += OnMouseUp;
+                mouse.Click += OnMouseClick;
+                mouse.DoubleClick += OnMouseDoubleClick;
                 mouse.MouseMove += OnMouseMove;
                 mouse.Scroll += OnMouseScroll;
             }
         }
 
-        private Rectangle doubleClickArea = new Rectangle(0, 0, 4, 4);
+        private int doubleClickRange = 4;
         private int doubleClickTime = 200;
-        private Timer doubleClickTimer = null;
-        private bool doubleClickTimerStopped = false;
-        private MouseButtons firstClickButton = MouseButtons.None;
-        private bool isFirstClick = true;
         private PointF lastMousePosition = PointF.Empty;
-        private float lastMouseWheelPosition = 0.0f;        
+        private float lastMouseWheelPosition = 0.0f;
 
         /// <summary>
         /// Maximum time in milliseconds for which two subsequent
@@ -360,7 +305,9 @@ namespace Silk.NET.Window
             set
             {
                 doubleClickTime = value;
-                doubleClickTimer.Interval = value;
+                
+                if (mouse != null)
+                    mouse.DoubleClickTime = value;
             }
         }
 
@@ -370,12 +317,15 @@ namespace Silk.NET.Window
         /// 
         /// Default: 4x4 (2 pixel in each direction)
         /// </summary>
-        public Size DoubleClickSize
+        public int DoubleClickRange
         {
-            get => doubleClickArea.Size;
+            get => doubleClickRange;
             set
             {
-                doubleClickArea.Size = value;
+                doubleClickRange = value;
+
+                if (mouse != null)
+                    mouse.DoubleClickRange = value;
             }
         }
 
@@ -403,92 +353,24 @@ namespace Silk.NET.Window
             return new Point((int)Math.Round(position.X), (int)Math.Round(position.Y));
         }
 
-        private void AdjustDoubleClickPosition(PointF clickPosition)
-        {
-            doubleClickArea.Location = new Point(
-                (int)Math.Round(clickPosition.X) - doubleClickArea.Width / 2,
-                (int)Math.Round(clickPosition.Y) - doubleClickArea.Height / 2
-            );
-        }
-
-        private Point GetFirstClickPosition()
-        {
-            return new Point(
-                doubleClickArea.X + doubleClickArea.Width / 2,
-                doubleClickArea.Y + doubleClickArea.Height / 2
-            );
-        }
-
-        protected void CancelDoubleClick()
-        {
-            if (doubleClickTimer.Running)
-            {
-                doubleClickTimerStopped = true;
-                doubleClickTimer.Stop();
-                OnClick(GetFirstClickPosition(), firstClickButton);                
-            }
-
-            isFirstClick = true;
-        }
-
-        private void DoubleClickTimer_Elapsed(object sender, EventArgs e)
-        {
-            if (doubleClickTimerStopped)
-            {
-                doubleClickTimerStopped = false;
-                return;
-            }
-
-            isFirstClick = true;
-            OnClick(GetFirstClickPosition(), firstClickButton);
-        }
-
         private void OnMouseDown(IMouse mouse, MouseButton mouseButton)
         {
-            var position = ConvertMousePosition(mouse.Position);
-            var button = ConvertMouseButton(mouseButton);
-
-            OnMouseDown(position, button);
-
-            if (isFirstClick || firstClickButton != button)
-            {
-                doubleClickTimerStopped = true;
-                doubleClickTimer.Stop();
-                FirstClick(position, button);
-            }
-            else
-            {
-                if (doubleClickTimer.Running)
-                {
-                    doubleClickTimerStopped = true;
-                    doubleClickTimer.Stop();
-
-                    if (doubleClickArea.Contains(position))
-                    {
-                        isFirstClick = true;
-                        OnDoubleClick(position, button);
-                    }
-                    else
-                    {
-                        OnClick(GetFirstClickPosition(), firstClickButton);
-                        FirstClick(position, button);
-                    }
-                }                    
-            }
-        }
-
-        private void FirstClick(Point position, MouseButtons button)
-        {
-            isFirstClick = false;
-            firstClickButton = button;
-            AdjustDoubleClickPosition(position);
-            doubleClickTimerStopped = false;
-            doubleClickTimer.Start();
+            OnMouseDown(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
         }
 
         private void OnMouseUp(IMouse mouse, MouseButton mouseButton)
         {
             OnMouseUp(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
+        }
+
+        private void OnMouseClick(IMouse mouse, MouseButton mouseButton)
+        {
+            OnMouseClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
+        }
+
+        private void OnMouseDoubleClick(IMouse mouse, MouseButton mouseButton)
+        {
+            OnMouseDoubleClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
         }
 
         private void OnMouseMove(IMouse mouse, PointF position)
@@ -542,6 +424,16 @@ namespace Silk.NET.Window
         protected virtual void OnMouseUp(Point position, MouseButtons button)
         {
             MouseUp?.Invoke(position, button);
+        }
+
+        protected virtual void OnMouseClick(Point position, MouseButtons button)
+        {
+            Click?.Invoke(position, button);
+        }
+
+        protected virtual void OnMouseDoubleClick(Point position, MouseButtons button)
+        {
+            DoubleClick?.Invoke(position, button);
         }
 
         protected virtual void OnMouseEnter()
