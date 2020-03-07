@@ -30,6 +30,8 @@ namespace Freeserf
         int lastDragY = int.MinValue;
         static Global.InitInfo initInfo = null;
         static Data.DataSource dataSource = null;
+        bool specialClickPerformed = false;
+        Point clickPosition = Point.Empty;
 
         private MainWindow(WindowOptions options)
             : base(options)
@@ -541,6 +543,8 @@ namespace Freeserf
         {
             UpdateMouseState(button, true);
 
+            clickPosition = position;
+
             // left + right = special click
             if ((button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right)))
             {
@@ -549,6 +553,8 @@ namespace Freeserf
                     pressedMouseButtons[(int)MouseButtonIndex.Right]
                 )
                 {
+                    specialClickPerformed = true;
+
                     try
                     {
                         gameView?.NotifySpecialClick(position.X, position.Y);
@@ -571,11 +577,17 @@ namespace Freeserf
             base.OnMouseDown(position, button);
         }
 
-        protected override void OnMouseClick(Point position, MouseButtons button)
+        protected override void OnClick(Point position, MouseButtons button)
         {
+            if (specialClickPerformed && button == MouseButtons.Right)
+            {
+                specialClickPerformed = false;
+                return;
+            }
+
             try
             {
-                gameView?.NotifyClick(position.X, position.Y, ConvertMouseButtons(button));
+                gameView?.NotifyClick(clickPosition.X, clickPosition.Y, ConvertMouseButtons(button));
             }
             catch (Exception ex)
             {
@@ -585,7 +597,7 @@ namespace Freeserf
             base.OnClick(position, button);
         }
 
-        protected override void OnMouseDoubleClick(Point position, MouseButtons button)
+        protected override void OnDoubleClick(Point position, MouseButtons button)
         {
             try
             {
