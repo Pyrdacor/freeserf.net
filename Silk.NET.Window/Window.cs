@@ -365,12 +365,12 @@ namespace Silk.NET.Window
 
         private void OnMouseClick(IMouse mouse, MouseButton mouseButton)
         {
-            OnMouseClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
+            OnClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
         }
 
         private void OnMouseDoubleClick(IMouse mouse, MouseButton mouseButton)
         {
-            OnMouseDoubleClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
+            OnDoubleClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
         }
 
         private void OnMouseMove(IMouse mouse, PointF position)
@@ -424,16 +424,6 @@ namespace Silk.NET.Window
         protected virtual void OnMouseUp(Point position, MouseButtons button)
         {
             MouseUp?.Invoke(position, button);
-        }
-
-        protected virtual void OnMouseClick(Point position, MouseButtons button)
-        {
-            Click?.Invoke(position, button);
-        }
-
-        protected virtual void OnMouseDoubleClick(Point position, MouseButtons button)
-        {
-            DoubleClick?.Invoke(position, button);
         }
 
         protected virtual void OnMouseEnter()
