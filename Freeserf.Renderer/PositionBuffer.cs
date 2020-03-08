@@ -78,17 +78,7 @@ namespace Freeserf.Renderer
             }
             else
             {
-                if (index == buffer.Length / 2) // we need to recreate the buffer
-                {
-                    if (buffer.Length < 1024)
-                        Array.Resize(ref buffer, buffer.Length + 256);
-                    else if (buffer.Length < 4096)
-                        Array.Resize(ref buffer, buffer.Length + 512);
-                    else
-                        Array.Resize(ref buffer, buffer.Length + 1024);
-
-                    changedSinceLastCreation = true;
-                }
+                buffer = EnsureBufferSize(buffer, index * 2, out bool changed);
 
                 if (!reused)
                     size += 2;
@@ -101,6 +91,10 @@ namespace Freeserf.Renderer
                     buffer[bufferIndex + 0] = x;
                     buffer[bufferIndex + 1] = y;
 
+                    changedSinceLastCreation = true;
+                }
+                else if (changed)
+                {
                     changedSinceLastCreation = true;
                 }
             }

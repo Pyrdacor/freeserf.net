@@ -119,19 +119,7 @@ namespace Freeserf.Renderer
 
             if (size <= arrayIndex + 6)
             {
-                if (buffer == null)
-                {
-                    buffer = new uint[256];
-                }
-                else if (buffer.Length <= arrayIndex + 6) // we need to recreate the buffer
-                {
-                    if (buffer.Length < 1024)
-                        Array.Resize(ref buffer, buffer.Length + 256);
-                    else if (buffer.Length < 4096)
-                        Array.Resize(ref buffer, buffer.Length + 512);
-                    else
-                        Array.Resize(ref buffer, buffer.Length + 1024);
-                }
+                buffer = EnsureBufferSize(buffer, arrayIndex + 6, out _);
 
                 buffer[arrayIndex++] = vertexIndex + 0;
                 buffer[arrayIndex++] = vertexIndex + 1;
