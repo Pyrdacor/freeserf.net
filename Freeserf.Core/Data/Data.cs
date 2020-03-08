@@ -169,7 +169,7 @@ namespace Freeserf.Data
                 {
                     Log.Info.Write(ErrorSystemType.Data, $"Game data found in '{source.Path}'...");
 
-                    if (source.Load())
+                    if (source.Load().HasFlag(DataLoadResult.GraphicsLoaded)) // at least we need graphics
                     {
                         source.GraphicDataUsage = graphicDataUsage;
                         source.SoundDataUsage = soundDataUsage;

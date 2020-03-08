@@ -30,6 +30,16 @@ using System.Runtime.InteropServices;
 
 namespace Freeserf.Data
 {
+    [Flags]
+    public enum DataLoadResult
+    {
+        NothingLoaded = 0x00,
+        GraphicsLoaded = 0x01,
+        MusicLoaded = 0x02,
+        SoundLoaded = 0x04,
+        AllLoaded = GraphicsLoaded | MusicLoaded | SoundLoaded
+    }
+
     public class SpriteInfo
     {
         public int DeltaX;
@@ -765,7 +775,10 @@ namespace Freeserf.Data
         public virtual uint BPP => 0;
 
         public abstract bool Check();
-        public abstract bool Load();
+        public abstract bool CheckMusic();
+        public abstract bool CheckSound();
+        public abstract bool CheckGraphics();
+        public abstract DataLoadResult Load();
 
         public SpriteInfo GetSpriteInfo(Data.Resource resource, uint index)
         {

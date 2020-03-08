@@ -28,7 +28,9 @@ namespace Freeserf.Data
 
         DataSourceAmiga amiga = null;
         DataSourceDos dos = null;
-        bool amigaOk = false;
+        bool amigaMusicOk = false;
+        bool amigaSoundOk = false;
+        bool amigaGraphicsOk = false;
         bool dosOk = false;
 
         public override string Name => "Mixed";
@@ -45,12 +47,40 @@ namespace Freeserf.Data
             dos = new DataSourceDos(path);
         }
 
+        public override bool CheckMusic()
+        {
+            amigaMusicOk = amiga.CheckMusic();
+            if (!dosOk)
+                dosOk = dos.CheckMusic();
+
+            return amigaMusicOk || dosOk;
+        }
+
+        public override bool CheckSound()
+        {
+            amigaSoundOk = amiga.CheckSound();
+            if (!dosOk)
+                dosOk = dos.CheckSound();
+
+            return amigaSoundOk || dosOk;
+        }
+
+        public override bool CheckGraphics()
+        {
+            amigaGraphicsOk = amiga.CheckGraphics();
+            if (!dosOk)
+                dosOk = dos.CheckGraphics();
+
+            return amigaGraphicsOk || dosOk;
+        }
+
         public override bool Check()
         {
-            amigaOk = amiga.Check();
-            dosOk = dos.Check();
+            CheckMusic();
+            CheckSound();
+            CheckGraphics();
 
-            return amigaOk || dosOk;
+            return dosOk || amigaGraphicsOk; // at least we need graphics
         }
 
         public override Buffer GetMusic(uint index)
@@ -58,7 +88,7 @@ namespace Freeserf.Data
             switch (MusicDataUsage)
             {
                 case DataUsage.ForceAmiga:
-                    if (!amigaOk)
+                    if (!amigaMusicOk)
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga music data not available.");
                     return amiga.GetMusic(index);
                 case DataUsage.ForceDos:
@@ -67,7 +97,7 @@ namespace Freeserf.Data
                     return dos.GetMusic(index);
                 case DataUsage.PreferAmiga:
                 default:
-                    if (amigaOk)
+                    if (amigaMusicOk)
                         return amiga.GetMusic(index);
                     else
                         return dos.GetMusic(index);
@@ -84,7 +114,7 @@ namespace Freeserf.Data
             switch (SoundDataUsage)
             {
                 case DataUsage.ForceAmiga:
-                    if (!amigaOk)
+                    if (!amigaSoundOk)
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga sound data not available.");
                     return amiga.GetSound(index);
                 case DataUsage.ForceDos:
@@ -92,7 +122,7 @@ namespace Freeserf.Data
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS sound data not available.");
                     return dos.GetSound(index);
                 case DataUsage.PreferAmiga:
-                    if (amigaOk)
+                    if (amigaSoundOk)
                         return amiga.GetSound(index);
                     else
                         return dos.GetSound(index);
@@ -110,7 +140,7 @@ namespace Freeserf.Data
             switch (GraphicDataUsage)
             {
                 case DataUsage.ForceAmiga:
-                    if (!amigaOk)
+                    if (!amigaGraphicsOk)
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetSpriteParts(resource, index);
                 case DataUsage.ForceDos:
@@ -118,7 +148,7 @@ namespace Freeserf.Data
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetSpriteParts(resource, index);
                 case DataUsage.PreferAmiga:
-                    if (amigaOk)
+                    if (amigaGraphicsOk)
                         return amiga.GetSpriteParts(resource, index);
                     else
                         return dos.GetSpriteParts(resource, index);
@@ -136,7 +166,7 @@ namespace Freeserf.Data
             switch (GraphicDataUsage)
             {
                 case DataUsage.ForceAmiga:
-                    if (!amigaOk)
+                    if (!amigaGraphicsOk)
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetSprite(resource, index, color);
                 case DataUsage.ForceDos:
@@ -144,7 +174,7 @@ namespace Freeserf.Data
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetSprite(resource, index, color);
                 case DataUsage.PreferAmiga:
-                    if (amigaOk)
+                    if (amigaGraphicsOk)
                         return amiga.GetSprite(resource, index, color);
                     else
                         return dos.GetSprite(resource, index, color);
@@ -162,7 +192,7 @@ namespace Freeserf.Data
             switch (GraphicDataUsage)
             {
                 case DataUsage.ForceAmiga:
-                    if (!amigaOk)
+                    if (!amigaGraphicsOk)
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetAnimation(animation, phase);
                 case DataUsage.ForceDos:
@@ -170,7 +200,7 @@ namespace Freeserf.Data
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetAnimation(animation, phase);
                 case DataUsage.PreferAmiga:
-                    if (amigaOk)
+                    if (amigaGraphicsOk)
                         return amiga.GetAnimation(animation, phase);
                     else
                         return dos.GetAnimation(animation, phase);
@@ -188,7 +218,7 @@ namespace Freeserf.Data
             switch (GraphicDataUsage)
             {
                 case DataUsage.ForceAmiga:
-                    if (!amigaOk)
+                    if (!amigaGraphicsOk)
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                     return amiga.GetAnimationPhaseCount(animation);
                 case DataUsage.ForceDos:
@@ -196,7 +226,7 @@ namespace Freeserf.Data
                         throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                     return dos.GetAnimationPhaseCount(animation);
                 case DataUsage.PreferAmiga:
-                    if (amigaOk)
+                    if (amigaGraphicsOk)
                         return amiga.GetAnimationPhaseCount(animation);
                     else
                         return dos.GetAnimationPhaseCount(animation);
@@ -216,7 +246,7 @@ namespace Freeserf.Data
                 switch (GraphicDataUsage)
                 {
                     case DataUsage.ForceAmiga:
-                        if (!amigaOk)
+                        if (!amigaGraphicsOk)
                             throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                         return amiga.BPP;
                     case DataUsage.ForceDos:
@@ -224,7 +254,7 @@ namespace Freeserf.Data
                             throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                         return dos.BPP;
                     case DataUsage.PreferAmiga:
-                        if (amigaOk)
+                        if (amigaGraphicsOk)
                             return amiga.BPP;
                         else
                             return dos.BPP;
@@ -245,7 +275,7 @@ namespace Freeserf.Data
                 switch (GraphicDataUsage)
                 {
                     case DataUsage.ForceAmiga:
-                        if (!amigaOk)
+                        if (!amigaGraphicsOk)
                             throw new ExceptionFreeserf(ErrorSystemType.Data, "Amiga graphic data not available.");
                         return amiga.Scale;
                     case DataUsage.ForceDos:
@@ -253,7 +283,7 @@ namespace Freeserf.Data
                             throw new ExceptionFreeserf(ErrorSystemType.Data, "DOS graphic data not available.");
                         return dos.Scale;
                     case DataUsage.PreferAmiga:
-                        if (amigaOk)
+                        if (amigaGraphicsOk)
                             return amiga.Scale;
                         else
                             return dos.Scale;
@@ -267,19 +297,36 @@ namespace Freeserf.Data
             }
         }
 
-        public override bool Load()
+        public override DataLoadResult Load()
         {
-            if (amigaOk)
-                amigaOk = amiga.Load();
+            DataLoadResult result = DataLoadResult.NothingLoaded;
+
+            if (amigaMusicOk || amigaSoundOk || amigaGraphicsOk)
+            {
+                var amigaResult = amiga.Load();
+
+                if (!amigaResult.HasFlag(DataLoadResult.GraphicsLoaded))
+                    amigaGraphicsOk = false;
+                if (!amigaResult.HasFlag(DataLoadResult.MusicLoaded))
+                    amigaMusicOk = false;
+                if (!amigaResult.HasFlag(DataLoadResult.SoundLoaded))
+                    amigaSoundOk = false;
+
+                result |= amigaResult;
+            }
 
             if (dosOk)
-                dosOk = dos.Load();
+            {
+                var dosResult = dos.Load();
+                dosOk = dosResult != DataLoadResult.NothingLoaded;
+                result |= dosResult;
+            }
 
-            return amigaOk || dosOk;
+            return result;
         }
 
-        public bool UseDosGraphics => dosOk && (GraphicDataUsage == DataUsage.ForceDos || GraphicDataUsage == DataUsage.PreferDos || (!amigaOk && GraphicDataUsage == DataUsage.PreferAmiga));
-        public bool UseDosSounds => dosOk && (SoundDataUsage == DataUsage.ForceDos || SoundDataUsage == DataUsage.PreferDos || (!amigaOk && SoundDataUsage == DataUsage.PreferAmiga));
-        public bool UseDosMusic => dosOk && (MusicDataUsage == DataUsage.ForceDos || MusicDataUsage == DataUsage.PreferDos || (!amigaOk && MusicDataUsage == DataUsage.PreferAmiga));
+        public bool UseDosGraphics => dosOk && (GraphicDataUsage == DataUsage.ForceDos || GraphicDataUsage == DataUsage.PreferDos || (!amigaGraphicsOk && GraphicDataUsage == DataUsage.PreferAmiga));
+        public bool UseDosSounds => dosOk && (SoundDataUsage == DataUsage.ForceDos || SoundDataUsage == DataUsage.PreferDos || (!amigaSoundOk && SoundDataUsage == DataUsage.PreferAmiga));
+        public bool UseDosMusic => dosOk && (MusicDataUsage == DataUsage.ForceDos || MusicDataUsage == DataUsage.PreferDos || (!amigaMusicOk && MusicDataUsage == DataUsage.PreferAmiga));
     }
 }

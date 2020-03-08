@@ -688,7 +688,17 @@ namespace Freeserf.Data
         public override uint Scale => 1;
         public override uint BPP => 5;
 
-        public override bool Check()
+        public override bool CheckMusic()
+        {
+            return CheckFiles("music");
+        }
+
+        public override bool CheckSound()
+        {
+            return CheckFiles("sounds");
+        }
+
+        public override bool CheckGraphics()
         {
             var dataFiles = new string[]
             {
@@ -697,6 +707,11 @@ namespace Freeserf.Data
                 "gfxchip"       // chip graphics file
             };
 
+            return CheckFiles(dataFiles);
+        }
+
+        private bool CheckFiles(params string[] dataFiles)
+        {
             bool found = true;
 
             foreach (var fileName in dataFiles)
@@ -758,8 +773,15 @@ namespace Freeserf.Data
             return true;
         }
 
-        public override bool Load()
+        public override bool Check()
         {
+            return CheckMusic() && CheckSound() && CheckGraphics();            
+        }
+
+        public override DataLoadResult Load()
+        {
+            bool graphicsLoadError = false;
+
             try
             {
                 gfxFast = new Buffer(path + "/gfxfast", Endian.Endianess.Big);
@@ -771,84 +793,96 @@ namespace Freeserf.Data
             catch (Exception)
             {
                 Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxfast'");
-                return false;
+                graphicsLoadError = true;
             }
 
-            try
+            if (!graphicsLoadError)
             {
-                gfxChip = new Buffer(path + "/gfxchip", Endian.Endianess.Big);
-                gfxChip = Decode(gfxChip);
-                gfxChip = Unpack(gfxChip);
-                Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxchip' loaded (size = {gfxChip.Size})");
+                try
+                {
+                    gfxChip = new Buffer(path + "/gfxchip", Endian.Endianess.Big);
+                    gfxChip = Decode(gfxChip);
+                    gfxChip = Unpack(gfxChip);
+                    Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxchip' loaded (size = {gfxChip.Size})");
+                }
+                catch (Exception)
+                {
+                    Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxchip'");
+                    graphicsLoadError = true;
+                }
             }
-            catch (Exception)
+
+            if (!graphicsLoadError)
             {
-                Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxchip'");
-                return false;
+                Buffer gfxHeader = null;
+
+                try
+                {
+                    gfxHeader = new Buffer(path + "/gfxheader", Endian.Endianess.Big);
+                }
+                catch (Exception)
+                {
+                    Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxheader'");
+                    graphicsLoadError = true;
+                }
+
+                if (!graphicsLoadError)
+                {
+                    // Prepare icons catalog
+                    uint iconCatalogOffset = gfxHeader.Pop<ushort>();
+                    uint iconCatalogSize = gfxHeader.Pop<ushort>();
+                    Buffer iconCatalogTemp = gfxFast.GetSubBuffer(iconCatalogOffset * 4, iconCatalogSize * 4);
+
+                    for (uint i = 0; i < iconCatalogSize; ++i)
+                    {
+                        uint offset = iconCatalogTemp.Pop<uint>();
+
+                        iconCatalog.Add(offset);
+                    }
+
+                    // Prepare data pointer bases
+                    dataPointers[1] = gfxFast;   // Animations
+                    dataPointers[2] = gfxFast;   // Ground masks catalog (4 * 81)
+                    dataPointers[3] = gfxFast;   // Path sprites catalog (4 * 27)
+                    dataPointers[4] = gfxFast;   // Ground sprites catalog (4 * 32)
+                    dataPointers[5] = gfxChip;   // ?
+                    dataPointers[6] = gfxFast;   // Map objects catalog (4 * 194)
+                    dataPointers[7] = gfxFast;   // Hud multiplayer
+                    dataPointers[8] = gfxChip;   // Borders
+                    dataPointers[9] = gfxChip;   // Waves
+                    dataPointers[10] = gfxChip;  // Popup frame horizontal
+                    dataPointers[11] = gfxFast;  // Popup frame vertical
+                    dataPointers[12] = gfxFast;  // Cursor
+                    dataPointers[13] = gfxFast;  // Icons catalog
+                    dataPointers[14] = gfxFast;  // Font data (8 * 44)
+                    dataPointers[15] = gfxFast;  // Game objects catalog
+                    dataPointers[16] = gfxFast;  // Panel buttons (17 images)
+                    dataPointers[17] = gfxFast;  // Rotated star catalog
+                    dataPointers[18] = gfxFast;  // Hud
+                    dataPointers[19] = gfxFast;  // Serf torse+arms catalog
+                    dataPointers[20] = gfxFast;  // Serf heads
+                    dataPointers[21] = gfxChip;  // Screen top
+                    dataPointers[22] = gfxChip;  // Screen sides (2 * 1864)
+                    dataPointers[23] = gfxFast;  // Title (1 * 43200)
+
+                    for (uint i = 1; i < gfxHeader.Size / 4; ++i)
+                    {
+                        uint blackOffset = gfxHeader.Pop<uint>();
+
+                        // Log.Warn.Write("data", $"Block {i} : {blackOffset}");
+
+                        dataPointers[i] = dataPointers[i].GetTail(blackOffset);
+                    }
+                }
             }
 
-            Buffer gfxHeader;
-
-            try
-            {
-                gfxHeader = new Buffer(path + "/gfxheader", Endian.Endianess.Big);
-            }
-            catch (Exception)
-            {
-                Log.Debug.Write(ErrorSystemType.Data, "Failed to load 'gfxheader'");
-                return false;
-            }
-
-            // Prepare icons catalog
-            uint iconCatalogOffset = gfxHeader.Pop<ushort>();
-            uint iconCatalogSize = gfxHeader.Pop<ushort>();
-            Buffer iconCatalogTemp = gfxFast.GetSubBuffer(iconCatalogOffset * 4, iconCatalogSize * 4);
-
-            for (uint i = 0; i < iconCatalogSize; ++i)
-            {
-                uint offset = iconCatalogTemp.Pop<uint>();
-
-                iconCatalog.Add(offset);
-            }
-
-            // Prepare data pointer bases
-            dataPointers[1] = gfxFast;   // Animations
-            dataPointers[2] = gfxFast;   // Ground masks catalog (4 * 81)
-            dataPointers[3] = gfxFast;   // Path sprites catalog (4 * 27)
-            dataPointers[4] = gfxFast;   // Ground sprites catalog (4 * 32)
-            dataPointers[5] = gfxChip;   // ?
-            dataPointers[6] = gfxFast;   // Map objects catalog (4 * 194)
-            dataPointers[7] = gfxFast;   // Hud multiplayer
-            dataPointers[8] = gfxChip;   // Borders
-            dataPointers[9] = gfxChip;   // Waves
-            dataPointers[10] = gfxChip;  // Popup frame horizontal
-            dataPointers[11] = gfxFast;  // Popup frame vertical
-            dataPointers[12] = gfxFast;  // Cursor
-            dataPointers[13] = gfxFast;  // Icons catalog
-            dataPointers[14] = gfxFast;  // Font data (8 * 44)
-            dataPointers[15] = gfxFast;  // Game objects catalog
-            dataPointers[16] = gfxFast;  // Panel buttons (17 images)
-            dataPointers[17] = gfxFast;  // Rotated star catalog
-            dataPointers[18] = gfxFast;  // Hud
-            dataPointers[19] = gfxFast;  // Serf torse+arms catalog
-            dataPointers[20] = gfxFast;  // Serf heads
-            dataPointers[21] = gfxChip;  // Screen top
-            dataPointers[22] = gfxChip;  // Screen sides (2 * 1864)
-            dataPointers[23] = gfxFast;  // Title (1 * 43200)
-
-            for (uint i = 1; i < gfxHeader.Size / 4; ++i)
-            {
-                uint blackOffset = gfxHeader.Pop<uint>();
-
-                // Log.Warn.Write("data", $"Block {i} : {blackOffset}");
-
-                dataPointers[i] = dataPointers[i].GetTail(blackOffset);
-            }
+            var result = DataLoadResult.NothingLoaded;
 
             try
             {
                 sound = new Buffer(path + "/sounds");
                 sound = Decode(sound);
+                result |= DataLoadResult.SoundLoaded;
             }
             catch (Exception)
             {
@@ -858,28 +892,45 @@ namespace Freeserf.Data
 
             try
             {
-                Buffer gfxPics = new Buffer(path + "/gfxpics", Endian.Endianess.Big);
-
-                for (uint i = 0; i < 14; ++i)
-                {
-                    uint offset = gfxPics.Pop<uint>();
-                    uint size = gfxPics.Pop<uint>();
-
-                    pictures[i] = gfxPics.GetSubBuffer(28 * 4 + offset, size);
-                    pictures[i] = Decode(pictures[i]);
-                    pictures[i] = Unpack(pictures[i]);
-                }
-
-                Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxpics' loaded (size = {gfxPics.Size})");
+                GetMusic(0);
+                result |= DataLoadResult.MusicLoaded;
             }
             catch (Exception)
             {
-                Log.Warn.Write(ErrorSystemType.Data, "Failed to load 'gfxpics'");
+                Log.Warn.Write(ErrorSystemType.Data, "Failed to load 'music'");
+                music = null;
             }
 
-            loaded = LoadAnimationTable(dataPointers[1].GetSubBuffer(0, 30528));
+            if (!graphicsLoadError)
+            {
+                try
+                {
+                    Buffer gfxPics = new Buffer(path + "/gfxpics", Endian.Endianess.Big);
 
-            return loaded;
+                    for (uint i = 0; i < 14; ++i)
+                    {
+                        uint offset = gfxPics.Pop<uint>();
+                        uint size = gfxPics.Pop<uint>();
+
+                        pictures[i] = gfxPics.GetSubBuffer(28 * 4 + offset, size);
+                        pictures[i] = Decode(pictures[i]);
+                        pictures[i] = Unpack(pictures[i]);
+                    }
+
+                    Log.Debug.Write(ErrorSystemType.Data, $"Data file 'gfxpics' loaded (size = {gfxPics.Size})");
+                }
+                catch (Exception)
+                {
+                    Log.Warn.Write(ErrorSystemType.Data, "Failed to load 'gfxpics'");
+                }
+
+                if (LoadAnimationTable(dataPointers[1].GetSubBuffer(0, 30528)))
+                    result |= DataLoadResult.GraphicsLoaded;
+            }
+
+            loaded = result != DataLoadResult.NothingLoaded;
+
+            return result;
         }
 
         public override Tuple<Sprite, Sprite> GetSpriteParts(Data.Resource resource, uint index)
@@ -1325,7 +1376,7 @@ namespace Freeserf.Data
             // as we searched from 1080 and the offset to M!K! from the beginning is also 1080
             // the correct data start offset is the position of M!K!
 
-            return data.GetTail((uint)pos);
+            return music = data.GetTail((uint)pos);
         }
 
         Buffer gfxFast;

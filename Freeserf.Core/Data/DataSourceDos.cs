@@ -334,6 +334,10 @@ namespace Freeserf.Data
             "SPAU.PA"   // Engish (US)
         };
 
+        public override bool CheckMusic() => Check();
+        public override bool CheckSound() => Check();
+        public override bool CheckGraphics() => Check();
+
         public override bool Check()
         {
             if (CheckFile(path))
@@ -355,10 +359,10 @@ namespace Freeserf.Data
             return false;
         }
 
-        public override bool Load()
+        public override DataLoadResult Load()
         {
             if (!Check())
-                return false;
+                return DataLoadResult.NothingLoaded;
 
             try
             {
@@ -366,7 +370,7 @@ namespace Freeserf.Data
             }
             catch
             {
-                return false;
+                return DataLoadResult.NothingLoaded;
             }
 
             // Check that data file is decompressed
@@ -405,14 +409,14 @@ namespace Freeserf.Data
             if (size != anim.Pop<uint>())
             {
                 Log.Error.Write(ErrorSystemType.Data, "Could not extract animation table.");
-                return false;
+                return DataLoadResult.NothingLoaded;
             }
 
             anim = anim.PopTail();
 
             loaded = LoadAnimationTable(anim);
 
-            return loaded;
+            return loaded ? DataLoadResult.AllLoaded : DataLoadResult.NothingLoaded;
         }
 
         // Create sprite object
