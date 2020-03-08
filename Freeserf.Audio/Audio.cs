@@ -24,6 +24,14 @@ namespace Freeserf.Audio
                 var wavePlayerFactory = new WavePlayerFactory(dataSource);
                 var modPlayerFactory = new ModPlayerFactory(dataSource);
 
+#if !WINDOWS || !USE_WINMM
+                // If Bass should be used but it is not initialized, the sound is disabled
+                if (!Bass.BassLib.Initialized)
+                {
+                    DisableSound();
+                    return;
+                }
+#endif
                 musicPlayer = DataSource.DosMusic(dataSource) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
                 soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
             }

@@ -13,22 +13,29 @@ namespace Freeserf.Audio.Bass
         internal Music(byte[] data, BassFlags flags, int frequency)
         {
             channel = BassImpl.MusicLoad(data, 0L, data.Length, flags, frequency);
+
+            if (channel == 0)
+                Log.Warn.Write(ErrorSystemType.Audio, $"Failed to load music from data: {BassImpl.LastError}");
         }
 
         public void Play(Audio.Player player)
         {
-            if (!disposed)
+            if (!disposed && channel != 0 && BassLib.Initialized)
+            {
                 BassImpl.ChannelPlay(channel);
-
-            BassImpl.Start();
+                BassImpl.Start();
+            }
         }
 
         public void Dispose()
         {
             if (!disposed)
             {
-                BassImpl.MusicFree(channel);
-                channel = -1;
+                if (channel != 0)
+                {
+                    BassImpl.MusicFree(channel);
+                    channel = 0;
+                }
 
                 disposed = true;
             }

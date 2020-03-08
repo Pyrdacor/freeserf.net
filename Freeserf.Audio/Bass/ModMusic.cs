@@ -10,7 +10,7 @@ namespace Freeserf.Audio.Bass
         }
 
         internal ModMusic(byte[] data)
-            : base(data, BassFlags.MusicPT1Mod, 8000)
+            : base(data, BassFlags.MusicPT1Mod | BassFlags.Loop, 8000)
         {
 
         }

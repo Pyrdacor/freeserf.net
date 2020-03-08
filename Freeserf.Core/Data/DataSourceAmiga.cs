@@ -1376,7 +1376,7 @@ namespace Freeserf.Data
             // as we searched from 1080 and the offset to M!K! from the beginning is also 1080
             // the correct data start offset is the position of M!K!
 
-            return music = data.GetTail((uint)pos);
+            return music = new Buffer(data.GetTail((uint)pos).Unfix(), Endian.Endianess.Big);
         }
 
         Buffer gfxFast;

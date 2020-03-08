@@ -163,14 +163,14 @@ namespace Freeserf.Audio
         {
             data.SetEndianess(Endian.Endianess.Big);
 
-            data.Skip(20); // songname
+            Log.Info.Write(ErrorSystemType.Data, $"Loading MOD song: {System.Text.Encoding.ASCII.GetString(data.Pop(20).ReinterpretAsArray(20))}"); // songname
 
             // add dummy sample 0
             samples.Add(new Sample());
 
             for (int i = 1; i < 32; ++i) // samples 1-31
             {
-                data.Skip(22); // samplename
+                Log.Info.Write(ErrorSystemType.Data, $"Sample {i} name: {System.Text.Encoding.ASCII.GetString(data.Pop(22).ReinterpretAsArray(22))}"); // samplename
 
                 samples.Add(new Sample()
                 {
