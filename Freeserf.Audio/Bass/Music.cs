@@ -7,12 +7,30 @@ namespace Freeserf.Audio.Bass
 
     internal abstract class Music : Audio.ITrack, IDisposable
     {
-        int channel;
+        public enum Type
+        {
+            Midi,
+            Mod,
+            Wave
+        }
+
+        int channel = 0;
         bool disposed = false;
 
-        internal Music(byte[] data, BassFlags flags, int frequency)
+        internal Music(byte[] data, Type type)
         {
-            channel = BassImpl.MusicLoad(data, 0L, data.Length, flags, frequency);
+            switch (type)
+            {
+                case Type.Midi:
+                    // TODO
+                    break;
+                case Type.Mod:
+                    channel = BassImpl.MusicLoad(data, 0L, data.Length, BassFlags.Default | BassFlags.MusicPT1Mod, 44100);
+                    break;
+                case Type.Wave:
+                    // TODO
+                    break;
+            }
 
             if (channel == 0)
                 Log.Warn.Write(ErrorSystemType.Audio, $"Failed to load music from data: {BassImpl.LastError}");
@@ -22,8 +40,10 @@ namespace Freeserf.Audio.Bass
         {
             if (!disposed && channel != 0 && BassLib.Initialized)
             {
-                BassImpl.ChannelPlay(channel);
-                BassImpl.Start();
+                (player as MusicPlayer).SetCurrentChannel(channel);
+
+                if (player.Enabled)
+                    BassImpl.ChannelPlay(channel);
             }
         }
 

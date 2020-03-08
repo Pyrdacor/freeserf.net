@@ -183,7 +183,8 @@ namespace Freeserf.Audio.Windows
 
             public void Play(Audio.Player player)
             {
-                (player as MidiPlayer).Play(xmi);
+                if (player.Enabled)
+                    (player as MidiPlayer).Play(xmi);
             }
         }
 

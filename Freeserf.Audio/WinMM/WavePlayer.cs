@@ -36,9 +36,9 @@ namespace Freeserf.Audio.Windows
                 this.data = data;
             }
 
-            public void Play(Freeserf.Audio.Audio.Player player)
+            public void Play(Audio.Player player)
             {
-                if (player is WavePlayer)
+                if (player is WavePlayer && player.Enabled)
                     (player as WavePlayer).Play(data);
             }
         }

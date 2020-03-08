@@ -100,6 +100,21 @@ namespace Freeserf
             coloredRectFactory = new ColoredRectFactory(VirtualScreen);
             minimapTextureFactory = new MinimapTextureFactory();
             audioFactory = new AudioFactory(dataSource);
+            var audio = audioFactory.GetAudio();
+
+            if (audio != null)
+            {
+                var musicPlayer = audio.GetMusicPlayer();
+                var soundPlayer = audio.GetSoundPlayer();
+                var volumeController = audio.GetVolumeController();
+
+                if (musicPlayer != null)
+                    musicPlayer.Enabled = UserConfig.Audio.Music;
+                if (soundPlayer != null)
+                    soundPlayer.Enabled = UserConfig.Audio.Sound;
+                if (volumeController != null)
+                    volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
+            }
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());
 

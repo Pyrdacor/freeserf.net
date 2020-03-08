@@ -112,13 +112,8 @@ namespace Freeserf.Audio
         {
             protected Dictionary<int, ITrack> trackCache = new Dictionary<int, ITrack>();
 
-            public virtual ITrack PlayTrack(int trackID)
+            public virtual void PlayTrack(int trackID)
             {
-                if (!Enabled)
-                {
-                    return null;
-                }
-
                 ITrack track;
 
                 if (!trackCache.ContainsKey(trackID))
@@ -139,8 +134,6 @@ namespace Freeserf.Audio
                 {
                     track.Play(this);
                 }
-
-                return track;
             }
 
             public abstract bool Enabled

@@ -236,7 +236,7 @@ namespace Freeserf
         {
             var music = MainInterface.Audio?.GetMusicPlayer();
 
-            if (music != null && music.Enabled)
+            if (music != null)
                 music.PlayTrack((int)Audio.Audio.TypeMidi.Track0);
 
             MainInterface.SetGame(game);
@@ -381,7 +381,7 @@ namespace Freeserf
         {
             var music = MainInterface.Audio?.GetMusicPlayer();
 
-            if (music != null && music.Enabled)
+            if (music != null)
                 music.PlayTrack((int)Audio.Audio.TypeMidi.Track0);
 
             MainInterface.SetGame(game);

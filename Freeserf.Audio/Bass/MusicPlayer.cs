@@ -6,6 +6,8 @@ namespace Freeserf.Audio.Bass
     internal abstract class MusicPlayer : Audio.Player, Audio.IVolumeController
     {
         protected DataSource dataSource = null;
+        bool enabled = true;
+        int currentChannel = 0;
 
         public MusicPlayer(DataSource dataSource)
         {
@@ -14,14 +16,40 @@ namespace Freeserf.Audio.Bass
 
         public override bool Enabled
         {
-            get;
-            set;
-        } = true;
+            get => enabled;
+            set
+            {
+                if (enabled == value)
+                    return;
+
+                enabled = value;
+
+                if (enabled && currentChannel != 0)
+                {
+                    ManagedBass.Bass.ChannelPlay(currentChannel, true);
+                    ManagedBass.Bass.Start();
+                }
+                else if (!enabled)
+                    ManagedBass.Bass.ChannelStop(currentChannel);
+            }
+        }
 
         public float Volume
         {
-            get => (float)ManagedBass.Bass.Volume;
-            set => ManagedBass.Bass.Volume = value;
+            get
+            {
+                if (currentChannel == 0)
+                    return (float)ManagedBass.Bass.Volume;
+                else
+                    return (float)ManagedBass.Bass.ChannelGetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume);
+            }
+            set
+            {
+                if (currentChannel == 0)
+                    ManagedBass.Bass.Volume = value;
+                else
+                    ManagedBass.Bass.ChannelSetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume, value);
+            }
         }
 
         public override Audio.IVolumeController GetVolumeController()
@@ -36,7 +64,13 @@ namespace Freeserf.Audio.Bass
 
         public override void Stop()
         {
-            ManagedBass.Bass.Stop();
+            if (enabled && currentChannel != 0)
+                ManagedBass.Bass.ChannelStop(currentChannel);
+        }
+
+        internal void SetCurrentChannel(int channel)
+        {
+            currentChannel = channel;
         }
 
         public void VolumeDown()
