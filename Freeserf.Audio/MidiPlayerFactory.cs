@@ -3,14 +3,16 @@
 namespace Freeserf.Audio
 {
 #if WINDOWS
-    using os = Windows;
-#elif LINUX
-    using os = Linux;
+    #if USE_WINMM
+        using Audiolib = Windows;
+    #else
+        using Audiolib = Bass;
+    #endif
 #else
-    #error Unsupported platform.
+    using Audiolib = Bass;
 #endif
 
-    internal class MidiPlayerFactory : IMidiPlayerFactory
+    internal class MidiPlayerFactory
     {
         public MidiPlayerFactory(DataSource dataSource)
         {
@@ -18,12 +20,12 @@ namespace Freeserf.Audio
         }
 
         readonly DataSource dataSource = null;
-        IMidiPlayer player = null;
+        Audio.Player player = null;
 
-        public IMidiPlayer GetMidiPlayer()
+        public Audio.Player GetMidiPlayer()
         {
             if (player == null)
-                player = new os.MidiPlayer(dataSource);
+                player = new Audiolib.MidiPlayer(dataSource);
 
             return player;
         }

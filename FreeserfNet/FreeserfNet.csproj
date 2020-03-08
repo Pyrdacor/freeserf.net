@@ -69,14 +69,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="OpenTK\**" />
-    <EmbeddedResource Remove="OpenTK\**" />
-    <None Remove="OpenTK\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="log.txt" />
-    <None Remove="SPAE.PA" />
+    <None Remove="*.PA" />
   </ItemGroup>
 
   <ItemGroup>
@@ -102,11 +96,55 @@
     <ProjectReference Include="..\Silk.NET.Window\Silk.NET.Window.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='WindowsDebug|AnyCPU'">
+    <BassLib Include="bass\win-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='WindowsDebug|x64'">
+    <BassLib Include="bass\win-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='WindowsDebug|x86'">
+    <BassLib Include="bass\win-x86\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='WindowsRelease|AnyCPU'">
+    <BassLib Include="bass\win-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='WindowsRelease|x64'">
+    <BassLib Include="bass\win-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='WindowsRelease|x86'">
+    <BassLib Include="bass\win-x86\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|AnyCPU'">
+    <BassLib Include="bass\linux-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|x64'">
+    <BassLib Include="bass\linux-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|x86'">
+    <BassLib Include="bass\linux-x86\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|AnyCPU'">
+    <BassLib Include="bass\linux-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|x64'">
+    <BassLib Include="bass\linux-x64\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|x86'">
+    <BassLib Include="bass\linux-x86\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='MacDebug'">
+    <BassLib Include="bass\osx\*.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='MacRelease'">
+    <BassLib Include="bass\osx\*.*" />
+  </ItemGroup>
+
   <Target Name="CopyPackages" BeforeTargets="BeforeCompile">
     <ItemGroup>
       <PackageReferenceFiles Condition="%(PackageReference.CopyToOutputDirectory) != ''" Include="$(NugetPackageRoot)\%(PackageReference.FileName)\%(PackageReference.Version)\%(PackageReference.CopyToOutputDirectory)" />
     </ItemGroup>
     <Copy SourceFiles="@(PackageReferenceFiles)" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="@(BassLib)" DestinationFiles="@(BassLib->'$(OutDir)\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

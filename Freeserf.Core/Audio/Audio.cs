@@ -154,8 +154,6 @@ namespace Freeserf.Audio
             protected abstract ITrack CreateTrack(int trackID);
 
             public abstract void Stop();
-            public abstract void Pause();
-            public abstract void Resume();
         }
 
         protected float volume = 0.75f;

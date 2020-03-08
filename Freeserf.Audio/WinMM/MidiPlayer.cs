@@ -8,7 +8,7 @@ using Freeserf.Data;
 namespace Freeserf.Audio.Windows
 {
 #if WINDOWS
-    internal class MidiPlayer : Audio.Player, Audio.IVolumeController, IMidiPlayer, IDisposable
+    internal class MidiPlayer : Audio.Player, Audio.IVolumeController, IDisposable
     {
         IntPtr handle = IntPtr.Zero;
         readonly Timer eventTimer = new Timer();
@@ -18,7 +18,8 @@ namespace Freeserf.Audio.Windows
         DateTime pauseStartTime = DateTime.MinValue;
         bool looped = false;
         bool paused = false;
-        bool enabled = true;
+        readonly bool available = false;
+        bool enabled = false;
         DataSource dataSource = null;
         bool runningStateChanged = false;
         bool playingEvents = false;
@@ -32,7 +33,8 @@ namespace Freeserf.Audio.Windows
             if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device))
                 throw new ExceptionAudio("Unable to create midi output.");
 
-            Available = true;
+            available = true;
+            enabled = true;
 
             Init();
 
@@ -49,67 +51,38 @@ namespace Freeserf.Audio.Windows
             }
         }
 
-        public bool Available
-        {
-            get;
-            private set;
-        } = false;
-
         public override bool Enabled
         {
-            get => enabled && Available;
+            get => enabled && available;
             set
             {
-                if (!Available)
-                    value = false;
-
                 if (enabled == value)
                     return;
 
-                if (value) // just enabled
-                {
-                    enabled = true;
+                enabled = value;
 
-                    // restart the music
-                    if (CurrentXMI != null)
+                if (available)
+                {
+                    if (enabled) // just enabled
                     {
-                        currentEventIndex = 0;
-                        trackStartTime = DateTime.Now;
-                        Running = true;
-                        runningStateChanged = true;
-                        Play(CurrentXMI, Looped);
+                        // restart the music
+                        if (CurrentXMI != null)
+                        {
+                            currentEventIndex = 0;
+                            trackStartTime = DateTime.Now;
+                            Running = true;
+                            runningStateChanged = true;
+                            Play(CurrentXMI);
+                        }
+                    }
+                    else
+                    {
+                        if (Running)
+                        {
+                            Stop();
+                        }
                     }
                 }
-                else
-                {
-                    if (Running)
-                    {
-                        Stop();
-                    }
-
-                    enabled = false;
-                }
-            }
-        }
-
-        public bool Paused
-        {
-            get => paused && Running && Enabled && CurrentXMI != null;
-            private set
-            {
-                if (!Running || !Enabled || CurrentXMI == null)
-                {
-                    paused = false;
-                    return;
-                }
-
-                if (paused == value)
-                    return;
-
-                paused = value;
-
-                if (paused)
-                    pauseStartTime = DateTime.Now;
             }
         }
 
@@ -119,33 +92,13 @@ namespace Freeserf.Audio.Windows
             private set;
         } = false;
 
-        public bool Looped
-        {
-            get => looped;
-            private set
-            {
-                if (looped == value)
-                    return;
-
-                bool start = Enabled && !looped && !Running && CurrentXMI != null;
-
-                looped = value;
-
-                if (start)
-                {
-                    Running = true;
-                    Play(CurrentXMI, looped);
-                }
-            }
-        }
-
         public XMI CurrentXMI
         {
             get;
             private set;
         } = null;
 
-        public void Play(XMI xmi, bool looped)
+        void Play(XMI xmi)
         {
             if (Running)
                 Stop();
@@ -183,23 +136,10 @@ namespace Freeserf.Audio.Windows
                     return;
                 }
 
-                if (Paused)
-                {
-                    return;
-                }
-
                 if (currentEventIndex == CurrentXMI.NumEvents)
                 {
-                    if (Looped)
-                    {
-                        currentEventIndex = 0;
-                        trackStartTime = DateTime.Now;
-                    }
-                    else
-                    {
-                        Stop();
-                        return;
-                    }
+                    currentEventIndex = 0;
+                    trackStartTime = DateTime.Now;
                 }
 
                 var currentTrackTime = CurrentTrackTime;
@@ -215,17 +155,9 @@ namespace Freeserf.Audio.Windows
 
                         if (currentEventIndex == CurrentXMI.NumEvents)
                         {
-                            if (Looped)
-                            {
-                                currentEventIndex = 0;
-                                trackStartTime = DateTime.Now;
-                                break;
-                            }
-                            else
-                            {
-                                Stop();
-                                return;
-                            }
+                            currentEventIndex = 0;
+                            trackStartTime = DateTime.Now;
+                            break;
                         }
                     }
                     else
@@ -240,15 +172,27 @@ namespace Freeserf.Audio.Windows
             }
         }
 
+        class MidiTrack : Audio.ITrack
+        {
+            private XMI xmi = null;
+
+            public MidiTrack(XMI xmi)
+            {
+                this.xmi = xmi;
+            }
+
+            public void Play(Audio.Player player)
+            {
+                (player as MidiPlayer).Play(xmi);
+            }
+        }
+
         protected override Audio.ITrack CreateTrack(int trackID)
         {
-            var music = dataSource.GetMusic((uint)trackID);
-
-            if (music == null)
-                throw new ExceptionFreeserf(ErrorSystemType.Data, $"Error loading music track {trackID}");
+            var music = AudioImpl.GetMusicTrackData(dataSource, trackID);
 
             if (DataSource.DosMusic(dataSource))
-                return new XMI(music);
+                return new MidiTrack(new XMI(music));
 
             throw new ExceptionFreeserf(ErrorSystemType.Data, $"Only DOS data uses MIDI music");
         }
@@ -264,24 +208,6 @@ namespace Freeserf.Audio.Windows
                 WinMMNatives.ResetPlaybackDevice(handle);
                 runningStateChanged = true;
             }
-        }
-
-        public override void Pause()
-        {
-            Paused = true;
-        }
-
-        public override void Resume()
-        {
-            if (!Paused)
-                return;
-
-            if (Running && Enabled && CurrentXMI != null)
-            {
-                trackStartTime += DateTime.Now - pauseStartTime;
-            }
-
-            Paused = false;
         }
 
         public override Audio.IVolumeController GetVolumeController()

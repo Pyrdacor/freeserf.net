@@ -1,19 +1,28 @@
-﻿using Freeserf.Data;
+﻿using System;
+using Freeserf.Data;
 
 namespace Freeserf.Audio
 {
-    internal class AudioImpl : Audio, Audio.IVolumeController
+    internal class AudioImpl : Audio, Audio.IVolumeController, IDisposable
     {
         Player musicPlayer = null;
         Player soundPlayer = null;
+
+        static AudioImpl()
+        {
+#if !WINDOWS || !USE_WINMM
+            // Init Bass if is is used
+            Bass.BassLib.EnsureBass();
+#endif
+        }
 
         internal AudioImpl(DataSource dataSource)
         {
             try
             {
-                IMidiPlayerFactory midiPlayerFactory = new MidiPlayerFactory(dataSource);
-                IWavePlayerFactory wavePlayerFactory = new WavePlayerFactory(dataSource);
-                IModPlayerFactory modPlayerFactory = new ModPlayerFactory(dataSource);
+                var midiPlayerFactory = new MidiPlayerFactory(dataSource);
+                var wavePlayerFactory = new WavePlayerFactory(dataSource);
+                var modPlayerFactory = new ModPlayerFactory(dataSource);
 
                 musicPlayer = DataSource.DosMusic(dataSource) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
                 soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
@@ -81,6 +90,34 @@ namespace Freeserf.Audio
         public void VolumeDown()
         {
             SetVolume(Volume - 0.1f);
+        }
+
+        public void Dispose()
+        {
+#if !WINDOWS || !USE_WINMM
+            // Free Bass resources if is is used
+            Bass.BassLib.FreeBass();
+#endif
+        }
+
+        internal static Data.Buffer GetMusicTrackData(DataSource dataSource, int trackID)
+        {
+            var musicData = dataSource.GetMusic((uint)trackID);
+
+            if (musicData == null)
+                throw new ExceptionFreeserf(ErrorSystemType.Data, $"Error loading music track {trackID}");
+
+            return musicData;
+        }
+
+        internal static Data.Buffer GetSoundTrackData(DataSource dataSource, int trackID)
+        {
+            var soundData = dataSource.GetSound((uint)trackID);
+
+            if (soundData == null)
+                throw new ExceptionFreeserf(ErrorSystemType.Data, $"Error loading sound track {trackID}");
+
+            return soundData;
         }
     }
 

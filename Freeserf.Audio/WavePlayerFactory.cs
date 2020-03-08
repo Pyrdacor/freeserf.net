@@ -3,14 +3,16 @@
 namespace Freeserf.Audio
 {
 #if WINDOWS
-    using os = Windows;
-#elif LINUX
-    using os = Linux;
+    #if USE_WINMM
+        using Audiolib = Windows;
+    #else
+        using Audiolib = Bass;
+    #endif
 #else
-    #error Unsupported platform.
+    using Audiolib = Bass;
 #endif
 
-    internal class WavePlayerFactory : IWavePlayerFactory
+    internal class WavePlayerFactory
     {
         public WavePlayerFactory(DataSource dataSource)
         {
@@ -18,12 +20,12 @@ namespace Freeserf.Audio
         }
 
         readonly DataSource dataSource = null;
-        IWavePlayer player = null;
+        Audio.Player player = null;
 
-        public IWavePlayer GetWavePlayer()
+        public Audio.Player GetWavePlayer()
         {
             if (player == null)
-                player = new os.WavePlayer(dataSource);
+                player = new Audiolib.WavePlayer(dataSource);
 
             return player;
         }

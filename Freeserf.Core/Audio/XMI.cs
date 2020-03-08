@@ -6,7 +6,7 @@ using Freeserf.Data;
 
 namespace Freeserf.Audio
 {
-    public class XMI : Audio.ITrack, IEnumerable<XMI.Event>
+    public class XMI : IEnumerable<XMI.Event>
     {
         uint tempo = 500000;
         readonly List<Event> events = new List<Event>();
@@ -121,12 +121,6 @@ namespace Freeserf.Audio
 
                 return result;
             });
-        }
-
-        public void Play(Audio.Player player)
-        {
-            if (player is IMidiPlayer)
-                (player as IMidiPlayer).Play(this, true);
         }
 
         uint ParseDeltaTime(Data.Buffer data)

@@ -8,11 +8,12 @@ using Freeserf.Data;
 namespace Freeserf.Audio.Windows
 {
 #if WINDOWS
-    internal class WavePlayer : Audio.Player, Audio.IVolumeController, IWavePlayer, IDisposable
+    internal class WavePlayer : Audio.Player, Audio.IVolumeController, IDisposable
     {
         IntPtr handle = IntPtr.Zero;
         protected DataSource dataSource = null;
         WinMMNatives.Wave wave = null;
+        bool running = false;
 
         public WavePlayer(DataSource dataSource)
         {
@@ -24,8 +25,6 @@ namespace Freeserf.Audio.Windows
 
             if (device == -1 || !WinMMNatives.OpenPlaybackDevice(out handle, (uint)device, samplesPerSec, 1))
                 throw new ExceptionAudio("Unable to create wave output.");
-
-            Available = true;
         }
 
         protected class WaveTrack : Audio.ITrack
@@ -44,23 +43,11 @@ namespace Freeserf.Audio.Windows
             }
         }
 
-        public bool Available
-        {
-            get;
-            private set;
-        } = false;
-
         public override bool Enabled
         {
             get;
             set;
         } = true;
-
-        public bool Running
-        {
-            get;
-            private set;
-        } = false;
 
         public void Play(short[] data)
         {
@@ -75,14 +62,13 @@ namespace Freeserf.Audio.Windows
 
             wave = new WinMMNatives.Wave(handle, data);
             wave.Finished += Wave_Finished;
-            Running = true;
 
             wave.Play();
         }
 
         private void Wave_Finished(object sender, EventArgs e)
         {
-            Running = false;
+            running = false;
         }
 
         protected override Audio.ITrack CreateTrack(int trackID)
@@ -94,21 +80,11 @@ namespace Freeserf.Audio.Windows
 
         public override void Stop()
         {
-            if (Running)
+            if (running)
             {
                 WinMMNatives.ResetPlaybackDevice(handle);
-                Running = false;
+                running = false;
             }
-        }
-
-        public override void Pause()
-        {
-            // sounds do not support pause
-        }
-
-        public override void Resume()
-        {
-            // do nothing
         }
 
         public override Audio.IVolumeController GetVolumeController()
