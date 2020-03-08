@@ -1,4 +1,8 @@
-﻿using System;
+﻿#if !WINDOWS || !USE_WINMM
+    #define AUDIO_BASS
+#endif
+
+using System;
 using Freeserf.Data;
 
 namespace Freeserf.Audio
@@ -8,23 +12,21 @@ namespace Freeserf.Audio
         Player musicPlayer = null;
         Player soundPlayer = null;
 
-        static AudioImpl()
-        {
-#if !WINDOWS || !USE_WINMM
-            // Init Bass if is is used
-            Bass.BassLib.EnsureBass();
+#if AUDIO_BASS
+        static int RefCount = 0;
 #endif
-        }
 
         internal AudioImpl(DataSource dataSource)
         {
             try
             {
-                var midiPlayerFactory = new MidiPlayerFactory(dataSource);
-                var wavePlayerFactory = new WavePlayerFactory(dataSource);
-                var modPlayerFactory = new ModPlayerFactory(dataSource);
+#if AUDIO_BASS
+                if (RefCount++ == 0)
+                {
+                    // Init Bass if it is used
+                    Bass.BassLib.EnsureBass();
+                }
 
-#if !WINDOWS || !USE_WINMM
                 // If Bass should be used but it is not initialized, the sound is disabled
                 if (!Bass.BassLib.Initialized)
                 {
@@ -32,8 +34,11 @@ namespace Freeserf.Audio
                     return;
                 }
 #endif
-                musicPlayer = DataSource.DosMusic(dataSource) ? midiPlayerFactory?.GetMidiPlayer() as Audio.Player : modPlayerFactory?.GetModPlayer() as Audio.Player;
-                soundPlayer = wavePlayerFactory?.GetWavePlayer() as Audio.Player;
+
+                musicPlayer = DataSource.DosMusic(dataSource)
+                    ? new MidiPlayerFactory(dataSource).GetMidiPlayer()
+                    : new ModPlayerFactory(dataSource).GetModPlayer();
+                soundPlayer = new WavePlayerFactory(dataSource).GetWavePlayer();
             }
             catch
             {
@@ -102,9 +107,12 @@ namespace Freeserf.Audio
 
         public void Dispose()
         {
-#if !WINDOWS || !USE_WINMM
-            // Free Bass resources if is is used
-            Bass.BassLib.FreeBass();
+#if AUDIO_BASS
+            if (--RefCount == 0)
+            {
+                // Free Bass resources if it is used
+                Bass.BassLib.FreeBass();
+            }
 #endif
         }
 

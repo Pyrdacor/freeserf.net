@@ -253,7 +253,6 @@ namespace Freeserf
                 var view = gameView;
                 gameView = null;
                 view.Close();
-                return;
             }
 
             try
