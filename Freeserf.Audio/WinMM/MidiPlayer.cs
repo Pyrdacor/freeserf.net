@@ -243,11 +243,7 @@ namespace Freeserf.Audio.Windows
 
         public void SetVolume(float volume)
         {
-            if (volume < 0.0f)
-                volume = 0.0f;
-            if (volume > 1.0f)
-                volume = 1.0f;
-
+            Misc.Clamp(0.0f, ref volume, 1.0f);
             uint value = (uint)Misc.Round(volume * 0xffff);
 
             value |= (value << 16); // copy left volume to right volume

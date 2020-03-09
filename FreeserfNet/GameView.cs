@@ -113,7 +113,7 @@ namespace Freeserf
                 if (soundPlayer != null)
                     soundPlayer.Enabled = UserConfig.Audio.Sound;
                 if (volumeController != null)
-                    volumeController.SetVolume(Misc.Clamp(0.0f, UserConfig.Audio.Volume, 1.0f));
+                    volumeController.SetVolume(UserConfig.Audio.Volume);
             }
 
             TextureAtlasManager.RegisterFactory(new TextureAtlasBuilderFactory());

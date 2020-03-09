@@ -8,6 +8,7 @@ namespace Freeserf.Audio.Bass
         protected DataSource dataSource = null;
         bool enabled = true;
         int currentChannel = 0;
+        float volume = 1.0f;
 
         public MusicPlayer(DataSource dataSource)
         {
@@ -36,19 +37,13 @@ namespace Freeserf.Audio.Bass
 
         public float Volume
         {
-            get
-            {
-                if (currentChannel == 0)
-                    return (float)ManagedBass.Bass.Volume;
-                else
-                    return (float)ManagedBass.Bass.ChannelGetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume);
-            }
+            get => volume;
             set
             {
-                if (currentChannel == 0)
-                    ManagedBass.Bass.Volume = value;
-                else
-                    ManagedBass.Bass.ChannelSetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume, value);
+                volume = Misc.Clamp(0.0f, value, 1.0f);
+
+                if (currentChannel != 0)
+                    ManagedBass.Bass.ChannelSetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume, volume);
             }
         }
 
@@ -59,7 +54,7 @@ namespace Freeserf.Audio.Bass
 
         public void SetVolume(float volume)
         {
-            Volume = Math.Max(0.0f, Math.Min(1.0f, volume));
+            Volume = volume;
         }
 
         public override void Stop()
@@ -71,6 +66,9 @@ namespace Freeserf.Audio.Bass
         internal void SetCurrentChannel(int channel)
         {
             currentChannel = channel;
+
+            if (currentChannel != 0) // use set volume for the new channel
+                ManagedBass.Bass.ChannelSetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume, Volume);
         }
 
         public void VolumeDown()
