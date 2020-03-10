@@ -28,7 +28,8 @@ namespace Freeserf.Audio.Bass
                     channel = BassImpl.MusicLoad(data, 0L, data.Length, BassFlags.Default | BassFlags.MusicPT1Mod, 44100);
                     break;
                 case Type.Wave:
-                    // TODO
+                    channel = BassImpl.CreateStream(8000, 1, BassFlags.Default | BassFlags.Mono,
+                        new WaveMusic.WaveStreamProvider(data).StreamProcedure);
                     break;
             }
 
@@ -43,7 +44,7 @@ namespace Freeserf.Audio.Bass
                 (player as MusicPlayer).SetCurrentChannel(channel);
 
                 if (player.Enabled)
-                    BassImpl.ChannelPlay(channel);
+                    BassImpl.ChannelPlay(channel, true);
             }
         }
 
