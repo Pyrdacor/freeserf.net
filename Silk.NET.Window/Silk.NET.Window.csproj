@@ -70,10 +70,10 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Silk.NET.GLFW" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Input" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Windowing" Version="1.0.0" />
+    <PackageReference Include="Silk.NET.GLFW" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Input" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Windowing" Version="1.1.0" />
   </ItemGroup>
 
 </Project>

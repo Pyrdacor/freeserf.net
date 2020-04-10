@@ -210,6 +210,8 @@ namespace Freeserf
         private static void Exit()
         {
             mainWindow?.Close();
+            // TODO: Silk has still problems to trigger the closing event on manual close.
+            mainWindow?.MainWindow_Closing(); // Remove this later if Silk is fixed.
         }
 
         private void GameView_Closed(object sender, EventArgs e)

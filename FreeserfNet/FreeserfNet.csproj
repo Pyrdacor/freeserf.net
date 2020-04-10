@@ -77,15 +77,15 @@
     <PackageReference Include="glfw" Version="3.3.2">
       <CopyToOutputDirectory>build\native\bin\dynamic\v142\x64\*</CopyToOutputDirectory>
     </PackageReference>
-    <PackageReference Include="Silk.NET.Core" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.GLFW" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Input" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Input.Common" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.OpenGL" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Windowing" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Windowing.Common" Version="1.0.0" />
-    <PackageReference Include="Silk.NET.Windowing.Desktop" Version="1.0.0" />
+    <PackageReference Include="Silk.NET.Core" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.GLFW" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Input" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Input.Common" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.OpenGL" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Windowing" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Windowing.Common" Version="1.1.0" />
+    <PackageReference Include="Silk.NET.Windowing.Desktop" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

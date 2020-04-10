@@ -37,7 +37,7 @@ namespace Freeserf.Renderer
 
         internal abstract bool RecreateUnbound();
 
-        protected static T[] EnsureBufferSize<T>(T[] buffer, int size, out bool changed)
+        protected static T[] EnsureBufferSize(T[] buffer, int size, out bool changed)
         {
             changed = false;
 
