@@ -40,8 +40,9 @@ namespace Freeserf.Audio
                     : new ModPlayerFactory(dataSource).GetModPlayer();
                 soundPlayer = new WavePlayerFactory(dataSource).GetWavePlayer();
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Debug.Write(ErrorSystemType.Audio, "Unable to create BASS audio: " + ex.Message);
                 DisableSound();
             }
         }
