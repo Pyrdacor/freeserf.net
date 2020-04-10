@@ -18,9 +18,19 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 Builds for other platforms will follow later. Only recent Ubuntu versions are tested for Linux version.
 
-Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. You can only use the Amiga files (either the disk files *.adf or the extracted files like "sounds" and "music" will work).
-Amiga music and sounds work well but the map tiles are not displayed properly. You can combine DOS and Amiga data (e.g. music from Amiga and graphics from DOS). There should be a user.cfg in your user directory with those settings
-(%APPDATA%\freeserf.net on Windows, ~/.local/share/freesert on Ubuntu).
+Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. You can also use the Amiga files (either the disk files "*.adf" or the extracted files like "sounds" and "music" will work).
+Amiga music and sounds work well but the map tiles are not displayed properly.
+
+You can combine DOS and Amiga data (e.g. music from Amiga and graphics from DOS). There should be a user.cfg in your user directory with those settings
+(%APPDATA%\freeserf.net on Windows, ~/.local/share/freeserf on Ubuntu). Change the following settings:
+
+```
+graphic_data_usage = PreferDos
+sound_data_usage = PreferAmiga
+music_data_usage = PreferAmiga
+```
+
+Possible values are `PreferDos`, `PreferAmiga`, `ForceDos` and `ForceAmiga`. The force options will disable music or sound if the specific data files are not present. In case of graphics the game won't even start then.
 
 For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
 
