@@ -2,16 +2,6 @@
 
 namespace Freeserf.Audio
 {
-#if WINDOWS
-    #if USE_WINMM
-        using Audiolib = Windows;
-    #else
-        using Audiolib = Bass;
-    #endif
-#else
-    using Audiolib = Bass;
-#endif
-
     internal class ModPlayerFactory
     {
         public ModPlayerFactory(DataSource dataSource)
@@ -25,7 +15,7 @@ namespace Freeserf.Audio
         public Audio.Player GetModPlayer()
         {
             if (player == null)
-                player = new Audiolib.ModPlayer(dataSource);
+                player = new Bass.ModPlayer(dataSource);
 
             return player;
         }

@@ -1,8 +1,4 @@
-﻿#if !WINDOWS || !USE_WINMM
-    #define AUDIO_BASS
-#endif
-
-using System;
+﻿using System;
 using Freeserf.Data;
 
 namespace Freeserf.Audio
@@ -12,15 +8,12 @@ namespace Freeserf.Audio
         Player musicPlayer = null;
         Player soundPlayer = null;
 
-#if AUDIO_BASS
         static int RefCount = 0;
-#endif
 
         internal AudioImpl(DataSource dataSource)
         {
             try
             {
-#if AUDIO_BASS
                 if (RefCount++ == 0)
                 {
                     // Init Bass if it is used
@@ -33,7 +26,6 @@ namespace Freeserf.Audio
                     DisableSound();
                     return;
                 }
-#endif
 
                 musicPlayer = DataSource.DosMusic(dataSource)
                     ? new MidiPlayerFactory(dataSource).GetMidiPlayer()
@@ -108,13 +100,11 @@ namespace Freeserf.Audio
 
         public void Dispose()
         {
-#if AUDIO_BASS
             if (--RefCount == 0)
             {
                 // Free Bass resources if it is used
                 Bass.BassLib.FreeBass();
             }
-#endif
         }
 
         internal static Data.Buffer GetMusicTrackData(DataSource dataSource, int trackID)
