@@ -46,7 +46,7 @@ namespace Freeserf.Renderer
             $"",
             $"void main()",
             $"{{",
-            $"    vec4 pixelColor = texture2D({DefaultSamplerName}, varTexCoord);",
+            $"    vec4 pixelColor = texture({DefaultSamplerName}, varTexCoord);",
             $"    ",
             $"    if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
             $"        pixelColor.a = 0;",
