@@ -66,6 +66,7 @@ The game is playable for most parts. If you find any bugs please report it in th
 ![Mission](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_2.png "Start a mission")
 ![Ingame](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_3.png "Build your settlement")
 ![Menus](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_4.png "Change settings")
+![Map](https://github.com/Pyrdacor/freeserf.net/raw/master/images/Settlers_5.png "View the map")
 
 
 ## Roadmap
@@ -75,7 +76,7 @@ The game is playable for most parts. If you find any bugs please report it in th
 The first step is to port everything from C++ to C# and ensure that the game runs.
 There may be some quick&dirty implementations or things that could be done better.
 
-### Phase 2: Optimizing (100%) - <span style="color:forestgreen">[Active]</span>
+### Phase 2: Optimizing (100%) - <span style="color:forestgreen">[Finished]</span>
 
 This includes bug fixing and C#-specific optimizations.
 Moreover this includes performance and stability optimizations if needed.
