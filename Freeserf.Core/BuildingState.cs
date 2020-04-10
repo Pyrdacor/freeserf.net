@@ -258,7 +258,7 @@ namespace Freeserf
             }
         }
         [Ignore]
-        public bool PlayingSfx
+        public bool PlayingSfx // Note: This is used for weapon smiths as a flag for free shields. :(
         {
             get => Flags.HasFlag(BuildingStateFlags.PlayingSfx);
             set

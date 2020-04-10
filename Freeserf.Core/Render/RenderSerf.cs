@@ -837,7 +837,8 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.Audio.TypeSfx type)
         {
-            audio?.GetSoundPlayer()?.PlayTrack((int)type);
+            if (sprite?.Visible == true) // Only play sound if on screen
+                audio?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 
         // Extracted from obsolete update_map_serf_rows(). 
