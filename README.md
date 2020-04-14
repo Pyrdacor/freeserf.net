@@ -34,7 +34,7 @@ Possible values are `PreferDos`, `PreferAmiga`, `ForceDos` and `ForceAmiga`. The
 
 For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
 
-Audio is provided by BASS and ManagedBass. The assemblies are contained in the releases but they are for 64-bit systems only. If you have a 32-bit system you have to download them on your own or from [here](https://github.com/Pyrdacor/freeserf.net/tree/master/FreeserfNet/bass "Bass assemblies").
+Audio is provided by BASS. The assemblies are contained in the releases but they are for 64-bit systems only. If you have a 32-bit system you have to download them on your own or from [here](https://github.com/Pyrdacor/freeserf.net/tree/master/FreeserfNet/bass "Bass assemblies").
 
 
 ## Support development
@@ -100,7 +100,7 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 ## Implementation details
 
-The core is implemented as a .NET Standard 2.1 DLL. The renderer is also a .NET Standard 2.1 DLL and uses Silk.NET for rendering. The sound engine is using ManagedBass and BASS and is capable of playing MIDI, MOD and SFX/WAV on Windows and Linux.
+The core is implemented as a .NET Standard 2.1 DLL. The renderer is also a .NET Standard 2.1 DLL and uses Silk.NET for rendering. The sound engine is using BASS and is capable of playing MIDI, MOD and SFX/WAV on Windows and Linux.
 
 The main program is based on netcore 3.1 and should run at least on Windows and Ubuntu.
 
