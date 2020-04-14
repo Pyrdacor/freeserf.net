@@ -563,7 +563,7 @@ namespace Freeserf
 
         protected override void OnClick(Point position, MouseButtons button)
         {
-            if (specialClickPerformed && button == MouseButtons.Right)
+            if (specialClickPerformed && (button == MouseButtons.Right || button == MouseButtons.Left))
             {
                 specialClickPerformed = false;
                 return;
