@@ -1,6 +1,4 @@
-﻿using ManagedBass;
-
-namespace Freeserf.Audio.Bass
+﻿namespace Freeserf.Audio.Bass
 {
     internal class ModMusic : Music
     {
