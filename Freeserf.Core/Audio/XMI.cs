@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Freeserf.Data;
 
 namespace Freeserf.Audio
 {
     public class XMI : IEnumerable<XMI.Event>
     {
+        const int freq = 120; // ticks per second
         uint tempo = 500000;
         readonly List<Event> events = new List<Event>();
         double currentTime = 0.0;
+        uint currentTick = 0;
 
         public int NumEvents => events.Count;
 
@@ -105,18 +105,18 @@ namespace Freeserf.Audio
                 ParseEvent(data);
             }
 
+            var eventIndices = new Dictionary<Event, int>();
+
+            for (int i = 0; i < events.Count; ++i)
+                eventIndices.Add(events[i], i);
+
             events.Sort((a, b) =>
             {
                 int result = a.StartTime.CompareTo(b.StartTime);
 
                 if (result == 0)
                 {
-                    if (a is SetInstrumentEvent && !(b is SetInstrumentEvent))
-                        return -1;
-                    else if (b is SetInstrumentEvent && !(a is SetInstrumentEvent))
-                        return 1;
-                    else
-                        return 0;
+                    return eventIndices[a].CompareTo(eventIndices[b]);
                 }
 
                 return result;
@@ -159,6 +159,8 @@ namespace Freeserf.Audio
 
                 tempo = (uint)high << 16 | (uint)mid << 8 | low;
 
+                events.Add(new SetTempoEvent(tempo, currentTime, currentTick));
+
                 Log.Verbose.Write(ErrorSystemType.Audio, $"XMI Tempo Changed: {tempo} microseconds per quarter note.");
             }
             else if (type == 0x58)
@@ -196,7 +198,9 @@ namespace Freeserf.Audio
 
             if (eventType < 0x8)
             {
-                currentTime += ConvertTicksToTime(data.Pop<byte>());
+                uint ticks = data.Pop<byte>();
+                currentTime += ConvertTicksToTime(ticks);
+                currentTick += ticks;
                 return;
             }
             else if (eventType < 0xF)
@@ -216,26 +220,32 @@ namespace Freeserf.Audio
 
                         if (velocity != 0)
                         {
-                            var onEvent = new PlayNoteEvent((byte)channel, note, currentTime);
-                            var offEvent = new StopNoteEvent((byte)channel, note, currentTime + ConvertTicksToTime(length));
+                            var onEvent = new PlayNoteEvent((byte)channel, note, velocity, currentTime, currentTick);
+                            var offEvent = new StopNoteEvent((byte)channel, note, currentTime + ConvertTicksToTime(length), currentTick + length);
 
                             events.Add(onEvent);
                             events.Add(offEvent);
                         }
                     }
                     break;
+                case 0xB: // Control change
+                    {
+                        byte controller = (byte)(data.Pop<byte>() & 0x7f);
+                        byte value = (byte)(data.Pop<byte>() & 0x7f);
+
+                        if (controller < 120) // ignore reserved controller events >= 120
+                        {
+                            events.Add(new SetControllerValueEvent((byte)channel, controller, value, currentTime, currentTick));
+                        }
+                    }
+                    break;
                 case 0x8:
                 case 0xA:
-                case 0xB:
                 case 0xE:
                     data.Pop(2);
                     break;
                 case 0xC:
-                    {
-                        var patchEvent = new SetInstrumentEvent((byte)channel, data.Pop<byte>(), currentTime);
-
-                        events.Add(patchEvent);
-                    }
+                    events.Add(new SetInstrumentEvent((byte)channel, data.Pop<byte>(), currentTime, currentTick));
                     break;
                 case 0xD:
                     data.Pop(1);
@@ -245,14 +255,19 @@ namespace Freeserf.Audio
             }
         }
 
+        public double TicksPerQuarternote
+        {
+            get
+            {
+                // ticks_per_quarter_note / quarternote_time_in_seconds = freq
+                return Math.Floor(freq * tempo / 1000000.0);
+            }
+        }
+
         // in milliseconds
         double ConvertTicksToTime(uint ticks)
         {
-            // ticks_per_quarter_note / quarternote_time_in_seconds = freq
-            const int freq = 120; // ticks per second
-            double ticksPerQuarternote = Math.Floor(freq * tempo / 1000000.0);
-
-            double time = (double)ticks / (double)ticksPerQuarternote;
+            double time = (double)ticks / TicksPerQuarternote;
 
             return time * tempo / 1000.0;
         }
@@ -274,9 +289,15 @@ namespace Freeserf.Audio
                 get;
             }
 
-            protected Event(double startTime)
+            public uint Ticks
+            {
+                get;
+            }
+
+            protected Event(double startTime, uint ticks)
             {
                 StartTime = startTime;
+                Ticks = ticks;
             }
 
             public abstract uint ToMidiMessage();
@@ -284,61 +305,101 @@ namespace Freeserf.Audio
 
         public class PlayNoteEvent : Event
         {
-            byte channel = 0;
-            byte note = 0;
+            public byte Channel { get; } = 0;
+            public byte Note { get; } = 0;
+            public byte Velocity { get; } = 0;
 
-            public PlayNoteEvent(byte channel, byte note, double startTime)
-                : base(startTime)
+            public PlayNoteEvent(byte channel, byte note, byte velocity, double startTime, uint ticks)
+                : base(startTime, ticks)
             {
-                this.channel = channel;
-                this.note = note;
+                Channel = channel;
+                Note = note;
+                Velocity = velocity;
             }
 
             public override uint ToMidiMessage()
             {
-                byte code = (byte)(0x90 | channel);
+                byte code = (byte)(0x90 | Channel);
 
-                return BitConverter.ToUInt32(new byte[4] { code, note, 0x40, 0x00 }, 0);
+                return BitConverter.ToUInt32(new byte[4] { code, Note, Velocity, 0x00 }, 0);
             }
         }
 
         public class StopNoteEvent : Event
         {
-            byte channel = 0;
-            byte note = 0;
+            public byte Channel { get; } = 0;
+            public byte Note { get; } = 0;
 
-            public StopNoteEvent(byte channel, byte note, double startTime)
-                : base(startTime)
+            public StopNoteEvent(byte channel, byte note, double startTime, uint ticks)
+                : base(startTime, ticks)
             {
-                this.channel = channel;
-                this.note = note;
+                Channel = channel;
+                Note = note;
             }
 
             public override uint ToMidiMessage()
             {
-                byte code = (byte)(0x90 | channel);
+                byte code = (byte)(0x90 | Channel);
 
-                return BitConverter.ToUInt32(new byte[4] { code, note, 0x00, 0x00 }, 0);
+                return BitConverter.ToUInt32(new byte[4] { code, Note, 0x00, 0x00 }, 0);
+            }
+        }
+
+        public class SetControllerValueEvent : Event
+        {
+            public byte Channel { get; } = 0;
+            public byte Controller { get; } = 0;
+            public byte Value { get; } = 0;
+
+            public SetControllerValueEvent(byte channel, byte controller, byte value, double startTime, uint ticks)
+                : base(startTime, ticks)
+            {
+                Channel = channel;
+                Controller = controller;
+                Value = value;
+            }
+
+            public override uint ToMidiMessage()
+            {
+                byte code = (byte)(0xB0 | Channel);
+
+                return BitConverter.ToUInt32(new byte[4] { code, Controller, Value, 0x00 }, 0);
+            }
+        }
+
+        public class SetTempoEvent : Event
+        {
+            public UInt32 MicroSecondsPerQuarterNote { get; } = 0;
+
+            public SetTempoEvent(UInt32 microSecondsPerQuarterNote, double startTime, uint ticks)
+                : base(startTime, ticks)
+            {
+                MicroSecondsPerQuarterNote = microSecondsPerQuarterNote;
+            }
+
+            public override uint ToMidiMessage()
+            {
+                throw new ExceptionAudio("Tempo event can not be converted to MIDI message.");
             }
         }
 
         public class SetInstrumentEvent : Event
         {
-            byte channel = 0;
-            byte instrument = 0;
+            public byte Channel { get; } = 0;
+            public byte Instrument { get; } = 0;
 
-            public SetInstrumentEvent(byte channel, byte instrument, double startTime)
-                : base(startTime)
+            public SetInstrumentEvent(byte channel, byte instrument, double startTime, uint ticks)
+                : base(startTime, ticks)
             {
-                this.channel = channel;
-                this.instrument = instrument;
+                Channel = channel;
+                Instrument = instrument;
             }
 
             public override uint ToMidiMessage()
             {
-                byte code = (byte)(0xC0 | channel);
+                byte code = (byte)(0xC0 | Channel);
 
-                return BitConverter.ToUInt32(new byte[4] { code, instrument, 0x00, 0x00 }, 0);
+                return BitConverter.ToUInt32(new byte[4] { code, Instrument, 0x00, 0x00 }, 0);
             }
         }
     }

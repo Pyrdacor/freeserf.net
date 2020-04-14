@@ -2,31 +2,22 @@
 
 namespace Freeserf.Audio.Bass
 {
-    internal class MidiPlayer : Audio.Player
+    internal class MidiPlayer : MusicPlayer
     {
         public MidiPlayer(DataSource dataSource)
+            : base(dataSource)
         {
-            // TODO
-        }
 
-        // TODO
-        public override bool Enabled { get => false; set { } }
-
-        public override Audio.IVolumeController GetVolumeController()
-        {
-            // TODO
-            return null;
-        }
-
-        public override void Stop()
-        {
-            // TODO
         }
 
         protected override Audio.ITrack CreateTrack(int trackID)
         {
-            // TODO
-            return null;
+            var music = AudioImpl.GetMusicTrackData(dataSource, trackID);
+
+            if (DataSource.DosMusic(dataSource))
+                return new MidiMusic(new XMI(music));
+
+            throw new ExceptionFreeserf(ErrorSystemType.Data, $"Only DOS data uses MIDI music");
         }
     }
 }

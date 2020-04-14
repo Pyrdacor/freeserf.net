@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace Freeserf
 {
@@ -15,6 +16,12 @@ namespace Freeserf
         static Program()
         {
             var assemblyPath = Process.GetCurrentProcess().MainModule.FileName;
+
+            if (assemblyPath.EndsWith("dotnet"))
+            {
+                assemblyPath = Assembly.GetExecutingAssembly().Location;
+            }
+
             var assemblyDirectory = Path.GetDirectoryName(assemblyPath);
 
             if (FileSystem.Paths.IsWindows())

@@ -27,11 +27,11 @@ namespace Freeserf.Audio.Bass
 
                 if (enabled && currentChannel != 0)
                 {
-                    ManagedBass.Bass.ChannelPlay(currentChannel, true);
-                    ManagedBass.Bass.Start();
+                    BassLib.Play(currentChannel, true);
+                    BassLib.StartAll();
                 }
                 else if (!enabled)
-                    ManagedBass.Bass.ChannelStop(currentChannel);
+                    BassLib.Stop(currentChannel);
             }
         }
 
@@ -43,7 +43,7 @@ namespace Freeserf.Audio.Bass
                 volume = Misc.Clamp(0.0f, value, 1.0f);
 
                 if (currentChannel != 0)
-                    ManagedBass.Bass.ChannelSetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume, volume);
+                    BassLib.SetVolume(currentChannel, volume);
             }
         }
 
@@ -60,7 +60,7 @@ namespace Freeserf.Audio.Bass
         public override void Stop()
         {
             if (enabled && currentChannel != 0)
-                ManagedBass.Bass.ChannelStop(currentChannel);
+                BassLib.Stop(currentChannel);
         }
 
         internal void SetCurrentChannel(int channel)
@@ -68,7 +68,7 @@ namespace Freeserf.Audio.Bass
             currentChannel = channel;
 
             if (currentChannel != 0) // use set volume for the new channel
-                ManagedBass.Bass.ChannelSetAttribute(currentChannel, ManagedBass.ChannelAttribute.Volume, Volume);
+                BassLib.SetVolume(currentChannel, Volume);
         }
 
         public void VolumeDown()

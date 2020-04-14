@@ -7,5 +7,10 @@
         {
 
         }
+
+        protected override void FreeMusic(int channel)
+        {
+            BassLib.FreeModMusic(channel);
+        }
     }
 }

@@ -1,40 +1,38 @@
 ﻿using System;
-using ManagedBass;
 
 namespace Freeserf.Audio.Bass
 {
-    using BassImpl = ManagedBass.Bass;
-
     internal abstract class Music : Audio.ITrack, IDisposable
     {
         public enum Type
         {
             Midi,
             Mod,
-            Wave
+            Sfx
         }
 
         int channel = 0;
         bool disposed = false;
 
-        internal Music(byte[] data, Type type)
+        protected Music(byte[] data, Type type)
         {
             switch (type)
             {
-                case Type.Midi:
-                    // TODO
-                    break;
                 case Type.Mod:
-                    channel = BassImpl.MusicLoad(data, 0L, data.Length, BassFlags.Default | BassFlags.MusicPT1Mod, 44100);
+                    channel = BassLib.LoadModMusic(data);
                     break;
-                case Type.Wave:
-                    channel = BassImpl.CreateStream(8000, 1, BassFlags.Default | BassFlags.Mono,
-                        new WaveMusic.WaveStreamProvider(data).StreamProcedure);
+                case Type.Sfx:
+                    channel = BassLib.LoadSfxMusic(data);
                     break;
             }
 
             if (channel == 0)
-                Log.Warn.Write(ErrorSystemType.Audio, $"Failed to load music from data: {BassImpl.LastError}");
+                Log.Warn.Write(ErrorSystemType.Audio, $"Failed to load music from data: {BassLib.LastError}");
+        }
+
+        protected Music(int channel)
+        {
+            this.channel = channel;
         }
 
         public void Play(Audio.Player player)
@@ -44,9 +42,11 @@ namespace Freeserf.Audio.Bass
                 (player as MusicPlayer).SetCurrentChannel(channel);
 
                 if (player.Enabled)
-                    BassImpl.ChannelPlay(channel, true);
+                    BassLib.Play(channel, true);
             }
         }
+
+        protected abstract void FreeMusic(int channel);
 
         public void Dispose()
         {
@@ -54,7 +54,7 @@ namespace Freeserf.Audio.Bass
             {
                 if (channel != 0)
                 {
-                    BassImpl.MusicFree(channel);
+                    FreeMusic(channel);
                     channel = 0;
                 }
 

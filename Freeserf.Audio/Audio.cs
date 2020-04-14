@@ -102,7 +102,7 @@ namespace Freeserf.Audio
         {
             if (--RefCount == 0)
             {
-                // Free Bass resources if it is used
+                // Free Bass resources
                 Bass.BassLib.FreeBass();
             }
         }
