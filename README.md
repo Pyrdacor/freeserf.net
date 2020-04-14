@@ -34,7 +34,7 @@ Possible values are `PreferDos`, `PreferAmiga`, `ForceDos` and `ForceAmiga`. The
 
 For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
 
-Audio is provided by BASS. The assemblies are contained in the releases but they are for 64-bit systems only. If you have a 32-bit system you have to download them on your own or from [here](https://github.com/Pyrdacor/freeserf.net/tree/master/FreeserfNet/bass "Bass assemblies").
+Audio is provided by [BASS](http://www.un4seen.com/ "BASS"). The assemblies are contained in the releases but they are for 64-bit systems only. If you have a 32-bit system you have to download them on your own or from [here](https://github.com/Pyrdacor/freeserf.net/tree/master/FreeserfNet/bass "Bass assemblies").
 
 
 ## Support development
