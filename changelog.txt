@@ -1,8 +1,16 @@
-Version 2.0.0-preview1:
+Version 2.0.0-preview5:
+===============
+
+- Improved fullscreen switching
+- Fixed special click issues
+- Fixed mouse wheel zooming
+
+
+Version 2.0.0-preview1-4:
 ===============
 
 - Sound and music support for Linux
-- Sound and music now uses BASS / ManagedBass
+- Sound and music now uses BASS
 - Settings are now saved when using ingame exit button
 - Serfs only play sounds when on screen
 - Bugfixes
