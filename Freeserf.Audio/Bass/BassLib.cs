@@ -24,8 +24,9 @@ namespace Freeserf.Audio.Bass
             if (!Initialized)
             {
                 // This is needed on linux as it will pre-load the lib with
-                // RTLD_GLOBAL instead ot RTLD_LOCAL.
-                DynamicLibrary.PreLoad("bass");
+                // RTLD_GLOBAL instead ot RTLD_LOCAL. Otherwise bassmidi won't
+                // work on linux unfortunately.
+                DynamicLibrary.PreLoad("bass", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
                 Initialized = NativeBass.BASS_Init(-1, 44100u, 0u, 0, IntPtr.Zero);
             }
         }
