@@ -130,8 +130,8 @@ namespace Freeserf.Audio
 
     public class AudioFactory : IAudioFactory
     {
-        AudioImpl audio = null;
-        readonly DataSource dataSource = null;
+        private AudioImpl audio = null;
+        private readonly DataSource dataSource = null;
 
         public AudioFactory(DataSource dataSource)
         {

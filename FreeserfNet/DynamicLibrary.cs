@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Freeserf.Audio.Bass
+namespace Freeserf
 {
     public static class DynamicLibrary
     {
@@ -17,16 +17,9 @@ namespace Freeserf.Audio.Bass
             return !string.IsNullOrWhiteSpace(folder) ? Path.Combine(folder, fileName) : fileName;
         }
 
-        public static void PreLoad(string dllName, string folder = null)
+        public static IntPtr Load(string dllName, string folder = null)
         {
-            try
-            {
-                LoadLinux(GetPath($"lib{dllName}.so", folder));
-            }
-            catch
-            {
-                // Ignore
-            }
+            return LoadLinux(GetPath($"lib{dllName}.so", folder));
         }
     }
 }
