@@ -272,8 +272,6 @@ namespace Silk.NET.Window
 
             if (mouse != null)
             {
-                ScrollWheel? firstWheel = mouse.ScrollWheels.Count > 0 ? mouse.ScrollWheels.First() : (ScrollWheel?)null;
-                lastMouseWheelPosition = firstWheel != null ? firstWheel.Value.Y : 0.0f;
                 lastMousePosition = mouse.Position;
 
                 mouse.DoubleClickTime = DoubleClickTime;
@@ -291,7 +289,6 @@ namespace Silk.NET.Window
         private int doubleClickRange = 4;
         private int doubleClickTime = 200;
         private PointF lastMousePosition = PointF.Empty;
-        private float lastMouseWheelPosition = 0.0f;
 
         /// <summary>
         /// Maximum time in milliseconds for which two subsequent
@@ -405,13 +402,11 @@ namespace Silk.NET.Window
             // therefore we explicitely check the value of the first wheel
             if (mouse.ScrollWheels.Count > 0)
             {
-                float firstWheelPosition = mouse.ScrollWheels.First().Y;
+                float delta = mouse.ScrollWheels.First().Y;
 
-                if (lastMouseWheelPosition != firstWheelPosition)
+                if (delta != 0.0f)
                 {
-                    float delta = firstWheelPosition - lastMouseWheelPosition;
                     OnMouseWheel(ConvertMousePosition(mouse.Position), delta);
-                    lastMouseWheelPosition = firstWheelPosition;
                 }
             }
         }
