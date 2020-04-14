@@ -187,7 +187,7 @@ namespace Freeserf
                 gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
-                gameView.Resize(Width, Height, Orientation.LandscapeLeftRight);
+                gameView.Resize(Width, Height);
 
                 if (initInfo.Fullscreen == true)
                     SetFullscreen(true);
@@ -285,7 +285,6 @@ namespace Freeserf
                 return false;
 
             gameView.Fullscreen = fullscreen;
-            gameView.Resize(Width, Height, Orientation.LandscapeLeftRight);
 
             if (save)
                 UserConfig.Video.Fullscreen = gameView.Fullscreen;
@@ -312,7 +311,7 @@ namespace Freeserf
 
         private void MainWindow_Resize(System.Drawing.Size size)
         {
-            // not used for now, window should not be resizable
+            gameView.Resize(size.Width, size.Height);
         }
 
         private void MainWindow_Render(double delta)
