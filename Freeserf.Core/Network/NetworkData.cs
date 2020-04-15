@@ -1,7 +1,7 @@
 ﻿/*
  * NetworkData.cs - Basic network data interfaces
  *
- * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Runtime.InteropServices;
 
@@ -55,31 +56,40 @@ namespace Freeserf.Network
         NetworkDataType Type { get; }
         int Size { get; }
         void Send(IRemote destination);
-        INetworkData Parse(byte[] rawData);
+        INetworkData Parse(byte[] rawData, ref int offset);
     }
 
     public static class NetworkDataParser
     {
-        public static INetworkData Parse(byte[] rawData)
+        public static IEnumerable<INetworkData> Parse(byte[] rawData)
         {
             if (rawData.Length < 2)
                 throw new ExceptionFreeserf("Unknown network data.");
 
-            NetworkDataType type = (NetworkDataType)BitConverter.ToUInt16(rawData, 0);
+            int offset = 0;
 
-            switch (type)
+            while (offset < rawData.Length)
             {
-                case NetworkDataType.Request:
-                    return new RequestData().Parse(rawData);
-                case NetworkDataType.Response:
-                    return new ResponseData().Parse(rawData);
-                case NetworkDataType.Heartbeat:
-                    return new Heartbeat().Parse(rawData);
-                case NetworkDataType.LobbyData:
-                    return new LobbyData().Parse(rawData);
-                // TODO ...
-                default:
-                    throw new ExceptionFreeserf("Unknown network data.");
+                NetworkDataType type = (NetworkDataType)BitConverter.ToUInt16(rawData, offset);
+
+                switch (type)
+                {
+                    case NetworkDataType.Request:
+                        yield return new RequestData().Parse(rawData, ref offset);
+                        break;
+                    case NetworkDataType.Response:
+                        yield return new ResponseData().Parse(rawData, ref offset);
+                        break;
+                    case NetworkDataType.Heartbeat:
+                        yield return new Heartbeat().Parse(rawData, ref offset);
+                        break;
+                    case NetworkDataType.LobbyData:
+                        yield return new LobbyData().Parse(rawData, ref offset);
+                        break;
+                    // TODO ...
+                    default:
+                        throw new ExceptionFreeserf("Unknown network data.");
+                }
             }
         }
     }

@@ -66,17 +66,19 @@ namespace Freeserf.Network
             ResponseType = responseType;
         }
 
-        public INetworkData Parse(byte[] rawData)
+        public INetworkData Parse(byte[] rawData, ref int offset)
         {
-            if (rawData.Length != Size)
+            if (rawData.Length - offset != Size)
                 throw new ExceptionFreeserf($"Response length must be {Size}.");
 
-            Number = rawData[2];
+            Number = rawData[offset + 2];
 
-            if (rawData[3] > (byte)ResponseType.Failed)
+            if (rawData[offset + 3] > (byte)ResponseType.Failed)
                 ResponseType = ResponseType.Invalid;
             else
-                ResponseType = (ResponseType)rawData[3];
+                ResponseType = (ResponseType)rawData[offset + 3];
+
+            offset += Size;
 
             return this;
         }

@@ -82,7 +82,7 @@ namespace Freeserf.UI
             //public int X, Y;
         }
 
-        object gameLock = new object();
+        readonly object gameLock = new object();
         GameInitBox initBox;
 
         protected MapPos mapCursorPosition = 0u;
@@ -97,7 +97,6 @@ namespace Freeserf.UI
 
         int[] sfxQueue = new int[4];
 
-        Player player;
         // Bit 0: Always 1, is used for messages that should always be notified
         // Bit 1: Invert scrolling
         // Bit 2: Fast building
@@ -110,12 +109,12 @@ namespace Freeserf.UI
         int config = 0x39;
         int msgFlags; // TODO: Create constants/flag enum values for all bits and document possible values
 
-        SpriteLocation[] mapCursorSprites = new SpriteLocation[7];
+        readonly SpriteLocation[] mapCursorSprites = new SpriteLocation[7];
 
         int returnTimeout;
         int returnPos;
 
-        ISprite cursorSprite = null;
+        readonly ISprite cursorSprite = null;
 
         public IRenderView RenderView { get; } = null;
         public Audio.IAudioInterface AudioInterface { get; } = null;
@@ -131,6 +130,8 @@ namespace Freeserf.UI
         internal Viewer Viewer { get; set; }
         public string ServerGameName => initBox?.ServerGameName ?? "";
         public GameInfo ServerGameInfo => initBox?.ServerGameInfo;
+        public Network.ILocalServer Server => initBox?.Server;
+        public Network.ILocalClient Client => initBox?.Client;
 
         public Interface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
             : base(renderView, audioInterface)
@@ -261,7 +262,7 @@ namespace Freeserf.UI
                 }
 
                 Game = game;
-                player = null;
+                Player = null;
 
                 if (Game != null)
                 {
@@ -450,7 +451,7 @@ namespace Freeserf.UI
         // Open box for next message in the message queue 
         public void OpenMessage()
         {
-            if (!player.HasAnyNotification)
+            if (!Player.HasAnyNotification)
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 return;
@@ -465,7 +466,7 @@ namespace Freeserf.UI
                 returnPos = (int)position;
             }
 
-            var notification = player.PopNotification();
+            var notification = Player.PopNotification();
 
             if (notification.NotificationType == Notification.Type.CallToMenu)
             {
@@ -528,9 +529,9 @@ namespace Freeserf.UI
 
         public void GotoCastle()
         {
-            if (player != null && player.HasCastle)
+            if (Player != null && Player.HasCastle)
             {
-                GotoMapPosition(player.CastlePosition);
+                GotoMapPosition(Player.CastlePosition);
             }
         }
 
@@ -565,7 +566,7 @@ namespace Freeserf.UI
             }
         }
 
-        public Player Player => player;
+        public Player Player { get; private set; }
 
         public void SetPlayer(uint player)
         {
@@ -574,25 +575,25 @@ namespace Freeserf.UI
                 return;
             }
 
-            if (this.player != null && player == this.player.Index)
+            if (this.Player != null && player == this.Player.Index)
             {
                 return;
             }
 
-            this.player = Game.GetPlayer(player);
+            this.Player = Game.GetPlayer(player);
 
             // Move viewport to initial position 
             var initialPosition = Game.Map.Position(0, 0);
 
-            if (this.player != null)
+            if (this.Player != null)
             {
                 if (Ingame)
                     PanelBar.Displayed = true;
                 else
                     PanelBar.Displayed = false;
 
-                if (this.player.CastlePosition != Global.INVALID_MAPPOS)
-                    initialPosition = this.player.CastlePosition;
+                if (this.Player.CastlePosition != Global.INVALID_MAPPOS)
+                    initialPosition = this.Player.CastlePosition;
             }
             else
             {
@@ -688,7 +689,7 @@ namespace Freeserf.UI
 
             MapPos destination = 0;
             bool water = false;
-            int result = Game.CanBuildRoad(buildingRoad, player, ref destination, ref water, roadEndsThere);
+            int result = Game.CanBuildRoad(buildingRoad, Player, ref destination, ref water, roadEndsThere);
 
             if (result <= 0)
             {
@@ -699,7 +700,7 @@ namespace Freeserf.UI
             if (Game.Map.GetObject(destination) == Map.Object.Flag)
             {
                 // Existing flag at destination, try to connect. 
-                if (!Game.BuildRoad(buildingRoad.Copy(), player, true))
+                if (!Game.BuildRoad(buildingRoad.Copy(), Player, true))
                 {
                     BuildRoadEnd();
                     return -1;
@@ -737,7 +738,7 @@ namespace Freeserf.UI
             RemoveLastBuildingRoadSegment();
 
             if (buildingRoad.Length == 0 ||
-                Game.CanBuildRoad(buildingRoad, player, ref destination, ref water) == 0)
+                Game.CanBuildRoad(buildingRoad, Player, ref destination, ref water) == 0)
             {
                 // Road construction is no longer valid, abort.
                 BuildRoadEnd();
@@ -791,7 +792,7 @@ namespace Freeserf.UI
             if (mapCursorType == CursorType.RemovableFlag)
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
-                Game.DemolishFlag(mapCursorPosition, player);
+                Game.DemolishFlag(mapCursorPosition, Player);
                 DetermineMapCursorType();
             }
             else if (mapCursorType == CursorType.Building)
@@ -807,7 +808,7 @@ namespace Freeserf.UI
                 }
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Ahhh);
-                Game.DemolishBuilding(mapCursorPosition, player);
+                Game.DemolishBuilding(mapCursorPosition, Player);
                 DetermineMapCursorType();
             }
             else
@@ -824,7 +825,7 @@ namespace Freeserf.UI
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildFlag(mapCursorPosition, player))
+            if (!Game.BuildFlag(mapCursorPosition, Player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
@@ -839,7 +840,7 @@ namespace Freeserf.UI
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildBuilding(mapCursorPosition, type, player))
+            if (!Game.BuildBuilding(mapCursorPosition, type, Player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
@@ -859,7 +860,7 @@ namespace Freeserf.UI
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildCastle(mapCursorPosition, player))
+            if (!Game.BuildCastle(mapCursorPosition, Player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 return;
@@ -874,10 +875,10 @@ namespace Freeserf.UI
             if (AccessRights != Viewer.Access.Player)
                 return;
 
-            if (!Game.BuildRoad(buildingRoad.Copy(), player))
+            if (!Game.BuildRoad(buildingRoad.Copy(), Player))
             {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
-                Game.DemolishFlag(mapCursorPosition, player);
+                Game.DemolishFlag(mapCursorPosition, Player);
             }
             else
             {
@@ -925,13 +926,13 @@ namespace Freeserf.UI
                 }
 
                 // Handle newly enqueued messages 
-                if (player != null && player.HasNotifications)
+                if (Player != null && Player.HasNotifications)
                 {
-                    player.DropNotifications();
+                    Player.DropNotifications();
 
-                    while (player.HasAnyNotification)
+                    while (Player.HasAnyNotification)
                     {
-                        var notification = player.PeekNotification();
+                        var notification = Player.PeekNotification();
 
                         if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
                         {
@@ -940,28 +941,28 @@ namespace Freeserf.UI
                             break;
                         }
 
-                        player.PopNotification();
+                        Player.PopNotification();
                     }
                 }
 
-                if (player != null && Misc.BitTest(msgFlags, 1))
+                if (Player != null && Misc.BitTest(msgFlags, 1))
                 {
                     msgFlags &= ~Misc.Bit(1);
 
                     while (true)
                     {
-                        if (!player.HasAnyNotification)
+                        if (!Player.HasAnyNotification)
                         {
                             msgFlags &= ~Misc.Bit(0);
                             break;
                         }
 
-                        var notification = player.PeekNotification();
+                        var notification = Player.PeekNotification();
 
                         if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
                             break;
 
-                        player.PopNotification();
+                        Player.PopNotification();
                     }
                 }
 
@@ -1127,7 +1128,7 @@ namespace Freeserf.UI
            in get_map_cursor_type(). */
         void DetermineMapCursorType()
         {
-            GetMapCursorType(player, mapCursorPosition, out buildPossibility, out mapCursorType);
+            GetMapCursorType(Player, mapCursorPosition, out buildPossibility, out mapCursorType);
         }
 
         /* Update the interface_t object with the information returned
@@ -1426,7 +1427,7 @@ namespace Freeserf.UI
                     {
                         if (Viewer.AccessRights != Viewer.Access.Player)
                         {
-                            uint index = Game.GetNextPlayer(player).Index;
+                            uint index = Game.GetNextPlayer(Player).Index;
                             SetPlayer(index);
                             Log.Info.Write(ErrorSystemType.Game, "Switched to player #" + index);
                         }

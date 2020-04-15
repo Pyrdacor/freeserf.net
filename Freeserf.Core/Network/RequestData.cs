@@ -92,20 +92,21 @@ namespace Freeserf.Network
 
         public int Size => 4;
 
-        public INetworkData Parse(byte[] rawData)
+        public INetworkData Parse(byte[] rawData, ref int offset)
         {
-            if (rawData.Length != Size)
+            if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"Request length must be {Size}.");
 
-            Number = rawData[2];
+            Number = rawData[offset + 2];
 
             var possibleValues = Enum.GetValues(typeof(Request));
 
             foreach (Request possibleValue in possibleValues)
             {
-                if ((byte)possibleValue == rawData[3])
+                if ((byte)possibleValue == rawData[offset + 3])
                 {
                     Request = possibleValue;
+                    offset += Size;
                     return this;
                 }
             }

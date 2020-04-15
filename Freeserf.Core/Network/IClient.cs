@@ -42,6 +42,11 @@ namespace Freeserf.Network
 
         event EventHandler Disconnected;
         event EventHandler LobbyDataUpdated;
+        event EventHandler GameStarted;
+        event EventHandler GamePaused;
+        event EventHandler GameResumed;
+        event EventHandler InputAllowed;
+        event EventHandler InputDisallowed;
 
         byte RequestLobbyStateUpdate();
         byte RequestPlayerStateUpdate(uint playerIndex);

@@ -1,4 +1,25 @@
-﻿using System;
+﻿/*
+ * Client.cs - Freeserf clients
+ *
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ *
+ * This file is part of freeserf.net. freeserf.net is based on freeserf.
+ *
+ * freeserf.net is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * freeserf.net is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -48,6 +69,11 @@ namespace Freeserf.Network
 
         public event EventHandler Disconnected;
         public event EventHandler LobbyDataUpdated;
+        public event EventHandler GameStarted;
+        public event EventHandler GamePaused;
+        public event EventHandler GameResumed;
+        public event EventHandler InputAllowed;
+        public event EventHandler InputDisallowed;
 
         public void Disconnect()
         {
@@ -130,23 +156,24 @@ namespace Freeserf.Network
         {
             lastServerHeartbeat = DateTime.UtcNow;
 
-            var parsedData = NetworkDataParser.Parse(data);
-            
-            switch (parsedData.Type)
+            foreach (var parsedData in NetworkDataParser.Parse(data))
             {
-                case NetworkDataType.Request:
-                    HandleRequest(parsedData as RequestData);
-                    break;
-                case NetworkDataType.Heartbeat:
-                    // Last heartbeat time was set above.
-                    break;
-                case NetworkDataType.LobbyData:
-                    UpdateLobbyData(parsedData as LobbyData);
-                    break;
-                // TODO: other data
-                default:
-                    // TODO: ignore? track safely?
-                    throw new ExceptionFreeserf("Unknown server data");
+                switch (parsedData.Type)
+                {
+                    case NetworkDataType.Request:
+                        HandleRequest(parsedData as RequestData);
+                        break;
+                    case NetworkDataType.Heartbeat:
+                        // Last heartbeat time was set above.
+                        break;
+                    case NetworkDataType.LobbyData:
+                        UpdateLobbyData(parsedData as LobbyData);
+                        break;
+                    // TODO: other data
+                    default:
+                        // TODO: ignore? track safely?
+                        throw new ExceptionFreeserf("Unknown server data");
+                }
             }
         }
 
@@ -162,21 +189,21 @@ namespace Freeserf.Network
                     // Response is send below.
                     break;
                 case Request.StartGame:
-                    // TODO: start game etc
+                    GameStarted?.Invoke(this, EventArgs.Empty);
                     SendStartGameRequest();
                     // Start game messages are sent asynchronously.
                     return;
                 case Request.AllowUserInput:
-                    // TODO
+                    InputAllowed?.Invoke(this, EventArgs.Empty);
                     break;
                 case Request.DisallowUserInput:
-                    // TODO
+                    InputDisallowed?.Invoke(this, EventArgs.Empty);
                     break;
                 case Request.Pause:
-                    // TODO
+                    GamePaused?.Invoke(this, EventArgs.Empty);
                     break;
                 case Request.Resume:
-                    // TODO
+                    GameResumed?.Invoke(this, EventArgs.Empty);
                     break;
                 default:
                     // all other requests can not be send to a client

@@ -43,7 +43,7 @@ namespace Freeserf
         // Client must also receive events from server (with the other clients player index)
         public static Viewer CreateClientPlayer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
         {
-            throw new NotSupportedException("Not supported yet.");
+            return new ClientViewer(renderView, audioInterface, previousViewer, gui);
         }
 
         public static Viewer CreateLocalSpectator(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
@@ -260,7 +260,7 @@ namespace Freeserf
 
     internal class ServerViewer : LocalPlayerViewer
     {
-        Network.ILocalServer server = null;
+        readonly Network.ILocalServer server = null;
         internal override Interface MainInterface { get; }
 
         public ServerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
@@ -269,7 +269,7 @@ namespace Freeserf
             // Note: It is ok if the only clients are spectators, but running a server without any connected client makes no sense.
             // Note: All clients must be setup at game start. Clients can not join during the game.
             // Note: There may be more than 3 clients because of spectators!
-            server = Network.Network.DefaultServerFactory.CreateLocal(previousViewer.MainInterface.ServerGameName, previousViewer.MainInterface.ServerGameInfo);
+            server = previousViewer.MainInterface.Server;
 
             Init();
             MainInterface = new ServerInterface(renderView, audioInterface, this, server);
@@ -315,15 +315,28 @@ namespace Freeserf
 
     internal class ClientViewer : RemoteSpectatorViewer
     {
+        readonly Network.ILocalClient client = null;
         public override Access AccessRights => Access.Player;
 
         public ClientViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : base(renderView, audioInterface, previousViewer, gui, Type.Client)
         {
-
+            client = previousViewer.MainInterface.Client;
         }
 
-        // TODO
+        public override void OnEndGame(Game game)
+        {
+            base.OnEndGame(game);
+
+            client.SendDisconnect();
+        }
+
+        public override void Update()
+        {
+            client.SendHeartbeat();
+
+            base.Update();
+        }
     }
 
     internal class RemoteSpectatorViewer : Viewer
@@ -349,20 +362,23 @@ namespace Freeserf
         {
             var remoteInterface = MainInterface as RemoteInterface;
 
-            remoteInterface.GetMapUpdate();
-            remoteInterface.GetGameUpdate();
-
-            if (AccessRights == Access.Spectator)
+            if (remoteInterface.Game != null && remoteInterface.Player != null)
             {
-                for (uint i = 0; i < remoteInterface.Game.PlayerCount; ++i)
-                    remoteInterface.GetPlayerUpdate(i);
-            }
-            else
-            {
-                remoteInterface.GetPlayerUpdate(remoteInterface.Player.Index);
-            }
+                remoteInterface.GetMapUpdate();
+                remoteInterface.GetGameUpdate();
 
-            remoteInterface.Update();
+                if (AccessRights == Access.Spectator)
+                {
+                    for (uint i = 0; i < remoteInterface.Game.PlayerCount; ++i)
+                        remoteInterface.GetPlayerUpdate(i);
+                }
+                else
+                {
+                    remoteInterface.GetPlayerUpdate(remoteInterface.Player.Index);
+                }
+
+                remoteInterface.Update();
+            }
         }
 
         public override void Draw()

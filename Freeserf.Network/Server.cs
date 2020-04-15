@@ -1,4 +1,25 @@
-﻿using System;
+﻿/*
+ * Server.cs - Freeserf servers
+ *
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ *
+ * This file is part of freeserf.net. freeserf.net is based on freeserf.
+ *
+ * freeserf.net is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * freeserf.net is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -311,75 +332,76 @@ namespace Freeserf.Network
 
         void HandleData(RemoteClient client, byte[] data)
         {
-            var networkData = NetworkDataParser.Parse(data);
-
-            // Whenever we receive something from the client we update the last heartbeat time.
-            lastClientHeartbeats[client] = DateTime.UtcNow;
-
-            if (networkData.Type == NetworkDataType.Heartbeat)
+            foreach (var networkData in NetworkDataParser.Parse(data))
             {
-                // Heartbeats are possible in all states but
-                // we set the last heartbeat time above already.
-                return;
-            }
+                // Whenever we receive something from the client we update the last heartbeat time.
+                lastClientHeartbeats[client] = DateTime.UtcNow;
 
-            switch (State)
-            {
-                case ServerState.Lobby:
-                    {
-                        // TODO allow user actions in lobby? can clients do something in lobby?
+                if (networkData.Type == NetworkDataType.Heartbeat)
+                {
+                    // Heartbeats are possible in all states but
+                    // we set the last heartbeat time above already.
+                    return;
+                }
 
-                        if (networkData.Type != NetworkDataType.Request)
-                            throw new ExceptionFreeserf("Request expected.");
-
-                        var request = networkData as RequestData;
-
-                        HandleLobbyRequest(client, request.Number, request.Request);
-
-                        break;
-                    }
-                case ServerState.Loading:
-                    {
-                        if (networkData.Type != NetworkDataType.Request)
-                            throw new ExceptionFreeserf("Request expected.");
-
-                        var request = networkData as RequestData;
-
-                        if (request.Request == Request.StartGame)
+                switch (State)
+                {
+                    case ServerState.Lobby:
                         {
-                            // client sends this when he is ready
-                            ClientReady(client);
-                            break;
-                        }
-                        else
-                            throw new ExceptionFreeserf("Unexpected request during loading."); // TODO maybe just ignore?
-                    }
-                case ServerState.Game:
-                    {
-                        if (networkData.Type == NetworkDataType.Request)
-                        {
+                            // TODO allow user actions in lobby? can clients do something in lobby?
+
+                            if (networkData.Type != NetworkDataType.Request)
+                                throw new ExceptionFreeserf("Request expected.");
+
                             var request = networkData as RequestData;
 
-                            HandleGameRequest(client, request.Number, request.Request);
-                        }
-                        else if (networkData.Type == NetworkDataType.UserActionData)
-                        {
-                            /*var userAction = networkData as UserActionData;
+                            HandleLobbyRequest(client, request.Number, request.Request);
 
-                            HandleGameUserAction(client, userAction.Number, userAction...);*/
+                            break;
                         }
-                        else
+                    case ServerState.Loading:
                         {
-                            throw new ExceptionFreeserf("Request or user action expected.");
-                        }
+                            if (networkData.Type != NetworkDataType.Request)
+                                throw new ExceptionFreeserf("Request expected.");
 
+                            var request = networkData as RequestData;
+
+                            if (request.Request == Request.StartGame)
+                            {
+                                // client sends this when he is ready
+                                ClientReady(client);
+                                break;
+                            }
+                            else
+                                throw new ExceptionFreeserf("Unexpected request during loading."); // TODO maybe just ignore?
+                        }
+                    case ServerState.Game:
+                        {
+                            if (networkData.Type == NetworkDataType.Request)
+                            {
+                                var request = networkData as RequestData;
+
+                                HandleGameRequest(client, request.Number, request.Request);
+                            }
+                            else if (networkData.Type == NetworkDataType.UserActionData)
+                            {
+                                /*var userAction = networkData as UserActionData;
+
+                                HandleGameUserAction(client, userAction.Number, userAction...);*/
+                            }
+                            else
+                            {
+                                throw new ExceptionFreeserf("Request or user action expected.");
+                            }
+
+                            break;
+                        }
+                    case ServerState.Outro:
+                        // TODO
                         break;
-                    }
-                case ServerState.Outro:
-                    // TODO
-                    break;
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
         }
 

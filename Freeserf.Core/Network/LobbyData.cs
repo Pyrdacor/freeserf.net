@@ -231,23 +231,23 @@ namespace Freeserf.Network
             destination.Send(sendData);
         }
 
-        unsafe public INetworkData Parse(byte[] rawData)
+        unsafe public INetworkData Parse(byte[] rawData, ref int offset)
         {
             sendData = rawData;
 
-            if (rawData.Length == 2)
+            if (rawData.Length - offset == 2)
                 throw new ExceptionFreeserf("Empty lobby data received.");
-            else if (rawData.Length < MIN_DATA_SIZE)
+            else if (rawData.Length - offset < MIN_DATA_SIZE)
                 throw new ExceptionFreeserf("Invalid lobby data received.");
 
-            Number = rawData[2];
-            header.DataSize = rawData[3];
-            header.PlayerCount = rawData[4];
+            Number = rawData[offset + 2];
+            header.DataSize = rawData[offset + 3];
+            header.PlayerCount = rawData[offset + 4];
 
             if (header.PlayerCount > 4)
                 throw new ExceptionFreeserf("Lobby player count was > 4. Lobby data is corrupted.");
 
-            int dataIndex = 5;
+            int dataIndex = offset + 5;
             var serverSettings = NetworkDataConverter<LobbyServerSettings>.FromBytes(rawData, ref dataIndex);
 
             byte[] mapSeed = new byte[16];
@@ -283,6 +283,8 @@ namespace Freeserf.Network
 
                 players.Add(playerInfo);
             }
+
+            offset = dataIndex;
 
             return this;
         }
