@@ -903,9 +903,10 @@ namespace Freeserf.UI
 
             lock (gameLock)
             {
-                if (this is RemoteInterface)
+                // TODO: rethink this as the client should predict and simulate the game too
+                /*if (this is RemoteInterface)
                     Game.UpdateVisuals();
-                else
+                else*/
                     Game.Update();
 
                 UpdateBuildingRoadSegments();
