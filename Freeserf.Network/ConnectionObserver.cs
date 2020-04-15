@@ -38,6 +38,7 @@ namespace Freeserf.Network
         {
             this.lastHeartbeatTimeProvider = lastHeartbeatTimeProvider;
             this.checkDelay = checkDelay;
+            this.cancellationToken = cancellationToken;
         }
 
         public void Run()

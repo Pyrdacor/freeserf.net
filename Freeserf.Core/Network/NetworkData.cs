@@ -28,7 +28,6 @@ namespace Freeserf.Network
 {
     public interface IRemote
     {
-        IPAddress GetIP();
         void Send(byte[] rawData);
     }
 

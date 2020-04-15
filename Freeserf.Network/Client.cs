@@ -315,11 +315,6 @@ namespace Freeserf.Network
             get;
         }
 
-        public IPAddress GetIP()
-        {
-            throw new NotImplementedException();
-        }
-
         public void SendHeartbeat()
         {
             new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(this);

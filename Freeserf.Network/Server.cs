@@ -765,11 +765,6 @@ namespace Freeserf.Network
             private set;
         }
 
-        public IPAddress GetIP()
-        {
-            return Ip;
-        }
-
         public event ReceivedDataHandler DataReceived;
 
         public void Send(byte[] rawData)
