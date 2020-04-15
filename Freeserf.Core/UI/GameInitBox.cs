@@ -145,19 +145,17 @@ namespace Freeserf.UI
             263u
         };
 
-        Interface interf = null;
-        Network.ILocalServer server = null;
-        Network.ILocalClient client = null;
+        readonly Interface interf = null;
+        ILocalServer server = null;
+        ILocalClient client = null;
 
         GameType gameType = GameType.Custom;
         int gameMission = 0;
 
         GameInfo customMission = null;
-        GameInfo mission = null;
-
-        RandomInput randomInput = null;
-        ListSavedFiles fileList = null;
-        ListServers serverList = null;
+        readonly RandomInput randomInput = null;
+        readonly ListSavedFiles fileList = null;
+        readonly ListServers serverList = null;
 
         // rendering
         Button buttonStart = null;
@@ -183,7 +181,7 @@ namespace Freeserf.UI
         readonly bool[] playerIsAI = new bool[4];
         readonly Dictionary<uint, Network.IRemoteClient> playerClientMapping = new Dictionary<uint, Network.IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
-        public GameInfo ServerGameInfo => mission;
+        public GameInfo ServerGameInfo { get; private set; } = null;
         readonly Dictionary<uint, MultiplayerStatus> playerStatus = new Dictionary<uint, MultiplayerStatus>(); // key: playerIndex, value: status
 
         internal class PlayerBox
@@ -413,7 +411,7 @@ namespace Freeserf.UI
             SetSize(16 + 320 + 16, 200);
 
             customMission = new GameInfo(new Random(), false);
-            mission = customMission;
+            ServerGameInfo = customMission;
 
             randomInput.SetRandom(customMission.RandomBase);
             AddChild(randomInput, 8 + 31 * 8, 12, true);
@@ -517,11 +515,11 @@ namespace Freeserf.UI
             {
                 checkBoxServerValues.Checked = false;
 
-                var player1 = mission.GetPlayer(0);
+                var player1 = ServerGameInfo.GetPlayer(0);
 
-                for (uint i = 1; i < mission.PlayerCount; ++i)
+                for (uint i = 1; i < ServerGameInfo.PlayerCount; ++i)
                 {
-                    var player = mission.GetPlayer(i);
+                    var player = ServerGameInfo.GetPlayer(i);
 
                     player.Supplies = player1.Supplies;
                     player.Reproduction = player1.Reproduction;
@@ -659,6 +657,11 @@ namespace Freeserf.UI
         {
             base.InternalDraw();
 
+            buttonStart.Displayed = true;
+            buttonOptions.Displayed = true;
+            buttonGameType.Displayed = true;
+            buttonExit.Displayed = true;
+
             buttonGameType.SetSpriteIndex(GameTypeSprites[(int)gameType]);
 
             checkBoxServerValues.Displayed = gameType == GameType.MultiplayerServer;
@@ -717,7 +720,7 @@ namespace Freeserf.UI
                     else
                     {
                         DrawBoxString(10, 18, textFieldName, "Mapsize:");
-                        DrawBoxString(20, 18, textFieldValue, mission.MapSize.ToString());
+                        DrawBoxString(20, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
                         HideBoxString(textCreateServer);
 
                         buttonUp.Displayed = false;
@@ -787,13 +790,13 @@ namespace Freeserf.UI
 
                 for (int i = 0; i < 4; ++i)
                 {
-                    if (i >= mission.PlayerCount)
+                    if (i >= ServerGameInfo.PlayerCount)
                     {
                         playerBoxes[i].SetPlayerFace(-1);
                     }
                     else
                     {
-                        var player = mission.GetPlayer((uint)i);
+                        var player = ServerGameInfo.GetPlayer((uint)i);
 
                         playerBoxes[i].SetPlayerFace((int)player.Face);
                         playerBoxes[i].SetPlayerValues(player.Supplies, player.Intelligence, player.Reproduction);
@@ -816,7 +819,7 @@ namespace Freeserf.UI
             DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
         }
 
-        void UpdateGameType()
+        internal void UpdateGameType(bool resetRandomGames = true)
         {
             if (buttonStart != null)
                 buttonStart.Enabled = true;
@@ -825,7 +828,7 @@ namespace Freeserf.UI
             {
                 case GameType.Mission:
                     {
-                        mission = GameInfo.GetMission((uint)gameMission);
+                        ServerGameInfo = GameInfo.GetMission((uint)gameMission);
                         randomInput.Displayed = false;
                         fileList.Displayed = false;
                         serverList.Displayed = false;
@@ -834,10 +837,13 @@ namespace Freeserf.UI
                     }
                 case GameType.Custom:
                     {
-                        customMission = new GameInfo(new Random(), false);
-                        mission = customMission;
-                        randomInput.Displayed = true;
-                        randomInput.SetRandom(customMission.RandomBase);
+                        if (resetRandomGames)
+                        {
+                            customMission = new GameInfo(new Random(), false);
+                            ServerGameInfo = customMission;
+                            randomInput.SetRandom(customMission.RandomBase);
+                        }
+                        randomInput.Displayed = true;                            
                         fileList.Displayed = false;
                         serverList.Displayed = false;
                         SetRedraw();
@@ -869,10 +875,13 @@ namespace Freeserf.UI
                     }
                 case GameType.AIvsAI:
                     {
-                        customMission = new GameInfo(new Random(), true);
-                        mission = customMission;
-                        randomInput.Displayed = true;
-                        randomInput.SetRandom(customMission.RandomBase);
+                        if (resetRandomGames)
+                        {
+                            customMission = new GameInfo(new Random(), true);
+                            ServerGameInfo = customMission;
+                            randomInput.SetRandom(customMission.RandomBase);
+                        }
+                        randomInput.Displayed = true;                        
                         fileList.Displayed = false;
                         serverList.Displayed = false;
                         SetRedraw();
@@ -888,16 +897,16 @@ namespace Freeserf.UI
                 case Action.CreateServer:
                     gameType = GameType.MultiplayerServer;
                     customMission = new GameInfo(new Random(), false);
-                    mission = customMission;
-                    mission.RemoveAllPlayers();
-                    mission.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
+                    ServerGameInfo = customMission;
+                    ServerGameInfo.RemoveAllPlayers();
+                    ServerGameInfo.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
                     randomInput.Displayed = true;
                     randomInput.SetRandom(customMission.RandomBase);
                     fileList.Displayed = false;
                     serverList.Displayed = false;
                     SetRedraw();
                     server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", customMission); // TODO: name should be editable
-                    server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, customMission.MapSize, randomInput.Text, mission.Players);
+                    server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, customMission.MapSize, randomInput.Text, ServerGameInfo.Players);
                     server.ClientJoined += Server_ClientJoined;
                     server.ClientLeft += Server_ClientLeft;
                     break;
@@ -971,8 +980,8 @@ namespace Freeserf.UI
                                         gameType = GameType.MultiplayerJoined;
 
                                         customMission = new GameInfo(new Random(), false);
-                                        mission = customMission;
-                                        mission.RemoveAllPlayers();
+                                        ServerGameInfo = customMission;
+                                        ServerGameInfo.RemoveAllPlayers();
                                         randomInput.Displayed = true;
                                         randomInput.Enabled = false;
                                         randomInput.SetRandom(customMission.RandomBase);
@@ -1012,7 +1021,7 @@ namespace Freeserf.UI
 
                             gameType = GameType.MultiplayerLoading;
 
-                            var game = GameManager.Instance.PrepareMultiplayerGame(mission, interf.RenderView, interf.AudioInterface);
+                            var game = GameManager.Instance.PrepareMultiplayerGame(ServerGameInfo, interf.RenderView, interf.AudioInterface);
 
                             if (game == null)
                             {
@@ -1029,7 +1038,7 @@ namespace Freeserf.UI
                         }
                         else
                         {
-                            if (!GameManager.Instance.StartGame(mission, interf.RenderView, interf.AudioInterface))
+                            if (!GameManager.Instance.StartGame(ServerGameInfo, interf.RenderView, interf.AudioInterface))
                             {
                                 return;
                             }
@@ -1066,7 +1075,7 @@ namespace Freeserf.UI
                     {
                         case GameType.Mission:
                             gameMission = Math.Min(gameMission + 1, (int)GameInfo.GetMissionCount() - 1);
-                            mission = GameInfo.GetMission((uint)gameMission);
+                            ServerGameInfo = GameInfo.GetMission((uint)gameMission);
                             SetRedraw();
                             break;
                         case GameType.Custom:
@@ -1086,7 +1095,7 @@ namespace Freeserf.UI
                     {
                         case GameType.Mission:
                             gameMission = Math.Max(0, gameMission - 1);
-                            mission = GameInfo.GetMission((uint)gameMission);
+                            ServerGameInfo = GameInfo.GetMission((uint)gameMission);
                             SetRedraw();
                             break;
                         case GameType.Custom:
@@ -1106,7 +1115,7 @@ namespace Freeserf.UI
                     {
                         case GameType.Mission:
                             gameMission = Math.Min(gameMission + 5, (int)GameInfo.GetMissionCount() - 1);
-                            mission = GameInfo.GetMission((uint)gameMission);
+                            ServerGameInfo = GameInfo.GetMission((uint)gameMission);
                             SetRedraw();
                             break;
                         case GameType.Custom:
@@ -1126,7 +1135,7 @@ namespace Freeserf.UI
                     {
                         case GameType.Mission:
                             gameMission = Math.Max(0, gameMission - 5);
-                            mission = GameInfo.GetMission((uint)gameMission);
+                            ServerGameInfo = GameInfo.GetMission((uint)gameMission);
                             SetRedraw();
                             break;
                         case GameType.Custom:
@@ -1177,13 +1186,13 @@ namespace Freeserf.UI
                             // in a multiplayer game this will only affect the map, not the players
                             if (gameType == GameType.MultiplayerServer)
                             {
-                                var players = new List<PlayerInfo>(mission.Players);
-                                mission = customMission;
-                                mission.RemoveAllPlayers();
+                                var players = new List<PlayerInfo>(ServerGameInfo.Players);
+                                ServerGameInfo = customMission;
+                                ServerGameInfo.RemoveAllPlayers();
 
                                 foreach (var player in players)
                                 {
-                                    mission.AddPlayer(player);
+                                    ServerGameInfo.AddPlayer(player);
                                 }
 
                                 randomInput.SetRandom(customMission.RandomBase);
@@ -1193,7 +1202,7 @@ namespace Freeserf.UI
                             }
                             else
                             {
-                                mission = customMission;
+                                ServerGameInfo = customMission;
                             }
 
                             SetRedraw();
@@ -1207,9 +1216,9 @@ namespace Freeserf.UI
 
         private void Server_ClientLeft(Network.ILocalServer server, Network.IRemoteClient client)
         {
-            lock (mission)
+            lock (ServerGameInfo)
             {
-                mission.RemovePlayer(client.PlayerIndex);
+                ServerGameInfo.RemovePlayer(client.PlayerIndex);
                 playerClientMapping.Remove(client.PlayerIndex);
                 SetRedraw();
             }
@@ -1219,23 +1228,23 @@ namespace Freeserf.UI
 
         private void Server_ClientJoined(Network.ILocalServer server, Network.IRemoteClient client)
         {
-            lock (mission)
+            lock (ServerGameInfo)
             {
-                while (mission.PlayerCount >= 4)
+                while (ServerGameInfo.PlayerCount >= 4)
                 {
                     // joined too late -> kick player
                     server.DisconnectClient(client);
                 }
 
-                uint supplies = checkBoxSameValues.Checked ? mission.GetPlayer(0u).Supplies : 20u;
-                uint reproduction = checkBoxSameValues.Checked ? mission.GetPlayer(0u).Reproduction : 20u;
-                uint playerIndex = mission.PlayerCount;
+                uint supplies = checkBoxSameValues.Checked ? ServerGameInfo.GetPlayer(0u).Supplies : 20u;
+                uint reproduction = checkBoxSameValues.Checked ? ServerGameInfo.GetPlayer(0u).Reproduction : 20u;
+                uint playerIndex = ServerGameInfo.PlayerCount;
 
                 // TODO: every face < PlayerFace.You is treated as AI so we only can have 2 human players (= 1 client) for now
                 //       we should add two more human player faces later
                 var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
 
-                mission.AddPlayer(playerInfo);
+                ServerGameInfo.AddPlayer(playerInfo);
                 playerIsAI[playerIndex] = false;
                 playerClientMapping.Add(playerIndex, client);
                 SetRedraw();
@@ -1251,7 +1260,7 @@ namespace Freeserf.UI
                 checkBoxServerValues.Checked,
                 customMission.MapSize,
                 randomInput.Text,
-                mission.Players
+                ServerGameInfo.Players
             );
         }
 
@@ -1273,12 +1282,12 @@ namespace Freeserf.UI
 
                 customMission = new GameInfo(new Random(serverInfo.MapSeed), false);
                 customMission.MapSize = serverInfo.MapSize;
-                mission = customMission;
-                mission.RemoveAllPlayers();
+                ServerGameInfo = customMission;
+                ServerGameInfo.RemoveAllPlayers();
 
                 for (int i = 0; i < players.Count; ++i)
                 {
-                    mission.AddPlayer((PlayerFace)players[i].Face, PlayerInfo.PlayerColors[i],
+                    ServerGameInfo.AddPlayer((PlayerFace)players[i].Face, PlayerInfo.PlayerColors[i],
                         (uint)players[i].Intelligence, (uint)players[i].Supplies, (uint)players[i].Reproduction);
                 }
 
@@ -1342,7 +1351,7 @@ namespace Freeserf.UI
         {
             for (uint i = 0; i < playerIndex; ++i)
             {
-                if (mission.GetPlayer(i).Face == face)
+                if (ServerGameInfo.GetPlayer(i).Face == face)
                     return true;
             }
 
@@ -1363,9 +1372,9 @@ namespace Freeserf.UI
                 {
                     if (playerIndex > 0) // at least one player must be active
                     {
-                        if (playerIndex >= mission.PlayerCount) // add player
+                        if (playerIndex >= ServerGameInfo.PlayerCount) // add player
                         {
-                            playerIndex = mission.PlayerCount;
+                            playerIndex = ServerGameInfo.PlayerCount;
                             PlayerInfo playerInfo;
 
                             do
@@ -1377,11 +1386,11 @@ namespace Freeserf.UI
 
                             if (checkBoxSameValues.Checked)
                             {
-                                playerInfo.Supplies = mission.GetPlayer(0).Supplies;
-                                playerInfo.Reproduction = mission.GetPlayer(0).Reproduction;
+                                playerInfo.Supplies = ServerGameInfo.GetPlayer(0).Supplies;
+                                playerInfo.Reproduction = ServerGameInfo.GetPlayer(0).Reproduction;
                             }
 
-                            mission.AddPlayer(playerInfo);
+                            ServerGameInfo.AddPlayer(playerInfo);
                             playerIsAI[playerIndex] = true; // manually added players are always AI players
                             SetRedraw();
                         }
@@ -1393,7 +1402,7 @@ namespace Freeserf.UI
                                 server.DisconnectClient(playerClientMapping[playerIndex]);
                             }
 
-                            mission.RemovePlayer(playerIndex);
+                            ServerGameInfo.RemovePlayer(playerIndex);
                             playerIsAI[playerIndex] = false;
                             SetRedraw();
                         }
@@ -1406,12 +1415,12 @@ namespace Freeserf.UI
                 return true;
             }
 
-            if (playerIndex >= mission.PlayerCount)
+            if (playerIndex >= ServerGameInfo.PlayerCount)
             {
                 return true;
             }
 
-            var player = mission.GetPlayer(playerIndex);
+            var player = ServerGameInfo.GetPlayer(playerIndex);
             
             if (cx < 8 + 32 && cy < 72) // click on face
             {
@@ -1436,10 +1445,10 @@ namespace Freeserf.UI
                         // Check that face is not already in use by another player 
                         inUse = false;
 
-                        for (uint i = 0; i < mission.PlayerCount; ++i)
+                        for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                         {
                             if (playerIndex != i &&
-                                mission.GetPlayer(i).Face == (PlayerFace)next)
+                                ServerGameInfo.GetPlayer(i).Face == (PlayerFace)next)
                             {
                                 inUse = true;
                                 break;
@@ -1458,11 +1467,11 @@ namespace Freeserf.UI
                 // and to AI enemies in multiplayer
                 if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.MultiplayerServer)
                 {
-                    for (uint i = 0; i < mission.PlayerCount; ++i)
+                    for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                     {
                         if (i != playerIndex)
                         {
-                            var otherPlayer = mission.GetPlayer(i);
+                            var otherPlayer = ServerGameInfo.GetPlayer(i);
                             otherPlayer.Supplies = player.Supplies;
                             otherPlayer.Intelligence = player.Intelligence;
                             otherPlayer.Reproduction = player.Reproduction;
@@ -1513,9 +1522,9 @@ namespace Freeserf.UI
                         {
                             if (checkBoxSameValues.Checked)
                             {
-                                for (uint i = 0; i < mission.PlayerCount; ++i)
+                                for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                                 {
-                                    mission.GetPlayer(i).Supplies = value;
+                                    ServerGameInfo.GetPlayer(i).Supplies = value;
                                 }
                             }
                             else
@@ -1573,9 +1582,9 @@ namespace Freeserf.UI
                         {
                             if (checkBoxSameValues.Checked)
                             {
-                                for (uint i = 0; i < mission.PlayerCount; ++i)
+                                for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                                 {
-                                    mission.GetPlayer(i).Reproduction = value;
+                                    ServerGameInfo.GetPlayer(i).Reproduction = value;
                                 }
                             }
                             else

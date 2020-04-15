@@ -345,7 +345,7 @@ namespace Freeserf.UI
             if (PopupBox == null)
                 PopupBox = new PopupBox(this);
 
-            if (initBox != null)
+            if (initBox != null && initBox.Displayed)
                 initBox.AddChild(PopupBox, 0, 0);
             else
                 AddChild(PopupBox, 0, 0);
@@ -389,6 +389,10 @@ namespace Freeserf.UI
                 initBox = new GameInitBox(this, gameType);
                 AddChild(initBox, 0, 0);
             }
+            else
+            {
+                initBox.UpdateGameType(false);
+            }
 
             initBox.Displayed = true;
             initBox.Enabled = true;
@@ -410,8 +414,6 @@ namespace Freeserf.UI
             if (initBox != null)
             {
                 initBox.Displayed = false;
-                DeleteChild(initBox);
-                initBox = null;
             }
 
             PanelBar.Displayed = true;
