@@ -145,7 +145,7 @@ namespace Freeserf.UI
             263u
         };
 
-        readonly Interface interf = null;
+        Interface interf = null;
         ILocalServer server = null;
         ILocalClient client = null;
 
@@ -924,7 +924,9 @@ namespace Freeserf.UI
                             return;
                         }
 
-                        if (!GameManager.Instance.LoadGame(path, interf.RenderView, interf.AudioInterface, interf.Viewer))
+                        var viewer = interf.Viewer;
+
+                        if (!GameManager.Instance.LoadGame(path, interf.RenderView, interf.AudioInterface, ref viewer))
                         {
                             interf.OpenGameInit(GameType.Load);
 
@@ -934,6 +936,7 @@ namespace Freeserf.UI
                         }
                         else
                         {
+                            interf = viewer.MainInterface;
                             interf.OpenPopup(PopupBox.Type.DiskMsg);
                         }
                     }
@@ -957,7 +960,7 @@ namespace Freeserf.UI
                                 // therefore change the spectator viewer back to player viewer
                                 // as this is the default viewer after game closing.
                                 GameManager.Instance.CloseGame();
-                                interf.Viewer.ChangeTo(Viewer.Type.LocalSpectator);
+                                interf = interf.Viewer.ChangeTo(Viewer.Type.LocalSpectator).MainInterface;
                                 break;
                             case GameType.MultiplayerClient:
                                 {
@@ -1001,7 +1004,7 @@ namespace Freeserf.UI
                                     client.LobbyDataUpdated -= Client_LobbyDataUpdated;
                                 }
                                 GameManager.Instance.CloseGame();
-                                interf.Viewer.ChangeTo(Viewer.Type.Client);
+                                interf = interf.Viewer.ChangeTo(Viewer.Type.Client).MainInterface;
                                 gameType = GameType.MultiplayerLoading;
                                 SetRedraw();
                                 break;
@@ -1010,7 +1013,7 @@ namespace Freeserf.UI
                         if (gameType == GameType.MultiplayerServer)
                         {
                             GameManager.Instance.CloseGame();
-                            interf.Viewer.ChangeTo(Viewer.Type.Server);
+                            interf = interf.Viewer.ChangeTo(Viewer.Type.Server).MainInterface;
 
                             playerStatus.Clear();
                             playerStatus.Add(0u, MultiplayerStatus.Ready); // server

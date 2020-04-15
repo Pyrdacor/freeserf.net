@@ -41,21 +41,28 @@ namespace Freeserf.Network
     {
         public NetworkDataType Type => NetworkDataType.Response;
 
+        public byte Number
+        {
+            get;
+            private set;
+        } = 0;
+
         public ResponseType ResponseType
         {
             get;
             private set;
         }
 
-        public int Size => 1;
+        public int Size => 4;
 
         public ResponseData()
         {
-
+            // use when parsing the data
         }
 
-        public ResponseData(ResponseType responseType)
+        public ResponseData(byte number, ResponseType responseType)
         {
+            Number = number;
             ResponseType = responseType;
         }
 
@@ -64,10 +71,12 @@ namespace Freeserf.Network
             if (rawData.Length != Size)
                 throw new ExceptionFreeserf($"Response length must be {Size}.");
 
-            if (rawData[2] > (byte)ResponseType.Failed)
+            Number = rawData[2];
+
+            if (rawData[3] > (byte)ResponseType.Failed)
                 ResponseType = ResponseType.Invalid;
             else
-                ResponseType = (ResponseType)rawData[2];
+                ResponseType = (ResponseType)rawData[3];
 
             return this;
         }
@@ -77,6 +86,7 @@ namespace Freeserf.Network
             List<byte> rawData = new List<byte>(Size);
 
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
+            rawData.Add(Number);
             rawData.Add((byte)ResponseType);
 
             destination?.Send(rawData.ToArray());

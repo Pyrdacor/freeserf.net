@@ -109,12 +109,16 @@ namespace Freeserf
             ViewerType = type;
         }
 
-        public void ChangeTo(Type type)
+        public Viewer ChangeTo(Type type)
         {
             if (ViewerType == type)
-                return;
+                return this;
 
-            Gui.SetViewer(Create(type, MainInterface.RenderView, MainInterface.AudioInterface, this, Gui));
+            var viewer = Create(type, MainInterface.RenderView, MainInterface.AudioInterface, this, Gui);
+
+            Gui.SetViewer(viewer);
+
+            return viewer;
         }
 
         public abstract bool SendEvent(Event.EventArgs args);
@@ -140,6 +144,7 @@ namespace Freeserf
                 return;
 
             GameManager.Instance.DeleteHandler(this);
+            MainInterface.Destroy();
 
             initialized = false;
         }

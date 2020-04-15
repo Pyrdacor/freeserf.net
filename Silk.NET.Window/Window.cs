@@ -172,7 +172,14 @@ namespace Silk.NET.Window
 
         public void MakeCurrent()
         {
-            window?.MakeCurrent();
+            try
+            {
+                window?.MakeCurrent();
+            }
+            catch
+            {
+                Console.WriteLine("Warning: MakeCurrent failed.");
+            }
         }
 
         public void SwapBuffers()

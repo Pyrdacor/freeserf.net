@@ -132,7 +132,7 @@ namespace Freeserf
             SetCurrentGame(null);
         }
 
-        public bool LoadGame(string path, Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
+        public bool LoadGame(string path, Render.IRenderView renderView, Audio.IAudioInterface audioInterface, ref Viewer viewer)
         {
             var newGame = new Game(renderView, audioInterface);
 
@@ -144,7 +144,7 @@ namespace Freeserf
             CloseGame();
 
             if (newGame.GetPlayer(0).IsAI)
-                viewer.ChangeTo(Viewer.Type.LocalSpectator);
+                viewer = viewer.ChangeTo(Viewer.Type.LocalSpectator);
 
             lastSaveTime = DateTime.Now;
             currentGameSaveFile = path;

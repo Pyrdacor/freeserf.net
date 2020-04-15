@@ -425,6 +425,28 @@ namespace Freeserf.UI
             UpdateMapCursorPosition(mapCursorPosition);
         }
 
+        public void Destroy()
+        {
+            ClosePopup();
+            PopupBox = null;
+
+            if (initBox != null)
+            {
+                initBox.Displayed = false;
+            }
+
+            if (PanelBar != null)
+            {
+                PanelBar.Displayed = false;
+                PanelBar.Enabled = false;
+            }
+
+            if (Viewport != null)
+                Viewport.Enabled = false;
+
+            SetRedraw();
+        }
+
         // Open box for next message in the message queue 
         public void OpenMessage()
         {
@@ -1459,17 +1481,20 @@ namespace Freeserf.UI
         {
             base.Update();
 
-            // TODO all to all
-            foreach (var client in server.Clients)
+            if (Game != null)
             {
-                var player = Game.GetPlayer(client.PlayerIndex);
+                // TODO all to all
+                foreach (var client in server.Clients)
+                {
+                    var player = Game.GetPlayer(client.PlayerIndex);
 
-                if (player.Dirty)
-                    client.SendPlayerStateUpdate(player);
+                    if (player.Dirty)
+                        client.SendPlayerStateUpdate(player);
+                }
+
+                for (uint i = 0; i < Game.PlayerCount; ++i)
+                    Game.GetPlayer(i).ResetDirtyFlag();
             }
-
-            for (uint i = 0; i < Game.PlayerCount; ++i)
-                Game.GetPlayer(i).ResetDirtyFlag();
         }
     }
 

@@ -162,8 +162,10 @@ namespace Freeserf.Network
                     // Response is send below.
                     break;
                 case Request.StartGame:
-                    // TODO
-                    break;
+                    // TODO: start game etc
+                    SendStartGameRequest();
+                    // Start game messages are sent asynchronously.
+                    return;
                 case Request.AllowUserInput:
                     // TODO
                     break;
@@ -192,10 +194,10 @@ namespace Freeserf.Network
             switch (request.Request)
             {
                 case Request.Heartbeat:
-                    SendHeartbeat();
+                    SendHeartbeat(request.Number);
                     break;
                 default:
-                    SendResponse(ResponseType.Ok);
+                    SendResponse(request.Number, ResponseType.Ok);
                     break;
             }
         }
@@ -251,6 +253,11 @@ namespace Freeserf.Network
             return messageIndex;
         }
 
+        public void SendHeartbeat(byte messageIndex)
+        {
+            new Heartbeat(messageIndex, (byte)PlayerIndex).Send(server);
+        }
+
         public void SendHeartbeat()
         {
             new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(server);
@@ -261,9 +268,14 @@ namespace Freeserf.Network
             new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(server);
         }
 
-        private void SendResponse(ResponseType responseType)
+        private void SendStartGameRequest()
         {
-            new ResponseData(responseType).Send(server);
+            new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(server);
+        }
+
+        private void SendResponse(byte messageIndex, ResponseType responseType)
+        {
+            new ResponseData(messageIndex, responseType).Send(server);
         }
     }
 
@@ -332,17 +344,17 @@ namespace Freeserf.Network
 
         public void SendGameStateUpdate(Game game)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void SendPlayerStateUpdate(Player player)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public void SendMapStateUpdate(Map map)
         {
-            throw new NotImplementedException();
+            // TODO
         }
     }
 
