@@ -1058,6 +1058,15 @@ namespace Freeserf.UI
                         Server.Close();
                         Server = null;
                     }
+
+                    // TODO: Remove for multiplayer support (still WIP!)
+                    if (gameType == GameType.MultiplayerClient - 1)
+                    {
+                        gameType += 2;
+                        UpdateGameType();
+                        break;
+                    }
+
                     if (gameType == GameType.MultiplayerServer ||
                         gameType == GameType.MultiplayerJoined ||
                         gameType == GameType.MultiplayerLoading)
