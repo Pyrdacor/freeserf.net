@@ -1548,8 +1548,8 @@ namespace Freeserf.UI
 
             if (Game != null)
             {
-                // TODO all to all
-                foreach (var client in server.Clients)
+                // TODO
+                /*foreach (var client in server.Clients)
                 {
                     var player = Game.GetPlayer(client.PlayerIndex);
 
@@ -1558,7 +1558,7 @@ namespace Freeserf.UI
                 }
 
                 for (uint i = 0; i < Game.PlayerCount; ++i)
-                    Game.GetPlayer(i).ResetDirtyFlag();
+                    Game.GetPlayer(i).ResetDirtyFlag();*/
             }
         }
     }

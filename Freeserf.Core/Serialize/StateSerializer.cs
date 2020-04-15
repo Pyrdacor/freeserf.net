@@ -142,7 +142,7 @@ namespace Freeserf.Serialize
             }
         }
 
-        private static readonly Dictionary<State, PropertyMap> propertyMapCache = new Dictionary<State, PropertyMap>();
+        private static readonly Dictionary<Type, PropertyMap> propertyMapCache = new Dictionary<Type, PropertyMap>();
         /// <summary>
         /// Major data version.
         /// This is part of the data version a communication partner uses.
@@ -241,7 +241,16 @@ namespace Freeserf.Serialize
                 return;
             }
 
-            var propertyMap = PropertyMap.Create(state.GetType());
+            PropertyMap propertyMap;
+
+            if (propertyMapCache.ContainsKey(state.GetType()))
+                propertyMap = propertyMapCache[state.GetType()];
+            else
+            {
+                propertyMap = PropertyMap.Create(state.GetType());
+                propertyMapCache.Add(state.GetType(), propertyMap);
+            }
+
             var properties = GetSerializableProperties(state, !full);
 
             foreach (var property in properties)
@@ -425,7 +434,6 @@ namespace Freeserf.Serialize
 
                 int count = reader.ReadInt32();
                 var map = Array.CreateInstance(typeof(KeyValuePair<object, object>), count);
-                var dirtyMap = propertyValue as IDirtyMap;
 
                 for (int i = 0; i < count; ++i)
                 {
@@ -434,7 +442,7 @@ namespace Freeserf.Serialize
                     map.SetValue(new KeyValuePair<object, object>(key, value), i);
                 }
 
-                if (dirtyMap == null)
+                if (!(propertyValue is IDirtyMap dirtyMap))
                     dirtyMap = (IDirtyMap)Activator.CreateInstance(type);
 
                 dirtyMap.Initialize(map);

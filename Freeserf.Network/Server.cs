@@ -435,10 +435,7 @@ namespace Freeserf.Network
                     // TODO response
                     break;
                 case Request.StartGame:
-                // This is not allowed while in lobby.
-                case Request.GameData:
-                    // TODO
-                    break;
+                    // This is not allowed while in lobby.
                 case Request.Heartbeat:
                     // TODO
                     break;
@@ -448,12 +445,6 @@ namespace Freeserf.Network
                         {
                             client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
                         }
-                    break;
-                case Request.MapData:
-                    // TODO
-                    break;
-                case Request.PlayerData:
-                    // TODO
                     break;
                 default:
                     // TODO error?
@@ -476,12 +467,6 @@ namespace Freeserf.Network
                     break;
                 case Request.LobbyData:
                     throw new ExceptionFreeserf("Lobby data should not be requested during game."); // maybe for spectators?
-                case Request.MapData:
-                    // TODO
-                    break;
-                case Request.PlayerData:
-                    // TODO
-                    break;
                 default:
                     // TODO error?
                     break;
@@ -693,16 +678,6 @@ namespace Freeserf.Network
         private void BroadcastHeartbeat()
         {
             Broadcast((client) => client.SendHeartbeat());
-        }
-
-        private void BroadcastMapStateUpdate(Map map)
-        {
-            Broadcast((client) => client.SendMapStateUpdate(map));
-        }
-
-        private void BroadcastPlayerStateUpdate(Player player)
-        {
-            Broadcast((client) => client.SendPlayerStateUpdate(player));
         }
     }
 

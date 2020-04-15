@@ -49,8 +49,6 @@ namespace Freeserf.Network
         event EventHandler InputDisallowed;
 
         byte RequestLobbyStateUpdate();
-        byte RequestPlayerStateUpdate(uint playerIndex);
-        byte RequestMapStateUpdate();
         byte RequestGameStateUpdate();
 
         bool JoinServer(string name, IPAddress ip);
@@ -63,8 +61,7 @@ namespace Freeserf.Network
 
         void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players);
         void SendGameStateUpdate(Game game);
-        void SendPlayerStateUpdate(Player player);
-        void SendMapStateUpdate(Map map);
+        void SendInSyncMessage(UInt32 gameTime);
     }
 
     public interface IClientFactory

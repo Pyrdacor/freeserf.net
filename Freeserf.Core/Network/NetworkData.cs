@@ -43,12 +43,10 @@ namespace Freeserf.Network
         Request,
         Response,
         Heartbeat,
+        InSync,
         LobbyData,
-        PlayerData,
-        MapData,
-        GameData,
-        UserActionData, // setting, building, demolishing, etc
-        // TODO ...
+        SyncData,
+        UserActionData // setting, building, demolishing, etc
     }
 
     public interface INetworkData

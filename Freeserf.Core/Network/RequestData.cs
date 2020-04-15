@@ -31,8 +31,6 @@ namespace Freeserf.Network
         StartGame,
         Disconnect,
         LobbyData,
-        PlayerData,
-        MapData,
         GameData,
         AllowUserInput,
         DisallowUserInput,

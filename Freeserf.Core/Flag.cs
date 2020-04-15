@@ -1882,22 +1882,19 @@ namespace Freeserf
     {
         public const int SEARCH_MAX_DEPTH = 0x10000;
 
-        readonly Game game;
         readonly Queue<Flag> queue = new Queue<Flag>();
-        readonly int id;
 
         public FlagSearch(Game game)
         {
-            this.game = game;
-            id = game.NextSearchId();
+            ID = game.NextSearchId();
         }
 
-        public int ID => id;
+        public int ID { get; }
 
         public void AddSource(Flag flag)
         {
             queue.Enqueue(flag);
-            flag.SearchNumber = (uint)id;
+            flag.SearchNumber = (uint)ID;
         }
 
         public bool Execute(FlagSearchFunc callback, bool land, bool transporter, object data)
@@ -1924,9 +1921,9 @@ namespace Freeserf
 
                     if ((!land || !flag.IsWaterPath(direction)) &&
                         (!transporter || flag.HasTransporter(direction)) &&
-                        otherFlag.SearchNumber != id)
+                        otherFlag.SearchNumber != ID)
                     {
-                        otherFlag.SearchNumber = (uint)id;
+                        otherFlag.SearchNumber = (uint)ID;
                         otherFlag.SearchDirection = flag.SearchDirection;
                         otherFlag.Tag = flag.Tag;
                         queue.Enqueue(otherFlag);

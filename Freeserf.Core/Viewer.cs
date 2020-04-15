@@ -275,21 +275,6 @@ namespace Freeserf
             MainInterface = new ServerInterface(renderView, audioInterface, this, server);
         }
 
-        public override void OnNewGame(Game game)
-        {
-            base.OnNewGame(game);
-
-            // TODO: neccessary?
-            foreach (var client in server.Clients)
-            {
-                client.SendGameStateUpdate(game);
-                client.SendMapStateUpdate(game.Map);
-
-                for (uint i = 0; i < game.PlayerCount; ++i)
-                    client.SendPlayerStateUpdate(game.GetPlayer(i));
-            }
-        }
-
         public override void OnEndGame(Game game)
         {
             base.OnEndGame(game);

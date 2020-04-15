@@ -142,14 +142,13 @@ namespace Freeserf.Network
 
         private void ConnectionObserver_ConnectionLost()
         {
-            // TODO: connection was lost
             HandleDisconnect();
         }
 
         private void ConnectionObserver_DataRefreshNeeded()
         {
-            // TODO: long response time -> data refresh from server is needed
-            RequestGameStateUpdate(); // TODO
+            // long response time -> data refresh from server is needed
+            RequestGameStateUpdate();
         }
 
         private void Server_DataReceived(IRemoteServer server, byte[] data)
@@ -257,25 +256,8 @@ namespace Freeserf.Network
         {
             byte messageIndex = Global.GetNextMessageIndex();
 
-            throw new NotImplementedException();
-
-            return messageIndex;
-        }
-
-        public byte RequestMapStateUpdate()
-        {
-            byte messageIndex = Global.GetNextMessageIndex();
-
-            throw new NotImplementedException();
-
-            return messageIndex;
-        }
-
-        public byte RequestPlayerStateUpdate(uint playerIndex)
-        {
-            byte messageIndex = Global.GetNextMessageIndex();
-
-            throw new NotImplementedException();
+            // Note: A game data request is always a full sync request.
+            new RequestData(messageIndex, Request.GameData).Send(server);
 
             return messageIndex;
         }
@@ -371,17 +353,14 @@ namespace Freeserf.Network
 
         public void SendGameStateUpdate(Game game)
         {
-            // TODO
+            // TODO: distinguish between patch / full
+            byte[] data = new byte[] { }; // TODO: get from game
+            new SyncData(game.GameTime, data).Send(this);
         }
 
-        public void SendPlayerStateUpdate(Player player)
+        public void SendInSyncMessage(UInt32 gameTime)
         {
-            // TODO
-        }
-
-        public void SendMapStateUpdate(Map map)
-        {
-            // TODO
+            new InSyncData(gameTime).Send(this);
         }
     }
 
