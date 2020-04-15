@@ -21,7 +21,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
@@ -34,7 +33,11 @@ namespace Freeserf.Network
         LobbyData,
         PlayerData,
         MapData,
-        GameData
+        GameData,
+        AllowUserInput,
+        DisallowUserInput,
+        Pause,
+        Resume
     }
 
     public partial class Global
@@ -62,8 +65,6 @@ namespace Freeserf.Network
 
     public class RequestData : INetworkData
     {
-        const int Size = 4;
-
         public NetworkDataType Type => NetworkDataType.Request;
 
         public byte Number
@@ -89,10 +90,7 @@ namespace Freeserf.Network
             Request = request;
         }
 
-        public int GetSize()
-        {
-            return Size;
-        }
+        public int Size => 4;
 
         public INetworkData Parse(byte[] rawData)
         {
@@ -117,7 +115,7 @@ namespace Freeserf.Network
 
         public void Send(IRemote destination)
         {
-            List<byte> rawData = new List<byte>(GetSize());
+            List<byte> rawData = new List<byte>(Size);
 
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
             rawData.Add(Number);

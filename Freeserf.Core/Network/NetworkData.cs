@@ -20,10 +20,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
@@ -42,6 +40,7 @@ namespace Freeserf.Network
     public enum NetworkDataType : UInt16
     {
         Request,
+        Response,
         Heartbeat,
         LobbyData,
         PlayerData,
@@ -54,7 +53,7 @@ namespace Freeserf.Network
     public interface INetworkData
     {
         NetworkDataType Type { get; }
-        int GetSize();
+        int Size { get; }
         void Send(IRemote destination);
         INetworkData Parse(byte[] rawData);
     }
@@ -72,6 +71,8 @@ namespace Freeserf.Network
             {
                 case NetworkDataType.Request:
                     return new RequestData().Parse(rawData);
+                case NetworkDataType.Response:
+                    return new ResponseData().Parse(rawData);
                 case NetworkDataType.Heartbeat:
                     return new Heartbeat().Parse(rawData);
                 case NetworkDataType.LobbyData:

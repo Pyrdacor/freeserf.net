@@ -43,7 +43,7 @@ namespace Freeserf.UI
     internal class Interface : GuiObject
     {
         // Interval between automatic save games
-        const int AUTOSAVE_INTERVAL = 10 * 60 * Global.TICKS_PER_SEC;
+        const int AUTOSAVE_INTERVAL = 10 * 60 * Global.TICKS_PER_SEC; // TODO: autosaves
 
         static readonly uint[] MapBuildingSprite = new uint[]
         {
@@ -1366,7 +1366,7 @@ namespace Freeserf.UI
                 case 'P':
                     {
                         if (!IsRemote)
-                            Game.Pause();
+                            Game.TogglePause();
                         break;
                     }
 

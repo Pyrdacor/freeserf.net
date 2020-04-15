@@ -26,8 +26,6 @@ namespace Freeserf.Network
 {
     public class Heartbeat : INetworkData
     {
-        const int Size = 12;
-
         public NetworkDataType Type => NetworkDataType.Heartbeat;
 
         public byte Number
@@ -59,10 +57,7 @@ namespace Freeserf.Network
             PlayerId = playerId;
         }
 
-        public int GetSize()
-        {
-            return Size;
-        }
+        public int Size => 12;
 
         public INetworkData Parse(byte[] rawData)
         {

@@ -1,0 +1,85 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Freeserf.Network
+{
+    public enum ResponseType
+    {
+        /// <summary>
+        /// The request was processed successfully.
+        /// </summary>
+        Ok,
+        /// <summary>
+        /// The request was invalid.
+        /// </summary>
+        BadRequest,
+        /// <summary>
+        /// The request was not possible in the current state.
+        /// </summary>
+        BadState,
+        /// <summary>
+        /// The request was not for this destination.
+        /// For example if requests were send to a client
+        /// which should be send to the server or when
+        /// sending to the wrong client.
+        /// </summary>
+        BadDestination,
+        /// <summary>
+        /// Request could not be processed successfully.
+        /// </summary>
+        Failed,
+        /// <summary>
+        /// Invalid response code.
+        /// </summary>
+        Invalid = 0xff
+    }
+
+    /// <summary>
+    /// General response with a simple status.
+    /// </summary>
+    public class ResponseData : INetworkData
+    {
+        public NetworkDataType Type => NetworkDataType.Response;
+
+        public ResponseType ResponseType
+        {
+            get;
+            private set;
+        }
+
+        public int Size => 1;
+
+        public ResponseData()
+        {
+
+        }
+
+        public ResponseData(ResponseType responseType)
+        {
+            ResponseType = responseType;
+        }
+
+        public INetworkData Parse(byte[] rawData)
+        {
+            if (rawData.Length != Size)
+                throw new ExceptionFreeserf($"Response length must be {Size}.");
+
+            if (rawData[2] > (byte)ResponseType.Failed)
+                ResponseType = ResponseType.Invalid;
+            else
+                ResponseType = (ResponseType)rawData[2];
+
+            return this;
+        }
+
+        public void Send(IRemote destination)
+        {
+            List<byte> rawData = new List<byte>(Size);
+
+            rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
+            rawData.Add((byte)ResponseType);
+
+            destination?.Send(rawData.ToArray());
+        }
+    }
+}

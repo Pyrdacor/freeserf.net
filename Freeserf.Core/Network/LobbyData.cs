@@ -24,7 +24,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
@@ -222,10 +221,7 @@ namespace Freeserf.Network
             }
         }
 
-        public int GetSize()
-        {
-            return header.DataSize;
-        }
+        public int Size => header.DataSize;
 
         public void Send(IRemote destination)
         {

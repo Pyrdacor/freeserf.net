@@ -102,6 +102,9 @@ namespace Freeserf
                 return null;
             }
 
+            // Multiplayer games start paused.
+            newGame.TogglePause();
+
             return newGame;
         }
 
@@ -146,7 +149,7 @@ namespace Freeserf
             lastSaveTime = DateTime.Now;
             currentGameSaveFile = path;
             SetCurrentGame(newGame);
-            newGame.Pause();
+            newGame.TogglePause();
 
             return true;
         }

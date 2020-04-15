@@ -42,11 +42,11 @@ namespace Freeserf
     {
         public const int DEFAULT_GAME_SPEED = 2;
         public const int GAME_MAX_PLAYER_COUNT = 4;
-        Players players;
-        Flags flags;
-        Inventories inventories;
-        Buildings buildings;
-        Serfs serfs;
+        readonly Players players;
+        readonly Flags flags;
+        readonly Inventories inventories;
+        readonly Buildings buildings;
+        readonly Serfs serfs;
 
         // Rendering
         Render.IRenderView renderView = null;
@@ -85,7 +85,7 @@ namespace Freeserf
         public uint GoldTotal { get; private set; }
         public GameTime GameTime { get; } = 0; // in seconds
 
-        public Game(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
+        public Game(Render.IRenderView renderView, IAudioInterface audioInterface)
         {
             AI.ClearMemory();
 
@@ -350,7 +350,7 @@ namespace Freeserf
             audioInterface?.AudioFactory?.GetAudio()?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 
-        public void Pause()
+        public void TogglePause()
         {
             if (gameSpeed != 0)
             {
@@ -363,6 +363,25 @@ namespace Freeserf
             }
 
             Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+        }
+
+        public void Pause()
+        {
+            if (gameSpeed != 0)
+            {
+                gameSpeedSave = gameSpeed;
+                gameSpeed = 0;
+                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+            }
+        }
+
+        public void Resume()
+        {
+            if (gameSpeed == 0)
+            {
+                gameSpeed = gameSpeedSave;
+                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+            }
         }
 
         public void IncreaseSpeed()

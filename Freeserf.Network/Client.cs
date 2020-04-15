@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Freeserf.Network
 {
@@ -10,10 +10,13 @@ namespace Freeserf.Network
     {
         TcpClient client = null;
         RemoteServer server = null;
+        DateTime lastServerHeartbeat = DateTime.MinValue;
+        ConnectionObserver connectionObserver = null;
+        readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
 
         public LocalClient()
         {
-            Ip = HostNetwork.GetLocalIpAddress();
+            Ip = Host.GetLocalIpAddress();
         }
 
         public IPAddress Ip
@@ -57,6 +60,19 @@ namespace Freeserf.Network
                 // ignore
             }
 
+            disconnectToken?.Cancel();
+
+            if (connectionObserver != null)
+            {
+                connectionObserver.ConnectionLost -= ConnectionObserver_ConnectionLost;
+                connectionObserver.DataRefreshNeeded -= ConnectionObserver_DataRefreshNeeded;
+            }
+
+            HandleDisconnect();
+        }
+
+        private void HandleDisconnect()
+        {
             client?.Close();
             server?.Close();
             client = null;
@@ -77,12 +93,18 @@ namespace Freeserf.Network
                 client = new TcpClient(new IPEndPoint(Ip, 0));
 
                 if (IPAddress.IsLoopback(ip))
-                    client.Connect(HostNetwork.GetLocalIpAddress(), Global.NetworkPort);
+                    client.Connect(Host.GetLocalIpAddress(), Global.NetworkPort);
                 else
                     client.Connect(ip, Global.NetworkPort);
 
                 server = new RemoteServer(name, ip, client);
                 server.DataReceived += Server_DataReceived;
+                lastServerHeartbeat = DateTime.UtcNow;
+
+                connectionObserver = new ConnectionObserver(() => lastServerHeartbeat, 200, disconnectToken.Token);
+
+                connectionObserver.DataRefreshNeeded += ConnectionObserver_DataRefreshNeeded;
+                connectionObserver.ConnectionLost += ConnectionObserver_ConnectionLost;
 
                 return true;
             }
@@ -92,8 +114,22 @@ namespace Freeserf.Network
             }
         }
 
+        private void ConnectionObserver_ConnectionLost()
+        {
+            // TODO: connection was lost
+            HandleDisconnect();
+        }
+
+        private void ConnectionObserver_DataRefreshNeeded()
+        {
+            // TODO: long response time -> data refresh from server is needed
+            RequestGameStateUpdate(); // TODO
+        }
+
         private void Server_DataReceived(IRemoteServer server, byte[] data)
         {
+            lastServerHeartbeat = DateTime.UtcNow;
+
             var parsedData = NetworkDataParser.Parse(data);
             
             switch (parsedData.Type)
@@ -102,6 +138,7 @@ namespace Freeserf.Network
                     HandleRequest(parsedData as RequestData);
                     break;
                 case NetworkDataType.Heartbeat:
+                    // Last heartbeat time was set above.
                     break;
                 case NetworkDataType.LobbyData:
                     UpdateLobbyData(parsedData as LobbyData);
@@ -119,18 +156,29 @@ namespace Freeserf.Network
             {
                 case Request.Disconnect:
                     // server closed or kicked player
-                    client?.Close();
-                    server?.Close();
-                    client = null;
-                    server = null;
-                    Disconnected?.Invoke(this, EventArgs.Empty);
+                    HandleDisconnect();
                     break;
                 case Request.Heartbeat:
+                    // Response is send below.
+                    break;
+                case Request.StartGame:
+                    // TODO
+                    break;
+                case Request.AllowUserInput:
+                    // TODO
+                    break;
+                case Request.DisallowUserInput:
+                    // TODO
+                    break;
+                case Request.Pause:
+                    // TODO
+                    break;
+                case Request.Resume:
                     // TODO
                     break;
                 default:
                     // all other requests can not be send to a client
-                    throw new ExceptionFreeserf(ErrorSystemType.Network, $"Request {request.ToString()} can not be send to client.");
+                    throw new ExceptionFreeserf(ErrorSystemType.Network, $"Request {request} can not be send to a client.");
             }
 
             RespondToRequest(request);
@@ -141,8 +189,15 @@ namespace Freeserf.Network
             if (request.Number == Global.SpontaneousMessage)
                 return; // spontaneous messages don't need a response
 
-            // TODO
-            // ...
+            switch (request.Request)
+            {
+                case Request.Heartbeat:
+                    SendHeartbeat();
+                    break;
+                default:
+                    SendResponse(ResponseType.Ok);
+                    break;
+            }
         }
 
         private void UpdateLobbyData(LobbyData data)
@@ -204,6 +259,11 @@ namespace Freeserf.Network
         public void SendDisconnect()
         {
             new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(server);
+        }
+
+        private void SendResponse(ResponseType responseType)
+        {
+            new ResponseData(responseType).Send(server);
         }
     }
 

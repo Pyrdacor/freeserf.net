@@ -274,6 +274,7 @@ namespace Freeserf
         {
             base.OnNewGame(game);
 
+            // TODO: neccessary?
             foreach (var client in server.Clients)
             {
                 client.SendGameStateUpdate(game);

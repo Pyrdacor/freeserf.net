@@ -1,13 +1,8 @@
 ﻿Rendering:
 
 - Improve grid drawing in minimap?
-- There are still some black artifacts sometimes. It seems this is only true for one tile type (grass) and one slope type (a triangle pointing down right).
-  It is not affected by zoom or map scrolling so I guess it is a problem with the graphic/shader/index/mask itself. Maybe a mismatch in graphic and mask index.
-- Sometimes borders remain from the last game (not deleted properly?)
 - In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
 	- This is fixed but remains true for military building white flags
-- Saw a stonecutter building with the burning flames behind it.
-- Sometimes a serf is drawn that is inside the castle (leaving the castle).
 
 
 Non-working code:
@@ -21,7 +16,6 @@ Non-working code:
 - Leaving the minimap window while dragging with left mouse the minimap is closed (should not happen until mouse release)
 - Click positions in water (no height) are a bit off (this already worked previously!).
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
-- Wrong sounds are played sometimes
 - When loading a game and there is an exception during loading (in AI loading at end) the background intro game seem to be drawn messed up.
   I guess because map and stuff are loaded but then are discarded?
 
@@ -113,7 +107,6 @@ Missing stuff:
 
 - multiplayer
 	- multiplayer should support coop mode (one player is played by two or more clients)
-- button to merge roads to a flag
 - ground analysis for local spectators?
 - possible builds for local spectators?
 - disable some features in multiplayer (e.g. game speed)
@@ -121,13 +114,11 @@ Missing stuff:
 
 Nice to have:
 
-- After closing a game the GameInitBox should display the last started game settings.
-  This way a map can be played again or the RNG number can be memorized.
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
   Maybe just add a directory called ".." in every directory inside the savegame list which performs a "up" operation.
-- Custom games and AIvsAI should share the map size setting. And other options like the seed.
 - When switching player in AIvsAI (e.g. with key 'j') the currently opened menu should be updated.
 - Later think of a strategy to avoid the tactic to demolish a hut when own knights lose and the opponent is capturing it. Players could do this to get a better fight outcome.
+  - Maybe buildings under attack can't be demolished?
 
 
 TODO:
@@ -135,12 +126,11 @@ TODO:
 - Check/improve map position selection (clicks, minimap clicks, centering)
 - Finish AIs
 - Add more game options (like tutorial)
-- Improve/fix sound and add music/sound players for all operating systems
 - Look through all TODO code comments and resolve them
-- Bugfixing (important is the serf logic which seems to be very bugged in some situations)
+- Bugfixing
 - Remove unused code and improve bad code
 - Adjust and limit all values properly (like max speed increase and so on)
-- Check if all shortcuts/keystrokes work as expected (if not implement them)
+- Check if all shortcuts/keystrokes work as expected (if not, implement them)
 - Add new features / improve usability (more infos in UI, better menus, indicators like "how many trees are left for a lumberjack" or even a visual search area if the building is selected, get materials after demolishing)
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Freeserf.Network
 {
-    internal class HostNetwork
+    internal class Host
     {
         internal static byte[] ReadData(NetworkStream stream)
         {
@@ -29,7 +29,6 @@ namespace Freeserf.Network
         internal static IPAddress GetLocalIpAddress()
         {
             UnicastIPAddressInformation mostSuitableIp = null;
-
             var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
 
             foreach (var network in networkInterfaces)
@@ -69,16 +68,15 @@ namespace Freeserf.Network
                 }
             }
 
-            return mostSuitableIp != null
-                ? mostSuitableIp.Address
-                : null;
+            return mostSuitableIp?.Address;
         }
     }
 
     public class LocalServer : ILocalServer
     {
+        readonly object gameReadyLock = new object();
         bool acceptClients = true;
-        CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+        readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
         TcpListener listener = null;
         LobbyServerInfo lobbyServerInfo = null;
@@ -86,11 +84,12 @@ namespace Freeserf.Network
         readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
         readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
         readonly Dictionary<IRemoteClient, MultiplayerStatus> clientStatus = new Dictionary<IRemoteClient, MultiplayerStatus>();
+        readonly Dictionary<IRemoteClient, DateTime> lastClientHeartbeats = new Dictionary<IRemoteClient, DateTime>();
 
         public LocalServer(string name, GameInfo gameInfo)
         {
             Name = name;
-            Ip = HostNetwork.GetLocalIpAddress();
+            Ip = Host.GetLocalIpAddress();
             GameInfo = gameInfo;
         }
 
@@ -166,6 +165,7 @@ namespace Freeserf.Network
             lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSize, mapSeed);
             lobbyPlayerInfo.Clear();
             uint playerIndex = 0u;
+
             foreach (var player in players)
             {
                 string identification = null;
@@ -219,6 +219,7 @@ namespace Freeserf.Network
                     playerClients.Add(GameInfo.PlayerCount, remoteClient);
                     clients.Add(remoteClient, client);
                     clientStatus.Add(remoteClient, MultiplayerStatus.Unknown);
+                    lastClientHeartbeats.Add(remoteClient, DateTime.UtcNow);
 
                     HandleClient(remoteClient, client, cancellationToken).ContinueWith((task) => client.Close());
                 }
@@ -270,40 +271,39 @@ namespace Freeserf.Network
             var clientReceiveTask = Task.Run(() =>
             {
                 byte[] buffer = new byte[1024];
+                using var stream = tcpClient.GetStream();
 
-                using (var stream = tcpClient.GetStream())
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    while (!cancellationToken.IsCancellationRequested)
+                    try
                     {
-                        try
+                        if (!stream.DataAvailable)
                         {
-                            if (!stream.DataAvailable)
-                            {
-                                Thread.Sleep(5);
-                                continue;
-                            }
-
-                            var data = HostNetwork.ReadData(stream);
-
-                            if (data.Length > 0)
-                            {
-                                HandleData(client, data);
-                            }
+                            Thread.Sleep(5);
+                            continue;
                         }
-                        catch (ObjectDisposedException)
+
+                        var data = Host.ReadData(stream);
+
+                        if (data.Length > 0)
                         {
-                            if (tcpClient.Connected)
-                            {
-                                // TODO: connected but disposed? should not happen.
-                            }
+                            HandleData(client, data);
+                        }
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        if (tcpClient.Connected)
+                        {
+                            // TODO: connected but disposed? should not happen.
                         }
                     }
                 }
             });
 
-            // this should add the player to the game in lobby
-            // moreover it should trigger a server update and
-            // therefore broadcasts the lobby data to all clients (including this one)
+            // This should add the player to the game in lobby.
+            // Moreover it should trigger a server update and
+            // therefore broadcasts the lobby data to all clients
+            // (including this one).
             ClientJoined?.Invoke(this, client);
 
             return clientReceiveTask;
@@ -313,10 +313,14 @@ namespace Freeserf.Network
         {
             var networkData = NetworkDataParser.Parse(data);
 
+            // Whenever we receive something from the client we update the last heartbeat time.
+            lastClientHeartbeats[client] = DateTime.UtcNow;
+
             if (networkData.Type == NetworkDataType.Heartbeat)
             {
-                // TODO
-                // Heartbeats are possible in all states
+                // Heartbeats are possible in all states but
+                // we set the last heartbeat time above already.
+                return;
             }
 
             switch (State)
@@ -387,10 +391,16 @@ namespace Freeserf.Network
 
         void CheckGameReady()
         {
-            // all clients ready or disconnected?
-            GameReady?.Invoke(
-                clientStatus.Count(c => c.Value == MultiplayerStatus.Ready) == playerClients.Count
-            );
+            lock (gameReadyLock)
+            {
+                // all clients ready or disconnected?
+                bool gameReady = clientStatus.Count(c => c.Value == MultiplayerStatus.Ready) == playerClients.Count;
+
+                if (GameReady?.Invoke(gameReady) == true)
+                {
+                    EnterGame();
+                }
+            }
         }
 
         void HandleLobbyRequest(RemoteClient client, byte messageIndex, Request request)
@@ -403,7 +413,7 @@ namespace Freeserf.Network
                     // TODO response
                     break;
                 case Request.StartGame:
-
+                    // This is not allowed while in lobby.
                 case Request.GameData:
                     // TODO
                     break;
@@ -568,6 +578,39 @@ namespace Freeserf.Network
             BroadcastLobbyData();
         }
 
+        public void AllowUserInput(bool allow)
+        {
+            // Note: This is only a notification. A client might easily change its code
+            // to ignore it. So this can't be used in a secure way to disable user input.
+            // It's more like "all your user input from now on is processed or discarded".
+            // If the client proceeds with user input without allowance its progress will
+            // be overriden by the server anyway.
+            if (allow)
+                BroadcastAllowUserInputRequest();
+            else
+                BroadcastDisallowUserInputRequest();
+        }
+
+        public void PauseGame()
+        {
+            // Note: This is only a notification. A client might easily change its code
+            // to ignore it. So this can't be used in a secure way to disable client's
+            // game progress or even settings the client's game speed.
+            // It's more like "all your game progress from now on is discarded".
+            // If the client proceeds with game without allowance its progress will
+            // be overriden by the server anyway.
+            BroadcastPauseRequest();
+        }
+
+        public void ResumeGame()
+        {
+            // Note: This is only a notification. A client might easily change its code
+            // to ignore it. So this can't be used in a secure way to enable client's
+            // game progress or even settings the client's game speed.
+            // It's more like "all your game progress from now on is processed".
+            BroadcastResumeRequest();
+        }
+
         private delegate void BroadcastMethod(IRemoteClient client);
 
         private void Broadcast(BroadcastMethod method)
@@ -581,6 +624,26 @@ namespace Freeserf.Network
         private void BroadcastStartGameRequest()
         {
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client));
+        }
+
+        private void BroadcastAllowUserInputRequest()
+        {
+            Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client));
+        }
+
+        private void BroadcastDisallowUserInputRequest()
+        {
+            Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.DisallowUserInput).Send(client));
+        }
+
+        private void BroadcastPauseRequest()
+        {
+            Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.Pause).Send(client));
+        }
+
+        private void BroadcastResumeRequest()
+        {
+            Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client));
         }
 
         private void BroadcastLobbyData()
@@ -670,7 +733,7 @@ namespace Freeserf.Network
                                 continue;
                             }
 
-                            var data = HostNetwork.ReadData(stream);
+                            var data = Host.ReadData(stream);
 
                             if (data.Length > 0)
                             {

@@ -1034,7 +1034,21 @@ namespace Freeserf.UI
 
                             SetRedraw();
 
-                            server.StartGame(game); // the game is not really started yet, we have to call GameManager.Instance.StartMultiplayerGame later
+                            server.GameReady += (bool ready) =>
+                            {
+                                if (ready)
+                                {
+                                    GameManager.Instance.StartMultiplayerGame(game);
+                                    server.ResumeGame();
+                                    server.AllowUserInput(true);
+                                    interf.CloseGameInit();
+                                    game.Resume();
+                                    return true;
+                                }
+
+                                return false;
+                            };
+                            server.StartGame(game);
                         }
                         else
                         {

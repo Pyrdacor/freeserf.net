@@ -57,7 +57,7 @@ namespace Freeserf.Network
 
     public delegate void ClientJoinedHandler(ILocalServer server, IRemoteClient client);
     public delegate void ClientLeftHandler(ILocalServer server, IRemoteClient client);
-    public delegate void GameReadyHandler(bool ready);
+    public delegate bool GameReadyHandler(bool ready);
 
     public interface ILocalServer : IServer
     {
@@ -65,6 +65,9 @@ namespace Freeserf.Network
         void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
 
         void StartGame(Game game);
+        void AllowUserInput(bool allow);
+        void PauseGame();
+        void ResumeGame();
         void DisconnectClient(IRemoteClient client);
 
         event ClientJoinedHandler ClientJoined;
