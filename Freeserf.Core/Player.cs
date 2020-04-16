@@ -504,6 +504,15 @@ namespace Freeserf
             settings.KnightOccupation[3] = value;
         }
 
+        public void SetKnightOccupation(byte[] values)
+        {
+            if (values.Length != 4)
+                throw new ArgumentOutOfRangeException("Invalid knight occupation value length.");
+
+            for (int i = 0; i < 4; ++i)
+                settings.KnightOccupation[0] = values[i];
+        }
+
         public void IncreaseCastleKnights()
         {
             ++state.CastleKnights;
@@ -782,14 +791,17 @@ namespace Freeserf
 
         /// <summary>
         /// Begin cycling knights by sending knights from military buildings
-        /// to inventories.The knights can then be replaced by more experienced
+        /// to inventories. The knights can then be replaced by more experienced
         /// knights.
         /// </summary>
         public void CycleKnights()
-        {
-            state.CyclingKnightsInProgress = true;
-            state.CyclingKnightsReducedLevel = true;
-            state.KnightCycleCounter = 2400;
+		{
+            if (!state.CyclingKnightsInProgress)
+            {
+                state.CyclingKnightsInProgress = true;
+                state.CyclingKnightsReducedLevel = true;
+                state.KnightCycleCounter = 2400;
+            }
         }
 
         /// <summary>
@@ -1200,6 +1212,50 @@ namespace Freeserf
 
             // set the priority for the tool to 100%
             SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
+        }
+
+        public void MoveTransportItemPriority(bool up, bool toEnd, byte[] priorities, Resource.Type type)
+        {
+            int currentValue = priorities[(int)type];
+            int nextValue;
+
+            if (up)
+            {
+                if (toEnd)
+                {
+                    nextValue = 26;
+                }
+                else
+                {
+                    nextValue = currentValue + 1;
+                }
+            }
+            else // down
+            {
+                if (toEnd)
+                {
+                    nextValue = 1;
+                }
+                else
+                {
+                    nextValue = currentValue - 1;
+                }
+            }
+
+            if (nextValue >= 1 && nextValue <= 26)
+            {
+                int delta = (nextValue > currentValue) ? -1 : 1;
+                int min = (nextValue > currentValue) ? currentValue + 1 : nextValue;
+                int max = (nextValue > currentValue) ? nextValue : currentValue - 1;
+
+                for (int i = 0; i < 26; ++i)
+                {
+                    if (priorities[i] >= min && priorities[i] <= max)
+                        priorities[i] = (byte)(priorities[i] + delta);
+                }
+
+                priorities[(int)type] = (byte)nextValue;
+            }
         }
 
         public DirtyArray<byte> GetFlagPriorities()

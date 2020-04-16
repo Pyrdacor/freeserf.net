@@ -390,6 +390,8 @@ namespace Freeserf
             Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
         }
 
+        public bool IsPaused => gameSpeed == 0;
+
         public void Pause()
         {
             if (gameSpeed != 0)

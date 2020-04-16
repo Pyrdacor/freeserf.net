@@ -3348,59 +3348,20 @@ namespace Freeserf.UI
         {
             var player = interf.Player;
             byte[] priorities;
-            int current;
+            int currentItem;
 
             if (Box == Type.TransportPriorities)
             {
                 priorities = player.GetFlagPriorities();
-                current = (int)CurrentTransportPriorityItem;
+                currentItem = (int)CurrentTransportPriorityItem - 1;
             }
             else // inventory priorities
             {
                 priorities = player.GetInventoryPriorities();
-                current = (int)CurrentInventoryPriorityItem;
+                currentItem = (int)CurrentInventoryPriorityItem - 1;
             }
 
-            int currentValue = priorities[current - 1];
-            int nextValue = -1;
-
-            if (up)
-            {
-                if (toEnd)
-                {
-                    nextValue = 26;
-                }
-                else
-                {
-                    nextValue = currentValue + 1;
-                }
-            }
-            else // down
-            {
-                if (toEnd)
-                {
-                    nextValue = 1;
-                }
-                else
-                {
-                    nextValue = currentValue - 1;
-                }
-            }
-
-            if (nextValue >= 1 && nextValue <= 26)
-            {
-                int delta = (nextValue > currentValue) ? -1 : 1;
-                int min = (nextValue > currentValue) ? currentValue + 1 : nextValue;
-                int max = (nextValue > currentValue) ? nextValue : currentValue - 1;
-
-                for (int i = 0; i < 26; ++i)
-                {
-                    if (priorities[i] >= min && priorities[i] <= max)
-                        priorities[i] = (byte)(priorities[i] + delta);
-                }
-
-                priorities[current - 1] = (byte)nextValue;
-            }
+            player.MoveTransportItemPriority(up, toEnd, priorities, (Resource.Type)currentItem);
         }
 
         void HandleAction(Action action, int x, int y, object tag = null)
