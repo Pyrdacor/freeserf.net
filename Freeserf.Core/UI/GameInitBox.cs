@@ -179,8 +179,16 @@ namespace Freeserf.UI
         readonly Dictionary<uint, Network.IRemoteClient> playerClientMapping = new Dictionary<uint, Network.IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
         public GameInfo ServerGameInfo { get; private set; } = null;
-        public ILocalServer Server { get; private set; } = null;
-        public ILocalClient Client { get; private set; } = null;
+        public ILocalServer Server
+        {
+            get => interf.Server;
+            private set => interf.Server = value;
+        }
+        public ILocalClient Client
+        {
+            get => interf.Client;
+            private set => interf.Client = value;
+        }
         readonly Dictionary<uint, MultiplayerStatus> playerStatus = new Dictionary<uint, MultiplayerStatus>(); // key: playerIndex, value: status
 
         internal class PlayerBox

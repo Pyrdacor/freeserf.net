@@ -2,7 +2,7 @@
  * PopupBox.cs - Popup GUI component
  *
  * Copyright (C) 2013-2017  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -569,6 +569,8 @@ namespace Freeserf.UI
 
             var player = interf.Player;
             uint realAmount = (uint)slideBars[index].Fill * SlideBarFactor;
+
+            // TODO: CLIENT
 
             switch (Box)
             {
@@ -1137,7 +1139,7 @@ namespace Freeserf.UI
             SetBuilding(index++, 40, 86, Building.Type.IronMine);
             SetBuilding(index++, 88, 86, Building.Type.GoldMine);
 
-            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.Player))
+            if (interf.Game.CanBuildFlag(interf.MapCursorPosition, interf.Player))
             {
                 SetFlag(index, 24, 123);
                 ++num;
@@ -1153,7 +1155,7 @@ namespace Freeserf.UI
             int index = 0;
 
             // add hut if military buildings are possible
-            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPosition()))
+            if (interf.Game.CanBuildMilitary(interf.MapCursorPosition))
             {
                 SetBuilding(index++, 88, 22, Building.Type.Hut);
                 ++num;
@@ -1166,7 +1168,7 @@ namespace Freeserf.UI
             SetBuilding(index++, 24, 94, Building.Type.Mill);
             SetBuilding(index++, 88, 96, Building.Type.Boatbuilder);
 
-            if (interf.Game.CanBuildFlag(interf.GetMapCursorPosition(), interf.Player))
+            if (interf.Game.CanBuildFlag(interf.MapCursorPosition, interf.Player))
             {
                 SetFlag(index, 72, 117);
                 ++num;
@@ -1201,7 +1203,7 @@ namespace Freeserf.UI
             int index = 0;
 
             // add hut if military buildings are possible
-            if (interf.Game.CanBuildMilitary(interf.GetMapCursorPosition()))
+            if (interf.Game.CanBuildMilitary(interf.MapCursorPosition))
             {
                 SetBuilding(index++, 24, 108, Building.Type.Tower);
                 SetBuilding(index++, 72, 93, Building.Type.Fortress);
@@ -2296,7 +2298,7 @@ namespace Freeserf.UI
 
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
 
-            var position = interf.GetMapCursorPosition();
+            var position = interf.MapCursorPosition;
             uint[] estimates = new uint[5];
 
             interf.Game.PrepareGroundAnalysis(position, estimates);
@@ -3462,6 +3464,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ResetFoodPriority();
                     }
                     break;
@@ -3472,6 +3475,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ResetPlanksPriority();
                         player.ResetSteelPriority();
                     }
@@ -3483,6 +3487,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ResetCoalPriority();
                         player.ResetWheatPriority();
                     }
@@ -3494,6 +3499,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ResetToolPriority();
                     }
                     break;
@@ -3504,6 +3510,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         if (Box == Type.TransportPriorities)
                             player.ResetFlagPriority();
                         else
@@ -3517,6 +3524,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         MoveTransportItem(true, true);
                     }
                     break;
@@ -3527,6 +3535,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         MoveTransportItem(false, true);
                     }
                     break;
@@ -3537,6 +3546,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         MoveTransportItem(true, false);
                     }
                     break;
@@ -3547,6 +3557,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         MoveTransportItem(false, false);
                     }
                     break;
@@ -3654,6 +3665,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         // the button/icon is 32x32
                         if (x < 16)
                         {
@@ -3690,6 +3702,7 @@ namespace Freeserf.UI
                     {
                         if (player.SendStrongest)
                         {
+                            // TODO: CLIENT
                             player.SendStrongest = false;
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
@@ -3704,6 +3717,7 @@ namespace Freeserf.UI
                     {
                         if (!player.SendStrongest)
                         {
+                            // TODO: CLIENT
                             player.SendStrongest = true;
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                         }
@@ -3716,6 +3730,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.CycleKnights();
                         PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                     }
@@ -3727,6 +3742,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.DecreaseCastleKnightsWanted();
                     }
                     break;
@@ -3737,6 +3753,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.IncreaseCastleKnightsWanted();
                     }
                     break;
@@ -3747,6 +3764,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(3, false, -1);
                     }
                     break;
@@ -3757,6 +3775,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(3, false, 1);
                     }
                     break;
@@ -3767,6 +3786,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(3, true, -1);
                     }
                     break;
@@ -3777,6 +3797,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(3, true, 1);
                     }
                     break;
@@ -3787,6 +3808,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(2, false, -1);
                     }
                     break;
@@ -3797,6 +3819,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(2, false, 1);
                     }
                     break;
@@ -3807,6 +3830,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(2, true, -1);
                     }
                     break;
@@ -3817,6 +3841,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(2, true, 1);
                     }
                     break;
@@ -3827,6 +3852,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(1, false, -1);
                     }
                     break;
@@ -3837,6 +3863,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(1, false, 1);
                     }
                     break;
@@ -3847,6 +3874,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(1, true, -1);
                     }
                     break;
@@ -3857,6 +3885,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(1, true, 1);
                     }
                     break;
@@ -3867,6 +3896,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(0, false, -1);
                     }
                     break;
@@ -3877,6 +3907,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(0, false, 1);
                     }
                     break;
@@ -3887,6 +3918,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(0, true, -1);
                     }
                     break;
@@ -3897,6 +3929,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         player.ChangeKnightOccupation(0, true, 1);
                     }
                     break;
@@ -3921,6 +3954,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
+                        // TODO: CLIENT
                         SetInventoryMode(action);
                     }
                     break;
@@ -3949,7 +3983,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        var position = interf.GetMapCursorPosition();
+                        var position = interf.MapCursorPosition;
                         var flag = interf.Game.GetFlagAtPosition(position);
 
                         if (!interf.Game.SendGeologist(flag))
@@ -3958,6 +3992,7 @@ namespace Freeserf.UI
                         }
                         else
                         {
+                            // TODO: CLIENT
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.ClosePopup();
                         }
@@ -3970,7 +4005,7 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        var position = interf.GetMapCursorPosition();
+                        var position = interf.MapCursorPosition;
                         var flag = interf.Game.GetFlagAtPosition(position);
 
                         if (!flag.MergeNearbyPaths())
@@ -3979,6 +4014,7 @@ namespace Freeserf.UI
                         }
                         else
                         {
+                            // TODO: CLIENT
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.ClosePopup();
                         }
@@ -3989,6 +4025,7 @@ namespace Freeserf.UI
                     {
                         if (player.AttackingBuildingCount > 0)
                         {
+                            // TODO: CLIENT
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             player.StartAttack();
                         }
@@ -4145,9 +4182,11 @@ namespace Freeserf.UI
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm || Box == Type.DiskMsg)
                         SetBox(Type.SettlerMenu);
                     // TODO
+                    // TODO: CLIENT
                     break;
                 case Action.QuitConfirm:
                 case Action.NoSaveQuitConfirm:
+                    // TODO: CLIENT
                     // no saving
                     interf.ClosePopup();
                     interf.OpenGameInit();
@@ -4191,7 +4230,6 @@ namespace Freeserf.UI
                         SetBox(Type.PlayerStatistics);
                     }
                     break;
-                // TODO ...
                 default:
                     Log.Warn.Write(ErrorSystemType.UI, "unhandled action " + action.ToString());
                     break;

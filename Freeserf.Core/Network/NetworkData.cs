@@ -83,6 +83,15 @@ namespace Freeserf.Network
                     case NetworkDataType.LobbyData:
                         yield return new LobbyData().Parse(rawData, ref offset);
                         break;
+                    case NetworkDataType.InSync:
+                        yield return new InSyncData().Parse(rawData, ref offset);
+                        break;
+                    case NetworkDataType.SyncData:
+                        yield return new SyncData().Parse(rawData, ref offset);
+                        break;
+                    case NetworkDataType.UserActionData:
+                        yield return new UserActionData().Parse(rawData, ref offset);
+                        break;
                     // TODO ...
                     default:
                         throw new ExceptionFreeserf("Unknown network data.");

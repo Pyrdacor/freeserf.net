@@ -256,7 +256,23 @@ namespace Freeserf.Network
         /// Surrender the game.
         /// No parameters.
         /// </summary>
-        Surrender
+        Surrender,
+        /// <summary>
+        /// Merge a path.
+        /// TODO
+        /// </summary>
+        MergePaths, // TODO
+        /// <summary>
+        /// Sets the mode of an inventory.
+        /// - Serfs in
+        /// - Serfs stop
+        /// - Serfs out
+        /// - Resources in
+        /// - Resources stop
+        /// - Resources out
+        /// TODO
+        /// </summary>
+        SetInventoryMode // TODO
     }
 
     public class UserActionData : INetworkData

@@ -378,7 +378,7 @@ namespace Freeserf.UI
 
                 var buildPossibility = interf.GetBuildPossibility();
 
-                switch (interf.GetMapCursorType())
+                switch (interf.MapCursorType)
                 {
                     case Interface.CursorType.None:
                         SetButton(0, ButtonId.BuildInactive);
@@ -660,7 +660,7 @@ namespace Freeserf.UI
                     }
                     break;
                 case ButtonId.Destroy:
-                    if (interf.GetMapCursorType() == Interface.CursorType.RemovableFlag)
+                    if (interf.MapCursorType == Interface.CursorType.RemovableFlag)
                     {
                         interf.DemolishObject();
                     }
@@ -679,17 +679,20 @@ namespace Freeserf.UI
                     break;
                 case ButtonId.DestroyRoad:
                     {
-                        bool result = interf.Player.Game.DemolishRoad(interf.GetMapCursorPosition(), interf.Player);
+                        bool result = interf.Player.Game.DemolishRoad(interf.MapCursorPosition, interf.Player);
 
                         if (!result)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
-                            interf.UpdateMapCursorPosition(interf.GetMapCursorPosition());
+                            interf.UpdateMapCursorPosition(interf.MapCursorPosition);
                         }
                         else
                         {
+                            if (interf.Viewer.ViewerType == Viewer.Type.Client)
+                                interf.Client.SendUserAction(Network.UserActionData.CreateDemolishRoadUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
+
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
-                            interf.UpdateMapCursorPosition(interf.GetMapCursorPosition());
+                            interf.UpdateMapCursorPosition(interf.MapCursorPosition);
                         }
                     }
                     break;
@@ -780,7 +783,7 @@ namespace Freeserf.UI
                     timerLength = 60 * 60;
                 }
 
-                interf.Player.AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.GetMapCursorPosition());
+                interf.Player.AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.MapCursorPosition);
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             }

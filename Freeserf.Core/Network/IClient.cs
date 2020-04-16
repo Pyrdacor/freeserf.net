@@ -50,6 +50,7 @@ namespace Freeserf.Network
 
         byte RequestLobbyStateUpdate();
         byte RequestGameStateUpdate();
+        void SendUserAction(UserActionData userAction);
         void SendUserAction(UserActionData userAction, Action<ResponseType> responseAction);
 
         bool JoinServer(string name, IPAddress ip);

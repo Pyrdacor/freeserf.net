@@ -160,35 +160,57 @@ namespace Freeserf.Network
         {
             lastServerHeartbeat = DateTime.UtcNow;
 
-            foreach (var parsedData in NetworkDataParser.Parse(data))
+            try
             {
-                switch (parsedData.Type)
+                foreach (var parsedData in NetworkDataParser.Parse(data))
                 {
-                    case NetworkDataType.Request:
-                        HandleRequest(parsedData as RequestData);
-                        break;
-                    case NetworkDataType.Heartbeat:
-                        // Last heartbeat time was set above.
-                        break;
-                    case NetworkDataType.LobbyData:
-                        UpdateLobbyData(parsedData as LobbyData);
-                        break;
-                    case NetworkDataType.Response:
-                        {
-                            var responseData = parsedData as ResponseData;
-
-                            foreach (var registeredResponseHandler in registeredResponseHandlers.ToArray())
-                            {
-                                registeredResponseHandler?.Invoke(responseData);
-                            }
-
+                    switch (parsedData.Type)
+                    {
+                        case NetworkDataType.Request:
+                            HandleRequest(parsedData as RequestData);
                             break;
-                        }
-                    // TODO: other data
-                    default:
-                        // TODO: ignore? track safely?
-                        throw new ExceptionFreeserf("Unknown server data");
+                        case NetworkDataType.Heartbeat:
+                            // Last heartbeat time was set above.
+                            break;
+                        case NetworkDataType.LobbyData:
+                            UpdateLobbyData(parsedData as LobbyData);
+                            break;
+                        case NetworkDataType.Response:
+                            {
+                                var responseData = parsedData as ResponseData;
+
+                                foreach (var registeredResponseHandler in registeredResponseHandlers.ToArray())
+                                {
+                                    registeredResponseHandler?.Invoke(responseData);
+                                }
+
+                                break;
+                            }
+                        case NetworkDataType.InSync:
+                            // TODO: handle in sync
+                            break;
+                        case NetworkDataType.SyncData:
+                            // TODO: handle sync
+                            break;
+                        case NetworkDataType.UserActionData:
+                            {
+                                var userActionData = parsedData as UserActionData;
+
+                                if (userActionData.Number != Global.SpontaneousMessage)
+                                    SendResponse(userActionData.Number, ResponseType.BadDestination);
+
+                                Log.Error.Write(ErrorSystemType.Network, "User actions can't be send to a client.");
+                                break;
+                            }
+                        default:
+                            Log.Error.Write(ErrorSystemType.Network, "Received unknown server data");
+                            break;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Error in receiving server data: " + ex.Message);
             }
         }
 
@@ -303,10 +325,15 @@ namespace Freeserf.Network
             new ResponseData(messageIndex, responseType).Send(server);
         }
 
+        public void SendUserAction(UserActionData userAction)
+        {
+            userAction.Send(server);
+        }
+
         public void SendUserAction(UserActionData userAction, Action<ResponseType> responseAction)
         {
             RegisterResponse(userAction.Number, responseAction);
-            userAction.Send(server);
+            SendUserAction(userAction);
         }
 
         private void RegisterResponse(byte messageIndex, Action<ResponseType> responseAction)
