@@ -377,17 +377,19 @@ namespace Freeserf.Network
                         }
                     case ServerState.Game:
                         {
+                            Game game = GameManager.Instance.GetCurrentGame();
+
                             if (networkData.Type == NetworkDataType.Request)
                             {
                                 var request = networkData as RequestData;
 
-                                HandleGameRequest(client, request.Number, request.Request);
+                                HandleGameRequest(game, client, request.Number, request.Request);
                             }
                             else if (networkData.Type == NetworkDataType.UserActionData)
                             {
-                                /*var userAction = networkData as UserActionData;
+                                var userAction = networkData as UserActionData;
 
-                                HandleGameUserAction(client, userAction.Number, userAction...);*/
+                                new ResponseData(userAction.Number, userAction.ApplyToGame(game, game.GetPlayer(client.PlayerIndex)));
                             }
                             else
                             {
@@ -452,7 +454,7 @@ namespace Freeserf.Network
             }
         }
 
-        void HandleGameRequest(RemoteClient client, byte messageIndex, Request request)
+        void HandleGameRequest(Game game, RemoteClient client, byte messageIndex, Request request)
         {
             switch (request)
             {

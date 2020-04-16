@@ -34,6 +34,7 @@ namespace Freeserf.Network
         DateTime lastServerHeartbeat = DateTime.MinValue;
         ConnectionObserver connectionObserver = null;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
+        readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
 
         public LocalClient()
         {
@@ -99,6 +100,10 @@ namespace Freeserf.Network
 
         private void HandleDisconnect()
         {
+            lock (registeredResponseHandlers)
+            {
+                registeredResponseHandlers.Clear();
+            }
             client?.Close();
             server?.Close();
             client = null;
@@ -168,6 +173,17 @@ namespace Freeserf.Network
                     case NetworkDataType.LobbyData:
                         UpdateLobbyData(parsedData as LobbyData);
                         break;
+                    case NetworkDataType.Response:
+                        {
+                            var responseData = parsedData as ResponseData;
+
+                            foreach (var registeredResponseHandler in registeredResponseHandlers.ToArray())
+                            {
+                                registeredResponseHandler?.Invoke(responseData);
+                            }
+
+                            break;
+                        }
                     // TODO: other data
                     default:
                         // TODO: ignore? track safely?
@@ -220,7 +236,7 @@ namespace Freeserf.Network
             switch (request.Request)
             {
                 case Request.Heartbeat:
-                    SendHeartbeat(request.Number);
+                    SendHeartbeatAsResponse(request.Number);
                     break;
                 default:
                     SendResponse(request.Number, ResponseType.Ok);
@@ -262,7 +278,7 @@ namespace Freeserf.Network
             return messageIndex;
         }
 
-        public void SendHeartbeat(byte messageIndex)
+        public void SendHeartbeatAsResponse(byte messageIndex)
         {
             new Heartbeat(messageIndex, (byte)PlayerIndex).Send(server);
         }
@@ -285,6 +301,30 @@ namespace Freeserf.Network
         private void SendResponse(byte messageIndex, ResponseType responseType)
         {
             new ResponseData(messageIndex, responseType).Send(server);
+        }
+
+        public void SendUserAction(UserActionData userAction, Action<ResponseType> responseAction)
+        {
+            RegisterResponse(userAction.Number, responseAction);
+            userAction.Send(server);
+        }
+
+        private void RegisterResponse(byte messageIndex, Action<ResponseType> responseAction)
+        {
+            void responseHandler(ResponseData response)
+            {
+                if (response.Number == messageIndex)
+                {
+                    lock (registeredResponseHandlers)
+                    {
+                        registeredResponseHandlers.Remove(responseHandler);
+                    }
+
+                    responseAction?.Invoke(response.ResponseType);
+                }
+            }
+
+            registeredResponseHandlers.Add(responseHandler);
         }
     }
 
