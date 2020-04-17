@@ -100,6 +100,7 @@ namespace Freeserf.Network
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
         TcpListener listener = null;
+        INetworkDataReceiver networkDataReceiver = null;
         LobbyServerInfo lobbyServerInfo = null;
         readonly List<LobbyPlayerInfo> lobbyPlayerInfo = new List<LobbyPlayerInfo>();
         readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
@@ -282,6 +283,26 @@ namespace Freeserf.Network
             State = ServerState.Outro;
         }
 
+        public void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver)
+        {
+            if (this.networkDataReceiver != networkDataReceiver)
+                this.networkDataReceiver = networkDataReceiver;
+
+            void handleReceivedData(IRemote source, INetworkData data, ResponseHandler responseHandler)
+            {
+                if (!(source is IRemoteClient client))
+                {
+                    Log.Error.Write(ErrorSystemType.Network, "Server received data from a non-client.");
+                    responseHandler?.Invoke(ResponseType.BadDestination);
+                    return;
+                }
+
+                ProcessData(client, data, responseHandler);
+            }
+
+            networkDataReceiver.ProcessReceivedData(handleReceivedData);
+        }
+
         Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
         {
             if (State != ServerState.Lobby)
@@ -291,6 +312,7 @@ namespace Freeserf.Network
 
             var clientReceiveTask = Task.Run(() =>
             {
+                var server = client.Server as LocalServer;
                 byte[] buffer = new byte[1024];
                 using var stream = tcpClient.GetStream();
 
@@ -308,7 +330,7 @@ namespace Freeserf.Network
 
                         if (data.Length > 0)
                         {
-                            HandleData(client, data);
+                            server.HandleData(client, data);
                         }
                     }
                     catch (ObjectDisposedException)
@@ -332,6 +354,9 @@ namespace Freeserf.Network
 
         void HandleData(RemoteClient client, byte[] data)
         {
+            if (networkDataReceiver == null)
+                throw new ExceptionFreeserf(ErrorSystemType.Application, "Network data receiver is not set up.");
+
             try
             {
                 foreach (var networkData in NetworkDataParser.Parse(data))
@@ -358,10 +383,7 @@ namespace Freeserf.Network
                                     throw new ExceptionFreeserf("Request expected.");
                                 }
 
-                                var request = networkData as RequestData;
-
-                                HandleLobbyRequest(client, request.MessageIndex, request.Request);
-
+                                networkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
                                 break;
                             }
                         case ServerState.Loading:
@@ -374,10 +396,10 @@ namespace Freeserf.Network
 
                                 var request = networkData as RequestData;
 
+                                // client sends this when he is ready
                                 if (request.Request == Request.StartGame)
                                 {
-                                    // client sends this when he is ready
-                                    ClientReady(client);
+                                    networkDataReceiver.Receive(client, request, null);                                    
                                     break;
                                 }
                                 else
@@ -385,19 +407,9 @@ namespace Freeserf.Network
                             }
                         case ServerState.Game:
                             {
-                                Game game = GameManager.Instance.GetCurrentGame();
-
-                                if (networkData.Type == NetworkDataType.Request)
+                                if (networkData.Type == NetworkDataType.Request || networkData.Type == NetworkDataType.UserActionData)
                                 {
-                                    var request = networkData as RequestData;
-
-                                    HandleGameRequest(game, client, request.MessageIndex, request.Request);
-                                }
-                                else if (networkData.Type == NetworkDataType.UserActionData)
-                                {
-                                    var userAction = networkData as UserActionData;
-
-                                    new ResponseData(userAction.MessageIndex, userAction.ApplyToGame(game, game.GetPlayer(client.PlayerIndex)));
+                                    networkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
                                 }
                                 else
                                 {
@@ -422,6 +434,68 @@ namespace Freeserf.Network
             }
         }
 
+        void ProcessData(IRemoteClient client, INetworkData networkData, ResponseHandler responseHandler)
+        {
+            switch (State)
+            {
+                case ServerState.Lobby:
+                    {
+                        // TODO: assert that it is a request (checked before in HandleData)
+                        var request = networkData as RequestData;
+
+                        HandleLobbyRequest(client, request.MessageIndex, request.Request, responseHandler);
+
+                        break;
+                    }
+                case ServerState.Loading:
+                    {
+                        // TODO: assert that it is a startgame request (checked before in HandleData)
+                        var request = networkData as RequestData;
+
+                        if (request.Request == Request.StartGame)
+                        {
+                            // client sends this when he is ready
+                            ClientReady(client);                            
+                        }
+
+                        break;
+                    }
+                case ServerState.Game:
+                    {
+                        // TODO: assert that it is a request or user action (checked before in HandleData)
+                        Game game = GameManager.Instance.GetCurrentGame();
+
+                        if (networkData.Type == NetworkDataType.Request)
+                        {
+                            var request = networkData as RequestData;
+
+                            HandleGameRequest(game, client, request.MessageIndex, request.Request, responseHandler);
+                        }
+                        else if (networkData.Type == NetworkDataType.UserActionData)
+                        {
+                            var userAction = networkData as UserActionData;
+                            var response = userAction.ApplyToGame(game, game.GetPlayer(client.PlayerIndex));
+
+                            responseHandler?.Invoke(response);
+                        }
+
+                        break;
+                    }
+                case ServerState.Outro:
+                    // TODO
+                    break;
+                default:
+                    // Was handled in HandleData already.
+                    break;
+            }
+        }
+
+        void SendResponse(IRemoteClient client, byte messageIndex, ResponseType responseType)
+        {
+            if (messageIndex != Global.SpontaneousMessage)
+                client.SendResponse(messageIndex, responseType);
+        }
+
         void ClientReady(IRemoteClient client)
         {
             clientStatus[client] = MultiplayerStatus.Ready;
@@ -442,19 +516,21 @@ namespace Freeserf.Network
             }
         }
 
-        void HandleLobbyRequest(RemoteClient client, byte messageIndex, Request request)
+        void HandleLobbyRequest(IRemoteClient client, byte messageIndex, Request request, ResponseHandler responseHandler)
         {
             switch (request)
             {
                 case Request.Disconnect:
                     ClientLeft?.Invoke(this, client);
+                    responseHandler?.Invoke(ResponseType.Ok);
                     DisconnectClient(client);
-                    // TODO response
                     break;
                 case Request.StartGame:
                     // This is not allowed while in lobby.
+                    responseHandler?.Invoke(ResponseType.BadState);
+                    break;
                 case Request.Heartbeat:
-                    // TODO
+                    responseHandler?.Invoke(ResponseType.Ok);
                     break;
                 case Request.LobbyData:
                     lock (lobbyServerInfo)
@@ -464,12 +540,12 @@ namespace Freeserf.Network
                         }
                     break;
                 default:
-                    // TODO error?
+                    responseHandler?.Invoke(ResponseType.BadRequest);
                     break;
             }
         }
 
-        void HandleGameRequest(Game game, RemoteClient client, byte messageIndex, Request request)
+        void HandleGameRequest(Game game, IRemoteClient client, byte messageIndex, Request request, ResponseHandler responseHandler)
         {
             switch (request)
             {
@@ -641,7 +717,8 @@ namespace Freeserf.Network
         {
             foreach (var client in clients.ToList())
             {
-                method(client.Key);
+                if (client.Value.Connected)
+                    method(client.Key);
             }
         }
 
@@ -692,6 +769,7 @@ namespace Freeserf.Network
             Broadcast((client) => client.SendGameStateUpdate(game));
         }
 
+        // TODO: call it!
         private void BroadcastHeartbeat()
         {
             Broadcast((client) => client.SendHeartbeat());

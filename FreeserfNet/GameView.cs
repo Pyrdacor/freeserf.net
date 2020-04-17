@@ -22,6 +22,7 @@
 using Freeserf.Audio;
 using Freeserf.Data;
 using Freeserf.Event;
+using Freeserf.Network;
 using Freeserf.Render;
 using Freeserf.Renderer;
 using Silk.NET.OpenGL;
@@ -37,7 +38,7 @@ namespace Freeserf
 
     public delegate bool FullscreenRequestHandler(bool fullscreen);
 
-    public class GameView : RenderLayerFactory, IRenderView, IAudioInterface, IDisposable
+    public class GameView : RenderLayerFactory, IRenderView, IAudioInterface, INetworkDataHandler, IDisposable
     {
         // these two lines are fore the background map at start
         int mapScrollTicks = 0;
@@ -632,6 +633,11 @@ namespace Freeserf
                     disposed = true;
                 }
             }
+        }
+
+        public void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver)
+        {
+            gui.UpdateNetworkEvents(networkDataReceiver);
         }
     }
 }

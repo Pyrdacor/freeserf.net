@@ -35,11 +35,12 @@ namespace Freeserf.Network
         void SendDisconnect();
     }
 
-    public interface ILocalClient : IClient
+    public interface ILocalClient : IClient, INetworkDataHandler
     {
         Game Game { get; set; }
         LobbyData LobbyData { get; }
         IRemoteServer Server { get; }
+        bool Connected { get; }
 
         event EventHandler Disconnected;
         event EventHandler LobbyDataUpdated;

@@ -32,6 +32,7 @@ namespace Freeserf.Network
         TcpClient client = null;
         RemoteServer server = null;
         DateTime lastServerHeartbeat = DateTime.MinValue;
+        INetworkDataReceiver networkDataReceiver = null;
         ConnectionObserver connectionObserver = null;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
@@ -61,6 +62,8 @@ namespace Freeserf.Network
         }
 
         public IRemoteServer Server => server;
+
+        public bool Connected => client != null && client.Connected;
 
         public LobbyData LobbyData
         {
@@ -145,21 +148,82 @@ namespace Freeserf.Network
             }
         }
 
-        private void ConnectionObserver_ConnectionLost()
+        void ConnectionObserver_ConnectionLost()
         {
             HandleDisconnect();
         }
 
-        private void ConnectionObserver_DataRefreshNeeded()
+        void ConnectionObserver_DataRefreshNeeded()
         {
             // long response time -> data refresh from server is needed
             RequestGameStateUpdate();
         }
 
-        private void Server_DataReceived(IRemoteServer server, byte[] data)
+        public void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver)
+        {
+            if (this.networkDataReceiver != networkDataReceiver)
+                this.networkDataReceiver = networkDataReceiver;
+
+            void handleReceivedData(IRemote source, INetworkData data, ResponseHandler responseHandler)
+            {
+                if (!(source is IRemoteServer server))
+                {
+                    Log.Error.Write(ErrorSystemType.Network, "Client received data from a non-server.");
+                    responseHandler?.Invoke(ResponseType.BadDestination);
+                    return;
+                }
+
+                ProcessData(server, data, responseHandler);
+            }
+
+            networkDataReceiver.ProcessReceivedData(handleReceivedData);
+        }
+
+        void ProcessData(IRemoteServer server, INetworkData networkData, ResponseHandler responseHandler)
+        {
+            switch (networkData.Type)
+            {
+                case NetworkDataType.Request:
+                    HandleRequest(networkData as RequestData, responseHandler);
+                    break;
+                case NetworkDataType.Heartbeat:
+                    // Last heartbeat time was set before.
+                    responseHandler?.Invoke(ResponseType.Ok);
+                    break;
+                case NetworkDataType.LobbyData:
+                    responseHandler?.Invoke(ResponseType.Ok);
+                    UpdateLobbyData(networkData as LobbyData);
+                    break;
+                case NetworkDataType.Response:
+                    {
+                        var responseData = networkData as ResponseData;
+                        foreach (var registeredResponseHandler in registeredResponseHandlers.ToArray())
+                            registeredResponseHandler?.Invoke(responseData);
+                        break;
+                    }
+                case NetworkDataType.InSync:
+                    // TODO: handle in sync
+                    break;
+                case NetworkDataType.SyncData:
+                    // TODO: handle sync
+                    break;
+                default:
+                    // Should be handled by Server_DataReceived already.
+                    break;
+            }
+        }
+
+        void Server_DataReceived(IRemoteServer server, byte[] data)
         {
             // TODO: handle client states
             lastServerHeartbeat = DateTime.UtcNow;
+
+            if (networkDataReceiver == null)
+            {
+                Log.Error.Write(ErrorSystemType.Application, "Network data receiver is not set up.");
+                Disconnect();                
+                return;
+            }
 
             try
             {
@@ -167,44 +231,25 @@ namespace Freeserf.Network
                 {
                     switch (parsedData.Type)
                     {
-                        case NetworkDataType.Request:
-                            HandleRequest(parsedData as RequestData);
-                            break;
                         case NetworkDataType.Heartbeat:
                             // Last heartbeat time was set above.
                             break;
+                        case NetworkDataType.Request:
                         case NetworkDataType.LobbyData:
-                            UpdateLobbyData(parsedData as LobbyData);
+                        case NetworkDataType.SyncData:
+                            networkDataReceiver.Receive(server, parsedData, (ResponseType responseType) => SendResponse(parsedData.MessageIndex, responseType));
                             break;
                         case NetworkDataType.Response:
-                            {
-                                var responseData = parsedData as ResponseData;
-
-                                foreach (var registeredResponseHandler in registeredResponseHandlers.ToArray())
-                                {
-                                    registeredResponseHandler?.Invoke(responseData);
-                                }
-
-                                break;
-                            }
                         case NetworkDataType.InSync:
-                            // TODO: handle in sync
-                            break;
-                        case NetworkDataType.SyncData:
-                            // TODO: handle sync
+                            networkDataReceiver.Receive(server, parsedData, null);
                             break;
                         case NetworkDataType.UserActionData:
-                            {
-                                var userActionData = parsedData as UserActionData;
-
-                                if (userActionData.MessageIndex != Global.SpontaneousMessage)
-                                    SendResponse(userActionData.MessageIndex, ResponseType.BadDestination);
-
-                                Log.Error.Write(ErrorSystemType.Network, "User actions can't be send to a client.");
-                                break;
-                            }
+                            Log.Error.Write(ErrorSystemType.Network, "User actions can't be send to a client.");
+                            SendResponse(parsedData.MessageIndex, ResponseType.BadDestination);                                
+                            break;
                         default:
-                            Log.Error.Write(ErrorSystemType.Network, "Received unknown server data");
+                            Log.Error.Write(ErrorSystemType.Network, "Received unknown server data.");
+                            SendResponse(parsedData.MessageIndex, ResponseType.BadRequest);
                             break;
                     }
                 }
@@ -215,7 +260,7 @@ namespace Freeserf.Network
             }
         }
 
-        private void HandleRequest(RequestData request)
+        private void HandleRequest(RequestData request, ResponseHandler responseHandler)
         {
             switch (request.Request)
             {
@@ -323,7 +368,8 @@ namespace Freeserf.Network
 
         public void SendResponse(byte messageIndex, ResponseType responseType)
         {
-            new ResponseData(messageIndex, responseType).Send(server);
+            if (messageIndex != Global.SpontaneousMessage)
+                new ResponseData(messageIndex, responseType).Send(server);
         }
 
         public void SendUserAction(UserActionData userAction)

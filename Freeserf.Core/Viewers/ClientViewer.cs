@@ -43,7 +43,8 @@ namespace Freeserf
 
         public override void Update()
         {
-            client.SendHeartbeat();
+            if (client.Connected)
+                client.SendHeartbeat();
 
             base.Update();
         }
