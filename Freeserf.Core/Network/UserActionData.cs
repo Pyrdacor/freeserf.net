@@ -348,10 +348,10 @@ namespace Freeserf.Network
         {
             List<byte> rawData = new List<byte>(Size);
 
-            rawData.Add(MessageIndex);
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
+            rawData.Add(MessageIndex);
             rawData.AddRange(BitConverter.GetBytes(GameTime));
-            rawData.AddRange(BitConverter.GetBytes((byte)UserAction));
+            rawData.Add((byte)UserAction);
 
             if (Parameters != null && Parameters.Length > 0)
             {
@@ -423,7 +423,7 @@ namespace Freeserf.Network
                 CreateParameters
                 (
                     mapPosition,
-                    game.GetBuildingAtPosition(mapPosition).Index
+                    game.GetBuildingAtPosition(mapPosition).BuildingType
                 )
             );
         }
@@ -441,13 +441,7 @@ namespace Freeserf.Network
 
         public static UserActionData CreatePlaceFlagUserAction(byte number, Game game, MapPos mapPosition)
         {
-            return new UserActionData(number, game.GameTime, UserAction.PlaceFlag,
-                CreateParameters
-                (
-                    mapPosition,
-                    game.GetFlagAtPosition(mapPosition).Index
-                )
-            );
+            return new UserActionData(number, game.GameTime, UserAction.PlaceFlag, BitConverter.GetBytes(mapPosition));
         }
 
         public static UserActionData CreateDemolishFlagUserAction(byte number, Game game, MapPos mapPosition)
