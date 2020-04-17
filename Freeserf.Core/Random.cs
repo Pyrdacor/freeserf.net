@@ -1,8 +1,8 @@
 ﻿/*
  * Random.cs - Random number generator
  *
- * Copyright (C) 2012  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2012       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -25,39 +25,46 @@ using System.Text;
 
 namespace Freeserf
 {
-    public class Random
-    {
-        System.Random internalRandom;
-        ushort[] state = new ushort[3];
+    using Serialize;
+    using word = UInt16;
 
-        ushort RandomInt()
-        {
-            return (ushort)internalRandom.Next(0, 65536);
-        }
+    internal class Random : State
+    {
+        public DirtyArray<word> State { get; } = new DirtyArray<word>(3);
 
         public Random()
         {
-            internalRandom = new System.Random(DateTime.Now.Millisecond);
+            var internalRandom = new System.Random(DateTime.Now.Millisecond);
 
-            state[0] = RandomInt();
-            state[1] = RandomInt();
-            state[2] = RandomInt();
+            ushort RandomInt()
+            {
+                return (ushort)internalRandom.Next(0, 65536);
+            }
+
+            State[0] = RandomInt();
+            State[1] = RandomInt();
+            State[2] = RandomInt();
 
             Next();
+            Init();
         }
 
         public Random(ushort value)
         {
-            state[0] = value;
-            state[1] = value;
-            state[2] = value;
+            State[0] = value;
+            State[1] = value;
+            State[2] = value;
+
+            Init();
         }
 
         public Random(Random randomState)
         {
-            state[0] = randomState.state[0];
-            state[1] = randomState.state[1];
-            state[2] = randomState.state[2];
+            State[0] = randomState.State[0];
+            State[1] = randomState.State[1];
+            State[2] = randomState.State[2];
+
+            Init();
         }
 
         public Random(string str)
@@ -72,23 +79,42 @@ namespace Freeserf
                 tmp |= c;
             }
 
-            state[0] = (ushort)(tmp & 0xFFFF);
+            State[0] = (ushort)(tmp & 0xFFFF);
             tmp >>= 16;
-            state[1] = (ushort)(tmp & 0xFFFF);
+            State[1] = (ushort)(tmp & 0xFFFF);
             tmp >>= 16;
-            state[2] = (ushort)(tmp & 0xFFFF);
+            State[2] = (ushort)(tmp & 0xFFFF);
+
+            Init();
         }
 
         public Random(ushort base0, ushort base1, ushort base2)
         {
-            state[0] = base0;
-            state[1] = base1;
-            state[2] = base2;
+            State[0] = base0;
+            State[1] = base1;
+            State[2] = base2;
+
+            Init();
+        }
+
+        private void Init()
+        {
+            State.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(State)); };
+        }
+
+        public override void ResetDirtyFlag()
+        {
+            lock (dirtyLock)
+            {
+                State.Dirty = false;
+
+                ResetDirtyFlagUnlocked();
+            }
         }
 
         public ushort Next()
         {
-            ushort[] random = state;
+            ushort[] random = State;
             ushort result = (ushort)((random[0] + random[1]) ^ random[2]);
             random[2] += random[1];
             random[1] ^= random[2];
@@ -101,9 +127,9 @@ namespace Freeserf
 
         public override string ToString()
         {
-            ulong tmp0 = state[0];
-            ulong tmp1 = state[1];
-            ulong tmp2 = state[2];
+            ulong tmp0 = State[0];
+            ulong tmp1 = State[1];
+            ulong tmp2 = State[2];
 
             string str = "";
 
@@ -124,9 +150,9 @@ namespace Freeserf
 
         public static Random operator ^(Random left, Random right)
         {
-            ushort s0 = (ushort)(left.state[0] ^ right.state[0]);
-            ushort s1 = (ushort)(left.state[1] ^ right.state[1]);
-            ushort s2 = (ushort)(left.state[2] ^ right.state[2]);
+            ushort s0 = (ushort)(left.State[0] ^ right.State[0]);
+            ushort s1 = (ushort)(left.State[1] ^ right.State[1]);
+            ushort s2 = (ushort)(left.State[2] ^ right.State[2]);
 
             return new Random(s0, s1, s2);
         }
