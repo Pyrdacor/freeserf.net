@@ -28,6 +28,8 @@ namespace Freeserf.Network
     {
         public NetworkDataType Type => NetworkDataType.InSync;
 
+        public byte MessageIndex => Global.SpontaneousMessage; // always async
+
         public UInt32 GameTime
         {
             get;

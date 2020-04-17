@@ -332,78 +332,93 @@ namespace Freeserf.Network
 
         void HandleData(RemoteClient client, byte[] data)
         {
-            foreach (var networkData in NetworkDataParser.Parse(data))
+            try
             {
-                // Whenever we receive something from the client we update the last heartbeat time.
-                lastClientHeartbeats[client] = DateTime.UtcNow;
-
-                if (networkData.Type == NetworkDataType.Heartbeat)
+                foreach (var networkData in NetworkDataParser.Parse(data))
                 {
-                    // Heartbeats are possible in all states but
-                    // we set the last heartbeat time above already.
-                    return;
-                }
+                    // Whenever we receive something from the client we update the last heartbeat time.
+                    lastClientHeartbeats[client] = DateTime.UtcNow;
 
-                switch (State)
-                {
-                    case ServerState.Lobby:
-                        {
-                            // TODO allow user actions in lobby? can clients do something in lobby?
+                    if (networkData.Type == NetworkDataType.Heartbeat)
+                    {
+                        // Heartbeats are possible in all states but
+                        // we have set the last heartbeat time above already.
+                        return;
+                    }
 
-                            if (networkData.Type != NetworkDataType.Request)
-                                throw new ExceptionFreeserf("Request expected.");
-
-                            var request = networkData as RequestData;
-
-                            HandleLobbyRequest(client, request.Number, request.Request);
-
-                            break;
-                        }
-                    case ServerState.Loading:
-                        {
-                            if (networkData.Type != NetworkDataType.Request)
-                                throw new ExceptionFreeserf("Request expected.");
-
-                            var request = networkData as RequestData;
-
-                            if (request.Request == Request.StartGame)
+                    switch (State)
+                    {
+                        case ServerState.Lobby:
                             {
-                                // client sends this when he is ready
-                                ClientReady(client);
-                                break;
-                            }
-                            else
-                                throw new ExceptionFreeserf("Unexpected request during loading."); // TODO maybe just ignore?
-                        }
-                    case ServerState.Game:
-                        {
-                            Game game = GameManager.Instance.GetCurrentGame();
+                                // TODO allow user actions in lobby? can clients do something in lobby?
 
-                            if (networkData.Type == NetworkDataType.Request)
-                            {
+                                if (networkData.Type != NetworkDataType.Request)
+                                {
+                                    client.SendResponse(networkData.MessageIndex, ResponseType.BadState);
+                                    throw new ExceptionFreeserf("Request expected.");
+                                }
+
                                 var request = networkData as RequestData;
 
-                                HandleGameRequest(game, client, request.Number, request.Request);
-                            }
-                            else if (networkData.Type == NetworkDataType.UserActionData)
-                            {
-                                var userAction = networkData as UserActionData;
+                                HandleLobbyRequest(client, request.MessageIndex, request.Request);
 
-                                new ResponseData(userAction.Number, userAction.ApplyToGame(game, game.GetPlayer(client.PlayerIndex)));
+                                break;
                             }
-                            else
+                        case ServerState.Loading:
                             {
-                                throw new ExceptionFreeserf("Request or user action expected.");
-                            }
+                                if (networkData.Type != NetworkDataType.Request)
+                                {
+                                    client.SendResponse(networkData.MessageIndex, ResponseType.BadState);
+                                    throw new ExceptionFreeserf("Request expected.");
+                                }
 
+                                var request = networkData as RequestData;
+
+                                if (request.Request == Request.StartGame)
+                                {
+                                    // client sends this when he is ready
+                                    ClientReady(client);
+                                    break;
+                                }
+                                else
+                                    throw new ExceptionFreeserf("Unexpected request during loading."); // TODO maybe just ignore?
+                            }
+                        case ServerState.Game:
+                            {
+                                Game game = GameManager.Instance.GetCurrentGame();
+
+                                if (networkData.Type == NetworkDataType.Request)
+                                {
+                                    var request = networkData as RequestData;
+
+                                    HandleGameRequest(game, client, request.MessageIndex, request.Request);
+                                }
+                                else if (networkData.Type == NetworkDataType.UserActionData)
+                                {
+                                    var userAction = networkData as UserActionData;
+
+                                    new ResponseData(userAction.MessageIndex, userAction.ApplyToGame(game, game.GetPlayer(client.PlayerIndex)));
+                                }
+                                else
+                                {
+                                    client.SendResponse(networkData.MessageIndex, ResponseType.BadState);
+                                    throw new ExceptionFreeserf("Request or user action expected.");
+                                }
+
+                                break;
+                            }
+                        case ServerState.Outro:
+                            // TODO
                             break;
-                        }
-                    case ServerState.Outro:
-                        // TODO
-                        break;
-                    default:
-                        break;
+                        default:
+                            client.SendResponse(networkData.MessageIndex, ResponseType.BadRequest);
+                            throw new ExceptionFreeserf(ErrorSystemType.Network, "Invalid server state.");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, $"Error in receiving data from client {client.Ip}: " + ex.Message);
             }
         }
 

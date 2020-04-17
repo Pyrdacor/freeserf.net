@@ -65,7 +65,7 @@ namespace Freeserf.Network
     {
         public NetworkDataType Type => NetworkDataType.Request;
 
-        public byte Number
+        public byte MessageIndex
         {
             get;
             private set;
@@ -84,7 +84,7 @@ namespace Freeserf.Network
 
         public RequestData(byte number, Request request)
         {
-            Number = number;
+            MessageIndex = number;
             Request = request;
         }
 
@@ -95,7 +95,7 @@ namespace Freeserf.Network
             if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"Request length must be {Size}.");
 
-            Number = rawData[offset + 2];
+            MessageIndex = rawData[offset + 2];
 
             var possibleValues = Enum.GetValues(typeof(Request));
 
@@ -117,7 +117,7 @@ namespace Freeserf.Network
             List<byte> rawData = new List<byte>(Size);
 
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
-            rawData.Add(Number);
+            rawData.Add(MessageIndex);
             rawData.Add((byte)Request);
 
             destination?.Send(rawData.ToArray());

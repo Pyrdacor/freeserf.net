@@ -30,6 +30,7 @@ namespace Freeserf.Network
         IPAddress Ip { get; }
         uint PlayerIndex { get; }
 
+        void SendResponse(byte messageIndex, ResponseType responseType);
         void SendHeartbeat();
         void SendDisconnect();
     }

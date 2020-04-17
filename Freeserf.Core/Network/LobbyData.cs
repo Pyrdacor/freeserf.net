@@ -122,7 +122,7 @@ namespace Freeserf.Network
 
         public NetworkDataType Type => NetworkDataType.LobbyData;
 
-        public byte Number
+        public byte MessageIndex
         {
             get;
             private set;
@@ -135,7 +135,7 @@ namespace Freeserf.Network
 
         public LobbyData(byte number, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players)
         {
-            Number = number;
+            MessageIndex = number;
 
             if (players.Count > 4)
                 throw new ExceptionFreeserf("Player count must not exceed 4.");
@@ -172,7 +172,7 @@ namespace Freeserf.Network
             sendData = new byte[dataSize];
             sendData[0] = typeBytes[0];
             sendData[1] = typeBytes[1];
-            sendData[2] = Number;
+            sendData[2] = MessageIndex;
 
             NetworkDataConverter<LobbyDataHeader>.ToBytes(header, sendData, ref dataOffset);
             NetworkDataConverter<LobbyServerSettings>.ToBytes(serverSettings, sendData, ref dataOffset);
@@ -240,7 +240,7 @@ namespace Freeserf.Network
             else if (rawData.Length - offset < MIN_DATA_SIZE)
                 throw new ExceptionFreeserf("Invalid lobby data received.");
 
-            Number = rawData[offset + 2];
+            MessageIndex = rawData[offset + 2];
             header.DataSize = rawData[offset + 3];
             header.PlayerCount = rawData[offset + 4];
 

@@ -31,12 +31,6 @@ namespace Freeserf.Network
         void Send(byte[] rawData);
     }
 
-    public interface IResponse
-    {
-        IRemote GetSource();
-        INetworkData GetData();
-    }
-
     public enum NetworkDataType : UInt16
     {
         Request,
@@ -51,6 +45,7 @@ namespace Freeserf.Network
     public interface INetworkData
     {
         NetworkDataType Type { get; }
+        byte MessageIndex { get; }
         int Size { get; }
         void Send(IRemote destination);
         INetworkData Parse(byte[] rawData, ref int offset);
@@ -61,7 +56,10 @@ namespace Freeserf.Network
         public static IEnumerable<INetworkData> Parse(byte[] rawData)
         {
             if (rawData.Length < 2)
-                throw new ExceptionFreeserf("Unknown network data.");
+            {
+                Log.Error.Write(ErrorSystemType.Network, $"Invalid network data received: {rawData}");
+                throw new ExceptionFreeserf("Invalid network data received.");
+            }
 
             int offset = 0;
 
@@ -94,6 +92,7 @@ namespace Freeserf.Network
                         break;
                     // TODO ...
                     default:
+                        Log.Error.Write(ErrorSystemType.Network, $"Unknown network data received: {rawData}");
                         throw new ExceptionFreeserf("Unknown network data.");
                 }
             }

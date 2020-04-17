@@ -28,7 +28,7 @@ namespace Freeserf.Network
     {
         public NetworkDataType Type => NetworkDataType.Heartbeat;
 
-        public byte Number
+        public byte MessageIndex
         {
             get;
             private set;
@@ -53,7 +53,7 @@ namespace Freeserf.Network
 
         public Heartbeat(byte number, byte playerId)
         {
-            Number = number;
+            MessageIndex = number;
             PlayerId = playerId;
         }
 
@@ -67,7 +67,7 @@ namespace Freeserf.Network
             if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"Heartbeat length must be {Size}.");
 
-            Number = rawData[offset + 2];
+            MessageIndex = rawData[offset + 2];
             Last = DateTime.FromBinary(BitConverter.ToInt64(rawData, offset + 3));
             PlayerId = rawData[offset + Size - 1];
 
@@ -81,7 +81,7 @@ namespace Freeserf.Network
             List<byte> rawData = new List<byte>(Size);
 
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
-            rawData.Add(Number);
+            rawData.Add(MessageIndex);
             rawData.AddRange(BitConverter.GetBytes(DateTime.UtcNow.ToBinary()));
             rawData.Add(PlayerId);
 

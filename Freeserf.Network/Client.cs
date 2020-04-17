@@ -158,6 +158,7 @@ namespace Freeserf.Network
 
         private void Server_DataReceived(IRemoteServer server, byte[] data)
         {
+            // TODO: handle client states
             lastServerHeartbeat = DateTime.UtcNow;
 
             try
@@ -196,8 +197,8 @@ namespace Freeserf.Network
                             {
                                 var userActionData = parsedData as UserActionData;
 
-                                if (userActionData.Number != Global.SpontaneousMessage)
-                                    SendResponse(userActionData.Number, ResponseType.BadDestination);
+                                if (userActionData.MessageIndex != Global.SpontaneousMessage)
+                                    SendResponse(userActionData.MessageIndex, ResponseType.BadDestination);
 
                                 Log.Error.Write(ErrorSystemType.Network, "User actions can't be send to a client.");
                                 break;
@@ -252,16 +253,16 @@ namespace Freeserf.Network
 
         private void RespondToRequest(RequestData request)
         {
-            if (request.Number == Global.SpontaneousMessage)
+            if (request.MessageIndex == Global.SpontaneousMessage)
                 return; // spontaneous messages don't need a response
 
             switch (request.Request)
             {
                 case Request.Heartbeat:
-                    SendHeartbeatAsResponse(request.Number);
+                    SendHeartbeatAsResponse(request.MessageIndex);
                     break;
                 default:
-                    SendResponse(request.Number, ResponseType.Ok);
+                    SendResponse(request.MessageIndex, ResponseType.Ok);
                     break;
             }
         }
@@ -320,7 +321,7 @@ namespace Freeserf.Network
             new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(server);
         }
 
-        private void SendResponse(byte messageIndex, ResponseType responseType)
+        public void SendResponse(byte messageIndex, ResponseType responseType)
         {
             new ResponseData(messageIndex, responseType).Send(server);
         }
@@ -332,7 +333,7 @@ namespace Freeserf.Network
 
         public void SendUserAction(UserActionData userAction, Action<ResponseType> responseAction)
         {
-            RegisterResponse(userAction.Number, responseAction);
+            RegisterResponse(userAction.MessageIndex, responseAction);
             SendUserAction(userAction);
         }
 
@@ -340,7 +341,7 @@ namespace Freeserf.Network
         {
             void responseHandler(ResponseData response)
             {
-                if (response.Number == messageIndex)
+                if (response.MessageIndex == messageIndex)
                 {
                     lock (registeredResponseHandlers)
                     {
@@ -380,6 +381,11 @@ namespace Freeserf.Network
         public ILocalServer Server
         {
             get;
+        }
+
+        public void SendResponse(byte messageIndex, ResponseType responseType)
+        {
+            new ResponseData(messageIndex, responseType).Send(this);
         }
 
         public void SendHeartbeat()

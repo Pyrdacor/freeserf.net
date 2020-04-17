@@ -419,7 +419,7 @@ namespace Freeserf.UI
                 // Fast building
                 if (interf.AccessRights == Viewer.Access.Player &&
                     interf.GetOption(Option.FastBuilding) &&
-                    interf.GetMapCursorPosition() == mapPosition)
+                    interf.MapCursorPosition == mapPosition)
                 {
                     if (!interf.Player.HasCastle)
                     {

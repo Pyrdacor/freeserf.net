@@ -28,6 +28,12 @@ namespace Freeserf.Network
     {
         public NetworkDataType Type => NetworkDataType.SyncData;
 
+        public byte MessageIndex
+        {
+            get;
+            private set;
+        } = 0;
+
         public UInt32 GameTime
         {
             get;
@@ -49,7 +55,7 @@ namespace Freeserf.Network
         {
             GameTime = gameTime;
             SerializedData = serializedData;
-            Size = 10 + serializedData.Length;
+            Size = 11 + serializedData.Length;
         }
 
         public int Size
@@ -61,20 +67,21 @@ namespace Freeserf.Network
         public INetworkData Parse(byte[] rawData, ref int offset)
         {
             if (rawData.Length - offset == 2)
-                throw new ExceptionFreeserf("Empty ssync data received.");
+                throw new ExceptionFreeserf("Empty sync data received.");
 
             if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"Sync data length must be {Size}.");
 
-            GameTime = BitConverter.ToUInt32(rawData, offset + 2);
-            int dataSize = (int)(BitConverter.ToUInt32(rawData, offset + 6) & 0x7fffffff);
-            Size = 10 + dataSize;
+            MessageIndex = rawData[offset + 2];
+            GameTime = BitConverter.ToUInt32(rawData, offset + 3);
+            int dataSize = (int)(BitConverter.ToUInt32(rawData, offset + 7) & 0x7fffffff);
+            Size = 11 + dataSize;
 
             if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"Sync data length must be {Size}.");
 
             SerializedData = new byte[dataSize];
-            Buffer.BlockCopy(rawData, offset + 10, SerializedData, 0, SerializedData.Length);
+            Buffer.BlockCopy(rawData, offset + 11, SerializedData, 0, SerializedData.Length);
 
             offset += Size;
 
@@ -86,6 +93,7 @@ namespace Freeserf.Network
             List<byte> rawData = new List<byte>(Size);
 
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
+            rawData.Add(MessageIndex);
             rawData.AddRange(BitConverter.GetBytes(GameTime));
             rawData.AddRange(BitConverter.GetBytes((UInt32)SerializedData.Length));
             rawData.AddRange(SerializedData);

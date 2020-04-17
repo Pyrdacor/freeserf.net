@@ -280,7 +280,7 @@ namespace Freeserf.Network
         private const int MinDataSize = 9;
         public NetworkDataType Type => NetworkDataType.UserActionData;
 
-        public byte Number
+        public byte MessageIndex
         {
             get;
             private set;
@@ -311,7 +311,7 @@ namespace Freeserf.Network
 
         private UserActionData(byte number, uint gameTime, UserAction userAction, byte[] parameters)
         {
-            Number = number;
+            MessageIndex = number;
             GameTime = gameTime;
             UserAction = userAction;
             Parameters = parameters;
@@ -324,7 +324,7 @@ namespace Freeserf.Network
             if (rawData.Length - offset < MinDataSize)
                 throw new ExceptionFreeserf($"User action data length must be at least {MinDataSize}.");
 
-            Number = rawData[offset + 2];
+            MessageIndex = rawData[offset + 2];
             GameTime = BitConverter.ToUInt32(rawData, offset + 3);
             UserAction = (UserAction)rawData[offset + 7];
             int parameterByteCount = rawData[offset + 8];
@@ -348,7 +348,7 @@ namespace Freeserf.Network
         {
             List<byte> rawData = new List<byte>(Size);
 
-            rawData.Add(Number);
+            rawData.Add(MessageIndex);
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
             rawData.AddRange(BitConverter.GetBytes(GameTime));
             rawData.AddRange(BitConverter.GetBytes((byte)UserAction));
@@ -761,7 +761,7 @@ namespace Freeserf.Network
         /// <summary>
         /// Applies a user action to the game.
         /// 
-        /// Note that bad state has to be cought before.
+        /// Note that bad state has to be caught before.
         /// I.e. user input disallowing or game pause.
         /// </summary>
         public ResponseType ApplyToGame(Game game, Player source)
