@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf.Network
 {
@@ -459,7 +460,7 @@ namespace Freeserf.Network
         {
             int numDirectionPairEntries = ((int)road.Length + 1) / 2;
             var directionPairs = new byte[numDirectionPairEntries];
-            var roadDirections = road.Directions.ToArray();
+            var roadDirections = road.Directions.Reverse().ToArray();
 
             for (int i = 0; i < numDirectionPairEntries; ++i)
             {
@@ -477,7 +478,8 @@ namespace Freeserf.Network
                         road.StartPosition,
                         game.GetFlagAtPosition(road.StartPosition).Index,
                         road.EndPosition,
-                        endFlagWasJustCreated ? 0u : game.GetFlagAtPosition(road.EndPosition).Index
+                        endFlagWasJustCreated ? 0u : game.GetFlagAtPosition(road.EndPosition).Index,
+                        (byte)(road.Length - 1)
                     ),
                     directionPairs
                 )
@@ -518,12 +520,12 @@ namespace Freeserf.Network
             return result.ToArray();
         }
 
-        private static byte[] MergeParameters(byte[] parameters1, params object[] parameters2)
+        private static byte[] MergeParameters(byte[] parameters1, byte[] parameters2)
         {
             var result = new List<byte>(parameters1.Length + 20);
 
             result.AddRange(parameters1);
-            result.AddRange(CreateParameters(parameters2));
+            result.AddRange(parameters2);
 
             return result.ToArray();
         }
@@ -879,7 +881,7 @@ namespace Freeserf.Network
                             road.Start(startFlagPosition);
                             for (int i = 0; i < positionsInBetween + 1; ++i)
                             {
-                                var direction = (Direction)(Parameters[17 + i / 2] >> ((1 - (i % 2)) * 4));
+                                var direction = (Direction)((Parameters[17 + i / 2] >> ((1 - (i % 2)) * 4)) & 0x0f);
 
                                 if (direction == Direction.None)
                                     return ResponseType.BadRequest;
