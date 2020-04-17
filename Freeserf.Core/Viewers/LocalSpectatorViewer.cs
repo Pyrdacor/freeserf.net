@@ -41,13 +41,13 @@ namespace Freeserf
             if (previousViewer == null)
             {
                 Init();
-                MainInterface = new Interface(renderView, audioInterface, this);
+                MainInterface = new Interface(renderView, audioInterface, gui, this);
                 MainInterface.OpenGameInit();
             }
             else
             {
                 if (previousViewer.MainInterface.GetType() != typeof(Interface))
-                    MainInterface = new Interface(renderView, audioInterface, this);
+                    MainInterface = new Interface(renderView, audioInterface, gui, this);
                 else
                     MainInterface = previousViewer.MainInterface;
 

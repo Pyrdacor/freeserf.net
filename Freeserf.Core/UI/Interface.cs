@@ -108,6 +108,7 @@ namespace Freeserf.UI
 
         public IRenderView RenderView { get; } = null;
         public Audio.IAudioInterface AudioInterface { get; } = null;
+        public Network.INetworkDataHandler NetworkDataHandler { get; } = null;
         public Viewport Viewport { get; private set; } = null;
         public PanelBar PanelBar { get; private set; } = null;
         public PopupBox PopupBox { get; private set; } = null;
@@ -123,12 +124,13 @@ namespace Freeserf.UI
         public Network.ILocalServer Server { get; internal set; } = null;
         public Network.ILocalClient Client { get; internal set; } = null;
 
-        public Interface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer)
+        public Interface(IRenderView renderView, Audio.IAudioInterface audioInterface, Network.INetworkDataHandler networkDataHandler, Viewer viewer)
             : base(renderView, audioInterface)
         {
             RenderView = renderView;
             AudioInterface = audioInterface;
-            Viewer = viewer;
+            NetworkDataHandler = networkDataHandler;
+            Viewer = viewer; 
 
             TextRenderer = new TextRenderer(renderView);
 
@@ -1553,7 +1555,7 @@ namespace Freeserf.UI
     internal class ServerInterface : Interface
     {
         public ServerInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Network.ILocalServer server)
-            : base(renderView, audioInterface, viewer)
+            : base(renderView, audioInterface, server, viewer)
         {
             Server = server;
         }
@@ -1582,7 +1584,7 @@ namespace Freeserf.UI
     internal class RemoteInterface : Interface
     {
         public RemoteInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Network.ILocalClient client)
-            : base(renderView, audioInterface, viewer)
+            : base(renderView, audioInterface, client, viewer)
         {
             Client = client;
         }

@@ -932,6 +932,7 @@ namespace Freeserf.UI
                     serverList.Displayed = false;
                     SetRedraw();
                     Server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", customMission); // TODO: name should be editable
+                    Server.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
                     Server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, customMission.MapSize, randomInput.Text, ServerGameInfo.Players);
                     Server.ClientJoined += Server_ClientJoined;
                     Server.ClientLeft += Server_ClientLeft;
@@ -992,10 +993,11 @@ namespace Freeserf.UI
                                         if (Client == null)
                                         {
                                             Client = Network.Network.DefaultClientFactory.CreateLocal();
+                                            Client.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
                                             Client.Disconnected += Client_Disconnected;
                                             Client.LobbyDataUpdated += Client_LobbyDataUpdated;
                                             Client.GameStarted += Client_GameStarted;
-                                        }
+                                        }                                        
 
                                         lock (Client)
                                         {

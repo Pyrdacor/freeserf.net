@@ -75,6 +75,7 @@ namespace Freeserf
         public event EventHandler SystemKeyPress;
         public event EventHandler StopDrag;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
+        public Network.INetworkDataReceiver NetworkDataReceiver { get; set; }
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
             DeviceType deviceType = DeviceType.Desktop,
@@ -635,9 +636,10 @@ namespace Freeserf
             }
         }
 
-        public void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver)
+        public void UpdateNetworkEvents()
         {
-            gui.UpdateNetworkEvents(networkDataReceiver);
+            gui.NetworkDataReceiver = NetworkDataReceiver;
+            gui.UpdateNetworkEvents();
         }
     }
 }

@@ -32,7 +32,6 @@ namespace Freeserf.Network
         TcpClient client = null;
         RemoteServer server = null;
         DateTime lastServerHeartbeat = DateTime.MinValue;
-        INetworkDataReceiver networkDataReceiver = null;
         ConnectionObserver connectionObserver = null;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
@@ -64,6 +63,8 @@ namespace Freeserf.Network
         public IRemoteServer Server => server;
 
         public bool Connected => client != null && client.Connected;
+
+        public INetworkDataReceiver NetworkDataReceiver { get; set; }
 
         public LobbyData LobbyData
         {
@@ -159,11 +160,8 @@ namespace Freeserf.Network
             RequestGameStateUpdate();
         }
 
-        public void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver)
+        public void UpdateNetworkEvents()
         {
-            if (this.networkDataReceiver != networkDataReceiver)
-                this.networkDataReceiver = networkDataReceiver;
-
             void handleReceivedData(IRemote source, INetworkData data, ResponseHandler responseHandler)
             {
                 if (!(source is IRemoteServer server))
@@ -176,7 +174,7 @@ namespace Freeserf.Network
                 ProcessData(server, data, responseHandler);
             }
 
-            networkDataReceiver.ProcessReceivedData(handleReceivedData);
+            NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
         }
 
         void ProcessData(IRemoteServer server, INetworkData networkData, ResponseHandler responseHandler)
@@ -218,7 +216,7 @@ namespace Freeserf.Network
             // TODO: handle client states
             lastServerHeartbeat = DateTime.UtcNow;
 
-            if (networkDataReceiver == null)
+            if (NetworkDataReceiver == null)
             {
                 Log.Error.Write(ErrorSystemType.Application, "Network data receiver is not set up.");
                 Disconnect();                
@@ -237,11 +235,11 @@ namespace Freeserf.Network
                         case NetworkDataType.Request:
                         case NetworkDataType.LobbyData:
                         case NetworkDataType.SyncData:
-                            networkDataReceiver.Receive(server, parsedData, (ResponseType responseType) => SendResponse(parsedData.MessageIndex, responseType));
+                            NetworkDataReceiver.Receive(server, parsedData, (ResponseType responseType) => SendResponse(parsedData.MessageIndex, responseType));
                             break;
                         case NetworkDataType.Response:
                         case NetworkDataType.InSync:
-                            networkDataReceiver.Receive(server, parsedData, null);
+                            NetworkDataReceiver.Receive(server, parsedData, null);
                             break;
                         case NetworkDataType.UserActionData:
                             Log.Error.Write(ErrorSystemType.Network, "User actions can't be send to a client.");

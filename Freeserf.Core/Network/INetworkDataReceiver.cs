@@ -16,6 +16,8 @@
 
     public interface INetworkDataHandler
     {
-        void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver);
+        INetworkDataReceiver NetworkDataReceiver { get; set; }
+
+        void UpdateNetworkEvents();
     }
 }

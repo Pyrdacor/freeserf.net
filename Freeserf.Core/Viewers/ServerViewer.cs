@@ -35,6 +35,7 @@ namespace Freeserf
             // Note: All clients must be setup at game start. Clients can not join during the game.
             // Note: There may be more than 3 clients because of spectators!
             server = previousViewer.MainInterface.Server;
+            server.NetworkDataReceiver = previousViewer.MainInterface.NetworkDataHandler.NetworkDataReceiver;
 
             Init();
             MainInterface = new ServerInterface(renderView, audioInterface, this, server);

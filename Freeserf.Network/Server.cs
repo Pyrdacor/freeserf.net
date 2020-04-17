@@ -100,7 +100,6 @@ namespace Freeserf.Network
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
         TcpListener listener = null;
-        INetworkDataReceiver networkDataReceiver = null;
         LobbyServerInfo lobbyServerInfo = null;
         readonly List<LobbyPlayerInfo> lobbyPlayerInfo = new List<LobbyPlayerInfo>();
         readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
@@ -156,6 +155,8 @@ namespace Freeserf.Network
         {
             get;
         }
+
+        public INetworkDataReceiver NetworkDataReceiver { get; set; }
 
         public List<IRemoteClient> Clients => clients.Keys.ToList();
 
@@ -283,11 +284,8 @@ namespace Freeserf.Network
             State = ServerState.Outro;
         }
 
-        public void UpdateNetworkEvents(INetworkDataReceiver networkDataReceiver)
+        public void UpdateNetworkEvents()
         {
-            if (this.networkDataReceiver != networkDataReceiver)
-                this.networkDataReceiver = networkDataReceiver;
-
             void handleReceivedData(IRemote source, INetworkData data, ResponseHandler responseHandler)
             {
                 if (!(source is IRemoteClient client))
@@ -300,7 +298,7 @@ namespace Freeserf.Network
                 ProcessData(client, data, responseHandler);
             }
 
-            networkDataReceiver.ProcessReceivedData(handleReceivedData);
+            NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
         }
 
         Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
@@ -354,7 +352,7 @@ namespace Freeserf.Network
 
         void HandleData(RemoteClient client, byte[] data)
         {
-            if (networkDataReceiver == null)
+            if (NetworkDataReceiver == null)
                 throw new ExceptionFreeserf(ErrorSystemType.Application, "Network data receiver is not set up.");
 
             try
@@ -383,7 +381,7 @@ namespace Freeserf.Network
                                     throw new ExceptionFreeserf("Request expected.");
                                 }
 
-                                networkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
+                                NetworkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
                                 break;
                             }
                         case ServerState.Loading:
@@ -399,7 +397,7 @@ namespace Freeserf.Network
                                 // client sends this when he is ready
                                 if (request.Request == Request.StartGame)
                                 {
-                                    networkDataReceiver.Receive(client, request, null);                                    
+                                    NetworkDataReceiver.Receive(client, request, null);                                    
                                     break;
                                 }
                                 else
@@ -409,7 +407,7 @@ namespace Freeserf.Network
                             {
                                 if (networkData.Type == NetworkDataType.Request || networkData.Type == NetworkDataType.UserActionData)
                                 {
-                                    networkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
+                                    NetworkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
                                 }
                                 else
                                 {
@@ -864,7 +862,8 @@ namespace Freeserf.Network
 
         public void Send(byte[] rawData)
         {
-            localClient.GetStream().Write(rawData, 0, rawData.Length);
+            if (localClient != null && localClient.Connected)
+                localClient.GetStream().Write(rawData, 0, rawData.Length);
         }
     }
 
