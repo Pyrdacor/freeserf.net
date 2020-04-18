@@ -90,10 +90,10 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
-                toolPriorities.Dirty = false;
-                flagPriorities.Dirty = false;
-                inventoryPriorities.Dirty = false;
-                knightOccupation.Dirty = false;
+                toolPriorities.ResetDirtyFlag();
+                flagPriorities.ResetDirtyFlag();
+                inventoryPriorities.ResetDirtyFlag();
+                knightOccupation.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }

@@ -34,7 +34,7 @@ namespace Freeserf
             lock (dirtyLock)
             {
                 if (stateData != null)
-                    stateData.Dirty = false;
+                    stateData.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }

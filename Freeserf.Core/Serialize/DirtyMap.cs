@@ -35,7 +35,7 @@ namespace Freeserf.Serialize
 
     public class DirtyMap<TKey, TValue> : IDirtyMap, IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IComparable where TValue : IComparable
     {
-        Dictionary<TKey, TValue> map = null;
+        readonly Dictionary<TKey, TValue> map = null;
 
         public DirtyMap()
         {
@@ -49,17 +49,26 @@ namespace Freeserf.Serialize
 
         public TValue this[TKey key]
         {
-            get => map[key];
+            get
+            {
+                lock (map)
+                {
+                    return map[key];
+                }
+            }
             set
             {
-                if ((map[key] == null && value != null) || value is State || map[key].CompareTo(value) != 0)
+                lock (map)
                 {
-                    map[key] = value;
-
-                    if (!Dirty)
+                    if ((map[key] == null && value != null) || value is State || map[key].CompareTo(value) != 0)
                     {
-                        Dirty = true;
-                        GotDirty?.Invoke(this, EventArgs.Empty);
+                        map[key] = value;
+
+                        if (!Dirty)
+                        {
+                            Dirty = true;
+                            GotDirty?.Invoke(this, EventArgs.Empty);
+                        }
                     }
                 }
             }
@@ -71,55 +80,85 @@ namespace Freeserf.Serialize
             set;
         } = false;
 
-        public int Count => map.Count;
+        public int Count
+        {
+            get
+            {
+                lock (map)
+                {
+                    return map.Count;
+                }
+            }
+        }
 
         public event EventHandler GotDirty;
 
         public void Add(TKey key, TValue value)
         {
-            map.Add(key, value);
+            lock (map)
+            {
+                map.Add(key, value);
+            }
         }
 
         public bool ContainsKey(TKey key)
         {
-            return map.ContainsKey(key);
+            lock (map)
+            {
+                return map.ContainsKey(key);
+            }
         }
 
         public bool Remove(TKey key)
         {
-            return map.Remove(key);
+            lock (map)
+            {
+                return map.Remove(key);
+            }
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            return map.TryGetValue(key, out value);
+            lock (map)
+            {
+                return map.TryGetValue(key, out value);
+            }
         }
 
         public void Initialize(Array values)
         {
-            map.Clear();
-
-            foreach (var value in values)
+            lock (map)
             {
-                var entry = (KeyValuePair<object, object>)value;
-                map.Add((TKey)entry.Key, (TValue)entry.Value);
+                map.Clear();
+
+                foreach (var value in values)
+                {
+                    var entry = (KeyValuePair<object, object>)value;
+                    map.Add((TKey)entry.Key, (TValue)entry.Value);
+                }
             }
         }
 
         public static implicit operator Dictionary<TKey, TValue>(DirtyMap<TKey, TValue> map)
         {
-            // TODO make this readonly/a copy?
-            return map.map;
+            lock (map)
+            {
+                // TODO make this readonly/a copy?
+                return map.map;
+            }
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            return map.GetEnumerator();
+            lock (map)
+            {
+                return map.GetEnumerator();
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

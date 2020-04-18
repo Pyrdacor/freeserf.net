@@ -29,15 +29,18 @@ namespace Freeserf.Serialize
     internal interface IDirtyArray : IEnumerable
     {
         bool Dirty { get; }
+        IReadOnlyList<int> DirtyIndices { get; }
         int Length { get; }
         event EventHandler GotDirty;
-        void Initialize(Array values);
+        object Get(int index);
+        void Set(int index, object value);
     }
 
     public class DirtyArray<T> : IDirtyArray, IEnumerable<T> where T : IComparable
     {
         T[] array = null;
-
+        readonly List<int> dirtyIndices = new List<int>();
+  
         public DirtyArray()
         {
             array = new T[0];
@@ -53,6 +56,10 @@ namespace Freeserf.Serialize
             array = values;
         }
 
+        public object Get(int index) => this[index];
+
+        public void Set(int index, object value) => this[index] = (T)value;
+
         public T this[int index]
         {
             get => array[index];
@@ -62,11 +69,13 @@ namespace Freeserf.Serialize
                 {
                     array[index] = value;
 
-                    if (!Dirty)
-                    {
-                        Dirty = true;
+                    bool wasDirty = Dirty;
+
+                    if (!dirtyIndices.Contains(index))
+                        dirtyIndices.Add(index);
+
+                    if (!wasDirty)
                         GotDirty?.Invoke(this, EventArgs.Empty);
-                    }
                 }
             }
         }
@@ -77,11 +86,14 @@ namespace Freeserf.Serialize
             set => this[(int)index] = value;
         }
 
-        public bool Dirty
+        public bool Dirty => dirtyIndices.Count != 0;
+
+        public IReadOnlyList<int> DirtyIndices => dirtyIndices.AsReadOnly();
+
+        public void ResetDirtyFlag()
         {
-            get;
-            set;
-        } = false;
+            dirtyIndices.Clear();
+        }
 
         public int Length => array.Length;
 
@@ -90,17 +102,6 @@ namespace Freeserf.Serialize
         public void RemoveGotDirtyHandlers()
         {
             GotDirty = null;
-        }
-
-        public void Initialize(Array values)
-        {
-            if (array == null || array.Length == 0)
-                array = new T[values.Length];
-            else if (array.Length != values.Length)
-                throw new ExceptionFreeserf("Invalid number of dirty array elements");
-
-            for (int i = 0; i < values.Length; ++i)
-                array[i] = (T)values.GetValue(i);
         }
 
         public static implicit operator T[](DirtyArray<T> array)

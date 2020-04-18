@@ -2123,7 +2123,7 @@ namespace Freeserf
         }
 
         public bool Dirty => state.Dirty;
-        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
+        public IReadOnlyList<string> DirtyProperties => Serialize.State.DirtyState(nameof(state), state.Dirty);
 
         public uint Player
         {

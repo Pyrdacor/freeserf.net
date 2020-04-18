@@ -5,6 +5,7 @@ using System.Linq;
 namespace Freeserf
 {
     using Serialize;
+    using static Serialize.StateSerializer;
     using GameTime = UInt32;
     using MapPos = UInt32;
     using word = UInt16;
@@ -13,9 +14,8 @@ namespace Freeserf
     using Inventories = Collection<Inventory>;
     using Buildings = Collection<Building>;
     using Serfs = Collection<Serf>;
-    using Players = Collection<Player>;
+    using Players = Collection<Player>;    
 
-    // TODO: map state
     [DataClass]
     internal class GameState : State
     {
@@ -172,49 +172,6 @@ namespace Freeserf
     /// </summary>
     public static class GameStateSerializer
     {
-        static uint ReadCount(Stream stream)
-        {
-            ulong count = 0;
-            int shift = 0;
-
-            while (true)
-            {
-                int b = stream.ReadByte();
-
-                if (b == -1)
-                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Invalid game state data.");
-
-                count |= (((ulong)b & 0x7ful) << shift);
-
-                if (count > uint.MaxValue)
-                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Invalid game state data.");
-
-                if ((b & 0x80) == 0)
-                    break;
-
-                shift += 7;
-            }
-
-            return (uint)count;
-        }
-
-        static void WriteCount(Stream stream, uint count)
-        {
-            do
-            {
-                if ((count & 0x80) == 0)
-                {
-                    stream.WriteByte((byte)count);
-                    break;
-                }
-                else
-                {
-                    stream.WriteByte((byte)(count & 0x7f));
-                    count >>= 7;
-                }
-            } while (count != 0);
-        }
-
         static void SerializeCollection<T>(Stream stream, Collection<T> collection, bool full) where T : class, IGameObject, IState
         {
             WriteCount(stream, (uint)collection.FreeIndices.Count);
@@ -228,7 +185,7 @@ namespace Freeserf
             }
             foreach (var obj in collection)
             {
-                StateSerializer.SerializeWithoutHeader(stream, obj, full);
+                SerializeWithoutHeader(stream, obj, full);
             }
         }
 
@@ -271,7 +228,7 @@ namespace Freeserf
             for (int i = 0; i < objectIndices.Length; ++i)
             {
                 var updatedObject = collection.GetOrInsert(objectIndices[i]);
-                StateSerializer.DeserializeWithoutHeader(updatedObject, stream);
+                DeserializeWithoutHeader(updatedObject, stream);
             }
 
             // 4. Update free indices again
@@ -301,7 +258,7 @@ namespace Freeserf
 
         public static void DeserializeInto(Game game, Stream stream, bool leaveOpen)
         {
-            StateSerializer.Deserialize(game, stream, true);
+            Deserialize(game, stream, true);
 
             DeserializeIntoCollection(stream, game.Players, (Player player) => throw new ExceptionFreeserf("A player can't be removed from a game."));
             DeserializeIntoCollection(stream, game.Flags, (Flag flag) => game.DeleteFlag(flag));

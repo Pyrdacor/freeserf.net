@@ -27,6 +27,12 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
         public event EventHandler GotDirty;
 
+        public IReadOnlyList<int> DirtyIndices => throw new NotImplementedException();
+
+        public object Get(int index) => throw new NotImplementedException();
+
+        public void Set(int index, object value) => throw new NotImplementedException();
+
         public int CompareTo(object obj)
         {
             if (obj == null || !(obj is InvalidDirtyArray))

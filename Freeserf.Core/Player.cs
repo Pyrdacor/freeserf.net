@@ -121,9 +121,11 @@ namespace Freeserf
         {
             get
             {
-                var dirtyProperties = new List<string>(settings.DirtyProperties.Count + state.DirtyProperties.Count);
-                dirtyProperties.AddRange(settings.DirtyProperties);
-                dirtyProperties.AddRange(state.DirtyProperties);
+                var dirtyProperties = new List<string>(2);
+                if (settings.Dirty)
+                    dirtyProperties.Add(nameof(settings));
+                if (state.Dirty)
+                    dirtyProperties.Add(nameof(state));
                 return dirtyProperties;
             }
         }

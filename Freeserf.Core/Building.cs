@@ -161,7 +161,7 @@ namespace Freeserf
         }
 
         public bool Dirty => state.Dirty;
-        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
+        public IReadOnlyList<string> DirtyProperties => State.DirtyState(nameof(state), state.Dirty);
 
         /// <summary>
         /// Map position of the building

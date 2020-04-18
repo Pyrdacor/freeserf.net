@@ -30,7 +30,7 @@ namespace Freeserf
             {
                 Resources.Dirty = false;
                 Serfs.Dirty = false;
-                OutQueue.Dirty = false;
+                OutQueue.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }

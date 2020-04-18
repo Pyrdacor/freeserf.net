@@ -136,10 +136,10 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
-                serfCounts.Dirty = false;
-                resourceCounts.Dirty = false;
-                completedBuildingCount.Dirty = false;
-                incompleteBuildingCount.Dirty = false;
+                serfCounts.ResetDirtyFlag();
+                resourceCounts.ResetDirtyFlag();
+                completedBuildingCount.ResetDirtyFlag();
+                incompleteBuildingCount.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }

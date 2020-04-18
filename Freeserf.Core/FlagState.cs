@@ -200,9 +200,9 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
-                FlagPaths.Dirty = false;
-                OtherEndpoints.Dirty = false;
-                OtherEndpointPaths.Dirty = false;
+                FlagPaths.ResetDirtyFlag();
+                OtherEndpoints.ResetDirtyFlag();
+                OtherEndpointPaths.ResetDirtyFlag();
                 // incompleteBuildingCount.Dirty = false;
 
                 ResetDirtyFlagUnlocked();

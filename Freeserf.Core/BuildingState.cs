@@ -68,8 +68,7 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
-                Stock.Dirty = false;
-
+                Stock.ResetDirtyFlag();
                 ResetDirtyFlagUnlocked();
             }
         }

@@ -71,6 +71,7 @@ using System.Linq;
 
 namespace Freeserf
 {
+    using Serialize;
     using MapPos = UInt32;
     using Directions = Stack<Direction>;
     using ChangeHandlers = List<MapHandler>;
@@ -309,7 +310,7 @@ namespace Freeserf
         internal abstract void OnRoadSegmentDeleted(MapPos position, Direction direction);
     }
 
-    internal class Map : IEquatable<Map>
+    internal class Map : IEquatable<Map>, IState
     {
         const int SAVE_MAP_TILE_SIZE = 16;
 
@@ -564,16 +565,67 @@ namespace Freeserf
 
         #endregion
 
-        public class LandscapeTile : IEquatable<LandscapeTile>
+        [DataClass]
+        public class LandscapeTile : Serialize.State, IEquatable<LandscapeTile>
         {
-            // Landscape filds
-            public uint Height = 0;
+            // Landscape fields
+            uint height = 0;
+            Minerals mineral = Minerals.None;
+            int resourceAmount = 0;
+            Object mapObject = Object.None;
+            [Ignore]
             public Terrain TypeUp = Terrain.Water0;
+            [Ignore]
             public Terrain TypeDown = Terrain.Water0;
-            public Minerals Mineral = Minerals.None;
-            public int ResourceAmount = 0;
-            // Mingled fields
-            public Object Object = Object.None;
+
+            public uint Height
+            {
+                get => height;
+                set
+                {
+                    if (height != value)
+                    {
+                        height = value;
+                        MarkPropertyAsDirty(nameof(Height));
+                    }
+                }
+            }
+            public Minerals Mineral
+            {
+                get => mineral;
+                set
+                {
+                    if (mineral != value)
+                    {
+                        mineral = value;
+                        MarkPropertyAsDirty(nameof(Mineral));
+                    }
+                }
+            }
+            public int ResourceAmount
+            {
+                get => resourceAmount;
+                set
+                {
+                    if (resourceAmount != value)
+                    {
+                        resourceAmount = value;
+                        MarkPropertyAsDirty(nameof(ResourceAmount));
+                    }
+                }
+            }
+            public Object Object
+            {
+                get => mapObject;
+                set
+                {
+                    if (mapObject != value)
+                    {
+                        mapObject = value;
+                        MarkPropertyAsDirty(nameof(Object));
+                    }
+                }
+            }
 
             public bool Equals(LandscapeTile other)
             {
@@ -602,28 +654,55 @@ namespace Freeserf
 
             public override int GetHashCode()
             {
-                unchecked // Overflow is fine, just wrap
-                {
-                    int hash = 17;
-
-                    hash = hash * 23 + Height.GetHashCode();
-                    hash = hash * 23 + TypeUp.GetHashCode();
-                    hash = hash * 23 + TypeDown.GetHashCode();
-                    hash = hash * 23 + Mineral.GetHashCode();
-                    hash = hash * 23 + ResourceAmount.GetHashCode();
-                    hash = hash * 23 + Object.GetHashCode();
-
-                    return hash;
-                }
+                return HashCode.Combine(Height, TypeUp, TypeDown, Mineral, ResourceAmount, Object);
             }
         }
 
-        public class UpdateState : IEquatable<UpdateState>
+        [DataClass]
+        public class UpdateState : State, IEquatable<UpdateState>
         {
-            public int RemoveSignsCounter = 0;
-            public ushort LastTick = 0;
-            public int Counter = 0;
+            int removeSignsCounter = 0;
+            ushort lastTick = 0;
+            int counter = 0;
+            [Ignore]
             public MapPos InitialPosition = 0;
+
+            public int RemoveSignsCounter
+            {
+                get => removeSignsCounter;
+                set
+                {
+                    if (removeSignsCounter != value)
+                    {
+                        removeSignsCounter = value;
+                        MarkPropertyAsDirty(nameof(RemoveSignsCounter));
+                    }
+                }
+            }
+            public ushort LastTick
+            {
+                get => lastTick;
+                set
+                {
+                    if (lastTick != value)
+                    {
+                        lastTick = value;
+                        MarkPropertyAsDirty(nameof(LastTick));
+                    }
+                }
+            }
+            public int Counter
+            {
+                get => counter;
+                set
+                {
+                    if (counter != value)
+                    {
+                        counter = value;
+                        MarkPropertyAsDirty(nameof(Counter));
+                    }
+                }
+            }
 
             public bool Equals(UpdateState other)
             {
@@ -650,27 +729,79 @@ namespace Freeserf
 
             public override int GetHashCode()
             {
-                unchecked // Overflow is fine, just wrap
-                {
-                    int hash = 17;
-
-                    hash = hash * 23 + RemoveSignsCounter.GetHashCode();
-                    hash = hash * 23 + LastTick.GetHashCode();
-                    hash = hash * 23 + Counter.GetHashCode();
-                    hash = hash * 23 + InitialPosition.GetHashCode();
-
-                    return hash;
-                }
+                return HashCode.Combine(RemoveSignsCounter, LastTick, Counter, InitialPosition);
             }
         }
 
-        class GameTile : IEquatable<GameTile>
+        [DataClass]
+        class GameTile : State, IEquatable<GameTile>
         {
-            public uint Serf = 0;
-            public uint Owner = 0;
-            public uint ObjectIndex = 0;
-            public byte Paths = 0;
-            public bool IdleSerf = false;
+            uint serf = 0;
+            uint owner = 0;
+            uint objectIndex = 0;
+            byte paths = 0;
+            bool idleSerf = false;
+
+            public uint Serf
+            {
+                get => serf;
+                set
+                {
+                    if (serf != value)
+                    {
+                        serf = value;
+                        MarkPropertyAsDirty(nameof(Serf));
+                    }
+                }
+            }
+            public uint Owner
+            {
+                get => owner;
+                set
+                {
+                    if (owner != value)
+                    {
+                        owner = value;
+                        MarkPropertyAsDirty(nameof(Owner));
+                    }
+                }
+            }
+            public uint ObjectIndex
+            {
+                get => objectIndex;
+                set
+                {
+                    if (objectIndex != value)
+                    {
+                        objectIndex = value;
+                        MarkPropertyAsDirty(nameof(ObjectIndex));
+                    }
+                }
+            }
+            public byte Paths
+            {
+                get => paths;
+                set
+                {
+                    if (paths != value)
+                    {
+                        paths = value;
+                        MarkPropertyAsDirty(nameof(Paths));
+                    }
+                }
+            }
+            public bool IdleSerf
+            {
+                get => idleSerf;
+                set
+                {
+                    if (idleSerf != value)
+                    {
+                        idleSerf = value;
+                        MarkPropertyAsDirty(nameof(IdleSerf));
+                    }
+                }
+            }
 
             public bool Equals(GameTile other)
             {
@@ -698,25 +829,39 @@ namespace Freeserf
 
             public override int GetHashCode()
             {
-                unchecked // Overflow is fine, just wrap
-                {
-                    int hash = 17;
-
-                    hash = hash * 23 + Serf.GetHashCode();
-                    hash = hash * 23 + Owner.GetHashCode();
-                    hash = hash * 23 + ObjectIndex.GetHashCode();
-                    hash = hash * 23 + Paths.GetHashCode();
-                    hash = hash * 23 + IdleSerf.GetHashCode();
-
-                    return hash;
-                }
+                return HashCode.Combine(Serf, Owner, ObjectIndex, Paths, IdleSerf);
             }
         }
 
+        public bool Dirty => updateState.Dirty || landscapeTiles.Dirty || gameTiles.Dirty;
+        public IReadOnlyList<string> DirtyProperties
+        {
+            get
+            {
+                var dirtyProperties = new List<string>(3);
+                if (updateState.Dirty)
+                    dirtyProperties.Add(nameof(updateState));
+                if (landscapeTiles.Dirty)
+                    dirtyProperties.Add(nameof(landscapeTiles));
+                if (gameTiles.Dirty)
+                    dirtyProperties.Add(nameof(gameTiles));
+                return dirtyProperties;
+            }
+        }
+        public void ResetDirtyFlag()
+        {
+            updateState.ResetDirtyFlag();
+            landscapeTiles.ResetDirtyFlag();
+            gameTiles.ResetDirtyFlag();
+        }
+
         public MapGeometry Geometry { get; }
-        LandscapeTile[] landscapeTiles;
-        readonly GameTile[] gameTiles;
+        [Data]
+        DirtyArray<LandscapeTile> landscapeTiles;
+        [Data]
+        DirtyArray<GameTile> gameTiles;
         readonly ushort regions;
+        [Data]
         UpdateState updateState = new UpdateState();
         readonly MapPos[] spiralPosPattern;
 
@@ -740,8 +885,8 @@ namespace Freeserf
 
             spiralPosPattern = new MapPos[295];
 
-            landscapeTiles = new LandscapeTile[(int)geometry.TileCount];
-            gameTiles = new GameTile[(int)geometry.TileCount];
+            landscapeTiles = new DirtyArray<LandscapeTile>((int)geometry.TileCount);
+            gameTiles = new DirtyArray<GameTile>((int)geometry.TileCount);
 
             for (int i = 0; i < (int)geometry.TileCount; ++i)
             {
@@ -1758,7 +1903,7 @@ namespace Freeserf
         // Copy tile data from map generator into map tile data. 
         public void InitTiles(MapGenerator generator)
         {
-            landscapeTiles = generator.GetLandscape();
+            landscapeTiles = new DirtyArray<LandscapeTile>(generator.GetLandscape());
 
             MapPos position = 0;
 

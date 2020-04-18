@@ -421,17 +421,24 @@ namespace Freeserf.Serialize
                     typeof(IDirtyMap).IsAssignableFrom(elementType))
                     throw new ExceptionFreeserf("DirtyArray and DirtyMap are not supported as elements of a DirtyArray.");
 
-                int length = reader.ReadInt32();
-                var array = Array.CreateInstance(elementType, length);
-                var dirtyArray = propertyValue as IDirtyArray;
+                uint length = ReadCount(reader.BaseStream);
+                uint serializedLength = ReadCount(reader.BaseStream);
 
-                for (int i = 0; i < length; ++i)
-                    array.SetValue(DeserializePropertyValue(reader, elementType, null), i);
+                if (serializedLength > length)
+                    throw new ExceptionFreeserf("Invalid dirty array data.");
 
-                if (dirtyArray == null)
-                    dirtyArray = (IDirtyArray)Activator.CreateInstance(type);
+                bool full = length == serializedLength;
 
-                dirtyArray.Initialize(array);
+                if (!(propertyValue is IDirtyArray dirtyArray))
+                    dirtyArray = (IDirtyArray)Activator.CreateInstance(type, (int)length);
+                else if (dirtyArray.Length != length)
+                    throw new ExceptionFreeserf("Invalid dirty array data.");
+
+                for (int i = 0; i < serializedLength; ++i)
+                {
+                    int index = full ? i : (int)ReadCount(reader.BaseStream);
+                    dirtyArray.Set(index, DeserializePropertyValue(reader, elementType, null));
+                }
 
                 return dirtyArray;
             }
@@ -560,12 +567,37 @@ namespace Freeserf.Serialize
             }
             else if (value is IDirtyArray)
             {
+                // First the lenght of the array.
+                // Then the number of serialized elements (0 - array length).
+                // Then each element is serialized:
+                // - If not all elements are serialized, the index of the element is serialized.
+                // - Then the element itself is serialized.
+
                 var array = value as IDirtyArray;
 
-                writer.Write(array.Length);
+                WriteCount(writer.BaseStream, (uint)array.Length);
 
-                foreach (var element in array)
-                    SerializePropertyValue(writer, element, full);
+                if (full)
+                {
+                    WriteCount(writer.BaseStream, (uint)array.Length);
+
+                    foreach (var element in array)
+                        SerializePropertyValue(writer, element, full);
+                }
+                else
+                {
+                    var dirtyIndices = array.DirtyIndices;
+                    bool allDirty = dirtyIndices.Count == array.Length;
+
+                    WriteCount(writer.BaseStream, (uint)dirtyIndices.Count);
+
+                    for (int i = 0; i < dirtyIndices.Count; ++i)
+                    {
+                        if (!allDirty)
+                            WriteCount(writer.BaseStream, (uint)dirtyIndices[i]);
+                        SerializePropertyValue(writer, array.Get(dirtyIndices[i]), full);
+                    }
+                }
             }
             else if (value is IDirtyMap)
             {
@@ -589,6 +621,49 @@ namespace Freeserf.Serialize
             {
                 throw new ExceptionFreeserf("Unsupport data type for state serialization: " + value.GetType().Name);
             }
+        }
+
+        public static uint ReadCount(Stream stream)
+        {
+            ulong count = 0;
+            int shift = 0;
+
+            while (true)
+            {
+                int b = stream.ReadByte();
+
+                if (b == -1)
+                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Invalid game state data.");
+
+                count |= (((ulong)b & 0x7ful) << shift);
+
+                if (count > uint.MaxValue)
+                    throw new ExceptionFreeserf(ErrorSystemType.Data, "Invalid game state data.");
+
+                if ((b & 0x80) == 0)
+                    break;
+
+                shift += 7;
+            }
+
+            return (uint)count;
+        }
+
+        public static void WriteCount(Stream stream, uint count)
+        {
+            do
+            {
+                if ((count & 0x80) == 0)
+                {
+                    stream.WriteByte((byte)count);
+                    break;
+                }
+                else
+                {
+                    stream.WriteByte((byte)(count & 0x7f));
+                    count >>= 7;
+                }
+            } while (count != 0);
         }
     }
 }

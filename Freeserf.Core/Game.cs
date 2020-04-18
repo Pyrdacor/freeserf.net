@@ -80,20 +80,33 @@ namespace Freeserf
         [Data]
         private readonly GameState state = new GameState();
 
-        internal GameState State => state;
-
         public bool Dirty => state.Dirty ||
+            Map.Dirty ||
             Players.Any(p => p.Dirty) ||
             Flags.Any(f => f.Dirty) ||
             Inventories.Any(i => i.Dirty) ||
             Buildings.Any(b => b.Dirty) ||
             Serfs.Any(s => s.Dirty);
 
-        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
+        public IReadOnlyList<string> DirtyProperties
+        {
+            get
+            {
+                // Note: The object collections are serialized
+                // separately in GameStateSerializer.
+                var dirtyProperties = new List<string>(2);
+                if (state.Dirty)
+                    dirtyProperties.Add(nameof(state));
+                if (Map.Dirty)
+                    dirtyProperties.Add(nameof(Map));
+                return dirtyProperties;
+            }
+        }
 
         public void ResetDirtyFlag()
         {
             state.ResetDirtyFlag();
+            Map.ResetDirtyFlag();
 
             foreach (var player in Players)
                 player.ResetDirtyFlag();
@@ -124,6 +137,7 @@ namespace Freeserf
         int birdSoundCounter;
         uint gameTimeTicksOfSecond = 0;
 
+        [Data]
         internal Map Map { get; private set; }
         internal uint MapGoldMoraleFactor { get; private set; }
         internal uint GoldTotal { get; private set; }

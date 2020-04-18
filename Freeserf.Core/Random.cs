@@ -107,7 +107,7 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
-                State.Dirty = false;
+                State.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }
