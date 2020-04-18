@@ -106,6 +106,7 @@ namespace Freeserf.Network
         readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
         readonly Dictionary<IRemoteClient, MultiplayerStatus> clientStatus = new Dictionary<IRemoteClient, MultiplayerStatus>();
         readonly Dictionary<IRemoteClient, DateTime> lastClientHeartbeats = new Dictionary<IRemoteClient, DateTime>();
+        DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat but only the broadcasted ones so no client is missed out.
         uint lastUserActionOrInSyncGameTime = 0;
 
         public LocalServer(string name, GameInfo gameInfo)
@@ -754,6 +755,8 @@ namespace Freeserf.Network
 
         private void Broadcast(BroadcastMethod method)
         {
+            lastOwnHearbeat = DateTime.UtcNow;
+
             foreach (var client in clients.ToList())
             {
                 if (client.Value.Connected)
@@ -831,9 +834,12 @@ namespace Freeserf.Network
             Broadcast((client) => client.SendGameStateUpdate(game));
         }
 
-        // TODO: call it!
-        private void BroadcastHeartbeat()
+        public void BroadcastHeartbeat()
         {
+            // Only send heartbeats every second.
+            if ((DateTime.UtcNow - lastOwnHearbeat).TotalSeconds < 1.0)
+                return;
+
             Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast heartbeat to {clients.Count} clients.");
 
             Broadcast((client) => client.SendHeartbeat());

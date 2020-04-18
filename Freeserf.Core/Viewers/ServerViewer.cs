@@ -55,10 +55,7 @@ namespace Freeserf
 
         public override void Update()
         {
-            foreach (var client in server.Clients)
-            {
-                client.SendHeartbeat();
-            }
+            server.BroadcastHeartbeat();
 
             base.Update();
         }

@@ -32,6 +32,7 @@ namespace Freeserf.Network
         TcpClient client = null;
         RemoteServer server = null;
         DateTime lastServerHeartbeat = DateTime.MinValue;
+        DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat!
         ConnectionObserver connectionObserver = null;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
@@ -346,32 +347,44 @@ namespace Freeserf.Network
 
         public void SendHeartbeatAsResponse(byte messageIndex)
         {
+            lastOwnHearbeat = DateTime.UtcNow;
             new Heartbeat(messageIndex, (byte)PlayerIndex).Send(server);
         }
 
         public void SendHeartbeat()
         {
+            // Only send heartbeat every second
+            if ((DateTime.UtcNow - lastOwnHearbeat).TotalSeconds < 1.0)
+                return;
+
+            lastOwnHearbeat = DateTime.UtcNow;
             new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(server);
         }
 
         public void SendDisconnect()
         {
+            lastOwnHearbeat = DateTime.UtcNow;
             new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(server);
         }
 
         private void SendStartGameRequest()
         {
+            lastOwnHearbeat = DateTime.UtcNow;
             new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(server);
         }
 
         public void SendResponse(byte messageIndex, ResponseType responseType)
         {
             if (messageIndex != Global.SpontaneousMessage)
+            {
+                lastOwnHearbeat = DateTime.UtcNow;
                 new ResponseData(messageIndex, responseType).Send(server);
+            }
         }
 
         public void SendUserAction(UserActionData userAction)
         {
+            lastOwnHearbeat = DateTime.UtcNow;
             userAction.Send(server);
         }
 
