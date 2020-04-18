@@ -106,7 +106,7 @@ namespace Freeserf
         public uint Supplies { get; set; }
         public uint Reproduction { get; set; }
         public PlayerFace Face { get; private set; }
-        public Color Color { get; set; }
+        internal Color Color { get; set; }
         internal Position CastlePosition { get; set; }
 
         internal PlayerInfo(Random random)

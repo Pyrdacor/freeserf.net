@@ -9,19 +9,28 @@ namespace Freeserf
     using MapPos = UInt32;
     using word = UInt16;
     using dword = UInt32;
+    using Flags = Collection<Flag>;
+    using Inventories = Collection<Inventory>;
+    using Buildings = Collection<Building>;
+    using Serfs = Collection<Serf>;
+    using Players = Collection<Player>;
 
     // TODO: map state
     [DataClass]
     internal class GameState : State
     {
+        [Ignore]
+        public const int DEFAULT_GAME_SPEED = 2;
+
         private word tick = 0;
         private dword constTick = 0;
         private word gameTimeTicksOfSecond = 0;
         private GameTime gameTime = 0; // in seconds
+        private dword gameSpeed = DEFAULT_GAME_SPEED;
         private Random random = new Random();
 
         // TODO: add properties for those later
-        private dword gameStatsCounter;
+        /*private dword gameStatsCounter;
         private dword historyCounter;
         private word flagSearchCounter;
         private dword goldTotal = 0;
@@ -29,9 +38,9 @@ namespace Freeserf
         private int knightMoraleCounter = 0;
         private int inventoryScheduleCounter = 0;
         // TODO: I'm not sure what the history stuff is actually doing
-        private int[] playerHistoryIndex = new int[4];
-        private int[] playerHistoryCounter = new int[3];
-        private int resourceHistoryIndex;
+        private DirtyArray<int> playerHistoryIndex = new DirtyArray<int>(4);
+        private DirtyArray<int> playerHistoryCounter = new DirtyArray<int>(3);
+        private int resourceHistoryIndex;*/
 
         /// <summary>
         /// Current game tick (game speed dependent)
@@ -94,6 +103,21 @@ namespace Freeserf
             }
         }
         /// <summary>
+        /// Speed of game.
+        /// </summary>
+        public dword GameSpeed
+        {
+            get => gameSpeed;
+            set
+            {
+                if (gameSpeed != value)
+                {
+                    gameSpeed = value;
+                    MarkPropertyAsDirty(nameof(GameSpeed));
+                }
+            }
+        }
+        /// <summary>
         /// Random number generator.
         /// </summary>
         public Random Random
@@ -108,6 +132,37 @@ namespace Freeserf
                 }
             }
         }
+
+        // TODO ...
+    }
+
+    public class SavedGameState
+    {
+        readonly Game game;
+
+        internal SavedGameState(Game game)
+        {
+            this.game = game;
+        }
+
+        public static SavedGameState FromGame(Game game)
+        {
+            var gameCopy = new Game();
+            GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true));
+            return new SavedGameState(gameCopy);
+        }
+
+        public static SavedGameState UpdateGameAndLastState(Game game, SavedGameState lastState, byte[] updateData)
+        {
+            // Update last state with update.
+            GameStateSerializer.DeserializeInto(lastState.game, updateData);
+            // Serialize the updated state.
+            var newState = GameStateSerializer.SerializeFrom(lastState.game, true);
+            // Replace the current game state with the updated state.
+            GameStateSerializer.DeserializeInto(game, newState);
+            // Return the new state of the game.
+            return FromGame(game);
+        }
     }
 
     /// <summary>
@@ -115,7 +170,7 @@ namespace Freeserf
     /// and states for players, inventories,
     /// buildings, flags and serfs.
     /// </summary>
-    internal static class GameStateSerializer
+    public static class GameStateSerializer
     {
         static uint ReadCount(Stream stream)
         {

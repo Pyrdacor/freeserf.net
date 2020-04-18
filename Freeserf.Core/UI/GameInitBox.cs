@@ -1316,7 +1316,7 @@ namespace Freeserf.UI
                 while (ServerGameInfo.PlayerCount >= 4)
                 {
                     // joined too late -> kick player
-                    server.DisconnectClient(client);
+                    server.DisconnectClient(client, true);
                 }
 
                 uint supplies = checkBoxSameValues.Checked ? ServerGameInfo.GetPlayer(0u).Supplies : 20u;
@@ -1485,7 +1485,7 @@ namespace Freeserf.UI
                             if (gameType == GameType.MultiplayerServer && !playerIsAI[playerIndex])
                             {
                                 // kick player
-                                Server.DisconnectClient(playerClientMapping[playerIndex]);
+                                Server.DisconnectClient(playerClientMapping[playerIndex], true);
                             }
 
                             ServerGameInfo.RemovePlayer(playerIndex);

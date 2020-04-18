@@ -31,7 +31,7 @@ namespace Freeserf.Network
         uint PlayerIndex { get; }
 
         void SendResponse(byte messageIndex, ResponseType responseType);
-        void SendHeartbeat();
+        void SendHeartbeat(byte messageIndex);
         void SendDisconnect();
     }
 
@@ -64,7 +64,7 @@ namespace Freeserf.Network
         ILocalServer Server { get; }
 
         void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players);
-        void SendGameStateUpdate(Game game);
+        void SendGameStateUpdate(byte messageIndex, Game game, bool fullState);
         void SendInSyncMessage(UInt32 gameTime);
     }
 

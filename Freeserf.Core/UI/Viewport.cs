@@ -501,6 +501,8 @@ namespace Freeserf.UI
                             {
                                 if (interf.Viewer.ViewerType == Viewer.Type.Client)
                                     interf.Client.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
+                                else if (interf.Viewer.ViewerType == Viewer.Type.Server)
+                                    interf.Server.GameDirty = true;
 
                                 interf.BuildRoad();
                                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
@@ -524,6 +526,8 @@ namespace Freeserf.UI
                     {
                         if (interf.Viewer.ViewerType == Viewer.Type.Client)
                             interf.Client.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
+                        else if (interf.Viewer.ViewerType == Viewer.Type.Server)
+                            interf.Server.GameDirty = true;
 
                         interf.BuildRoad();
                     }

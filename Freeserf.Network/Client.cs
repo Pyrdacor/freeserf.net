@@ -36,10 +36,17 @@ namespace Freeserf.Network
         ConnectionObserver connectionObserver = null;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
+        SavedGameState lastSavedGameState = null;
 
         public LocalClient()
         {
             Ip = Host.GetLocalIpAddress();
+
+            if (Ip == null)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Unable to retrieve local IP.");
+                Ip = IPAddress.Loopback; // Is this ok or should we throw here?
+            }
         }
 
         public IPAddress Ip
@@ -203,11 +210,38 @@ namespace Freeserf.Network
                         break;
                     }
                 case NetworkDataType.InSync:
-                    // TODO: handle in sync
-                    break;
+                    {
+                        try
+                        {
+                            var insyncData = networkData as InSyncData;
+                            // TODO: do we need insyncData.GameTime?
+                            lastSavedGameState = SavedGameState.FromGame(Game);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
+                            Disconnect();
+                        }
+                        break;
+                    }
                 case NetworkDataType.SyncData:
-                    // TODO: handle sync
-                    break;
+                    {
+                        var syncData = networkData as SyncData;
+                        try
+                        {
+                            // TODO: do we need syncData.GameTime?
+                            // TODO: check performance of the game state sync
+                            if (lastSavedGameState == null)
+                                lastSavedGameState = SavedGameState.FromGame(Game);
+                            lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
+                            Disconnect();
+                        }
+                        break;
+                    }
                 default:
                     // Should be handled by Server_DataReceived already.
                     break;
@@ -309,7 +343,7 @@ namespace Freeserf.Network
             switch (request.Request)
             {
                 case Request.Heartbeat:
-                    SendHeartbeatAsResponse(request.MessageIndex);
+                    SendHeartbeat(request.MessageIndex);
                     break;
                 default:
                     SendResponse(request.MessageIndex, ResponseType.Ok);
@@ -355,7 +389,7 @@ namespace Freeserf.Network
             return messageIndex;
         }
 
-        public void SendHeartbeatAsResponse(byte messageIndex)
+        public void SendHeartbeat(byte messageIndex)
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Send heartbeat to server.");
             lastOwnHearbeat = DateTime.UtcNow;
@@ -368,7 +402,7 @@ namespace Freeserf.Network
             if ((DateTime.UtcNow - lastOwnHearbeat).TotalSeconds < 1.0)
                 return;
 
-            SendHeartbeatAsResponse(Global.GetNextMessageIndex());
+            SendHeartbeat(Global.GetNextMessageIndex());
         }
 
         public void SendDisconnect()
@@ -459,9 +493,9 @@ namespace Freeserf.Network
             new ResponseData(messageIndex, responseType).Send(this);
         }
 
-        public void SendHeartbeat()
+        public void SendHeartbeat(byte messageIndex)
         {
-            new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(this);
+            new Heartbeat(messageIndex, (byte)PlayerIndex).Send(this);
         }
 
         public void SendDisconnect()
@@ -490,11 +524,10 @@ namespace Freeserf.Network
             new LobbyData(messageIndex, serverInfo, players).Send(this);
         }
 
-        public void SendGameStateUpdate(Game game)
+        public void SendGameStateUpdate(byte messageIndex, Game game, bool fullState)
         {
-            // TODO: distinguish between patch / full
-            byte[] data = new byte[] { }; // TODO: get from game
-            new SyncData(game.GameTime, data).Send(this);
+            byte[] data = GameStateSerializer.SerializeFrom(game, fullState);
+            new SyncData(messageIndex, game.GameTime, data).Send(this);
         }
 
         public void SendInSyncMessage(UInt32 gameTime)

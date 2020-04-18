@@ -3,13 +3,11 @@
   Maybe wait for disconnect responses for a given timeout.
 - Client states (received messages should be only processed in right state)
 - Outro / game end / surrender
-- Client and server crash when the other side disconnects / shuts down
-- Sometimes black screen on server and client after starting the game (maybe timing of network events in relation to rendering / silk event processing?)
-    - Maybe gather and memorize incoming network events and execute them in the next main loop iteration?
-- Call heartbeat broadcast
+- Test client and server shutdowns in different states
 - Call all user actions
 - Check exceptions
 - Longrun tests
 - Server game updates (atm the client sees no game updates beside his own)
 - No heartbeats are sent while in lobby nor are timeouts checked in lobby
 - Server does not check for client timeouts yet
+- Once a MP game was running another started MP game can be started by the server but clients are rejected then

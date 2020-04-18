@@ -690,6 +690,8 @@ namespace Freeserf.UI
                         {
                             if (interf.Viewer.ViewerType == Viewer.Type.Client)
                                 interf.Client.SendUserAction(Network.UserActionData.CreateDemolishRoadUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
+                            else if (interf.Viewer.ViewerType == Viewer.Type.Server)
+                                interf.Server.GameDirty = true;
 
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             interf.UpdateMapCursorPosition(interf.MapCursorPosition);

@@ -51,8 +51,9 @@ namespace Freeserf.Network
             // use when parsing the data
         }
 
-        public SyncData(uint gameTime, byte[] serializedData)
+        public SyncData(byte messageIndex, uint gameTime, byte[] serializedData)
         {
+            MessageIndex = messageIndex;
             GameTime = gameTime;
             SerializedData = serializedData;
             Size = 11 + serializedData.Length;

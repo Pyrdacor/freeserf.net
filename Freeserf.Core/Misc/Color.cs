@@ -19,15 +19,22 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Collections.Generic;
+
 namespace Freeserf
 {
     using Serialize;
 
     [DataClass]
-    public class Color
+    internal class Color : IState
     {
         public byte Red;
         public byte Green;
         public byte Blue;
+
+        public bool Dirty => false; // Will never change during game.
+        public IReadOnlyList<string> DirtyProperties { get; } = new List<string>();
+
+        public void ResetDirtyFlag() { }
     }
 }

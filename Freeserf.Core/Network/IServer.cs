@@ -67,15 +67,27 @@ namespace Freeserf.Network
         void AllowUserInput(bool allow);
         void PauseGame();
         void ResumeGame();
-        void DisconnectClient(IRemoteClient client);
+        void DisconnectClient(IRemoteClient client, bool sendNotificationToClient);
         void BroadcastHeartbeat();
 
         event ClientJoinedHandler ClientJoined;
         event ClientLeftHandler ClientLeft;
         event GameReadyHandler GameReady;
 
+        /// <summary>
+        /// List of all connected clients.
+        /// </summary>
         List<IRemoteClient> Clients { get; }
+        /// <summary>
+        /// Flag that indicates if the server is currently
+        /// accepting new connecting clients.
+        /// </summary>
         bool AcceptClients { get; set; }
+        /// <summary>
+        /// Is only set when the server game possibly differs from some
+        /// client game and the server should send a game state update.
+        /// </summary>
+        bool GameDirty { get; set; }
     }
 
     public delegate void ReceivedDataHandler(IRemoteServer server, byte[] data);

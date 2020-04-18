@@ -2,7 +2,7 @@
  * Game.cs - Gameplay related functions
  *
  * Copyright (C) 2013-2017   Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018	    Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020   Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -59,7 +59,6 @@ namespace Freeserf
 
     public class Game : MapHandler, IState
     {
-        public const int DEFAULT_GAME_SPEED = 2;
         public const int GAME_MAX_PLAYER_COUNT = 4;
         internal Players Players { get; }
         internal Flags Flags { get; }
@@ -80,6 +79,8 @@ namespace Freeserf
 
         [Data]
         private readonly GameState state = new GameState();
+
+        internal GameState State => state;
 
         public bool Dirty => state.Dirty ||
             Players.Any(p => p.Dirty) ||
@@ -107,10 +108,8 @@ namespace Freeserf
         }
 
         uint gameSpeedSave;
-        uint gameSpeed;
         uint gameStatsCounter;
         uint historyCounter;
-        Random random;
         ushort flagSearchCounter;
 
         int tickDifference;
@@ -126,21 +125,16 @@ namespace Freeserf
         uint gameTimeTicksOfSecond = 0;
 
         internal Map Map { get; private set; }
-        internal ushort Tick { get; private set; }
-        internal uint ConstTick { get; private set; }
         internal uint MapGoldMoraleFactor { get; private set; }
         internal uint GoldTotal { get; private set; }
-        public GameTime GameTime { get; private set; } = 0; // in seconds
-        public GameTime NextGameTime => GameTime + (gameTimeTicksOfSecond + gameSpeed) / Global.TICKS_PER_SEC;
+        internal word Tick => state.Tick;
+        internal dword ConstTick => state.ConstTick;
+        public GameTime GameTime => state.GameTime; // in seconds
+        public GameTime NextGameTime => GameTime + (gameTimeTicksOfSecond + state.GameSpeed) / Global.TICKS_PER_SEC;
 
-        public Game(Render.IRenderView renderView, IAudioInterface audioInterface)
+        internal Game()
         {
             AI.ClearMemory();
-
-            this.renderView = renderView;
-            this.audioInterface = audioInterface;
-
-            random = new Random();
 
             Players = new Players(this);
             Flags = new Flags(this);
@@ -148,22 +142,12 @@ namespace Freeserf
             Buildings = new Buildings(this);
             Serfs = new Serfs(this);
 
-            // Create NULL-serf 
-            Serfs.Allocate();
-
-            // Create NULL-building (index 0 is undefined) 
-            Buildings.Allocate();
-
-            // Create NULL-flag (index 0 is undefined) 
-            Flags.Allocate();
-
-            // Initialize global lookup tables 
-            gameSpeed = DEFAULT_GAME_SPEED;
+            // TODO: use state values
 
             resourceHistoryIndex = 0;
 
-            Tick = 0;
-            ConstTick = 0;
+            state.Tick = 0;
+            state.ConstTick = 0;
             tickDifference = 0;
 
             gameType = 0;
@@ -176,6 +160,22 @@ namespace Freeserf
             birdSoundCounter = 0;
 
             GoldTotal = 0;
+        }
+
+        internal Game(Render.IRenderView renderView, IAudioInterface audioInterface)
+            : this()
+        {
+            this.renderView = renderView;
+            this.audioInterface = audioInterface;
+
+            // Create NULL-serf 
+            Serfs.Allocate();
+
+            // Create NULL-building (index 0 is undefined) 
+            Buildings.Allocate();
+
+            // Create NULL-flag (index 0 is undefined) 
+            Flags.Allocate();
         }
 
         public void Close()
@@ -229,7 +229,7 @@ namespace Freeserf
         public void ScrollMapRandomly()
         {
             if (Map != null)
-                Map.ScrollTo(random.Next() % Map.Columns, random.Next() % Map.Rows);
+                Map.ScrollTo(state.Random.Next() % Map.Columns, state.Random.Next() % Map.Rows);
         }
 
         internal void AddGoldTotal(int delta)
@@ -331,20 +331,20 @@ namespace Freeserf
         public void Update()
         {
             // Increment tick counters
-            if (ConstTick == uint.MaxValue)
-                ConstTick = 0;
+            if (state.ConstTick == uint.MaxValue)
+                state.ConstTick = 0;
             else
-                ++ConstTick;
+                ++state.ConstTick;
 
             // Update tick counters based on game speed 
             uint lastTick = Tick;
 
-            Tick += (ushort)gameSpeed;
-            gameTimeTicksOfSecond += gameSpeed;
+            state.Tick += (ushort)state.GameSpeed;
+            gameTimeTicksOfSecond += state.GameSpeed;
             while (gameTimeTicksOfSecond >= Global.TICKS_PER_SEC)
             {
                 gameTimeTicksOfSecond -= Global.TICKS_PER_SEC;
-                ++GameTime;
+                ++state.GameTime;
             }
 
             if (lastTick > Tick) // ushort overflow
@@ -357,7 +357,7 @@ namespace Freeserf
             }
 
             ClearSerfRequestFailure();
-            Map.Update(Tick, random);
+            Map.Update(state.Tick, state.Random);
 
             // Update players 
             foreach (var player in Players.ToList())
@@ -426,63 +426,63 @@ namespace Freeserf
 
         public void TogglePause()
         {
-            if (gameSpeed != 0)
+            if (state.GameSpeed != 0)
             {
-                gameSpeedSave = gameSpeed;
-                gameSpeed = 0;
+                gameSpeedSave = state.GameSpeed;
+                state.GameSpeed = 0;
             }
             else
             {
-                gameSpeed = gameSpeedSave;
+                state.GameSpeed = gameSpeedSave;
             }
 
-            Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+            Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
         }
 
-        public uint GameSpeed => gameSpeed;
-        public bool IsPaused => gameSpeed == 0;
+        public uint GameSpeed => state.GameSpeed;
+        public bool IsPaused => state.GameSpeed == 0;
 
         public void Pause()
         {
-            if (gameSpeed != 0)
+            if (state.GameSpeed != 0)
             {
-                gameSpeedSave = gameSpeed;
-                gameSpeed = 0;
-                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+                gameSpeedSave = state.GameSpeed;
+                state.GameSpeed = 0;
+                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
             }
         }
 
         public void Resume()
         {
-            if (gameSpeed == 0)
+            if (state.GameSpeed == 0)
             {
-                gameSpeed = gameSpeedSave;
-                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+                state.GameSpeed = gameSpeedSave;
+                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
             }
         }
 
         public void IncreaseSpeed()
         {
-            if (gameSpeed < 40) // TODO: adjust later maybe
+            if (state.GameSpeed < 40) // TODO: adjust later maybe
             {
-                ++gameSpeed;
-                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+                ++state.GameSpeed;
+                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
             }
         }
 
         public void DecreaseSpeed()
         {
-            if (gameSpeed > 0)
+            if (state.GameSpeed > 0)
             {
-                --gameSpeed;
-                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+                --state.GameSpeed;
+                Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
             }
         }
 
         public void ResetSpeed()
         {
-            gameSpeed = DEFAULT_GAME_SPEED;
-            Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
+            state.GameSpeed = GameState.DEFAULT_GAME_SPEED;
+            Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
         }
 
         // Prepare a ground analysis at position. 
@@ -1712,12 +1712,12 @@ namespace Freeserf
 
         internal ushort RandomInt()
         {
-            return random.Next();
+            return state.Random.Next();
         }
 
         internal Random GetRandom()
         {
-            return random;
+            return state.Random;
         }
 
         // Dispatch serf from (nearest?) inventory to flag. 
@@ -3266,13 +3266,13 @@ namespace Freeserf
             reader.Skip(74);
             gameType = reader.ReadWord(); // 74
             reader.Skip(2);  // 76
-            Tick = reader.ReadWord(); // 78
+            state.Tick = reader.ReadWord(); // 78
             gameStatsCounter = 0;
             historyCounter = 0;
 
             reader.Skip(4);
 
-            random = new Random(reader.ReadWord(), reader.ReadWord(), reader.ReadWord()); // 84, 86, 88
+            state.Random = new Random(reader.ReadWord(), reader.ReadWord(), reader.ReadWord()); // 84, 86, 88
 
             int maxFlagIndex = reader.ReadWord(); // 90
             int maxBuildingIndex = reader.ReadWord(); // 92
@@ -3350,8 +3350,8 @@ namespace Freeserf
             LoadBuildings(reader, maxBuildingIndex);
             LoadInventories(reader, maxInventoryIndex);
 
-            gameSpeed = 0;
-            gameSpeedSave = DEFAULT_GAME_SPEED;
+            state.GameSpeed = 0;
+            gameSpeedSave = GameState.DEFAULT_GAME_SPEED;
 
             Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
@@ -3397,11 +3397,11 @@ namespace Freeserf
             }
 
             gameType = gameReader.Value("game_type").ReadInt();
-            Tick = (ushort)gameReader.Value("tick").ReadUInt();
+            state.Tick = (ushort)gameReader.Value("tick").ReadUInt();
             gameStatsCounter = gameReader.Value("game_stats_counter").ReadUInt();
             historyCounter = gameReader.Value("history_counter").ReadUInt();
 
-            random = new Random(gameReader.Value("random").ReadString());
+            state.Random = new Random(gameReader.Value("random").ReadString());
             flagSearchCounter = (ushort)gameReader.Value("flag_search_counter").ReadUInt();
 
             for (int i = 0; i < 4; ++i)
@@ -3524,8 +3524,8 @@ namespace Freeserf
                 OnObjectPlaced(flag.Position);
             }
 
-            gameSpeed = 0;
-            gameSpeedSave = DEFAULT_GAME_SPEED;
+            state.GameSpeed = 0;
+            gameSpeedSave = GameState.DEFAULT_GAME_SPEED;
 
             Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
@@ -3561,7 +3561,7 @@ namespace Freeserf
             writer.Value("tick").Write(Tick);
             writer.Value("game_stats_counter").Write(gameStatsCounter);
             writer.Value("history_counter").Write(historyCounter);
-            writer.Value("random").Write(random.ToString());
+            writer.Value("random").Write(state.Random.ToString());
 
             writer.Value("next_index").Write(0); // next_index (we keep this to be compatible to freeserf save games)
             writer.Value("flag_search_counter").Write(flagSearchCounter);

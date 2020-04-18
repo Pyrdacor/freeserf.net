@@ -44,7 +44,7 @@ namespace Freeserf
         public override void Update()
         {
             if (client.Connected)
-                client.SendHeartbeat();
+                client.SendHeartbeat(Network.Global.SpontaneousMessage);
 
             base.Update();
         }

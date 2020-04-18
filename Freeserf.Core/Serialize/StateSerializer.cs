@@ -190,7 +190,7 @@ namespace Freeserf.Serialize
                         property.GetSetMethod() != null
                     )
                     .Select(property => new KeyValuePair<string, bool>(property.Name, true));
-                var fields = stateType.GetFields()
+                var fields = stateType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                     .Where(field =>
                         field.GetCustomAttribute(typeof(DataAttribute)) != null
                     )
@@ -267,7 +267,7 @@ namespace Freeserf.Serialize
                 }
                 else // field
                 {
-                    var fieldInfo = state.GetType().GetField(property.Key);
+                    var fieldInfo = state.GetType().GetField(property.Key, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     propertyValue = fieldInfo.GetValue(state);
                     propertyType = fieldInfo.FieldType;
                 }
@@ -319,7 +319,7 @@ namespace Freeserf.Serialize
                 }
                 else // possibly a field
                 {
-                    var field = type.GetField(propertyName);
+                    var field = type.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                     field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, field.GetValue(targetObject)));
                 }
@@ -333,14 +333,14 @@ namespace Freeserf.Serialize
             return obj;
         }
 
-        private static T DeserializeWithoutHeader<T>(BinaryReader reader) where T : State, new()
+        private static T DeserializeWithoutHeader<T>(BinaryReader reader) where T : IState, new()
         {
             return (T)DeserializeWithoutHeader(reader, typeof(T));
         }
 
         private static object DeserializePropertyValue(BinaryReader reader, Type type, object propertyValue)
         {
-            if (type.IsSubclassOf(typeof(State)))
+            if (typeof(IState).IsAssignableFrom(type))
             {
                 return DeserializeWithoutHeader(reader, type);
             }
@@ -462,7 +462,7 @@ namespace Freeserf.Serialize
 
         private static void SerializePropertyNullValue(BinaryWriter writer, Type propertyType)
         {
-            if (propertyType.IsSubclassOf(typeof(State)))
+            if (typeof(IState).IsAssignableFrom(propertyType))
             {
                 SerializePropertyValue(writer, 0, false);
             }
@@ -486,9 +486,9 @@ namespace Freeserf.Serialize
 
         private static void SerializePropertyValue(BinaryWriter writer, object value, bool full)
         {
-            if (value is State)
+            if (value is IState)
             {
-                SerializeWithoutHeader(writer, value as State, full);
+                SerializeWithoutHeader(writer, value as IState, full);
             }
             else if (value is string)
             {

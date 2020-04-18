@@ -733,6 +733,8 @@ namespace Freeserf.UI
                 {
                     if (Viewer.ViewerType == Viewer.Type.Client)
                         Client.SendUserAction(Network.UserActionData.CreatePlaceRoadUserAction(Network.Global.SpontaneousMessage, Game, buildingRoad.Copy(), false));
+                    else if (Viewer.ViewerType == Viewer.Type.Server)
+                        Server.GameDirty = true;
 
                     BuildRoadEnd();
                     UpdateMapCursorPosition(destination);
@@ -839,6 +841,8 @@ namespace Freeserf.UI
             {
                 if (Viewer.ViewerType == Viewer.Type.Client)
                     Client.SendUserAction(Network.UserActionData.CreateDemolishFlagUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
+                else if (Viewer.ViewerType == Viewer.Type.Server)
+                    Server.GameDirty = true;
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 Game.DemolishFlag(mapCursorPosition, Player);
@@ -858,6 +862,8 @@ namespace Freeserf.UI
 
                 if (Viewer.ViewerType == Viewer.Type.Client)
                     Client.SendUserAction(Network.UserActionData.CreateDemolishBuildingUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
+                else if (Viewer.ViewerType == Viewer.Type.Server)
+                    Server.GameDirty = true;
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Ahhh);
                 Game.DemolishBuilding(mapCursorPosition, Player);
@@ -887,6 +893,8 @@ namespace Freeserf.UI
 
             if (Viewer.ViewerType == Viewer.Type.Client)
                 Client.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
+            else if (Viewer.ViewerType == Viewer.Type.Server)
+                Server.GameDirty = true;
         }
 
         // Build a new building. 
@@ -903,6 +911,8 @@ namespace Freeserf.UI
 
             if (Viewer.ViewerType == Viewer.Type.Client)
                 Client.SendUserAction(Network.UserActionData.CreatePlaceBuildingUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
+            else if (Viewer.ViewerType == Viewer.Type.Server)
+                Server.GameDirty = true;
 
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             ClosePopup();
@@ -926,6 +936,8 @@ namespace Freeserf.UI
 
             if (Viewer.ViewerType == Viewer.Type.Client)
                 Client.SendUserAction(Network.UserActionData.CreatePlaceBuildingUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
+            else if (Viewer.ViewerType == Viewer.Type.Server)
+                Server.GameDirty = true;
 
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
             UpdateMapCursorPosition(mapCursorPosition);
@@ -940,6 +952,8 @@ namespace Freeserf.UI
             {
                 if (Viewer.ViewerType == Viewer.Type.Client)
                     Client.SendUserAction(Network.UserActionData.CreateDemolishFlagUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
+                else if (Viewer.ViewerType == Viewer.Type.Server)
+                    Server.GameDirty = true;
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 Game.DemolishFlag(mapCursorPosition, Player);
@@ -948,6 +962,8 @@ namespace Freeserf.UI
             {
                 if (Viewer.ViewerType == Viewer.Type.Client)
                     Client.SendUserAction(Network.UserActionData.CreatePlaceRoadUserAction(Network.Global.SpontaneousMessage, Game, buildingRoad.Copy(), false));
+                else if (Viewer.ViewerType == Viewer.Type.Server)
+                    Server.GameDirty = true;
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                 BuildRoadEnd();

@@ -59,8 +59,9 @@ namespace Freeserf.Network
 
                 var properties = network.GetIPProperties();
 
-                if (properties.GatewayAddresses.Count == 0)
-                    continue;
+                // TODO: do we care?
+                //if (properties.GatewayAddresses.Count == 0)
+                //    continue;
 
                 foreach (var address in properties.UnicastAddresses)
                 {
@@ -146,6 +147,8 @@ namespace Freeserf.Network
                     cancelTokenSource.Cancel();
             }
         }
+
+        public bool GameDirty { get; set; } = false;
 
         public string Error
         {
@@ -302,25 +305,36 @@ namespace Freeserf.Network
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
 
-            // Send an in-sync message if necessary
+            // Send an in-sync message if necessary or update the game state
             if (State == ServerState.Game)
             {
                 var currentGame = GameManager.Instance.GetCurrentGame();
 
-                if (currentGame != null && lastUserActionOrInSyncGameTime - currentGame.GameTime >= InSyncData.SyncDelay * Freeserf.Global.TICKS_PER_SEC &&
-                    InSyncData.TimeToSync(currentGame))
+                if (currentGame != null)
                 {
-                    lastUserActionOrInSyncGameTime = currentGame.GameTime;
+                    if (GameDirty)
+                    {
+                        BroadcastGameStateUpdate(currentGame, false);
+                        lastUserActionOrInSyncGameTime = currentGame.GameTime;
+                    }
+                    else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >= InSyncData.SyncDelay * Freeserf.Global.TICKS_PER_SEC &&
+                        InSyncData.TimeToSync(currentGame))
+                    {
+                        lastUserActionOrInSyncGameTime = currentGame.GameTime;
 
-                    var gameTime = currentGame.GameTime;
-                    var hours = gameTime / 3600;
-                    gameTime -= hours * 3600;
-                    var minutes = gameTime / 60;
-                    gameTime -= minutes * 60;
-                    var seconds = gameTime;
-                    Log.Verbose.Write(ErrorSystemType.Network, $"Sending in-sync message to all clients at game time: {hours}:{minutes}:{seconds}.");
+                        var gameTime = currentGame.GameTime;
+                        var hours = gameTime / 3600;
+                        gameTime -= hours * 3600;
+                        var minutes = gameTime / 60;
+                        gameTime -= minutes * 60;
+                        var seconds = gameTime;
+                        Log.Verbose.Write(ErrorSystemType.Network, $"Sending in-sync message to all clients at game time: {hours}:{minutes}:{seconds}.");
 
-                    BroadcastInSync(currentGame.GameTime);
+                        BroadcastInSync(currentGame.GameTime);
+                    }
+
+                    GameDirty = false;
+                    currentGame.ResetDirtyFlag(); // TODO: if we use the dirty flag for local saving as well, we should auto-save now so unsaved changes tracking will work                    
                 }
             }
         }
@@ -422,8 +436,9 @@ namespace Freeserf.Network
 
                                 var request = networkData as RequestData;
 
-                                // client sends this when he is ready
-                                if (request.Request == Request.StartGame)
+                                // client sends the start game request when he is ready
+                                if (request.Request == Request.StartGame ||
+                                    request.Request == Request.Disconnect)
                                 {
                                     NetworkDataReceiver.Receive(client, request, null);                                    
                                     break;
@@ -495,9 +510,15 @@ namespace Freeserf.Network
                         if (request.Request == Request.StartGame)
                         {
                             // client sends this when he is ready
-                            ClientReady(client);                            
+                            ClientReady(client);
                         }
-
+                        else if (request.Request == Request.Disconnect)
+                        {
+                            ClientLeft?.Invoke(this, client);
+                            responseHandler?.Invoke(ResponseType.Ok);
+                            DisconnectClient(client, false);
+                        }
+                    
                         break;
                     }
                 case ServerState.Game:
@@ -515,6 +536,9 @@ namespace Freeserf.Network
                         {
                             var userAction = networkData as UserActionData;
                             var response = userAction.ApplyToGame(game, client.PlayerIndex);
+
+                            if (clients.Count > 1)
+                                GameDirty = true;
 
                             responseHandler?.Invoke(response);
                         }
@@ -563,16 +587,18 @@ namespace Freeserf.Network
                 case Request.Disconnect:
                     ClientLeft?.Invoke(this, client);
                     responseHandler?.Invoke(ResponseType.Ok);
-                    DisconnectClient(client);
+                    DisconnectClient(client, false);
                     break;
                 case Request.StartGame:
                     // This is not allowed while in lobby.
                     responseHandler?.Invoke(ResponseType.BadState);
                     break;
                 case Request.Heartbeat:
-                    responseHandler?.Invoke(ResponseType.Ok);
+                    // TODO: check if the client just requested it (bruteforce attacks should be avoided)
+                    client.SendHeartbeat(messageIndex);
                     break;
                 case Request.LobbyData:
+                    // TODO: check if the client just requested it (bruteforce attacks should be avoided)
                     lock (lobbyServerInfo)
                         lock (lobbyPlayerInfo)
                         {
@@ -590,18 +616,22 @@ namespace Freeserf.Network
             switch (request)
             {
                 case Request.Disconnect:
-                    // TODO
+                    ClientLeft?.Invoke(this, client);
+                    responseHandler?.Invoke(ResponseType.Ok);
+                    DisconnectClient(client, false);
                     break;
                 case Request.GameData:
-                    // TODO
+                    // TODO: check if the client just requested it (bruteforce attacks should be avoided)
+                    client.SendGameStateUpdate(messageIndex, game, true);
                     break;
                 case Request.Heartbeat:
-                    // TODO
+                    // TODO: check if the client just requested it (bruteforce attacks should be avoided)
+                    client.SendHeartbeat(messageIndex);
                     break;
                 case Request.LobbyData:
                     throw new ExceptionFreeserf("Lobby data should not be requested during game."); // maybe for spectators?
                 default:
-                    // TODO error?
+                    responseHandler?.Invoke(ResponseType.BadRequest);
                     break;
             }
         }
@@ -627,7 +657,7 @@ namespace Freeserf.Network
         public void StartGame(Game game)
         {
             BroadcastStartGameRequest();
-            BroadcastGameStateUpdate(game);
+            BroadcastGameStateUpdate(game, true);
             LoadGame();
         }
 
@@ -637,9 +667,10 @@ namespace Freeserf.Network
             client?.Close();
         }
 
-        public void DisconnectClient(IRemoteClient client)
+        public void DisconnectClient(IRemoteClient client, bool sendNotificationToClient = true)
         {
-            client.SendDisconnect();
+            if (sendNotificationToClient)
+                client.SendDisconnect();
 
             if (clients.ContainsKey(client))
             {
@@ -661,6 +692,7 @@ namespace Freeserf.Network
                     break;
                 case ServerState.Game:
                     // TODO: let AI continue the players settlement or keep it at this state?
+                    // Maybe even allow a reconnect?
                     break;
                 default:
                     break;
@@ -827,11 +859,11 @@ namespace Freeserf.Network
             Broadcast((client) => client.SendInSyncMessage(gameTime));
         }
 
-        private void BroadcastGameStateUpdate(Game game)
+        private void BroadcastGameStateUpdate(Game game, bool fullState)
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast game state update to {clients.Count} clients.");
 
-            Broadcast((client) => client.SendGameStateUpdate(game));
+            Broadcast((client) => client.SendGameStateUpdate(Global.SpontaneousMessage, game, fullState));
         }
 
         public void BroadcastHeartbeat()
@@ -842,7 +874,7 @@ namespace Freeserf.Network
 
             Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast heartbeat to {clients.Count} clients.");
 
-            Broadcast((client) => client.SendHeartbeat());
+            Broadcast((client) => client.SendHeartbeat(Global.SpontaneousMessage));
         }
     }
 
