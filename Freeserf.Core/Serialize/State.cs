@@ -26,6 +26,7 @@ namespace Freeserf.Serialize
     internal interface IState
     {
         bool Dirty { get; }
+        IReadOnlyList<string> DirtyProperties { get; }
 
         void ResetDirtyFlag();
     }

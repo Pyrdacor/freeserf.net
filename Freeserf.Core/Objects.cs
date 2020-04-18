@@ -26,13 +26,13 @@ using System.Linq;
 
 namespace Freeserf
 {
-    public interface IGameObject
+    internal interface IGameObject
     {
         uint Index { get; }
         Game Game { get; }
     }
 
-    public class GameObject : IGameObject
+    internal abstract class GameObject : IGameObject
     {
         public uint Index { get; protected set; }
         public Game Game { get; protected set; }
@@ -70,33 +70,42 @@ namespace Freeserf
         }
     }
 
-    public class Collection<T> : IEnumerable<T> where T : class, IGameObject
+    internal class Collection<T> : IEnumerable<T> where T : class, IGameObject, Serialize.IState
     {
         readonly object objectsLock = new object();
-        Game game;
+        internal Game Game { get; }
         uint firstFreeIndex = 0;
-        Dictionary<uint, T> objects = new Dictionary<uint, T>();
-        SortedSet<uint> freeIndices = new SortedSet<uint>();
+        readonly Dictionary<uint, T> objects = new Dictionary<uint, T>();
+        internal SortedSet<uint> FreeIndices { get; } = new SortedSet<uint>();
 
-        public Collection(Game game = null)
+        public Collection(Game game)
         {
-            this.game = game;
+            Game = game;
+        }
+
+        // used by state deserialization
+        internal void UpdateFreeIndices(uint[] freeIndices)
+        {
+            FreeIndices.Clear();
+
+            foreach (var freeIndex in freeIndices)
+                FreeIndices.Add(freeIndex);
         }
 
         public T Allocate()
         {
             T obj;
 
-            if (freeIndices.Count > 0)
+            if (FreeIndices.Count > 0)
             {
-                var index = freeIndices.First();
+                var index = FreeIndices.First();
 
-                obj = ObjectFactory<T>.Create(game, index);
-                freeIndices.Remove(index);
+                obj = ObjectFactory<T>.Create(Game, index);
+                FreeIndices.Remove(index);
             }
             else
             {
-                obj = ObjectFactory<T>.Create(game, firstFreeIndex++);
+                obj = ObjectFactory<T>.Create(Game, firstFreeIndex++);
             }
 
             lock (objectsLock)
@@ -113,16 +122,16 @@ namespace Freeserf
             {
                 lock (objectsLock)
                 {
-                    objects.Add(index, ObjectFactory<T>.Create(game, index));
+                    objects.Add(index, ObjectFactory<T>.Create(Game, index));
                 }
 
-                if (freeIndices.Contains(index))
-                    freeIndices.Remove(index);
+                if (FreeIndices.Contains(index))
+                    FreeIndices.Remove(index);
 
                 if (index >= firstFreeIndex)
                 {
                     for (uint i = firstFreeIndex; i < index; ++i)
-                        freeIndices.Add(i);
+                        FreeIndices.Add(i);
 
                     firstFreeIndex = index + 1;
                 }
@@ -152,7 +161,7 @@ namespace Freeserf
                 if (index == firstFreeIndex - 1)
                     --firstFreeIndex;
                 else
-                    freeIndices.Add(index);
+                    FreeIndices.Add(index);
 
                 lock (objectsLock)
                 {

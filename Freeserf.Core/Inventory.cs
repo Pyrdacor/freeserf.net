@@ -30,7 +30,7 @@ namespace Freeserf
     using ResourceMap = Serialize.DirtyMap<Resource.Type, uint>;
     using word = UInt16;
 
-    public class Inventory : GameObject, IState, IDisposable
+    internal class Inventory : GameObject, IState, IDisposable
     {
         public enum Mode
         {
@@ -61,7 +61,7 @@ namespace Freeserf
         }
 
         [Data]
-        private InventoryState state = new InventoryState();
+        private readonly InventoryState state = new InventoryState();       
 
         // Count of serfs waiting to move out
         uint serfsOut = 0;
@@ -87,6 +87,7 @@ namespace Freeserf
         }
 
         public bool Dirty => state.Dirty;
+        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
 
         /// <summary>
         /// Inventory owner

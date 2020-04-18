@@ -27,7 +27,7 @@ namespace Freeserf
 {
     using MapPos = UInt32;
 
-    public class Character
+    internal class Character
     {
         public Character(PlayerFace face, string name, string characterization)
         {
@@ -43,7 +43,7 @@ namespace Freeserf
 
     public class PlayerInfo
     {
-        public static readonly Character[] Characters = new Character[]
+        internal static readonly Character[] Characters = new Character[]
         {
             new Character(PlayerFace.None, "ERROR", "ERROR"),
             new Character(PlayerFace.LadyAmalie, "Lady Amalie", "An inoffensive lady, reserved, who goes about her work peacefully."),
@@ -69,7 +69,7 @@ namespace Freeserf
             new Color() {Red = 0xef, Green = 0xef, Blue = 0x8f}
         };
 
-        public struct Position
+        internal struct Position
         {
             public Position(int column, int row)
             {
@@ -83,7 +83,7 @@ namespace Freeserf
             public static readonly Position None = new Position() { Column = -1, Row = -1 };
         }
 
-        public struct Preset
+        internal struct Preset
         {
             public Preset(uint character, uint intelligence, uint supplies,
                 uint reproduction, Position castlePosition)
@@ -107,9 +107,9 @@ namespace Freeserf
         public uint Reproduction { get; set; }
         public PlayerFace Face { get; private set; }
         public Color Color { get; set; }
-        public Position CastlePosition { get; set; }
+        internal Position CastlePosition { get; set; }
 
-        public PlayerInfo(Random random)
+        internal PlayerInfo(Random random)
         {
             var character = (((random.Next() * 10u) >> 16) + 1u) & 0xFFu;
 
@@ -121,7 +121,7 @@ namespace Freeserf
             CastlePosition = Position.None;
         }
 
-        public PlayerInfo(PlayerFace character, Color color,
+        internal PlayerInfo(PlayerFace character, Color color,
              uint intelligence, uint supplies, uint reproduction)
         {
             SetCharacter(character);
@@ -133,7 +133,7 @@ namespace Freeserf
             CastlePosition = Position.None;
         }
 
-        public void SetCharacter(PlayerFace character)
+        internal void SetCharacter(PlayerFace character)
         {
             Face = Characters[(int)character].Face;
         }
@@ -143,7 +143,7 @@ namespace Freeserf
 
     public class GameInfo
     {
-        public struct Mission
+        internal struct Mission
         {
             internal Mission(string name, Random random, params PlayerInfo.Preset[] players)
             {
@@ -380,10 +380,10 @@ namespace Freeserf
 
         public uint MapSize { get; set; }
 
-        public Random RandomBase { get; private set; }
+        internal Random RandomBase { get; private set; }
 
         public uint PlayerCount => (uint)players.Count;
-        public IReadOnlyList<PlayerInfo> Players => players.AsReadOnly();
+        internal IReadOnlyList<PlayerInfo> Players => players.AsReadOnly();
 
         readonly List<PlayerInfo> players = new List<PlayerInfo>(4);
         readonly string name = "";
@@ -409,19 +409,19 @@ namespace Freeserf
             }
         }
 
-        public GameInfo(Random randomBase, bool aiPlayersOnly)
+        internal GameInfo(Random randomBase, bool aiPlayersOnly)
         {
             MapSize = 3;
             name = randomBase.ToString();
             SetRandomBase(randomBase, aiPlayersOnly);
         }
 
-        public PlayerInfo GetPlayer(uint player)
+        internal PlayerInfo GetPlayer(uint player)
         {
             return players[(int)player];
         }
 
-        public void SetRandomBase(Random randomBase, bool aiPlayersOnly)
+        internal void SetRandomBase(Random randomBase, bool aiPlayersOnly)
         {
             var random = new Random(randomBase);
             RandomBase = randomBase;
@@ -487,24 +487,24 @@ namespace Freeserf
             }
         }
 
-        public void AddPlayer(PlayerInfo player)
+        internal void AddPlayer(PlayerInfo player)
         {
             players.Add(player);
         }
 
-        public void AddPlayer(PlayerFace character, Color color,
+        internal void AddPlayer(PlayerFace character, Color color,
                          uint intelligence, uint supplies,
                          uint reproduction)
         {
             AddPlayer(new PlayerInfo(character, color, intelligence, supplies, reproduction));
         }
 
-        public void RemoveAllPlayers()
+        internal void RemoveAllPlayers()
         {
             players.Clear();
         }
 
-        public void RemovePlayer(uint index)
+        internal void RemovePlayer(uint index)
         {
             if (index >= players.Count)
                 return;
@@ -523,12 +523,12 @@ namespace Freeserf
             }
         }
 
-        public static GameInfo GetIntroMission()
+        internal static GameInfo GetIntroMission()
         {
             return new GameInfo(IntroMission);
         }
 
-        public static GameInfo GetMission(uint mission)
+        internal static GameInfo GetMission(uint mission)
         {
             if (mission >= GetMissionCount())
             {
@@ -538,12 +538,12 @@ namespace Freeserf
             return new GameInfo(missions[(int)mission]);
         }
 
-        public static uint GetMissionCount()
+        internal static uint GetMissionCount()
         {
             return (uint)missions.Length;
         }
 
-        public Character GetCharacter(uint character)
+        internal Character GetCharacter(uint character)
         {
             if (character >= GetCharacterCount())
             {
@@ -553,12 +553,12 @@ namespace Freeserf
             return PlayerInfo.Characters[character];
         }
 
-        public uint GetCharacterCount()
+        internal uint GetCharacterCount()
         {
             return (uint)PlayerInfo.Characters.Length;
         }
 
-        public Game Instantiate(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
+        internal Game Instantiate(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
             var game = new Game(renderView, audioInterface);
 

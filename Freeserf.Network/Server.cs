@@ -472,7 +472,7 @@ namespace Freeserf.Network
                         else if (networkData.Type == NetworkDataType.UserActionData)
                         {
                             var userAction = networkData as UserActionData;
-                            var response = userAction.ApplyToGame(game, game.GetPlayer(client.PlayerIndex));
+                            var response = userAction.ApplyToGame(game, client.PlayerIndex);
 
                             responseHandler?.Invoke(response);
                         }

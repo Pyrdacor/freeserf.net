@@ -368,7 +368,7 @@ namespace Freeserf.Network
             destination.Send(rawData.ToArray());
         }
 
-        public static UserActionData CreateChangeSettingUserAction(byte number, Game game, UserActionGameSetting setting, params byte[] values)
+        internal static UserActionData CreateChangeSettingUserAction(byte number, Game game, UserActionGameSetting setting, params byte[] values)
         {
             byte[] parameters = new byte[values.Length + 1];
             parameters[0] = (byte)setting;
@@ -377,12 +377,12 @@ namespace Freeserf.Network
             return new UserActionData(number, game.GameTime, UserAction.ChangeSetting, parameters);
         }
 
-        public static UserActionData CreateChangeSettingUserAction(byte number, Game game, UserActionGameSetting setting, UInt16 value)
+        internal static UserActionData CreateChangeSettingUserAction(byte number, Game game, UserActionGameSetting setting, UInt16 value)
         {
             return new UserActionData(number, game.GameTime, UserAction.ChangeSetting, CreateParameters((byte)setting, value));
         }
 
-        public static UserActionData CreateAttackUserAction(byte number, Game game, MapPos mapPosition, int numberOfKnightsToSend)
+        internal static UserActionData CreateAttackUserAction(byte number, Game game, MapPos mapPosition, int numberOfKnightsToSend)
         {
             var building = game.GetBuildingAtPosition(mapPosition);
 
@@ -397,7 +397,7 @@ namespace Freeserf.Network
             );
         }
 
-        public static UserActionData CreateSendGeologistUserAction(byte number, Game game, MapPos mapPosition)
+        internal static UserActionData CreateSendGeologistUserAction(byte number, Game game, MapPos mapPosition)
         {
             return new UserActionData(number, game.GameTime, UserAction.SendGeologist,
                 CreateParameters
@@ -408,17 +408,17 @@ namespace Freeserf.Network
             );
         }
 
-        public static UserActionData CreateCycleKnightsUserAction(byte number, Game game)
+        internal static UserActionData CreateCycleKnightsUserAction(byte number, Game game)
         {
             return new UserActionData(number, game.GameTime, UserAction.CycleKnights, null);
         }
 
-        public static UserActionData CreateTrainKnightsUserAction(byte number, Game game, byte amount)
+        internal static UserActionData CreateTrainKnightsUserAction(byte number, Game game, byte amount)
         {
             return new UserActionData(number, game.GameTime, UserAction.TrainKnights, new byte[1] { amount });
         }
 
-        public static UserActionData CreatePlaceBuildingUserAction(byte number, Game game, MapPos mapPosition)
+        internal static UserActionData CreatePlaceBuildingUserAction(byte number, Game game, MapPos mapPosition)
         {
             return new UserActionData(number, game.GameTime, UserAction.PlaceBuilding,
                 CreateParameters
@@ -429,7 +429,7 @@ namespace Freeserf.Network
             );
         }
 
-        public static UserActionData CreateDemolishBuildingUserAction(byte number, Game game, MapPos mapPosition)
+        internal static UserActionData CreateDemolishBuildingUserAction(byte number, Game game, MapPos mapPosition)
         {
             return new UserActionData(number, game.GameTime, UserAction.DemolishBuilding,
                 CreateParameters
@@ -440,12 +440,12 @@ namespace Freeserf.Network
             );
         }
 
-        public static UserActionData CreatePlaceFlagUserAction(byte number, Game game, MapPos mapPosition)
+        internal static UserActionData CreatePlaceFlagUserAction(byte number, Game game, MapPos mapPosition)
         {
             return new UserActionData(number, game.GameTime, UserAction.PlaceFlag, BitConverter.GetBytes(mapPosition));
         }
 
-        public static UserActionData CreateDemolishFlagUserAction(byte number, Game game, MapPos mapPosition)
+        internal static UserActionData CreateDemolishFlagUserAction(byte number, Game game, MapPos mapPosition)
         {
             return new UserActionData(number, game.GameTime, UserAction.DemolishFlag,
                 CreateParameters
@@ -456,7 +456,7 @@ namespace Freeserf.Network
             );
         }
 
-        public static UserActionData CreatePlaceRoadUserAction(byte number, Game game, Road road, bool endFlagWasJustCreated)
+        internal static UserActionData CreatePlaceRoadUserAction(byte number, Game game, Road road, bool endFlagWasJustCreated)
         {
             int numDirectionPairEntries = ((int)road.Length + 1) / 2;
             var directionPairs = new byte[numDirectionPairEntries];
@@ -486,12 +486,12 @@ namespace Freeserf.Network
             );
         }
 
-        public static UserActionData CreateDemolishRoadUserAction(byte number, Game game, MapPos mapPosition)
+        internal static UserActionData CreateDemolishRoadUserAction(byte number, Game game, MapPos mapPosition)
         {
             return new UserActionData(number, game.GameTime, UserAction.DemolishRoad, BitConverter.GetBytes(mapPosition));
         }
 
-        public static UserActionData CreateSurrenderUserAction(byte number, Game game)
+        internal static UserActionData CreateSurrenderUserAction(byte number, Game game)
         {
             return new UserActionData(number, game.GameTime, UserAction.Surrender, null);
         }
@@ -760,8 +760,10 @@ namespace Freeserf.Network
         /// Note that bad state has to be caught before.
         /// I.e. user input disallowing or game pause.
         /// </summary>
-        public ResponseType ApplyToGame(Game game, Player source)
+        public ResponseType ApplyToGame(Game game, uint sourcePlayer)
         {
+            var source = game.GetPlayer(sourcePlayer);
+
             try
             {
                 switch (UserAction)

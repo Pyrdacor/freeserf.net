@@ -39,7 +39,7 @@ namespace Freeserf
         public int[] Serfs; // int[16]
     }
 
-    public class Flag : GameObject, IState
+    internal class Flag : GameObject, IState
     {
         internal class ResourceSlot : State, IComparable
         {
@@ -94,7 +94,7 @@ namespace Freeserf
         static readonly int[] MaxTransporters = new[] { 1, 2, 3, 4, 6, 8, 11, 15 };
 
         [Data]
-        private FlagState state = new FlagState();
+        private readonly FlagState state = new FlagState();
         public object Tag { get; set; } = null; // General purpose tagged object (used in Game.UpdateInventories)
 
         internal OtherEndpoint[] OtherEndPoints { get; } = new OtherEndpoint[6];
@@ -120,6 +120,7 @@ namespace Freeserf
         }
 
         public bool Dirty => state.Dirty;
+        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
 
         internal MapPos Position
         {
@@ -1876,9 +1877,9 @@ namespace Freeserf
         }
     }
 
-    public delegate bool FlagSearchFunc(Flag flag, object data);
+    internal delegate bool FlagSearchFunc(Flag flag, object data);
 
-    public class FlagSearch
+    internal class FlagSearch
     {
         public const int SEARCH_MAX_DEPTH = 0x10000;
 

@@ -163,13 +163,20 @@ namespace Freeserf.UI
             {
                 DrawMapCursorSprite(map.Move(position, direction), 1 + (int)direction, interf.GetMapCursorSprite(1 + (int)direction));
             }
+
+            // Hide map cursor sprites if the viewport is not enabled
+            foreach (var mapCursorSprite in mapCursorSprites)
+            {
+                if (mapCursorSprite != null)
+                    mapCursorSprite.Visible = Visible && Enabled;
+            }
         }
 
         void DrawMapCursorSprite(MapPos position, int index, uint spriteIndex)
         {
             var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
-            var textureAtlas = Render.TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
+            var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
 
             mapCursorSprites[index].Resize((int)spriteInfo.Width, (int)spriteInfo.Height);
             mapCursorSprites[index].X = TotalX + renderPos.X + spriteInfo.OffsetX;

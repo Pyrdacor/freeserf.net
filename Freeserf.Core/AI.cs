@@ -130,7 +130,7 @@ namespace Freeserf
     /// 
     /// Maybe the campaign will be extended for this sake as well.
     /// </summary>
-    public class AI
+    internal class AI
     {
         public enum State
         {
@@ -1298,7 +1298,7 @@ namespace Freeserf
         }
     }
 
-    public class IntroAI : AI
+    internal class IntroAI : AI
     {
         public IntroAI(Player player, PlayerInfo playerInfo)
             : base(player, playerInfo)

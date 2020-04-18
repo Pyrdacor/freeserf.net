@@ -16,7 +16,8 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             StateSerializer.Serialize(stream, state, true, true);
             stream.Position = 0;
-            var resultingState = StateSerializer.Deserialize<TestState>(stream);
+            var resultingState = new TestState();
+            StateSerializer.Deserialize(resultingState, stream);
 
             Assert.IsTrue(state.Equals(resultingState), "Deserialized state does not match previously serialized state.");
         }
@@ -43,7 +44,8 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             StateSerializer.Serialize(stream, state, true, true);
             stream.Position = 0;
-            var resultingState = StateSerializer.Deserialize<TestState>(stream);
+            var resultingState = new TestState();
+            StateSerializer.Deserialize(resultingState, stream);
 
             Assert.IsTrue(state.Equals(resultingState), "Deserialized state does not match previously serialized state.");
         }
@@ -58,7 +60,7 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
             stream.Position = 0;
             stream.Write(new byte[1] { 0 }, 0, 1); // overwrite 'F' with 0
 
-            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize<TestState>(stream),
+            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize(new TestState(), stream),
                 "Manipulated serialized state header does not throw exception on deserialization.");
         }
 
@@ -70,7 +72,8 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             StateSerializer.Serialize(stream, state, true, true);
             stream.Position = 0;
-            var resultingState = StateSerializer.Deserialize<TestState>(stream);
+            var resultingState = new TestState();
+            StateSerializer.Deserialize(resultingState, stream);
 
             Assert.IsTrue(
                 state.TestProperty1 == null && resultingState.TestProperty1 == "" &&
@@ -109,7 +112,7 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
             StateSerializer.Serialize(stream, state, true, true);
             stream.Position = 0;
 
-            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize<InvalidTestState_UnsupportedArrayElementType>(stream),
+            Assert.ThrowsException<ExceptionFreeserf>(() => StateSerializer.Deserialize(new InvalidTestState_UnsupportedArrayElementType(), stream),
                 "Invalid state does not throw exception on deserialization.");
         }
 
@@ -123,7 +126,7 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
             {
                 StateSerializer.Serialize(stream, state, true, true);
                 stream.Position = 0;
-                StateSerializer.Deserialize<FlagState>(stream);
+                StateSerializer.Deserialize(new FlagState(), stream);
             }
             catch (Exception ex)
             {
@@ -141,7 +144,8 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             StateSerializer.Serialize(stream, state, true, true);
             stream.Position = 0;
-            var resultingState = StateSerializer.Deserialize<TestState_DataAttribute>(stream);
+            var resultingState = new TestState_DataAttribute();
+            StateSerializer.Deserialize(resultingState, stream);
 
             Assert.IsTrue(state.Serialized == resultingState.Serialized,
                 "Public field with Data attribute is not serialized.");
@@ -159,7 +163,8 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
             StateSerializer.Serialize(stream, state, true, true);
             stream.Position = 0;
-            var resultingState = StateSerializer.Deserialize<TestState_IgnoreAttribute>(stream);
+            var resultingState = new TestState_IgnoreAttribute();
+            StateSerializer.Deserialize(resultingState, stream);
 
             Assert.IsTrue(state.Serialized == resultingState.Serialized,
                 "Public field in DataClass without Ignore attribute is not serialized.");

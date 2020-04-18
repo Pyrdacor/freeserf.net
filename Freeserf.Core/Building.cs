@@ -21,6 +21,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Freeserf
@@ -47,7 +48,7 @@ namespace Freeserf
         public uint Phase2;
     }
 
-    public class Building : GameObject, IState
+    internal class Building : GameObject, IState
     {
         public enum Type : byte
         {
@@ -151,7 +152,7 @@ namespace Freeserf
         };
 
         [Data]
-        private BuildingState state = new BuildingState();
+        private readonly BuildingState state = new BuildingState();
 
         public Building(Game game, uint index)
             : base(game, index)
@@ -160,6 +161,7 @@ namespace Freeserf
         }
 
         public bool Dirty => state.Dirty;
+        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
 
         /// <summary>
         /// Map position of the building
@@ -503,7 +505,7 @@ namespace Freeserf
                         serf.CastleDeleted(Position, true);
                     }
 
-                    Game.PlayerDefeated(player);
+                    Game.PlayerDefeated(Player);
                 }
 
                 if (!state.Constructing && IsMilitary())

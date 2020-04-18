@@ -71,11 +71,11 @@ using System.Linq;
 
 namespace Freeserf
 {
-    using ChangeHandlers = List<Map.Handler>;
-    using Directions = Stack<Direction>;
     using MapPos = UInt32;
+    using Directions = Stack<Direction>;
+    using ChangeHandlers = List<MapHandler>;
 
-    public class Road : IEquatable<Road>
+    internal class Road : IEquatable<Road>
     {
         const uint MaxLength = 256;
 
@@ -299,7 +299,17 @@ namespace Freeserf
         }
     }
 
-    public class Map : IEquatable<Map>
+    public abstract class MapHandler
+    {
+        internal abstract void OnHeightChanged(MapPos position);
+        internal abstract void OnObjectChanged(MapPos position);
+        internal abstract void OnObjectPlaced(MapPos position);
+        internal abstract void OnObjectExchanged(MapPos position, Map.Object oldObject, Map.Object newObject);
+        internal abstract void OnRoadSegmentPlaced(MapPos position, Direction direction);
+        internal abstract void OnRoadSegmentDeleted(MapPos position, Direction direction);
+    }
+
+    internal class Map : IEquatable<Map>
     {
         const int SAVE_MAP_TILE_SIZE = 16;
 
@@ -553,17 +563,6 @@ namespace Freeserf
 
 
         #endregion
-
-
-        public abstract class Handler
-        {
-            public abstract void OnHeightChanged(MapPos position);
-            public abstract void OnObjectChanged(MapPos position);
-            public abstract void OnObjectPlaced(MapPos position);
-            public abstract void OnObjectExchanged(MapPos position, Map.Object oldObject, Map.Object newObject);
-            public abstract void OnRoadSegmentPlaced(MapPos position, Direction direction);
-            public abstract void OnRoadSegmentDeleted(MapPos position, Direction direction);
-        }
 
         public class LandscapeTile : IEquatable<LandscapeTile>
         {
@@ -1830,12 +1829,12 @@ namespace Freeserf
             this.updateState = updateState;
         }
 
-        public void AddChangeHandler(Handler handler)
+        public void AddChangeHandler(MapHandler handler)
         {
             changeHandlers.Add(handler);
         }
 
-        public void DeleteChangeHandler(Handler handler)
+        public void DeleteChangeHandler(MapHandler handler)
         {
             changeHandlers.Remove(handler);
         }

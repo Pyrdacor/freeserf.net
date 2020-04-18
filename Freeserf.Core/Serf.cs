@@ -31,7 +31,7 @@ namespace Freeserf
 
     // TODO: Give the state values plausible names instead of FieldX and so on!
 
-    public class Serf : GameObject, IState
+    internal class Serf : GameObject, IState
     {
         public enum Type : sbyte
         {
@@ -2113,7 +2113,7 @@ namespace Freeserf
         };
 
         [Data]
-        private SerfState state = new SerfState();
+        private readonly SerfState state = new SerfState();
         readonly StateData s = null;
 
         public Serf(Game game, uint index)
@@ -2123,6 +2123,7 @@ namespace Freeserf
         }
 
         public bool Dirty => state.Dirty;
+        public IReadOnlyList<string> DirtyProperties => state.DirtyProperties;
 
         public uint Player
         {

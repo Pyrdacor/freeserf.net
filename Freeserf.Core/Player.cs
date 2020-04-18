@@ -36,17 +36,16 @@ namespace Freeserf
     using SerfMap = Dictionary<Serf.Type, int>;
     using word = UInt16;
 
-    public class Player : GameObject, IState
+    internal class Player : GameObject, IState
     {
         // We only serialize the settings and the player state
         [Data]
-        private PlayerSettings settings = new PlayerSettings();
+        private readonly PlayerSettings settings = new PlayerSettings();
         [Data]
-        private PlayerState state = new PlayerState();
-
+        private readonly PlayerState state = new PlayerState();
+        
         // Those are only saved locally
         ushort lastTick = 0;
-        bool notificationFlag = false;
         readonly Notifications notifications = new Notifications();
         readonly PositionTimers timers = new PositionTimers();
         readonly Dictionary<MapPos, GameTime> lastUnderAttackNotificationTimes = new Dictionary<MapPos, GameTime>();
@@ -118,6 +117,16 @@ namespace Freeserf
 
         // Used for multiplayer games to see if an update is necessary.
         public bool Dirty => settings.Dirty || state.Dirty;
+        public IReadOnlyList<string> DirtyProperties
+        {
+            get
+            {
+                var dirtyProperties = new List<string>(settings.DirtyProperties.Count + state.DirtyProperties.Count);
+                dirtyProperties.AddRange(settings.DirtyProperties);
+                dirtyProperties.AddRange(state.DirtyProperties);
+                return dirtyProperties;
+            }
+        }
 
         public bool EmergencyProgramActive
         {
@@ -220,10 +229,10 @@ namespace Freeserf
         /// <summary>
         /// Whether a notification is queued for this player.
         /// </summary>
-        public bool HasNotifications => notificationFlag;
+        public bool HasNotifications { get; private set; } = false;
         public void DropNotifications()
         {
-            notificationFlag = false;
+            HasNotifications = false;
         }
         /// <summary>
         /// Whether the knight level of military buildings is temporarily
@@ -263,7 +272,7 @@ namespace Freeserf
         // Enqueue a new notification message for player.
         public void AddNotification(Notification.Type type, MapPos position, uint data)
         {
-            notificationFlag = true;
+            HasNotifications = true;
 
             var notification = new Notification();
             notification.NotificationType = type;
@@ -1864,7 +1873,7 @@ namespace Freeserf
             state.HasCastle = (flags & 0x01) != 0;
             settings.SendStrongest = (flags & 0x02) != 0;
             state.CyclingKnightsInProgress = (flags & 0x04) != 0;
-            notificationFlag = (flags & 0x08) != 0;
+            HasNotifications = (flags & 0x08) != 0;
             state.CyclingKnightsReducedLevel = (flags & 0x10) != 0;
             state.CyclingKnightsSecondPhase = (flags & 0x20) != 0;
             state.IsAI = (flags & 0x80) != 0;
@@ -1960,7 +1969,7 @@ namespace Freeserf
             state.HasCastle = (flags & 0x01) != 0;
             settings.SendStrongest = (flags & 0x02) != 0;
             state.CyclingKnightsInProgress = (flags & 0x04) != 0;
-            notificationFlag = (flags & 0x08) != 0;
+            HasNotifications = (flags & 0x08) != 0;
             state.CyclingKnightsReducedLevel = (flags & 0x10) != 0;
             state.CyclingKnightsSecondPhase = (flags & 0x20) != 0;
             state.IsAI = (flags & 0x80) != 0;
@@ -2047,8 +2056,8 @@ namespace Freeserf
             if (settings.SendStrongest)
                 flags |= 0x02;
             if (state.CyclingKnightsInProgress)
-                flags |= 0x04;
-            if (notificationFlag)
+                flags  |= 0x04;
+            if (HasNotifications)
                 flags |= 0x08;
             if (state.CyclingKnightsReducedLevel)
                 flags |= 0x10;

@@ -209,7 +209,7 @@ namespace Freeserf.Serialize
         /// <param name="state"></param>
         /// <param name="onlyDirtyProperties"></param>
         /// <returns></returns>
-        private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(State state, bool onlyDirtyProperties)
+        private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(IState state, bool onlyDirtyProperties)
         {
             if (onlyDirtyProperties && state.DirtyProperties.Count == 0)
                 return new KeyValuePair<string, bool>[0];
@@ -222,7 +222,7 @@ namespace Freeserf.Serialize
             return allProperties;
         }
 
-        public static void Serialize(Stream stream, State state, bool full, bool leaveOpen = false)
+        public static void Serialize(Stream stream, IState state, bool full, bool leaveOpen = false)
         {
             using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen))
             {
@@ -233,7 +233,7 @@ namespace Freeserf.Serialize
             }
         }
 
-        private static void SerializeWithoutHeader(BinaryWriter writer, State state, bool full)
+        private static void SerializeWithoutHeader(BinaryWriter writer, IState state, bool full)
         {
             if (!full && !state.Dirty)
             {
@@ -282,7 +282,7 @@ namespace Freeserf.Serialize
             SerializePropertyValue(writer, 0, false);
         }
 
-        public static T Deserialize<T>(Stream stream, bool leaveOpen = false) where T : State, new()
+        public static void Deserialize<T>(T targetObject, Stream stream, bool leaveOpen = false) where T : IState
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen))
             {
@@ -295,14 +295,14 @@ namespace Freeserf.Serialize
                     header[3] != DATA_MINOR_VERSION)
                     throw new ExceptionFreeserf("Wrong state data version");
 
-                return DeserializeWithoutHeader<T>(reader);
+                DeserializeWithoutHeader(targetObject, reader);
             }
         }
 
-        private static object DeserializeWithoutHeader(BinaryReader reader, Type type)
+        private static void DeserializeWithoutHeader(object targetObject, BinaryReader reader)
         {
+            var type = targetObject.GetType();
             var propertyMap = PropertyMap.Create(type);
-            var obj = Activator.CreateInstance(type);
 
             while (true)
             {
@@ -315,16 +315,21 @@ namespace Freeserf.Serialize
 
                 if (property != null)
                 {
-                    property.SetValue(obj, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(obj)));
+                    property.SetValue(targetObject, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(targetObject)));
                 }
                 else // possibly a field
                 {
                     var field = type.GetField(propertyName);
 
-                    field.SetValue(obj, DeserializePropertyValue(reader, field.FieldType, field.GetValue(obj)));
+                    field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, field.GetValue(targetObject)));
                 }
             }
+        }
 
+        private static object DeserializeWithoutHeader(BinaryReader reader, Type type)
+        {
+            var obj = Activator.CreateInstance(type);
+            DeserializeWithoutHeader(obj, reader);
             return obj;
         }
 

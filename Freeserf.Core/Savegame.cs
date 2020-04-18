@@ -36,10 +36,10 @@ namespace Freeserf
     using Sections = List<SaveWriterTextSection>;
     using WriterValues = Dictionary<string, SaveWriterTextValue>;
 
-    public class SaveReaderBinary
+    internal class SaveReaderBinary
     {
-        BinaryReader reader;
-        long size;
+        readonly BinaryReader reader;
+        readonly long size;
 
         public SaveReaderBinary(SaveReaderBinary reader)
         {
@@ -116,10 +116,10 @@ namespace Freeserf
         }
     }
 
-    public class SaveReaderTextValue
+    internal class SaveReaderTextValue
     {
-        protected string value = "";
-        protected List<SaveReaderTextValue> parts = new List<SaveReaderTextValue>();
+        protected readonly string value = "";
+        protected readonly List<SaveReaderTextValue> parts = new List<SaveReaderTextValue>();
 
         public SaveReaderTextValue(string value)
         {
@@ -207,7 +207,7 @@ namespace Freeserf
         public SaveReaderTextValue this[int index] => parts[index];
     }
 
-    public class SaveWriterTextValue
+    internal class SaveWriterTextValue
     {
         public string Value { get; protected set; } = "";
 
@@ -227,7 +227,7 @@ namespace Freeserf
         }
     }
 
-    public abstract class SaveReaderText
+    internal abstract class SaveReaderText
     {
         public abstract string Name { get; }
         public abstract int Number { get; }
@@ -237,7 +237,7 @@ namespace Freeserf
         public abstract bool HasValue(string name);
     }
 
-    public abstract class SaveWriterText
+    internal abstract class SaveWriterText
     {
         public abstract string Name { get; }
         public abstract uint Number { get; }
@@ -246,7 +246,7 @@ namespace Freeserf
         public abstract SaveWriterText AddSection(string name, uint number);
     }
 
-    public class GameStore
+    internal class GameStore
     {
         public class SaveInfo
         {
@@ -516,10 +516,10 @@ namespace Freeserf
 
     class SaveWriterTextSection : SaveWriterText
     {
-        protected string name = "";
-        protected uint number;
-        protected WriterValues values = new WriterValues();
-        protected Sections sections = new Sections();
+        protected readonly string name = "";
+        protected readonly uint number;
+        protected readonly WriterValues values = new WriterValues();
+        protected readonly Sections sections = new Sections();
 
         public override string Name => name;
 
@@ -589,9 +589,9 @@ namespace Freeserf
 
     class SaveReaderTextSection : SaveReaderText
     {
-        protected string name = "";
-        protected int number;
-        protected ReaderValues values = new ReaderValues();
+        protected readonly string name = "";
+        protected readonly int number;
+        protected readonly ReaderValues values = new ReaderValues();
 
         public override string Name => name;
 
@@ -645,8 +645,8 @@ namespace Freeserf
 
     class SaveReaderTextFile : SaveReaderText
     {
-        protected ReaderSections sections = new ReaderSections();
-        protected ReaderValues values = new ReaderValues();
+        protected readonly ReaderSections sections = new ReaderSections();
+        protected readonly ReaderValues values = new ReaderValues();
 
         public override string Name => "";
 

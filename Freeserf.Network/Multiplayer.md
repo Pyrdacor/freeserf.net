@@ -19,7 +19,8 @@ There are basically these states:
 
 In addition there are some map states and game settings.
 
-- Roads
+- Borders
+- Roads / Paths
 - Trees
 - Stones
 - Fish resource amounts
