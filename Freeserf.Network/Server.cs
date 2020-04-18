@@ -106,6 +106,7 @@ namespace Freeserf.Network
         readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
         readonly Dictionary<IRemoteClient, MultiplayerStatus> clientStatus = new Dictionary<IRemoteClient, MultiplayerStatus>();
         readonly Dictionary<IRemoteClient, DateTime> lastClientHeartbeats = new Dictionary<IRemoteClient, DateTime>();
+        uint lastUserActionOrInSyncGameTime = 0;
 
         public LocalServer(string name, GameInfo gameInfo)
         {
@@ -299,6 +300,28 @@ namespace Freeserf.Network
             }
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
+
+            // Send an in-sync message if necessary
+            if (State == ServerState.Game)
+            {
+                var currentGame = GameManager.Instance.GetCurrentGame();
+
+                if (currentGame != null && lastUserActionOrInSyncGameTime - currentGame.GameTime >= InSyncData.SyncDelay * Freeserf.Global.TICKS_PER_SEC &&
+                    InSyncData.TimeToSync(currentGame))
+                {
+                    lastUserActionOrInSyncGameTime = currentGame.GameTime;
+
+                    var gameTime = currentGame.GameTime;
+                    var hours = gameTime / 3600;
+                    gameTime -= hours * 3600;
+                    var minutes = gameTime / 60;
+                    gameTime -= minutes * 60;
+                    var seconds = gameTime;
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Sending in-sync message to all clients at game time: {hours}:{minutes}:{seconds}.");
+
+                    BroadcastInSync(currentGame.GameTime);
+                }
+            }
         }
 
         Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
@@ -407,6 +430,20 @@ namespace Freeserf.Network
                             {
                                 if (networkData.Type == NetworkDataType.Request || networkData.Type == NetworkDataType.UserActionData)
                                 {
+                                    if (networkData.Type == NetworkDataType.UserActionData)
+                                    {
+                                        var currentGame = GameManager.Instance.GetCurrentGame();
+
+                                        if (currentGame == null)
+                                        {
+                                            Log.Error.Write(ErrorSystemType.Network, "User action received after game was closed.");
+                                            Close();
+                                            return;
+                                        }
+
+                                        lastUserActionOrInSyncGameTime = currentGame.GameTime;
+                                    }
+
                                     NetworkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
                                 }
                                 else
@@ -760,6 +797,11 @@ namespace Freeserf.Network
         private void BroadcastDisconnect()
         {
             Broadcast((client) => client.SendDisconnect());
+        }
+
+        private void BroadcastInSync(uint gameTime)
+        {
+            Broadcast((client) => client.SendInSyncMessage(gameTime));
         }
 
         private void BroadcastGameStateUpdate(Game game)

@@ -26,6 +26,17 @@ namespace Freeserf.Network
 {
     public class InSyncData : INetworkData
     {
+        /// <summary>
+        /// Sync is only done if the game time is a multiple of this in seconds.
+        /// </summary>
+        public const int SyncDelay = 10;
+
+        public static bool TimeToSync(Game game)
+        {
+            var nextGameTime = game.NextGameTime;
+            return game.GameTime != nextGameTime && nextGameTime % SyncDelay == 0;
+        }
+
         public NetworkDataType Type => NetworkDataType.InSync;
 
         public byte MessageIndex => Global.SpontaneousMessage; // always async

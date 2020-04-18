@@ -131,6 +131,7 @@ namespace Freeserf
         internal uint MapGoldMoraleFactor { get; private set; }
         internal uint GoldTotal { get; private set; }
         public GameTime GameTime { get; private set; } = 0; // in seconds
+        public GameTime NextGameTime => GameTime + (gameTimeTicksOfSecond + gameSpeed) / Global.TICKS_PER_SEC;
 
         public Game(Render.IRenderView renderView, IAudioInterface audioInterface)
         {
@@ -438,6 +439,7 @@ namespace Freeserf
             Log.Info.Write(ErrorSystemType.Game, $"Game speed: {gameSpeed}");
         }
 
+        public uint GameSpeed => gameSpeed;
         public bool IsPaused => gameSpeed == 0;
 
         public void Pause()
