@@ -11,3 +11,4 @@
 - No heartbeats are sent while in lobby nor are timeouts checked in lobby
 - Server does not check for client timeouts yet
 - Once a MP game was running another started MP game can be started by the server but clients are rejected then (seems to happen after any game)
+- Clients are player 1 when a game state update is received (players must be swapped so that the server takes their position, or player != 0 must be controlled in client interface)

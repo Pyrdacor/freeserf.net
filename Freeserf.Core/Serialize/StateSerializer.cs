@@ -444,6 +444,7 @@ namespace Freeserf.Serialize
             }
             else if (typeof(IDirtyMap).IsAssignableFrom(type))
             {
+                // TODO: adjust serialization like for DirtyArray
                 var keyType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
                 var valueType = type.IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
 

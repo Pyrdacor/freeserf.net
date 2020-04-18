@@ -314,7 +314,7 @@ namespace Freeserf
     {
         const int SAVE_MAP_TILE_SIZE = 16;
 
-        public enum Object
+        public enum Object : byte
         {
             None = 0,
             Flag,
@@ -422,7 +422,7 @@ namespace Freeserf
             Object127
         }
 
-        public enum Minerals
+        public enum Minerals : byte
         {
             None = 0,
             Gold,
@@ -438,7 +438,7 @@ namespace Freeserf
            A SEMIPASSABLE space is like FILLED but no roads
            can be built. A IMPASSABLE space can neither be
            used for contructions nor passed by serfs. */
-        public enum Space
+        public enum Space : byte
         {
             Open = 0,
             Filled,
@@ -446,7 +446,7 @@ namespace Freeserf
             Impassable,
         }
 
-        public enum Terrain
+        public enum Terrain : byte
         {
             Water0 = 0,
             Water1,
@@ -833,6 +833,47 @@ namespace Freeserf
             }
         }
 
+        [DataClass]
+        class ObjectChange : IState, IComparable
+        {
+            public MapPos Position;
+            public Object OldObject;
+            public Object NewObject;
+            public int OldObjectIndex;
+            public int NewObjectIndex;
+
+            static readonly List<string> Names = new List<string>()
+            {
+                nameof(Position),
+                nameof(OldObject),
+                nameof(NewObject),
+                nameof(OldObjectIndex),
+                nameof(NewObjectIndex)
+            };
+
+            public bool Dirty => true;
+
+            public IReadOnlyList<string> DirtyProperties => Names;
+
+            public void ResetDirtyFlag()
+            {
+                // do nothing
+            }
+
+            public int CompareTo(object obj)
+            {
+                return Position.CompareTo(obj as ObjectChange);
+            }
+
+            public int CompareTo(ObjectChange obj)
+            {
+                if (obj == null)
+                    return 1;
+
+                return Position.CompareTo(obj.Position);
+            }
+        }
+
         public bool Dirty => updateState.Dirty || landscapeTiles.Dirty || gameTiles.Dirty;
         public IReadOnlyList<string> DirtyProperties
         {
@@ -845,14 +886,45 @@ namespace Freeserf
                     dirtyProperties.Add(nameof(landscapeTiles));
                 if (gameTiles.Dirty)
                     dirtyProperties.Add(nameof(gameTiles));
+                if (changedObjects.Dirty)
+                    dirtyProperties.Add(nameof(changedObjects));
                 return dirtyProperties;
             }
         }
+
         public void ResetDirtyFlag()
         {
+            changedObjects.Clear();
             updateState.ResetDirtyFlag();
             landscapeTiles.ResetDirtyFlag();
             gameTiles.ResetDirtyFlag();
+        }
+
+        // Value: Lower word: Old object, Higher word, 
+        [Data]
+        readonly DirtyMap<MapPos, ObjectChange> changedObjects = new DirtyMap<MapPos, ObjectChange>();
+
+        /// <summary>
+        /// Should only be used for clients after map state deserialization.
+        /// </summary>
+        /// <param name="mapPositions"></param>
+        public void PrepareDeserialization()
+        {
+            changedObjects.Clear();
+        }
+
+        /// <summary>
+        /// Should only be used for clients after map state deserialization.
+        /// </summary>
+        /// <param name="mapPositions"></param>
+        public void UpdateObjectsAfterDeserialization()
+        {
+            foreach (var changedObject in changedObjects)
+            {
+                ProcessObjectChange(changedObject.Value);
+            }
+
+            changedObjects.Clear();
         }
 
         public MapGeometry Geometry { get; }
@@ -1800,6 +1872,8 @@ namespace Freeserf
             }
         }
 
+
+
         /// <summary>
         /// Change the object at a map position. If index is non-negative
         /// also change this. The index should be reset to zero when a flag or
@@ -1811,12 +1885,38 @@ namespace Freeserf
         public void SetObject(MapPos position, Object obj, int index)
         {
             var oldObject = landscapeTiles[(int)position].Object;
+            var oldObjectIndex = (int)gameTiles[(int)position].ObjectIndex;
 
             landscapeTiles[(int)position].Object = obj;
 
             if (index >= 0)
                 gameTiles[(int)position].ObjectIndex = (uint)index;
 
+            var objectChange = new ObjectChange()
+            {
+                Position = position,
+                OldObject = oldObject,
+                NewObject = obj,
+                OldObjectIndex = oldObjectIndex,
+                NewObjectIndex = index
+            };
+
+            ProcessObjectChange(objectChange);
+
+            // Do we have an object change for this position already?
+            if (changedObjects.ContainsKey(position))
+            {
+                // Merge
+                var prevObjectChange = changedObjects[position];
+                objectChange.OldObject = prevObjectChange.OldObject;
+                objectChange.OldObjectIndex = prevObjectChange.OldObjectIndex;                
+            }
+
+            changedObjects[position] = objectChange;
+        }
+
+        void ProcessObjectChange(ObjectChange objectChange)
+        {
             // Notify about object change
             var cycle = DirectionCycleCW.CreateDefault();
 
@@ -1824,32 +1924,32 @@ namespace Freeserf
             {
                 foreach (var handler in changeHandlers)
                 {
-                    handler.OnObjectChanged(Move(position, direction));
+                    handler.OnObjectChanged(Move(objectChange.Position, direction));
                 }
             }
 
-            if ((oldObject == Object.None && obj != Object.None) ||
-                (obj < Object.Tree0 && obj != Object.None)) // e.g. placing flags/buildings on some removable map objects
+            if ((objectChange.OldObject == Object.None && objectChange.NewObject != Object.None) ||
+                (objectChange.NewObject < Object.Tree0 && objectChange.NewObject != Object.None)) // e.g. placing flags/buildings on some removable map objects
             {
-                if (oldObject != Object.None && obj < Object.Tree0 && obj != Object.None)
+                if (objectChange.OldObject != Object.None && objectChange.NewObject < Object.Tree0 && objectChange.NewObject != Object.None)
                 {
                     // this will remove an existing map object when a building or flag is placed
                     foreach (var handler in changeHandlers)
                     {
-                        handler.OnObjectExchanged(position, oldObject, obj);
+                        handler.OnObjectExchanged(objectChange.Position, objectChange.OldObject, objectChange.NewObject);
                     }
                 }
 
                 foreach (var handler in changeHandlers)
                 {
-                    handler.OnObjectPlaced(position);
+                    handler.OnObjectPlaced(objectChange.Position);
                 }
             }
-            else if (oldObject != Object.None)
+            else if (objectChange.OldObject != Object.None)
             {
                 foreach (var handler in changeHandlers)
                 {
-                    handler.OnObjectExchanged(position, oldObject, obj);
+                    handler.OnObjectExchanged(objectChange.Position, objectChange.OldObject, objectChange.NewObject);
                 }
             }
         }
@@ -2399,14 +2499,14 @@ namespace Freeserf
                     randomValue = random.Next();
                     if ((randomValue & 0x300) == 0)
                     {
-                        SetObject(position, Object.Pine0 + (randomValue & 7), -1);
+                        SetObject(position, (Object)((int)Object.Pine0 + (randomValue & 7)), -1);
                     }
                     break;
                 case Object.NewTree:
                     randomValue = random.Next();
                     if ((randomValue & 0x300) == 0)
                     {
-                        SetObject(position, Object.Tree0 + (randomValue & 7), -1);
+                        SetObject(position, (Object)((int)Object.Tree0 + (randomValue & 7)), -1);
                     }
                     break;
                 case Object.Seeds0:

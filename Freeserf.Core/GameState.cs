@@ -14,7 +14,7 @@ namespace Freeserf
     using Inventories = Collection<Inventory>;
     using Buildings = Collection<Building>;
     using Serfs = Collection<Serf>;
-    using Players = Collection<Player>;    
+    using Players = Collection<Player>;
 
     [DataClass]
     internal class GameState : State
@@ -258,6 +258,8 @@ namespace Freeserf
 
         public static void DeserializeInto(Game game, Stream stream, bool leaveOpen)
         {
+            game.Map?.PrepareDeserialization();
+
             Deserialize(game, stream, true);
 
             DeserializeIntoCollection(stream, game.Players, (Player player) => throw new ExceptionFreeserf("A player can't be removed from a game."));
@@ -265,6 +267,8 @@ namespace Freeserf
             DeserializeIntoCollection(stream, game.Inventories, (Inventory inventory) => game.DeleteInventory(inventory));
             DeserializeIntoCollection(stream, game.Buildings, (Building building) => game.DeleteBuilding(building));
             DeserializeIntoCollection(stream, game.Serfs, (Serf serf) => game.DeleteSerf(serf));
+
+            game.Map?.UpdateObjectsAfterDeserialization();
 
             if (!leaveOpen)
                 stream.Close();

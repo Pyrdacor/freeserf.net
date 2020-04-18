@@ -6856,7 +6856,7 @@ namespace Freeserf
             {
                 ++s.FreeWalking.NegDistance2;
 
-                int newObject = -1;
+                int newObject;
 
                 if (s.FreeWalking.NegDistance1 != 0)
                 {
@@ -6975,7 +6975,7 @@ namespace Freeserf
 
                 // Plant a tree 
                 Animation = 122;
-                var newObject = (Map.Object)(Map.Object.NewPine + (Game.RandomInt() & 1));
+                var newObject = (Map.Object)((int)Map.Object.NewPine + (Game.RandomInt() & 1));
 
                 if (map.Paths(Position) == 0 && map.GetObject(Position) == Map.Object.None)
                 {
@@ -8293,10 +8293,10 @@ namespace Freeserf
                         Animation = 142;
 
                         // Select small or large sign with the right resource depicted. 
-                        var obj = Map.Object.SignLargeGold +
+                        var obj = (int)Map.Object.SignLargeGold +
                             2 * ((int)map.GetResourceType(Position) - 1) +
                             (map.GetResourceAmount(Position) < 12 ? 1 : 0);
-                        map.SetObject(Position, obj, -1);
+                        map.SetObject(Position, (Map.Object)obj, -1);
 
                         // Check whether a new notification should be posted. 
                         bool showNotification = true;

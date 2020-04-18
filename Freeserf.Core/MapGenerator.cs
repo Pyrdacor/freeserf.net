@@ -1164,7 +1164,7 @@ namespace Freeserf
                             if (HexagonTypesInRange(position, typeMin, typeMax) &&
                                 tiles[(int)position].Object == Map.Object.None)
                             {
-                                tiles[(int)position].Object = objectBase + (RandomInt() & objectMask);
+                                tiles[(int)position].Object = (Map.Object)((int)objectBase + (RandomInt() & objectMask));
                             }
                         }
                         break;

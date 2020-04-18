@@ -60,7 +60,7 @@ namespace Freeserf.Serialize
             {
                 lock (map)
                 {
-                    if ((map[key] == null && value != null) || value is State || map[key].CompareTo(value) != 0)
+                    if (!map.ContainsKey(key) || (map[key] == null && value != null) || value is State || map[key].CompareTo(value) != 0)
                     {
                         map[key] = value;
 
@@ -98,6 +98,12 @@ namespace Freeserf.Serialize
             lock (map)
             {
                 map.Add(key, value);
+
+                if (!Dirty)
+                {
+                    Dirty = true;
+                    GotDirty?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -113,7 +119,29 @@ namespace Freeserf.Serialize
         {
             lock (map)
             {
-                return map.Remove(key);
+                bool removed = map.Remove(key);
+
+                if (removed && !Dirty)
+                {
+                    Dirty = true;
+                    GotDirty?.Invoke(this, EventArgs.Empty);
+                }
+
+                return removed;
+            }
+        }
+
+        public void Clear()
+        {
+            lock (map)
+            {
+                map.Clear();
+
+                if (!Dirty)
+                {
+                    Dirty = true;
+                    GotDirty?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
