@@ -65,7 +65,6 @@ namespace Freeserf
                 Log.MaxSize = null; // Console output is not limited
 #endif
                 Log.SetLevel(UserConfig.DefaultLogLevel);
-                
             }
             catch (IOException)
             {
@@ -715,7 +714,7 @@ namespace Freeserf
         }
 
 
-        #region IDisposable
+#region IDisposable
 
         private bool disposed = false;
 
@@ -741,7 +740,7 @@ namespace Freeserf
             Dispose(true);
         }
 
-        #endregion
+#endregion
 
     }
 }

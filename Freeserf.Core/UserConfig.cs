@@ -40,7 +40,11 @@ namespace Freeserf
         const int DefaultResolutionY = 960;
         const bool DefaultFullscreen = false;
         // Logging
+#if DEBUG
+        public const Log.Level DefaultLogLevel = Log.Level.Verbose;
+#else
         public const Log.Level DefaultLogLevel = Log.Level.Error;
+#endif
         public const long DefaultMaxLogSize = 10 * 1024 * 1024; // 10 MB
         public const long MinLogSize = 1024;
         public const string DefaultLogFile = "freeserf.log";
