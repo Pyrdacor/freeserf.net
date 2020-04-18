@@ -142,6 +142,8 @@ namespace Freeserf.Network
                 connectionObserver.DataRefreshNeeded += ConnectionObserver_DataRefreshNeeded;
                 connectionObserver.ConnectionLost += ConnectionObserver_ConnectionLost;
 
+                connectionObserver.Run();
+
                 return true;
             }
             catch

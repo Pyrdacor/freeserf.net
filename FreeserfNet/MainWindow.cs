@@ -356,8 +356,11 @@ namespace Freeserf
 
         private void MainWindow_Update(double delta)
         {
-            gameView.NetworkDataReceiver = networkDataReceiver;
-            gameView?.UpdateNetworkEvents();
+            if (gameView != null)
+            {
+                gameView.NetworkDataReceiver = networkDataReceiver;
+                gameView.UpdateNetworkEvents();
+            }
         }
 
         private void MainWindow_StateChanged(WindowState state)

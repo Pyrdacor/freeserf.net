@@ -11,4 +11,5 @@
 - Check exceptions
 - Longrun tests
 - Server game updates (atm the client sees no game updates beside his own)
-- No heartbeats are sent while in lobby
+- No heartbeats are sent while in lobby nor are timeouts checked in lobby
+- Server does not check for client timeouts yet
