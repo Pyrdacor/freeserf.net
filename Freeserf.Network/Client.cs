@@ -214,6 +214,8 @@ namespace Freeserf.Network
 
         void Server_DataReceived(IRemoteServer server, byte[] data)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Received {data.Length} byte(s) of data from server '{server.Ip}'.");
+
             // TODO: handle client states
             lastServerHeartbeat = DateTime.UtcNow;
 
@@ -228,6 +230,8 @@ namespace Freeserf.Network
             {
                 foreach (var parsedData in NetworkDataParser.Parse(data))
                 {
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Received {parsedData.LogName} (message index {parsedData.MessageIndex}).");
+
                     switch (parsedData.Type)
                     {
                         case NetworkDataType.Heartbeat:
@@ -330,6 +334,8 @@ namespace Freeserf.Network
         {
             byte messageIndex = Global.GetNextMessageIndex();
 
+            Log.Verbose.Write(ErrorSystemType.Network, $"Send request 'Lobby state update' with message index {messageIndex} to server.");
+
             new RequestData(messageIndex, Request.LobbyData).Send(server);
 
             return messageIndex;
@@ -339,6 +345,8 @@ namespace Freeserf.Network
         {
             byte messageIndex = Global.GetNextMessageIndex();
 
+            Log.Verbose.Write(ErrorSystemType.Network, $"Send request 'Game state update' with message index {messageIndex} to server.");
+
             // Note: A game data request is always a full sync request.
             new RequestData(messageIndex, Request.GameData).Send(server);
 
@@ -347,6 +355,7 @@ namespace Freeserf.Network
 
         public void SendHeartbeatAsResponse(byte messageIndex)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Send heartbeat to server.");
             lastOwnHearbeat = DateTime.UtcNow;
             new Heartbeat(messageIndex, (byte)PlayerIndex).Send(server);
         }
@@ -357,18 +366,19 @@ namespace Freeserf.Network
             if ((DateTime.UtcNow - lastOwnHearbeat).TotalSeconds < 1.0)
                 return;
 
-            lastOwnHearbeat = DateTime.UtcNow;
-            new Heartbeat(Global.GetNextMessageIndex(), (byte)PlayerIndex).Send(server);
+            SendHeartbeatAsResponse(Global.GetNextMessageIndex());
         }
 
         public void SendDisconnect()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, "Send disconnect to server.");
             lastOwnHearbeat = DateTime.UtcNow;
             new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(server);
         }
 
         private void SendStartGameRequest()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, "Send request 'Start game' to server.");
             lastOwnHearbeat = DateTime.UtcNow;
             new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(server);
         }
@@ -377,6 +387,7 @@ namespace Freeserf.Network
         {
             if (messageIndex != Global.SpontaneousMessage)
             {
+                Log.Verbose.Write(ErrorSystemType.Network, $"Send response {responseType} to server.");
                 lastOwnHearbeat = DateTime.UtcNow;
                 new ResponseData(messageIndex, responseType).Send(server);
             }
@@ -384,6 +395,7 @@ namespace Freeserf.Network
 
         public void SendUserAction(UserActionData userAction)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Send user action {userAction.UserAction} to server.");
             lastOwnHearbeat = DateTime.UtcNow;
             userAction.Send(server);
         }
