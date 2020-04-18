@@ -223,6 +223,8 @@ namespace Freeserf.Network
 
         public int Size => header.DataSize;
 
+        public string LogName => "Lobby data";
+
         public void Send(IRemote destination)
         {
             if (sendData == null)

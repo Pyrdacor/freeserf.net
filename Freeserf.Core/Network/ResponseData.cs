@@ -55,6 +55,8 @@ namespace Freeserf.Network
 
         public int Size => 4;
 
+        public string LogName => $"Response '{ResponseType}'";
+
         public ResponseData()
         {
             // use when parsing the data

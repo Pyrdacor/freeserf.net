@@ -320,6 +320,8 @@ namespace Freeserf.Network
 
         public int Size { get; private set; }
 
+        public string LogName => $"User action '{UserAction}'";
+
         public INetworkData Parse(byte[] rawData, ref int offset)
         {
             if (rawData.Length - offset < MinDataSize)

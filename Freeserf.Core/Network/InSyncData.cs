@@ -59,6 +59,8 @@ namespace Freeserf.Network
 
         public int Size => 6;
 
+        public string LogName => "In-sync message";
+
         public INetworkData Parse(byte[] rawData, ref int offset)
         {
             if (rawData.Length - offset == 2)

@@ -375,6 +375,8 @@ namespace Freeserf.Network
 
         void HandleData(RemoteClient client, byte[] data)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Received {data.Length} byte(s) of data from client '{client.Ip} (player {client.PlayerIndex})'.");
+
             if (NetworkDataReceiver == null)
                 throw new ExceptionFreeserf(ErrorSystemType.Application, "Network data receiver is not set up.");
 
@@ -382,6 +384,8 @@ namespace Freeserf.Network
             {
                 foreach (var networkData in NetworkDataParser.Parse(data))
                 {
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Received {networkData.LogName} (message index {networkData.MessageIndex}).");
+
                     // Whenever we receive something from the client we update the last heartbeat time.
                     lastClientHeartbeats[client] = DateTime.UtcNow;
 
@@ -759,31 +763,43 @@ namespace Freeserf.Network
 
         private void BroadcastStartGameRequest()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast request 'Start game' to {clients.Count} clients.");
+
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client));
         }
 
         private void BroadcastAllowUserInputRequest()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast request 'Allow user input' to {clients.Count} clients.");
+
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client));
         }
 
         private void BroadcastDisallowUserInputRequest()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast request 'Disallow user input' to {clients.Count} clients.");
+
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.DisallowUserInput).Send(client));
         }
 
         private void BroadcastPauseRequest()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast request 'Pause game' to {clients.Count} clients.");
+
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.Pause).Send(client));
         }
 
         private void BroadcastResumeRequest()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast request 'Resume game' to {clients.Count} clients.");
+
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client));
         }
 
         private void BroadcastLobbyData()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast lobby data to {clients.Count} clients.");
+
             Broadcast((client) =>
             {
                 lock (lobbyServerInfo)
@@ -796,22 +812,30 @@ namespace Freeserf.Network
 
         private void BroadcastDisconnect()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast disconnect to {clients.Count} clients.");
+
             Broadcast((client) => client.SendDisconnect());
         }
 
         private void BroadcastInSync(uint gameTime)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast in-sync message to {clients.Count} clients.");
+
             Broadcast((client) => client.SendInSyncMessage(gameTime));
         }
 
         private void BroadcastGameStateUpdate(Game game)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast game state update to {clients.Count} clients.");
+
             Broadcast((client) => client.SendGameStateUpdate(game));
         }
 
         // TODO: call it!
         private void BroadcastHeartbeat()
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast heartbeat to {clients.Count} clients.");
+
             Broadcast((client) => client.SendHeartbeat());
         }
     }

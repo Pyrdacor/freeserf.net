@@ -49,6 +49,7 @@ namespace Freeserf.Network
         int Size { get; }
         void Send(IRemote destination);
         INetworkData Parse(byte[] rawData, ref int offset);
+        string LogName { get; }
     }
 
     public static class NetworkDataParser

@@ -90,6 +90,8 @@ namespace Freeserf.Network
 
         public int Size => 4;
 
+        public string LogName => $"Request '{Request}'";
+
         public INetworkData Parse(byte[] rawData, ref int offset)
         {
             if (rawData.Length - offset < Size)
