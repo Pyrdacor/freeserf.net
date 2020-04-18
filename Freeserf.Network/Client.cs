@@ -391,18 +391,13 @@ namespace Freeserf.Network
 
         public void SendHeartbeat(byte messageIndex)
         {
-            Log.Verbose.Write(ErrorSystemType.Network, $"Send heartbeat to server.");
-            lastOwnHearbeat = DateTime.UtcNow;
-            new Heartbeat(messageIndex, (byte)PlayerIndex).Send(server);
-        }
-
-        public void SendHeartbeat()
-        {
             // Only send heartbeat every second
             if ((DateTime.UtcNow - lastOwnHearbeat).TotalSeconds < 1.0)
                 return;
 
-            SendHeartbeat(Global.GetNextMessageIndex());
+            Log.Verbose.Write(ErrorSystemType.Network, $"Send heartbeat to server.");
+            lastOwnHearbeat = DateTime.UtcNow;
+            new Heartbeat(messageIndex, (byte)PlayerIndex).Send(server);
         }
 
         public void SendDisconnect()

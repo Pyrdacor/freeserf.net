@@ -1846,7 +1846,7 @@ namespace Freeserf
 
         internal void DeleteSerf(Serf serf)
         {
-            if (Map.GetSerfIndex(serf.Position) == serf.Index)
+            if (Map != null && serf.Position != Global.INVALID_MAPPOS && Map.GetSerfIndex(serf.Position) == serf.Index)
                 Map.SetSerfIndex(serf.Position, 0);
 
             RemoveSerfFromDrawing(serf);
@@ -1902,7 +1902,8 @@ namespace Freeserf
 
         internal void DeleteBuilding(Building building)
         {
-            Map.SetObject(building.Position, Map.Object.None, 0);
+            if (building.Position != Global.INVALID_MAPPOS)
+                Map?.SetObject(building.Position, Map.Object.None, 0);
 
             if (renderBuildings.TryRemove(building, out var renderBuilding) && renderBuilding != null)
                 renderBuilding.Delete();
@@ -1912,7 +1913,8 @@ namespace Freeserf
 
         internal void DeleteFlag(Flag flag)
         {
-            Map.SetObject(flag.Position, Map.Object.None, 0);
+            if (flag.Position != Global.INVALID_MAPPOS)
+                Map?.SetObject(flag.Position, Map.Object.None, 0);
 
             if (renderFlags.TryRemove(flag, out var renderFlag) && renderFlag != null)
                 renderFlag.Delete();

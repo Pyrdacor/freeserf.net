@@ -224,13 +224,18 @@ namespace Freeserf.Serialize
 
         public static void Serialize(Stream stream, IState state, bool full, bool leaveOpen = false)
         {
-            using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen))
-            {
-                // "FS" -> Freeserf State
-                writer.Write(new byte[] { (byte)'F', (byte)'S', DATA_MAJOR_VERSION, DATA_MINOR_VERSION });
+            using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen);
+            // "FS" -> Freeserf State
+            writer.Write(new byte[] { (byte)'F', (byte)'S', DATA_MAJOR_VERSION, DATA_MINOR_VERSION });
 
-                SerializeWithoutHeader(writer, state, full);
-            }
+            SerializeWithoutHeader(writer, state, full);
+        }
+
+        public static void SerializeWithoutHeader(Stream stream, IState state, bool full)
+        {
+            using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
+
+            SerializeWithoutHeader(writer, state, full);
         }
 
         private static void SerializeWithoutHeader(BinaryWriter writer, IState state, bool full)
@@ -284,19 +289,24 @@ namespace Freeserf.Serialize
 
         public static void Deserialize<T>(T targetObject, Stream stream, bool leaveOpen = false) where T : IState
         {
-            using (var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen))
-            {
-                byte[] header = reader.ReadBytes(4);
+            using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen);
+            byte[] header = reader.ReadBytes(4);
 
-                if (header[0] != 'F' || header[1] != 'S')
-                    throw new ExceptionFreeserf("Invalid state data");
+            if (header[0] != 'F' || header[1] != 'S')
+                throw new ExceptionFreeserf("Invalid state data");
 
-                if (header[2] != DATA_MAJOR_VERSION ||
-                    header[3] != DATA_MINOR_VERSION)
-                    throw new ExceptionFreeserf("Wrong state data version");
+            if (header[2] != DATA_MAJOR_VERSION ||
+                header[3] != DATA_MINOR_VERSION)
+                throw new ExceptionFreeserf("Wrong state data version");
 
-                DeserializeWithoutHeader(targetObject, reader);
-            }
+            DeserializeWithoutHeader(targetObject, reader);
+        }
+
+        public static void DeserializeWithoutHeader<T>(T targetObject, Stream stream) where T : IState
+        {
+            using var reader = new BinaryReader(stream, Encoding.UTF8, true);
+
+            DeserializeWithoutHeader(targetObject, reader);
         }
 
         private static void DeserializeWithoutHeader(object targetObject, BinaryReader reader)

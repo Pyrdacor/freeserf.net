@@ -228,7 +228,7 @@ namespace Freeserf
             }
             foreach (var obj in collection)
             {
-                StateSerializer.Serialize(stream, obj, full, true);
+                StateSerializer.SerializeWithoutHeader(stream, obj, full);
             }
         }
 
@@ -271,7 +271,7 @@ namespace Freeserf
             for (int i = 0; i < objectIndices.Length; ++i)
             {
                 var updatedObject = collection.GetOrInsert(objectIndices[i]);
-                StateSerializer.Deserialize(updatedObject, stream, true);
+                StateSerializer.DeserializeWithoutHeader(updatedObject, stream);
             }
 
             // 4. Update free indices again
