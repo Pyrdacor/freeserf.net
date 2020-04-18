@@ -10,4 +10,4 @@
 - Server game updates (atm the client sees no game updates beside his own)
 - No heartbeats are sent while in lobby nor are timeouts checked in lobby
 - Server does not check for client timeouts yet
-- Once a MP game was running another started MP game can be started by the server but clients are rejected then
+- Once a MP game was running another started MP game can be started by the server but clients are rejected then (seems to happen after any game)

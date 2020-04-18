@@ -279,7 +279,7 @@ namespace Freeserf.Serialize
             }
 
             // end of state data marker
-            SerializePropertyValue(writer, 0, false);
+            SerializePropertyValue(writer, (byte)0, false);
         }
 
         public static void Deserialize<T>(T targetObject, Stream stream, bool leaveOpen = false) where T : IState

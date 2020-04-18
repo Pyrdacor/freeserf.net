@@ -30,6 +30,7 @@ namespace Freeserf
 
     internal class Random : State
     {
+        [Data]
         public DirtyArray<word> State { get; } = new DirtyArray<word>(3);
 
         public Random()
