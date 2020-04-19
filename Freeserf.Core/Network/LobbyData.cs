@@ -248,8 +248,8 @@ namespace Freeserf.Network
             header.DataSize = rawData[offset + 3];
             header.PlayerCount = rawData[offset + 4];
 
-            if (header.PlayerCount > 4)
-                throw new ExceptionFreeserf("Lobby player count was > 4. Lobby data is corrupted.");
+            if (header.PlayerCount > Game.MAX_PLAYER_COUNT)
+                throw new ExceptionFreeserf($"Lobby player count was > {Game.MAX_PLAYER_COUNT}. Lobby data is corrupted.");
 
             int dataIndex = offset + 5;
             var serverSettings = NetworkDataConverter<LobbyServerSettings>.FromBytes(rawData, ref dataIndex);

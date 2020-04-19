@@ -165,7 +165,7 @@ namespace Freeserf.UI
         Button buttonUp = null;
         Button buttonDown = null;
         Button buttonMapSize = null;
-        readonly PlayerBox[] playerBoxes = new PlayerBox[4];
+        readonly PlayerBox[] playerBoxes = new PlayerBox[Game.MAX_PLAYER_COUNT];
         TextField textFieldVersion = null;
         Button buttonExit = null;
         TextField textCreateServer = null;
@@ -176,7 +176,7 @@ namespace Freeserf.UI
         // TODO: maybe the game speed should be setable (before the game) or changeable (option to change it in the game)
 
         // used only for multiplayer games
-        readonly bool[] playerIsAI = new bool[4] { false, false, false, false };
+        readonly bool[] playerIsAI = new bool[Game.MAX_PLAYER_COUNT] { false, false, false, false };
         readonly Dictionary<uint, IRemoteClient> playerClientMapping = new Dictionary<uint, IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
         public GameInfo ServerGameInfo { get; private set; } = null;
@@ -491,7 +491,7 @@ namespace Freeserf.UI
             buttonMapSize.Clicked += ButtonMapSize_Clicked;
             AddChild(buttonMapSize, 8 * 25 + 12, 16, true);
 
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                 playerBoxes[i] = new PlayerBox(interf, buttonLayer);
 
             textFieldVersion = new TextField(interf, 1);
@@ -626,7 +626,7 @@ namespace Freeserf.UI
         {
             base.InternalHide();
 
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                 playerBoxes[i].Visible = false;
         }
 
@@ -672,7 +672,7 @@ namespace Freeserf.UI
             if (serverInfo == null)
                 return 0;
 
-            return Math.Min(4, serverInfo.MaxPlayers);
+            return Math.Min(Game.MAX_PLAYER_COUNT, serverInfo.MaxPlayers);
         }
 
         protected override void InternalDraw()
@@ -756,7 +756,7 @@ namespace Freeserf.UI
                         buttonCreateServer.Displayed = false;
                     }
 
-                    for (int i = 0; i < 4; ++i)
+                    for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                     {
                         if (i > 0)
                             playerBoxes[i].ShowActivationButton = gameType != GameType.MultiplayerLoading;
@@ -775,7 +775,7 @@ namespace Freeserf.UI
                     buttonMapSize.Displayed = false;
                     buttonCreateServer.Displayed = false;
 
-                    for (int i = 0; i < 4; ++i)
+                    for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                     {
                         playerBoxes[i].ShowActivationButton = false;
                         playerBoxes[i].ShowCopyValueButton = false;
@@ -802,7 +802,7 @@ namespace Freeserf.UI
                         buttonMapSize.Displayed = false;
                         buttonCreateServer.Displayed = false;
 
-                        for (int i = 0; i < 4; ++i)
+                        for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                         {
                             playerBoxes[i].ShowActivationButton = false;
                             playerBoxes[i].ShowCopyValueButton = false;
@@ -1412,7 +1412,7 @@ namespace Freeserf.UI
 
             var clickPosition = new Position(x, y);
 
-            for (uint i = 0; i < 4; ++i)
+            for (uint i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
             {
                 var area = playerBoxes[i].Area;
 

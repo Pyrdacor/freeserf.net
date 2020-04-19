@@ -26,7 +26,7 @@ namespace Freeserf.UI
         public string Name = "";
         public string HostName = "";
         public int CurrentPlayers = 0;
-        public int MaxPlayers = 4;
+        public int MaxPlayers = Game.MAX_PLAYER_COUNT;
 
         public override string ToString()
         {
@@ -40,12 +40,12 @@ namespace Freeserf.UI
             : base(interf, Render.TextRenderType.NewUI)
         {
             // TODO
-            AddServer("Test Server", "localhost", 1, 4);
+            AddServer("Test Server", "localhost", 1, Game.MAX_PLAYER_COUNT);
 
             Init(interf);
         }
 
-        public void AddServer(string serverName, string hostName, int currentPlayers, int maxPlayers = 4)
+        public void AddServer(string serverName, string hostName, int currentPlayers, int maxPlayers = Game.MAX_PLAYER_COUNT)
         {
             items.Add(new ServerInfo()
             {
