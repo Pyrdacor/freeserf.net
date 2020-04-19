@@ -254,7 +254,7 @@ namespace Freeserf.Serialize
         {
             if (!full && !state.Dirty)
             {
-                SerializePropertyValue(writer, 0, false);
+                SerializePropertyValue(writer, (byte)0, false);
                 return;
             }
 
@@ -516,7 +516,7 @@ namespace Freeserf.Serialize
         {
             if (typeof(IState).IsAssignableFrom(propertyType))
             {
-                SerializePropertyValue(writer, 0, false);
+                SerializePropertyValue(writer, (byte)0, false);
             }
             else if (propertyType == typeof(string))
             {
@@ -524,7 +524,7 @@ namespace Freeserf.Serialize
             }
             else if (typeof(IDirtyArray).IsAssignableFrom(propertyType))
             {
-                writer.Write(0); // length of zero
+                WriteCount(writer.BaseStream, 0); // length of zero
             }
             else if (typeof(IDirtyMap).IsAssignableFrom(propertyType))
             {
