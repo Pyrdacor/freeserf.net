@@ -143,6 +143,7 @@ namespace Freeserf.Serialize
         }
 
         private static readonly Dictionary<Type, PropertyMap> propertyMapCache = new Dictionary<Type, PropertyMap>();
+        private static readonly Dictionary<Type, List<KeyValuePair<string, bool>>> typeSerializablePropertyCache = new Dictionary<Type, List<KeyValuePair<string, bool>>>();
         /// <summary>
         /// Major data version.
         /// This is part of the data version a communication partner uses.
@@ -154,9 +155,24 @@ namespace Freeserf.Serialize
         /// </summary>
         private const byte DATA_MINOR_VERSION = 0;
 
+        private static bool IsPropertySerializable(PropertyInfo property)
+        {
+            if (property.GetGetMethod() != null)
+                return true;
+
+            // Internal properties are serializable too
+            if (property.GetGetMethod(true) != null)
+            {
+                if (property.GetGetMethod(true).IsAssembly)
+                    return true;
+            }
+
+            return false;
+        }
+
         private static bool IsPropertyDeserializable(PropertyInfo property)
         {
-            // We wiil deserialize into such objects.
+            // We will deserialize into such objects.
             if (typeof(IState).IsAssignableFrom(property.PropertyType) ||
                 typeof(IDirtyArray).IsAssignableFrom(property.PropertyType) ||
                 typeof(IDirtyMap).IsAssignableFrom(property.PropertyType))
@@ -177,6 +193,9 @@ namespace Freeserf.Serialize
         /// <returns></returns>
         private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(Type stateType)
         {
+            if (typeSerializablePropertyCache.ContainsKey(stateType))
+                return typeSerializablePropertyCache[stateType];
+
             if (stateType.GetCustomAttribute(typeof(DataClassAttribute)) != null)
             {
                 var properties = stateType.GetProperties()
@@ -191,14 +210,16 @@ namespace Freeserf.Serialize
                         field.GetCustomAttribute(typeof(IgnoreAttribute)) == null
                     )
                     .Select(field => new KeyValuePair<string, bool>(field.Name, false));
-                return Enumerable.Concat(properties, fields);
+                var result = new List<KeyValuePair<string, bool>>(Enumerable.Concat(properties, fields));
+                typeSerializablePropertyCache[stateType] = result;
+                return result;
             }
             else
             {
-                var properties = stateType.GetProperties()
+                var properties = stateType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                     .Where(property =>
                         property.GetCustomAttribute(typeof(DataAttribute)) != null &&
-                        property.GetGetMethod() != null &&
+                        IsPropertySerializable(property) &&
                         IsPropertyDeserializable(property)
                     )
                     .Select(property => new KeyValuePair<string, bool>(property.Name, true));
@@ -207,7 +228,9 @@ namespace Freeserf.Serialize
                         field.GetCustomAttribute(typeof(DataAttribute)) != null
                     )
                     .Select(field => new KeyValuePair<string, bool>(field.Name, false));
-                return Enumerable.Concat(properties, fields);
+                var result = new List<KeyValuePair<string, bool>>(Enumerable.Concat(properties, fields));
+                typeSerializablePropertyCache[stateType] = result;
+                return result;
             }
         }
 
@@ -278,7 +301,7 @@ namespace Freeserf.Serialize
 
                 if (property.Value) // real property
                 {
-                    var propertyInfo = state.GetType().GetProperty(property.Key);
+                    var propertyInfo = state.GetType().GetProperty(property.Key, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     propertyValue = propertyInfo.GetValue(state);
                     propertyType = propertyInfo.PropertyType;
                 }
@@ -333,7 +356,7 @@ namespace Freeserf.Serialize
                 if (propertyName == null)
                     break;
 
-                var property = type.GetProperty(propertyName);
+                var property = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (property != null)
                 {
@@ -378,57 +401,29 @@ namespace Freeserf.Serialize
 
                 return propertyValue;
             }
-            else if (type == typeof(string))
+            else if (type == typeof(dword))
             {
-                return reader.ReadString();
-            }
-            else if (type == typeof(char))
-            {
-                return reader.ReadChar();
+                return reader.ReadUInt32();
             }
             else if (type == typeof(int))
             {
                 return reader.ReadInt32();
             }
-            else if (type == typeof(sbyte))
-            {
-                return reader.ReadSByte();
-            }
-            else if (type == typeof(byte))
-            {
-                return reader.ReadByte();
-            }
-            else if (type == typeof(short))
-            {
-                return reader.ReadInt16();
-            }
             else if (type == typeof(word))
             {
                 return reader.ReadUInt16();
             }
-            else if (type == typeof(dword))
+            else if (type == typeof(byte))
             {
-                return reader.ReadUInt32();
+                return reader.ReadByte();
+            }            
+            else if (type == typeof(bool))
+            {
+                return reader.ReadByte() != 0;
             }
-            else if (type == typeof(long))
+            else if (type == typeof(string))
             {
-                return reader.ReadInt64();
-            }
-            else if (type == typeof(qword))
-            {
-                return reader.ReadUInt64();
-            }
-            else if (type == typeof(float))
-            {
-                return reader.ReadSingle();
-            }
-            else if (type == typeof(double))
-            {
-                return reader.ReadDouble();
-            }
-            else if (type == typeof(decimal))
-            {
-                return reader.ReadDecimal();
+                return reader.ReadString();
             }
             else if (type.IsEnum)
             {
@@ -506,6 +501,38 @@ namespace Freeserf.Serialize
 
                 return dirtyMap;
             }
+            else if (type == typeof(char))
+            {
+                return reader.ReadChar();
+            }            
+            else if (type == typeof(sbyte))
+            {
+                return reader.ReadSByte();
+            }
+            else if (type == typeof(short))
+            {
+                return reader.ReadInt16();
+            }
+            else if (type == typeof(long))
+            {
+                return reader.ReadInt64();
+            }
+            else if (type == typeof(qword))
+            {
+                return reader.ReadUInt64();
+            }
+            else if (type == typeof(float))
+            {
+                return reader.ReadSingle();
+            }
+            else if (type == typeof(double))
+            {
+                return reader.ReadDouble();
+            }
+            else if (type == typeof(decimal))
+            {
+                return reader.ReadDecimal();
+            }
             else
             {
                 throw new ExceptionFreeserf("Unsupport data type for state deserialization: " + type.Name);
@@ -542,57 +569,29 @@ namespace Freeserf.Serialize
             {
                 SerializeWithoutHeader(writer, value as IState, full);
             }
-            else if (value is string)
+            else if (value is dword)
             {
-                writer.Write(value as string);
-            }
-            else if (value is char)
-            {
-                writer.Write((char)value);
+                writer.Write((dword)value);
             }
             else if (value is int)
             {
                 writer.Write((int)value);
             }
-            else if (value is sbyte)
+            else if (value is word)
             {
-                writer.Write((sbyte)value);
+                writer.Write((word)value);
             }
             else if (value is byte)
             {
                 writer.Write((byte)value);
             }
-            else if (value is short)
+            else if (value is bool)
             {
-                writer.Write((short)value);
+                writer.Write((byte)((bool)value ? 1 : 0));
             }
-            else if (value is word)
+            else if (value is string)
             {
-                writer.Write((word)value);
-            }
-            else if (value is dword)
-            {
-                writer.Write((dword)value);
-            }
-            else if (value is long)
-            {
-                writer.Write((long)value);
-            }
-            else if (value is qword)
-            {
-                writer.Write((qword)value);
-            }
-            else if (value is float)
-            {
-                writer.Write((float)value);
-            }
-            else if (value is double)
-            {
-                writer.Write((double)value);
-            }
-            else if (value is decimal)
-            {
-                writer.Write((decimal)value);
+                writer.Write(value as string);
             }
             else if (value.GetType().IsEnum)
             {
@@ -651,6 +650,38 @@ namespace Freeserf.Serialize
                     SerializePropertyValue(writer, elementKey, full);
                     SerializePropertyValue(writer, elementValue, full);
                 }
+            }
+            else if (value is char)
+            {
+                writer.Write((char)value);
+            }            
+            else if (value is sbyte)
+            {
+                writer.Write((sbyte)value);
+            }
+            else if (value is short)
+            {
+                writer.Write((short)value);
+            }
+            else if (value is long)
+            {
+                writer.Write((long)value);
+            }
+            else if (value is qword)
+            {
+                writer.Write((qword)value);
+            }
+            else if (value is float)
+            {
+                writer.Write((float)value);
+            }
+            else if (value is double)
+            {
+                writer.Write((double)value);
+            }
+            else if (value is decimal)
+            {
+                writer.Write((decimal)value);
             }
             else
             {
