@@ -401,6 +401,13 @@ namespace Freeserf.UI
         // Open box for starting a new game 
         public void OpenGameInit(GameInitBox.GameType gameType = GameInitBox.GameType.Custom)
         {
+            if (Viewer.ViewerType != Viewer.Type.LocalPlayer)
+            {
+                Viewer = Viewer.ChangeTo(Viewer.Type.LocalPlayer);
+                Viewer.MainInterface.OpenGameInit(gameType);
+                return;
+            }
+
             // the following code will start the intro mission that is played in the background while the GameInitBox is active
             GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView, AudioInterface);
 

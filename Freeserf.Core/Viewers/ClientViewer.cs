@@ -32,6 +32,13 @@ namespace Freeserf
             : base(renderView, audioInterface, previousViewer, gui, Type.Client)
         {
             client = previousViewer.MainInterface.Client;
+            client.Disconnected += Client_Disconnected;
+        }
+
+        private void Client_Disconnected(object sender, System.EventArgs e)
+        {
+            GameManager.Instance.CloseGame();
+            MainInterface.OpenGameInit();
         }
 
         public override void OnNewGame(Game game)
