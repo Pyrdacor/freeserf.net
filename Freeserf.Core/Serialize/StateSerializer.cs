@@ -337,7 +337,7 @@ namespace Freeserf.Serialize
 
                 if (property != null)
                 {
-                    property.SetValue(targetObject, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(targetObject)));
+                    DeserializePropertyValueInto(targetObject, reader, property);
                 }
                 else // possibly a field
                 {
@@ -351,6 +351,20 @@ namespace Freeserf.Serialize
         private static void DeserializeWithoutHeaderInto(object obj, BinaryReader reader, Type type)
         {
             DeserializeWithoutHeader(obj, reader);
+        }
+
+        private static void DeserializePropertyValueInto(object targetObject, BinaryReader reader, PropertyInfo property)
+        {
+            if (typeof(IState).IsAssignableFrom(property.PropertyType) ||
+                typeof(IDirtyArray).IsAssignableFrom(property.PropertyType) ||
+                typeof(IDirtyMap).IsAssignableFrom(property.PropertyType))
+            {
+                DeserializePropertyValue(reader, property.PropertyType, property.GetValue(targetObject));
+            }
+            else
+            {
+                property.SetValue(targetObject, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(targetObject)));
+            }
         }
 
         private static object DeserializePropertyValue(BinaryReader reader, Type type, object propertyValue)
@@ -425,7 +439,8 @@ namespace Freeserf.Serialize
             }
             else if (typeof(IDirtyArray).IsAssignableFrom(type))
             {
-                var elementType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
+                // Note: Dirty arrays have to provide the element type as the last generic argument to make this work!
+                var elementType = type.IsGenericType ? type.GetGenericArguments()[^1] : typeof(object);
 
                 if (typeof(IDirtyArray).IsAssignableFrom(elementType) ||
                     typeof(IDirtyMap).IsAssignableFrom(elementType))

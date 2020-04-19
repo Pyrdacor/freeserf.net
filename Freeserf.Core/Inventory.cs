@@ -39,17 +39,41 @@ namespace Freeserf
             Out = 3,   // 11
         }
 
-        internal class OutQueue : IComparable
+        [DataClass]
+        internal class OutQueue : State, IComparable
         {
-            public Resource.Type Type;
-            public uint Destination;
+            public Resource.Type type;
+            public uint destination;
 
-            public int CompareTo(object other)
+            public Resource.Type Type
             {
-                if (other is OutQueue)
+                get => type;
+                set
                 {
-                    var otherQueue = other as OutQueue;
+                    if (type != value)
+                    {
+                        type = value;
+                        MarkPropertyAsDirty(nameof(Type));
+                    }
+                }
+            }
+            public uint Destination
+            {
+                get => destination;
+                set
+                {
+                    if (destination != value)
+                    {
+                        destination = value;
+                        MarkPropertyAsDirty(nameof(Destination));
+                    }
+                }
+            }
 
+            public override int CompareTo(object other)
+            {
+                if (other is OutQueue otherQueue)
+                {
                     if (Type == otherQueue.Type)
                         return Destination.CompareTo(otherQueue.Destination);
 

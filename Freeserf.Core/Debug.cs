@@ -149,7 +149,7 @@ namespace Freeserf
             [CallerFilePath] string file = "")
         {
             Log.Error.Write(ErrorSystemType.Application, $"NOT_REACHED at line {lineNumber} of {Path.GetFileName(file)}.");
-            Environment.Exit(6);
+            throw new ExceptionFreeserf(ErrorSystemType.Application, "Not reached");
         }
 #else
         public static void NotReached()
