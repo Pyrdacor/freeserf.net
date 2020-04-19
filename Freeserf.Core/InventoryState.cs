@@ -3,10 +3,10 @@
 namespace Freeserf
 {
     using Serialize;
-    using dword = UInt32;
-    using ResourceMap = Serialize.DirtyMap<Resource.Type, UInt32>;
-    using SerfMap = Serialize.DirtyMap<Serf.Type, UInt32>;
     using word = UInt16;
+    using dword = UInt32;
+    using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, UInt32>;
+    using SerfMap = Serialize.DirtyArrayWithEnumIndex<Serf.Type, UInt32>;
 
     [DataClass]
     internal class InventoryState : State
@@ -28,8 +28,8 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
-                Resources.Dirty = false;
-                Serfs.Dirty = false;
+                Resources.ResetDirtyFlag();
+                Serfs.ResetDirtyFlag();
                 OutQueue.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
@@ -99,11 +99,11 @@ namespace Freeserf
         /// <summary>
         /// Count of resources
         /// </summary>
-        public ResourceMap Resources { get; } = new ResourceMap();
+        public ResourceMap Resources { get; } = new ResourceMap((int)Resource.Type.MaxValueWithoutFoodGroup + 1);
         /// <summary>
         /// Indices to serfs of each type
         /// </summary>
-        public SerfMap Serfs { get; } = new SerfMap();
+        public SerfMap Serfs { get; } = new SerfMap((int)Serf.Type.MaxValue + 1);
         /// <summary>
         /// Resources waiting to be moved out
         /// </summary>

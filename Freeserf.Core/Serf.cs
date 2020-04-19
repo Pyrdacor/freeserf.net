@@ -63,7 +63,8 @@ namespace Freeserf
             Knight2,
             Knight3,
             Knight4,
-            Dead
+            Dead,
+            MaxValue = Dead
         }
 
         // The term FREE is used loosely in the following

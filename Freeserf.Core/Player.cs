@@ -27,14 +27,14 @@ using System.Linq;
 namespace Freeserf
 {
     using Serialize;
+    using word = UInt16;
     using dword = UInt32;
     using GameTime = UInt32;
     using MapPos = UInt32;
     using Notifications = Queue<Notification>;
     using PositionTimers = List<PositionTimer>;
-    using ResourceMap = Dictionary<Resource.Type, uint>;
-    using SerfMap = Dictionary<Serf.Type, int>;
-    using word = UInt16;
+    using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, uint>;
+    using SerfMap = Serialize.DirtyArrayWithEnumIndex<Serf.Type, int>;
 
     internal class Player : GameObject, IState
     {
@@ -1595,7 +1595,7 @@ namespace Freeserf
 
         public ResourceMap GetStatsResources()
         {
-            var resources = new ResourceMap();
+            var resources = new ResourceMap((int)Resource.Type.MaxValueWithoutFoodGroup + 1);
 
             for (int j = 0; j < 26; ++j)
             {
@@ -1608,10 +1608,7 @@ namespace Freeserf
 
         public SerfMap GetStatsSerfsIdle()
         {
-            var serfs = new SerfMap();
-
-            foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
-                serfs.Add(type, 0);
+            var serfs = new SerfMap((int)Serf.Type.MaxValue + 1);
 
             // Sum up all existing serfs.
             foreach (var serf in Game.GetPlayerSerfs(this))
@@ -1627,10 +1624,7 @@ namespace Freeserf
 
         public SerfMap GetStatsSerfsPotential()
         {
-            var serfs = new SerfMap();
-
-            foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
-                serfs.Add(type, 0);
+            var serfs = new SerfMap((int)Serf.Type.MaxValue + 1);
 
             // Sum up potential serfs of all inventories.
             foreach (var inventory in Game.GetPlayerInventories(this))
@@ -1639,7 +1633,7 @@ namespace Freeserf
                 {
                     for (int i = 0; i < 27; ++i)
                     {
-                        serfs[(Serf.Type)i] += (int)inventory.SerfPotentialCount((Serf.Type)i);
+                        serfs[i] += (int)inventory.SerfPotentialCount((Serf.Type)i);
                     }
                 }
             }

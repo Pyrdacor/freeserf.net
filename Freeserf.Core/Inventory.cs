@@ -27,8 +27,8 @@ using System.Linq;
 namespace Freeserf
 {
     using Serialize;
-    using ResourceMap = Serialize.DirtyMap<Resource.Type, uint>;
     using word = UInt16;
+    using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, uint>;
 
     internal class Inventory : GameObject, IState, IDisposable
     {
@@ -73,16 +73,6 @@ namespace Freeserf
             {
                 state.OutQueue[i].Type = Resource.Type.None;
                 state.OutQueue[i].Destination = 0;
-            }
-
-            foreach (Serf.Type type in Enum.GetValues(typeof(Serf.Type)))
-            {
-                state.Serfs.Add(type, 0u);
-            }
-
-            for (var resource = Resource.Type.Fish; resource <= Resource.Type.Shield; ++resource)
-            {
-                state.Resources.Add(resource, 0);
             }
         }
 
@@ -146,7 +136,7 @@ namespace Freeserf
         {
             var serfType = serf.SerfType;
 
-            if (state.Serfs[serfType] != serf.Index)
+            if (serfType == Serf.Type.None || state.Serfs[serfType] != serf.Index)
             {
                 return false;
             }
@@ -165,7 +155,7 @@ namespace Freeserf
 
         public Serf CallOutSerf(Serf.Type type)
         {
-            if (state.Serfs[type] == 0)
+            if (type == Serf.Type.None || state.Serfs[type] == 0)
             {
                 return null;
             }
@@ -182,7 +172,7 @@ namespace Freeserf
 
         public bool CallInternal(Serf serf)
         {
-            if (state.Serfs[serf.SerfType] != serf.Index)
+            if (serf.SerfType == Serf.Type.None || state.Serfs[serf.SerfType] != serf.Index)
             {
                 return false;
             }
@@ -194,7 +184,7 @@ namespace Freeserf
 
         public Serf CallInternal(Serf.Type type)
         {
-            if (state.Serfs[type] == 0)
+            if (type == Serf.Type.None || state.Serfs[type] == 0)
             {
                 return null;
             }
@@ -214,6 +204,9 @@ namespace Freeserf
 
         public bool HasSerf(Serf.Type type)
         {
+            if (type == Serf.Type.None)
+                return false;
+
             return state.Serfs[type] != 0;
         }
 
@@ -529,7 +522,7 @@ namespace Freeserf
 
         public bool SpecializeSerf(Serf serf, Serf.Type type)
         {
-            if (serf.SerfType != Serf.Type.Generic)
+            if (serf.SerfType != Serf.Type.Generic || type == Serf.Type.None)
             {
                 return false;
             }
@@ -611,12 +604,18 @@ namespace Freeserf
 
         public void SerfIdleInStock(Serf serf)
         {
+            if (serf.SerfType == Serf.Type.None)
+                throw new ExceptionFreeserf(ErrorSystemType.Serf, $"Null-serf used in {nameof(SerfIdleInStock)}.");
+
             state.Serfs[serf.SerfType] = serf.Index;
         }
 
         public void KnightTraining(Serf serf, int probability)
         {
             var oldType = serf.SerfType;
+
+            if (oldType == Serf.Type.None)
+                throw new ExceptionFreeserf(ErrorSystemType.Serf, $"Null-serf used in {nameof(KnightTraining)}.");
 
             if (serf.TrainKnight(probability))
             {

@@ -25,7 +25,9 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
 
         public int Length => 0;
 
+#pragma warning disable CS0067
         public event EventHandler GotDirty;
+#pragma warning restore CS0067
 
         public IReadOnlyList<int> DirtyIndices => throw new NotImplementedException();
 

@@ -28,7 +28,7 @@ using System.Linq;
 namespace Freeserf.UI
 {
     using Freeserf.Data;
-    using ResourceMap = Dictionary<Resource.Type, uint>;
+    using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, uint>;
 
     // TODO: If stats should reflect the current state we have
     //       to redraw the stat popup from time to time.

@@ -26,6 +26,7 @@ namespace Freeserf.Resource
     {
         MinValue = None,
         MaxValue = GroupFood,
+        MaxValueWithoutFoodGroup = Shield,
 
         None = -1,
 

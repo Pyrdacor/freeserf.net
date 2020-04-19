@@ -36,6 +36,33 @@ namespace Freeserf.Serialize
         void Set(int index, object value);
     }
 
+    public class DirtyArrayWithEnumIndex<TEnumIndex, T> : DirtyArray<T> where T : IComparable where TEnumIndex : Enum
+    {
+        public DirtyArrayWithEnumIndex()
+            : base()
+        {
+
+        }
+
+        public DirtyArrayWithEnumIndex(int size)
+            : base(size)
+        {
+
+        }
+
+        public DirtyArrayWithEnumIndex(params T[] values)
+            : base(values)
+        {
+
+        }
+
+        public T this[TEnumIndex index]
+        {
+            get => this[Convert.ToInt32(index)];
+            set => this[Convert.ToInt32(index)] = value;
+        }
+    }
+
     public class DirtyArray<T> : IDirtyArray, IEnumerable<T> where T : IComparable
     {
         T[] array = null;
