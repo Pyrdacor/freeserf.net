@@ -296,6 +296,9 @@ namespace Freeserf.Network
                 return;
             }
 
+            if (serverState == ServerState.Offline)
+                serverState = ServerState.Lobby;
+
             try
             {
                 foreach (var parsedData in NetworkDataParser.Parse(data))
