@@ -371,7 +371,7 @@ namespace Freeserf.Serialize
             }
         }
 
-        private static void DeserializeWithoutHeaderInto(object obj, BinaryReader reader, Type type)
+        private static void DeserializeWithoutHeaderInto(object obj, BinaryReader reader)
         {
             DeserializeWithoutHeader(obj, reader);
         }
@@ -397,7 +397,7 @@ namespace Freeserf.Serialize
                 if (Object.ReferenceEquals(propertyValue, null))
                     propertyValue = Activator.CreateInstance(type);
 
-                DeserializeWithoutHeaderInto(propertyValue, reader, type);
+                DeserializeWithoutHeaderInto(propertyValue, reader);
 
                 return propertyValue;
             }
@@ -457,7 +457,7 @@ namespace Freeserf.Serialize
                 for (int i = 0; i < serializedLength; ++i)
                 {
                     int index = full ? i : (int)ReadCount(reader.BaseStream);
-                    dirtyArray.Set(index, DeserializePropertyValue(reader, elementType, null));
+                    dirtyArray.Set(index, DeserializePropertyValue(reader, elementType, dirtyArray.Get(i)));
                 }
 
                 return dirtyArray;
@@ -487,7 +487,7 @@ namespace Freeserf.Serialize
                 for (int i = 0; i < count; ++i)
                 {
                     var key = DeserializePropertyValue(reader, keyType, null);
-                    var value = DeserializePropertyValue(reader, valueType, null);
+                    var value = DeserializePropertyValue(reader, valueType, null); // TODO: use previous value instead of null
                     map.SetValue(new KeyValuePair<object, object>(key, value), i);
                     Log.Verbose.Write(ErrorSystemType.Application, $"### Entry {i}: {{{key}: {value}}}");
                 }
@@ -719,14 +719,14 @@ namespace Freeserf.Serialize
         {
             do
             {
-                if ((count & 0x80) == 0)
+                if (count < 0x80)
                 {
                     stream.WriteByte((byte)count);
                     break;
                 }
                 else
                 {
-                    stream.WriteByte((byte)(count & 0x7f));
+                    stream.WriteByte((byte)(0x80 | (count & 0x7f)));
                     count >>= 7;
                 }
             } while (count != 0);

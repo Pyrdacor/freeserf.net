@@ -589,6 +589,19 @@ namespace Freeserf
             [Ignore]
             public Terrain TypeDown = Terrain.Water0;
 
+            public LandscapeTile Copy()
+            {
+                return new LandscapeTile()
+                {
+                    height = height,
+                    mineral = mineral,
+                    resourceAmount = resourceAmount,
+                    mapObject = mapObject,
+                    TypeUp = TypeUp,
+                    TypeDown = TypeDown
+                };
+            }
+
             public uint Height
             {
                 get => height;
@@ -752,6 +765,18 @@ namespace Freeserf
             uint objectIndex = 0;
             byte paths = 0;
             bool idleSerf = false;
+
+            public GameTile Copy()
+            {
+                return new GameTile()
+                {
+                    serf = serf,
+                    owner = owner,
+                    objectIndex = objectIndex,
+                    paths = paths,
+                    idleSerf = idleSerf
+                };
+            }
 
             public uint Serf
             {
@@ -955,7 +980,7 @@ namespace Freeserf
         // Callback for map height changes 
         readonly ChangeHandlers changeHandlers = new ChangeHandlers();
 
-        public Map(MapGeometry geometry, Render.IRenderView renderView)
+        public Map(MapGeometry geometry, Render.IRenderView renderView, Map template = null)
         {
             // Some code may still assume that map has at least size 3.
             if (geometry.Size < 3)
@@ -971,16 +996,35 @@ namespace Freeserf
             landscapeTiles = new DirtyArray<LandscapeTile>((int)geometry.TileCount);
             gameTiles = new DirtyArray<GameTile>((int)geometry.TileCount);
 
-            for (int i = 0; i < (int)geometry.TileCount; ++i)
+            if (template != null)
             {
-                landscapeTiles[i] = new LandscapeTile();
-                gameTiles[i] = new GameTile();
-            }
+                if (template.Geometry != geometry)
+                    throw new ExceptionFreeserf(ErrorSystemType.Application, "Invalid usage of map template.");
 
-            updateState.LastTick = 0;
-            updateState.Counter = 0;
-            updateState.RemoveSignsCounter = 0;
-            updateState.InitialPosition = 0;
+                for (int i = 0; i < (int)geometry.TileCount; ++i)
+                {
+                    landscapeTiles[i] = template.landscapeTiles[i].Copy();
+                    gameTiles[i] = template.gameTiles[i].Copy();
+                }
+
+                updateState.LastTick = template.updateState.LastTick;
+                updateState.Counter = template.updateState.Counter;
+                updateState.RemoveSignsCounter = template.updateState.RemoveSignsCounter;
+                updateState.InitialPosition = template.updateState.InitialPosition;
+            }
+            else
+            {
+                for (int i = 0; i < (int)geometry.TileCount; ++i)
+                {
+                    landscapeTiles[i] = new LandscapeTile();
+                    gameTiles[i] = new GameTile();
+                }
+
+                updateState.LastTick = 0;
+                updateState.Counter = 0;
+                updateState.RemoveSignsCounter = 0;
+                updateState.InitialPosition = 0;
+            }
 
             regions = (ushort)((geometry.Columns >> 5) * (geometry.Rows >> 5));
 
