@@ -862,7 +862,7 @@ namespace Freeserf
 
             public int CompareTo(object obj)
             {
-                return Position.CompareTo(obj as ObjectChange);
+                return CompareTo(obj as ObjectChange);
             }
 
             public int CompareTo(ObjectChange obj)
