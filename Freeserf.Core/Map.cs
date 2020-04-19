@@ -588,10 +588,18 @@ namespace Freeserf
             public Terrain TypeUp = Terrain.Water0;
             [Ignore]
             public Terrain TypeDown = Terrain.Water0;
+            readonly DirtyArray<LandscapeTile> parent;
+            readonly int parentIndex;
 
-            public LandscapeTile Copy()
+            public LandscapeTile(DirtyArray<LandscapeTile> parent, int parentIndex)
             {
-                return new LandscapeTile()
+                this.parent = parent;
+                this.parentIndex = parentIndex;
+            }
+
+            public LandscapeTile Copy(DirtyArray<LandscapeTile> parent)
+            {
+                return new LandscapeTile(parent, parentIndex)
                 {
                     height = height,
                     mineral = mineral,
@@ -600,6 +608,13 @@ namespace Freeserf
                     TypeUp = TypeUp,
                     TypeDown = TypeDown
                 };
+            }
+
+            protected override void MarkPropertyAsDirty(string name)
+            {
+                parent?.MarkIndexAsDirty(parentIndex);
+
+                base.MarkPropertyAsDirty(name);
             }
 
             public uint Height
@@ -765,10 +780,18 @@ namespace Freeserf
             uint objectIndex = 0;
             byte paths = 0;
             bool idleSerf = false;
+            readonly DirtyArray<GameTile> parent;
+            readonly int parentIndex;
 
-            public GameTile Copy()
+            public GameTile(DirtyArray<GameTile> parent, int parentIndex)
             {
-                return new GameTile()
+                this.parent = parent;
+                this.parentIndex = parentIndex;
+            }
+
+            public GameTile Copy(DirtyArray<GameTile> parent)
+            {
+                return new GameTile(parent, parentIndex)
                 {
                     serf = serf,
                     owner = owner,
@@ -776,6 +799,13 @@ namespace Freeserf
                     paths = paths,
                     idleSerf = idleSerf
                 };
+            }
+
+            protected override void MarkPropertyAsDirty(string name)
+            {
+                parent.MarkIndexAsDirty(parentIndex);
+
+                base.MarkPropertyAsDirty(name);
             }
 
             public uint Serf
@@ -1003,8 +1033,8 @@ namespace Freeserf
 
                 for (int i = 0; i < (int)geometry.TileCount; ++i)
                 {
-                    landscapeTiles[i] = template.landscapeTiles[i].Copy();
-                    gameTiles[i] = template.gameTiles[i].Copy();
+                    landscapeTiles[i] = template.landscapeTiles[i].Copy(landscapeTiles);
+                    gameTiles[i] = template.gameTiles[i].Copy(gameTiles);
                 }
 
                 updateState.LastTick = template.updateState.LastTick;
@@ -1016,8 +1046,8 @@ namespace Freeserf
             {
                 for (int i = 0; i < (int)geometry.TileCount; ++i)
                 {
-                    landscapeTiles[i] = new LandscapeTile();
-                    gameTiles[i] = new GameTile();
+                    landscapeTiles[i] = new LandscapeTile(landscapeTiles, i);
+                    gameTiles[i] = new GameTile(gameTiles, i);
                 }
 
                 updateState.LastTick = 0;
@@ -2060,17 +2090,15 @@ namespace Freeserf
         {
             landscapeTiles = new DirtyArray<LandscapeTile>(generator.GetLandscape());
 
-            MapPos position = 0;
-
-            foreach (var tile in landscapeTiles)
+            for (int i = 0; i < landscapeTiles.Length; ++i)
             {
-                if (tile.Object != Object.None)
+                landscapeTiles[i] = landscapeTiles[i].Copy(landscapeTiles);
+
+                if (landscapeTiles[i].Object != Object.None)
                 {
                     foreach (var handler in changeHandlers)
-                        handler.OnObjectPlaced(position);
+                        handler.OnObjectPlaced((MapPos)i);
                 }
-
-                ++position;
             }
         }
 

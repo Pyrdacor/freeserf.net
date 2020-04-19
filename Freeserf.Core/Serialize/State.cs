@@ -49,7 +49,7 @@ namespace Freeserf.Serialize
         [Ignore]
         public IReadOnlyList<string> DirtyProperties => dirtyProperties.AsReadOnly();
 
-        protected void MarkPropertyAsDirty(string name)
+        protected virtual void MarkPropertyAsDirty(string name)
         {
             lock (dirtyLock)
             {

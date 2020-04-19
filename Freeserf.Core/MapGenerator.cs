@@ -61,7 +61,7 @@ namespace Freeserf
             tags = new int[tileCount];
 
             for (int i = 0; i < tileCount; ++i)
-                tiles[i] = new Map.LandscapeTile();
+                tiles[i] = new Map.LandscapeTile(null, i);
 
             this.map = map;
         }

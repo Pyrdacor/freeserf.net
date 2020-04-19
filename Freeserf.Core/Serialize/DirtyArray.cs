@@ -87,6 +87,12 @@ namespace Freeserf.Serialize
 
         public void Set(int index, object value) => this[index] = (T)value;
 
+        public void MarkIndexAsDirty(int index)
+        {
+            if (!dirtyIndices.Contains(index))
+                dirtyIndices.Add(index);
+        }
+
         public T this[int index]
         {
             get => array[index];
