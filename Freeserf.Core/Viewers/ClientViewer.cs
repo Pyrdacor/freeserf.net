@@ -34,6 +34,17 @@ namespace Freeserf
             client = previousViewer.MainInterface.Client;
         }
 
+        public override void OnNewGame(Game game)
+        {
+            var music = MainInterface.Audio?.GetMusicPlayer();
+
+            if (music != null)
+                music.PlayTrack((int)Audio.Audio.TypeMidi.Track0);
+
+            MainInterface.SetGame(game);
+            MainInterface.SetPlayer(client.PlayerIndex);
+        }
+
         public override void OnEndGame(Game game)
         {
             base.OnEndGame(game);

@@ -603,7 +603,7 @@ namespace Freeserf.UI
                 return;
             }
 
-            this.Player = Game.GetPlayer(player);
+            Player = Game.GetPlayer(player);
 
             // Move viewport to initial position 
             var initialPosition = Game.Map.Position(0, 0);
