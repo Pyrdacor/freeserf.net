@@ -80,7 +80,18 @@ namespace Freeserf.Serialize
 
             // we only support reference comparison here
             // its only purpose is to be useable in DirtyArray and DirtyMap values
-            return this == obj ? 0 : GetHashCode().CompareTo(obj.GetHashCode());
+            if (this == obj)
+                return 0;
+
+            var hashCodeResult = GetHashCode().CompareTo(obj.GetHashCode());
+
+            if (hashCodeResult == 0) // not equal but same hash code
+            {
+                Log.Error.Write(ErrorSystemType.Application, "Different object with same hash code.");
+                return -1; // hopefully it works
+            }
+
+            return hashCodeResult;
         }
     }
 }

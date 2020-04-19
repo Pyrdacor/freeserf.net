@@ -87,12 +87,13 @@ namespace Freeserf
 
         public Road Copy()
         {
-            var copy = new Road();
-            copy.StartPosition = StartPosition;
-            copy.EndPosition = EndPosition;
-            copy.Directions = new Directions(Directions.Reverse()); // enumerator of stack is reversed order
-            copy.Cost = Cost;
-            return copy;
+            return new Road
+            {
+                StartPosition = StartPosition,
+                EndPosition = EndPosition,
+                Directions = new Directions(Directions.Reverse()), // enumerator of stack is reversed order
+                Cost = Cost
+            };
         }
 
         public static Road CreateBuildingRoad(Map map, MapPos flagPosition)
@@ -124,14 +125,22 @@ namespace Freeserf
                 position = map.Move(position, direction);
 
                 var cycle = DirectionCycleCW.CreateDefault();
+                bool found = false;
 
                 foreach (var nextDirection in cycle)
                 {
                     if (nextDirection != direction.Reverse() && map.HasPath(position, nextDirection))
                     {
                         direction = nextDirection;
+                        found = true;
                         break;
                     }
+                }
+
+                if (!found && !map.HasFlag(position) && !map.HasBuilding(position))
+                {
+                    throw new ExceptionFreeserf(ErrorSystemType.Map,
+                        $"Could not build road from map path. No valid path found at position {position}. Came from {map.Move(position, direction.Reverse())} -> {direction}.");
                 }
             }
             while (!map.HasFlag(position) && !map.HasBuilding(position));
@@ -599,6 +608,9 @@ namespace Freeserf
 
             public LandscapeTile Copy(DirtyArray<LandscapeTile> parent)
             {
+                if (parent == null)
+                    throw new ExceptionFreeserf(ErrorSystemType.Map, "Null landscape array.");
+
                 return new LandscapeTile(parent, parentIndex)
                 {
                     height = height,
@@ -678,7 +690,9 @@ namespace Freeserf
                     self.TypeDown == other.TypeDown &&
                     self.Mineral == other.Mineral &&
                     self.ResourceAmount == other.ResourceAmount &&
-                    self.Object == other.Object;
+                    self.Object == other.Object &&
+                    self.parent == other.parent &&
+                    self.parentIndex == other.parentIndex;
             }
 
             public static bool operator !=(LandscapeTile self, LandscapeTile other)
@@ -693,7 +707,7 @@ namespace Freeserf
 
             public override int GetHashCode()
             {
-                return HashCode.Combine(Height, TypeUp, TypeDown, Mineral, ResourceAmount, Object);
+                return HashCode.Combine(Height, TypeUp, TypeDown, Mineral, ResourceAmount, Object, parent, parentIndex);
             }
         }
 
@@ -880,7 +894,9 @@ namespace Freeserf
                     self.Owner == other.Owner &&
                     self.ObjectIndex == other.ObjectIndex &&
                     self.Paths == other.Paths &&
-                    self.IdleSerf == other.IdleSerf;
+                    self.IdleSerf == other.IdleSerf &&
+                    self.parent == other.parent &&
+                    self.parentIndex == other.parentIndex;
             }
 
             public static bool operator !=(GameTile self, GameTile other)
@@ -895,7 +911,7 @@ namespace Freeserf
 
             public override int GetHashCode()
             {
-                return HashCode.Combine(Serf, Owner, ObjectIndex, Paths, IdleSerf);
+                return HashCode.Combine(Serf, Owner, ObjectIndex, Paths, IdleSerf, parent, parentIndex);
             }
         }
 
