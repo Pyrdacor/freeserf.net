@@ -336,23 +336,21 @@ namespace Freeserf.Serialize
             }
         }
 
-        private static object DeserializeWithoutHeader(BinaryReader reader, Type type)
+        private static void DeserializeWithoutHeaderInto(object obj, BinaryReader reader, Type type)
         {
-            var obj = Activator.CreateInstance(type);
             DeserializeWithoutHeader(obj, reader);
-            return obj;
-        }
-
-        private static T DeserializeWithoutHeader<T>(BinaryReader reader) where T : IState, new()
-        {
-            return (T)DeserializeWithoutHeader(reader, typeof(T));
         }
 
         private static object DeserializePropertyValue(BinaryReader reader, Type type, object propertyValue)
         {
             if (typeof(IState).IsAssignableFrom(type))
             {
-                return DeserializeWithoutHeader(reader, type);
+                if (Object.ReferenceEquals(propertyValue, null))
+                    propertyValue = Activator.CreateInstance(type);
+
+                DeserializeWithoutHeaderInto(propertyValue, reader, type);
+
+                return propertyValue;
             }
             else if (type == typeof(string))
             {
