@@ -417,6 +417,13 @@ namespace Freeserf.Network
                         return;
                     }
 
+                    if (networkData.Type == NetworkDataType.Response)
+                    {
+                        // Responses are possible in all states
+                        // but we won't handle it here.
+                        return;
+                    }
+
                     switch (State)
                     {
                         case ServerState.Lobby:
