@@ -303,16 +303,15 @@ namespace Freeserf
         #region External interface
 
         /// <summary>
-        /// Add new player to the game. Returns the player number.
+        /// Adds a new player to the game. Returns the added player.
         /// </summary>
-        /// <param name="intelligence"></param>
-        /// <param name="supplies"></param>
-        /// <param name="reproduction"></param>
-        /// <returns></returns>
-        internal uint AddPlayer(uint intelligence, uint supplies, uint reproduction)
+        internal Player InsertPlayer(uint index, uint intelligence, uint supplies, uint reproduction)
         {
+            if (index >= Game.MAX_PLAYER_COUNT)
+                throw new ExceptionFreeserf(ErrorSystemType.Application, "Invalid player index.");
+
             // Allocate object 
-            var player = Players.Allocate();
+            var player = Players.GetOrInsert(index);
 
             if (player == null)
             {
@@ -324,7 +323,7 @@ namespace Freeserf
             // Update map values dependent on player count 
             MapGoldMoraleFactor = 10u * 1024u * (uint)Players.Size;
 
-            return player.Index;
+            return player;
         }
 
         internal bool Init(uint mapSize, Random random)

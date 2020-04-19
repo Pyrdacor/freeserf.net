@@ -589,32 +589,40 @@ namespace Freeserf
                 return null;
             }
 
+            uint playerIndex = 0u;
+
             // Initialize player and build initial castle 
             foreach (var playerInfo in players)
             {
-                var index = game.AddPlayer(playerInfo.Intelligence,
-                                           playerInfo.Supplies,
-                                           playerInfo.Reproduction);
-                var player = game.GetPlayer(index);
-
-                if (!playerInfo.Face.IsHuman()) // not you or your partner
+                if (playerInfo != null)
                 {
-                    if (intro)
-                        player.AI = new IntroAI(player, playerInfo);
-                    else
-                        player.AI = new AI(player, playerInfo);
+                    var player = game.InsertPlayer(playerIndex, playerInfo.Intelligence,
+                                                   playerInfo.Supplies, playerInfo.Reproduction);
+
+                    if (!playerInfo.Face.IsHuman()) // not you or your partner
+                    {
+                        if (intro)
+                            player.AI = new IntroAI(player, playerInfo);
+                        else
+                            player.AI = new AI(player, playerInfo);
+                    }
+
+                    player.InitView(playerInfo.Color, playerInfo.Face);
+
+                    var castlePos = playerInfo.CastlePosition;
+
+                    if (castlePos.Column > -1 && castlePos.Row > -1)
+                    {
+                        var position = game.Map.Position((MapPos)castlePos.Column, (MapPos)castlePos.Row);
+
+                        game.BuildCastle(position, player);
+                    }
                 }
 
-                player.InitView(playerInfo.Color, playerInfo.Face);
+                ++playerIndex;
 
-                var castlePos = playerInfo.CastlePosition;
-
-                if (castlePos.Column > -1 && castlePos.Row > -1)
-                {
-                    var position = game.Map.Position((MapPos)castlePos.Column, (MapPos)castlePos.Row);
-
-                    game.BuildCastle(position, player);
-                }
+                if (playerIndex == Game.MAX_PLAYER_COUNT)
+                    break;
             }
 
             return game;
