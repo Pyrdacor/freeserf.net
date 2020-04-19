@@ -196,25 +196,28 @@ namespace Freeserf.Network
 
             foreach (var player in players)
             {
-                string identification = null;
-
-                if (player.Face >= PlayerFace.You) // human
+                if (player != null)
                 {
-                    if (playerIndex == 0u) // host
-                        identification = Ip.ToString();
-                    else
-                        identification = playerClients[playerIndex].Ip.ToString();
-                }
+                    string identification = null;
 
-                lobbyPlayerInfo.Add(new LobbyPlayerInfo
-                (
-                    identification,
-                    playerIndex == 0u,
-                    (int)player.Face,
-                    (int)player.Supplies,
-                    (int)player.Intelligence,
-                    (int)player.Reproduction
-                ));
+                    if (player.Face >= PlayerFace.You) // human
+                    {
+                        if (playerIndex == 0u) // host
+                            identification = Ip.ToString();
+                        else
+                            identification = playerClients[playerIndex].Ip.ToString();
+                    }
+
+                    lobbyPlayerInfo.Add(new LobbyPlayerInfo
+                    (
+                        identification,
+                        playerIndex,
+                        (int)player.Face,
+                        (int)player.Supplies,
+                        (int)player.Intelligence,
+                        (int)player.Reproduction
+                    ));
+                }
 
                 ++playerIndex;
             }
@@ -236,15 +239,16 @@ namespace Freeserf.Network
                     // Note: We can not just stop the listener if there are 4 players in the lobby
                     // because players may disconnect or may be removed by the server. If the listener
                     // would be stopped no other client may connect then.
-                    else if (GameInfo.PlayerCount == 4) // TODO: spectators
+                    else if (GameInfo.MultiplayerPlayerCount == Game.MAX_PLAYER_COUNT) // TODO: spectators
                     {
                         RejectClient(client);
                         continue;
                     }
 
-                    var remoteClient = new RemoteClient(GameInfo.PlayerCount, this, client);
+                    var clientPlayerIndex = GameInfo.FirstFreeMultiplayerPlayerIndex;
+                    var remoteClient = new RemoteClient(clientPlayerIndex, this, client);
 
-                    playerClients.Add(GameInfo.PlayerCount, remoteClient);
+                    playerClients.Add(clientPlayerIndex, remoteClient);
                     clients.Add(remoteClient, client);
                     clientStatus.Add(remoteClient, MultiplayerStatus.Unknown);
                     lastClientHeartbeats.Add(remoteClient, DateTime.UtcNow);
@@ -726,24 +730,27 @@ namespace Freeserf.Network
 
                 foreach (var player in players.ToList())
                 {
-                    string identification = null;
-
-                    if (player.Face >= PlayerFace.You) // human
+                    if (player != null)
                     {
-                        if (playerIndex == 0u) // host
-                            identification = Ip.ToString();
-                        else
-                            identification = playerClients[playerIndex].Ip.ToString();
-                    }
+                        string identification = null;
 
-                    lobbyPlayerInfo.Add(new LobbyPlayerInfo(
-                        identification,
-                        playerIndex == 0u,
-                        (int)player.Face,
-                        (int)player.Supplies,
-                        (int)player.Intelligence,
-                        (int)player.Reproduction
-                    ));
+                        if (player.Face >= PlayerFace.You) // human
+                        {
+                            if (playerIndex == 0u) // host
+                                identification = Ip.ToString();
+                            else
+                                identification = playerClients[playerIndex].Ip.ToString();
+                        }
+
+                        lobbyPlayerInfo.Add(new LobbyPlayerInfo(
+                            identification,
+                            playerIndex,
+                            (int)player.Face,
+                            (int)player.Supplies,
+                            (int)player.Intelligence,
+                            (int)player.Reproduction
+                        ));
+                    }
 
                     ++playerIndex;
                 }

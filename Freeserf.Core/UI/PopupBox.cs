@@ -358,7 +358,7 @@ namespace Freeserf.UI
         readonly SlideBar[] slideBars = new SlideBar[9];
         const int SlideBarFactor = 1310;
         TextField clickableTextField = null;
-        readonly Render.IColoredRect[] playerFaceBackgrounds = new Render.IColoredRect[Game.GAME_MAX_PLAYER_COUNT];
+        readonly Render.IColoredRect[] playerFaceBackgrounds = new Render.IColoredRect[Game.MAX_PLAYER_COUNT];
 
         uint CurrentTransportPriorityItem = 0u;
         uint CurrentInventoryPriorityItem = 0u;
@@ -409,7 +409,7 @@ namespace Freeserf.UI
 
         void InitPlayerFaceBackgrounds(Render.IColoredRectFactory coloredRectFactory)
         {
-            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
             {
                 var playerColor = PlayerInfo.PlayerColors[i];
                 var color = new Render.Color()
@@ -428,7 +428,7 @@ namespace Freeserf.UI
         {
             base.UpdateParent();
 
-            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
             {
                 playerFaceBackgrounds[i].DisplayLayer = (byte)(BaseDisplayLayer + 10);
             }
@@ -744,7 +744,7 @@ namespace Freeserf.UI
 
             bool showPlayerFaceBackgrounds = box == Type.PlayerFaces;
 
-            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
             {
                 playerFaceBackgrounds[i].Visible = showPlayerFaceBackgrounds;
             }
@@ -3242,7 +3242,7 @@ namespace Freeserf.UI
             int width = (Width - 16) / 2;
             int height = (Height - 16) / 2;
 
-            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
             {
                 playerFaceBackgrounds[i].X = TotalX + 8 + (i % 2) * width;
                 playerFaceBackgrounds[i].Y = TotalY + 9 + (i / 2) * height;
@@ -4258,7 +4258,7 @@ namespace Freeserf.UI
         {
             base.InternalHide();
 
-            for (int i = 0; i < Game.GAME_MAX_PLAYER_COUNT; ++i)
+            for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
             {
                 playerFaceBackgrounds[i].Visible = false;
             }

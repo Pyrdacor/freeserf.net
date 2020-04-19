@@ -23,6 +23,7 @@
 using Freeserf.Network;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf.UI
 {
@@ -175,8 +176,8 @@ namespace Freeserf.UI
         // TODO: maybe the game speed should be setable (before the game) or changeable (option to change it in the game)
 
         // used only for multiplayer games
-        readonly bool[] playerIsAI = new bool[4];
-        readonly Dictionary<uint, Network.IRemoteClient> playerClientMapping = new Dictionary<uint, Network.IRemoteClient>(); // key: playerIndex, value: client
+        readonly bool[] playerIsAI = new bool[4] { false, false, false, false };
+        readonly Dictionary<uint, IRemoteClient> playerClientMapping = new Dictionary<uint, IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
         public GameInfo ServerGameInfo { get; private set; } = null;
         public ILocalServer Server
@@ -813,9 +814,9 @@ namespace Freeserf.UI
                 int bx = 0;
                 int by = 0;
 
-                for (int i = 0; i < 4; ++i)
+                for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                 {
-                    if (i >= ServerGameInfo.PlayerCount)
+                    if (i >= ServerGameInfo.PlayerCount || ServerGameInfo.Players[i] == null)
                     {
                         playerBoxes[i].SetPlayerFace(-1);
                     }
@@ -836,7 +837,7 @@ namespace Freeserf.UI
             }
             else
             {
-                for (int i = 0; i < 4; ++i)
+                for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                     playerBoxes[i].Visible = false;
             }
 
@@ -1301,7 +1302,7 @@ namespace Freeserf.UI
         {
             lock (ServerGameInfo)
             {
-                ServerGameInfo.RemovePlayer(client.PlayerIndex);
+                ServerGameInfo.RemovePlayer(client.PlayerIndex, true);
                 playerClientMapping.Remove(client.PlayerIndex);
                 SetRedraw();
             }
@@ -1309,25 +1310,38 @@ namespace Freeserf.UI
             ServerUpdate();
         }
 
-        private void Server_ClientJoined(Network.ILocalServer server, Network.IRemoteClient client)
+        private void Server_ClientJoined(ILocalServer server, IRemoteClient client)
         {
             lock (ServerGameInfo)
             {
-                while (ServerGameInfo.PlayerCount >= 4)
+                if (ServerGameInfo.PlayerCount >= Game.MAX_PLAYER_COUNT && !ServerGameInfo.Players.Any(p => p == null))
                 {
                     // joined too late -> kick player
                     server.DisconnectClient(client, true);
+                    return;
                 }
 
                 uint supplies = checkBoxSameValues.Checked ? ServerGameInfo.GetPlayer(0u).Supplies : 20u;
                 uint reproduction = checkBoxSameValues.Checked ? ServerGameInfo.GetPlayer(0u).Reproduction : 20u;
                 uint playerIndex = ServerGameInfo.PlayerCount;
 
+                var freeSlot = ServerGameInfo.Players.Select((p, index) => new { p, index }).FirstOrDefault(r => r.p == null);
+
                 // TODO: every face < PlayerFace.You is treated as AI so we only can have 2 human players (= 1 client) for now
                 //       we should add two more human player faces later
-                var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
 
-                ServerGameInfo.AddPlayer(playerInfo);
+                if (freeSlot != null)
+                {
+                    playerIndex = (uint)freeSlot.index;
+                    var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
+                    ServerGameInfo.ReplacePlayer(freeSlot.index, playerInfo);
+                }
+                else
+                {
+                    var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
+                    ServerGameInfo.AddPlayer(playerInfo);
+                }
+
                 playerIsAI[playerIndex] = false;
                 playerClientMapping.Add(playerIndex, client);
                 SetRedraw();
@@ -1437,11 +1451,33 @@ namespace Freeserf.UI
         {
             for (uint i = 0; i < playerIndex; ++i)
             {
-                if (ServerGameInfo.GetPlayer(i).Face == face)
+                var player = ServerGameInfo.GetPlayer(i);
+
+                if (player != null && player.Face == face)
                     return true;
             }
 
             return false;
+        }
+
+        PlayerInfo GetRandomPlayerInfo(uint playerIndex)
+        {
+            PlayerInfo playerInfo;
+
+            do
+            {
+                playerInfo = new PlayerInfo(new Random());
+            } while (PlayerFaceAlreadyTaken(playerIndex, playerInfo.Face));
+
+            playerInfo.Color = PlayerInfo.PlayerColors[playerIndex];
+
+            if (gameType == GameType.MultiplayerServer && checkBoxSameValues.Checked)
+            {
+                playerInfo.Supplies = ServerGameInfo.GetPlayer(0).Supplies;
+                playerInfo.Reproduction = ServerGameInfo.GetPlayer(0).Reproduction;
+            }
+
+            return playerInfo;
         }
 
         bool HandlePlayerClick(uint playerIndex, int cx, int cy)
@@ -1461,20 +1497,7 @@ namespace Freeserf.UI
                         if (playerIndex >= ServerGameInfo.PlayerCount) // add player
                         {
                             playerIndex = ServerGameInfo.PlayerCount;
-                            PlayerInfo playerInfo;
-
-                            do
-                            {
-                                playerInfo = new PlayerInfo(new Random());
-                            } while (PlayerFaceAlreadyTaken(playerIndex, playerInfo.Face));
-
-                            playerInfo.Color = PlayerInfo.PlayerColors[playerIndex];
-
-                            if (checkBoxSameValues.Checked)
-                            {
-                                playerInfo.Supplies = ServerGameInfo.GetPlayer(0).Supplies;
-                                playerInfo.Reproduction = ServerGameInfo.GetPlayer(0).Reproduction;
-                            }
+                            var playerInfo = GetRandomPlayerInfo(playerIndex);
 
                             ServerGameInfo.AddPlayer(playerInfo);
                             playerIsAI[playerIndex] = true; // manually added players are always AI players
@@ -1482,13 +1505,32 @@ namespace Freeserf.UI
                         }
                         else // remove
                         {
-                            if (gameType == GameType.MultiplayerServer && !playerIsAI[playerIndex])
+                            if (gameType == GameType.MultiplayerServer)
                             {
-                                // kick player
-                                Server.DisconnectClient(playerClientMapping[playerIndex], true);
+                                if (ServerGameInfo.Players[(int)playerIndex] == null)
+                                {
+                                    var playerInfo = GetRandomPlayerInfo(playerIndex);
+
+                                    // Add player in multiplayer
+                                    ServerGameInfo.ReplacePlayer((int)playerIndex, playerInfo);
+                                    playerIsAI[playerIndex] = true; // manually added players are always AI players
+                                    SetRedraw();
+                                    ServerUpdate();
+                                    return true;
+                                }
+
+                                if (!playerIsAI[playerIndex])
+                                {
+                                    if (playerClientMapping.ContainsKey(playerIndex))
+                                    {
+                                        // kick player
+                                        Server.DisconnectClient(playerClientMapping[playerIndex], true);
+                                        playerClientMapping.Remove(playerIndex);
+                                    }
+                                }
                             }
 
-                            ServerGameInfo.RemovePlayer(playerIndex);
+                            ServerGameInfo.RemovePlayer(playerIndex, gameType == GameType.MultiplayerServer);
                             playerIsAI[playerIndex] = false;
                             SetRedraw();
                         }

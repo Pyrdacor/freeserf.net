@@ -30,6 +30,7 @@ namespace Freeserf.Network
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct LobbyPlayerData
     {
+        public byte Index;
         public byte Type; // 0: AI, 1: Server/Host, 2: Client
         public byte Face;
         public byte Supplies;
@@ -68,11 +69,11 @@ namespace Freeserf.Network
 
     public class LobbyPlayerInfo
     {
-        public LobbyPlayerInfo(string identification, bool isHost,
+        public LobbyPlayerInfo(string identification, uint playerIndex,
             int face, int supplies, int intelligence, int reproduction)
         {
             Identification = identification;
-            IsHost = isHost;
+            PlayerIndex = playerIndex;
             Face = face;
             Supplies = supplies;
             Intelligence = intelligence;
@@ -80,7 +81,7 @@ namespace Freeserf.Network
         }
 
         public readonly string Identification; // IP or empty
-        public readonly bool IsHost;
+        public readonly uint PlayerIndex;
         public readonly int Face;
         public readonly int Supplies;
         public readonly int Intelligence;
@@ -116,7 +117,7 @@ namespace Freeserf.Network
         private static readonly int MIN_DATA_SIZE = 3 + Marshal.SizeOf(typeof(LobbyDataHeader)) + Marshal.SizeOf(typeof(LobbyServerSettings));
         private LobbyDataHeader header;
         public LobbyServerInfo ServerInfo { get; private set; } = null;
-        private readonly List<LobbyPlayerInfo> players = new List<LobbyPlayerInfo>(4);
+        private readonly List<LobbyPlayerInfo> players = new List<LobbyPlayerInfo>(Game.MAX_PLAYER_COUNT);
         public IReadOnlyList<LobbyPlayerInfo> Players => players.AsReadOnly();
         private byte[] sendData = null;
 
@@ -137,8 +138,8 @@ namespace Freeserf.Network
         {
             MessageIndex = number;
 
-            if (players.Count > 4)
-                throw new ExceptionFreeserf("Player count must not exceed 4.");
+            if (players.Count > Game.MAX_PLAYER_COUNT)
+                throw new ExceptionFreeserf($"Player count must not exceed {Game.MAX_PLAYER_COUNT}.");
 
             int dataSize = MIN_DATA_SIZE + (players.Count == 0 ? 0 : players.Select(p => p.GetDataSize()).Aggregate((a, b) => a + b));
 
@@ -181,10 +182,11 @@ namespace Freeserf.Network
             {
                 var playerData = new LobbyPlayerData();
 
+                playerData.Index = (byte)player.PlayerIndex;
                 playerData.Type = 0;
 
                 if (player.Identification != null)
-                    playerData.Type = (byte)(player.IsHost ? 1 : 2);
+                    playerData.Type = (byte)(player.PlayerIndex == 0u ? 1 : 2);
 
                 playerData.Face = (byte)player.Face;
                 playerData.Supplies = (byte)player.Supplies;
@@ -270,7 +272,7 @@ namespace Freeserf.Network
                 if (player.Type == 0) // AI
                 {
                     var aiPlayer = NetworkDataConverter<LobbyAIPlayerData>.FromBytes(rawData, ref dataIndex);
-                    playerInfo = new LobbyPlayerInfo(null, false, player.Face, player.Supplies, aiPlayer.Intelligence, player.Reproduction);
+                    playerInfo = new LobbyPlayerInfo(null, player.Index, player.Face, player.Supplies, aiPlayer.Intelligence, player.Reproduction);
                 }
                 else // Human
                 {
@@ -280,8 +282,11 @@ namespace Freeserf.Network
                     Marshal.Copy((IntPtr)humanPlayer.IP, ipBytes, 0, 4);
                     string ip = $"{ipBytes[0]}.{ipBytes[1]}.{ipBytes[2]}.{ipBytes[3]}";
 
-                    playerInfo = new LobbyPlayerInfo(ip, player.Type == 1, player.Face, player.Supplies, 40, player.Reproduction);
+                    playerInfo = new LobbyPlayerInfo(ip, player.Index, player.Face, player.Supplies, 40, player.Reproduction);
                 }
+
+                while (player.Index > players.Count)
+                    players.Add(null);
 
                 players.Add(playerInfo);
             }

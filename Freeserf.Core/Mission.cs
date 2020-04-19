@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Freeserf
 {
@@ -383,6 +384,20 @@ namespace Freeserf
         internal Random RandomBase { get; private set; }
 
         public uint PlayerCount => (uint)players.Count;
+        public uint MultiplayerPlayerCount => (uint)players.Count(p => p != null);
+        public uint FirstFreeMultiplayerPlayerIndex
+        {
+            get
+            {
+                var firstFreeSlot = players.Select((p, index) => new { p, index }).FirstOrDefault(r => r.p == null);
+
+                if (firstFreeSlot != null)
+                    return (uint)firstFreeSlot.index;
+
+                return PlayerCount;
+            }
+        }
+
         internal IReadOnlyList<PlayerInfo> Players => players.AsReadOnly();
 
         readonly List<PlayerInfo> players = new List<PlayerInfo>(4);
@@ -499,17 +514,24 @@ namespace Freeserf
             AddPlayer(new PlayerInfo(character, color, intelligence, supplies, reproduction));
         }
 
+        internal void ReplacePlayer(int playerIndex, PlayerInfo player)
+        {
+            players[playerIndex] = player;
+        }
+
         internal void RemoveAllPlayers()
         {
             players.Clear();
         }
 
-        internal void RemovePlayer(uint index)
+        internal void RemovePlayer(uint index, bool multiplayer)
         {
             if (index >= players.Count)
                 return;
 
-            if (index == players.Count - 1)
+            if (multiplayer)
+                players[(int)index] = null;
+            else if (index == players.Count - 1)
                 players.RemoveAt((int)index);
             else
             {

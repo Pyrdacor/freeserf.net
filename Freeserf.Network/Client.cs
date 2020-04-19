@@ -31,6 +31,7 @@ namespace Freeserf.Network
     {
         TcpClient client = null;
         RemoteServer server = null;
+        ServerState serverState = ServerState.Offline;
         DateTime lastServerHeartbeat = DateTime.MinValue;
         DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat!
         ConnectionObserver connectionObserver = null;
@@ -116,11 +117,13 @@ namespace Freeserf.Network
             {
                 registeredResponseHandlers.Clear();
             }
+
             client?.Close();
             server?.Close();
             client = null;
             server = null;
             Disconnected?.Invoke(this, EventArgs.Empty);
+            serverState = ServerState.Offline;
         }
 
         public bool JoinServer(string name, IPAddress ip)
@@ -167,8 +170,17 @@ namespace Freeserf.Network
         void ConnectionObserver_DataRefreshNeeded()
         {
             // long response time -> data refresh from server is needed
-            // TODO: Only call this in game
-            RequestGameStateUpdate();
+
+            switch (serverState)
+            {
+                case ServerState.Lobby:
+                    RequestLobbyStateUpdate();
+                    break;
+                    // TODO: what to do while loading?
+                case ServerState.Game:
+                    RequestGameStateUpdate();
+                    break;
+            }
         }
 
         public void UpdateNetworkEvents()
@@ -200,8 +212,13 @@ namespace Freeserf.Network
                     responseHandler?.Invoke(ResponseType.Ok);
                     break;
                 case NetworkDataType.LobbyData:
-                    responseHandler?.Invoke(ResponseType.Ok);
-                    UpdateLobbyData(networkData as LobbyData);
+                    if (serverState != ServerState.Lobby)
+                        responseHandler?.Invoke(ResponseType.BadState);
+                    else
+                    {
+                        responseHandler?.Invoke(ResponseType.Ok);
+                        UpdateLobbyData(networkData as LobbyData);
+                    }
                     break;
                 case NetworkDataType.Response:
                     {
@@ -212,34 +229,51 @@ namespace Freeserf.Network
                     }
                 case NetworkDataType.InSync:
                     {
-                        try
+                        if (serverState != ServerState.Game &&
+                            serverState != ServerState.Loading)
                         {
-                            var insyncData = networkData as InSyncData;
-                            // TODO: do we need insyncData.GameTime?
-                            lastSavedGameState = SavedGameState.FromGame(Game);
+                            responseHandler?.Invoke(ResponseType.BadState);
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
-                            Disconnect();
+                            try
+                            {
+                                var insyncData = networkData as InSyncData;
+                                // TODO: do we need insyncData.GameTime?
+                                lastSavedGameState = SavedGameState.FromGame(Game);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
+                                Disconnect();
+                            }
                         }
                         break;
                     }
                 case NetworkDataType.SyncData:
                     {
-                        var syncData = networkData as SyncData;
-                        try
+                        if (serverState != ServerState.Game &&
+                            serverState != ServerState.Loading)
                         {
-                            // TODO: do we need syncData.GameTime?
-                            // TODO: check performance of the game state sync
-                            if (lastSavedGameState == null)
-                                lastSavedGameState = SavedGameState.FromGame(Game);
-                            lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData);
+                            responseHandler?.Invoke(ResponseType.BadState);
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
-                            Disconnect();
+                            try
+                            {
+                                var syncData = networkData as SyncData;
+
+                                // TODO: do we need syncData.GameTime?
+                                // TODO: check performance of the game state sync
+                                if (lastSavedGameState == null)
+                                    lastSavedGameState = SavedGameState.FromGame(Game);
+                                lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
+                                Disconnect();
+                            }
                         }
                         break;
                     }
@@ -253,7 +287,6 @@ namespace Freeserf.Network
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Received {data.Length} byte(s) of data from server '{server.Ip}'.");
 
-            // TODO: handle client states
             lastServerHeartbeat = DateTime.UtcNow;
 
             if (NetworkDataReceiver == null)
@@ -312,11 +345,14 @@ namespace Freeserf.Network
                     // Response is send below.
                     break;
                 case Request.StartGame:
+                    serverState = ServerState.Loading;
                     GameStarted?.Invoke(this, EventArgs.Empty);
                     SendStartGameRequest();
                     // Start game messages are sent asynchronously.
                     return;
                 case Request.AllowUserInput:
+                    if (serverState == ServerState.Loading)
+                        serverState = ServerState.Game;
                     InputAllowed?.Invoke(this, EventArgs.Empty);
                     break;
                 case Request.DisallowUserInput:
@@ -356,7 +392,7 @@ namespace Freeserf.Network
         {
             for (int i = 0; i < data.Players.Count; ++i)
             {
-                if (!data.Players[i].IsHost && data.Players[i].Identification == Ip.ToString())
+                if (data.Players[i] != null && data.Players[i].PlayerIndex != 0u && data.Players[i].Identification == Ip.ToString())
                 {
                     PlayerIndex = (uint)i;
                     break;

@@ -59,7 +59,7 @@ namespace Freeserf
 
     public class Game : MapHandler, IState
     {
-        public const int GAME_MAX_PLAYER_COUNT = 4;
+        public const int MAX_PLAYER_COUNT = 4;
         internal Players Players { get; }
         internal Flags Flags { get; }
         internal Inventories Inventories { get; }

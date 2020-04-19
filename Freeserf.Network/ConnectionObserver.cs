@@ -33,6 +33,7 @@ namespace Freeserf.Network
         readonly Func<DateTime> lastHeartbeatTimeProvider;
         readonly int checkDelay;
         readonly CancellationToken cancellationToken;
+        DateTime lastRefreshRequestTime = DateTime.MinValue;
 
         public ConnectionObserver(Func<DateTime> lastHeartbeatTimeProvider, int checkDelay, CancellationToken cancellationToken)
         {
@@ -56,7 +57,11 @@ namespace Freeserf.Network
                     }
                     else if (noResponseTime > NeedRefreshTimeoutInSeconds)
                     {
-                        DataRefreshNeeded?.Invoke();
+                        if ((DateTime.UtcNow - lastRefreshRequestTime).TotalSeconds >= 1.0)
+                        {
+                            lastRefreshRequestTime = DateTime.UtcNow;
+                            DataRefreshNeeded?.Invoke();
+                        }
                     }
 
                     Thread.Sleep(checkDelay);
