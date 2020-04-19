@@ -620,13 +620,14 @@ namespace Freeserf
                     }
 
                     OtherEndPoints[(int)direction].Flag = otherFlag;
+
                     if (otherFlag != null)
                     {
                         // Re-use the road from the other flag to this flag if possible
                         var newRoad = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
                         var otherFlagOutDir = newRoad.Last.Reverse();
                         var otherFlagOutRoad = OtherEndPoints[(int)direction].Flag.GetRoad(otherFlagOutDir);
-                        OtherEndPoints[(int)direction].Road = otherFlagOutRoad != null ? otherFlagOutRoad : newRoad;
+                        OtherEndPoints[(int)direction].Road = otherFlagOutRoad ?? newRoad;
                     }
                     else
                     {
@@ -713,6 +714,72 @@ namespace Freeserf
 
             writer.Value("bld_flags").Write(buildingFlags);
             writer.Value("bld2_flags").Write(buildingFlags2);
+        }
+
+        public override void PostDeserialize(bool onlyData)
+        {
+            if (onlyData)
+            {
+                // Other endpoint references are only needed in real game.
+                return;
+            }
+
+            var cycle = DirectionCycleCW.CreateDefault();
+
+            foreach (var direction in cycle)
+            {
+                int directionIndex = (int)direction;
+
+                if (direction == Direction.UpLeft && HasBuilding)
+                {
+                    if (OtherEndPoints[directionIndex].Building == null)
+                        OtherEndPoints[directionIndex].Building = Game.GetBuildingAtPosition(Game.Map.MoveUpLeft(Position));
+                    if (OtherEndPoints[directionIndex].Road == null)
+                        OtherEndPoints[directionIndex].Road = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
+                }
+                else
+                {
+                    if (HasPath(direction))
+                    {
+                        // Re-use the road from the other flag to this flag if possible
+                        var newRoad = Road.CreateRoadFromMapPath(Game.Map, state.Position, direction);
+                        var otherFlag = Game.GetFlagAtPosition(newRoad.EndPosition);
+
+                        if (otherFlag == null)
+                            throw new ExceptionFreeserf(ErrorSystemType.Flag, $"Other end flag does not exist. Flag {Index} at position {Position} and direction {direction}.");
+
+                        var otherFlagOutDir = newRoad.Last.Reverse();
+                        var otherFlagOutRoad = OtherEndPoints[directionIndex].Flag.GetRoad(otherFlagOutDir);
+                        OtherEndPoints[directionIndex].Road = otherFlagOutRoad ?? newRoad;
+                        OtherEndPoints[directionIndex].Flag = otherFlag;
+                    }
+                    else
+                    {
+                        if (OtherEndPoints[directionIndex].Road != null)
+                        {
+                            if (OtherEndPoints[directionIndex].Flag != null)
+                            {
+                                var otherFlagRoadDirection = OtherEndPoints[directionIndex].Road.Last.Reverse();
+
+                                if (OtherEndPoints[directionIndex].Flag.OtherEndPoints[(int)otherFlagRoadDirection].Road != null)
+                                    OtherEndPoints[directionIndex].Flag.OtherEndPoints[(int)otherFlagRoadDirection].Road = null;
+                            }
+
+                            OtherEndPoints[directionIndex].Road.RemoveFromMap(Game.Map);
+                            OtherEndPoints[directionIndex].Road = null;
+                        }
+                        if (OtherEndPoints[directionIndex].Building != null)
+                        {
+                            // Should have been deleted by the deserialization.
+                            OtherEndPoints[directionIndex].Building = null;
+                        }
+                        if (OtherEndPoints[directionIndex].Flag != null)
+                        {
+                            OtherEndPoints[directionIndex].Flag = null;
+                        }
+                    }
+                }
+            }
         }
 
         public void ResetTransport(Flag other)

@@ -30,6 +30,12 @@ namespace Freeserf
     {
         uint Index { get; }
         Game Game { get; }
+        /// <summary>
+        /// This is called after the game object has been
+        /// deserialized.
+        /// </summary>
+        /// <param name="onlyData">If true the game object is only deserialized for data storage (i.e. as the last game state backup). Otherwise this is the real game state (with visuals etc).</param>
+        void PostDeserialize(bool onlyData);
     }
 
     internal abstract class GameObject : IGameObject
@@ -41,6 +47,11 @@ namespace Freeserf
         {
             Game = game;
             Index = index;
+        }
+
+        public virtual void PostDeserialize(bool onlyData)
+        {
+            // Override in derived classes if needed.
         }
     }
 

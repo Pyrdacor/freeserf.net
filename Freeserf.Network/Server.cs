@@ -375,6 +375,8 @@ namespace Freeserf.Network
                         {
                             // TODO: connected but disposed? should not happen.
                         }
+
+                        return;
                     }
                 }
             });

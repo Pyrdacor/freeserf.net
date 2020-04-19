@@ -147,19 +147,19 @@ namespace Freeserf
 
         public static SavedGameState FromGame(Game game)
         {
-            var gameCopy = new Game();
-            GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true));
+            var gameCopy = new Game(game.Map);
+            GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true), true);
             return new SavedGameState(gameCopy);
         }
 
         public static SavedGameState UpdateGameAndLastState(Game game, SavedGameState lastState, byte[] updateData)
         {
             // Update last state with update.
-            GameStateSerializer.DeserializeInto(lastState.game, updateData);
+            GameStateSerializer.DeserializeInto(lastState.game, updateData, true);
             // Serialize the updated state.
             var newState = GameStateSerializer.SerializeFrom(lastState.game, true);
             // Replace the current game state with the updated state.
-            GameStateSerializer.DeserializeInto(game, newState);
+            GameStateSerializer.DeserializeInto(game, newState, false);
             // Return the new state of the game.
             return FromGame(game);
         }
@@ -189,7 +189,7 @@ namespace Freeserf
             }
         }
 
-        static void DeserializeIntoCollection<T>(Stream stream, Collection<T> collection, Action<T> deleteAction) where T : class, IGameObject, IState
+        static void DeserializeIntoCollection<T>(Stream stream, Collection<T> collection, Action<T> deleteAction, bool dataOnly) where T : class, IGameObject, IState
         {
             uint freeIndexCount = ReadCount(stream);
             uint[] freeIndices = new uint[freeIndexCount];
@@ -205,7 +205,7 @@ namespace Freeserf
 
             // Note: The collection is always serialized full which means it always
             // contains all objects of the current state. The objects themselves may
-            // be serialized partially onle.
+            // be serialized partially only.
             // As the collection reflects always the complete state.
             // - Look for matching objects and update them.
             // - Look for new objects and add them.
@@ -229,6 +229,8 @@ namespace Freeserf
             {
                 var updatedObject = collection.GetOrInsert(objectIndices[i]);
                 DeserializeWithoutHeader(updatedObject, stream);
+                updatedObject.PostDeserialize(dataOnly);
+                updatedObject.ResetDirtyFlag();
             }
 
             // 4. Update free indices again
@@ -239,10 +241,11 @@ namespace Freeserf
         {
             StateSerializer.Serialize(stream, game, full, true);
 
+            // Note: Keep this order!
             SerializeCollection(stream, game.Players, full);
-            SerializeCollection(stream, game.Flags, full);
             SerializeCollection(stream, game.Inventories, full);
             SerializeCollection(stream, game.Buildings, full);
+            SerializeCollection(stream, game.Flags, full);           
             SerializeCollection(stream, game.Serfs, full);
 
             if (!leaveOpen)
@@ -256,29 +259,32 @@ namespace Freeserf
             return stream.ToArray();
         }
 
-        public static void DeserializeInto(Game game, Stream stream, bool leaveOpen)
+        public static void DeserializeInto(Game game, Stream stream, bool leaveOpen, bool dataOnly)
         {
             game.Map?.PrepareDeserialization();
 
             Deserialize(game, stream, true);
 
-            DeserializeIntoCollection(stream, game.Players, (Player player) => throw new ExceptionFreeserf("A player can't be removed from a game."));
-            DeserializeIntoCollection(stream, game.Flags, (Flag flag) => game.DeleteFlag(flag));
-            DeserializeIntoCollection(stream, game.Inventories, (Inventory inventory) => game.DeleteInventory(inventory));
-            DeserializeIntoCollection(stream, game.Buildings, (Building building) => game.DeleteBuilding(building));
-            DeserializeIntoCollection(stream, game.Serfs, (Serf serf) => game.DeleteSerf(serf));
+            // Note: Keep this order!
+            DeserializeIntoCollection(stream, game.Players, (Player player) => throw new ExceptionFreeserf("A player can't be removed from a game."), dataOnly);
+            DeserializeIntoCollection(stream, game.Inventories, (Inventory inventory) => game.DeleteInventory(inventory), dataOnly);
+            DeserializeIntoCollection(stream, game.Buildings, (Building building) => game.DeleteBuilding(building), dataOnly);
+            DeserializeIntoCollection(stream, game.Flags, (Flag flag) => game.DeleteFlag(flag), dataOnly);
+            DeserializeIntoCollection(stream, game.Serfs, (Serf serf) => game.DeleteSerf(serf), dataOnly);
 
             game.Map?.UpdateObjectsAfterDeserialization();
+
+            game.ResetDirtyFlag();
 
             if (!leaveOpen)
                 stream.Close();
         }
 
-        public static void DeserializeInto(Game game, byte[] data)
+        public static void DeserializeInto(Game game, byte[] data, bool dataOnly)
         {
             using var stream = new MemoryStream(data);
             stream.Position = 0;
-            DeserializeInto(game, stream, true);
+            DeserializeInto(game, stream, true, dataOnly);
         }
     }
 }

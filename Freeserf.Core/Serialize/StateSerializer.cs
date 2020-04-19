@@ -154,6 +154,18 @@ namespace Freeserf.Serialize
         /// </summary>
         private const byte DATA_MINOR_VERSION = 0;
 
+        private static bool IsPropertyDeserializable(PropertyInfo property)
+        {
+            // We wiil deserialize into such objects.
+            if (typeof(IState).IsAssignableFrom(property.PropertyType) ||
+                typeof(IDirtyArray).IsAssignableFrom(property.PropertyType) ||
+                typeof(IDirtyMap).IsAssignableFrom(property.PropertyType))
+                return true;
+            else
+                // Everything else is deserializable with a pulic setter.
+                return property.GetSetMethod() != null;
+        }
+
         /// <summary>
         /// If a class has the DataClass attribute, each public property and field
         /// of the class is serializable. Except for those which have the Ignore attribute.
@@ -171,7 +183,7 @@ namespace Freeserf.Serialize
                     .Where(property =>
                         property.GetCustomAttribute(typeof(IgnoreAttribute)) == null &&
                         property.GetGetMethod() != null &&
-                        property.GetSetMethod() != null
+                        IsPropertyDeserializable(property)
                     )
                     .Select(property => new KeyValuePair<string, bool>(property.Name, true));
                 var fields = stateType.GetFields()
@@ -187,7 +199,7 @@ namespace Freeserf.Serialize
                     .Where(property =>
                         property.GetCustomAttribute(typeof(DataAttribute)) != null &&
                         property.GetGetMethod() != null &&
-                        property.GetSetMethod() != null
+                        IsPropertyDeserializable(property)
                     )
                     .Select(property => new KeyValuePair<string, bool>(property.Name, true));
                 var fields = stateType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)

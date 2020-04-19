@@ -167,6 +167,7 @@ namespace Freeserf.Network
         void ConnectionObserver_DataRefreshNeeded()
         {
             // long response time -> data refresh from server is needed
+            // TODO: Only call this in game
             RequestGameStateUpdate();
         }
 

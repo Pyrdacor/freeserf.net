@@ -83,20 +83,79 @@ namespace Freeserf
         public const uint MaxStock = 2;
 
         [DataClass]
-        internal class Stock : IComparable
+        internal class Stock : State, IComparable
         {
-            public Resource.Type Type;
-            public byte Priority;
-            public byte Available;
-            public byte Requested;
-            public byte Maximum;
+            Resource.Type type;
+            byte priority;
+            byte available;
+            byte requested;
+            byte maximum;
 
-            public int CompareTo(object other)
+            public Resource.Type Type
             {
-                if (other is Stock)
+                get => type;
+                set
                 {
-                    var otherStock = other as Stock;
+                    if (type != value)
+                    {
+                        type = value;
+                        MarkPropertyAsDirty(nameof(Type));
+                    }
+                }
+            }
+            public byte Priority
+            {
+                get => priority;
+                set
+                {
+                    if (priority != value)
+                    {
+                        priority = value;
+                        MarkPropertyAsDirty(nameof(Priority));
+                    }
+                }
+            }
+            public byte Available
+            {
+                get => available;
+                set
+                {
+                    if (available != value)
+                    {
+                        available = value;
+                        MarkPropertyAsDirty(nameof(Available));
+                    }
+                }
+            }
+            public byte Requested
+            {
+                get => requested;
+                set
+                {
+                    if (requested != value)
+                    {
+                        requested = value;
+                        MarkPropertyAsDirty(nameof(Requested));
+                    }
+                }
+            }
+            public byte Maximum
+            {
+                get => maximum;
+                set
+                {
+                    if (maximum != value)
+                    {
+                        maximum = value;
+                        MarkPropertyAsDirty(nameof(Maximum));
+                    }
+                }
+            }
 
+            public override int CompareTo(object other)
+            {
+                if (other is Stock otherStock)
+                {
                     if (Type == otherStock.Type)
                     {
                         if (Priority == otherStock.Priority)

@@ -298,6 +298,17 @@ namespace Freeserf
                    EndPosition == other.EndPosition &&
                    Length == other.Length;
         }
+
+        public void RemoveFromMap(Map map)
+        {
+            var position = StartPosition;
+
+            foreach (var direction in Directions)
+            {
+                map.DeletePath(position, direction);
+                position = map.Move(position, direction);
+            }
+        }
     }
 
     public abstract class MapHandler
@@ -566,7 +577,7 @@ namespace Freeserf
         #endregion
 
         [DataClass]
-        public class LandscapeTile : Serialize.State, IEquatable<LandscapeTile>
+        public class LandscapeTile : State, IEquatable<LandscapeTile>
         {
             // Landscape fields
             uint height = 0;
