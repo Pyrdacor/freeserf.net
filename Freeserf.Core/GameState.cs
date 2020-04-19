@@ -261,7 +261,8 @@ namespace Freeserf
 
         public static void DeserializeInto(Game game, Stream stream, bool leaveOpen, bool dataOnly)
         {
-            game.Map?.PrepareDeserialization();
+            if (!dataOnly)
+                game.Map?.PrepareDeserialization();
 
             Deserialize(game, stream, true);
 
@@ -272,9 +273,11 @@ namespace Freeserf
             DeserializeIntoCollection(stream, game.Flags, (Flag flag) => game.DeleteFlag(flag), dataOnly);
             DeserializeIntoCollection(stream, game.Serfs, (Serf serf) => game.DeleteSerf(serf), dataOnly);
 
-            game.Map?.UpdateObjectsAfterDeserialization();
-
-            game.ResetDirtyFlag();
+            if (!dataOnly)
+            {
+                game.Map?.UpdateObjectsAfterDeserialization();
+                game.ResetDirtyFlag();
+            }
 
             if (!leaveOpen)
                 stream.Close();
