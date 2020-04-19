@@ -239,8 +239,17 @@ namespace Freeserf.Network
                             try
                             {
                                 var insyncData = networkData as InSyncData;
+
+#if DEBUG
+                                var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+                                Log.Verbose.Write(ErrorSystemType.Network, "Processing in-sync - save current state ... ");
+#endif
                                 // TODO: do we need insyncData.GameTime?
                                 lastSavedGameState = SavedGameState.FromGame(Game);
+
+#if DEBUG
+                                Log.Verbose.Write(ErrorSystemType.Network, $"Processing in-sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");
+#endif
                             }
                             catch (Exception ex)
                             {
@@ -263,11 +272,19 @@ namespace Freeserf.Network
                             {
                                 var syncData = networkData as SyncData;
 
+#if DEBUG
+                                var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+                                Log.Verbose.Write(ErrorSystemType.Network, "Processing sync ... ");
+#endif
                                 // TODO: do we need syncData.GameTime?
                                 // TODO: check performance of the game state sync
                                 if (lastSavedGameState == null)
                                     lastSavedGameState = SavedGameState.FromGame(Game);
                                 lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData);
+
+#if DEBUG
+                                Log.Verbose.Write(ErrorSystemType.Network, $"Processing sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");
+#endif
                             }
                             catch (Exception ex)
                             {
