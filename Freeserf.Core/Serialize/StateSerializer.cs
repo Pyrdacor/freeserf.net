@@ -382,7 +382,16 @@ namespace Freeserf.Serialize
                 typeof(IDirtyArray).IsAssignableFrom(property.PropertyType) ||
                 typeof(IDirtyMap).IsAssignableFrom(property.PropertyType))
             {
-                DeserializePropertyValue(reader, property.PropertyType, property.GetValue(targetObject));
+                var value = property.GetValue(targetObject);
+                bool wasNull = value == null;
+
+                if (wasNull && property.GetSetMethod(true) == null)
+                    throw new ExceptionFreeserf(ErrorSystemType.Network, "Null-Property without setter.");
+
+                value = DeserializePropertyValue(reader, property.PropertyType, value);
+
+                if (wasNull)
+                    property.SetValue(targetObject, value);
             }
             else
             {
@@ -552,6 +561,7 @@ namespace Freeserf.Serialize
             else if (typeof(IDirtyArray).IsAssignableFrom(propertyType))
             {
                 WriteCount(writer.BaseStream, 0); // length of zero
+                WriteCount(writer.BaseStream, 0); // serialized length of zero
             }
             else if (typeof(IDirtyMap).IsAssignableFrom(propertyType))
             {
