@@ -679,7 +679,10 @@ namespace Freeserf.UI
         {
             base.InternalDraw();
 
-            buttonStart.Displayed = gameType != GameType.MultiplayerJoined && gameType != GameType.MultiplayerLoading;
+            buttonStart.Displayed =
+                gameType != GameType.MultiplayerJoined &&
+                gameType != GameType.MultiplayerLoading &&
+                (gameType != GameType.MultiplayerServer || Server.Clients.Count > 0);
             buttonOptions.Displayed = true;
             buttonGameType.Displayed = true;
             buttonExit.Displayed = true;
