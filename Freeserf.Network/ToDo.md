@@ -25,3 +25,5 @@
     - Limit user input to this popup (disable viewport input)
     - After closing this popup open game init box (and close current game)
 - The server should memorize disconnected clients (IP + player index) and allow reconnect of those
+- Syncs take too long
+    - If game time differs too much after sync, a partial game state update request would be nice

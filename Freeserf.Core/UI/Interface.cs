@@ -310,21 +310,34 @@ namespace Freeserf.UI
 
                 lock (gameLock)
                 {
-                    game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
 
-                    // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
-                    Viewport = new Viewport(this, Game.Map);
-                    Viewport.Displayed = true;
-                    AddChild(Viewport, 0, 0);
+                    EnsureViewport();
 
-                    if (PanelBar == null)
-                        PanelBar = new PanelBar(this);
-                    if (!PanelBar.Enabled)
-                        PanelBar.Enabled = true;
                 }
             }
 
             Layout();
+        }
+
+        internal void EnsureViewport()
+        {
+            if (Game == null || Game.Map == null)
+                return;
+
+            if (Game.Map.RenderMap == null)
+                Game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
+
+            if (Viewport == null)
+            {
+                Viewport = new Viewport(this, Game.Map);
+                Viewport.Displayed = true;
+                AddChild(Viewport, 0, 0);
+            }
+
+            if (PanelBar == null)
+                PanelBar = new PanelBar(this);
+            if (!PanelBar.Enabled)
+                PanelBar.Enabled = true;
         }
 
         public Color GetPlayerColor(uint playerIndex)

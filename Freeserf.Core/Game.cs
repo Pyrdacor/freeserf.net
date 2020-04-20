@@ -3975,7 +3975,8 @@ namespace Freeserf
 
             renderRoadSegment.Visible = true;
 
-            renderRoadSegments.TryAdd(index, renderRoadSegment);
+            if (!renderRoadSegments.TryAdd(index, renderRoadSegment))
+                Log.Error.Write(ErrorSystemType.Game, $"Failed to add road segment at position {position} direction {direction}.");
         }
 
         void RemoveRoadSegment(MapPos position, Direction direction)
@@ -3993,6 +3994,8 @@ namespace Freeserf
 
             if (renderRoadSegments.TryRemove(index, out var renderRoadSegment) && renderRoadSegment != null)
                 renderRoadSegment.Delete();
+            else
+                Log.Error.Write(ErrorSystemType.Game, $"Failed to remove road segment at position {position} direction {direction}.");
         }
 
         internal Road GetRoadFromPathAtPosition(MapPos position)

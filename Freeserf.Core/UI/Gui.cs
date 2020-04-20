@@ -169,10 +169,13 @@ namespace Freeserf.UI
 
         protected internal virtual void UpdateParent()
         {
-            foreach (var child in children)
-                child.UpdateParent();
+            lock (children)
+            {
+                foreach (var child in children)
+                    child.UpdateParent();
 
-            children.Sort(childComparer);
+                children.Sort(childComparer);
+            }
         }
 
         protected abstract void InternalDraw();
@@ -180,8 +183,11 @@ namespace Freeserf.UI
         {
             if (!Displayed)
             {
-                foreach (var child in children)
-                    child.Displayed = false;
+                lock (children)
+                {
+                    foreach (var child in children)
+                        child.Displayed = false;
+                }
             }
         }
 
@@ -231,11 +237,14 @@ namespace Freeserf.UI
             {
                 InternalDraw();
 
-                for (int i = children.Count - 1; i >= 0; --i)
+                lock (children)
                 {
-                    // The collection might change while drawing (e.g. through key events).
-                    // In worst case we draw a child twice.
-                    children[i].Draw();
+                    for (int i = children.Count - 1; i >= 0; --i)
+                    {
+                        // The collection might change while drawing (e.g. through key events).
+                        // In worst case we draw a child twice.
+                        children[i].Draw();
+                    }
                 }
 
                 redraw = false;
@@ -273,18 +282,24 @@ namespace Freeserf.UI
 
         public void AddChild(GuiObject obj, int x, int y, bool displayed = true)
         {
-            obj.Parent = this;
-            children.Add(obj);
-            obj.MoveTo(x, y); // will call SetRedraw
-            obj.Displayed = displayed;
+            lock (children)
+            {
+                obj.Parent = this;
+                children.Add(obj);
+                obj.MoveTo(x, y); // will call SetRedraw
+                obj.Displayed = displayed;
 
-            children.Sort(childComparer);
+                children.Sort(childComparer);
+            }
         }
 
         public void DeleteChild(GuiObject obj)
         {
             obj.Parent = null;
-            children.Remove(obj);
+            lock (children)
+            {
+                children.Remove(obj);
+            }
             SetRedraw();
         }
 
@@ -329,9 +344,12 @@ namespace Freeserf.UI
 
         public virtual void HandleZoomChange()
         {
-            foreach (var child in children)
+            lock (children)
             {
-                child.HandleZoomChange();
+                foreach (var child in children)
+                {
+                    child.HandleZoomChange();
+                }
             }
         }
 
@@ -361,11 +379,14 @@ namespace Freeserf.UI
             }
 
             // Find the corresponding child element if any
-            foreach (var child in children)
+            lock (children)
             {
-                if (child.HandleEvent(e))
+                foreach (var child in children)
                 {
-                    return true;
+                    if (child.HandleEvent(e))
+                    {
+                        return true;
+                    }
                 }
             }
 
