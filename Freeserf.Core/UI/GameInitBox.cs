@@ -1026,11 +1026,15 @@ namespace Freeserf.UI
 
                             if (gameType == GameType.MultiplayerServer)
                             {
+                                Server.ClientJoined -= Server_ClientJoined;
+                                Server.ClientLeft -= Server_ClientLeft;
+
                                 GameManager.Instance.CloseGame();
                                 interf = interf.Viewer.ChangeTo(Viewer.Type.Server).MainInterface;
 
                                 playerStatus.Clear();
                                 playerStatus.Add(0u, MultiplayerStatus.Ready); // server
+
                                 foreach (var client in playerClientMapping)
                                 {
                                     playerStatus.Add(client.Key, MultiplayerStatus.Unknown); // clients

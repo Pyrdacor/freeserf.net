@@ -709,7 +709,6 @@ namespace Freeserf.Network
             switch (request)
             {
                 case Request.Disconnect:
-                    ClientLeft?.Invoke(this, client);
                     responseHandler?.Invoke(ResponseType.Ok);
                     DisconnectClient(client, false);
                     break;
