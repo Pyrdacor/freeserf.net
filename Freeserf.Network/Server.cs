@@ -426,10 +426,10 @@ namespace Freeserf.Network
                 if (State != ServerState.Lobby)
                 {
                     // This is a reconnect during loading or game.
-                    client.SendGameStateUpdate(Global.SpontaneousMessage, GameManager.Instance.GetCurrentGame(), true);
                     new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client);
                     new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client);
-                    new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client);                    
+                    new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client);
+                    client.SendGameStateUpdate(Global.SpontaneousMessage, GameManager.Instance.GetCurrentGame(), true);
                 }
 
                 var server = client.Server as LocalServer;
@@ -630,8 +630,11 @@ namespace Freeserf.Network
                             var userAction = networkData as UserActionData;
                             var response = userAction.ApplyToGame(game, client.PlayerIndex);
 
-                            if (clients.Count > 1)
-                                GameDirty = true;
+                            if (response == ResponseType.Ok)
+                            {
+                                if (clients.Count > 1)
+                                    GameDirty = true;
+                            }
 
                             responseHandler?.Invoke(response);
                         }
@@ -749,7 +752,6 @@ namespace Freeserf.Network
         public void StartGame(Game game)
         {
             BroadcastStartGameRequest();
-            BroadcastGameStateUpdate(game, true);
             LoadGame();
         }
 

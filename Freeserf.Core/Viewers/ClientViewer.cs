@@ -37,6 +37,15 @@ namespace Freeserf
             client.Disconnected += Client_Disconnected;
         }
 
+        public void SendUserAction(Network.UserActionData userActionData)
+        {
+            client.SendUserAction(userActionData, response =>
+            {
+                if (response != Network.ResponseType.Ok)
+                    client.RequestGameStateUpdate();
+            });
+        }
+
         private void Client_Disconnected(object sender, System.EventArgs e)
         {
             GameManager.Instance.CloseGame();

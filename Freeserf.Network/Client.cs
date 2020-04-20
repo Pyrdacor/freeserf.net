@@ -37,6 +37,7 @@ namespace Freeserf.Network
         ConnectionObserver connectionObserver = null;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
+        readonly List<Action<Heartbeat>> registeredHeartbeatHandlers = new List<Action<Heartbeat>>();
         SavedGameState lastSavedGameState = null;
 
         public LocalClient()
@@ -55,14 +56,12 @@ namespace Freeserf.Network
             get;
         }
 
-        // TODO: get from server and set it here
         public uint PlayerIndex
         {
             get;
             private set;
         }
 
-        // TODO: needed
         public Game Game
         {
             get;
@@ -116,6 +115,10 @@ namespace Freeserf.Network
             lock (registeredResponseHandlers)
             {
                 registeredResponseHandlers.Clear();
+            }
+            lock (registeredHeartbeatHandlers)
+            {
+                registeredHeartbeatHandlers.Clear();
             }
 
             server?.Close();
@@ -208,9 +211,16 @@ namespace Freeserf.Network
                     HandleRequest(networkData as RequestData, responseHandler);
                     break;
                 case NetworkDataType.Heartbeat:
-                    // Last heartbeat time was set before.
-                    responseHandler?.Invoke(ResponseType.Ok);
-                    break;
+                    {
+                        var heartbeat = networkData as Heartbeat;
+                        // Last heartbeat time was set before.
+                        if (PlayerIndex == 0u)
+                            PlayerIndex = heartbeat.PlayerId;
+                        foreach (var registeredHeartbeatHandler in registeredHeartbeatHandlers.ToArray())
+                            registeredHeartbeatHandler?.Invoke(heartbeat);
+                        responseHandler?.Invoke(ResponseType.Ok);
+                        break;
+                    }
                 case NetworkDataType.LobbyData:
                     if (serverState != ServerState.Lobby)
                         responseHandler?.Invoke(ResponseType.BadState);
@@ -366,9 +376,20 @@ namespace Freeserf.Network
                     break;
                 case Request.StartGame:
                     serverState = ServerState.Loading;
-                    GameStarted?.Invoke(this, EventArgs.Empty);
-                    SendStartGameRequest();
-                    // Start game messages are sent asynchronously.
+                    if (PlayerIndex == 0u)
+                    {
+                        // We have to wait for first heartbeat to set the player index.
+                        SendHeartbeatRequest(response =>
+                        {
+                            GameStarted?.Invoke(this, EventArgs.Empty);
+                            SendStartGameRequest();
+                        });
+                    }
+                    else
+                    {
+                        GameStarted?.Invoke(this, EventArgs.Empty);
+                        SendStartGameRequest();
+                    }
                     return;
                 case Request.AllowUserInput:
                     if (serverState == ServerState.Loading)
@@ -481,6 +502,13 @@ namespace Freeserf.Network
             }
         }
 
+        public void SendHeartbeatRequest(Action<Heartbeat> responseAction)
+        {
+            var request = new RequestData(Global.GetNextMessageIndex(), Request.Heartbeat);
+            RegisterHeartbeatResponse(request.MessageIndex, responseAction);
+            request.Send(server);
+        }
+
         public void SendUserAction(UserActionData userAction)
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Send user action {userAction.UserAction} to server.");
@@ -510,6 +538,24 @@ namespace Freeserf.Network
             }
 
             registeredResponseHandlers.Add(responseHandler);
+        }
+
+        private void RegisterHeartbeatResponse(byte messageIndex, Action<Heartbeat> heartbeatAction)
+        {
+            void heartbeatHandler(Heartbeat heartbeat)
+            {
+                if (heartbeat.MessageIndex == messageIndex)
+                {
+                    lock (registeredHeartbeatHandlers)
+                    {
+                        registeredHeartbeatHandlers.Remove(heartbeatHandler);
+                    }
+
+                    heartbeatAction?.Invoke(heartbeat);
+                }
+            }
+
+            registeredHeartbeatHandlers.Add(heartbeatHandler);
         }
     }
 

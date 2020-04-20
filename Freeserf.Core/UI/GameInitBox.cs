@@ -1279,12 +1279,12 @@ namespace Freeserf.UI
         private void Client_InputDisallowed(object sender, System.EventArgs e)
         {
             // TODO: at least the client should be able to leave the game
-            interf.Enabled = false;
+            interf.AllowInput(false);
         }
 
         private void Client_InputAllowed(object sender, System.EventArgs e)
         {
-            interf.Enabled = true;
+            interf.AllowInput(true);
         }
 
         private void Client_GameResumed(object sender, System.EventArgs e)

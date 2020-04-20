@@ -513,8 +513,8 @@ namespace Freeserf.UI
                         {
                             if (interf.Game.BuildFlag(interf.MapCursorPosition, player))
                             {
-                                if (interf.Viewer.ViewerType == Viewer.Type.Client)
-                                    interf.Client.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
+                                if (interf.Viewer is ClientViewer clientViewer)
+                                    clientViewer.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
                                 else if (interf.Viewer.ViewerType == Viewer.Type.Server)
                                     interf.Server.GameDirty = true;
 
@@ -538,8 +538,8 @@ namespace Freeserf.UI
 
                     if (result)
                     {
-                        if (interf.Viewer.ViewerType == Viewer.Type.Client)
-                            interf.Client.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
+                        if (interf.Viewer is ClientViewer clientViewer)
+                            clientViewer.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
                         else if (interf.Viewer.ViewerType == Viewer.Type.Server)
                             interf.Server.GameDirty = true;
 
