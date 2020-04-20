@@ -181,6 +181,18 @@ namespace Freeserf
             }
         }
 
+        /// <summary>
+        /// Clears the collection.
+        /// 
+        /// Note that the objects are not disposed / deleted from the game
+        /// automatically. You have to do so before calling this.
+        /// </summary>
+        public void Clear()
+        {
+            FreeIndices.Clear();
+            objects.Clear();
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             lock (objectsLock)

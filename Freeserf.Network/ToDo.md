@@ -10,3 +10,9 @@
 - No heartbeats are sent while in lobby nor are timeouts checked in lobby
 - Server does not check for client timeouts yet
 - When a server game is started (enter game init mp server screen is enough) and then a game as client is joined, there are several bugs (seems that the client has still server view)
+- Full syncs
+    - Client still keeps his base game (renderview, interface, base map data, map change handler, etc)
+    - Client must first delete all game objects / render objects
+    - Client must not rely on changeObjects in map but has to update each tile (remove old stuff, place new stuff)
+    - To do all this the client has to know that it is a full sync
+        - First sync is always full but can be treated as an update

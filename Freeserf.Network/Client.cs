@@ -277,10 +277,10 @@ namespace Freeserf.Network
                                 Log.Verbose.Write(ErrorSystemType.Network, "Processing sync ... ");
 #endif
                                 // TODO: do we need syncData.GameTime?
-                                // TODO: check performance of the game state sync
+                                bool full = syncData.Full && lastSavedGameState != null; // first sync should not be handled as full
                                 if (lastSavedGameState == null)
                                     lastSavedGameState = SavedGameState.FromGame(Game);
-                                lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData);
+                                lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData, full);
 
 #if DEBUG
                                 Log.Verbose.Write(ErrorSystemType.Network, $"Processing sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");
@@ -579,7 +579,7 @@ namespace Freeserf.Network
         public void SendGameStateUpdate(byte messageIndex, Game game, bool fullState)
         {
             byte[] data = GameStateSerializer.SerializeFrom(game, fullState);
-            new SyncData(messageIndex, game.GameTime, data).Send(this);
+            new SyncData(messageIndex, game.GameTime, data, fullState).Send(this);
         }
 
         public void SendInSyncMessage(UInt32 gameTime)

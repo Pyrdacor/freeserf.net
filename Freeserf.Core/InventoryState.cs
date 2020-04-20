@@ -107,7 +107,7 @@ namespace Freeserf
         /// <summary>
         /// Resources waiting to be moved out
         /// </summary>
-        public DirtyArray<Inventory.OutQueue> OutQueue { get; } = new DirtyArray<Inventory.OutQueue>
+        public DirtyArray<Inventory.OutQueue> OutQueue { get; } = new DirtyArray<Inventory.OutQueue> // TODO: stock changes have to make the array dirty
         (
             new Inventory.OutQueue(), new Inventory.OutQueue()
         );

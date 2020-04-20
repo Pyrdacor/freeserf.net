@@ -296,7 +296,7 @@ namespace Freeserf
         public DirtyArray<byte> FlagPaths { get; } = new DirtyArray<byte>(6);
         public DirtyArray<word> OtherEndpoints { get; } = new DirtyArray<word>(6);
         public DirtyArray<byte> OtherEndpointPaths { get; } = new DirtyArray<byte>(6);
-        public DirtyArray<ResourceSlot> Slots { get; } = new DirtyArray<ResourceSlot>(Global.FLAG_MAX_RES_COUNT);
+        public DirtyArray<ResourceSlot> Slots { get; } = new DirtyArray<ResourceSlot>(Global.FLAG_MAX_RES_COUNT); // TODO: stock changes have to make the array dirty
 
         [Ignore]
         public PathConnectionFlags PathConnectionFlags

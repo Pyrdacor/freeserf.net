@@ -211,7 +211,7 @@ namespace Freeserf
         /// <summary>
         /// Stocks of this building
         /// </summary>
-        public DirtyArray<Building.Stock> Stock { get; } = new DirtyArray<Building.Stock>
+        public DirtyArray<Building.Stock> Stock { get; } = new DirtyArray<Building.Stock> // TODO: stock changes have to make the array dirty
         (
             new Building.Stock(), new Building.Stock()
         );

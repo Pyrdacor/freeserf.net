@@ -40,6 +40,12 @@ namespace Freeserf.Network
             private set;
         } = 0u;
 
+        public bool Full
+        {
+            get;
+            private set;
+        } = false;
+
         public byte[] SerializedData
         {
             get;
@@ -51,11 +57,12 @@ namespace Freeserf.Network
             // use when parsing the data
         }
 
-        public SyncData(byte messageIndex, uint gameTime, byte[] serializedData)
+        public SyncData(byte messageIndex, uint gameTime, byte[] serializedData, bool full)
         {
             MessageIndex = messageIndex;
             GameTime = gameTime;
             SerializedData = serializedData;
+            Full = full;
             Size = 11 + serializedData.Length;
         }
 
@@ -77,14 +84,15 @@ namespace Freeserf.Network
 
             MessageIndex = rawData[offset + 2];
             GameTime = BitConverter.ToUInt32(rawData, offset + 3);
-            int dataSize = (int)(BitConverter.ToUInt32(rawData, offset + 7) & 0x7fffffff);
-            Size = 11 + dataSize;
+            Full = rawData[offset + 7] != 0;
+            int dataSize = (int)(BitConverter.ToUInt32(rawData, offset + 8) & 0x7fffffff);
+            Size = 12 + dataSize;
 
             if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"Sync data length must be {Size}.");
 
             SerializedData = new byte[dataSize];
-            Buffer.BlockCopy(rawData, offset + 11, SerializedData, 0, SerializedData.Length);
+            Buffer.BlockCopy(rawData, offset + 12, SerializedData, 0, SerializedData.Length);
 
             offset += Size;
 
@@ -98,6 +106,7 @@ namespace Freeserf.Network
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
             rawData.Add(MessageIndex);
             rawData.AddRange(BitConverter.GetBytes(GameTime));
+            rawData.Add((byte)(Full ? 1 : 0));
             rawData.AddRange(BitConverter.GetBytes((UInt32)SerializedData.Length));
             rawData.AddRange(SerializedData);
 

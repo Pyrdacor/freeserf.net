@@ -999,14 +999,30 @@ namespace Freeserf
         /// Should only be used for clients after map state deserialization.
         /// </summary>
         /// <param name="mapPositions"></param>
-        public void UpdateObjectsAfterDeserialization()
+        public void UpdateObjectsAfterDeserialization(bool fullSync)
         {
-            foreach (var changedObject in changedObjects)
+            if (fullSync)
             {
-                ProcessObjectChange(changedObject.Value);
+                for (MapPos i = 0; i < Size; ++i)
+                {
+                    if (GetObject(i) != Map.Object.None)
+                    {
+                        foreach (var handler in changeHandlers)
+                        {
+                            handler.OnObjectPlaced(i);
+                        }
+                    }
+                }
             }
+            else
+            {
+                foreach (var changedObject in changedObjects)
+                {
+                    ProcessObjectChange(changedObject.Value);
+                }
 
-            changedObjects.Clear();
+                changedObjects.Clear();
+            }
         }
 
         public MapGeometry Geometry { get; }

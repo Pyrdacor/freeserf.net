@@ -148,18 +148,18 @@ namespace Freeserf
         public static SavedGameState FromGame(Game game)
         {
             var gameCopy = new Game(game.Map);
-            GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true), true);
+            GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true), true, false);
             return new SavedGameState(gameCopy);
         }
 
-        public static SavedGameState UpdateGameAndLastState(Game game, SavedGameState lastState, byte[] updateData)
+        public static SavedGameState UpdateGameAndLastState(Game game, SavedGameState lastState, byte[] updateData, bool full)
         {
             // Update last state with update.
-            GameStateSerializer.DeserializeInto(lastState.game, updateData, true);
+            GameStateSerializer.DeserializeInto(lastState.game, updateData, true, full);
             // Serialize the updated state.
             var newState = GameStateSerializer.SerializeFrom(lastState.game, true);
             // Replace the current game state with the updated state.
-            GameStateSerializer.DeserializeInto(game, newState, false);
+            GameStateSerializer.DeserializeInto(game, newState, false, full);
             // Return the new state of the game.
             return FromGame(game);
         }
@@ -259,10 +259,19 @@ namespace Freeserf
             return stream.ToArray();
         }
 
-        public static void DeserializeInto(Game game, Stream stream, bool leaveOpen, bool dataOnly)
+        public static void DeserializeInto(Game game, Stream stream, bool leaveOpen, bool dataOnly, bool fullSync)
         {
-            if (!dataOnly)
+            if (!dataOnly && !fullSync)
                 game.Map?.PrepareDeserialization();
+            else if (!dataOnly && fullSync)
+            {
+                game.Serfs.Clear();
+                game.Flags.Clear();
+                game.Buildings.Clear();
+                game.Inventories.Clear();
+
+                game.ClearVisuals();
+            }
 
             Deserialize(game, stream, true);
 
@@ -275,7 +284,7 @@ namespace Freeserf
 
             if (!dataOnly)
             {
-                game.Map?.UpdateObjectsAfterDeserialization();
+                game.Map?.UpdateObjectsAfterDeserialization(fullSync);
                 game.ResetDirtyFlag();
             }
 
@@ -283,11 +292,11 @@ namespace Freeserf
                 stream.Close();
         }
 
-        public static void DeserializeInto(Game game, byte[] data, bool dataOnly)
+        public static void DeserializeInto(Game game, byte[] data, bool dataOnly, bool fullSync)
         {
             using var stream = new MemoryStream(data);
             stream.Position = 0;
-            DeserializeInto(game, stream, true, dataOnly);
+            DeserializeInto(game, stream, true, dataOnly, fullSync);
         }
     }
 }
