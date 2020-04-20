@@ -324,6 +324,7 @@ namespace Freeserf
     {
         internal abstract void OnHeightChanged(MapPos position);
         internal abstract void OnObjectChanged(MapPos position);
+        internal abstract void OnObjectChanged(MapPos position, Map.Object oldObjectType, uint oldObjectIndex);
         internal abstract void OnObjectPlaced(MapPos position);
         internal abstract void OnObjectExchanged(MapPos position, Map.Object oldObject, Map.Object newObject);
         internal abstract void OnRoadSegmentPlaced(MapPos position, Direction direction);
@@ -1005,11 +1006,25 @@ namespace Freeserf
             {
                 for (MapPos i = 0; i < Size; ++i)
                 {
-                    if (GetObject(i) != Map.Object.None)
+                    var newObject = GetObject(i);
+
+                    if (newObject != Map.Object.None)
                     {
                         foreach (var handler in changeHandlers)
                         {
                             handler.OnObjectPlaced(i);
+                        }
+
+                        // These handlers will update territories.
+                        if (newObject == Object.SmallBuilding ||
+                            newObject == Object.LargeBuilding ||
+                            newObject == Object.Castle)
+                        {
+                            foreach (var handler in changeHandlers)
+                            {
+                                // We act as if there was no object before.
+                                handler.OnObjectChanged(i, Object.None, GameObject.INVALID_INDEX);
+                            }
                         }
                     }
                 }
@@ -1018,7 +1033,7 @@ namespace Freeserf
             {
                 foreach (var changedObject in changedObjects)
                 {
-                    ProcessObjectChange(changedObject.Value);
+                    ProcessObjectChange(changedObject.Value, true);
                 }
 
                 changedObjects.Clear();
@@ -2018,7 +2033,7 @@ namespace Freeserf
                 NewObjectIndex = index
             };
 
-            ProcessObjectChange(objectChange);
+            ProcessObjectChange(objectChange, false);
 
             // Do we have an object change for this position already?
             if (changedObjects.ContainsKey(position))
@@ -2032,10 +2047,20 @@ namespace Freeserf
             changedObjects[position] = objectChange;
         }
 
-        void ProcessObjectChange(ObjectChange objectChange)
+        void ProcessObjectChange(ObjectChange objectChange, bool postDeserialization)
         {
             // Notify about object change
             var cycle = DirectionCycleCW.CreateDefault();
+
+            if (postDeserialization)
+            {
+                // After deserialization these handlers will update territories.
+                foreach (var handler in changeHandlers)
+                {
+                    handler.OnObjectChanged(objectChange.Position, objectChange.OldObject,
+                        objectChange.OldObjectIndex == -1 ? uint.MaxValue : (uint)objectChange.OldObjectIndex);
+                }
+            }
 
             foreach (var direction in cycle)
             {

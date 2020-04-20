@@ -3827,6 +3827,36 @@ namespace Freeserf
             }
         }
 
+        internal override void OnObjectChanged(uint position, Map.Object oldObjectType, uint oldObjectIndex)
+        {
+            // In multiplayer update territory if a military building was placed, removed or captured
+            var newBuilding = GetBuildingAtPosition(position);
+            var oldBuilding = GetBuilding(oldObjectType switch
+            {
+                Map.Object.SmallBuilding => oldObjectIndex,
+                Map.Object.LargeBuilding => oldObjectIndex,
+                Map.Object.Castle => oldObjectIndex,
+                _ => GameObject.INVALID_INDEX
+            });
+
+            if (newBuilding == null && oldBuilding != null && oldBuilding.IsMilitary())
+            {
+                UpdateLandOwnership(position);
+            }
+            else if (newBuilding != null && newBuilding.IsMilitary())
+            {
+                if (oldBuilding == newBuilding)
+                {
+                    if (oldBuilding.Player != newBuilding.Player)
+                        UpdateLandOwnership(position);
+                }
+                else
+                {
+                    UpdateLandOwnership(position);
+                }
+            }
+        }
+
         internal override void OnObjectChanged(MapPos position)
         {
             // memorize mineral for AI

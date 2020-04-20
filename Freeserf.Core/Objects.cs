@@ -40,6 +40,8 @@ namespace Freeserf
 
     internal abstract class GameObject : IGameObject
     {
+        public const uint INVALID_INDEX = uint.MaxValue;
+
         public uint Index { get; protected set; }
         public Game Game { get; protected set; }
 
