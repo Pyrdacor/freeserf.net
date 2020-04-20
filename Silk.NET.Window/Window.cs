@@ -28,7 +28,7 @@ namespace Silk.NET.Window
             24
         );
 
-        IWindow window = null;
+        readonly IWindow window = null;
         IMouse mouse = null;
         bool cursorVisible = true;
 

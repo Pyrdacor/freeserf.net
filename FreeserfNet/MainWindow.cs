@@ -193,6 +193,7 @@ namespace Freeserf
                     SetFullscreen(true);
 
                 CursorVisible = false; // hide cursor
+                DoubleClickTime = 150;
 
                 gameView.Closed += GameView_Closed;
                 Closing += MainWindow_Closing;
