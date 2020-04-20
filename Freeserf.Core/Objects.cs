@@ -111,11 +111,17 @@ namespace Freeserf
             {
                 var index = FreeIndices.First();
 
+                if (index == uint.MaxValue)
+                    throw new ExceptionFreeserf(ErrorSystemType.Game, "Invalid game object index.");
+
                 obj = ObjectFactory<T>.Create(Game, index);
                 FreeIndices.Remove(index);
             }
             else
             {
+                if (firstFreeIndex == uint.MaxValue)
+                    throw new ExceptionFreeserf(ErrorSystemType.Game, "Invalid game object index.");
+
                 obj = ObjectFactory<T>.Create(Game, firstFreeIndex++);
             }
 
@@ -131,6 +137,9 @@ namespace Freeserf
         {
             if (!objects.ContainsKey(index))
             {
+                if (index == uint.MaxValue)
+                    throw new ExceptionFreeserf(ErrorSystemType.Game, "Invalid game object index.");
+
                 lock (objectsLock)
                 {
                     objects.Add(index, ObjectFactory<T>.Create(Game, index));
