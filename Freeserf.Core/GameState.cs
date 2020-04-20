@@ -229,11 +229,17 @@ namespace Freeserf
             {
                 var updatedObject = collection.GetOrInsert(objectIndices[i]);
                 DeserializeWithoutHeader(updatedObject, stream);
-                updatedObject.PostDeserialize(dataOnly);
                 updatedObject.ResetDirtyFlag();
             }
 
-            // 4. Update free indices again
+            // 4. Run post-serialization for each object
+            for (int i = 0; i < objectIndices.Length; ++i)
+            {
+                var updatedObject = collection.GetOrInsert(objectIndices[i]);
+                updatedObject.PostDeserialize(dataOnly);
+            }
+
+            // 5. Update free indices again
             collection.UpdateFreeIndices(freeIndices);
         }
 

@@ -749,7 +749,7 @@ namespace Freeserf
                             throw new ExceptionFreeserf(ErrorSystemType.Flag, $"Other end flag does not exist. Flag {Index} at position {Position} and direction {direction}.");
 
                         var otherFlagOutDir = newRoad.Last.Reverse();
-                        var otherFlagOutRoad = OtherEndPoints[directionIndex].Flag.GetRoad(otherFlagOutDir);
+                        var otherFlagOutRoad = otherFlag.GetRoad(otherFlagOutDir);
                         OtherEndPoints[directionIndex].Road = otherFlagOutRoad ?? newRoad;
                         OtherEndPoints[directionIndex].Flag = otherFlag;
                     }
