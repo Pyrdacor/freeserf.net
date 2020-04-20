@@ -347,7 +347,15 @@ namespace Freeserf.Serialize
         private static void DeserializeWithoutHeader(object targetObject, BinaryReader reader)
         {
             var type = targetObject.GetType();
-            var propertyMap = PropertyMap.Create(type);
+            PropertyMap propertyMap;
+
+            if (propertyMapCache.ContainsKey(type))
+                propertyMap = propertyMapCache[type];
+            else
+            {
+                propertyMap = PropertyMap.Create(type);
+                propertyMapCache.Add(type, propertyMap);
+            }
 
             while (true)
             {
