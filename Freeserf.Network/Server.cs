@@ -234,22 +234,43 @@ namespace Freeserf.Network
                     // if someone connects during game or outside lobby, we will ignore it and disconnect the client
                     if (State != ServerState.Lobby)
                     {
-                        // But not if it is a previously connected client
-                        if (ip != null && disconnectedClients.ContainsKey(ip))
+                        // But not if it is a previously connected client.
+                        if (ip != null)
                         {
-                            Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' reconnected.");
+                            uint reconnectedPlayerIndex = uint.MaxValue;
 
-                            var reconnectedClient = new RemoteClient(disconnectedClients[ip], this, client);
+                            if (disconnectedClients.ContainsKey(ip))
+                            {
+                                reconnectedPlayerIndex = disconnectedClients[ip];
+                                disconnectedClients.Remove(ip);
+                            }
+                            // Maybe we didn't notice the disconnect yet?
+                            else
+                            {
+                                var knownClient = clients.Select(c => c.Key).FirstOrDefault(c => c.Ip.ToString() == ip);
 
-                            disconnectedClients.Remove(ip);
-                            playerClients.Add(reconnectedClient.PlayerIndex, reconnectedClient);
-                            clients.Add(reconnectedClient, client);
-                            clientStatus.Add(reconnectedClient, MultiplayerStatus.Unknown);
+                                if (knownClient != null)
+                                {
+                                    reconnectedPlayerIndex = knownClient.PlayerIndex;
+                                    DisconnectClient(knownClient, false);
+                                }
+                            }
 
-                            SubscribeConnectionEvents(reconnectedClient);
+                            if (reconnectedPlayerIndex < GameInfo.MultiplayerPlayerCount)
+                            {
+                                Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' reconnected.");
 
-                            HandleClient(reconnectedClient, client, cancellationToken).ContinueWith((task) => client.Close());
-                            continue;
+                                var reconnectedClient = new RemoteClient(reconnectedPlayerIndex, this, client);
+
+                                playerClients.Add(reconnectedClient.PlayerIndex, reconnectedClient);
+                                clients.Add(reconnectedClient, client);
+                                clientStatus.Add(reconnectedClient, MultiplayerStatus.Unknown);
+
+                                SubscribeConnectionEvents(reconnectedClient);
+
+                                HandleClient(reconnectedClient, client, cancellationToken).ContinueWith((task) => client.Close());
+                                continue;
+                            }
                         }
 
                         RejectClient(client);
@@ -395,13 +416,22 @@ namespace Freeserf.Network
 
         Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
         {
-            if (State != ServerState.Lobby)
+            if (State != ServerState.Lobby && State != ServerState.Loading && State != ServerState.Game)
             {
-                throw new ExceptionFreeserf("Expected server to be in lobby.");
+                throw new ExceptionFreeserf("Expected server to be in lobby or game.");
             }
 
             var clientReceiveTask = Task.Run(() =>
             {
+                if (State != ServerState.Lobby)
+                {
+                    // This is a reconnect during loading or game.
+                    client.SendGameStateUpdate(Global.SpontaneousMessage, GameManager.Instance.GetCurrentGame(), true);
+                    new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client);
+                    new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client);
+                    new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client);                    
+                }
+
                 var server = client.Server as LocalServer;
                 byte[] buffer = new byte[1024];
                 using var stream = tcpClient.GetStream();
