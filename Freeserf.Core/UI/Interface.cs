@@ -334,8 +334,11 @@ namespace Freeserf.UI
 
             if (PanelBar == null)
                 PanelBar = new PanelBar(this);
-            if (!PanelBar.Enabled)
+            if (Ingame)
+            {
+                PanelBar.Displayed = true;
                 PanelBar.Enabled = true;
+            }
         }
 
         public Color GetPlayerColor(uint playerIndex)
@@ -423,13 +426,20 @@ namespace Freeserf.UI
             else
                 DeleteChild(PopupBox);
 
-            UpdateMapCursorPosition(mapCursorPosition);
-            PanelBar?.Update();
+            if (Game != null)
+            {
+                UpdateMapCursorPosition(mapCursorPosition);
+                PanelBar?.Update();
+            }
         }
 
         // Open box for starting a new game 
         public void OpenGameInit(GameInitBox.GameType gameType = GameInitBox.GameType.Custom)
         {
+            // This might be called through a click event out of an interface which
+            // didn't notices a previous viewer switch. So re-check it here.
+            Viewer = Viewer?.ActiveViewer ?? Viewer;
+
             if (Viewer.ViewerType != Viewer.Type.LocalPlayer)
             {
                 Viewer = Viewer.ChangeTo(Viewer.Type.LocalPlayer);
@@ -487,6 +497,8 @@ namespace Freeserf.UI
 
         public void Destroy()
         {
+            cursorSprite?.Delete();
+
             ClosePopup();
             PopupBox = null;
 

@@ -121,6 +121,8 @@ namespace Freeserf
             return viewer;
         }
 
+        public Viewer ActiveViewer => Gui.ActiveViewer;
+
         public abstract bool SendEvent(Event.EventArgs args);
         public abstract void DrawCursor(int x, int y);
         public abstract void Update();

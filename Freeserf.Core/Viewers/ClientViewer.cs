@@ -48,6 +48,9 @@ namespace Freeserf
 
         private void Client_Disconnected(object sender, System.EventArgs e)
         {
+            if (client == null || !client.Connected)
+                return; // already disconnected
+
             // TODO: this may be raised on a different thread and cause all kind of problems (should be invoked during main update cycle somehow)
             GameManager.Instance.CloseGame();
             MainInterface.OpenGameInit();
@@ -70,9 +73,12 @@ namespace Freeserf
         {
             Log.Verbose.Write(ErrorSystemType.Application, "Client viewer: End game");
 
+            client.Disconnected -= Client_Disconnected;
+
             base.OnEndGame(game);
 
-            client.Disconnect();
+            if (client.Connected)
+                client.Disconnect();
         }
 
         public override void Update()

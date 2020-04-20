@@ -427,9 +427,6 @@ namespace Freeserf.Network
                 {
                     // This is a reconnect during loading or game.
                     new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client);
-                    new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client);
-                    new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client);
-                    client.SendGameStateUpdate(Global.SpontaneousMessage, GameManager.Instance.GetCurrentGame(), true);
                 }
 
                 var server = client.Server as LocalServer;
@@ -724,7 +721,20 @@ namespace Freeserf.Network
                     client.SendHeartbeat(messageIndex);
                     break;
                 case Request.LobbyData:
-                    throw new ExceptionFreeserf("Lobby data should not be requested during game."); // maybe for spectators?
+                    // Reconnected clients may request it.
+                    // TODO: check if the client just requested it (bruteforce attacks should be avoided)
+                    lock (lobbyServerInfo)
+                    lock (lobbyPlayerInfo)
+                    {
+                        client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
+                    }
+                    break;
+                case Request.StartGame:
+                    // This may be send by reconnected clients.
+                    new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client);
+                    new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client);
+                    client.SendGameStateUpdate(Global.SpontaneousMessage, GameManager.Instance.GetCurrentGame(), true);
+                    break;
                 default:
                     responseHandler?.Invoke(ResponseType.BadRequest);
                     break;

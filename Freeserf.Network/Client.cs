@@ -246,6 +246,13 @@ namespace Freeserf.Network
                         }
                         else
                         {
+                            if (Game == null)
+                            {
+                                serverState = ServerState.Offline;
+                                responseHandler?.Invoke(ResponseType.BadState);
+                                return;
+                            }
+
                             try
                             {
                                 var insyncData = networkData as InSyncData;
@@ -278,6 +285,13 @@ namespace Freeserf.Network
                         }
                         else
                         {
+                            if (Game == null)
+                            {
+                                serverState = ServerState.Offline;
+                                responseHandler?.Invoke(ResponseType.BadState);
+                                return;
+                            }
+
                             try
                             {
                                 var syncData = networkData as SyncData;
@@ -336,6 +350,11 @@ namespace Freeserf.Network
                     {
                         case NetworkDataType.Heartbeat:
                             // Last heartbeat time was set above.
+                            if (parsedData.MessageIndex != Global.SpontaneousMessage)
+                            {
+                                // If it has a message index, it is an answer to a heartbeat request.
+                                NetworkDataReceiver.Receive(server, parsedData, null);
+                            }
                             break;
                         case NetworkDataType.Request:
                         case NetworkDataType.LobbyData:
@@ -375,6 +394,11 @@ namespace Freeserf.Network
                     // Response is send below.
                     break;
                 case Request.StartGame:
+                    if (Game != null)
+                    {
+                        responseHandler?.Invoke(ResponseType.BadState);
+                        return;
+                    }
                     serverState = ServerState.Loading;
                     if (PlayerIndex == 0u)
                     {

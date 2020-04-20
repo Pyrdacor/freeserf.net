@@ -489,8 +489,11 @@ namespace Freeserf.UI
                     if (client == null)
                         throw new ExceptionFreeserf(ErrorSystemType.Network, "Client viewer without client interface.");
 
-                    client.NetworkDataReceiver = NetworkDataReceiver;
-                    client.UpdateNetworkEvents();
+                    if (client.Connected)
+                    {
+                        client.NetworkDataReceiver = NetworkDataReceiver;
+                        client.UpdateNetworkEvents();
+                    }
                 }
             }
         }
@@ -513,6 +516,8 @@ namespace Freeserf.UI
             if (this.viewer != null)
                 this.viewer.Init();
         }
+
+        public Viewer ActiveViewer => viewer;
 
         public bool Ingame => viewer.Ingame;
         public bool CanZoom => viewer.MainInterface.CanZoom;
