@@ -169,6 +169,7 @@ namespace Freeserf
 
             private void Write(string text)
             {
+                
                 if (MaxSize != null)
                 {
                     if (MaxSize < text.Length)
@@ -177,14 +178,21 @@ namespace Freeserf
                         return;
                     }
 
-                    while (currentSize + text.Length > MaxSize)
-                        PopLine();
+                    lock (streamWriter)
+                    {
+                        while (currentSize + text.Length > MaxSize)
+                            PopLine();
+                    }
                 }
 
                 currentSize += text.Length + Environment.NewLine.Length;
                 lineSizes.Enqueue(text.Length + Environment.NewLine.Length);
-                streamWriter.WriteLine(text);
-                streamWriter.Flush();
+
+                lock (streamWriter)
+                {
+                    streamWriter.WriteLine(text);
+                    streamWriter.Flush();
+                }
             }
 
             public virtual void Write(ErrorSystemType subsystem, string text)
