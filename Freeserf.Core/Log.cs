@@ -200,7 +200,7 @@ namespace Freeserf
                 if (streamWriter == null)
                     return;
 
-                Write($"{prefix}: [{subsystem}] { text}");
+                Write($"{DateTime.Now.ToString("HH:mm:ss")} {prefix}: [{subsystem}] { text}");
             }
 
             public void ApplyLevel()
