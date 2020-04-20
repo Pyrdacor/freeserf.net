@@ -31,6 +31,8 @@ namespace Freeserf
         public ServerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : base(renderView, previousViewer, gui, Type.Server)
         {
+            Log.Verbose.Write(ErrorSystemType.Application, "Creating server viewer.");
+
             // Note: It is ok if the only clients are spectators, but running a server without any connected client makes no sense.
             // Note: All clients must be setup at game start. Clients can not join during the game.
             // Note: There may be more than 3 clients because of spectators!
@@ -38,7 +40,7 @@ namespace Freeserf
             server.NetworkDataReceiver = previousViewer.MainInterface.NetworkDataHandler.NetworkDataReceiver;
 
             Init();
-            MainInterface = new ServerInterface(renderView, audioInterface, this, server);
+            MainInterface = new ServerInterface(renderView, audioInterface, this, previousViewer.MainInterface);
         }
 
         public override void OnEndGame(Game game)

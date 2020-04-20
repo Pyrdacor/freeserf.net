@@ -84,13 +84,27 @@ namespace Freeserf.UI
 
         public void CleanUp()
         {
-            // destroy build sprites
-            for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
+            if (map?.RenderMap != null)
             {
-                for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
+                // destroy build sprites
+                for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
                 {
-                    builds[column, row]?.Delete();
-                    builds[column, row] = null;
+                    for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
+                    {
+                        builds[column, row]?.Delete();
+                        builds[column, row] = null;
+                    }
+                }
+            }
+            else
+            {
+                for (int column = 0; column < builds.GetLength(0); ++column)
+                {
+                    for (int row = 0; row < builds.GetLength(1); ++row)
+                    {
+                        builds[column, row]?.Delete();
+                        builds[column, row] = null;
+                    }
                 }
             }
 

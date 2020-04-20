@@ -256,7 +256,7 @@ namespace Freeserf.Network
                                 }
                             }
 
-                            if (reconnectedPlayerIndex < GameInfo.MultiplayerPlayerCount)
+                            if (reconnectedPlayerIndex < GameInfo.PlayerCount)
                             {
                                 Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' reconnected.");
 
@@ -983,7 +983,7 @@ namespace Freeserf.Network
     {
         private TcpClient localClient = null;
         private Task receiveTask = null;
-        private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
 
         public RemoteServer(string name, IPAddress ip, TcpClient localClient)
         {
@@ -1018,7 +1018,7 @@ namespace Freeserf.Network
 
                 using (var stream = localClient.GetStream())
                 {
-                    while (!cancellationToken.IsCancellationRequested)
+                    while (!cancellationToken.IsCancellationRequested && localClient.Connected)
                     {
                         try
                         {

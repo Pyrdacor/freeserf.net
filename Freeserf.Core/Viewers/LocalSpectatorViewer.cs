@@ -32,7 +32,8 @@ namespace Freeserf
         protected LocalSpectatorViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
             : base(renderView, gui, type)
         {
-
+            if (type == Type.LocalSpectator)
+                Log.Verbose.Write(ErrorSystemType.Application, "Creating local spectator viewer.");
         }
 
         public LocalSpectatorViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
@@ -80,6 +81,8 @@ namespace Freeserf
 
         public override void OnNewGame(Game game)
         {
+            Log.Verbose.Write(ErrorSystemType.Application, "Local viewer: New game");
+
             var music = MainInterface.Audio?.GetMusicPlayer();
 
             if (music != null)
@@ -91,11 +94,14 @@ namespace Freeserf
 
         public override void OnEndGame(Game game)
         {
-            MainInterface.SetGame(null);
+            Log.Verbose.Write(ErrorSystemType.Application, "Local viewer: End game");
+
+            var oldInterface = MainInterface;
 
             if (!(this is LocalPlayerViewer))
                 Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, MainInterface.AudioInterface, this, Gui));
 
+            oldInterface.SetGame(null);
         }
     }
 

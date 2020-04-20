@@ -1067,7 +1067,8 @@ namespace Freeserf.UI
                                 };
                                 Server.StartGame(game);
                             }
-                            else
+                            else if (gameType != GameType.MultiplayerClient &&
+                                     gameType != GameType.MultiplayerJoined)
                             {
                                 if (!GameManager.Instance.StartGame(ServerGameInfo, interf.RenderView, interf.AudioInterface))
                                 {
@@ -1252,23 +1253,23 @@ namespace Freeserf.UI
 
         private void Client_GameStarted(object sender, System.EventArgs e)
         {
-            // TODO: client or remote spectator depending on settings
+            // TODO: remote spectator
             if (Client != null)
             {
                 Client.Disconnected -= Client_Disconnected;
                 Client.LobbyDataUpdated -= Client_LobbyDataUpdated;
+
+                GameManager.Instance.CloseGame();
+                Client.Game = GameManager.Instance.PrepareMultiplayerGame(ServerGameInfo, interf.RenderView, interf.AudioInterface);
+                interf = interf.Viewer.ChangeTo(Viewer.Type.Client).MainInterface;
+                gameType = GameType.MultiplayerLoading;
+                SetRedraw();
+
                 Client.GamePaused += Client_GamePaused;
                 Client.GameResumed += Client_GameResumed;
                 Client.InputAllowed += Client_InputAllowed;
                 Client.InputDisallowed += Client_InputDisallowed;
             }
-
-            GameManager.Instance.CloseGame();
-            interf = interf.Viewer.ChangeTo(Viewer.Type.Client).MainInterface;
-            gameType = GameType.MultiplayerLoading;
-            // TODO: use game info from lobby/server here
-            Client.Game = GameManager.Instance.PrepareMultiplayerGame(ServerGameInfo, interf.RenderView, interf.AudioInterface);
-            SetRedraw();
         }
 
         private void Client_InputDisallowed(object sender, System.EventArgs e)
@@ -1295,7 +1296,7 @@ namespace Freeserf.UI
             Client.Game.Pause();
         }
 
-        private void Server_ClientLeft(Network.ILocalServer server, Network.IRemoteClient client)
+        private void Server_ClientLeft(Network.ILocalServer server, IRemoteClient client)
         {
             lock (ServerGameInfo)
             {

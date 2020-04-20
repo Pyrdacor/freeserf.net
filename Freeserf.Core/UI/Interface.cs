@@ -82,7 +82,7 @@ namespace Freeserf.UI
         }
 
         readonly object gameLock = new object();
-        GameInitBox initBox;
+        public GameInitBox GameInitBox { get; private set; }
 
         protected MapPos mapCursorPosition = 0u;
         CursorType mapCursorType = CursorType.None;
@@ -116,15 +116,16 @@ namespace Freeserf.UI
         public Game Game { get; private set; } = null;
         public Random Random { get; private set; } = null;
         public TextRenderer TextRenderer { get; } = null;
-        public bool Ingame => Game != null && (initBox == null || !initBox.Displayed);
+        public bool Ingame => Game != null && (GameInitBox == null || !GameInitBox.Displayed);
         public Viewer.Access AccessRights => Viewer.AccessRights;
         internal Viewer Viewer { get; set; }
-        public string ServerGameName => initBox?.ServerGameName ?? "";
-        public GameInfo ServerGameInfo => initBox?.ServerGameInfo;
+        public string ServerGameName => GameInitBox?.ServerGameName ?? "";
+        public GameInfo ServerGameInfo => GameInitBox?.ServerGameInfo;
         public Network.ILocalServer Server { get; internal set; } = null;
         public Network.ILocalClient Client { get; internal set; } = null;
 
-        public Interface(IRenderView renderView, Audio.IAudioInterface audioInterface, Network.INetworkDataHandler networkDataHandler, Viewer viewer)
+        public Interface(IRenderView renderView, Audio.IAudioInterface audioInterface,
+            Network.INetworkDataHandler networkDataHandler, Viewer viewer, GameInitBox initBox = null)
             : base(renderView, audioInterface)
         {
             RenderView = renderView;
@@ -155,6 +156,9 @@ namespace Freeserf.UI
 
             PanelBar = new PanelBar(this);
             AddChild(PanelBar, 0, 0, false);
+
+            GameInitBox = initBox;
+
             Layout();
         }
 
@@ -197,7 +201,7 @@ namespace Freeserf.UI
                 if (base.HandleEvent(e))
                 {
                     // Ensure viewport enable reset
-                    if (viewportEnabled)
+                    if (viewportEnabled && Viewport != null)
                         Viewport.Enabled = true;
 
                     return true; // handled
@@ -282,16 +286,19 @@ namespace Freeserf.UI
 
                 Game = game;
                 Player = null;
+            }
 
-                if (Game != null)
+            if (Game != null)
+            {
+                if (game.Map == null)
                 {
-                    if (game.Map == null)
-                    {
-                        SetGame(null);
-                        Log.Debug.Write(ErrorSystemType.Game, "Internal error. Map is null.");
-                        return;
-                    }
+                    SetGame(null);
+                    Log.Debug.Write(ErrorSystemType.Game, "Internal error. Map is null.");
+                    return;
+                }
 
+                lock (gameLock)
+                {
                     game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
 
                     // Note: The render map must be created above with AttachToRenderLayer before viewport creation.
@@ -304,9 +311,9 @@ namespace Freeserf.UI
                     if (!PanelBar.Enabled)
                         PanelBar.Enabled = true;
                 }
-
-                Layout();
             }
+
+            Layout();
         }
 
         public Color GetPlayerColor(uint playerIndex)
@@ -369,8 +376,8 @@ namespace Freeserf.UI
             if (PopupBox == null)
                 PopupBox = new PopupBox(this);
 
-            if (initBox != null && initBox.Displayed && !initBox.HasChild(PopupBox))
-                initBox.AddChild(PopupBox, 0, 0);
+            if (GameInitBox != null && GameInitBox.Displayed && !GameInitBox.HasChild(PopupBox))
+                GameInitBox.AddChild(PopupBox, 0, 0);
             else if (!HasChild(PopupBox))
                 AddChild(PopupBox, 0, 0);
 
@@ -389,8 +396,8 @@ namespace Freeserf.UI
 
             PopupBox.Hide();
 
-            if (initBox != null)
-                initBox.DeleteChild(PopupBox);
+            if (GameInitBox != null)
+                GameInitBox.DeleteChild(PopupBox);
             else
                 DeleteChild(PopupBox);
 
@@ -415,18 +422,18 @@ namespace Freeserf.UI
 
             RenderView.ResetZoom();
 
-            if (initBox == null)
+            if (GameInitBox == null)
             {
-                initBox = new GameInitBox(this, gameType);
-                AddChild(initBox, 0, 0);
+                GameInitBox = new GameInitBox(this, gameType);
+                AddChild(GameInitBox, 0, 0);
             }
             else
             {
-                initBox.UpdateGameType(false);
+                GameInitBox.UpdateGameType(false);
             }
 
-            initBox.Displayed = true;
-            initBox.Enabled = true;
+            GameInitBox.Displayed = true;
+            GameInitBox.Enabled = true;
 
             PanelBar.Displayed = false;
             PanelBar.Enabled = false;
@@ -442,9 +449,9 @@ namespace Freeserf.UI
             ClosePopup();
             PopupBox = null;
 
-            if (initBox != null)
+            if (GameInitBox != null)
             {
-                initBox.Displayed = false;
+                GameInitBox.Displayed = false;
             }
 
             PanelBar.Displayed = true;
@@ -461,9 +468,9 @@ namespace Freeserf.UI
             ClosePopup();
             PopupBox = null;
 
-            if (initBox != null)
+            if (GameInitBox != null)
             {
-                initBox.Displayed = false;
+                GameInitBox.Displayed = false;
             }
 
             if (PanelBar != null)
@@ -605,7 +612,7 @@ namespace Freeserf.UI
                 return;
             }
 
-            if (this.Player != null && player == this.Player.Index)
+            if (Player != null && player == Player.Index)
             {
                 return;
             }
@@ -1374,14 +1381,14 @@ namespace Freeserf.UI
                 PanelBar.SetSize(panelWidth, panelHeight);
             }
 
-            if (initBox != null)
+            if (GameInitBox != null)
             {
                 int initBoxWidth = 16 + 320 + 16;
                 int initBoxHeight = 200;
                 int initBoxX = (Width - initBoxWidth) / 2;
                 int initBoxY = (Height - initBoxHeight) / 2;
-                initBox.MoveTo(initBoxX, initBoxY);
-                initBox.SetSize(initBoxWidth, initBoxHeight);
+                GameInitBox.MoveTo(initBoxX, initBoxY);
+                GameInitBox.SetSize(initBoxWidth, initBoxHeight);
             }
 
             if (PopupBox != null && PopupBox.Parent != null)
@@ -1577,10 +1584,10 @@ namespace Freeserf.UI
 
     internal class ServerInterface : Interface
     {
-        public ServerInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Network.ILocalServer server)
-            : base(renderView, audioInterface, server, viewer)
+        public ServerInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Interface previousInterface)
+            : base(renderView, audioInterface, previousInterface.Server, viewer, previousInterface.GameInitBox)
         {
-            Server = server;
+            Server = previousInterface.Server;
         }
 
         public override void Update()
@@ -1606,15 +1613,13 @@ namespace Freeserf.UI
 
     internal class RemoteInterface : Interface
     {
-        public RemoteInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Network.ILocalClient client)
-            : base(renderView, audioInterface, client, viewer)
+        public RemoteInterface(IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer viewer, Interface previousInterface)
+            : base(renderView, audioInterface, previousInterface.Client, viewer, previousInterface.GameInitBox)
         {
-            Client = client;
-        }
+            Client = previousInterface.Client;
 
-        public void GetGameUpdate()
-        {
-
+            if (Game != null && Client.PlayerIndex < Game.PlayerCount)
+                SetPlayer(Client.PlayerIndex); // Ensure correct player if join mid-game
         }
     }
 }

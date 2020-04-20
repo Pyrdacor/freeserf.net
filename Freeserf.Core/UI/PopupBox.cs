@@ -4182,13 +4182,12 @@ namespace Freeserf.UI
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm || Box == Type.DiskMsg)
                         SetBox(Type.SettlerMenu);
                     // TODO
-                    // TODO: CLIENT
                     break;
                 case Action.QuitConfirm:
                 case Action.NoSaveQuitConfirm:
-                    // TODO: CLIENT
                     // no saving
                     interf.ClosePopup();
+                    GameManager.Instance.CloseGame();
                     interf.OpenGameInit();
                     break;
                 case Action.SaveAndQuit:

@@ -31,6 +31,8 @@ namespace Freeserf
         public ClientViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : base(renderView, audioInterface, previousViewer, gui, Type.Client)
         {
+            Log.Verbose.Write(ErrorSystemType.Application, "Creating client viewer.");
+
             client = previousViewer.MainInterface.Client;
             client.Disconnected += Client_Disconnected;
         }
@@ -43,6 +45,8 @@ namespace Freeserf
 
         public override void OnNewGame(Game game)
         {
+            Log.Verbose.Write(ErrorSystemType.Application, "Client viewer: New game");
+
             var music = MainInterface.Audio?.GetMusicPlayer();
 
             if (music != null)
@@ -54,9 +58,11 @@ namespace Freeserf
 
         public override void OnEndGame(Game game)
         {
+            Log.Verbose.Write(ErrorSystemType.Application, "Client viewer: End game");
+
             base.OnEndGame(game);
 
-            client.SendDisconnect();
+            client.Disconnect();
         }
 
         public override void Update()

@@ -31,7 +31,8 @@ namespace Freeserf
         protected LocalPlayerViewer(Render.IRenderView renderView, Viewer previousViewer, Gui gui, Type type)
             : base(renderView, previousViewer, gui, type)
         {
-
+            if (type == Type.LocalPlayer)
+                Log.Verbose.Write(ErrorSystemType.Application, "Creating local player viewer.");
         }
 
         public LocalPlayerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)

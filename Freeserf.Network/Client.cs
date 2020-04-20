@@ -118,8 +118,8 @@ namespace Freeserf.Network
                 registeredResponseHandlers.Clear();
             }
 
-            client?.Close();
             server?.Close();
+            client?.Close();
             client = null;
             server = null;
             Disconnected?.Invoke(this, EventArgs.Empty);

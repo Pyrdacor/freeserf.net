@@ -33,7 +33,7 @@ namespace Freeserf
             : base(renderView, gui, type)
         {
             Init();
-            MainInterface = new RemoteInterface(renderView, audioInterface, this, previousViewer.MainInterface.Client);
+            MainInterface = new RemoteInterface(renderView, audioInterface, this, previousViewer.MainInterface);
         }
 
         public RemoteSpectatorViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui, bool restricted)
@@ -48,7 +48,6 @@ namespace Freeserf
 
             if (remoteInterface.Game != null && remoteInterface.Player != null)
             {
-                remoteInterface.GetGameUpdate();
                 remoteInterface.Update();
             }
         }
@@ -84,9 +83,11 @@ namespace Freeserf
 
         public override void OnEndGame(Game game)
         {
-            MainInterface.SetGame(null);
+            var oldInterface = MainInterface;
 
             Gui.SetViewer(Viewer.CreateLocalPlayer(MainInterface.RenderView, MainInterface.AudioInterface, this, Gui));
+
+            oldInterface.SetGame(null);
         }
     }
 }
