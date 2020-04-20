@@ -956,6 +956,43 @@ namespace Freeserf
                 return Position.CompareTo(obj.Position);
             }
         }
+        [DataClass]
+        class PathChange : IState, IComparable
+        {
+            public MapPos Position;
+            public uint OldPath;
+            public uint NewPath;
+
+            static readonly List<string> Names = new List<string>()
+            {
+                nameof(Position),
+                nameof(OldPath),
+                nameof(NewPath)
+            };
+
+            public bool Dirty => true;
+
+            public IReadOnlyList<string> DirtyProperties => Names;
+
+            public void ResetDirtyFlag()
+            {
+                // do nothing
+            }
+
+            public int CompareTo(object obj)
+            {
+                return CompareTo(obj as PathChange);
+            }
+
+            public int CompareTo(PathChange obj)
+            {
+                if (obj == null)
+                    return 1;
+
+                return Position.CompareTo(obj.Position);
+            }
+        }
+
 
         public bool Dirty => updateState.Dirty || landscapeTiles.Dirty || gameTiles.Dirty;
         public IReadOnlyList<string> DirtyProperties
@@ -971,6 +1008,8 @@ namespace Freeserf
                     dirtyProperties.Add(nameof(gameTiles));
                 if (changedObjects.Dirty)
                     dirtyProperties.Add(nameof(changedObjects));
+                if (changedPaths.Dirty)
+                    dirtyProperties.Add(nameof(changedPaths));
                 return dirtyProperties;
             }
         }
@@ -978,14 +1017,16 @@ namespace Freeserf
         public void ResetDirtyFlag()
         {
             changedObjects.Clear();
+            changedPaths.Clear();
             updateState.ResetDirtyFlag();
             landscapeTiles.ResetDirtyFlag();
             gameTiles.ResetDirtyFlag();
         }
 
-        // Value: Lower word: Old object, Higher word, 
         [Data]
         readonly DirtyMap<MapPos, ObjectChange> changedObjects = new DirtyMap<MapPos, ObjectChange>();
+        [Data]
+        readonly DirtyMap<MapPos, PathChange> changedPaths = new DirtyMap<MapPos, PathChange>();
 
         /// <summary>
         /// Should only be used for clients after map state deserialization.
@@ -994,6 +1035,7 @@ namespace Freeserf
         public void PrepareDeserialization()
         {
             changedObjects.Clear();
+            changedPaths.Clear();
         }
 
         /// <summary>
@@ -1027,16 +1069,33 @@ namespace Freeserf
                             }
                         }
                     }
+
+                    if (Paths(i) != 0u)
+                    {
+                        var cycle = DirectionCycleCW.CreateDefault();
+
+                        foreach (var direction in cycle)
+                        {
+                            foreach (var handler in changeHandlers)
+                            {
+                                // We act as if there was no path before.
+                                handler.OnRoadSegmentPlaced(i, direction);
+                            }
+                        }
+                    }
                 }
             }
             else
             {
                 foreach (var changedObject in changedObjects)
-                {
                     ProcessObjectChange(changedObject.Value, true);
-                }
 
                 changedObjects.Clear();
+
+                foreach (var changedPath in changedPaths)
+                    ProcessPathChange(changedPath.Value);
+
+                changedPaths.Clear();
             }
         }
 
@@ -1313,23 +1372,105 @@ namespace Freeserf
 
         public bool HasPath(MapPos position, Direction direction)
         {
-            return Misc.BitTest(gameTiles[(int)position].Paths, (int)direction);
+            return HasPathFromValue(gameTiles[(int)position].Paths, direction);
+        }
+
+        private bool HasPathFromValue(uint paths, Direction direction)
+        {
+            return Misc.BitTest(paths, (int)direction);
+        }
+
+        void ProcessPathChange(PathChange pathChange)
+        {
+            // Notify about path change
+            var cycle = DirectionCycleCW.CreateDefault();
+
+            foreach (var direction in cycle)
+            {
+                bool oldPath = HasPathFromValue(pathChange.OldPath, direction);
+                bool newPath = HasPathFromValue(pathChange.NewPath, direction);
+
+                if (oldPath == newPath)
+                    continue;
+
+                if (newPath) // Added path
+                {
+                    foreach (var handler in changeHandlers)
+                    {
+                        handler.OnRoadSegmentPlaced(pathChange.Position, direction);
+                    }
+                }
+                else if (oldPath) // Removed path
+                {
+                    foreach (var handler in changeHandlers)
+                    {
+                        handler.OnRoadSegmentDeleted(pathChange.Position, direction);
+                    }
+                }
+            }
         }
 
         public void AddPath(MapPos position, Direction direction)
         {
+            var oldPath = gameTiles[(int)position].Paths;
+
             gameTiles[(int)position].Paths |= (byte)Misc.BitU((int)direction);
+
+            var pathChange = new PathChange()
+            {
+                Position = position,
+                OldPath = oldPath,
+                NewPath = gameTiles[(int)position].Paths
+            };
+
+            // Do we have an path change for this position already?
+            if (changedPaths.ContainsKey(position))
+            {
+                // Merge
+                var prevPathChange = changedPaths[position];
+                pathChange.OldPath = prevPathChange.OldPath;
+            }
+
+            if (pathChange.OldPath == pathChange.NewPath)
+                changedPaths.Remove(position);
+            else
+                changedPaths[position] = pathChange;
 
             foreach (var handler in changeHandlers)
                 handler.OnRoadSegmentPlaced(position, direction);
         }
 
-        public void DeletePath(MapPos position, Direction direction)
+        public void DeletePath(MapPos position, Direction direction, bool runHandlers = true)
         {
+            var oldPath = gameTiles[(int)position].Paths;
+
             gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction);
 
-            foreach (var handler in changeHandlers)
-                handler.OnRoadSegmentDeleted(position, direction);
+            var pathChange = new PathChange()
+            {
+                Position = position,
+                OldPath = oldPath,
+                NewPath = gameTiles[(int)position].Paths
+            };
+
+            // Do we have an path change for this position already?
+            if (changedPaths.ContainsKey(position))
+            {
+                // Merge
+                var prevPathChange = changedPaths[position];
+                pathChange.OldPath = prevPathChange.OldPath;
+            }
+
+            if (pathChange.OldPath == pathChange.NewPath)
+                changedPaths.Remove(position);
+            else
+                changedPaths[position] = pathChange;
+
+            if (runHandlers)
+            {
+                foreach (var handler in changeHandlers)
+                    handler.OnRoadSegmentDeleted(position, direction);
+            }
         }
 
         public bool HasOwner(MapPos position)
@@ -2050,8 +2191,6 @@ namespace Freeserf
         void ProcessObjectChange(ObjectChange objectChange, bool postDeserialization)
         {
             // Notify about object change
-            var cycle = DirectionCycleCW.CreateDefault();
-
             if (postDeserialization)
             {
                 // After deserialization these handlers will update territories.
@@ -2061,6 +2200,8 @@ namespace Freeserf
                         objectChange.OldObjectIndex == -1 ? uint.MaxValue : (uint)objectChange.OldObjectIndex);
                 }
             }
+
+            var cycle = DirectionCycleCW.CreateDefault();
 
             foreach (var direction in cycle)
             {
@@ -2245,11 +2386,8 @@ namespace Freeserf
                         direction = directions[j];
                         reverseDirection = direction.Reverse();
 
-                        gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction);
-                        gameTiles[(int)Move(position, direction)].Paths &= (byte)~Misc.BitU((int)reverseDirection);
-
-                        foreach (var handler in changeHandlers)
-                            handler.OnRoadSegmentDeleted(position, direction);
+                        DeletePath(position, direction);
+                        DeletePath(Move(position, direction), reverseDirection);
 
                         position = Move(position, direction);
                     }
@@ -2257,13 +2395,8 @@ namespace Freeserf
                     return false;
                 }
 
-                gameTiles[(int)position].Paths |= (byte)Misc.BitU((int)direction);
-                gameTiles[(int)Move(position, direction)].Paths |= (byte)Misc.BitU((int)reverseDirection);
-
-                foreach (var handler in changeHandlers)
-                    handler.OnRoadSegmentPlaced(position, direction);
-                foreach (var handler in changeHandlers)
-                    handler.OnRoadSegmentPlaced(Move(position, direction), direction.Reverse());
+                AddPath(position, direction);
+                AddPath(Move(position, direction), reverseDirection);
 
                 position = Move(position, direction);
             }
@@ -2348,11 +2481,11 @@ namespace Freeserf
         public Direction RemoveRoadSegment(ref MapPos position, Direction direction)
         {
             // Clear forward reference. 
-            gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction);
+            DeletePath(position, direction, false);
             position = Move(position, direction);
 
-            // Clear backreference. 
-            gameTiles[(int)position].Paths &= (byte)~Misc.BitU((int)direction.Reverse());
+            // Clear backreference.
+            DeletePath(position, direction.Reverse(), false);
 
             // Find next direction of path. 
             direction = Direction.None;
