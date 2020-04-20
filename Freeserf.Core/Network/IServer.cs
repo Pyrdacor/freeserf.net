@@ -69,6 +69,7 @@ namespace Freeserf.Network
         void ResumeGame();
         void DisconnectClient(IRemoteClient client, bool sendNotificationToClient);
         void BroadcastHeartbeat();
+        void BroadcastDisconnect();
 
         event ClientJoinedHandler ClientJoined;
         event ClientLeftHandler ClientLeft;

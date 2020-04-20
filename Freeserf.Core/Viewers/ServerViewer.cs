@@ -45,11 +45,7 @@ namespace Freeserf
         {
             base.OnEndGame(game);
 
-            foreach (var client in server.Clients)
-            {
-                client.SendDisconnect();
-            }
-
+            server.BroadcastDisconnect();
             server.Close();
         }
 

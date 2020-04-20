@@ -16,3 +16,12 @@
     - Client must not rely on changeObjects in map but has to update each tile (remove old stuff, place new stuff)
     - To do all this the client has to know that it is a full sync
         - First sync is always full but can be treated as an update
+- If somethings goes wrong on client side
+    - Pause game
+    - Disable all input
+    - Send a disconnect to the server
+    - Close all previous popups
+    - Open a popup with the error message or at least "Error ..."
+    - Limit user input to this popup (disable viewport input)
+    - After closing this popup open game init box (and close current game)
+- The server should memorize disconnected clients (IP + player index) and allow reconnect of those

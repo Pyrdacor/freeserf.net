@@ -30,9 +30,9 @@ namespace Freeserf.Network
         const double ConnectionTimeoutInSeconds = 10.0;
         const double NeedRefreshTimeoutInSeconds = 1.5;
 
-        readonly Func<DateTime> lastHeartbeatTimeProvider;
+        protected Func<DateTime> lastHeartbeatTimeProvider;
         readonly int checkDelay;
-        readonly CancellationToken cancellationToken;
+        protected CancellationToken cancellationToken;
         DateTime lastRefreshRequestTime = DateTime.MinValue;
 
         public ConnectionObserver(Func<DateTime> lastHeartbeatTimeProvider, int checkDelay, CancellationToken cancellationToken)
@@ -40,6 +40,11 @@ namespace Freeserf.Network
             this.lastHeartbeatTimeProvider = lastHeartbeatTimeProvider;
             this.checkDelay = checkDelay;
             this.cancellationToken = cancellationToken;
+        }
+
+        protected ConnectionObserver(int checkDelay)
+        {
+            this.checkDelay = checkDelay;
         }
 
         public void Run()

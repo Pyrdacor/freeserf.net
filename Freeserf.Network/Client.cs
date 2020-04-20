@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Freeserf.Network
 {
-    public class LocalClient : ILocalClient
+    internal class LocalClient : ILocalClient
     {
         TcpClient client = null;
         RemoteServer server = null;
@@ -513,16 +513,24 @@ namespace Freeserf.Network
         }
     }
 
-    public class RemoteClient : IRemoteClient
+    internal class RemoteClient : ConnectionObserver, IRemoteClient
     {
         readonly TcpClient client = new TcpClient();
+        public DateTime LastHeartbeat { get; set; } = DateTime.UtcNow;
+        readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
 
         public RemoteClient(uint playerIndex, ILocalServer server, TcpClient client)
+            : base(200)
         {
             Ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
             PlayerIndex = playerIndex;
             Server = server;
             this.client = client;
+
+            lastHeartbeatTimeProvider = () => LastHeartbeat;
+            cancellationToken = disconnectToken.Token;
+
+            Run();
         }
 
         public IPAddress Ip
@@ -553,6 +561,11 @@ namespace Freeserf.Network
         public void SendDisconnect()
         {
             new RequestData(Global.GetNextMessageIndex(), Request.Disconnect).Send(this);
+        }
+
+        public void CancelConnectionObserving()
+        {
+            disconnectToken.Cancel();
         }
 
         public void Send(byte[] rawData)

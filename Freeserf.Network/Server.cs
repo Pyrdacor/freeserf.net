@@ -94,7 +94,7 @@ namespace Freeserf.Network
         }
     }
 
-    public class LocalServer : ILocalServer
+    internal class LocalServer : ILocalServer
     {
         readonly object gameReadyLock = new object();
         bool acceptClients = true;
@@ -106,7 +106,8 @@ namespace Freeserf.Network
         readonly Dictionary<IRemoteClient, TcpClient> clients = new Dictionary<IRemoteClient, TcpClient>();
         readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
         readonly Dictionary<IRemoteClient, MultiplayerStatus> clientStatus = new Dictionary<IRemoteClient, MultiplayerStatus>();
-        readonly Dictionary<IRemoteClient, DateTime> lastClientHeartbeats = new Dictionary<IRemoteClient, DateTime>();
+        readonly Dictionary<string, uint> disconnectedClients = new Dictionary<string, uint>();
+        readonly Dictionary<RemoteClient, Action> connectionLossHandlers = new Dictionary<RemoteClient, Action>();
         DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat but only the broadcasted ones so no client is missed out.
         uint lastUserActionOrInSyncGameTime = 0;
 
@@ -227,23 +228,46 @@ namespace Freeserf.Network
                 try
                 {
                     TcpClient client = listener.AcceptTcpClient();
+                    var ip = ((IPEndPoint)client?.Client?.RemoteEndPoint)?.Address?.ToString();
                     // TODO: password protected games
 
                     // if someone connects during game or outside lobby, we will ignore it and disconnect the client
                     if (State != ServerState.Lobby)
                     {
+                        // But not if it is a previously connected client
+                        if (ip != null && disconnectedClients.ContainsKey(ip))
+                        {
+                            Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' reconnected.");
+
+                            var reconnectedClient = new RemoteClient(disconnectedClients[ip], this, client);
+
+                            disconnectedClients.Remove(ip);
+                            playerClients.Add(reconnectedClient.PlayerIndex, reconnectedClient);
+                            clients.Add(reconnectedClient, client);
+                            clientStatus.Add(reconnectedClient, MultiplayerStatus.Unknown);
+
+                            SubscribeConnectionEvents(reconnectedClient);
+
+                            HandleClient(reconnectedClient, client, cancellationToken).ContinueWith((task) => client.Close());
+                            continue;
+                        }
+
                         RejectClient(client);
-                        AcceptClients = false; // this will also cancel the listener (no more clients are able to connect)
-                        return;
+                        continue;
+                        // AcceptClients = false; // this will also cancel the listener (no more clients are able to connect)
+                        // return;
                     }
                     // Note: We can not just stop the listener if there are 4 players in the lobby
                     // because players may disconnect or may be removed by the server. If the listener
                     // would be stopped no other client may connect then.
                     else if (GameInfo.MultiplayerPlayerCount == Game.MAX_PLAYER_COUNT) // TODO: spectators
                     {
+                        Log.Verbose.Write(ErrorSystemType.Network, $"Rejected client '{ip ?? "no ip"}': Game is full.");
                         RejectClient(client);
                         continue;
                     }
+
+                    Log.Verbose.Write(ErrorSystemType.Network, $"New client with IP '{ip}' connected.");
 
                     var clientPlayerIndex = GameInfo.FirstFreeMultiplayerPlayerIndex;
                     var remoteClient = new RemoteClient(clientPlayerIndex, this, client);
@@ -251,7 +275,8 @@ namespace Freeserf.Network
                     playerClients.Add(clientPlayerIndex, remoteClient);
                     clients.Add(remoteClient, client);
                     clientStatus.Add(remoteClient, MultiplayerStatus.Unknown);
-                    lastClientHeartbeats.Add(remoteClient, DateTime.UtcNow);
+
+                    SubscribeConnectionEvents(remoteClient);
 
                     HandleClient(remoteClient, client, cancellationToken).ContinueWith((task) => client.Close());
                 }
@@ -268,14 +293,39 @@ namespace Freeserf.Network
                     else
                     {
                         Error = "Error connecting client: " + ex.Message;
+                        Log.Verbose.Write(ErrorSystemType.Network, Error);
                         return;
                     }
                 }
                 catch (Exception ex)
                 {
                     Error = "Error connecting client: " + ex.Message;
+                    Log.Verbose.Write(ErrorSystemType.Network, Error);
                 }
             }
+        }
+
+        void ClientConnectionLost(RemoteClient client)
+        {
+            DisconnectClient(client, false);
+        }
+
+        void SubscribeConnectionEvents(RemoteClient remoteClient)
+        {
+            void connectionLost()
+            {
+                ClientConnectionLost(remoteClient);
+            }
+
+            connectionLossHandlers.Add(remoteClient, connectionLost);
+            remoteClient.ConnectionLost += connectionLossHandlers[remoteClient];
+        }
+
+        void UnsubscribeConnectionEvents(RemoteClient remoteClient)
+        {
+            remoteClient.CancelConnectionObserving();
+            remoteClient.ConnectionLost -= connectionLossHandlers[remoteClient];
+            connectionLossHandlers.Remove(remoteClient);
         }
 
         public void LoadGame()
@@ -408,7 +458,7 @@ namespace Freeserf.Network
                     Log.Verbose.Write(ErrorSystemType.Network, $"Received {networkData.LogName} (message index {networkData.MessageIndex}).");
 
                     // Whenever we receive something from the client we update the last heartbeat time.
-                    lastClientHeartbeats[client] = DateTime.UtcNow;
+                    client.LastHeartbeat = DateTime.UtcNow;
 
                     if (networkData.Type == NetworkDataType.Heartbeat)
                     {
@@ -682,6 +732,10 @@ namespace Freeserf.Network
 
         public void DisconnectClient(IRemoteClient client, bool sendNotificationToClient = true)
         {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{client.Ip.ToString()}' disconnected.");
+
+            disconnectedClients.Add(client.Ip.ToString(), client.PlayerIndex);
+
             if (sendNotificationToClient)
                 client.SendDisconnect();
 
@@ -691,6 +745,7 @@ namespace Freeserf.Network
                 clients.Remove(client);
                 playerClients.Remove(client.PlayerIndex);
                 clientStatus.Remove(client);
+                UnsubscribeConnectionEvents(client as RemoteClient);
 
                 if (State == ServerState.Loading)
                 {
@@ -861,7 +916,7 @@ namespace Freeserf.Network
             });
         }
 
-        private void BroadcastDisconnect()
+        public void BroadcastDisconnect()
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast disconnect to {clients.Count} clients.");
 
@@ -894,7 +949,7 @@ namespace Freeserf.Network
         }
     }
 
-    public class RemoteServer : IRemoteServer
+    internal class RemoteServer : IRemoteServer
     {
         private TcpClient localClient = null;
         private Task receiveTask = null;
