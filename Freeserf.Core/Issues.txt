@@ -9,6 +9,8 @@ Non-working code:
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 	- This also hinders road building sometimes
+    - Also seen roads with invalid directions at one end (not even leading to the flag)
+      Happened with double-click. Couldn't even remove it and no serfs could use it. But it blocked other road building.
 - Minimap clicks will result in a map positions that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
@@ -18,6 +20,7 @@ Non-working code:
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
 - When loading a game and there is an exception during loading (in AI loading at end) the background intro game seem to be drawn messed up.
   I guess because map and stuff are loaded but then are discarded?
+- Seen roads without a serf (previously there was one). Sometimes a new serf approaches after a while. Not good.
 
 
 Long AI Games:
@@ -42,6 +45,10 @@ Flags / buildings / roads:
 - Sometimes additional paths should be built to avoid congestions
 
 Misc:
+- Castle position seem to be very important. Higher players should also care about the flag of the castle and try to create 5 roads out of it.
+- Balduin builds much large buildings but no stock for a long time -> too much traffic.
+    - Too much buildings and too few expansion to keep all those buildings inside borders.
+    - A stock should be build after x buildings have been built
 - Higher characters should be smarter in general than lower characters
 - Non-hard-times AIs with low materials should not plan many buildings and then all materials are gone
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.

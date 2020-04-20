@@ -279,6 +279,11 @@ namespace Freeserf.UI
                     Viewport = new Viewport(this, Game.Map);
                     Viewport.Displayed = true;
                     AddChild(Viewport, 0, 0);
+
+                    if (PanelBar == null)
+                        PanelBar = new PanelBar(this);
+                    if (!PanelBar.Enabled)
+                        PanelBar.Enabled = true;
                 }
 
                 Layout();
