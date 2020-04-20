@@ -334,17 +334,17 @@ namespace Freeserf.Serialize
                 header[3] != DATA_MINOR_VERSION)
                 throw new ExceptionFreeserf("Wrong state data version");
 
-            DeserializeWithoutHeader(targetObject, reader);
+            DeserializeWithoutHeaderInto(targetObject, reader);
         }
 
         public static void DeserializeWithoutHeader<T>(T targetObject, Stream stream) where T : IState
         {
             using var reader = new BinaryReader(stream, Encoding.UTF8, true);
 
-            DeserializeWithoutHeader(targetObject, reader);
+            DeserializeWithoutHeaderInto(targetObject, reader);
         }
 
-        private static void DeserializeWithoutHeader(object targetObject, BinaryReader reader)
+        private static void DeserializeWithoutHeaderInto(object targetObject, BinaryReader reader)
         {
             var type = targetObject.GetType();
             PropertyMap propertyMap;
@@ -377,11 +377,6 @@ namespace Freeserf.Serialize
                     field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, field.GetValue(targetObject)));
                 }
             }
-        }
-
-        private static void DeserializeWithoutHeaderInto(object obj, BinaryReader reader)
-        {
-            DeserializeWithoutHeader(obj, reader);
         }
 
         private static void DeserializePropertyValueInto(object targetObject, BinaryReader reader, PropertyInfo property)
@@ -481,13 +476,9 @@ namespace Freeserf.Serialize
             }
             else if (typeof(IDirtyMap).IsAssignableFrom(type))
             {
-                Log.Verbose.Write(ErrorSystemType.Application, "### Deserializing dirty map.");
-
                 // TODO: adjust serialization like for DirtyArray
                 var keyType = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
                 var valueType = type.IsGenericType ? type.GetGenericArguments()[1] : typeof(object);
-
-                Log.Verbose.Write(ErrorSystemType.Application, $"### KeyType '{keyType.Name}', ValueType '{valueType.Name}'");
 
                 if (typeof(IDirtyArray).IsAssignableFrom(keyType) ||
                     typeof(IDirtyMap).IsAssignableFrom(keyType))
@@ -499,20 +490,15 @@ namespace Freeserf.Serialize
                 int count = reader.ReadInt32();
                 var map = Array.CreateInstance(typeof(KeyValuePair<object, object>), count);
 
-                Log.Verbose.Write(ErrorSystemType.Application, $"### Count: {count}");
-
                 for (int i = 0; i < count; ++i)
                 {
                     var key = DeserializePropertyValue(reader, keyType, null);
                     var value = DeserializePropertyValue(reader, valueType, null); // TODO: use previous value instead of null
                     map.SetValue(new KeyValuePair<object, object>(key, value), i);
-                    Log.Verbose.Write(ErrorSystemType.Application, $"### Entry {i}: {{{key}: {value}}}");
                 }
 
                 if (!(propertyValue is IDirtyMap dirtyMap))
                     dirtyMap = (IDirtyMap)Activator.CreateInstance(type);
-
-                Log.Verbose.Write(ErrorSystemType.Application, $"### DirtyMap count: {dirtyMap.Count}");
 
                 dirtyMap.Initialize(map);
 
