@@ -474,7 +474,7 @@ namespace Freeserf.Serialize
                 for (int i = 0; i < serializedLength; ++i)
                 {
                     int index = full ? i : (int)ReadCount(reader.BaseStream);
-                    dirtyArray.Set(index, DeserializePropertyValue(reader, elementType, dirtyArray.Get(i)));
+                    dirtyArray.Set(index, DeserializePropertyValue(reader, elementType, dirtyArray.Get(index)));
                 }
 
                 return dirtyArray;
@@ -643,11 +643,20 @@ namespace Freeserf.Serialize
 
                     WriteCount(writer.BaseStream, (uint)dirtyIndices.Count);
 
-                    for (int i = 0; i < dirtyIndices.Count; ++i)
+                    if (!allDirty)
                     {
-                        if (!allDirty)
+                        for (int i = 0; i < dirtyIndices.Count; ++i)
+                        {
                             WriteCount(writer.BaseStream, (uint)dirtyIndices[i]);
-                        SerializePropertyValue(writer, array.Get(dirtyIndices[i]), full);
+                            SerializePropertyValue(writer, array.Get(dirtyIndices[i]), full);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < array.Length; ++i)
+                        {
+                            SerializePropertyValue(writer, array.Get(i), full);
+                        }
                     }
                 }
             }
