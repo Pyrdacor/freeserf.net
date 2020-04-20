@@ -108,7 +108,7 @@ namespace Freeserf.AIStates
                 }
 
                 // look for memorized large spot
-                if (canBuild && largeSpots.Count > 0)
+                if (largeSpots.Count > 0)
                 {
                     int index = game.GetRandom().Next() % largeSpots.Count;
                     spot = largeSpots[index];
@@ -121,7 +121,7 @@ namespace Freeserf.AIStates
 
                     largeSpots.RemoveAt(index);
                 }
-                else if (canBuild && considerSmallSpots && smallSpots.Count > 0)
+                else if (considerSmallSpots && smallSpots.Count > 0)
                 {
                     int index = game.GetRandom().Next() % smallSpots.Count;
                     spot = smallSpots[index];
@@ -134,7 +134,7 @@ namespace Freeserf.AIStates
 
                     smallSpots.RemoveAt(index);
                 }
-                else if (canBuild || largeSpots.Count < 6)
+                else if (largeSpots.Count < 6)
                 {
                     // no valid mineral spots found -> send geologists
                     var geologists = game.GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Geologist).ToList();
@@ -163,21 +163,8 @@ namespace Freeserf.AIStates
                                 Kill(ai);
                                 return;
                             }
-                            else
-                            {
-                                int numMaxAdditional = maxGeologists - sentOutGeologistCount - 1;
-
-                                if (numMaxAdditional > 0)
-                                {
-                                    int numAdditional = game.RandomInt() % (1 + numMaxAdditional);
-
-                                    // can we also send another one?
-                                    while (numAdditional-- != 0)
-                                        SendGeologist(ai, game, player);
-                                }
-                            }
                         }
-                        else // this means there are geologist but none in stock (so they are already looking for minerals) or 2 or more are already looking for minerals
+                        else // this means there are geologists but none in stock (so they are already looking for minerals) or 2 or more are already looking for minerals
                         {
                             Kill(ai);
                             // check again in a while
@@ -287,7 +274,7 @@ namespace Freeserf.AIStates
                 return false;
             }
 
-            var spotsWithFlag = possibleSpots.Where(possibleSpot => game.Map.HasFlag(possibleSpot)).ToList();
+            var spotsWithFlag = possibleSpots.Where(possibleSpot => game.Map.HasFlag(possibleSpot) && game.Map.GetOwner(possibleSpot) == player.Index).ToList();
 
             for (int i = 0; i < 10; ++i)
             {

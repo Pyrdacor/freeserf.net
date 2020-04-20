@@ -48,6 +48,7 @@ namespace Freeserf
 
         private void Client_Disconnected(object sender, System.EventArgs e)
         {
+            // TODO: this may be raised on a different thread and cause all kind of problems (should be invoked during main update cycle somehow)
             GameManager.Instance.CloseGame();
             MainInterface.OpenGameInit();
         }
