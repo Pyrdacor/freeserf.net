@@ -125,6 +125,8 @@ namespace Freeserf
         }
     }
 
+    public delegate bool LogFilter(ErrorSystemType logType, string message);
+
     public class Log
     {
         public enum Level
@@ -169,7 +171,6 @@ namespace Freeserf
 
             private void Write(string text)
             {
-                
                 if (MaxSize != null)
                 {
                     if (MaxSize < text.Length)
@@ -198,6 +199,9 @@ namespace Freeserf
             public virtual void Write(ErrorSystemType subsystem, string text)
             {
                 if (streamWriter == null)
+                    return;
+
+                if (logFilter != null && !logFilter(subsystem, text))
                     return;
 
                 Write($"{DateTime.Now.ToString("HH:mm:ss")} {prefix}: [{subsystem}] { text}");
@@ -252,7 +256,13 @@ namespace Freeserf
             Error.ApplyLevel();
         }
 
+        public static void SetLogFilter(LogFilter filter)
+        {
+            logFilter = filter;
+        }
+
         public static Level LogLevel => level;
+        private static LogFilter logFilter;
 
 #if DEBUG
         public static Logger Verbose = new Logger(Level.Verbose, "Verbose");

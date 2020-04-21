@@ -1,7 +1,7 @@
 ﻿/*
  * Extensions.cs - Some useful class extensions
  *
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Freeserf
 {
@@ -73,6 +74,29 @@ namespace Freeserf
             {
                 yield return array[row, i];
             }
+        }
+    }
+
+    public static class Enums
+    {
+        public static T MinValue<T>() where T : Enum
+        {
+            return Enum.GetValues(typeof(T)).Cast<T>().Min();
+        }
+
+        public static T MaxValue<T>() where T : Enum
+        {
+            return Enum.GetValues(typeof(T)).Cast<T>().Max();
+        }
+
+        public static int MinIntValue<T>() where T : Enum
+        {
+            return Enum.GetValues(typeof(T)).Cast<int>().Min();
+        }
+
+        public static int MaxIntValue<T>() where T : Enum
+        {
+            return Enum.GetValues(typeof(T)).Cast<int>().Max();
         }
     }
 }

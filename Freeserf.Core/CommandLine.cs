@@ -2,7 +2,7 @@
  * CommandLine.cs - Command line parser and helpers
  *
  * Copyright (C) 2017  Wicked_Digger <wicked_digger@mail.ru>
- * Copyright (C) 2018  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -28,12 +28,16 @@ namespace Freeserf
 {
     public class CommandLine
     {
+        const int CommentRowOffset = 14;
+        const int MaxCommentLineLength = 60;
+
         public class Option
         {
             protected struct Parameter
             {
                 public string Name;
                 public Func<AutoParseableString, bool> Handler;
+                public string PossibleValues;
             }
 
             protected string comment = "";
@@ -61,21 +65,73 @@ namespace Freeserf
 
             public string Comment => comment;
 
+            private static string SplitToLines(string text, int newLineOffset, int additionalLineIdentation = 0)
+            {
+                int maxLength = MaxCommentLineLength;
+
+                string lines = "";
+                int offset = 0;
+
+                while (offset < text.Length)
+                {
+                    string remaining = text.Substring(offset);
+                    string line = remaining.Substring(0, Math.Min(maxLength, remaining.Length));
+
+                    if (line.Contains("\n"))
+                    {
+                        int newLinePos = line.IndexOf('\n');
+                        line = line.Substring(0, newLinePos);
+                    }
+                    else if (remaining.Length > maxLength)
+                    {
+                        int lastSpace = line.LastIndexOf(' ');
+
+                        if (lastSpace == -1) // not splitable
+                            return text;
+
+                        line = line.Substring(0, lastSpace);
+                    }
+                    string prefix = offset == 0 ? "" : "\t" + new string(' ', newLineOffset + additionalLineIdentation);
+                    if (offset == 0)
+                        maxLength -= additionalLineIdentation;
+                    lines += prefix + line.TrimEnd() + Environment.NewLine;
+                    offset += line.Length + 1;
+                }
+
+                return lines;
+            }
+
             public void ShowHelp()
             {
+                string possibleValues = "";
+
                 if (parameters.Count > 0)
                 {
+                    int length = 0;
+
                     foreach (var par in parameters)
                     {
-                        Cout.Write(" " + par.Name + "\t");
+                        Cout.Write(" " + par.Name);
+                        length += par.Name.Length + 1;
+
+                        if (par.PossibleValues != null)
+                            possibleValues += SplitToLines("  " + par.Name + ": " + par.PossibleValues, 2 + CommentRowOffset, par.Name.Length + 2) + Environment.NewLine;
                     }
+
+                    if (length < CommentRowOffset)
+                        Cout.Write(new string(' ', CommentRowOffset - length));
+                    else
+                        Cout.Write(" ");
                 }
                 else
                 {
-                    Cout.Write("\t\t");
+                    Cout.Write(new string(' ', CommentRowOffset));
                 }
 
-                Cout.Write(comment);
+                Cout.Write(SplitToLines(comment, 2 + CommentRowOffset).TrimEnd());
+
+                if (possibleValues.Length > 0)
+                    Cout.Write(Environment.NewLine + "\t" + new string(' ', CommentRowOffset) + possibleValues.TrimEnd());
             }
 
             public void ShowUsage()
@@ -86,12 +142,13 @@ namespace Freeserf
                 }
             }
 
-            public Option AddParameter(string name, Func<AutoParseableString, bool> handler)
+            public Option AddParameter(string name, Func<AutoParseableString, bool> handler, string possibleValues = null)
             {
                 var parameter = new Parameter();
 
                 parameter.Name = name;
                 parameter.Handler = handler;
+                parameter.PossibleValues = possibleValues;
                 parameters.Add(parameter);
 
                 return this;

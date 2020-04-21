@@ -1,10 +1,10 @@
-﻿using Freeserf.Renderer;
-using Silk.NET.Input.Common;
-using Silk.NET.Window;
-using Silk.NET.Windowing.Common;
 using System;
 using System.Drawing;
 using System.IO;
+using Freeserf.Renderer;
+using Silk.NET.Input.Common;
+using Silk.NET.Window;
+using Silk.NET.Windowing.Common;
 
 namespace Freeserf
 {

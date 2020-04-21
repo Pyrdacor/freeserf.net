@@ -60,6 +60,10 @@ namespace Freeserf
             var initInfo = new InitInfo();
             var commandLine = new CommandLine();
 
+            int minDebugLevelValue = Enums.MinIntValue<Log.Level>();
+            int maxDebugLevelValue = Enums.MaxIntValue<Log.Level>();
+            string logTypes = string.Join(", ", Enum.GetNames(typeof(ErrorSystemType)));
+
             commandLine.AddOption('d', "Set debug output level").AddParameter("NUM", (AutoParseableString s) =>
             {
                 s.Retrieve(out int d);
@@ -68,34 +72,37 @@ namespace Freeserf
                 {
                     Log.SetLevel((Log.Level)d);
                     initInfo.LogLevelSet = true;
+                    return true;
                 }
 
-                return true;
-            });
+                Console.WriteLine($"Invalid debug output level {d}. Possbile values are {minDebugLevelValue} ~ {maxDebugLevelValue}.");
 
-            commandLine.AddOption('f', "Run in fullscreen mode", () => { initInfo.Fullscreen = true; });
+                return false;
+            }, $"{ minDebugLevelValue} ~ { maxDebugLevelValue}");
 
-            commandLine.AddOption('g', "Use specified data directory").AddParameter("DATA-PATH", (AutoParseableString s) =>
+            commandLine.AddOption('f', "Run in fullscreen mode.", () => { initInfo.Fullscreen = true; });
+
+            commandLine.AddOption('g', "Use specified data directory.").AddParameter("DATA-PATH", (AutoParseableString s) =>
             {
                 s.Retrieve(out initInfo.DataDirectory);
 
                 return true;
             });
 
-            commandLine.AddOption('h', "Show this help text", () =>
+            commandLine.AddOption('h', "Show this help text.", () =>
             {
                 commandLine.ShowHelp();
                 Environment.Exit(0);
             });
 
-            commandLine.AddOption('l', "Load saved game").AddParameter("FILE", (AutoParseableString s) =>
+            commandLine.AddOption('l', "Load saved game.").AddParameter("FILE", (AutoParseableString s) =>
             {
                 initInfo.SaveGame = s.ReadToEnd();
 
                 return true;
             });
 
-            commandLine.AddOption('r', "Set display resolution (e.g. 800x600)").AddParameter("RES", (AutoParseableString s) =>
+            commandLine.AddOption('r', "Set display resolution (e.g. 800x600).").AddParameter("RES", (AutoParseableString s) =>
             {
                 s.Retrieve(out initInfo.ScreenWidth);
                 s.Skip(1); // 'x'
@@ -104,10 +111,42 @@ namespace Freeserf
                 return true;
             });
 
-            commandLine.AddOption('c', "Log to console window", () =>
+            commandLine.AddOption('c', "Log to console window.", () =>
             {
                 initInfo.ConsoleWindow = true;
             });
+
+            commandLine.AddOption('o', "Log only messages of the given type.\nCannot be used with -x option.").AddParameter("LOG-TYPE", (AutoParseableString s) =>
+            {
+                s.Retrieve(out string type);
+
+                if (Enum.TryParse(typeof(ErrorSystemType), type, true, out object logTypeObject))
+                {
+                    var logType = (ErrorSystemType)logTypeObject;
+                    Log.SetLogFilter((ErrorSystemType type, string _) => type == logType);
+                    return true;
+                }
+
+                Console.WriteLine($"Invalid log type {type}. Possible values are: {logTypes}.");
+
+                return false;
+            }, $"{logTypes}");
+
+            commandLine.AddOption('x', "Log only messages not of the given type.\nCannot be used with -o option.").AddParameter("LOG-TYPE", (AutoParseableString s) =>
+            {
+                s.Retrieve(out string type);
+
+                if (Enum.TryParse(typeof(ErrorSystemType), type, true, out object logTypeObject))
+                {
+                    var logType = (ErrorSystemType)logTypeObject;
+                    Log.SetLogFilter((ErrorSystemType type, string _) => type != logType);
+                    return true;
+                }
+
+                Console.WriteLine($"Invalid log type {type}. Possible values are: {logTypes}.");
+
+                return false;
+            }, $"{logTypes}");
 
             // TODO: email configurable
             commandLine.SetComment("Please report bugs to <robert.schneckenhaus@web.de>");
