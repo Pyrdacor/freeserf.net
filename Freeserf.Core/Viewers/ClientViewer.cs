@@ -53,7 +53,7 @@ namespace Freeserf
 
             // TODO: this may be raised on a different thread and cause all kind of problems (should be invoked during main update cycle somehow)
             GameManager.Instance.CloseGame();
-            MainInterface.OpenGameInit();
+            ActiveViewer.MainInterface.OpenGameInit();
         }
 
         public override void OnNewGame(Game game)

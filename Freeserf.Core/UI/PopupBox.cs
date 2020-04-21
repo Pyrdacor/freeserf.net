@@ -4188,7 +4188,7 @@ namespace Freeserf.UI
                     // no saving
                     interf.ClosePopup();
                     GameManager.Instance.CloseGame();
-                    interf.OpenGameInit();
+                    interf.Viewer.ActiveViewer.MainInterface.OpenGameInit();
                     break;
                 case Action.SaveAndQuit:
                     {
