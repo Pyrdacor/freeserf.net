@@ -427,6 +427,7 @@ namespace Freeserf.Network
                 if (State != ServerState.Lobby)
                 {
                     // This is a reconnect during loading or game.
+                    client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
                     new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client);
                 }
 
