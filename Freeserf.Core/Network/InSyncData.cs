@@ -28,13 +28,15 @@ namespace Freeserf.Network
     {
         /// <summary>
         /// Sync is only done if the game time is a multiple of this in seconds.
+        /// But based on the default game speed which is 2.
         /// </summary>
         public const int SyncDelay = 10;
+        public const int SyncDelayFactor = GameState.DEFAULT_GAME_SPEED;
 
         public static bool TimeToSync(Game game)
         {
             var nextGameTime = game.NextGameTime;
-            return game.GameTime != nextGameTime && nextGameTime % SyncDelay == 0;
+            return game.GameTime != nextGameTime && nextGameTime % (SyncDelay * SyncDelayFactor) == 0;
         }
 
         public NetworkDataType Type => NetworkDataType.InSync;

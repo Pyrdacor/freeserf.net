@@ -392,7 +392,8 @@ namespace Freeserf.Network
                         BroadcastGameStateUpdate(currentGame, false);
                         lastUserActionOrInSyncGameTime = currentGame.GameTime;
                     }
-                    else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >= InSyncData.SyncDelay * Freeserf.Global.TICKS_PER_SEC &&
+                    else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >=
+                            InSyncData.SyncDelay * InSyncData.SyncDelayFactor * Freeserf.Global.TICKS_PER_SEC &&
                         InSyncData.TimeToSync(currentGame))
                     {
                         lastUserActionOrInSyncGameTime = currentGame.GameTime;
