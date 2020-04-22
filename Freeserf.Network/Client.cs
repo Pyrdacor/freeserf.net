@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -38,7 +39,9 @@ namespace Freeserf.Network
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
         readonly List<Action<Heartbeat>> registeredHeartbeatHandlers = new List<Action<Heartbeat>>();
-        SavedGameState lastSavedGameState = null;
+        readonly Dictionary<uint, SavedGameState> lastSavedGameStates = new Dictionary<uint, SavedGameState>();
+        SavedGameState lastVerifiedSavedGameState = null;
+        uint lastSavedGameStateGameTime = 0u;
 
         public LocalClient()
         {
@@ -201,6 +204,22 @@ namespace Freeserf.Network
             }
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
+
+            if (Game != null && client.Connected)
+            {
+                var gameTime = Game.GameTime;
+
+                // Save game state from time to time to avoid huge syncs.
+                if (gameTime - lastSavedGameStateGameTime >= SavedGameState.SyncDelay && SavedGameState.TimeToSync(Game))
+                {
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Saving game state with game time {Misc.SecondsToTime(gameTime)}.");
+
+                    lastSavedGameStateGameTime = gameTime;
+                    lastSavedGameStates.Add(gameTime, SavedGameState.FromGame(Game));
+
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Finished saving game state with game time {Misc.SecondsToTime(gameTime)}.");
+                }
+            }
         }
 
         void ProcessData(IRemoteServer server, INetworkData networkData, ResponseHandler responseHandler)
@@ -257,16 +276,20 @@ namespace Freeserf.Network
                             {
                                 var insyncData = networkData as InSyncData;
 
-#if DEBUG
-                                var stopWatch = System.Diagnostics.Stopwatch.StartNew();
-                                Log.Verbose.Write(ErrorSystemType.Network, "Processing in-sync - save current state ... ");
-#endif
-                                // TODO: do we need insyncData.GameTime?
-                                lastSavedGameState = SavedGameState.FromGame(Game);
+                                Log.Verbose.Write(ErrorSystemType.Network, $"Processing in-sync message with game time {Misc.SecondsToTime(insyncData.GameTime)}.");
 
-#if DEBUG
-                                Log.Verbose.Write(ErrorSystemType.Network, $"Processing in-sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");
-#endif
+                                if (!lastSavedGameStates.ContainsKey(insyncData.GameTime)) // We don't have the saved state anymore -> need full update
+                                {
+                                    Log.Verbose.Write(ErrorSystemType.Network, $"Last saved game state with game time {Misc.SecondsToTime(insyncData.GameTime)} not available. Requesting re-sync.");
+                                    RequestGameStateUpdate();
+                                    return;
+                                }
+
+                                Log.Verbose.Write(ErrorSystemType.Network, $"Updating last synced saved state to game time {Misc.SecondsToTime(insyncData.GameTime)} and discarding outdated saved game states.");
+                                lastVerifiedSavedGameState = lastSavedGameStates[insyncData.GameTime];
+                                // Remove all outdated (timestamp before in-sync game time) saved states.
+                                foreach (var outdatedSavedGameState in lastSavedGameStates.Where(s => s.Key <= insyncData.GameTime).ToList())
+                                    lastSavedGameStates.Remove(outdatedSavedGameState.Key);
                             }
                             catch (Exception ex)
                             {
@@ -300,11 +323,11 @@ namespace Freeserf.Network
                                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
                                 Log.Verbose.Write(ErrorSystemType.Network, "Processing sync ... ");
 #endif
-                                // TODO: do we need syncData.GameTime?
-                                bool full = syncData.Full && lastSavedGameState != null; // first sync should not be handled as full
-                                if (lastSavedGameState == null)
-                                    lastSavedGameState = SavedGameState.FromGame(Game);
-                                lastSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastSavedGameState, syncData.SerializedData, full);
+                                lastSavedGameStates.Clear();
+                                bool full = syncData.Full && lastVerifiedSavedGameState != null; // first sync should not be handled as full
+                                if (lastVerifiedSavedGameState == null)
+                                    lastVerifiedSavedGameState = SavedGameState.FromGame(Game);
+                                lastVerifiedSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastVerifiedSavedGameState, syncData.SerializedData, full);
 
 #if DEBUG
                                 Log.Verbose.Write(ErrorSystemType.Network, $"Processing sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");

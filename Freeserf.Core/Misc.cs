@@ -215,5 +215,15 @@ namespace Freeserf
 
             return max;
         }
+
+        public static string SecondsToTime(uint seconds)
+        {
+            var hours = seconds / 3600;
+            seconds -= hours * 3600;
+            var minutes = seconds / 60;
+            seconds -= minutes * 60;
+
+            return $"{hours:00}:{minutes:00}:{seconds:00}";
+        }
     }
 }

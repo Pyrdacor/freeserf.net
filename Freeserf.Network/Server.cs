@@ -99,6 +99,7 @@ namespace Freeserf.Network
         readonly object gameReadyLock = new object();
         bool acceptClients = true;
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+        CancellationTokenSource inSyncCancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
         TcpListener listener = null;
         LobbyServerInfo lobbyServerInfo = null;
@@ -389,24 +390,33 @@ namespace Freeserf.Network
                 {
                     if (GameDirty)
                     {
+                        inSyncCancelTokenSource.Cancel(); // Cancel pending in-sync broadcasts.
                         BroadcastGameStateUpdate(currentGame, false);
                         lastUserActionOrInSyncGameTime = currentGame.GameTime;
                     }
-                    else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >=
-                            InSyncData.SyncDelay * InSyncData.SyncDelayFactor * Freeserf.Global.TICKS_PER_SEC &&
-                        InSyncData.TimeToSync(currentGame))
+                    else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >= SavedGameState.SyncDelay &&
+                        SavedGameState.TimeToSync(currentGame))
                     {
                         lastUserActionOrInSyncGameTime = currentGame.GameTime;
 
-                        var gameTime = currentGame.GameTime;
-                        var hours = gameTime / 3600;
-                        gameTime -= hours * 3600;
-                        var minutes = gameTime / 60;
-                        gameTime -= minutes * 60;
-                        var seconds = gameTime;
-                        Log.Verbose.Write(ErrorSystemType.Network, $"Sending in-sync message to all clients at game time: {hours}:{minutes}:{seconds}.");
+                        Log.Verbose.Write(ErrorSystemType.Network, $"Sending in-sync message to all clients at game time: {Misc.SecondsToTime(currentGame.GameTime)}.");
 
-                        BroadcastInSync(currentGame.GameTime);
+                        // Broadcast the in-sync 1 second later so the clients had the chance to create their game states.
+                        inSyncCancelTokenSource.Dispose();
+                        inSyncCancelTokenSource = new CancellationTokenSource();
+                        var gameTime = currentGame.GameTime;
+                        Task.Delay(1000, CancellationTokenSource.CreateLinkedTokenSource(cancelTokenSource.Token, inSyncCancelTokenSource.Token).Token).ContinueWith(t =>
+                        {
+                            try
+                            {
+                                if (currentGame != null)
+                                    BroadcastInSync(gameTime);
+                            }
+                            catch
+                            {
+                                // ignore
+                            }
+                        });
                     }
 
                     GameDirty = false;
@@ -968,14 +978,14 @@ namespace Freeserf.Network
 
         private void BroadcastInSync(uint gameTime)
         {
-            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast in-sync message to {clients.Count} clients.");
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast in-sync message to {clients.Count} clients with game time {Misc.SecondsToTime(gameTime)}.");
 
             Broadcast((client) => client.SendInSyncMessage(gameTime));
         }
 
         private void BroadcastGameStateUpdate(Game game, bool fullState)
         {
-            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast game state update to {clients.Count} clients.");
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast game state update to {clients.Count} clients with game time {Misc.SecondsToTime(game.GameTime)}");
 
             Broadcast((client) => client.SendGameStateUpdate(Global.SpontaneousMessage, game, fullState));
         }
