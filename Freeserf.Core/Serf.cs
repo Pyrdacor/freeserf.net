@@ -181,6 +181,15 @@ namespace Freeserf
                 return new StateData(parentSerf);
             }
 
+            public void Clear()
+            {
+                if (Data != null)
+                {
+                    Data = null;
+                    MarkPropertyAsDirty(nameof(Data));
+                }
+            }
+
             public class StateDataBase : Serialize.State
             {
                 private readonly StateData parent;
@@ -2511,6 +2520,7 @@ namespace Freeserf
             }
 
             SerfState = newState;
+            UpdateSerfStateData();
         }
 
         static void SetOtherState(Serf otherSerf, State newState, [CallerMemberName] string function = "", [CallerLineNumber] int lineNumber = 0)
@@ -2525,6 +2535,37 @@ namespace Freeserf
             }
 
             otherSerf.SerfState = newState;
+            otherSerf.UpdateSerfStateData();
+        }
+
+        void UpdateSerfStateData()
+        {
+            switch (SerfState)
+            {
+                case State.EscapeBuilding:
+                case State.FinishedBuilding:
+                case State.Invalid:
+                case State.KnightDefending:
+                case State.KnightDefendingVictoryFree:
+                case State.KnightOccupyEnemyBuilding:
+                case State.KnightPrepareDefending:
+                case State.LookingForGeoSpot:
+                case State.LostSailor:
+                case State.Null:
+                case State.PigFarming:
+                case State.PlanningFarming:
+                case State.PlanningFishing:
+                case State.PlanningLogging:
+                case State.PlanningPlanting:
+                case State.PlanningStoneCutting:
+                case State.Scatter:
+                case State.WaitForResourceOut:
+                    // Those states have no data so clear it.
+                    stateData.Clear();
+                    break;
+                default:
+                    break;
+            }
         }
 
         public Type SerfType
@@ -3632,7 +3673,7 @@ namespace Freeserf
                         break;
                     default:
                         Log.Debug.Write(ErrorSystemType.Serf, $"Serf state {SerfState} isn't processed");
-                        SerfState = State.Null;
+                        SetState(State.Null);
                         break;
                 }
             }
@@ -3876,7 +3917,7 @@ namespace Freeserf
 
             Position = Game.Map.Position(x, y);
             state.Tick = (ushort)reader.Value("state.tick").ReadUInt();
-            SerfState = (State)reader.Value("state").ReadInt();
+            SetState((State)reader.Value("state").ReadInt());
 
             // TODO: Legacy loading seems to miss several states like FreeSailing or several attacking states
 
