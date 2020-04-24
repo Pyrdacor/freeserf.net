@@ -205,7 +205,7 @@ namespace Freeserf.Network
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
 
-            if (Game != null && client.Connected)
+            if (Game != null && client != null && client.Connected)
             {
                 var gameTime = Game.GameTime;
 
