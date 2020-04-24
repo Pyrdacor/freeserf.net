@@ -7,14 +7,8 @@ namespace Freeserf
     using Serialize;
     using static Serialize.StateSerializer;
     using GameTime = UInt32;
-    using MapPos = UInt32;
     using word = UInt16;
     using dword = UInt32;
-    using Flags = Collection<Flag>;
-    using Inventories = Collection<Inventory>;
-    using Buildings = Collection<Building>;
-    using Serfs = Collection<Serf>;
-    using Players = Collection<Player>;
 
     [DataClass]
     internal class GameState : State
@@ -26,21 +20,32 @@ namespace Freeserf
         private dword constTick = 0;
         private word gameTimeTicksOfSecond = 0;
         private GameTime gameTime = 0; // in seconds
-        private dword gameSpeed = DEFAULT_GAME_SPEED;
+        private word gameSpeed = DEFAULT_GAME_SPEED;
         private Random random = new Random();
-
-        // TODO: add properties for those later
-        /*private dword gameStatsCounter;
-        private dword historyCounter;
-        private word flagSearchCounter;
+        private dword gameStatsCounter = 0;
+        private dword historyCounter = 0;
+        private word flagSearchCounter = 0;
         private dword goldTotal = 0;
         private dword mapGoldMoraleFactor = 0;        
         private int knightMoraleCounter = 0;
         private int inventoryScheduleCounter = 0;
-        // TODO: I'm not sure what the history stuff is actually doing
-        private DirtyArray<int> playerHistoryIndex = new DirtyArray<int>(4);
-        private DirtyArray<int> playerHistoryCounter = new DirtyArray<int>(3);
-        private int resourceHistoryIndex;*/
+        private int resourceHistoryIndex = 0;
+
+        public GameState()
+        {
+            PlayerHistoryIndex.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(PlayerHistoryIndex)); };
+            PlayerHistoryCounter.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(PlayerHistoryCounter)); };
+        }
+
+        public override void ResetDirtyFlag()
+        {
+            lock (dirtyLock)
+            {
+                PlayerHistoryIndex.ResetDirtyFlag();
+                PlayerHistoryCounter.ResetDirtyFlag();
+                ResetDirtyFlagUnlocked();
+            }
+        }
 
         /// <summary>
         /// Current game tick (game speed dependent)
@@ -105,7 +110,7 @@ namespace Freeserf
         /// <summary>
         /// Speed of game.
         /// </summary>
-        public dword GameSpeed
+        public word GameSpeed
         {
             get => gameSpeed;
             set
@@ -133,7 +138,112 @@ namespace Freeserf
             }
         }
 
-        // TODO ...
+        public dword GameStatsCounter
+        {
+            get => gameStatsCounter;
+            set
+            {
+                if (gameStatsCounter != value)
+                {
+                    gameStatsCounter = value;
+                    MarkPropertyAsDirty(nameof(GameStatsCounter));
+                }
+            }
+        }
+
+        public dword HistoryCounter
+        {
+            get => historyCounter;
+            set
+            {
+                if (historyCounter != value)
+                {
+                    historyCounter = value;
+                    MarkPropertyAsDirty(nameof(HistoryCounter));
+                }
+            }
+        }
+
+        public word FlagSearchCounter
+        {
+            get => flagSearchCounter;
+            set
+            {
+                if (flagSearchCounter != value)
+                {
+                    flagSearchCounter = value;
+                    MarkPropertyAsDirty(nameof(FlagSearchCounter));
+                }
+            }
+        }
+
+        public dword GoldTotal
+        {
+            get => goldTotal;
+            set
+            {
+                if (goldTotal != value)
+                {
+                    goldTotal = value;
+                    MarkPropertyAsDirty(nameof(GoldTotal));
+                }
+            }
+        }
+
+        public dword MapGoldMoraleFactor
+        {
+            get => mapGoldMoraleFactor;
+            set
+            {
+                if (mapGoldMoraleFactor != value)
+                {
+                    mapGoldMoraleFactor = value;
+                    MarkPropertyAsDirty(nameof(MapGoldMoraleFactor));
+                }
+            }
+        }
+
+        public int KnightMoraleCounter
+        {
+            get => knightMoraleCounter;
+            set
+            {
+                if (knightMoraleCounter != value)
+                {
+                    knightMoraleCounter = value;
+                    MarkPropertyAsDirty(nameof(KnightMoraleCounter));
+                }
+            }
+        }
+
+        public int InventoryScheduleCounter
+        {
+            get => inventoryScheduleCounter;
+            set
+            {
+                if (inventoryScheduleCounter != value)
+                {
+                    inventoryScheduleCounter = value;
+                    MarkPropertyAsDirty(nameof(InventoryScheduleCounter));
+                }
+            }
+        }
+
+        public int ResourceHistoryIndex
+        {
+            get => resourceHistoryIndex;
+            set
+            {
+                if (resourceHistoryIndex != value)
+                {
+                    resourceHistoryIndex = value;
+                    MarkPropertyAsDirty(nameof(ResourceHistoryIndex));
+                }
+            }
+        }
+
+        public DirtyArray<int> PlayerHistoryIndex { get; } = new DirtyArray<int>(4);
+        public DirtyArray<int> PlayerHistoryCounter { get; } = new DirtyArray<int>(3);
     }
 
     public class SavedGameState

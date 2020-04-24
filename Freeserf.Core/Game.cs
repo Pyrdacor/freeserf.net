@@ -120,31 +120,22 @@ namespace Freeserf
                 serf.ResetDirtyFlag();
         }
 
-        uint gameSpeedSave;
-        uint gameStatsCounter;
-        uint historyCounter;
-        ushort flagSearchCounter;
+        ushort gameSpeedSave;
 
         int tickDifference;
-        int[] playerHistoryIndex = new int[4];
-        int[] playerHistoryCounter = new int[3];
-        int resourceHistoryIndex;
         int gameType; // TODO: this is never used beside in savegames
         int playerScoreLeader; // TODO: this is never used beside in savegames
 
-        int knightMoraleCounter;
-        int inventoryScheduleCounter;
         int birdSoundCounter;
-        uint gameTimeTicksOfSecond = 0;
 
         [Data]
         internal Map Map { get; private set; }
-        internal uint MapGoldMoraleFactor { get; private set; }
-        internal uint GoldTotal { get; private set; }
+        internal uint MapGoldMoraleFactor => state.MapGoldMoraleFactor;
+        internal uint GoldTotal => state.GoldTotal;
         internal word Tick => state.Tick;
         internal dword ConstTick => state.ConstTick;
         public GameTime GameTime => state.GameTime; // in seconds
-        public GameTime NextGameTime => GameTime + (gameTimeTicksOfSecond + state.GameSpeed) / Global.TICKS_PER_SEC;
+        public GameTime NextGameTime => GameTime + (GameTime)(state.GameTimeTicksOfSecond + state.GameSpeed) / Global.TICKS_PER_SEC;
 
         internal Game(Map map)
         {
@@ -156,24 +147,9 @@ namespace Freeserf
             Buildings = new Buildings(this);
             Serfs = new Serfs(this);
 
-            // TODO: use state values
-
-            resourceHistoryIndex = 0;
-
-            state.Tick = 0;
-            state.ConstTick = 0;
             tickDifference = 0;
-
             gameType = 0;
-            flagSearchCounter = 0;
-            gameStatsCounter = 0;
-            historyCounter = 0;
-
-            knightMoraleCounter = 0;
-            inventoryScheduleCounter = 0;
             birdSoundCounter = 0;
-
-            GoldTotal = 0;
 
             if (map != null)
                 Map = new Map(map.Geometry, null, map);
@@ -261,7 +237,7 @@ namespace Freeserf
                 }
             }
 
-            GoldTotal = (uint)((int)GoldTotal + delta);
+            state.GoldTotal = (uint)((int)GoldTotal + delta);
         }
 
         internal Building GetBuildingAtPosition(MapPos position)
@@ -323,7 +299,7 @@ namespace Freeserf
             player.Init(intelligence, supplies, reproduction);
 
             // Update map values dependent on player count 
-            MapGoldMoraleFactor = 10u * 1024u * (uint)Players.Size;
+            state.MapGoldMoraleFactor = 10u * 1024u * (uint)Players.Size;
 
             return player;
         }
@@ -338,7 +314,7 @@ namespace Freeserf
 
             Map.AddChangeHandler(this);
             Map.InitTiles(generator);
-            GoldTotal = Map.GetGoldDeposit();
+            state.GoldTotal = Map.GetGoldDeposit();
 
             return true;
         }
@@ -358,10 +334,10 @@ namespace Freeserf
             uint lastTick = Tick;
 
             state.Tick += (ushort)state.GameSpeed;
-            gameTimeTicksOfSecond += state.GameSpeed;
-            while (gameTimeTicksOfSecond >= Global.TICKS_PER_SEC)
+            state.GameTimeTicksOfSecond += state.GameSpeed;
+            while (state.GameTimeTicksOfSecond >= Global.TICKS_PER_SEC)
             {
-                gameTimeTicksOfSecond -= Global.TICKS_PER_SEC;
+                state.GameTimeTicksOfSecond -= Global.TICKS_PER_SEC;
                 ++state.GameTime;
             }
 
@@ -384,21 +360,21 @@ namespace Freeserf
             }
 
             // Update knight morale 
-            knightMoraleCounter -= tickDifference;
+            state.KnightMoraleCounter -= tickDifference;
 
-            if (knightMoraleCounter < 0)
+            if (state.KnightMoraleCounter < 0)
             {
                 UpdateKnightMorale();
-                knightMoraleCounter += 256;
+                state.KnightMoraleCounter += 256;
             }
 
             // Schedule resources to go out of inventories 
-            inventoryScheduleCounter -= tickDifference;
+            state.InventoryScheduleCounter -= tickDifference;
 
-            if (inventoryScheduleCounter < 0)
+            if (state.InventoryScheduleCounter < 0)
             {
                 UpdateInventories();
-                inventoryScheduleCounter += 64;
+                state.InventoryScheduleCounter += 64;
             }
 
             // AI related updates 
@@ -1827,27 +1803,27 @@ namespace Freeserf
 
         internal int GetPlayerHistoryIndex(uint scale)
         {
-            return playerHistoryIndex[scale];
+            return state.PlayerHistoryIndex[scale];
         }
 
         internal int GetResourceHistoryIndex()
         {
-            return resourceHistoryIndex;
+            return state.ResourceHistoryIndex;
         }
 
         internal int NextSearchId()
         {
-            ++flagSearchCounter;
+            ++state.FlagSearchCounter;
 
             // If we're back at zero the counter has overflown,
             // everything needs a reset to be safe.
-            if (flagSearchCounter == 0)
+            if (state.FlagSearchCounter == 0)
             {
-                ++flagSearchCounter;
+                ++state.FlagSearchCounter;
                 ClearSearchId();
             }
 
-            return flagSearchCounter;
+            return state.FlagSearchCounter;
         }
 
         internal Serf CreateSerf(int index = -1)
@@ -2702,47 +2678,46 @@ namespace Freeserf
         {
             var playerList = Players.ToList();
 
-            if ((int)gameStatsCounter > tickDifference)
+            if ((int)state.GameStatsCounter > tickDifference)
             {
-                gameStatsCounter -= (uint)tickDifference;
+                state.GameStatsCounter -= (uint)tickDifference;
             }
             else
             {
-                gameStatsCounter += (uint)(1500 - tickDifference);
-
+                state.GameStatsCounter += (uint)(1500 - tickDifference);
                 playerScoreLeader = 0;
 
                 int updateLevel = 0;
 
                 // Update first level index 
-                playerHistoryIndex[0] = playerHistoryIndex[0] + 1 < 112 ? playerHistoryIndex[0] + 1 : 0;
-                --playerHistoryCounter[0];
+                state.PlayerHistoryIndex[0] = state.PlayerHistoryIndex[0] + 1 < 112 ? state.PlayerHistoryIndex[0] + 1 : 0;
+                --state.PlayerHistoryCounter[0];
 
-                if (playerHistoryCounter[0] < 0)
+                if (state.PlayerHistoryCounter[0] < 0)
                 {
                     updateLevel = 1;
-                    playerHistoryCounter[0] = 3;
+                    state.PlayerHistoryCounter[0] = 3;
 
                     // Update second level index 
-                    playerHistoryIndex[1] = playerHistoryIndex[1] + 1 < 112 ? playerHistoryIndex[1] + 1 : 0;
-                    --playerHistoryCounter[1];
+                    state.PlayerHistoryIndex[1] = state.PlayerHistoryIndex[1] + 1 < 112 ? state.PlayerHistoryIndex[1] + 1 : 0;
+                    --state.PlayerHistoryCounter[1];
 
-                    if (playerHistoryCounter[1] < 0)
+                    if (state.PlayerHistoryCounter[1] < 0)
                     {
                         updateLevel = 2;
-                        playerHistoryCounter[1] = 4;
+                        state.PlayerHistoryCounter[1] = 4;
 
                         // Update third level index 
-                        playerHistoryIndex[2] = playerHistoryIndex[2] + 1 < 112 ? playerHistoryIndex[2] + 1 : 0;
-                        --playerHistoryCounter[2];
+                        state.PlayerHistoryIndex[2] = state.PlayerHistoryIndex[2] + 1 < 112 ? state.PlayerHistoryIndex[2] + 1 : 0;
+                        --state.PlayerHistoryCounter[2];
 
-                        if (playerHistoryCounter[2] < 0)
+                        if (state.PlayerHistoryCounter[2] < 0)
                         {
                             updateLevel = 3;
-                            playerHistoryCounter[2] = 4;
+                            state.PlayerHistoryCounter[2] = 4;
 
                             // Update fourth level index 
-                            playerHistoryIndex[3] = playerHistoryIndex[3] + 1 < 112 ? playerHistoryIndex[3] + 1 : 0;
+                            state.PlayerHistoryIndex[3] = state.PlayerHistoryIndex[3] + 1 < 112 ? state.PlayerHistoryIndex[3] + 1 : 0;
                         }
                     }
                 }
@@ -2755,7 +2730,7 @@ namespace Freeserf
                     values[player.Index] = player.LandArea;
                 }
 
-                RecordPlayerHistory(updateLevel, 1, playerHistoryIndex, values);
+                RecordPlayerHistory(updateLevel, 1, state.PlayerHistoryIndex, values);
 
                 int clearWinner = CalculateClearWinner(values);
 
@@ -2768,7 +2743,7 @@ namespace Freeserf
                     values[player.Index] = player.BuildingScore;
                 }
 
-                RecordPlayerHistory(updateLevel, 2, playerHistoryIndex, values);
+                RecordPlayerHistory(updateLevel, 2, state.PlayerHistoryIndex, values);
 
                 // Store military stats in history. 
                 foreach (var player in playerList)
@@ -2776,7 +2751,7 @@ namespace Freeserf
                     values[player.Index] = player.MilitaryScore;
                 }
 
-                RecordPlayerHistory(updateLevel, 3, playerHistoryIndex, values);
+                RecordPlayerHistory(updateLevel, 3, state.PlayerHistoryIndex, values);
 
                 clearWinner = CalculateClearWinner(values);
 
@@ -2789,20 +2764,20 @@ namespace Freeserf
                     values[player.Index] = player.Score;
                 }
 
-                RecordPlayerHistory(updateLevel, 0, playerHistoryIndex, values);
+                RecordPlayerHistory(updateLevel, 0, state.PlayerHistoryIndex, values);
 
                 // TODO Determine winner based on game.player_score_leader 
             }
 
-            if ((int)historyCounter > tickDifference)
+            if ((int)state.HistoryCounter > tickDifference)
             {
-                historyCounter -= (uint)tickDifference;
+                state.HistoryCounter -= (uint)tickDifference;
             }
             else
             {
-                historyCounter += (uint)(6000 - tickDifference);
+                state.HistoryCounter += (uint)(6000 - tickDifference);
 
-                int index = resourceHistoryIndex;
+                int index = state.ResourceHistoryIndex;
 
                 for (int resource = 0; resource < 26; ++resource)
                 {
@@ -2812,7 +2787,7 @@ namespace Freeserf
                     }
                 }
 
-                resourceHistoryIndex = index + 1 < 120 ? index + 1 : 0;
+                state.ResourceHistoryIndex = index + 1 < 120 ? index + 1 : 0;
             }
         }
 
@@ -3292,8 +3267,8 @@ namespace Freeserf
             gameType = reader.ReadWord(); // 74
             reader.Skip(2);  // 76
             state.Tick = reader.ReadWord(); // 78
-            gameStatsCounter = 0;
-            historyCounter = 0;
+            state.GameStatsCounter = 0;
+            state.HistoryCounter = 0;
 
             reader.Skip(4);
 
@@ -3304,21 +3279,21 @@ namespace Freeserf
             int maxSerfIndex = reader.ReadWord(); // 94
 
             reader.Skip(2); // 96, was next_index
-            flagSearchCounter = reader.ReadWord(); // 98
+            state.FlagSearchCounter = reader.ReadWord(); // 98
 
             reader.Skip(4);
 
             for (int i = 0; i < 4; ++i)
             {
-                playerHistoryIndex[i] = reader.ReadWord(); // 104 + i*2
+                state.PlayerHistoryIndex[i] = reader.ReadWord(); // 104 + i*2
             }
 
             for (int i = 0; i < 3; ++i)
             {
-                playerHistoryCounter[i] = reader.ReadWord(); // 112 + i*2
+                state.PlayerHistoryCounter[i] = reader.ReadWord(); // 112 + i*2
             }
 
-            resourceHistoryIndex = reader.ReadWord(); // 118
+            state.ResourceHistoryIndex = reader.ReadWord(); // 118
 
             //  if (0//gameType == TUTORIAL) {
             //    tutorial_level = *reinterpret_cast<uint16_t*>(&data[122]);
@@ -3343,7 +3318,7 @@ namespace Freeserf
             Map = new Map(new MapGeometry((uint)mapSize), renderView);
 
             reader.Skip(8);
-            MapGoldMoraleFactor = reader.ReadWord(); // 200
+            state.MapGoldMoraleFactor = reader.ReadWord(); // 200
             reader.Skip(2);
             playerScoreLeader = reader.ReadByte(); // 204
 
@@ -3383,7 +3358,7 @@ namespace Freeserf
             InitLandOwnership();
             PostLoadRoads();
 
-            GoldTotal = Map.GetGoldDeposit();
+            state.GoldTotal = Map.GetGoldDeposit();
 
             Map.AddChangeHandler(this);
         }
@@ -3423,27 +3398,27 @@ namespace Freeserf
 
             gameType = gameReader.Value("game_type").ReadInt();
             state.Tick = (ushort)gameReader.Value("tick").ReadUInt();
-            gameStatsCounter = gameReader.Value("game_stats_counter").ReadUInt();
-            historyCounter = gameReader.Value("history_counter").ReadUInt();
+            state.GameStatsCounter = gameReader.Value("game_stats_counter").ReadUInt();
+            state.HistoryCounter = gameReader.Value("history_counter").ReadUInt();
 
             state.Random = new Random(gameReader.Value("random").ReadString());
-            flagSearchCounter = (ushort)gameReader.Value("flag_search_counter").ReadUInt();
+            state.FlagSearchCounter = (ushort)gameReader.Value("flag_search_counter").ReadUInt();
 
             for (int i = 0; i < 4; ++i)
             {
-                playerHistoryIndex[i] = gameReader.Value("player_history_index")[i].ReadInt();
+                state.PlayerHistoryIndex[i] = gameReader.Value("player_history_index")[i].ReadInt();
             }
 
             for (int i = 0; i < 3; ++i)
             {
-                playerHistoryCounter[i] = gameReader.Value("player_history_counter")[i].ReadInt();
+                state.PlayerHistoryCounter[i] = gameReader.Value("player_history_counter")[i].ReadInt();
             }
 
-            resourceHistoryIndex = gameReader.Value("resource_history_index").ReadInt();
-            MapGoldMoraleFactor = gameReader.Value("map.gold_morale_factor").ReadUInt();
+            state.ResourceHistoryIndex = gameReader.Value("resource_history_index").ReadInt();
+            state.MapGoldMoraleFactor = gameReader.Value("map.gold_morale_factor").ReadUInt();
             playerScoreLeader = gameReader.Value("player_score_leader").ReadInt();
 
-            GoldTotal = gameReader.Value("gold_deposit").ReadUInt();
+            state.GoldTotal = gameReader.Value("gold_deposit").ReadUInt();
 
             var updateState = new Map.UpdateState();
 
@@ -3584,24 +3559,24 @@ namespace Freeserf
             writer.Value("map.size").Write(Map.Size);
             writer.Value("game_type").Write(gameType);
             writer.Value("tick").Write(Tick);
-            writer.Value("game_stats_counter").Write(gameStatsCounter);
-            writer.Value("history_counter").Write(historyCounter);
+            writer.Value("game_stats_counter").Write(state.GameStatsCounter);
+            writer.Value("history_counter").Write(state.HistoryCounter);
             writer.Value("random").Write(state.Random.ToString());
 
             writer.Value("next_index").Write(0); // next_index (we keep this to be compatible to freeserf save games)
-            writer.Value("flag_search_counter").Write(flagSearchCounter);
+            writer.Value("flag_search_counter").Write(state.FlagSearchCounter);
 
             for (int i = 0; i < 4; ++i)
             {
-                writer.Value("player_history_index").Write(playerHistoryIndex[i]);
+                writer.Value("player_history_index").Write(state.PlayerHistoryIndex[i]);
             }
 
             for (int i = 0; i < 3; ++i)
             {
-                writer.Value("player_history_counter").Write(playerHistoryCounter[i]);
+                writer.Value("player_history_counter").Write(state.PlayerHistoryCounter[i]);
             }
 
-            writer.Value("resource_history_index").Write(resourceHistoryIndex);
+            writer.Value("resource_history_index").Write(state.ResourceHistoryIndex);
 
             writer.Value("max_next_index").Write(0); // max_next_index (we keep this to be compatible to freeserf save games)
             writer.Value("map.gold_morale_factor").Write(MapGoldMoraleFactor);
