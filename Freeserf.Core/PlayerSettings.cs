@@ -53,14 +53,9 @@ namespace Freeserf
         CyclingKnightsSecondPhase = 0x08
     }
 
-    [DataClass]
     internal class PlayerSettings : State
     {
         private PlayerSettingFlags flags = PlayerSettingFlags.None;
-        private DirtyArray<word> toolPriorities = new DirtyArray<word>(Global.NUM_TOOL_TYPES);
-        private DirtyArray<byte> flagPriorities = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
-        private DirtyArray<byte> inventoryPriorities = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
-        private DirtyArray<byte> knightOccupation = new DirtyArray<byte>(Global.NUM_TREATMENT_LEVEL_TYPES);
         private word serfToKnightRate = 0;
         private byte castleKnightsWanted = 3;
         private word foodStonemine = 0;
@@ -80,25 +75,26 @@ namespace Freeserf
 
         public PlayerSettings()
         {
-            toolPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ToolPriorities)); };
-            flagPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(FlagPriorities)); };
-            inventoryPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(InventoryPriorities)); };
-            knightOccupation.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(KnightOccupation)); };
+            ToolPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ToolPriorities)); };
+            FlagPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(FlagPriorities)); };
+            InventoryPriorities.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(InventoryPriorities)); };
+            KnightOccupation.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(KnightOccupation)); };
         }
 
         public override void ResetDirtyFlag()
         {
             lock (dirtyLock)
             {
-                toolPriorities.ResetDirtyFlag();
-                flagPriorities.ResetDirtyFlag();
-                inventoryPriorities.ResetDirtyFlag();
-                knightOccupation.ResetDirtyFlag();
+                ToolPriorities.ResetDirtyFlag();
+                FlagPriorities.ResetDirtyFlag();
+                InventoryPriorities.ResetDirtyFlag();
+                KnightOccupation.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }
         }
 
+        [Data]
         public PlayerSettingFlags Flags
         {
             get => flags;
@@ -111,16 +107,23 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// 0 = minimum (0%), 65535 = maximum (100%)
         /// </summary>
-        public DirtyArray<word> ToolPriorities => toolPriorities;
-        public DirtyArray<byte> FlagPriorities => flagPriorities;
-        public DirtyArray<byte> InventoryPriorities => inventoryPriorities;
+        [Data]
+        public DirtyArray<word> ToolPriorities { get; } = new DirtyArray<word>(Global.NUM_TOOL_TYPES);
+        [Data]
+        public DirtyArray<byte> FlagPriorities { get; } = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
+        [Data]
+        public DirtyArray<byte> InventoryPriorities { get; } = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
         /// <summary>
         /// Lower 4 bits = min level, higher 4 bits = max level
         /// </summary>
-        public DirtyArray<byte> KnightOccupation => knightOccupation;
+        [Data]
+        public DirtyArray<byte> KnightOccupation { get; } = new DirtyArray<byte>(Global.NUM_TREATMENT_LEVEL_TYPES);
+
+        [Data]
         public word SerfToKnightRate
         {
             get => serfToKnightRate;
@@ -133,8 +136,10 @@ namespace Freeserf
                 }
             }
         }
+
         // +1 for every castle defeated,
         // -1 for own castle lost.
+        [Data]
         public byte CastleKnightsWanted
         {
             get => castleKnightsWanted;
@@ -147,7 +152,9 @@ namespace Freeserf
                 }
             }
         }
+
         // Food delivery priority of food for mines.
+        [Data]
         public word FoodStonemine
         {
             get => foodStonemine;
@@ -160,6 +167,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word FoodCoalmine
         {
             get => foodCoalmine;
@@ -172,6 +181,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word FoodIronmine
         {
             get => foodIronmine;
@@ -184,6 +195,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word FoodGoldmine
         {
             get => foodGoldmine;
@@ -196,7 +209,9 @@ namespace Freeserf
                 }
             }
         }
+
         // Planks delivery priority.
+        [Data]
         public word PlanksConstruction
         {
             get => planksConstruction;
@@ -209,6 +224,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word PlanksBoatbuilder
         {
             get => planksBoatbuilder;
@@ -221,6 +238,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word PlanksToolmaker
         {
             get => planksToolmaker;
@@ -233,6 +252,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word SteelToolmaker
         {
             get => steelToolmaker;
@@ -245,6 +266,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word SteelWeaponsmith
         {
             get => steelWeaponsmith;
@@ -257,6 +280,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word CoalSteelsmelter
         {
             get => coalSteelsmelter;
@@ -269,6 +294,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word CoalGoldsmelter
         {
             get => coalGoldsmelter;
@@ -281,6 +308,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word CoalWeaponsmith
         {
             get => coalWeaponsmith;
@@ -293,6 +322,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word WheatPigfarm
         {
             get => wheatPigfarm;
@@ -305,6 +336,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word WheatMill
         {
             get => wheatMill;
@@ -318,7 +351,6 @@ namespace Freeserf
             }
         }
 
-        [Ignore]
         public bool SendStrongest
         {
             get => Flags.HasFlag(PlayerSettingFlags.SendStrongest);

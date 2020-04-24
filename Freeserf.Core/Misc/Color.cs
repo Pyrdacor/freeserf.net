@@ -25,11 +25,13 @@ namespace Freeserf
 {
     using Serialize;
 
-    [DataClass]
     internal class Color : IState
     {
+        [Data]
         public byte Red;
+        [Data]
         public byte Green;
+        [Data]
         public byte Blue;
 
         public bool Dirty => false; // Will never change during game.

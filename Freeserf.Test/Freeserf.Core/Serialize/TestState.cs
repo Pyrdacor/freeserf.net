@@ -8,12 +8,11 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
     using qword = UInt64;
     using word = UInt16;
 
-    [DataClass]
     class TestState : State, IEquatable<TestState>
     {
-        [DataClass]
         public class InnerState : State, IComparable
         {
+            [Data]
             public qword InnerTestProperty { get; set; }
 
             public override int CompareTo(object obj)
@@ -25,12 +24,19 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
             }
         }
 
+        [Data]
         public string TestProperty1 { get; set; }
+        [Data]
         public int TestProperty2 { get; set; }
+        [Data]
         public byte TestProperty3 { get; set; }
+        [Data]
         public word PropertyTest1 { get; set; }
+        [Data]
         public double PropertyTest2 { get; set; }
+        [Data]
         public DirtyArray<dword> ArrayTestProperty { get; set; }
+        [Data]
         public DirtyMap<float, InnerState> MapTestProperty { get; set; }
 
         public bool Equals([AllowNull] TestState other)
@@ -117,15 +123,6 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
         [Data]
         public int Serialized = 0;
 
-        public int NotSerialized = 0;
-    }
-
-    [DataClass]
-    class TestState_IgnoreAttribute : State
-    {
-        public int Serialized = 0;
-
-        [Ignore]
         public int NotSerialized = 0;
     }
 }

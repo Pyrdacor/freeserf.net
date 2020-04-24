@@ -163,22 +163,130 @@ namespace Freeserf
 
             private readonly Serf serf;
 
+            static StateData()
+            {
+                StateSerializer.RegisterCustomTypeCreator(typeof(StateData), Create);
+            }
+
             public StateData(Serf serf)
             {
                 this.serf = serf;
             }
 
-            public class StateDataBase
+            private static object Create(object parent)
+            {
+                if (!(parent is Serf parentSerf))
+                    throw new ExceptionFreeserf($"Parent of {nameof(StateData)} is no {nameof(Serf)}.");
+
+                return new StateData(parentSerf);
+            }
+
+            public class StateDataBase : Serialize.State
             {
                 private readonly StateData parent;
+
+                static StateDataBase()
+                {
+                    StateSerializer.RegisterCustomTypeCreator(typeof(StateDataBase), Create);
+                }
 
                 protected StateDataBase(StateData parent)
                 {
                     this.parent = parent;
                 }
 
-                protected void MarkAsDirty()
+                private static object Create(object parent)
                 {
+                    if (!(parent is StateData parentStateData))
+                        throw new ExceptionFreeserf($"Parent of {nameof(StateDataBase)} is no {nameof(StateData)}.");
+
+                    return parentStateData.serf.SerfState switch
+                    {
+                        State.Baking => new StateDataBaking(parentStateData),
+                        State.Building => new StateDataBuilding(parentStateData),
+                        State.BuildingBoat => new StateDataBuildingBoat(parentStateData),
+                        State.BuildingCastle => new StateDataBuildingCastle(parentStateData),
+                        State.Butchering => new StateDataButchering(parentStateData),
+                        State.DefendingCastle => new StateDataDefending(parentStateData),
+                        State.DefendingFortress => new StateDataDefending(parentStateData),
+                        State.DefendingHut => new StateDataDefending(parentStateData),
+                        State.DefendingTower => new StateDataDefending(parentStateData),
+                        State.Delivering => new StateDataWalking(parentStateData),
+                        State.Digging => new StateDataDigging(parentStateData),
+                        State.DropResourceOut => new StateDataMoveResourceOut(parentStateData),
+                        State.EnteringBuilding => new StateDataEnteringBuilding(parentStateData),
+                        State.EscapeBuilding => null, // no state data
+                        State.Farming => new StateDataFreeWalking(parentStateData),
+                        State.FinishedBuilding => null, // no state data
+                        State.Fishing => new StateDataFreeWalking(parentStateData),
+                        State.FreeSailing => new StateDataFreeWalking(parentStateData),
+                        State.FreeWalking => new StateDataFreeWalking(parentStateData),
+                        State.IdleInStock => new StateDataIdleInStock(parentStateData),
+                        State.IdleOnPath => new StateDataIdleOnPath(parentStateData),
+                        State.Invalid => null,
+                        State.KnightAttacking => new StateDataAttacking(parentStateData),
+                        State.KnightAttackingDefeat => new StateDataAttacking(parentStateData),
+                        State.KnightAttackingDefeatFree => new StateDataAttacking(parentStateData),
+                        State.KnightAttackingFree => new StateDataFreeWalking(parentStateData),
+                        State.KnightAttackingFreeWait => new StateDataFreeWalking(parentStateData),
+                        State.KnightAttackingVictory => new StateDataAttacking(parentStateData),
+                        State.KnightAttackingVictoryFree => new StateDataAttackingVictoryFree(parentStateData),
+                        State.KnightDefending => null, // no state data
+                        State.KnightDefendingFree => new StateDataDefendingFree(parentStateData),
+                        State.KnightDefendingVictoryFree => null, // no state data (TODO: maybe should have later, see ReadFrom(binary) for this state)
+                        State.KnightEngageAttackingFree => new StateDataAttacking(parentStateData),
+                        State.KnightEngageAttackingFreeJoin => new StateDataAttacking(parentStateData),
+                        State.KnightEngageDefendingFree => new StateDataDefendingFree(parentStateData),
+                        State.KnightEngagingBuilding => new StateDataAttacking(parentStateData),
+                        State.KnightFreeWalking => new StateDataFreeWalking(parentStateData),
+                        State.KnightLeaveForFight => new StateDataLeavingBuilding(parentStateData),
+                        State.KnightLeaveForWalkToFight => new StateDataLeaveForWalkToFight(parentStateData),
+                        State.KnightOccupyEnemyBuilding => null, // no state data
+                        State.KnightPrepareAttacking => new StateDataAttacking(parentStateData),
+                        State.KnightPrepareAttackingFree => new StateDataAttacking(parentStateData),
+                        State.KnightPrepareDefending => null, // no state data
+                        State.KnightPrepareDefendingFree => new StateDataDefendingFree(parentStateData),
+                        State.KnightPrepareDefendingFreeWait => new StateDataDefendingFree(parentStateData),
+                        State.LeavingBuilding => new StateDataLeavingBuilding(parentStateData),
+                        State.Logging => new StateDataFreeWalking(parentStateData),
+                        State.LookingForGeoSpot => null, // no state data
+                        State.Lost => new StateDataLost(parentStateData),
+                        State.LostSailor => null, // no state data
+                        State.MakingTool => new StateDataMakingTool(parentStateData),
+                        State.MakingWeapon => new StateDataMakingWeapon(parentStateData),
+                        State.Milling => new StateDataMilling(parentStateData),
+                        State.Mining => new StateDataMining(parentStateData),
+                        State.MoveResourceOut => new StateDataMoveResourceOut(parentStateData),
+                        State.Null => null,
+                        State.PigFarming => new StateDataPigFarming(parentStateData),
+                        State.PlanningFarming => null, // no state data
+                        State.PlanningFishing => null, // no state data
+                        State.PlanningLogging => null, // no state data
+                        State.PlanningPlanting => null, // no state data
+                        State.PlanningStoneCutting => null, // no state data
+                        State.Planting => new StateDataFreeWalking(parentStateData),
+                        State.ReadyToEnter => new StateDataReadyToEnter(parentStateData),
+                        State.ReadyToLeave => new StateDataLeavingBuilding(parentStateData),
+                        State.ReadyToLeaveInventory => new StateDataReadyToLeaveInventory(parentStateData),
+                        State.SamplingGeoSpot => new StateDataFreeWalking(parentStateData),
+                        State.Sawing => new StateDataSawing(parentStateData),
+                        State.Scatter => null, // no state data
+                        State.Smelting => new StateDataSmelting(parentStateData),
+                        State.StoneCutterFreeWalking => new StateDataFreeWalking(parentStateData),
+                        State.StoneCutting => new StateDataFreeWalking(parentStateData),
+                        State.Transporting => new StateDataWalking(parentStateData),
+                        State.WaitForResourceOut => null, // no state data
+                        State.WaitIdleOnPath => new StateDataIdleOnPath(parentStateData),
+                        State.WakeAtFlag => new StateDataIdleOnPath(parentStateData),
+                        State.WakeOnPath => new StateDataIdleOnPath(parentStateData),
+                        State.Walking => new StateDataWalking(parentStateData),
+                        _ => null
+                    };
+                }
+
+                protected override void MarkPropertyAsDirty(string name)
+                {
+                    base.MarkPropertyAsDirty(name);
                     parent?.MarkPropertyAsDirty(nameof(Data));
                 }
             }
@@ -187,8 +295,12 @@ namespace Freeserf
             {
                 private uint inventoryIndex;
 
-                public StateDataIdleInStock(StateData parent) : base(parent) { }
+                public StateDataIdleInStock(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(InventoryIndex));
+                }
 
+                [Data]
                 public uint InventoryIndex
                 {
                     get => inventoryIndex;
@@ -197,7 +309,7 @@ namespace Freeserf
                         if (inventoryIndex != value)
                         {
                             inventoryIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(InventoryIndex));
                         }
                     }
                 }
@@ -231,8 +343,16 @@ namespace Freeserf
                 private int direction; // E 
                 private int waitCounter; // F 
 
-                public StateDataWalking(StateData parent) : base(parent) { }
+                public StateDataWalking(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Direction1));
+                    MarkPropertyAsDirty(nameof(Resource));
+                    MarkPropertyAsDirty(nameof(Destination));
+                    MarkPropertyAsDirty(nameof(Direction));
+                    MarkPropertyAsDirty(nameof(WaitCounter));
+                }
 
+                [Data]
                 public int Direction1
                 {
                     get => direction1;
@@ -241,10 +361,11 @@ namespace Freeserf
                         if (direction1 != value)
                         {
                             direction1 = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Direction1));
                         }
                     }
                 }
+                [Data]
                 public Resource.Type Resource
                 {
                     get => resource;
@@ -253,10 +374,11 @@ namespace Freeserf
                         if (resource != value)
                         {
                             resource = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Resource));
                         }
                     }
                 }
+                [Data]
                 public uint Destination
                 {
                     get => destination;
@@ -265,10 +387,11 @@ namespace Freeserf
                         if (destination != value)
                         {
                             destination = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Destination));
                         }
                     }
                 }
+                [Data]
                 public int Direction
                 {
                     get => direction;
@@ -277,10 +400,11 @@ namespace Freeserf
                         if (direction != value)
                         {
                             direction = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Direction));
                         }
                     }
                 }
+                [Data]
                 public int WaitCounter
                 {
                     get => waitCounter;
@@ -289,7 +413,7 @@ namespace Freeserf
                         if (waitCounter != value)
                         {
                             waitCounter = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(WaitCounter));
                         }
                     }
                 }
@@ -321,8 +445,13 @@ namespace Freeserf
                 private int fieldB; // B
                 private int slopeLength; // C
 
-                public StateDataEnteringBuilding(StateData parent) : base(parent) { }
+                public StateDataEnteringBuilding(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(FieldB));
+                    MarkPropertyAsDirty(nameof(SlopeLength));
+                }
 
+                [Data]
                 public int FieldB
                 {
                     get => fieldB;
@@ -331,10 +460,11 @@ namespace Freeserf
                         if (fieldB != value)
                         {
                             fieldB = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldB));
                         }
                     }
                 }
+                [Data]
                 public int SlopeLength
                 {
                     get => slopeLength;
@@ -343,7 +473,7 @@ namespace Freeserf
                         if (slopeLength != value)
                         {
                             slopeLength = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(SlopeLength));
                         }
                     }
                 }
@@ -367,7 +497,7 @@ namespace Freeserf
                 }
             }
 
-            // States: LeavingBuilding, ReadyToLeave, LeaveForFight
+            // States: LeavingBuilding, ReadyToLeave, KnightLeaveForFight
             public class StateDataLeavingBuilding : StateDataBase
             {
                 private int fieldB; // B
@@ -376,8 +506,16 @@ namespace Freeserf
                 private int direction; // E
                 private State nextState; // F
 
-                public StateDataLeavingBuilding(StateData parent) : base(parent) { }
+                public StateDataLeavingBuilding(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(FieldB));
+                    MarkPropertyAsDirty(nameof(Destination));
+                    MarkPropertyAsDirty(nameof(Destination2));
+                    MarkPropertyAsDirty(nameof(Direction));
+                    MarkPropertyAsDirty(nameof(NextState));
+                }
 
+                [Data]
                 public int FieldB
                 {
                     get => fieldB;
@@ -386,10 +524,11 @@ namespace Freeserf
                         if (fieldB != value)
                         {
                             fieldB = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldB));
                         }
                     }
                 }
+                [Data]
                 public uint Destination
                 {
                     get => destination;
@@ -398,10 +537,11 @@ namespace Freeserf
                         if (destination != value)
                         {
                             destination = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Destination));
                         }
                     }
                 }
+                [Data]
                 public int Destination2
                 {
                     get => destination2;
@@ -410,10 +550,11 @@ namespace Freeserf
                         if (destination2 != value)
                         {
                             destination2 = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Destination2));
                         }
                     }
                 }
+                [Data]
                 public int Direction
                 {
                     get => direction;
@@ -422,10 +563,11 @@ namespace Freeserf
                         if (direction != value)
                         {
                             direction = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Direction));
                         }
                     }
                 }
+                [Data]
                 public State NextState
                 {
                     get => nextState;
@@ -434,7 +576,7 @@ namespace Freeserf
                         if (nextState != value)
                         {
                             nextState = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(NextState));
                         }
                     }
                 }
@@ -464,8 +606,12 @@ namespace Freeserf
             {
                 private int fieldB; // B
 
-                public StateDataReadyToEnter(StateData parent) : base(parent) { }
+                public StateDataReadyToEnter(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(FieldB));
+                }
 
+                [Data]
                 public int FieldB
                 {
                     get => fieldB;
@@ -474,7 +620,7 @@ namespace Freeserf
                         if (fieldB != value)
                         {
                             fieldB = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldB));
                         }
                     }
                 }
@@ -511,8 +657,15 @@ namespace Freeserf
                 private int digPosition; // D
                 private int substate; // E
 
-                public StateDataDigging(StateData parent) : base(parent) { }
+                public StateDataDigging(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(HeightIndex));
+                    MarkPropertyAsDirty(nameof(TargetHeight));
+                    MarkPropertyAsDirty(nameof(DigPosition));
+                    MarkPropertyAsDirty(nameof(Substate));
+                }
 
+                [Data]
                 public int HeightIndex
                 {
                     get => heightIndex;
@@ -521,10 +674,11 @@ namespace Freeserf
                         if (heightIndex != value)
                         {
                             heightIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(HeightIndex));
                         }
                     }
                 }
+                [Data]
                 public uint TargetHeight
                 {
                     get => targetHeight;
@@ -533,10 +687,11 @@ namespace Freeserf
                         if (targetHeight != value)
                         {
                             targetHeight = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(TargetHeight));
                         }
                     }
                 }
+                [Data]
                 public int DigPosition
                 {
                     get => digPosition;
@@ -545,10 +700,11 @@ namespace Freeserf
                         if (digPosition != value)
                         {
                             digPosition = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DigPosition));
                         }
                     }
                 }
+                [Data]
                 public int Substate
                 {
                     get => substate;
@@ -557,7 +713,7 @@ namespace Freeserf
                         if (substate != value)
                         {
                             substate = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Substate));
                         }
                     }
                 }
@@ -590,8 +746,15 @@ namespace Freeserf
                 private uint materialStep; // E
                 private uint counter; // F
 
-                public StateDataBuilding(StateData parent) : base(parent) { }
+                public StateDataBuilding(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                    MarkPropertyAsDirty(nameof(Index));
+                    MarkPropertyAsDirty(nameof(MaterialStep));
+                    MarkPropertyAsDirty(nameof(Counter));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -600,10 +763,11 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
+                [Data]
                 public uint Index
                 {
                     get => index;
@@ -612,10 +776,11 @@ namespace Freeserf
                         if (index != value)
                         {
                             index = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Index));
                         }
                     }
                 }
+                [Data]
                 public uint MaterialStep
                 {
                     get => materialStep;
@@ -624,10 +789,11 @@ namespace Freeserf
                         if (materialStep != value)
                         {
                             materialStep = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(MaterialStep));
                         }
                     }
                 }
+                [Data]
                 public uint Counter
                 {
                     get => counter;
@@ -636,7 +802,7 @@ namespace Freeserf
                         if (counter != value)
                         {
                             counter = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Counter));
                         }
                     }
                 }
@@ -664,8 +830,12 @@ namespace Freeserf
             {
                 private uint inventoryIndex; // C
 
-                public StateDataBuildingCastle(StateData parent) : base(parent) { }
+                public StateDataBuildingCastle(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(InventoryIndex));
+                }
 
+                [Data]
                 public uint InventoryIndex
                 {
                     get => inventoryIndex;
@@ -674,7 +844,7 @@ namespace Freeserf
                         if (inventoryIndex != value)
                         {
                             inventoryIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(InventoryIndex));
                         }
                     }
                 }
@@ -705,8 +875,14 @@ namespace Freeserf
                 private uint resourceDestination; // C
                 private State nextState; // F
 
-                public StateDataMoveResourceOut(StateData parent) : base(parent) { }
+                public StateDataMoveResourceOut(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Resource));
+                    MarkPropertyAsDirty(nameof(ResourceDestination));
+                    MarkPropertyAsDirty(nameof(NextState));
+                }
 
+                [Data]
                 public uint Resource
                 {
                     get => resource;
@@ -715,10 +891,11 @@ namespace Freeserf
                         if (resource != value)
                         {
                             resource = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Resource));
                         }
                     }
                 }
+                [Data]
                 public uint ResourceDestination
                 {
                     get => resourceDestination;
@@ -727,10 +904,11 @@ namespace Freeserf
                         if (resourceDestination != value)
                         {
                             resourceDestination = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(ResourceDestination));
                         }
                     }
                 }
+                [Data]
                 public State NextState
                 {
                     get => nextState;
@@ -739,7 +917,7 @@ namespace Freeserf
                         if (nextState != value)
                         {
                             nextState = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(NextState));
                         }
                     }
                 }
@@ -772,8 +950,14 @@ namespace Freeserf
                 private uint destination; // C
                 private uint inventoryIndex; // E
 
-                public StateDataReadyToLeaveInventory(StateData parent) : base(parent) { }
+                public StateDataReadyToLeaveInventory(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                    MarkPropertyAsDirty(nameof(Destination));
+                    MarkPropertyAsDirty(nameof(InventoryIndex));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -782,10 +966,11 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
+                [Data]
                 public uint Destination
                 {
                     get => destination;
@@ -794,10 +979,11 @@ namespace Freeserf
                         if (destination != value)
                         {
                             destination = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Destination));
                         }
                     }
                 }
+                [Data]
                 public uint InventoryIndex
                 {
                     get => inventoryIndex;
@@ -806,7 +992,7 @@ namespace Freeserf
                         if (inventoryIndex != value)
                         {
                             inventoryIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(InventoryIndex));
                         }
                     }
                 }
@@ -841,8 +1027,16 @@ namespace Freeserf
                 private int negDistance2; // E
                 private int flags; // F
 
-                public StateDataFreeWalking(StateData parent) : base(parent) { }
+                public StateDataFreeWalking(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(DistanceX));
+                    MarkPropertyAsDirty(nameof(DistanceY));
+                    MarkPropertyAsDirty(nameof(NegDistance1));
+                    MarkPropertyAsDirty(nameof(NegDistance2));
+                    MarkPropertyAsDirty(nameof(Flags));
+                }
 
+                [Data]
                 public int DistanceX
                 {
                     get => distanceX;
@@ -851,10 +1045,11 @@ namespace Freeserf
                         if (distanceX != value)
                         {
                             distanceX = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceX));
                         }
                     }
                 }
+                [Data]
                 public int DistanceY
                 {
                     get => distanceY;
@@ -863,10 +1058,11 @@ namespace Freeserf
                         if (distanceY != value)
                         {
                             distanceY = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceY));
                         }
                     }
                 }
+                [Data]
                 public int NegDistance1
                 {
                     get => negDistance1;
@@ -875,10 +1071,11 @@ namespace Freeserf
                         if (negDistance1 != value)
                         {
                             negDistance1 = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(NegDistance1));
                         }
                     }
                 }
+                [Data]
                 public int NegDistance2
                 {
                     get => negDistance2;
@@ -887,10 +1084,11 @@ namespace Freeserf
                         if (negDistance2 != value)
                         {
                             negDistance2 = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(NegDistance2));
                         }
                     }
                 }
+                [Data]
                 public int Flags
                 {
                     get => flags;
@@ -899,7 +1097,7 @@ namespace Freeserf
                         if (flags != value)
                         {
                             flags = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Flags));
                         }
                     }
                 }
@@ -941,8 +1139,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataSawing(StateData parent) : base(parent) { }
+                public StateDataSawing(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -951,7 +1153,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -979,8 +1181,12 @@ namespace Freeserf
             {
                 private int fieldB; // B
 
-                public StateDataLost(StateData parent) : base(parent) { }
+                public StateDataLost(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(FieldB));
+                }
 
+                [Data]
                 public int FieldB
                 {
                     get => fieldB;
@@ -989,7 +1195,7 @@ namespace Freeserf
                         if (fieldB != value)
                         {
                             fieldB = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldB));
                         }
                     }
                 }
@@ -1019,8 +1225,14 @@ namespace Freeserf
                 private uint resource; // D
                 private Map.Minerals deposit; // E
 
-                public StateDataMining(StateData parent) : base(parent) { }
+                public StateDataMining(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Substate));
+                    MarkPropertyAsDirty(nameof(Resource));
+                    MarkPropertyAsDirty(nameof(Deposit));
+                }
 
+                [Data]
                 public uint Substate
                 {
                     get => substate;
@@ -1029,10 +1241,11 @@ namespace Freeserf
                         if (substate != value)
                         {
                             substate = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Substate));
                         }
                     }
                 }
+                [Data]
                 public uint Resource
                 {
                     get => resource;
@@ -1041,10 +1254,11 @@ namespace Freeserf
                         if (resource != value)
                         {
                             resource = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Resource));
                         }
                     }
                 }
+                [Data]
                 public Map.Minerals Deposit
                 {
                     get => deposit;
@@ -1053,7 +1267,7 @@ namespace Freeserf
                         if (deposit != value)
                         {
                             deposit = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Deposit));
                         }
                     }
                 }
@@ -1084,8 +1298,14 @@ namespace Freeserf
                 private int counter; // C
                 private int type; // D
 
-                public StateDataSmelting(StateData parent) : base(parent) { }
+                public StateDataSmelting(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                    MarkPropertyAsDirty(nameof(Counter));
+                    MarkPropertyAsDirty(nameof(Type));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1094,10 +1314,11 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
+                [Data]
                 public int Counter
                 {
                     get => counter;
@@ -1106,10 +1327,11 @@ namespace Freeserf
                         if (counter != value)
                         {
                             counter = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Counter));
                         }
                     }
                 }
+                [Data]
                 public int Type
                 {
                     get => type;
@@ -1118,7 +1340,7 @@ namespace Freeserf
                         if (type != value)
                         {
                             type = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Type));
                         }
                     }
                 }
@@ -1148,8 +1370,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataMilling(StateData parent) : base(parent) { }
+                public StateDataMilling(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1158,7 +1384,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1186,8 +1412,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataBaking(StateData parent) : base(parent) { }
+                public StateDataBaking(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1196,7 +1426,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1224,8 +1454,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataPigFarming(StateData parent) : base(parent) { }
+                public StateDataPigFarming(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1234,7 +1468,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1262,8 +1496,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataButchering(StateData parent) : base(parent) { }
+                public StateDataButchering(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1272,7 +1510,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1300,8 +1538,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataMakingWeapon(StateData parent) : base(parent) { }
+                public StateDataMakingWeapon(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1310,7 +1552,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1338,8 +1580,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataMakingTool(StateData parent) : base(parent) { }
+                public StateDataMakingTool(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1348,7 +1594,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1376,8 +1622,12 @@ namespace Freeserf
             {
                 private int mode; // B
 
-                public StateDataBuildingBoat(StateData parent) : base(parent) { }
+                public StateDataBuildingBoat(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Mode));
+                }
 
+                [Data]
                 public int Mode
                 {
                     get => mode;
@@ -1386,7 +1636,7 @@ namespace Freeserf
                         if (mode != value)
                         {
                             mode = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Mode));
                         }
                     }
                 }
@@ -1413,9 +1663,9 @@ namespace Freeserf
             // No state data: LookingForGeoSpot 
 
             // States: KnightEngagingBuilding, KnightPrepareAttacking,
-            // KnightPrepareDefendingFreeWait, KnightAttackingDefeatFree,
-            // KnightAttacking, KnightAttackingVictory, KnightEngageAttackingFree,
-            // KnightEngageAttackingFreeJoin
+            // KnightAttackingDefeatFree, KnightAttacking, KnightAttackingVictory,
+            // KnightEngageAttackingFree, KnightEngageAttackingFreeJoin,
+            // KnightAttackingDefeat, KnightPrepareAttackingFree
             public class StateDataAttacking : StateDataBase
             {
                 private int move; // B
@@ -1423,8 +1673,15 @@ namespace Freeserf
                 private int fieldD; // D
                 private int defenderIndex; // E
 
-                public StateDataAttacking(StateData parent) : base(parent) { }
+                public StateDataAttacking(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Move));
+                    MarkPropertyAsDirty(nameof(AttackerWon));
+                    MarkPropertyAsDirty(nameof(FieldD));
+                    MarkPropertyAsDirty(nameof(DefenderIndex));
+                }
 
+                [Data]
                 public int Move
                 {
                     get => move;
@@ -1433,10 +1690,11 @@ namespace Freeserf
                         if (move != value)
                         {
                             move = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Move));
                         }
                     }
                 }
+                [Data]
                 public int AttackerWon
                 {
                     get => attackerWon;
@@ -1445,10 +1703,11 @@ namespace Freeserf
                         if (attackerWon != value)
                         {
                             attackerWon = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(AttackerWon));
                         }
                     }
                 }
+                [Data]
                 public int FieldD
                 {
                     get => fieldD;
@@ -1457,10 +1716,11 @@ namespace Freeserf
                         if (fieldD != value)
                         {
                             fieldD = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldD));
                         }
                     }
                 }
+                [Data]
                 public int DefenderIndex
                 {
                     get => defenderIndex;
@@ -1469,7 +1729,7 @@ namespace Freeserf
                         if (defenderIndex != value)
                         {
                             defenderIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DefenderIndex));
                         }
                     }
                 }
@@ -1508,8 +1768,15 @@ namespace Freeserf
                 private int distanceRow; // D
                 private int defenderIndex; // E
 
-                public StateDataAttackingVictoryFree(StateData parent) : base(parent) { }
+                public StateDataAttackingVictoryFree(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(Move));
+                    MarkPropertyAsDirty(nameof(DistanceColumn));
+                    MarkPropertyAsDirty(nameof(DistanceRow));
+                    MarkPropertyAsDirty(nameof(DefenderIndex));
+                }
 
+                [Data]
                 public int Move
                 {
                     get => move;
@@ -1518,10 +1785,11 @@ namespace Freeserf
                         if (move != value)
                         {
                             move = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(Move));
                         }
                     }
                 }
+                [Data]
                 public int DistanceColumn
                 {
                     get => distanceColumn;
@@ -1530,10 +1798,11 @@ namespace Freeserf
                         if (distanceColumn != value)
                         {
                             distanceColumn = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceColumn));
                         }
                     }
                 }
+                [Data]
                 public int DistanceRow
                 {
                     get => distanceRow;
@@ -1542,10 +1811,11 @@ namespace Freeserf
                         if (distanceRow != value)
                         {
                             distanceRow = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceRow));
                         }
                     }
                 }
+                [Data]
                 public int DefenderIndex
                 {
                     get => defenderIndex;
@@ -1554,7 +1824,7 @@ namespace Freeserf
                         if (defenderIndex != value)
                         {
                             defenderIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DefenderIndex));
                         }
                     }
                 }
@@ -1578,7 +1848,7 @@ namespace Freeserf
                 }
             }
 
-            // States: KnightDefendingFree, KnightEngageDefendingFree
+            // States: KnightDefendingFree, KnightEngageDefendingFree, KnightPrepareDefendingFreeWait
             public class StateDataDefendingFree : StateDataBase
             {
                 private int distanceColumn; // B
@@ -1587,8 +1857,16 @@ namespace Freeserf
                 private int otherDistanceColumn; // E
                 private int otherDistanceRow; // F
 
-                public StateDataDefendingFree(StateData parent) : base(parent) { }
+                public StateDataDefendingFree(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(DistanceColumn));
+                    MarkPropertyAsDirty(nameof(DistanceRow));
+                    MarkPropertyAsDirty(nameof(FieldD));
+                    MarkPropertyAsDirty(nameof(OtherDistanceColumn));
+                    MarkPropertyAsDirty(nameof(OtherDistanceRow));
+                }
 
+                [Data]
                 public int DistanceColumn
                 {
                     get => distanceColumn;
@@ -1597,10 +1875,11 @@ namespace Freeserf
                         if (distanceColumn != value)
                         {
                             distanceColumn = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceColumn));
                         }
                     }
                 }
+                [Data]
                 public int DistanceRow
                 {
                     get => distanceRow;
@@ -1609,10 +1888,11 @@ namespace Freeserf
                         if (distanceRow != value)
                         {
                             distanceRow = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceRow));
                         }
                     }
                 }
+                [Data]
                 public int FieldD
                 {
                     get => fieldD;
@@ -1621,10 +1901,11 @@ namespace Freeserf
                         if (fieldD != value)
                         {
                             fieldD = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldD));
                         }
                     }
                 }
+                [Data]
                 public int OtherDistanceColumn
                 {
                     get => otherDistanceColumn;
@@ -1633,10 +1914,11 @@ namespace Freeserf
                         if (otherDistanceColumn != value)
                         {
                             otherDistanceColumn = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(OtherDistanceColumn));
                         }
                     }
                 }
+                [Data]
                 public int OtherDistanceRow
                 {
                     get => otherDistanceRow;
@@ -1645,7 +1927,7 @@ namespace Freeserf
                         if (otherDistanceRow != value)
                         {
                             otherDistanceRow = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(OtherDistanceRow));
                         }
                     }
                 }
@@ -1678,8 +1960,16 @@ namespace Freeserf
                 private int fieldE; // E
                 private State nextState; // F
 
-                public StateDataLeaveForWalkToFight(StateData parent) : base(parent) { }
+                public StateDataLeaveForWalkToFight(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(DistanceColumn));
+                    MarkPropertyAsDirty(nameof(DistanceRow));
+                    MarkPropertyAsDirty(nameof(FieldD));
+                    MarkPropertyAsDirty(nameof(FieldE));
+                    MarkPropertyAsDirty(nameof(NextState));
+                }
 
+                [Data]
                 public int DistanceColumn
                 {
                     get => distanceColumn;
@@ -1688,10 +1978,11 @@ namespace Freeserf
                         if (distanceColumn != value)
                         {
                             distanceColumn = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceColumn));
                         }
                     }
                 }
+                [Data]
                 public int DistanceRow
                 {
                     get => distanceRow;
@@ -1700,10 +1991,11 @@ namespace Freeserf
                         if (distanceRow != value)
                         {
                             distanceRow = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(DistanceRow));
                         }
                     }
                 }
+                [Data]
                 public int FieldD
                 {
                     get => fieldD;
@@ -1712,10 +2004,11 @@ namespace Freeserf
                         if (fieldD != value)
                         {
                             fieldD = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldD));
                         }
                     }
                 }
+                [Data]
                 public int FieldE
                 {
                     get => fieldE;
@@ -1724,10 +2017,11 @@ namespace Freeserf
                         if (fieldE != value)
                         {
                             fieldE = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldE));
                         }
                     }
                 }
+                [Data]
                 public State NextState
                 {
                     get => nextState;
@@ -1736,7 +2030,7 @@ namespace Freeserf
                         if (nextState != value)
                         {
                             nextState = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(NextState));
                         }
                     }
                 }
@@ -1768,8 +2062,14 @@ namespace Freeserf
                 private int fieldE; // E
                 private Direction reverseDirection; // B
 
-                public StateDataIdleOnPath(StateData parent) : base(parent) { }
+                public StateDataIdleOnPath(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(FlagIndex));
+                    MarkPropertyAsDirty(nameof(FieldE));
+                    MarkPropertyAsDirty(nameof(ReverseDirection));
+                }
 
+                [Data]
                 public uint FlagIndex
                 {
                     get => flagIndex;
@@ -1778,10 +2078,11 @@ namespace Freeserf
                         if (flagIndex != value)
                         {
                             flagIndex = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FlagIndex));
                         }
                     }
                 }
+                [Data]
                 public int FieldE
                 {
                     get => fieldE;
@@ -1790,10 +2091,11 @@ namespace Freeserf
                         if (fieldE != value)
                         {
                             fieldE = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(FieldE));
                         }
                     }
                 }
+                [Data]
                 public Direction ReverseDirection
                 {
                     get => reverseDirection;
@@ -1802,7 +2104,7 @@ namespace Freeserf
                         if (reverseDirection != value)
                         {
                             reverseDirection = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(ReverseDirection));
                         }
                     }
                 }
@@ -1837,8 +2139,12 @@ namespace Freeserf
             {
                 private uint nextKnight; // E
 
-                public StateDataDefending(StateData parent) : base(parent) { }
+                public StateDataDefending(StateData parent) : base(parent)
+                {
+                    MarkPropertyAsDirty(nameof(NextKnight));
+                }
 
+                [Data]
                 public uint NextKnight
                 {
                     get => nextKnight;
@@ -1847,7 +2153,7 @@ namespace Freeserf
                         if (nextKnight != value)
                         {
                             nextKnight = value;
-                            MarkAsDirty();
+                            MarkPropertyAsDirty(nameof(NextKnight));
                         }
                     }
                 }
@@ -2114,17 +2420,29 @@ namespace Freeserf
         };
 
         [Data]
-        private readonly SerfState state = new SerfState();
-        readonly StateData s = null;
+        readonly SerfState state = new SerfState();
+        [Data]
+        readonly StateData stateData = null; // Note: It is important that it is behind 'state' (higher line number)
 
         public Serf(Game game, uint index)
             : base(game, index)
         {
-            s = new StateData(this);
+            stateData = new StateData(this);
         }
 
-        public bool Dirty => state.Dirty;
-        public IReadOnlyList<string> DirtyProperties => Serialize.State.DirtyState(nameof(state), state.Dirty);
+        public bool Dirty => state.Dirty || stateData.Dirty;
+        public IReadOnlyList<string> DirtyProperties
+        {
+            get
+            {
+                var dirtyProperties = new List<string>(2);
+                if (state.Dirty)
+                    dirtyProperties.Add(nameof(state));
+                if (stateData.Dirty)
+                    dirtyProperties.Add(nameof(stateData));
+                return dirtyProperties;
+            }
+        }
 
         public uint Player
         {
@@ -2301,34 +2619,34 @@ namespace Freeserf
         {
             if (SerfState == State.Walking)
             {
-                if (s.Walking.Direction1 >= 0)
+                if (stateData.Walking.Direction1 >= 0)
                 {
-                    if (s.Walking.Direction1 != 6)
+                    if (stateData.Walking.Direction1 != 6)
                     {
-                        var direction = (Direction)s.Walking.Direction1;
-                        var flag = Game.GetFlag(s.Walking.Destination);
+                        var direction = (Direction)stateData.Walking.Direction1;
+                        var flag = Game.GetFlag(stateData.Walking.Destination);
                         flag.CancelSerfRequest(direction);
 
                         var otherDirection = flag.GetOtherEndDirection(direction);
                         flag.GetOtherEndFlag(direction).CancelSerfRequest(otherDirection);
                     }
                 }
-                else if (s.Walking.Direction1 == -1)
+                else if (stateData.Walking.Direction1 == -1)
                 {
-                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var flag = Game.GetFlag(stateData.Walking.Destination);
                     var building = flag.Building;
                     building.RequestedSerfLost();
                 }
 
                 SetState(State.Lost);
-                s.Lost.FieldB = 0;
+                stateData.Lost.FieldB = 0;
             }
             else if (SerfState == State.Transporting || SerfState == State.Delivering)
             {
-                if (s.Walking.Resource != Resource.Type.None)
+                if (stateData.Walking.Resource != Resource.Type.None)
                 {
-                    var resource = s.Walking.Resource;
-                    var destination = s.Walking.Destination;
+                    var resource = stateData.Walking.Resource;
+                    var destination = stateData.Walking.Destination;
 
                     Game.CancelTransportedResource(resource, destination);
                     Game.LoseResource(resource);
@@ -2337,7 +2655,7 @@ namespace Freeserf
                 if (SerfType != Type.Sailor)
                 {
                     SetState(State.Lost);
-                    s.Lost.FieldB = 0;
+                    stateData.Lost.FieldB = 0;
                 }
                 else
                 {
@@ -2347,7 +2665,7 @@ namespace Freeserf
             else
             {
                 SetState(State.Lost);
-                s.Lost.FieldB = 0;
+                stateData.Lost.FieldB = 0;
             }
         }
 
@@ -2358,31 +2676,31 @@ namespace Freeserf
         {
             if (SerfState == State.Walking)
             {
-                if (s.Walking.Direction1 >= 0)
+                if (stateData.Walking.Direction1 >= 0)
                 {
-                    if (s.Walking.Direction1 != 6)
+                    if (stateData.Walking.Direction1 != 6)
                     {
-                        var direction = (Direction)s.Walking.Direction1;
-                        var flag = Game.GetFlag(s.Walking.Destination);
+                        var direction = (Direction)stateData.Walking.Direction1;
+                        var flag = Game.GetFlag(stateData.Walking.Destination);
                         flag.CancelSerfRequest(direction);
 
                         var otherDirection = flag.GetOtherEndDirection(direction);
                         flag.GetOtherEndFlag(direction).CancelSerfRequest(otherDirection);
                     }
                 }
-                else if (s.Walking.Direction1 == -1)
+                else if (stateData.Walking.Direction1 == -1)
                 {
-                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var flag = Game.GetFlag(stateData.Walking.Destination);
                     var building = flag.Building;
                     building.RequestedSerfLost();
                 }
             }
             else if (SerfState == State.Transporting || SerfState == State.Delivering)
             {
-                if (s.Walking.Resource != Resource.Type.None)
+                if (stateData.Walking.Resource != Resource.Type.None)
                 {
-                    var resource = s.Walking.Resource;
-                    var destination = s.Walking.Destination;
+                    var resource = stateData.Walking.Resource;
+                    var destination = stateData.Walking.Destination;
 
                     Game.CancelTransportedResource(resource, destination);
                     inventory.PushResource(resource);
@@ -2394,7 +2712,7 @@ namespace Freeserf
         {
             SetState(State.DefendingCastle);
 
-            s.Defending.NextKnight = nextKnightIndex;
+            stateData.Defending.NextKnight = nextKnightIndex;
 
             if (pause)
             {
@@ -2411,58 +2729,58 @@ namespace Freeserf
             Position = building.Position;
             state.Tick = Game.Tick;
             SetState(State.IdleInStock);
-            s.IdleInStock.InventoryIndex = inventory.Index;
+            stateData.IdleInStock.InventoryIndex = inventory.Index;
         }
 
         public void InitInventoryTransporter(Inventory inventory)
         {
             SetState(State.BuildingCastle);
-            s.BuildingCastle.InventoryIndex = inventory.Index;
+            stateData.BuildingCastle.InventoryIndex = inventory.Index;
         }
 
         public void ResetTransport(Flag flag)
         {
-            if (SerfState == State.Walking && s.Walking.Destination == flag.Index && s.Walking.Direction1 < 0)
+            if (SerfState == State.Walking && stateData.Walking.Destination == flag.Index && stateData.Walking.Direction1 < 0)
             {
-                s.Walking.Direction1 = -2;
-                s.Walking.Destination = 0;
+                stateData.Walking.Direction1 = -2;
+                stateData.Walking.Destination = 0;
             }
             else if (SerfState == State.ReadyToLeaveInventory &&
-                     s.ReadyToLeaveInventory.Destination == flag.Index &&
-                     s.ReadyToLeaveInventory.Mode < 0)
+                     stateData.ReadyToLeaveInventory.Destination == flag.Index &&
+                     stateData.ReadyToLeaveInventory.Mode < 0)
             {
-                s.ReadyToLeaveInventory.Mode = -2;
-                s.ReadyToLeaveInventory.Destination = 0;
+                stateData.ReadyToLeaveInventory.Mode = -2;
+                stateData.ReadyToLeaveInventory.Destination = 0;
             }
             else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
-                     s.LeavingBuilding.NextState == State.Walking &&
-                     s.LeavingBuilding.Destination == flag.Index &&
-                     s.LeavingBuilding.FieldB < 0)
+                     stateData.LeavingBuilding.NextState == State.Walking &&
+                     stateData.LeavingBuilding.Destination == flag.Index &&
+                     stateData.LeavingBuilding.FieldB < 0)
             {
-                s.LeavingBuilding.FieldB = -2;
-                s.LeavingBuilding.Destination = 0;
+                stateData.LeavingBuilding.FieldB = -2;
+                stateData.LeavingBuilding.Destination = 0;
             }
             else if (SerfState == State.Transporting &&
-                     s.Walking.Destination == flag.Index)
+                     stateData.Walking.Destination == flag.Index)
             {
-                s.Walking.Destination = 0;
+                stateData.Walking.Destination = 0;
             }
             else if (SerfState == State.MoveResourceOut &&
-                     s.MoveResourceOut.NextState == State.DropResourceOut &&
-                     s.MoveResourceOut.ResourceDestination == flag.Index)
+                     stateData.MoveResourceOut.NextState == State.DropResourceOut &&
+                     stateData.MoveResourceOut.ResourceDestination == flag.Index)
             {
-                s.MoveResourceOut.ResourceDestination = 0;
+                stateData.MoveResourceOut.ResourceDestination = 0;
             }
             else if (SerfState == State.DropResourceOut &&
-                     s.MoveResourceOut.ResourceDestination == flag.Index)
+                     stateData.MoveResourceOut.ResourceDestination == flag.Index)
             {
-                s.MoveResourceOut.ResourceDestination = 0;
+                stateData.MoveResourceOut.ResourceDestination = 0;
             }
             else if (SerfState == State.LeavingBuilding &&
-                     s.LeavingBuilding.NextState == State.DropResourceOut &&
-                     s.LeavingBuilding.Destination == flag.Index)
+                     stateData.LeavingBuilding.NextState == State.DropResourceOut &&
+                     stateData.LeavingBuilding.Destination == flag.Index)
             {
-                s.LeavingBuilding.Destination = 0;
+                stateData.LeavingBuilding.Destination = 0;
             }
         }
 
@@ -2470,12 +2788,12 @@ namespace Freeserf
         {
             if (SerfState == State.Walking)
             {
-                if (s.Walking.Destination == flag1 && s.Walking.Direction1 == (int)direction1)
+                if (stateData.Walking.Destination == flag1 && stateData.Walking.Direction1 == (int)direction1)
                 {
                     select = 0; // TODO: change required?
                     return true;
                 }
-                else if (s.Walking.Destination == flag2 && s.Walking.Direction1 == (int)direction2)
+                else if (stateData.Walking.Destination == flag2 && stateData.Walking.Direction1 == (int)direction2)
                 {
                     select = 1;
                     return true;
@@ -2483,30 +2801,30 @@ namespace Freeserf
             }
             else if (SerfState == State.ReadyToLeaveInventory)
             {
-                if (s.ReadyToLeaveInventory.Destination == flag1 &&
-                    s.ReadyToLeaveInventory.Mode == (int)direction1)
+                if (stateData.ReadyToLeaveInventory.Destination == flag1 &&
+                    stateData.ReadyToLeaveInventory.Mode == (int)direction1)
                 {
                     select = 0; // TODO: change required?
                     return true;
                 }
-                else if (s.ReadyToLeaveInventory.Destination == flag2 &&
-                         s.ReadyToLeaveInventory.Mode == (int)direction2)
+                else if (stateData.ReadyToLeaveInventory.Destination == flag2 &&
+                         stateData.ReadyToLeaveInventory.Mode == (int)direction2)
                 {
                     select = 1;
                     return true;
                 }
             }
             else if ((SerfState == State.ReadyToLeave || SerfState == State.LeavingBuilding) &&
-                     s.LeavingBuilding.NextState == State.Walking)
+                     stateData.LeavingBuilding.NextState == State.Walking)
             {
-                if (s.LeavingBuilding.Destination == flag1 &&
-                    s.LeavingBuilding.FieldB == (int)direction1)
+                if (stateData.LeavingBuilding.Destination == flag1 &&
+                    stateData.LeavingBuilding.FieldB == (int)direction1)
                 {
                     select = 0; // TODO: change required?
                     return true;
                 }
-                else if (s.LeavingBuilding.Destination == flag2 &&
-                         s.LeavingBuilding.FieldB == (int)direction2)
+                else if (stateData.LeavingBuilding.Destination == flag2 &&
+                         stateData.LeavingBuilding.FieldB == (int)direction2)
                 {
                     select = 1;
                     return true;
@@ -2523,23 +2841,23 @@ namespace Freeserf
             switch (SerfState)
             {
                 case State.Walking:
-                    if (s.Walking.Destination == destination && s.Walking.Direction1 == (int)direction)
+                    if (stateData.Walking.Destination == destination && stateData.Walking.Direction1 == (int)direction)
                     {
                         result = true;
                     }
                     break;
                 case State.ReadyToLeaveInventory:
-                    if (s.ReadyToLeaveInventory.Destination == destination &&
-                        s.ReadyToLeaveInventory.Mode == (int)direction)
+                    if (stateData.ReadyToLeaveInventory.Destination == destination &&
+                        stateData.ReadyToLeaveInventory.Mode == (int)direction)
                     {
                         result = true;
                     }
                     break;
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    if (s.LeavingBuilding.Destination == destination &&
-                        s.LeavingBuilding.FieldB == (int)direction &&
-                        s.LeavingBuilding.NextState == State.Walking)
+                    if (stateData.LeavingBuilding.Destination == destination &&
+                        stateData.LeavingBuilding.FieldB == (int)direction &&
+                        stateData.LeavingBuilding.NextState == State.Walking)
                     {
                         result = true;
                     }
@@ -2556,28 +2874,28 @@ namespace Freeserf
             switch (SerfState)
             {
                 case State.Walking:
-                    if (s.Walking.Destination == destination && s.Walking.Direction1 == (int)direction)
+                    if (stateData.Walking.Destination == destination && stateData.Walking.Direction1 == (int)direction)
                     {
-                        s.Walking.Direction1 = -2;
-                        s.Walking.Destination = 0;
+                        stateData.Walking.Direction1 = -2;
+                        stateData.Walking.Destination = 0;
                     }
                     break;
                 case State.ReadyToLeaveInventory:
-                    if (s.ReadyToLeaveInventory.Destination == destination &&
-                        s.ReadyToLeaveInventory.Mode == (int)direction)
+                    if (stateData.ReadyToLeaveInventory.Destination == destination &&
+                        stateData.ReadyToLeaveInventory.Mode == (int)direction)
                     {
-                        s.ReadyToLeaveInventory.Mode = -2;
-                        s.ReadyToLeaveInventory.Destination = 0;
+                        stateData.ReadyToLeaveInventory.Mode = -2;
+                        stateData.ReadyToLeaveInventory.Destination = 0;
                     }
                     break;
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    if (s.LeavingBuilding.Destination == destination &&
-                        s.LeavingBuilding.FieldB == (int)direction &&
-                        s.LeavingBuilding.NextState == State.Walking)
+                    if (stateData.LeavingBuilding.Destination == destination &&
+                        stateData.LeavingBuilding.FieldB == (int)direction &&
+                        stateData.LeavingBuilding.NextState == State.Walking)
                     {
-                        s.LeavingBuilding.FieldB = -2;
-                        s.LeavingBuilding.Destination = 0;
+                        stateData.LeavingBuilding.FieldB = -2;
+                        stateData.LeavingBuilding.Destination = 0;
                     }
                     break;
                 default:
@@ -2588,60 +2906,60 @@ namespace Freeserf
         public void PathMerged(Flag flag)
         {
             if (SerfState == State.ReadyToLeaveInventory &&
-                s.ReadyToLeaveInventory.Destination == flag.Index)
+                stateData.ReadyToLeaveInventory.Destination == flag.Index)
             {
-                s.ReadyToLeaveInventory.Destination = 0;
-                s.ReadyToLeaveInventory.Mode = -2;
+                stateData.ReadyToLeaveInventory.Destination = 0;
+                stateData.ReadyToLeaveInventory.Mode = -2;
             }
-            else if (SerfState == State.Walking && s.Walking.Destination == flag.Index)
+            else if (SerfState == State.Walking && stateData.Walking.Destination == flag.Index)
             {
-                s.Walking.Destination = 0;
-                s.Walking.Direction1 = -2;
+                stateData.Walking.Destination = 0;
+                stateData.Walking.Direction1 = -2;
             }
             else if (SerfState == State.IdleInStock && true/*...*/) // TODO: ?
             {
                 // TODO 
             }
             else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
-                   s.LeavingBuilding.Destination == flag.Index &&
-                   s.LeavingBuilding.NextState == State.Walking)
+                   stateData.LeavingBuilding.Destination == flag.Index &&
+                   stateData.LeavingBuilding.NextState == State.Walking)
             {
-                s.LeavingBuilding.Destination = 0;
-                s.LeavingBuilding.FieldB = -2;
+                stateData.LeavingBuilding.Destination = 0;
+                stateData.LeavingBuilding.FieldB = -2;
             }
         }
 
         public void PathMerged2(uint flag1Index, Direction direction1, uint flag2Index, Direction direction2)
         {
             if (SerfState == State.ReadyToLeaveInventory &&
-              ((s.ReadyToLeaveInventory.Destination == flag1Index &&
-                s.ReadyToLeaveInventory.Mode == (int)direction1) ||
-               (s.ReadyToLeaveInventory.Destination == flag2Index &&
-                s.ReadyToLeaveInventory.Mode == (int)direction2)))
+              ((stateData.ReadyToLeaveInventory.Destination == flag1Index &&
+                stateData.ReadyToLeaveInventory.Mode == (int)direction1) ||
+               (stateData.ReadyToLeaveInventory.Destination == flag2Index &&
+                stateData.ReadyToLeaveInventory.Mode == (int)direction2)))
             {
-                s.ReadyToLeaveInventory.Destination = 0;
-                s.ReadyToLeaveInventory.Mode = -2;
+                stateData.ReadyToLeaveInventory.Destination = 0;
+                stateData.ReadyToLeaveInventory.Mode = -2;
             }
             else if (SerfState == State.Walking &&
-                     ((s.Walking.Destination == flag1Index && s.Walking.Direction1 == (int)direction1) ||
-                      (s.Walking.Destination == flag2Index && s.Walking.Direction1 == (int)direction2)))
+                     ((stateData.Walking.Destination == flag1Index && stateData.Walking.Direction1 == (int)direction1) ||
+                      (stateData.Walking.Destination == flag2Index && stateData.Walking.Direction1 == (int)direction2)))
             {
-                s.Walking.Destination = 0;
-                s.Walking.Direction1 = -2;
+                stateData.Walking.Destination = 0;
+                stateData.Walking.Direction1 = -2;
             }
             else if (SerfState == State.IdleInStock)
             {
                 // TODO 
             }
             else if ((SerfState == State.LeavingBuilding || SerfState == State.ReadyToLeave) &&
-                     ((s.LeavingBuilding.Destination == flag1Index &&
-                       s.LeavingBuilding.FieldB == (int)direction1) ||
-                      (s.LeavingBuilding.Destination == flag2Index &&
-                       s.LeavingBuilding.FieldB == (int)direction2)) &&
-                     s.LeavingBuilding.NextState == State.Walking)
+                     ((stateData.LeavingBuilding.Destination == flag1Index &&
+                       stateData.LeavingBuilding.FieldB == (int)direction1) ||
+                      (stateData.LeavingBuilding.Destination == flag2Index &&
+                       stateData.LeavingBuilding.FieldB == (int)direction2)) &&
+                     stateData.LeavingBuilding.NextState == State.Walking)
             {
-                s.LeavingBuilding.Destination = 0;
-                s.LeavingBuilding.FieldB = -2;
+                stateData.LeavingBuilding.Destination = 0;
+                stateData.LeavingBuilding.FieldB = -2;
             }
         }
 
@@ -2651,7 +2969,7 @@ namespace Freeserf
             {
                 case State.ReadyToLeave:
                 case State.LeavingBuilding:
-                    s.LeavingBuilding.NextState = State.Lost;
+                    stateData.LeavingBuilding.NextState = State.Lost;
                     break;
                 case State.FinishedBuilding:
                 case State.Walking:
@@ -2716,7 +3034,7 @@ namespace Freeserf
             if (Game.Map.GetSerfIndex(Position) == Index)
             {
                 SetState(State.Lost);
-                s.Lost.FieldB = 0;
+                stateData.Lost.FieldB = 0;
             }
             else
             {
@@ -2741,14 +3059,14 @@ namespace Freeserf
         {
             if (SerfState != State.WakeOnPath)
             {
-                s.Walking.WaitCounter = -1;
+                stateData.Walking.WaitCounter = -1;
 
-                if (s.Walking.Resource != Resource.Type.None)
+                if (stateData.Walking.Resource != Resource.Type.None)
                 {
-                    var resource = s.Walking.Resource;
-                    s.Walking.Resource = Resource.Type.None;
+                    var resource = stateData.Walking.Resource;
+                    stateData.Walking.Resource = Resource.Type.None;
 
-                    Game.CancelTransportedResource(resource, s.Walking.Destination);
+                    Game.CancelTransportedResource(resource, stateData.Walking.Destination);
                     Game.LoseResource(resource);
                 }
             }
@@ -2763,28 +3081,28 @@ namespace Freeserf
             switch (SerfState)
             {
                 case State.Walking:
-                    if (s.Walking.Destination == destination && s.Walking.Direction1 < 0)
+                    if (stateData.Walking.Destination == destination && stateData.Walking.Direction1 < 0)
                     {
-                        s.Walking.Direction1 = -2;
-                        s.Walking.Destination = 0;
+                        stateData.Walking.Direction1 = -2;
+                        stateData.Walking.Destination = 0;
                     }
                     break;
                 case State.ReadyToLeaveInventory:
-                    if (s.ReadyToLeaveInventory.Destination == destination &&
-                        s.ReadyToLeaveInventory.Mode < 0)
+                    if (stateData.ReadyToLeaveInventory.Destination == destination &&
+                        stateData.ReadyToLeaveInventory.Mode < 0)
                     {
-                        s.ReadyToLeaveInventory.Mode = -2;
-                        s.ReadyToLeaveInventory.Destination = 0;
+                        stateData.ReadyToLeaveInventory.Mode = -2;
+                        stateData.ReadyToLeaveInventory.Destination = 0;
                     }
                     break;
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    if (s.LeavingBuilding.Destination == destination &&
-                        s.LeavingBuilding.FieldB < 0 &&
-                        s.LeavingBuilding.NextState == State.Walking)
+                    if (stateData.LeavingBuilding.Destination == destination &&
+                        stateData.LeavingBuilding.FieldB < 0 &&
+                        stateData.LeavingBuilding.NextState == State.Walking)
                     {
-                        s.LeavingBuilding.FieldB = -2;
-                        s.LeavingBuilding.Destination = 0;
+                        stateData.LeavingBuilding.FieldB = -2;
+                        stateData.LeavingBuilding.Destination = 0;
                     }
                     break;
                 default:
@@ -2797,29 +3115,29 @@ namespace Freeserf
             switch (SerfState)
             {
                 case State.Transporting:
-                    if (s.Walking.Destination == destination)
+                    if (stateData.Walking.Destination == destination)
                     {
-                        s.Walking.Destination = 0;
+                        stateData.Walking.Destination = 0;
                     }
                     break;
                 case State.DropResourceOut:
-                    if (s.MoveResourceOut.ResourceDestination == destination)
+                    if (stateData.MoveResourceOut.ResourceDestination == destination)
                     {
-                        s.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
                     }
                     break;
                 case State.LeavingBuilding:
-                    if (s.LeavingBuilding.Destination == destination &&
-                        s.LeavingBuilding.NextState == State.DropResourceOut)
+                    if (stateData.LeavingBuilding.Destination == destination &&
+                        stateData.LeavingBuilding.NextState == State.DropResourceOut)
                     {
-                        s.LeavingBuilding.Destination = 0;
+                        stateData.LeavingBuilding.Destination = 0;
                     }
                     break;
                 case State.MoveResourceOut:
-                    if (s.MoveResourceOut.ResourceDestination == destination &&
-                        s.MoveResourceOut.NextState == State.DropResourceOut)
+                    if (stateData.MoveResourceOut.ResourceDestination == destination &&
+                        stateData.MoveResourceOut.NextState == State.DropResourceOut)
                     {
-                        s.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
                     }
                     break;
                 default:
@@ -2848,20 +3166,20 @@ namespace Freeserf
             {
                 case State.Delivering:
                 case State.Transporting:
-                    resource = (int)s.Walking.Resource + 1;
+                    resource = (int)stateData.Walking.Resource + 1;
                     break;
                 case State.EnteringBuilding:
-                    resource = s.EnteringBuilding.FieldB;
+                    resource = stateData.EnteringBuilding.FieldB;
                     break;
                 case State.LeavingBuilding:
-                    resource = s.LeavingBuilding.FieldB;
+                    resource = stateData.LeavingBuilding.FieldB;
                     break;
                 case State.ReadyToEnter:
-                    resource = s.ReadyToEnter.FieldB;
+                    resource = stateData.ReadyToEnter.FieldB;
                     break;
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    resource = (int)s.MoveResourceOut.Resource;
+                    resource = (int)stateData.MoveResourceOut.Resource;
                     break;
 
                 default:
@@ -2871,36 +3189,36 @@ namespace Freeserf
             return resource;
         }
 
-        internal int FreeWalkingNegDistance1 => s.FreeWalking.NegDistance1;
+        internal int FreeWalkingNegDistance1 => stateData.FreeWalking.NegDistance1;
 
-        internal int FreeWalkingNegDistance2 => s.FreeWalking.NegDistance2;
+        internal int FreeWalkingNegDistance2 => stateData.FreeWalking.NegDistance2;
 
-        internal State LeavingBuildingNextState => s.LeavingBuilding.NextState;
+        internal State LeavingBuildingNextState => stateData.LeavingBuilding.NextState;
 
-        internal int LeavingBuildingFieldB => s.LeavingBuilding.FieldB;
+        internal int LeavingBuildingFieldB => stateData.LeavingBuilding.FieldB;
 
-        internal uint MiningResource => s.Mining.Resource;
+        internal uint MiningResource => stateData.Mining.Resource;
 
-        internal Resource.Type TransportedResource => s.Walking.Resource;
+        internal Resource.Type TransportedResource => stateData.Walking.Resource;
 
-        internal uint TransportDestination => s.Walking.Destination;
+        internal uint TransportDestination => stateData.Walking.Destination;
 
-        internal int AttackingFieldD => s.Attacking.FieldD;
+        internal int AttackingFieldD => stateData.Attacking.FieldD;
 
-        internal int AttackingDefenderIndex => s.Attacking.DefenderIndex;
+        internal int AttackingDefenderIndex => stateData.Attacking.DefenderIndex;
 
-        internal int WalkingWaitCounter => s.Walking.WaitCounter;
+        internal int WalkingWaitCounter => stateData.Walking.WaitCounter;
 
         internal void SetWalkingWaitCounter(int newCounter)
         {
-            s.Walking.WaitCounter = newCounter;
+            stateData.Walking.WaitCounter = newCounter;
         }
 
-        internal int WalkingDirection => s.Walking.Direction;
+        internal int WalkingDirection => stateData.Walking.Direction;
 
-        internal uint IdleInStockInventoryIndex => s.IdleInStock.InventoryIndex;
+        internal uint IdleInStockInventoryIndex => stateData.IdleInStock.InventoryIndex;
 
-        internal int MiningSubstate => (int)s.Mining.Substate;
+        internal int MiningSubstate => (int)stateData.Mining.Substate;
 
         public Serf ExtractLastKnightFromList()
         {
@@ -2908,17 +3226,17 @@ namespace Freeserf
             var defendingSerf = Game.GetSerf(defenderIndex);
             Serf lastKnight = null;
 
-            while (defendingSerf.s.Defending.NextKnight != 0)
+            while (defendingSerf.stateData.Defending.NextKnight != 0)
             {
                 lastKnight = defendingSerf;
-                defenderIndex = defendingSerf.s.Defending.NextKnight;
+                defenderIndex = defendingSerf.stateData.Defending.NextKnight;
                 defendingSerf = Game.GetSerf(defenderIndex);
             }
 
             if (lastKnight != null)
             {
-                lastKnight.s.Defending.NextKnight = defendingSerf.s.Defending.NextKnight;
-                defendingSerf.s.Defending.NextKnight = 0;
+                lastKnight.stateData.Defending.NextKnight = defendingSerf.stateData.Defending.NextKnight;
+                defendingSerf.stateData.Defending.NextKnight = 0;
             }
 
             return defendingSerf;
@@ -2930,22 +3248,22 @@ namespace Freeserf
             {
                 if (lastKnight != null)
                 {
-                    lastKnight.s.Defending.NextKnight = s.Defending.NextKnight;
+                    lastKnight.stateData.Defending.NextKnight = stateData.Defending.NextKnight;
                 }
                 else // this is the first knight
                 {
-                    firstKnight = s.Defending.NextKnight;
+                    firstKnight = stateData.Defending.NextKnight;
                 }
 
-                s.Defending.NextKnight = 0;
+                stateData.Defending.NextKnight = 0;
 
                 return this;
             }
 
-            if (s.Defending.NextKnight == 0)
+            if (stateData.Defending.NextKnight == 0)
                 return null;
 
-            var nextKnight = Game.GetSerf(s.Defending.NextKnight);
+            var nextKnight = Game.GetSerf(stateData.Defending.NextKnight);
 
             return nextKnight.ExtractKnightFromList(index, ref firstKnight, this);
         }
@@ -2957,14 +3275,14 @@ namespace Freeserf
 
         internal void InsertKnightBefore(Serf knight)
         {
-            s.Defending.NextKnight = knight.Index;
+            stateData.Defending.NextKnight = knight.Index;
         }
 
-        internal uint NextKnight => s.Defending.NextKnight;
+        internal uint NextKnight => stateData.Defending.NextKnight;
 
         internal void SetNextKnight(uint nextKnightIndex)
         {
-            s.Defending.NextKnight = nextKnightIndex;
+            stateData.Defending.NextKnight = nextKnightIndex;
         }
 
         private Flag GetFlagAtPosition()
@@ -3012,19 +3330,19 @@ namespace Freeserf
                 case State.WaitForResourceOut:
                     return GetBuildingAtPosition();
                 case State.Building:
-                    return Game.GetBuilding(s.Building.Index);
+                    return Game.GetBuilding(stateData.Building.Index);
                 case State.Digging:
-                    if (s.Digging.Substate <= 0)
+                    if (stateData.Digging.Substate <= 0)
                     {
                         return GetBuildingAtPosition();
                     }
                     else
                     {
-                        if (s.Digging.DigPosition == 0)
+                        if (stateData.Digging.DigPosition == 0)
                             return GetBuildingAtPosition();
                         else
                         {
-                            var building = Game.GetBuildingAtPosition(Game.Map.Move(Position, ((Direction)(6 - s.Digging.DigPosition)).Reverse()));
+                            var building = Game.GetBuildingAtPosition(Game.Map.Move(Position, ((Direction)(6 - stateData.Digging.DigPosition)).Reverse()));
 
                             if (building != null)
                                 return building;
@@ -3045,35 +3363,35 @@ namespace Freeserf
         internal void GoOutFromInventory(uint inventoryIndex, MapPos destination, int mode)
         {
             SetState(State.ReadyToLeaveInventory);
-            s.ReadyToLeaveInventory.Mode = mode;
-            s.ReadyToLeaveInventory.Destination = destination;
-            s.ReadyToLeaveInventory.InventoryIndex = inventoryIndex;
+            stateData.ReadyToLeaveInventory.Mode = mode;
+            stateData.ReadyToLeaveInventory.Destination = destination;
+            stateData.ReadyToLeaveInventory.InventoryIndex = inventoryIndex;
         }
 
         internal void SendOffToFight(int distanceColumn, int distanceRow)
         {
             // Send this serf off to fight. 
             SetState(State.KnightLeaveForWalkToFight);
-            s.LeaveForWalkToFight.DistanceColumn = distanceColumn;
-            s.LeaveForWalkToFight.DistanceRow = distanceRow;
-            s.LeaveForWalkToFight.FieldD = 0;
-            s.LeaveForWalkToFight.FieldE = 0;
-            s.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
+            stateData.LeaveForWalkToFight.DistanceColumn = distanceColumn;
+            stateData.LeaveForWalkToFight.DistanceRow = distanceRow;
+            stateData.LeaveForWalkToFight.FieldD = 0;
+            stateData.LeaveForWalkToFight.FieldE = 0;
+            stateData.LeaveForWalkToFight.NextState = State.KnightFreeWalking;
         }
 
         internal void StayIdleInStock(uint inventory)
         {
             SetState(State.IdleInStock);
-            s.IdleInStock.InventoryIndex = inventory;
+            stateData.IdleInStock.InventoryIndex = inventory;
         }
 
         internal void GoOutFromBuilding(MapPos destination, int direction, int fieldB)
         {
             SetState(State.ReadyToLeave);
-            s.LeavingBuilding.FieldB = fieldB;
-            s.LeavingBuilding.Destination = destination;
-            s.LeavingBuilding.Direction = direction;
-            s.LeavingBuilding.NextState = State.Walking;
+            stateData.LeavingBuilding.FieldB = fieldB;
+            stateData.LeavingBuilding.Destination = destination;
+            stateData.LeavingBuilding.Direction = direction;
+            stateData.LeavingBuilding.NextState = State.Walking;
         }
 
         internal void Update()
@@ -3366,75 +3684,75 @@ namespace Freeserf
             {
                 case State.IdleInStock:
                     reader.Skip(3); // 11
-                    s.IdleInStock.InventoryIndex = reader.ReadWord(); // 14
+                    stateData.IdleInStock.InventoryIndex = reader.ReadWord(); // 14
                     break;
 
                 case State.Walking:
                     {
-                        s.Walking.Direction1 = reader.ReadByte(); // 11
-                        s.Walking.Destination = reader.ReadWord(); // 12
-                        s.Walking.Direction = reader.ReadByte(); // 14
-                        s.Walking.WaitCounter = reader.ReadByte(); // 15
+                        stateData.Walking.Direction1 = reader.ReadByte(); // 11
+                        stateData.Walking.Destination = reader.ReadWord(); // 12
+                        stateData.Walking.Direction = reader.ReadByte(); // 14
+                        stateData.Walking.WaitCounter = reader.ReadByte(); // 15
                         break;
                     }
                 case State.Transporting:
                 case State.Delivering:
                     {
-                        s.Walking.Resource = (Resource.Type)((reader.ReadByte()) - 1); // 11
-                        s.Walking.Destination = reader.ReadWord(); // 12
-                        s.Walking.Direction = reader.ReadByte(); // 14
-                        s.Walking.WaitCounter = reader.ReadByte(); // 15
+                        stateData.Walking.Resource = (Resource.Type)((reader.ReadByte()) - 1); // 11
+                        stateData.Walking.Destination = reader.ReadWord(); // 12
+                        stateData.Walking.Direction = reader.ReadByte(); // 14
+                        stateData.Walking.WaitCounter = reader.ReadByte(); // 15
                         break;
                     }
                 case State.EnteringBuilding:
-                    s.EnteringBuilding.FieldB = reader.ReadByte(); // 11
-                    s.EnteringBuilding.SlopeLength = reader.ReadWord(); // 12
+                    stateData.EnteringBuilding.FieldB = reader.ReadByte(); // 11
+                    stateData.EnteringBuilding.SlopeLength = reader.ReadWord(); // 12
                     break;
 
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
-                    s.LeavingBuilding.FieldB = reader.ReadByte(); // 11
-                    s.LeavingBuilding.Destination = reader.ReadByte(); // 12
-                    s.LeavingBuilding.Destination2 = reader.ReadByte(); // 13
-                    s.LeavingBuilding.Direction = reader.ReadByte(); // 14
-                    s.LeavingBuilding.NextState = (State)reader.ReadByte(); // 15
+                    stateData.LeavingBuilding.FieldB = reader.ReadByte(); // 11
+                    stateData.LeavingBuilding.Destination = reader.ReadByte(); // 12
+                    stateData.LeavingBuilding.Destination2 = reader.ReadByte(); // 13
+                    stateData.LeavingBuilding.Direction = reader.ReadByte(); // 14
+                    stateData.LeavingBuilding.NextState = (State)reader.ReadByte(); // 15
                     break;
 
                 case State.ReadyToEnter:
-                    s.ReadyToEnter.FieldB = reader.ReadByte(); // 11
+                    stateData.ReadyToEnter.FieldB = reader.ReadByte(); // 11
                     break;
 
                 case State.Digging:
-                    s.Digging.HeightIndex = reader.ReadByte(); // 11
-                    s.Digging.TargetHeight = reader.ReadByte(); // 12
-                    s.Digging.DigPosition = reader.ReadByte(); // 13
-                    s.Digging.Substate = reader.ReadByte(); // 14
+                    stateData.Digging.HeightIndex = reader.ReadByte(); // 11
+                    stateData.Digging.TargetHeight = reader.ReadByte(); // 12
+                    stateData.Digging.DigPosition = reader.ReadByte(); // 13
+                    stateData.Digging.Substate = reader.ReadByte(); // 14
                     break;
 
                 case State.Building:
-                    s.Building.Mode = reader.ReadByte(); // 11
-                    s.Building.Index = reader.ReadWord(); // 12
-                    s.Building.MaterialStep = reader.ReadByte(); // 14
-                    s.Building.Counter = reader.ReadByte(); // 15
+                    stateData.Building.Mode = reader.ReadByte(); // 11
+                    stateData.Building.Index = reader.ReadWord(); // 12
+                    stateData.Building.MaterialStep = reader.ReadByte(); // 14
+                    stateData.Building.Counter = reader.ReadByte(); // 15
                     break;
 
                 case State.BuildingCastle:
                     reader.Skip(1); // 11
-                    s.BuildingCastle.InventoryIndex = reader.ReadWord(); // 12
+                    stateData.BuildingCastle.InventoryIndex = reader.ReadWord(); // 12
                     break;
 
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    s.MoveResourceOut.Resource = reader.ReadByte(); // 11
-                    s.MoveResourceOut.ResourceDestination = reader.ReadWord(); // 12
+                    stateData.MoveResourceOut.Resource = reader.ReadByte(); // 11
+                    stateData.MoveResourceOut.ResourceDestination = reader.ReadWord(); // 12
                     reader.Skip(1); // 14
-                    s.MoveResourceOut.NextState = (State)reader.ReadByte(); // 15
+                    stateData.MoveResourceOut.NextState = (State)reader.ReadByte(); // 15
                     break;
 
                 case State.ReadyToLeaveInventory:
-                    s.ReadyToLeaveInventory.Mode = reader.ReadByte(); // 11
-                    s.ReadyToLeaveInventory.Destination = reader.ReadWord(); // 12
-                    s.ReadyToLeaveInventory.InventoryIndex = reader.ReadWord(); // 14
+                    stateData.ReadyToLeaveInventory.Mode = reader.ReadByte(); // 11
+                    stateData.ReadyToLeaveInventory.Destination = reader.ReadWord(); // 12
+                    stateData.ReadyToLeaveInventory.InventoryIndex = reader.ReadWord(); // 14
                     break;
 
                 case State.FreeWalking:
@@ -3445,60 +3763,60 @@ namespace Freeserf
                 case State.Fishing:
                 case State.Farming:
                 case State.SamplingGeoSpot:
-                    s.FreeWalking.DistanceX = reader.ReadByte(); // 11
-                    s.FreeWalking.DistanceY = reader.ReadByte(); // 12
-                    s.FreeWalking.NegDistance1 = reader.ReadByte(); // 13
-                    s.FreeWalking.NegDistance2 = reader.ReadByte(); // 14
-                    s.FreeWalking.Flags = reader.ReadByte(); // 15
+                    stateData.FreeWalking.DistanceX = reader.ReadByte(); // 11
+                    stateData.FreeWalking.DistanceY = reader.ReadByte(); // 12
+                    stateData.FreeWalking.NegDistance1 = reader.ReadByte(); // 13
+                    stateData.FreeWalking.NegDistance2 = reader.ReadByte(); // 14
+                    stateData.FreeWalking.Flags = reader.ReadByte(); // 15
                     break;
 
                 case State.Sawing:
-                    s.Sawing.Mode = reader.ReadByte(); // 11
+                    stateData.Sawing.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.Lost:
-                    s.Lost.FieldB = reader.ReadByte(); // 11
+                    stateData.Lost.FieldB = reader.ReadByte(); // 11
                     break;
 
                 case State.Mining:
-                    s.Mining.Substate = reader.ReadByte(); // 11
+                    stateData.Mining.Substate = reader.ReadByte(); // 11
                     reader.Skip(1); // 12
-                    s.Mining.Resource = reader.ReadByte(); // 13
-                    s.Mining.Deposit = (Map.Minerals)reader.ReadByte(); // 14
+                    stateData.Mining.Resource = reader.ReadByte(); // 13
+                    stateData.Mining.Deposit = (Map.Minerals)reader.ReadByte(); // 14
                     break;
 
                 case State.Smelting:
-                    s.Smelting.Mode = reader.ReadByte(); // 11
-                    s.Smelting.Counter = reader.ReadByte(); // 12
-                    s.Smelting.Type = reader.ReadByte(); // 13
+                    stateData.Smelting.Mode = reader.ReadByte(); // 11
+                    stateData.Smelting.Counter = reader.ReadByte(); // 12
+                    stateData.Smelting.Type = reader.ReadByte(); // 13
                     break;
 
                 case State.Milling:
-                    s.Milling.Mode = reader.ReadByte(); // 11
+                    stateData.Milling.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.Baking:
-                    s.Baking.Mode = reader.ReadByte(); // 11
+                    stateData.Baking.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.PigFarming:
-                    s.PigFarming.Mode = reader.ReadByte(); // 11
+                    stateData.PigFarming.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.Butchering:
-                    s.Butchering.Mode = reader.ReadByte(); // 11
+                    stateData.Butchering.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.MakingWeapon:
-                    s.MakingWeapon.Mode = reader.ReadByte(); // 11
+                    stateData.MakingWeapon.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.MakingTool:
-                    s.MakingTool.Mode = reader.ReadByte(); // 11
+                    stateData.MakingTool.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.BuildingBoat:
-                    s.BuildingBoat.Mode = reader.ReadByte(); // 11
+                    stateData.BuildingBoat.Mode = reader.ReadByte(); // 11
                     break;
 
                 case State.KnightDefendingVictoryFree:
@@ -3513,11 +3831,11 @@ namespace Freeserf
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
                     {
-                        s.IdleOnPath.ReverseDirection = (Direction)reader.ReadByte(); // 11
+                        stateData.IdleOnPath.ReverseDirection = (Direction)reader.ReadByte(); // 11
                         var v16 = reader.ReadWord(); // 12
                         Game.CreateFlag(v16 / 70);
-                        s.IdleOnPath.FlagIndex = Game.CreateFlag(v16 / 70).Index;
-                        s.IdleOnPath.FieldE = reader.ReadByte(); // 14
+                        stateData.IdleOnPath.FlagIndex = Game.CreateFlag(v16 / 70).Index;
+                        stateData.IdleOnPath.FieldE = reader.ReadByte(); // 14
                         break;
                     }
                 case State.DefendingHut:
@@ -3525,8 +3843,10 @@ namespace Freeserf
                 case State.DefendingFortress:
                 case State.DefendingCastle:
                     reader.Skip(3); // 11
-                    s.Defending.NextKnight = reader.ReadWord(); // 14
+                    stateData.Defending.NextKnight = reader.ReadWord(); // 14
                     break;
+
+                // TODO: what's about the other fighting stats??
 
                 default:
                     break;
@@ -3563,67 +3883,67 @@ namespace Freeserf
             switch (SerfState)
             {
                 case State.IdleInStock:
-                    s.IdleInStock.InventoryIndex = reader.Value("state.inventory").ReadUInt();
+                    stateData.IdleInStock.InventoryIndex = reader.Value("state.inventory").ReadUInt();
                     break;
 
                 case State.Walking:
                 case State.Transporting:
                 case State.Delivering:
-                    s.Walking.Resource = (Resource.Type)reader.Value("state.res").ReadInt();
-                    s.Walking.Destination = reader.Value("state.dest").ReadUInt();
-                    s.Walking.Direction = reader.Value("state.dir").ReadInt();
-                    s.Walking.Direction1 = reader.Value("state.dir1").ReadInt();
-                    s.Walking.WaitCounter = reader.Value("state.wait_counter").ReadInt();
+                    stateData.Walking.Resource = (Resource.Type)reader.Value("state.res").ReadInt();
+                    stateData.Walking.Destination = reader.Value("state.dest").ReadUInt();
+                    stateData.Walking.Direction = reader.Value("state.dir").ReadInt();
+                    stateData.Walking.Direction1 = reader.Value("state.dir1").ReadInt();
+                    stateData.Walking.WaitCounter = reader.Value("state.wait_counter").ReadInt();
                     break;
 
                 case State.EnteringBuilding:
-                    s.EnteringBuilding.FieldB = reader.Value("state.field_b").ReadInt();
-                    s.EnteringBuilding.SlopeLength = reader.Value("state.slope_len").ReadInt();
+                    stateData.EnteringBuilding.FieldB = reader.Value("state.field_b").ReadInt();
+                    stateData.EnteringBuilding.SlopeLength = reader.Value("state.slope_len").ReadInt();
                     break;
 
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
                 case State.KnightLeaveForFight:
-                    s.LeavingBuilding.FieldB = reader.Value("state.field_b").ReadInt();
-                    s.LeavingBuilding.Destination = reader.Value("state.dest").ReadUInt();
-                    s.LeavingBuilding.Destination2 = reader.Value("state.dest2").ReadInt();
-                    s.LeavingBuilding.Direction = reader.Value("state.dir").ReadInt();
-                    s.LeavingBuilding.NextState = (State)reader.Value("state.next_state").ReadInt();
+                    stateData.LeavingBuilding.FieldB = reader.Value("state.field_b").ReadInt();
+                    stateData.LeavingBuilding.Destination = reader.Value("state.dest").ReadUInt();
+                    stateData.LeavingBuilding.Destination2 = reader.Value("state.dest2").ReadInt();
+                    stateData.LeavingBuilding.Direction = reader.Value("state.dir").ReadInt();
+                    stateData.LeavingBuilding.NextState = (State)reader.Value("state.next_state").ReadInt();
                     break;
 
                 case State.ReadyToEnter:
-                    s.ReadyToEnter.FieldB = reader.Value("state.field_b").ReadInt();
+                    stateData.ReadyToEnter.FieldB = reader.Value("state.field_b").ReadInt();
                     break;
 
                 case State.Digging:
-                    s.Digging.HeightIndex = reader.Value("state.h_index").ReadInt();
-                    s.Digging.TargetHeight = reader.Value("state.target_h").ReadUInt();
-                    s.Digging.DigPosition = reader.Value("state.dig_pos").ReadInt();
-                    s.Digging.Substate = reader.Value("state.substate").ReadInt();
+                    stateData.Digging.HeightIndex = reader.Value("state.h_index").ReadInt();
+                    stateData.Digging.TargetHeight = reader.Value("state.target_h").ReadUInt();
+                    stateData.Digging.DigPosition = reader.Value("state.dig_pos").ReadInt();
+                    stateData.Digging.Substate = reader.Value("state.substate").ReadInt();
                     break;
 
                 case State.Building:
-                    s.Building.Mode = reader.Value("state.mode").ReadInt();
-                    s.Building.Index = reader.Value("state.bld_index").ReadUInt();
-                    s.Building.MaterialStep = reader.Value("state.material_step").ReadUInt();
-                    s.Building.Counter = reader.Value("state.counter").ReadUInt();
+                    stateData.Building.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.Building.Index = reader.Value("state.bld_index").ReadUInt();
+                    stateData.Building.MaterialStep = reader.Value("state.material_step").ReadUInt();
+                    stateData.Building.Counter = reader.Value("state.counter").ReadUInt();
                     break;
 
                 case State.BuildingCastle:
-                    s.BuildingCastle.InventoryIndex = reader.Value("state.inv_index").ReadUInt();
+                    stateData.BuildingCastle.InventoryIndex = reader.Value("state.inv_index").ReadUInt();
                     break;
 
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    s.MoveResourceOut.Resource = reader.Value("state.res").ReadUInt();
-                    s.MoveResourceOut.ResourceDestination = reader.Value("state.res_dest").ReadUInt();
-                    s.MoveResourceOut.NextState = (State)reader.Value("state.next_state").ReadInt();
+                    stateData.MoveResourceOut.Resource = reader.Value("state.res").ReadUInt();
+                    stateData.MoveResourceOut.ResourceDestination = reader.Value("state.res_dest").ReadUInt();
+                    stateData.MoveResourceOut.NextState = (State)reader.Value("state.next_state").ReadInt();
                     break;
 
                 case State.ReadyToLeaveInventory:
-                    s.ReadyToLeaveInventory.Mode = reader.Value("state.mode").ReadInt();
-                    s.ReadyToLeaveInventory.Destination = reader.Value("state.dest").ReadUInt();
-                    s.ReadyToLeaveInventory.InventoryIndex = reader.Value("state.inv_index").ReadUInt();
+                    stateData.ReadyToLeaveInventory.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.ReadyToLeaveInventory.Destination = reader.Value("state.dest").ReadUInt();
+                    stateData.ReadyToLeaveInventory.InventoryIndex = reader.Value("state.inv_index").ReadUInt();
                     break;
 
                 case State.FreeWalking:
@@ -3637,127 +3957,128 @@ namespace Freeserf
                 case State.KnightFreeWalking:
                 case State.KnightAttackingFree:
                 case State.KnightAttackingFreeWait:
-                    s.FreeWalking.DistanceX = reader.Value("state.dist1").ReadInt();
-                    s.FreeWalking.DistanceY = reader.Value("state.dist2").ReadInt();
-                    s.FreeWalking.NegDistance1 = reader.Value("state.neg_dist").ReadInt();
-                    s.FreeWalking.NegDistance2 = reader.Value("state.neg_dist2").ReadInt();
-                    s.FreeWalking.Flags = reader.Value("state.flags").ReadInt();
+                    stateData.FreeWalking.DistanceX = reader.Value("state.dist1").ReadInt();
+                    stateData.FreeWalking.DistanceY = reader.Value("state.dist2").ReadInt();
+                    stateData.FreeWalking.NegDistance1 = reader.Value("state.neg_dist").ReadInt();
+                    stateData.FreeWalking.NegDistance2 = reader.Value("state.neg_dist2").ReadInt();
+                    stateData.FreeWalking.Flags = reader.Value("state.flags").ReadInt();
                     break;
 
                 case State.Sawing:
-                    s.Sawing.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.Sawing.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.Lost:
-                    s.Lost.FieldB = reader.Value("state.field_b").ReadInt();
+                    stateData.Lost.FieldB = reader.Value("state.field_b").ReadInt();
                     break;
 
                 case State.Mining:
-                    s.Mining.Substate = reader.Value("state.substate").ReadUInt();
-                    s.Mining.Resource = reader.Value("state.res").ReadUInt();
-                    s.Mining.Deposit = (Map.Minerals)reader.Value("state.deposit").ReadInt();
+                    stateData.Mining.Substate = reader.Value("state.substate").ReadUInt();
+                    stateData.Mining.Resource = reader.Value("state.res").ReadUInt();
+                    stateData.Mining.Deposit = (Map.Minerals)reader.Value("state.deposit").ReadInt();
                     break;
 
                 case State.Smelting:
-                    s.Smelting.Mode = reader.Value("state.mode").ReadInt();
-                    s.Smelting.Counter = reader.Value("state.counter").ReadInt();
-                    s.Smelting.Type = reader.Value("state.type").ReadInt();
+                    stateData.Smelting.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.Smelting.Counter = reader.Value("state.counter").ReadInt();
+                    stateData.Smelting.Type = reader.Value("state.type").ReadInt();
                     break;
 
                 case State.Milling:
-                    s.Milling.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.Milling.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.Baking:
-                    s.Baking.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.Baking.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.PigFarming:
-                    s.PigFarming.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.PigFarming.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.Butchering:
-                    s.Butchering.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.Butchering.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.MakingWeapon:
-                    s.MakingWeapon.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.MakingWeapon.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.MakingTool:
-                    s.MakingTool.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.MakingTool.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.BuildingBoat:
-                    s.BuildingBoat.Mode = reader.Value("state.mode").ReadInt();
+                    stateData.BuildingBoat.Mode = reader.Value("state.mode").ReadInt();
                     break;
 
                 case State.KnightEngagingBuilding:
                 case State.KnightPrepareAttacking:
-                case State.KnightPrepareDefendingFreeWait:
                 case State.KnightAttackingDefeatFree:
                 case State.KnightAttacking:
                 case State.KnightAttackingVictory:
                 case State.KnightEngageAttackingFree:
                 case State.KnightEngageAttackingFreeJoin:
                     if (reader.HasValue("state.move"))
-                        s.Attacking.Move = reader.Value("state.move").ReadInt();
+                        stateData.Attacking.Move = reader.Value("state.move").ReadInt();
                     else
-                        s.Attacking.Move = reader.Value("state.field_b").ReadInt();
+                        stateData.Attacking.Move = reader.Value("state.field_b").ReadInt();
                     if (reader.HasValue("state.attacker_won"))
-                        s.Attacking.AttackerWon = reader.Value("state.attacker_won").ReadInt();
+                        stateData.Attacking.AttackerWon = reader.Value("state.attacker_won").ReadInt();
                     else
-                        s.Attacking.AttackerWon = reader.Value("state.field_c").ReadInt();
-                    s.Attacking.FieldD = reader.Value("state.field_d").ReadInt();
-                    s.Attacking.DefenderIndex = reader.Value("state.def_index").ReadInt();
+                        stateData.Attacking.AttackerWon = reader.Value("state.field_c").ReadInt();
+                    stateData.Attacking.FieldD = reader.Value("state.field_d").ReadInt();
+                    stateData.Attacking.DefenderIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
                 case State.KnightAttackingVictoryFree:
                     if (reader.HasValue("state.move"))
-                        s.AttackingVictoryFree.Move = reader.Value("state.move").ReadInt();
+                        stateData.AttackingVictoryFree.Move = reader.Value("state.move").ReadInt();
                     else
-                        s.AttackingVictoryFree.Move = reader.Value("state.field_b").ReadInt();
+                        stateData.AttackingVictoryFree.Move = reader.Value("state.field_b").ReadInt();
                     if (reader.HasValue("state.dist_col"))
-                        s.AttackingVictoryFree.DistanceColumn = reader.Value("state.dist_col").ReadInt();
+                        stateData.AttackingVictoryFree.DistanceColumn = reader.Value("state.dist_col").ReadInt();
                     else
-                        s.AttackingVictoryFree.DistanceColumn = reader.Value("state.field_c").ReadInt();
+                        stateData.AttackingVictoryFree.DistanceColumn = reader.Value("state.field_c").ReadInt();
                     if (reader.HasValue("state.dist_row"))
-                        s.AttackingVictoryFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
+                        stateData.AttackingVictoryFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
                     else
-                        s.AttackingVictoryFree.DistanceRow = reader.Value("state.field_c").ReadInt();
-                    s.AttackingVictoryFree.DefenderIndex = reader.Value("state.def_index").ReadInt();
+                        stateData.AttackingVictoryFree.DistanceRow = reader.Value("state.field_c").ReadInt();
+                    stateData.AttackingVictoryFree.DefenderIndex = reader.Value("state.def_index").ReadInt();
                     break;
 
                 case State.KnightDefendingFree:
                 case State.KnightEngageDefendingFree:
-                    s.DefendingFree.DistanceColumn = reader.Value("state.dist_col").ReadInt();
-                    s.DefendingFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
-                    s.DefendingFree.FieldD = reader.Value("state.field_d").ReadInt();
-                    s.DefendingFree.OtherDistanceColumn = reader.Value("state.other_dist_col").ReadInt();
-                    s.DefendingFree.OtherDistanceRow = reader.Value("state.other_dist_row").ReadInt();
+                case State.KnightPrepareDefendingFree:
+                case State.KnightPrepareDefendingFreeWait:
+                    stateData.DefendingFree.DistanceColumn = reader.Value("state.dist_col").ReadInt();
+                    stateData.DefendingFree.DistanceRow = reader.Value("state.dist_row").ReadInt();
+                    stateData.DefendingFree.FieldD = reader.Value("state.field_d").ReadInt();
+                    stateData.DefendingFree.OtherDistanceColumn = reader.Value("state.other_dist_col").ReadInt();
+                    stateData.DefendingFree.OtherDistanceRow = reader.Value("state.other_dist_row").ReadInt();
                     break;
 
                 case State.KnightLeaveForWalkToFight:
-                    s.LeaveForWalkToFight.DistanceColumn = reader.Value("state.dist_col").ReadInt();
-                    s.LeaveForWalkToFight.DistanceRow = reader.Value("state.dist_row").ReadInt();
-                    s.LeaveForWalkToFight.FieldD = reader.Value("state.field_d").ReadInt();
-                    s.LeaveForWalkToFight.FieldE = reader.Value("state.field_e").ReadInt();
-                    s.LeaveForWalkToFight.NextState = (State)reader.Value("state.next_state").ReadInt();
+                    stateData.LeaveForWalkToFight.DistanceColumn = reader.Value("state.dist_col").ReadInt();
+                    stateData.LeaveForWalkToFight.DistanceRow = reader.Value("state.dist_row").ReadInt();
+                    stateData.LeaveForWalkToFight.FieldD = reader.Value("state.field_d").ReadInt();
+                    stateData.LeaveForWalkToFight.FieldE = reader.Value("state.field_e").ReadInt();
+                    stateData.LeaveForWalkToFight.NextState = (State)reader.Value("state.next_state").ReadInt();
                     break;
 
                 case State.IdleOnPath:
                 case State.WaitIdleOnPath:
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
-                    s.IdleOnPath.ReverseDirection = (Direction)reader.Value("state.rev_dir").ReadInt();
-                    s.IdleOnPath.FlagIndex = reader.Value("state.flag").ReadUInt();
-                    s.IdleOnPath.FieldE = reader.Value("state.field_e").ReadInt();
+                    stateData.IdleOnPath.ReverseDirection = (Direction)reader.Value("state.rev_dir").ReadInt();
+                    stateData.IdleOnPath.FlagIndex = reader.Value("state.flag").ReadUInt();
+                    stateData.IdleOnPath.FieldE = reader.Value("state.field_e").ReadInt();
                     break;
                 case State.DefendingHut:
                 case State.DefendingTower:
                 case State.DefendingFortress:
                 case State.DefendingCastle:
-                    s.Defending.NextKnight = reader.Value("state.next_knight").ReadUInt();
+                    stateData.Defending.NextKnight = reader.Value("state.next_knight").ReadUInt();
                     break;
 
                 default:
@@ -3779,67 +4100,67 @@ namespace Freeserf
             switch (SerfState)
             {
                 case State.IdleInStock:
-                    writer.Value("state.inventory").Write(s.IdleInStock.InventoryIndex);
+                    writer.Value("state.inventory").Write(stateData.IdleInStock.InventoryIndex);
                     break;
 
                 case State.Walking:
                 case State.Transporting:
                 case State.Delivering:
-                    writer.Value("state.res").Write((int)s.Walking.Resource);
-                    writer.Value("state.dest").Write(s.Walking.Destination);
-                    writer.Value("state.dir").Write(s.Walking.Direction);
-                    writer.Value("state.dir1").Write(s.Walking.Direction1);
-                    writer.Value("state.wait_counter").Write(s.Walking.WaitCounter);
+                    writer.Value("state.res").Write((int)stateData.Walking.Resource);
+                    writer.Value("state.dest").Write(stateData.Walking.Destination);
+                    writer.Value("state.dir").Write(stateData.Walking.Direction);
+                    writer.Value("state.dir1").Write(stateData.Walking.Direction1);
+                    writer.Value("state.wait_counter").Write(stateData.Walking.WaitCounter);
                     break;
 
                 case State.EnteringBuilding:
-                    writer.Value("state.field_b").Write(s.EnteringBuilding.FieldB);
-                    writer.Value("state.slope_len").Write(s.EnteringBuilding.SlopeLength);
+                    writer.Value("state.field_b").Write(stateData.EnteringBuilding.FieldB);
+                    writer.Value("state.slope_len").Write(stateData.EnteringBuilding.SlopeLength);
                     break;
 
                 case State.LeavingBuilding:
                 case State.ReadyToLeave:
                 case State.KnightLeaveForFight:
-                    writer.Value("state.field_b").Write(s.LeavingBuilding.FieldB);
-                    writer.Value("state.dest").Write(s.LeavingBuilding.Destination);
-                    writer.Value("state.dest2").Write(s.LeavingBuilding.Destination2);
-                    writer.Value("state.dir").Write(s.LeavingBuilding.Direction);
-                    writer.Value("state.next_state").Write((int)s.LeavingBuilding.NextState);
+                    writer.Value("state.field_b").Write(stateData.LeavingBuilding.FieldB);
+                    writer.Value("state.dest").Write(stateData.LeavingBuilding.Destination);
+                    writer.Value("state.dest2").Write(stateData.LeavingBuilding.Destination2);
+                    writer.Value("state.dir").Write(stateData.LeavingBuilding.Direction);
+                    writer.Value("state.next_state").Write((int)stateData.LeavingBuilding.NextState);
                     break;
 
                 case State.ReadyToEnter:
-                    writer.Value("state.field_b").Write(s.ReadyToEnter.FieldB);
+                    writer.Value("state.field_b").Write(stateData.ReadyToEnter.FieldB);
                     break;
 
                 case State.Digging:
-                    writer.Value("state.h_index").Write(s.Digging.HeightIndex);
-                    writer.Value("state.target_h").Write(s.Digging.TargetHeight);
-                    writer.Value("state.dig_pos").Write(s.Digging.DigPosition);
-                    writer.Value("state.substate").Write(s.Digging.Substate);
+                    writer.Value("state.h_index").Write(stateData.Digging.HeightIndex);
+                    writer.Value("state.target_h").Write(stateData.Digging.TargetHeight);
+                    writer.Value("state.dig_pos").Write(stateData.Digging.DigPosition);
+                    writer.Value("state.substate").Write(stateData.Digging.Substate);
                     break;
 
                 case State.Building:
-                    writer.Value("state.mode").Write(s.Building.Mode);
-                    writer.Value("state.bld_index").Write(s.Building.Index);
-                    writer.Value("state.material_step").Write(s.Building.MaterialStep);
-                    writer.Value("state.counter").Write(s.Building.Counter);
+                    writer.Value("state.mode").Write(stateData.Building.Mode);
+                    writer.Value("state.bld_index").Write(stateData.Building.Index);
+                    writer.Value("state.material_step").Write(stateData.Building.MaterialStep);
+                    writer.Value("state.counter").Write(stateData.Building.Counter);
                     break;
 
                 case State.BuildingCastle:
-                    writer.Value("state.inv_index").Write(s.BuildingCastle.InventoryIndex);
+                    writer.Value("state.inv_index").Write(stateData.BuildingCastle.InventoryIndex);
                     break;
 
                 case State.MoveResourceOut:
                 case State.DropResourceOut:
-                    writer.Value("state.res").Write(s.MoveResourceOut.Resource);
-                    writer.Value("state.res_dest").Write(s.MoveResourceOut.ResourceDestination);
-                    writer.Value("state.next_state").Write((int)s.MoveResourceOut.NextState);
+                    writer.Value("state.res").Write(stateData.MoveResourceOut.Resource);
+                    writer.Value("state.res_dest").Write(stateData.MoveResourceOut.ResourceDestination);
+                    writer.Value("state.next_state").Write((int)stateData.MoveResourceOut.NextState);
                     break;
 
                 case State.ReadyToLeaveInventory:
-                    writer.Value("state.mode").Write(s.ReadyToLeaveInventory.Mode);
-                    writer.Value("state.dest").Write(s.ReadyToLeaveInventory.Destination);
-                    writer.Value("state.inv_index").Write(s.ReadyToLeaveInventory.InventoryIndex);
+                    writer.Value("state.mode").Write(stateData.ReadyToLeaveInventory.Mode);
+                    writer.Value("state.dest").Write(stateData.ReadyToLeaveInventory.Destination);
+                    writer.Value("state.inv_index").Write(stateData.ReadyToLeaveInventory.InventoryIndex);
                     break;
 
                 case State.FreeWalking:
@@ -3853,113 +4174,114 @@ namespace Freeserf
                 case State.KnightFreeWalking:
                 case State.KnightAttackingFree:
                 case State.KnightAttackingFreeWait:
-                    writer.Value("state.dist1").Write(s.FreeWalking.DistanceX);
-                    writer.Value("state.dist2").Write(s.FreeWalking.DistanceY);
-                    writer.Value("state.neg_dist").Write(s.FreeWalking.NegDistance1);
-                    writer.Value("state.neg_dist2").Write(s.FreeWalking.NegDistance2);
-                    writer.Value("state.flags").Write(s.FreeWalking.Flags);
+                    writer.Value("state.dist1").Write(stateData.FreeWalking.DistanceX);
+                    writer.Value("state.dist2").Write(stateData.FreeWalking.DistanceY);
+                    writer.Value("state.neg_dist").Write(stateData.FreeWalking.NegDistance1);
+                    writer.Value("state.neg_dist2").Write(stateData.FreeWalking.NegDistance2);
+                    writer.Value("state.flags").Write(stateData.FreeWalking.Flags);
                     break;
 
                 case State.Sawing:
-                    writer.Value("state.mode").Write(s.Sawing.Mode);
+                    writer.Value("state.mode").Write(stateData.Sawing.Mode);
                     break;
 
                 case State.Lost:
-                    writer.Value("state.field_b").Write(s.Lost.FieldB);
+                    writer.Value("state.field_b").Write(stateData.Lost.FieldB);
                     break;
 
                 case State.Mining:
-                    writer.Value("state.substate").Write(s.Mining.Substate);
-                    writer.Value("state.res").Write(s.Mining.Resource);
-                    writer.Value("state.deposit").Write((int)s.Mining.Deposit);
+                    writer.Value("state.substate").Write(stateData.Mining.Substate);
+                    writer.Value("state.res").Write(stateData.Mining.Resource);
+                    writer.Value("state.deposit").Write((int)stateData.Mining.Deposit);
                     break;
 
                 case State.Smelting:
-                    writer.Value("state.mode").Write(s.Smelting.Mode);
-                    writer.Value("state.counter").Write(s.Smelting.Counter);
-                    writer.Value("state.type").Write(s.Smelting.Type);
+                    writer.Value("state.mode").Write(stateData.Smelting.Mode);
+                    writer.Value("state.counter").Write(stateData.Smelting.Counter);
+                    writer.Value("state.type").Write(stateData.Smelting.Type);
                     break;
 
                 case State.Milling:
-                    writer.Value("state.mode").Write(s.Milling.Mode);
+                    writer.Value("state.mode").Write(stateData.Milling.Mode);
                     break;
 
                 case State.Baking:
-                    writer.Value("state.mode").Write(s.Baking.Mode);
+                    writer.Value("state.mode").Write(stateData.Baking.Mode);
                     break;
 
                 case State.PigFarming:
-                    writer.Value("state.mode").Write(s.PigFarming.Mode);
+                    writer.Value("state.mode").Write(stateData.PigFarming.Mode);
                     break;
 
                 case State.Butchering:
-                    writer.Value("state.mode").Write(s.Butchering.Mode);
+                    writer.Value("state.mode").Write(stateData.Butchering.Mode);
                     break;
 
                 case State.MakingWeapon:
-                    writer.Value("state.mode").Write(s.MakingWeapon.Mode);
+                    writer.Value("state.mode").Write(stateData.MakingWeapon.Mode);
                     break;
 
                 case State.MakingTool:
-                    writer.Value("state.mode").Write(s.MakingTool.Mode);
+                    writer.Value("state.mode").Write(stateData.MakingTool.Mode);
                     break;
 
                 case State.BuildingBoat:
-                    writer.Value("state.mode").Write(s.BuildingBoat.Mode);
+                    writer.Value("state.mode").Write(stateData.BuildingBoat.Mode);
                     break;
 
                 case State.KnightEngagingBuilding:
                 case State.KnightPrepareAttacking:
-                case State.KnightPrepareDefendingFreeWait:
                 case State.KnightAttackingDefeatFree:
                 case State.KnightAttacking:
                 case State.KnightAttackingVictory:
                 case State.KnightEngageAttackingFree:
-                case State.KnightEngageAttackingFreeJoin:
-                    writer.Value("state.move").Write(s.Attacking.Move);
-                    writer.Value("state.field_c").Write(s.Attacking.AttackerWon);
-                    writer.Value("state.field_d").Write(s.Attacking.FieldD);
-                    writer.Value("state.def_index").Write(s.Attacking.DefenderIndex);
+                case State.KnightEngageAttackingFreeJoin:                
+                    writer.Value("state.move").Write(stateData.Attacking.Move);
+                    writer.Value("state.field_c").Write(stateData.Attacking.AttackerWon);
+                    writer.Value("state.field_d").Write(stateData.Attacking.FieldD);
+                    writer.Value("state.def_index").Write(stateData.Attacking.DefenderIndex);
                     break;
 
                 case State.KnightAttackingVictoryFree:
-                    writer.Value("state.move").Write(s.AttackingVictoryFree.Move);
-                    writer.Value("state.dist_col").Write(s.AttackingVictoryFree.DistanceColumn);
-                    writer.Value("state.dist_row").Write(s.AttackingVictoryFree.DistanceRow);
-                    writer.Value("state.def_index").Write(s.AttackingVictoryFree.DefenderIndex);
+                    writer.Value("state.move").Write(stateData.AttackingVictoryFree.Move);
+                    writer.Value("state.dist_col").Write(stateData.AttackingVictoryFree.DistanceColumn);
+                    writer.Value("state.dist_row").Write(stateData.AttackingVictoryFree.DistanceRow);
+                    writer.Value("state.def_index").Write(stateData.AttackingVictoryFree.DefenderIndex);
                     break;
 
                 case State.KnightDefendingFree:
                 case State.KnightEngageDefendingFree:
-                    writer.Value("state.dist_col").Write(s.DefendingFree.DistanceColumn);
-                    writer.Value("state.dist_row").Write(s.DefendingFree.DistanceRow);
-                    writer.Value("state.field_d").Write(s.DefendingFree.FieldD);
-                    writer.Value("state.other_dist_col").Write(s.DefendingFree.OtherDistanceColumn);
-                    writer.Value("state.other_dist_row").Write(s.DefendingFree.OtherDistanceRow);
+                case State.KnightPrepareDefendingFree:
+                case State.KnightPrepareDefendingFreeWait:
+                    writer.Value("state.dist_col").Write(stateData.DefendingFree.DistanceColumn);
+                    writer.Value("state.dist_row").Write(stateData.DefendingFree.DistanceRow);
+                    writer.Value("state.field_d").Write(stateData.DefendingFree.FieldD);
+                    writer.Value("state.other_dist_col").Write(stateData.DefendingFree.OtherDistanceColumn);
+                    writer.Value("state.other_dist_row").Write(stateData.DefendingFree.OtherDistanceRow);
                     break;
 
                 case State.KnightLeaveForWalkToFight:
-                    writer.Value("state.dist_col").Write(s.LeaveForWalkToFight.DistanceColumn);
-                    writer.Value("state.dist_row").Write(s.LeaveForWalkToFight.DistanceRow);
-                    writer.Value("state.field_d").Write(s.LeaveForWalkToFight.FieldD);
-                    writer.Value("state.field_e").Write(s.LeaveForWalkToFight.FieldE);
-                    writer.Value("state.next_state").Write((int)s.LeaveForWalkToFight.NextState);
+                    writer.Value("state.dist_col").Write(stateData.LeaveForWalkToFight.DistanceColumn);
+                    writer.Value("state.dist_row").Write(stateData.LeaveForWalkToFight.DistanceRow);
+                    writer.Value("state.field_d").Write(stateData.LeaveForWalkToFight.FieldD);
+                    writer.Value("state.field_e").Write(stateData.LeaveForWalkToFight.FieldE);
+                    writer.Value("state.next_state").Write((int)stateData.LeaveForWalkToFight.NextState);
                     break;
 
                 case State.IdleOnPath:
                 case State.WaitIdleOnPath:
                 case State.WakeAtFlag:
                 case State.WakeOnPath:
-                    writer.Value("state.rev_dir").Write((int)s.IdleOnPath.ReverseDirection);
-                    writer.Value("state.flag").Write(s.IdleOnPath.FlagIndex);
-                    writer.Value("state.field_e").Write(s.IdleOnPath.FieldE);
+                    writer.Value("state.rev_dir").Write((int)stateData.IdleOnPath.ReverseDirection);
+                    writer.Value("state.flag").Write(stateData.IdleOnPath.FlagIndex);
+                    writer.Value("state.field_e").Write(stateData.IdleOnPath.FieldE);
                     break;
 
                 case State.DefendingHut:
                 case State.DefendingTower:
                 case State.DefendingFortress:
                 case State.DefendingCastle:
-                    writer.Value("state.next_knight").Write(s.Defending.NextKnight);
+                    writer.Value("state.next_knight").Write(stateData.Defending.NextKnight);
                     break;
 
                 default: break;
@@ -3977,9 +4299,9 @@ namespace Freeserf
         {
             if ((SerfState == State.Transporting || SerfState == State.Walking ||
                  SerfState == State.Delivering) &&
-                 s.Walking.Direction < 0)
+                 stateData.Walking.Direction < 0)
             {
-                direction = (Direction)(s.Walking.Direction + 6);
+                direction = (Direction)(stateData.Walking.Direction + 6);
                 return true;
             }
             else if ((SerfState == State.FreeWalking ||
@@ -3987,8 +4309,8 @@ namespace Freeserf
                       SerfState == State.StoneCutterFreeWalking) &&
                       Animation == 82)
             {
-                int distanceX = s.FreeWalking.DistanceX;
-                int distanceY = s.FreeWalking.DistanceY;
+                int distanceX = stateData.FreeWalking.DistanceX;
+                int distanceY = stateData.FreeWalking.DistanceY;
 
                 if (Math.Abs(distanceX) <= 1 && Math.Abs(distanceY) <= 1 &&
                     DirectionFromOffset[(distanceX + 1) + 3 * (distanceY + 1)] > Direction.None)
@@ -4002,9 +4324,9 @@ namespace Freeserf
 
                 return true;
             }
-            else if (SerfState == State.Digging && s.Digging.Substate < 0)
+            else if (SerfState == State.Digging && stateData.Digging.Substate < 0)
             {
-                int digPosition = s.Digging.DigPosition;
+                int digPosition = stateData.Digging.DigPosition;
 
                 direction = (digPosition == 0) ? Direction.Up : (Direction)(6 - digPosition);
 
@@ -4025,9 +4347,9 @@ namespace Freeserf
         {
             if ((SerfState == State.Transporting || SerfState == State.Walking ||
                 SerfState == State.Delivering) &&
-                s.Walking.Direction < 0)
+                stateData.Walking.Direction < 0)
             {
-                s.Walking.Direction = (int)direction.Reverse();
+                stateData.Walking.Direction = (int)direction.Reverse();
                 return true;
             }
             else if ((SerfState == State.FreeWalking ||
@@ -4038,18 +4360,18 @@ namespace Freeserf
                 int dx = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
                 int dy = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-                s.FreeWalking.DistanceX -= dx;
-                s.FreeWalking.DistanceY -= dy;
+                stateData.FreeWalking.DistanceX -= dx;
+                stateData.FreeWalking.DistanceY -= dy;
 
-                if (s.FreeWalking.DistanceX == 0 && s.FreeWalking.DistanceY == 0)
+                if (stateData.FreeWalking.DistanceX == 0 && stateData.FreeWalking.DistanceY == 0)
                 {
                     // Arriving to destination 
-                    s.FreeWalking.Flags = Misc.Bit(3);
+                    stateData.FreeWalking.Flags = Misc.Bit(3);
                 }
 
                 return true;
             }
-            else if (SerfState == State.Digging && s.Digging.Substate < 0)
+            else if (SerfState == State.Digging && stateData.Digging.Substate < 0)
             {
                 return false;
             }
@@ -4078,7 +4400,7 @@ namespace Freeserf
                 // Change direction, not occupied. 
                 map.SetSerfIndex(Position, 0);
                 Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, false);
-                s.Walking.Direction = (int)direction.Reverse();
+                stateData.Walking.Direction = (int)direction.Reverse();
             }
             else
             {
@@ -4094,7 +4416,7 @@ namespace Freeserf
                     // Change direction, not occupied. 
                     map.SetSerfIndex(Position, 0);
                     Animation = GetWalkingAnimation((int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, false);
-                    s.Walking.Direction = (int)direction.Reverse();
+                    stateData.Walking.Direction = (int)direction.Reverse();
                 }
                 else if (otherSerf.IsWaiting(ref otherDirection) &&
                     (otherDirection == direction.Reverse() || otherDirection == Direction.None) &&
@@ -4109,20 +4431,20 @@ namespace Freeserf
 
                     Animation = GetWalkingAnimation(
                         (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position), direction, true);
-                    s.Walking.Direction = (int)direction.Reverse();
+                    stateData.Walking.Direction = (int)direction.Reverse();
                 }
                 else
                 {
                     // Wait for other serf 
                     Animation = 81 + (int)direction;
                     Counter = CounterFromAnimation[Animation];
-                    s.Walking.Direction = (int)direction - 6;
+                    stateData.Walking.Direction = (int)direction - 6;
                     return;
                 }
             }
 
             if (!altEnd)
-                s.Walking.WaitCounter = 0;
+                stateData.Walking.WaitCounter = 0;
 
             Position = newPosition;
             map.SetSerfIndex(Position, (int)Index);
@@ -4144,42 +4466,42 @@ namespace Freeserf
         // Precondition: serf state is in WALKING or TRANSPORTING state 
         void TransporterMoveToFlag(Flag flag)
         {
-            var direction = (Direction)s.Walking.Direction;
+            var direction = (Direction)stateData.Walking.Direction;
 
             if (flag.IsScheduled(direction))
             {
                 // Fetch resource from flag 
-                s.Walking.WaitCounter = 0;
+                stateData.Walking.WaitCounter = 0;
                 var resourceIndex = flag.ScheduledSlot(direction);
 
-                if (s.Walking.Resource == Resource.Type.None)
+                if (stateData.Walking.Resource == Resource.Type.None)
                 {
                     // Pick up resource.
-                    Resource.Type resource = s.Walking.Resource;
-                    MapPos destination = s.Walking.Destination;
+                    Resource.Type resource = stateData.Walking.Resource;
+                    MapPos destination = stateData.Walking.Destination;
 
                     if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
                     {
-                        s.Walking.Resource = resource;
-                        s.Walking.Destination = destination;
+                        stateData.Walking.Resource = resource;
+                        stateData.Walking.Destination = destination;
                     }
                     else
                     {
-                        s.Walking.Resource = Resource.Type.None;
-                        s.Walking.Destination = 0u;
+                        stateData.Walking.Resource = Resource.Type.None;
+                        stateData.Walking.Destination = 0u;
                     }
                 }
                 else
                 {
                     // Switch resources and destination.
-                    Resource.Type resource = s.Walking.Resource;
-                    MapPos destination = s.Walking.Destination;
+                    Resource.Type resource = stateData.Walking.Resource;
+                    MapPos destination = stateData.Walking.Destination;
 
                     if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
                     {
-                        flag.DropResource(s.Walking.Resource, s.Walking.Destination);
-                        s.Walking.Resource = resource;
-                        s.Walking.Destination = destination;
+                        flag.DropResource(stateData.Walking.Resource, stateData.Walking.Destination);
+                        stateData.Walking.Resource = resource;
+                        stateData.Walking.Destination = destination;
                     }
                 }
 
@@ -4187,12 +4509,12 @@ namespace Freeserf
                 var player = Game.GetPlayer(Player);
                 flag.PrioritizePickup(direction, player);
             }
-            else if (s.Walking.Resource != Resource.Type.None)
+            else if (stateData.Walking.Resource != Resource.Type.None)
             {
                 // Drop resource at flag 
-                if (flag.DropResource(s.Walking.Resource, s.Walking.Destination))
+                if (flag.DropResource(stateData.Walking.Resource, stateData.Walking.Destination))
                 {
-                    s.Walking.Resource = Resource.Type.None;
+                    stateData.Walking.Resource = Resource.Type.None;
                 }
             }
 
@@ -4249,8 +4571,8 @@ namespace Freeserf
                     slope = 1;
             }
 
-            s.EnteringBuilding.SlopeLength = (slope * Counter) >> 5;
-            s.EnteringBuilding.FieldB = fieldB;
+            stateData.EnteringBuilding.SlopeLength = (slope * Counter) >> 5;
+            stateData.EnteringBuilding.FieldB = fieldB;
         }
 
         /// <summary>
@@ -4291,7 +4613,7 @@ namespace Freeserf
             // TODO ?
             /*serf->s.idleInStock.FieldB = 0;
               serf->s.idleInStock.FieldC = 0;*/
-            s.IdleInStock.InventoryIndex = building.Inventory.Index;
+            stateData.IdleInStock.InventoryIndex = building.Inventory.Index;
         }
 
         bool DropResource(Resource.Type resourceType)
@@ -4323,9 +4645,9 @@ namespace Freeserf
                     map.GetOwner(Position) == Player)
                 {
                     SetState(State.Walking);
-                    s.Walking.Direction1 = -2;
-                    s.Walking.Destination = 0;
-                    s.Walking.Direction = 0;
+                    stateData.Walking.Direction1 = -2;
+                    stateData.Walking.Destination = 0;
+                    stateData.Walking.Direction = 0;
                     Counter = 0;
 
                     return;
@@ -4333,7 +4655,7 @@ namespace Freeserf
             }
 
             SetState(State.Lost);
-            s.Lost.FieldB = 0;
+            stateData.Lost.FieldB = 0;
             Counter = 0;
         }
 
@@ -4376,7 +4698,7 @@ namespace Freeserf
                 playerIndex = defender.Player;
                 value = defenderExpFactor;
                 knightType = defender.SerfType;
-                attacker.s.Attacking.AttackerWon = 1;
+                attacker.stateData.Attacking.AttackerWon = 1;
                 Log.Debug.Write(ErrorSystemType.Serf, $"Fight: {morale} vs {defenderMorale} ({result}). Attacker winning.");
             }
             else
@@ -4384,7 +4706,7 @@ namespace Freeserf
                 playerIndex = attacker.Player;
                 value = expFactor;
                 knightType = attacker.SerfType;
-                attacker.s.Attacking.AttackerWon = 0;
+                attacker.stateData.Attacking.AttackerWon = 0;
                 Log.Debug.Write(ErrorSystemType.Serf, $"Fight: {morale} vs {defenderMorale} ({result}). Defender winning.");
             }
 
@@ -4393,13 +4715,13 @@ namespace Freeserf
             // TODO: Commented the following lines as the serf type later is set to 'Dead' and so the serf count and military score would be decreased twice. Needs testing.
             //player.DecreaseMilitaryScore(value);
             //player.DecreaseSerfCount(knightType);
-            attacker.s.Attacking.Move = Game.RandomInt() & 0x70;
+            attacker.stateData.Attacking.Move = Game.RandomInt() & 0x70;
         }
 
         static bool HandleSerfWalkingStateSearchCallback(Flag flag, object data)
         {
             var serf = data as Serf;
-            var destination = flag.Game.GetFlag(serf.s.Walking.Destination);
+            var destination = flag.Game.GetFlag(serf.stateData.Walking.Destination);
 
             if (flag == destination)
             {
@@ -4413,7 +4735,7 @@ namespace Freeserf
 
         void HandleSerfIdleInStockState()
         {
-            var inventory = Game.GetInventory(s.IdleInStock.InventoryIndex);
+            var inventory = Game.GetInventory(stateData.IdleInStock.InventoryIndex);
 
             if (inventory == null)
             {
@@ -4449,8 +4771,8 @@ namespace Freeserf
                 inventory.CallOutSerf(this);
 
                 SetState(State.ReadyToLeaveInventory);
-                s.ReadyToLeaveInventory.Mode = -3;
-                s.ReadyToLeaveInventory.InventoryIndex = inventory.Index;
+                stateData.ReadyToLeaveInventory.Mode = -3;
+                stateData.ReadyToLeaveInventory.InventoryIndex = inventory.Index;
                 // TODO immediate switch to next state. 
             }
         }
@@ -4458,7 +4780,7 @@ namespace Freeserf
         void HandleSerfWalkingStateDestReached()
         {
             // Destination reached. 
-            if (s.Walking.Direction1 < 0)
+            if (stateData.Walking.Direction1 < 0)
             {
                 var map = Game.Map;
                 var building = Game.GetBuildingAtPosition(map.MoveUpLeft(Position));
@@ -4480,10 +4802,10 @@ namespace Freeserf
                 }
                 else
                 {
-                    EnterBuilding(s.Walking.Direction1, false);
+                    EnterBuilding(stateData.Walking.Direction1, false);
                 }
             }
-            else if (s.Walking.Direction1 == 6)
+            else if (stateData.Walking.Direction1 == 6)
             {
                 SetState(State.LookingForGeoSpot);
                 Counter = 0;
@@ -4497,7 +4819,7 @@ namespace Freeserf
                     throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Flag expected as destination of walking serf.");
                 }
 
-                var direction = (Direction)s.Walking.Direction1;
+                var direction = (Direction)stateData.Walking.Direction1;
                 var otherFlag = flag.GetOtherEndFlag(direction);
 
                 if (otherFlag == null)
@@ -4512,10 +4834,10 @@ namespace Freeserf
                 otherFlag.CompleteSerfRequest(otherDirection);
 
                 SetState(State.Transporting);
-                s.Walking.Resource = Resource.Type.None;
-                s.Walking.Direction = (int)direction;
-                s.Walking.Direction1 = 0;
-                s.Walking.WaitCounter = 0;
+                stateData.Walking.Resource = Resource.Type.None;
+                stateData.Walking.Direction = (int)direction;
+                stateData.Walking.Direction1 = 0;
+                stateData.Walking.WaitCounter = 0;
 
                 TransporterMoveToFlag(flag);
             }
@@ -4524,16 +4846,16 @@ namespace Freeserf
         void HandleSerfWalkingStateWaiting()
         {
             // Waiting for other serf. 
-            var direction = (Direction)(s.Walking.Direction + 6);
+            var direction = (Direction)(stateData.Walking.Direction + 6);
             var map = Game.Map;
 
             // Only check for loops once in a while. 
-            ++s.Walking.WaitCounter;
+            ++stateData.Walking.WaitCounter;
 
-            if ((!map.HasFlag(Position) && s.Walking.WaitCounter >= 10) ||
-                s.Walking.WaitCounter >= 50)
+            if ((!map.HasFlag(Position) && stateData.Walking.WaitCounter >= 10) ||
+                stateData.Walking.WaitCounter >= 50)
             {
-                s.Walking.WaitCounter = 0;
+                stateData.Walking.WaitCounter = 0;
                 var position = Position;
                 var loopSerfs = new List<Serf>() { this };
 
@@ -4579,19 +4901,19 @@ namespace Freeserf
                         break;
                     }
 
-                    if (otherSerf.s.Walking.Direction >= 0 ||
-                        (otherSerf.s.Walking.Direction + 6) == (int)direction.Reverse())
+                    if (otherSerf.stateData.Walking.Direction >= 0 ||
+                        (otherSerf.stateData.Walking.Direction + 6) == (int)direction.Reverse())
                     {
                         break;
                     }
 
-                    direction = (Direction)(otherSerf.s.Walking.Direction + 6);
+                    direction = (Direction)(otherSerf.stateData.Walking.Direction + 6);
                     loopSerfs.Add(otherSerf);
                 }
             }
 
             // Stick to the same direction 
-            ChangeDirection((Direction)(s.Walking.Direction + 6), false);
+            ChangeDirection((Direction)(stateData.Walking.Direction + 6), false);
         }
 
         void HandleSerfWalkingState()
@@ -4602,7 +4924,7 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.Walking.Direction < 0)
+                if (stateData.Walking.Direction < 0)
                 {
                     HandleSerfWalkingStateWaiting();
                     continue;
@@ -4612,7 +4934,7 @@ namespace Freeserf
                 {
                     // Serf has reached a flag.
                     // Search for a destination if none is known.
-                    if (s.Walking.Destination == 0)
+                    if (stateData.Walking.Destination == 0)
                     {
                         var sourceFlag = GetFlagAtPosition();
                         int nearestInventory = sourceFlag.FindNearestInventoryForSerf();
@@ -4620,19 +4942,19 @@ namespace Freeserf
                         if (nearestInventory < 0)
                         {
                             SetState(State.Lost);
-                            s.Lost.FieldB = 1;
+                            stateData.Lost.FieldB = 1;
                             Counter = 0;
 
                             return;
                         }
 
-                        s.Walking.Destination = (uint)nearestInventory;
+                        stateData.Walking.Destination = (uint)nearestInventory;
                     }
 
                     // Check whether destination has been reached.
                     // If not, find out which direction to move in
                     // to reach the destination.
-                    if (s.Walking.Destination == Game.Map.GetObjectIndex(Position))
+                    if (stateData.Walking.Destination == Game.Map.GetObjectIndex(Position))
                     {
                         HandleSerfWalkingStateDestReached();
                         return;
@@ -4660,7 +4982,7 @@ namespace Freeserf
                 else
                 {
                     // Serf is not at a flag. Just follow the road. 
-                    var paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Direction);
+                    var paths = Game.Map.Paths(Position) & (byte)~Misc.BitU(stateData.Walking.Direction);
                     var direction = Direction.None;
                     var cycle = DirectionCycleCW.CreateDefault();
 
@@ -4685,33 +5007,33 @@ namespace Freeserf
                 // Either the road is a dead end; or
                 // we are at a flag, but the flag search for
                 // the destination failed.
-                if (s.Walking.Direction1 < 0)
+                if (stateData.Walking.Direction1 < 0)
                 {
-                    if (s.Walking.Direction1 < -1)
+                    if (stateData.Walking.Direction1 < -1)
                     {
                         SetState(State.Lost);
-                        s.Lost.FieldB = 1;
+                        stateData.Lost.FieldB = 1;
                         Counter = 0;
 
                         return;
                     }
 
-                    var flag = Game.GetFlag(s.Walking.Destination);
+                    var flag = Game.GetFlag(stateData.Walking.Destination);
                     var building = flag.Building;
 
                     building.RequestedSerfLost();
                 }
-                else if (s.Walking.Direction1 != 6)
+                else if (stateData.Walking.Direction1 != 6)
                 {
-                    var flag = Game.GetFlag(s.Walking.Destination);
-                    var direction = (Direction)s.Walking.Direction1;
+                    var flag = Game.GetFlag(stateData.Walking.Destination);
+                    var direction = (Direction)stateData.Walking.Direction1;
 
                     flag.CancelSerfRequest(direction);
                     flag.GetOtherEndFlag(direction).CancelSerfRequest(flag.GetOtherEndDirection(direction));
                 }
 
-                s.Walking.Direction1 = -2;
-                s.Walking.Destination = 0;
+                stateData.Walking.Direction1 = -2;
+                stateData.Walking.Destination = 0;
                 Counter = 0;
             }
         }
@@ -4725,9 +5047,9 @@ namespace Freeserf
             if (Counter >= 0)
                 return;
 
-            if (s.Walking.Direction < 0)
+            if (stateData.Walking.Direction < 0)
             {
-                ChangeDirection((Direction)(s.Walking.Direction + 6), true);
+                ChangeDirection((Direction)(stateData.Walking.Direction + 6), true);
             }
             else
             {
@@ -4736,12 +5058,12 @@ namespace Freeserf
                 if (map.HasFlag(Position))
                 {
                     // Current position occupied by waiting transporter 
-                    if (s.Walking.WaitCounter < 0)
+                    if (stateData.Walking.WaitCounter < 0)
                     {
                         SetState(State.Walking);
-                        s.Walking.WaitCounter = 0;
-                        s.Walking.Direction1 = -2;
-                        s.Walking.Destination = 0;
+                        stateData.Walking.WaitCounter = 0;
+                        stateData.Walking.Direction1 = -2;
+                        stateData.Walking.Destination = 0;
                         Counter = 0;
 
                         return;
@@ -4749,13 +5071,13 @@ namespace Freeserf
 
                     var flag = GetFlagAtPosition();
 
-                    if (s.Walking.Resource != Resource.Type.None &&
-                        map.GetObjectIndex(Position) == s.Walking.Destination &&
+                    if (stateData.Walking.Resource != Resource.Type.None &&
+                        map.GetObjectIndex(Position) == stateData.Walking.Destination &&
                         (!flag.HasInventory() || flag.AcceptsResources()))
                     {
                         // At resource destination 
                         SetState(State.Delivering);
-                        s.Walking.WaitCounter = 0;
+                        stateData.Walking.WaitCounter = 0;
 
                         var newPosition = map.MoveUpLeft(Position);
                         Animation = 3 + (int)map.GetHeight(newPosition) - (int)map.GetHeight(Position) +
@@ -4768,7 +5090,7 @@ namespace Freeserf
                 }
                 else
                 {
-                    var paths = map.Paths(Position) & (byte)~Misc.BitU(s.Walking.Direction);
+                    var paths = map.Paths(Position) & (byte)~Misc.BitU(stateData.Walking.Direction);
                     var direction = Direction.None;
                     var cycle = DirectionCycleCW.CreateDefault();
 
@@ -4790,8 +5112,8 @@ namespace Freeserf
                     }
 
                     if (!map.HasFlag(map.Move(Position, direction)) ||
-                        s.Walking.Resource != Resource.Type.None ||
-                        s.Walking.WaitCounter < 0)
+                        stateData.Walking.Resource != Resource.Type.None ||
+                        stateData.Walking.WaitCounter < 0)
                     {
                         ChangeDirection(direction, true);
                         return;
@@ -4808,29 +5130,29 @@ namespace Freeserf
                         return;
                     }
 
-                    Animation = 110 + s.Walking.Direction;
+                    Animation = 110 + stateData.Walking.Direction;
                     Counter = CounterFromAnimation[Animation];
-                    s.Walking.Direction -= 6;
+                    stateData.Walking.Direction -= 6;
 
                     if (flag.FreeTransporterCount(reverseDirection) > 1)
                     {
-                        ++s.Walking.WaitCounter;
+                        ++stateData.Walking.WaitCounter;
 
-                        if (s.Walking.WaitCounter > 3)
+                        if (stateData.Walking.WaitCounter > 3)
                         {
                             flag.TransporterToServe(reverseDirection);
                             otherFlag.TransporterToServe(otherDirection);
-                            s.Walking.WaitCounter = -1;
+                            stateData.Walking.WaitCounter = -1;
                         }
                     }
                     else
                     {
                         if (!otherFlag.IsScheduled(otherDirection))
                         {
-                            state.Tick = (ushort)((state.Tick & 0xff00) | (s.Walking.Direction & 0xff));
+                            state.Tick = (ushort)((state.Tick & 0xff00) | (stateData.Walking.Direction & 0xff));
                             SetState(State.IdleOnPath);
-                            s.IdleOnPath.ReverseDirection = reverseDirection;
-                            s.IdleOnPath.FlagIndex = flag.Index;
+                            stateData.IdleOnPath.ReverseDirection = reverseDirection;
+                            stateData.IdleOnPath.FlagIndex = flag.Index;
                             map.SetIdleSerf(Position);
                             map.SetSerfIndex(Position, 0);
 
@@ -4860,26 +5182,26 @@ namespace Freeserf
             state.Tick = Game.Tick;
             Counter -= delta;
 
-            if (Counter < 0 || Counter <= s.EnteringBuilding.SlopeLength)
+            if (Counter < 0 || Counter <= stateData.EnteringBuilding.SlopeLength)
             {
                 if (Game.Map.GetObjectIndex(Position) == 0 ||
                     GetBuildingAtPosition().IsBurning)
                 {
                     // Burning 
                     SetState(State.Lost);
-                    s.Lost.FieldB = 0;
+                    stateData.Lost.FieldB = 0;
                     Counter = 0;
 
                     return;
                 }
 
-                Counter = s.EnteringBuilding.SlopeLength;
+                Counter = stateData.EnteringBuilding.SlopeLength;
                 var map = Game.Map;
 
                 switch (SerfType)
                 {
                     case Type.Transporter:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -4902,23 +5224,23 @@ namespace Freeserf
                         EnterInventory();
                         break;
                     case Type.Digger:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
                         else
                         {
                             SetState(State.Digging);
-                            s.Digging.HeightIndex = 15;
+                            stateData.Digging.HeightIndex = 15;
 
                             var building = GetBuildingAtPosition();
-                            s.Digging.DigPosition = 6;
-                            s.Digging.TargetHeight = building.Level;
-                            s.Digging.Substate = 1;
+                            stateData.Digging.DigPosition = 6;
+                            stateData.Digging.TargetHeight = building.Level;
+                            stateData.Digging.Substate = 1;
                         }
                         break;
                     case Type.Builder:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -4927,11 +5249,11 @@ namespace Freeserf
                             SetState(State.Building);
                             Animation = 98;
                             Counter = 127;
-                            s.Building.Mode = 1;
-                            s.Building.Index = map.GetObjectIndex(Position);
-                            s.Building.MaterialStep = 0;
+                            stateData.Building.Mode = 1;
+                            stateData.Building.Index = map.GetObjectIndex(Position);
+                            stateData.Building.MaterialStep = 0;
 
-                            var building = Game.GetBuilding(s.Building.Index);
+                            var building = Game.GetBuilding(stateData.Building.Index);
 
                             switch (building.BuildingType)
                             {
@@ -4939,7 +5261,7 @@ namespace Freeserf
                                 case Building.Type.Sawmill:
                                 case Building.Type.ToolMaker:
                                 case Building.Type.Fortress:
-                                    s.Building.MaterialStep |= Misc.BitU(7);
+                                    stateData.Building.MaterialStep |= Misc.BitU(7);
                                     Animation = 100;
                                     break;
                                 default:
@@ -4953,7 +5275,7 @@ namespace Freeserf
                         Counter = 63;
                         break;
                     case Type.Lumberjack:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -4964,7 +5286,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.Sawmiller:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -4972,17 +5294,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Lumber);
                             }
 
                             SetState(State.Sawing);
-                            s.Sawing.Mode = 0;
+                            stateData.Sawing.Mode = 0;
                         }
                         break;
                     case Type.Stonecutter:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -4993,7 +5315,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.Forester:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5004,7 +5326,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.Miner:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5014,7 +5336,7 @@ namespace Freeserf
                             var building = GetBuildingAtPosition();
                             var buildingType = building.BuildingType;
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 building.StartActivity();
                                 building.StopPlayingSfx();
@@ -5023,15 +5345,15 @@ namespace Freeserf
                             }
 
                             SetState(State.Mining);
-                            s.Mining.Substate = 0;
-                            s.Mining.Deposit = (Map.Minerals)(4 - (buildingType - Building.Type.StoneMine));
+                            stateData.Mining.Substate = 0;
+                            stateData.Mining.Deposit = (Map.Minerals)(4 - (buildingType - Building.Type.StoneMine));
                             // TODO ?
                             //s.Mining.FieldC = 0;
-                            s.Mining.Resource = 0;
+                            stateData.Mining.Resource = 0;
                         }
                         break;
                     case Type.Smelter:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5041,7 +5363,7 @@ namespace Freeserf
 
                             var building = GetBuildingAtPosition();
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 if (building.BuildingType == Building.Type.SteelSmelter)
                                 {
@@ -5058,18 +5380,18 @@ namespace Freeserf
 
                             if (building.BuildingType == Building.Type.SteelSmelter)
                             {
-                                s.Smelting.Type = 0;
+                                stateData.Smelting.Type = 0;
                             }
                             else
                             {
-                                s.Smelting.Type = -1;
+                                stateData.Smelting.Type = -1;
                             }
 
-                            s.Smelting.Mode = 0;
+                            stateData.Smelting.Mode = 0;
                         }
                         break;
                     case Type.Fisher:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5080,7 +5402,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.PigFarmer:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5088,7 +5410,7 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 var building = GetBuildingAtPosition();
 
@@ -5096,18 +5418,18 @@ namespace Freeserf
                                 InitBuilding(Resource.Type.Wheat);
 
                                 SetState(State.PigFarming);
-                                s.PigFarming.Mode = 0;
+                                stateData.PigFarming.Mode = 0;
                             }
                             else
                             {
                                 SetState(State.PigFarming);
-                                s.PigFarming.Mode = 6;
+                                stateData.PigFarming.Mode = 6;
                                 Counter = 0;
                             }
                         }
                         break;
                     case Type.Butcher:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5115,17 +5437,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Pig);
                             }
 
                             SetState(State.Butchering);
-                            s.Butchering.Mode = 0;
+                            stateData.Butchering.Mode = 0;
                         }
                         break;
                     case Type.Farmer:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5136,7 +5458,7 @@ namespace Freeserf
                         }
                         break;
                     case Type.Miller:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5144,17 +5466,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Wheat);
                             }
 
                             SetState(State.Milling);
-                            s.Milling.Mode = 0;
+                            stateData.Milling.Mode = 0;
                         }
                         break;
                     case Type.Baker:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5162,17 +5484,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Flour);
                             }
 
                             SetState(State.Baking);
-                            s.Baking.Mode = 0;
+                            stateData.Baking.Mode = 0;
                         }
                         break;
                     case Type.BoatBuilder:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5180,17 +5502,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Plank);
                             }
 
                             SetState(State.BuildingBoat);
-                            s.BuildingBoat.Mode = 0;
+                            stateData.BuildingBoat.Mode = 0;
                         }
                         break;
                     case Type.Toolmaker:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5198,17 +5520,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Plank, Resource.Type.Steel);
                             }
 
                             SetState(State.MakingTool);
-                            s.MakingTool.Mode = 0;
+                            stateData.MakingTool.Mode = 0;
                         }
                         break;
                     case Type.WeaponSmith:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5216,17 +5538,17 @@ namespace Freeserf
                         {
                             map.SetSerfIndex(Position, 0);
 
-                            if (s.EnteringBuilding.FieldB != 0)
+                            if (stateData.EnteringBuilding.FieldB != 0)
                             {
                                 InitBuilding(Resource.Type.Coal, Resource.Type.Steel);
                             }
 
                             SetState(State.MakingWeapon);
-                            s.MakingWeapon.Mode = 0;
+                            stateData.MakingWeapon.Mode = 0;
                         }
                         break;
                     case Type.Geologist:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5251,7 +5573,7 @@ namespace Freeserf
                             inventory.SerfComeBack();
 
                             SetState(State.IdleInStock);
-                            s.IdleInStock.InventoryIndex = inventory.Index;
+                            stateData.IdleInStock.InventoryIndex = inventory.Index;
                             break;
                         }
                     case Type.Knight0:
@@ -5259,7 +5581,7 @@ namespace Freeserf
                     case Type.Knight2:
                     case Type.Knight3:
                     case Type.Knight4:
-                        if (s.EnteringBuilding.FieldB == -2)
+                        if (stateData.EnteringBuilding.FieldB == -2)
                         {
                             EnterInventory();
                         }
@@ -5282,7 +5604,7 @@ namespace Freeserf
                                     Counter = 6000;
 
                                     // Prepend to knight list 
-                                    s.Defending.NextKnight = building.FirstKnight;
+                                    stateData.Defending.NextKnight = building.FirstKnight;
                                     building.FirstKnight = Index;
 
                                     Game.GetPlayer(building.Player).IncreaseCastleKnights();
@@ -5315,7 +5637,7 @@ namespace Freeserf
                                 Counter = 6000;
 
                                 // Prepend to knight list 
-                                s.Defending.NextKnight = building.FirstKnight;
+                                stateData.Defending.NextKnight = building.FirstKnight;
                                 building.FirstKnight = Index;
                             }
                         }
@@ -5336,37 +5658,37 @@ namespace Freeserf
             if (Counter < 0)
             {
                 Counter = 0;
-                SetState(s.LeavingBuilding.NextState);
+                SetState(stateData.LeavingBuilding.NextState);
 
                 // Set FieldF to 0, do this for individual states if necessary 
                 if (SerfState == State.Walking)
                 {
-                    int mode = s.LeavingBuilding.FieldB;
-                    uint destination = s.LeavingBuilding.Destination;
-                    s.Walking.Direction1 = mode;
-                    s.Walking.Destination = destination;
-                    s.Walking.WaitCounter = 0;
+                    int mode = stateData.LeavingBuilding.FieldB;
+                    uint destination = stateData.LeavingBuilding.Destination;
+                    stateData.Walking.Direction1 = mode;
+                    stateData.Walking.Destination = destination;
+                    stateData.Walking.WaitCounter = 0;
                 }
                 else if (SerfState == State.DropResourceOut)
                 {
-                    uint resource = (uint)s.LeavingBuilding.FieldB;
-                    uint resourceDestination = s.LeavingBuilding.Destination;
-                    s.MoveResourceOut.Resource = resource;
-                    s.MoveResourceOut.ResourceDestination = resourceDestination;
+                    uint resource = (uint)stateData.LeavingBuilding.FieldB;
+                    uint resourceDestination = stateData.LeavingBuilding.Destination;
+                    stateData.MoveResourceOut.Resource = resource;
+                    stateData.MoveResourceOut.ResourceDestination = resourceDestination;
                 }
                 else if (SerfState == State.FreeWalking ||
                          SerfState == State.KnightFreeWalking ||
                          SerfState == State.StoneCutterFreeWalking)
                 {
-                    int distance1 = s.LeavingBuilding.FieldB;
-                    int distance2 = (int)s.LeavingBuilding.Destination;
-                    int negDistance1 = s.LeavingBuilding.Destination2;
-                    int negDistance2 = s.LeavingBuilding.Direction;
-                    s.FreeWalking.DistanceX = distance1;
-                    s.FreeWalking.DistanceY = distance2;
-                    s.FreeWalking.NegDistance1 = negDistance1;
-                    s.FreeWalking.NegDistance2 = negDistance2;
-                    s.FreeWalking.Flags = 0;
+                    int distance1 = stateData.LeavingBuilding.FieldB;
+                    int distance2 = (int)stateData.LeavingBuilding.Destination;
+                    int negDistance1 = stateData.LeavingBuilding.Destination2;
+                    int negDistance2 = stateData.LeavingBuilding.Direction;
+                    stateData.FreeWalking.DistanceX = distance1;
+                    stateData.FreeWalking.DistanceY = distance2;
+                    stateData.FreeWalking.NegDistance1 = negDistance1;
+                    stateData.FreeWalking.NegDistance2 = negDistance2;
+                    stateData.FreeWalking.Flags = 0;
                 }
                 else if (SerfState == State.KnightPrepareDefending ||
                          SerfState == State.Scatter)
@@ -5392,7 +5714,7 @@ namespace Freeserf
                 return;
             }
 
-            EnterBuilding(s.ReadyToEnter.FieldB, false);
+            EnterBuilding(stateData.ReadyToEnter.FieldB, false);
         }
 
         void HandleSerfReadyToLeaveState()
@@ -5430,13 +5752,13 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                --s.Digging.Substate;
+                --stateData.Digging.Substate;
 
-                if (s.Digging.Substate < 0)
+                if (stateData.Digging.Substate < 0)
                 {
                     Log.Verbose.Write(ErrorSystemType.Serf, "substate -1: wait for serf.");
 
-                    int digPosition = s.Digging.DigPosition;
+                    int digPosition = stateData.Digging.DigPosition;
                     var direction = (digPosition == 0) ? Direction.Up : (Direction)(6 - digPosition);
                     var newPosition = map.Move(Position, direction);
 
@@ -5468,7 +5790,7 @@ namespace Freeserf
                         else
                         {
                             Counter = 127;
-                            s.Digging.Substate = 0;
+                            stateData.Digging.Substate = 0;
 
                             return;
                         }
@@ -5489,80 +5811,80 @@ namespace Freeserf
 
                     map.SetSerfIndex(newPosition, (int)Index);
                     Position = newPosition;
-                    s.Digging.Substate = 3;
+                    stateData.Digging.Substate = 3;
                     Counter += CounterFromAnimation[Animation];
                 }
-                else if (s.Digging.Substate == 1)
+                else if (stateData.Digging.Substate == 1)
                 {
                     // 34CD6: Change height, head back to center 
                     int height = (int)map.GetHeight(Position);
-                    height += ((s.Digging.HeightIndex & 1) != 0) ? -1 : 1;
-                    Log.Verbose.Write(ErrorSystemType.Serf, "substate 1: change height " + (((s.Digging.HeightIndex & 1) != 0) ? "down." : "up."));
+                    height += ((stateData.Digging.HeightIndex & 1) != 0) ? -1 : 1;
+                    Log.Verbose.Write(ErrorSystemType.Serf, "substate 1: change height " + (((stateData.Digging.HeightIndex & 1) != 0) ? "down." : "up."));
                     map.SetHeight(Position, (uint)height);
 
-                    if (s.Digging.DigPosition == 0)
+                    if (stateData.Digging.DigPosition == 0)
                     {
-                        s.Digging.Substate = 1;
+                        stateData.Digging.Substate = 1;
                     }
                     else
                     {
-                        var direction = ((Direction)(6 - s.Digging.DigPosition)).Reverse();
+                        var direction = ((Direction)(6 - stateData.Digging.DigPosition)).Reverse();
                         StartWalking(direction, 32, true);
                     }
                 }
-                else if (s.Digging.Substate > 1)
+                else if (stateData.Digging.Substate > 1)
                 {
                     Log.Verbose.Write(ErrorSystemType.Serf, "substate 2: dig.");
                     // 34E89 
-                    Animation = 88 - (s.Digging.HeightIndex & 1);
+                    Animation = 88 - (stateData.Digging.HeightIndex & 1);
                     Counter += 383;
                 }
                 else
                 {
                     // 34CDC: Looking for a place to dig 
-                    Log.Verbose.Write(ErrorSystemType.Serf, $"substate 0: looking for place to dig {s.Digging.DigPosition}, {s.Digging.HeightIndex}");
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"substate 0: looking for place to dig {stateData.Digging.DigPosition}, {stateData.Digging.HeightIndex}");
 
                     do
                     {
-                        int heightDifference = DiggingHeightDifferences[s.Digging.HeightIndex] + (int)s.Digging.TargetHeight;
+                        int heightDifference = DiggingHeightDifferences[stateData.Digging.HeightIndex] + (int)stateData.Digging.TargetHeight;
 
-                        if (s.Digging.DigPosition >= 0 && heightDifference >= 0 && heightDifference < 32)
+                        if (stateData.Digging.DigPosition >= 0 && heightDifference >= 0 && heightDifference < 32)
                         {
-                            if (s.Digging.DigPosition == 0)
+                            if (stateData.Digging.DigPosition == 0)
                             {
                                 int height = (int)map.GetHeight(Position);
 
                                 if (height != heightDifference)
                                 {
-                                    --s.Digging.DigPosition;
+                                    --stateData.Digging.DigPosition;
                                     continue;
                                 }
 
                                 // Dig here 
-                                s.Digging.Substate = 2;
-                                Animation = 87 + (s.Digging.HeightIndex & 1);
+                                stateData.Digging.Substate = 2;
+                                Animation = 87 + (stateData.Digging.HeightIndex & 1);
                                 Counter += 383;
                             }
                             else
                             {
-                                var direction = (Direction)(6 - s.Digging.DigPosition);
+                                var direction = (Direction)(6 - stateData.Digging.DigPosition);
                                 var newPosition = map.Move(Position, direction);
                                 var newHeight = (int)map.GetHeight(newPosition);
 
                                 if (newHeight != heightDifference)
                                 {
-                                    --s.Digging.DigPosition;
+                                    --stateData.Digging.DigPosition;
                                     continue;
                                 }
 
-                                Log.Verbose.Write(ErrorSystemType.Serf, $"  found at: {s.Digging.DigPosition}.");
+                                Log.Verbose.Write(ErrorSystemType.Serf, $"  found at: {stateData.Digging.DigPosition}.");
 
                                 // Digging spot found 
                                 if (map.HasSerf(newPosition))
                                 {
                                     // Occupied by other serf, wait 
-                                    s.Digging.Substate = 0;
-                                    Animation = 87 - s.Digging.DigPosition;
+                                    stateData.Digging.Substate = 0;
+                                    Animation = 87 - stateData.Digging.DigPosition;
                                     Counter = CounterFromAnimation[Animation];
 
                                     return;
@@ -5570,27 +5892,27 @@ namespace Freeserf
 
                                 // Go to dig there 
                                 StartWalking(direction, 32, true);
-                                s.Digging.Substate = 3;
+                                stateData.Digging.Substate = 3;
                             }
 
                             break;
                         }
 
-                        s.Digging.DigPosition = 6;
-                        --s.Digging.HeightIndex;
+                        stateData.Digging.DigPosition = 6;
+                        --stateData.Digging.HeightIndex;
 
-                    } while (s.Digging.HeightIndex >= 0);
+                    } while (stateData.Digging.HeightIndex >= 0);
 
-                    if (s.Digging.HeightIndex < 0)
+                    if (stateData.Digging.HeightIndex < 0)
                     {
                         // Done digging 
                         var building = GetBuildingAtPosition();
                         building.DoneLeveling();
                         SetState(State.ReadyToLeave);
-                        s.LeavingBuilding.Destination = 0;
-                        s.LeavingBuilding.FieldB = -2;
-                        s.LeavingBuilding.Direction = 0;
-                        s.LeavingBuilding.NextState = State.Walking;
+                        stateData.LeavingBuilding.Destination = 0;
+                        stateData.LeavingBuilding.FieldB = -2;
+                        stateData.LeavingBuilding.Direction = 0;
+                        stateData.LeavingBuilding.NextState = State.Walking;
                         HandleSerfReadyToLeaveState();  // TODO(jonls): why isn't a state switch enough?
 
                         return;
@@ -5615,12 +5937,12 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                var building = Game.GetBuilding(s.Building.Index);
+                var building = Game.GetBuilding(stateData.Building.Index);
 
                 if (building == null)
                     return;
 
-                if (s.Building.Mode < 0)
+                if (stateData.Building.Mode < 0)
                 {
                     if (building.BuildProgress())
                     {
@@ -5630,18 +5952,18 @@ namespace Freeserf
                         return;
                     }
 
-                    --s.Building.Counter;
+                    --stateData.Building.Counter;
 
-                    if (s.Building.Counter == 0)
+                    if (stateData.Building.Counter == 0)
                     {
-                        s.Building.Mode = 1;
+                        stateData.Building.Mode = 1;
                         Animation = 98;
 
-                        if (Misc.BitTest(s.Building.MaterialStep, 7))
+                        if (Misc.BitTest(stateData.Building.MaterialStep, 7))
                             Animation = 100;
 
                         // 353A5 
-                        int materialStep = (int)s.Building.MaterialStep & 0xf;
+                        int materialStep = (int)stateData.Building.MaterialStep & 0xf;
 
                         if (!Misc.BitTest(MaterialOrder[(int)building.BuildingType], materialStep))
                         {
@@ -5674,24 +5996,24 @@ namespace Freeserf
                             building.StoneUsedForBuild();
                         }
 
-                        ++s.Building.MaterialStep;
-                        s.Building.Counter = 8;
-                        s.Building.Mode = -1;
+                        ++stateData.Building.MaterialStep;
+                        stateData.Building.Counter = 8;
+                        stateData.Building.Mode = -1;
                     }
                 }
                 else
                 {
-                    if (s.Building.Mode == 0)
+                    if (stateData.Building.Mode == 0)
                     {
-                        s.Building.Mode = 1;
+                        stateData.Building.Mode = 1;
                         Animation = 98;
 
-                        if (Misc.BitTest(s.Building.MaterialStep, 7))
+                        if (Misc.BitTest(stateData.Building.MaterialStep, 7))
                             Animation = 100;
                     }
 
                     // 353A5: Duplicate code 
-                    int materialStep = (int)s.Building.MaterialStep & 0xf;
+                    int materialStep = (int)stateData.Building.MaterialStep & 0xf;
 
                     if (!Misc.BitTest(MaterialOrder[(int)building.BuildingType], materialStep))
                     {
@@ -5724,14 +6046,14 @@ namespace Freeserf
                         building.StoneUsedForBuild();
                     }
 
-                    ++s.Building.MaterialStep;
-                    s.Building.Counter = 8;
-                    s.Building.Mode = -1;
+                    ++stateData.Building.MaterialStep;
+                    stateData.Building.Counter = 8;
+                    stateData.Building.Mode = -1;
                 }
 
                 int random = (Game.RandomInt() & 3) + 102;
 
-                if (Misc.BitTest(s.Building.MaterialStep, 7))
+                if (Misc.BitTest(stateData.Building.MaterialStep, 7))
                     random += 4;
 
                 Animation = random;
@@ -5743,7 +6065,7 @@ namespace Freeserf
         {
             state.Tick = Game.Tick;
 
-            var inventory = Game.GetInventory(s.BuildingCastle.InventoryIndex);
+            var inventory = Game.GetInventory(stateData.BuildingCastle.InventoryIndex);
             var building = Game.GetBuilding(inventory.Building);
 
             if (building.BuildProgress())
@@ -5785,15 +6107,15 @@ namespace Freeserf
                 return;
             }
 
-            var resource = s.MoveResourceOut.Resource;
-            var resourceDestination = s.MoveResourceOut.ResourceDestination;
-            var nextState = s.MoveResourceOut.NextState;
+            var resource = stateData.MoveResourceOut.Resource;
+            var resourceDestination = stateData.MoveResourceOut.ResourceDestination;
+            var nextState = stateData.MoveResourceOut.NextState;
 
             LeaveBuilding(false);
 
-            s.LeavingBuilding.NextState = nextState;
-            s.LeavingBuilding.FieldB = (int)resource;
-            s.LeavingBuilding.Destination = resourceDestination;
+            stateData.LeavingBuilding.NextState = nextState;
+            stateData.LeavingBuilding.FieldB = (int)resource;
+            stateData.LeavingBuilding.Destination = resourceDestination;
         }
 
         void HandleSerfWaitForResourceOutState()
@@ -5828,9 +6150,9 @@ namespace Freeserf
             uint destination = 0;
 
             inventory.GetResourceFromQueue(ref resource, ref destination);
-            s.MoveResourceOut.Resource = (uint)(resource + 1);
-            s.MoveResourceOut.ResourceDestination = destination;
-            s.MoveResourceOut.NextState = State.DropResourceOut;
+            stateData.MoveResourceOut.Resource = (uint)(resource + 1);
+            stateData.MoveResourceOut.ResourceDestination = destination;
+            stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
             // TODO ?
             // why isn't a state switch enough? 
@@ -5844,13 +6166,13 @@ namespace Freeserf
             if (flag == null)
                 return;
 
-            if (!flag.DropResource((Resource.Type)(s.MoveResourceOut.Resource - 1), s.MoveResourceOut.ResourceDestination))
+            if (!flag.DropResource((Resource.Type)(stateData.MoveResourceOut.Resource - 1), stateData.MoveResourceOut.ResourceDestination))
             {
                 throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Failed to drop resource.");
             }
 
             SetState(State.ReadyToEnter);
-            s.ReadyToEnter.FieldB = 0;
+            stateData.ReadyToEnter.FieldB = 0;
         }
 
         void HandleSerfDeliveringState()
@@ -5861,33 +6183,33 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.Walking.WaitCounter != 0)
+                if (stateData.Walking.WaitCounter != 0)
                 {
                     SetState(State.Transporting);
-                    s.Walking.WaitCounter = 0;
+                    stateData.Walking.WaitCounter = 0;
 
                     TransporterMoveToFlag(GetFlagAtPosition());
 
                     return;
                 }
 
-                if (s.Walking.Resource != Resource.Type.None)
+                if (stateData.Walking.Resource != Resource.Type.None)
                 {
                     var building = Game.GetBuildingAtPosition(Game.Map.MoveUpLeft(Position));
 
-                    if (building.RequestedResourceDelivered(s.Walking.Resource))
-                        s.Walking.Resource = Resource.Type.None;
+                    if (building.RequestedResourceDelivered(stateData.Walking.Resource))
+                        stateData.Walking.Resource = Resource.Type.None;
                     else
                     {
                         // if we can't deliver the serf transport it back to the nearest inventory.
                         // therefore we switch to transporting and set destination to 0.
                         SetState(State.Transporting);
-                        s.Walking.Destination = 0;
+                        stateData.Walking.Destination = 0;
                     }
                 }
 
                 Animation = 4 + 9 - (Animation - (3 + 10 * 9));
-                s.Walking.WaitCounter = -s.Walking.WaitCounter - 1;
+                stateData.Walking.WaitCounter = -stateData.Walking.WaitCounter - 1;
                 Counter += CounterFromAnimation[Animation] >> 1;
             }
         }
@@ -5926,7 +6248,7 @@ namespace Freeserf
                         if ((serf.SerfState == State.Walking || serf.SerfState == State.Transporting || serf.SerfState == State.KnightEngagingBuilding) &&
                             serf.IsWaiting(ref tempDirection))
                         {
-                            if (!(serf.SerfState != State.Transporting && serf.s.Walking.Destination == inventoryFlag.Position && serf.s.Walking.Direction == (int)direction.Reverse()))
+                            if (!(serf.SerfState != State.Transporting && serf.stateData.Walking.Destination == inventoryFlag.Position && serf.stateData.Walking.Direction == (int)direction.Reverse()))
                             {
                                 Animation = 82;
                                 Counter = 0;
@@ -5937,9 +6259,9 @@ namespace Freeserf
                 }
             }
 
-            if (s.ReadyToLeaveInventory.Mode == -1)
+            if (stateData.ReadyToLeaveInventory.Mode == -1)
             {
-                var flag = Game.GetFlag(s.ReadyToLeaveInventory.Destination);
+                var flag = Game.GetFlag(stateData.ReadyToLeaveInventory.Destination);
 
                 if (flag.HasBuilding)
                 {
@@ -5955,30 +6277,30 @@ namespace Freeserf
                 }
             }
 
-            var inventory = Game.GetInventory(s.ReadyToLeaveInventory.InventoryIndex);
+            var inventory = Game.GetInventory(stateData.ReadyToLeaveInventory.InventoryIndex);
 
             inventory.SerfAway();
 
             var nextState = State.Walking;
-            var mode = s.ReadyToLeaveInventory.Mode;
+            var mode = stateData.ReadyToLeaveInventory.Mode;
 
             if (mode == -3)
             {
                 nextState = State.Scatter;
             }
 
-            uint destination = s.ReadyToLeaveInventory.Destination;
+            uint destination = stateData.ReadyToLeaveInventory.Destination;
 
             LeaveBuilding(false);
-            s.LeavingBuilding.NextState = nextState;
-            s.LeavingBuilding.FieldB = mode;
-            s.LeavingBuilding.Destination = destination;
-            s.LeavingBuilding.Direction = 0;
+            stateData.LeavingBuilding.NextState = nextState;
+            stateData.LeavingBuilding.FieldB = mode;
+            stateData.LeavingBuilding.Destination = destination;
+            stateData.LeavingBuilding.Direction = 0;
         }
 
         void HandleSerfFreeWalkingStateDestReached()
         {
-            if (s.FreeWalking.NegDistance1 == -128 && s.FreeWalking.NegDistance2 < 0)
+            if (stateData.FreeWalking.NegDistance1 == -128 && stateData.FreeWalking.NegDistance2 < 0)
             {
                 FindInventory();
                 return;
@@ -5989,11 +6311,11 @@ namespace Freeserf
             switch (SerfType)
             {
                 case Type.Lumberjack:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         bool flagHasGone = false;
 
-                        if (s.FreeWalking.NegDistance2 > 0)
+                        if (stateData.FreeWalking.NegDistance2 > 0)
                         {
                             if (!DropResource(Resource.Type.Lumber))
                             {
@@ -6008,25 +6330,25 @@ namespace Freeserf
                         else
                         {
                             SetState(State.ReadyToEnter);
-                            s.ReadyToEnter.FieldB = 0;
+                            stateData.ReadyToEnter.FieldB = 0;
                             Counter = 0;
                         }
                     }
                     else
                     {
-                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.DistanceX = stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY = stateData.FreeWalking.NegDistance2;
                         var obj = map.GetObject(Position);
 
                         if (obj >= Map.Object.Tree0 &&
                             obj <= Map.Object.Pine7)
                         {
                             SetState(State.Logging);
-                            s.FreeWalking.NegDistance1 = 0;
-                            s.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.NegDistance1 = 0;
+                            stateData.FreeWalking.NegDistance2 = 0;
 
                             if ((int)obj < 16)
-                                s.FreeWalking.NegDistance1 = -1;
+                                stateData.FreeWalking.NegDistance1 = -1;
 
                             Animation = 116;
                             Counter = CounterFromAnimation[Animation];
@@ -6034,19 +6356,19 @@ namespace Freeserf
                         else
                         {
                             // The expected tree is gone 
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
                     break;
                 case Type.Stonecutter:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         bool flagHasGone = false;
 
-                        if (s.FreeWalking.NegDistance2 > 0)
+                        if (stateData.FreeWalking.NegDistance2 > 0)
                         {
                             if (!DropResource(Resource.Type.Stone))
                             {
@@ -6061,14 +6383,14 @@ namespace Freeserf
                         else
                         {
                             SetState(State.ReadyToEnter);
-                            s.ReadyToEnter.FieldB = 0;
+                            stateData.ReadyToEnter.FieldB = 0;
                             Counter = 0;
                         }
                     }
                     else
                     {
-                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.DistanceX = stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY = stateData.FreeWalking.NegDistance2;
 
                         var newPosition = map.MoveUpLeft(Position);
                         var obj = map.GetObject(newPosition);
@@ -6081,54 +6403,54 @@ namespace Freeserf
                             StartWalking(Direction.UpLeft, 32, true);
 
                             SetState(State.StoneCutting);
-                            s.FreeWalking.NegDistance2 = Counter >> 2;
-                            s.FreeWalking.NegDistance1 = 0;
+                            stateData.FreeWalking.NegDistance2 = Counter >> 2;
+                            stateData.FreeWalking.NegDistance1 = 0;
                         }
                         else
                         {
                             // The expected stone is gone or unavailable 
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
                     break;
                 case Type.Forester:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         SetState(State.ReadyToEnter);
-                        s.ReadyToEnter.FieldB = 0;
+                        stateData.ReadyToEnter.FieldB = 0;
                         Counter = 0;
                     }
                     else
                     {
-                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.DistanceX = stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY = stateData.FreeWalking.NegDistance2;
 
                         if (map.GetObject(Position) == Map.Object.None)
                         {
                             SetState(State.Planting);
-                            s.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.NegDistance2 = 0;
                             Animation = 121;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
                             // The expected free space is no longer empty 
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
                     break;
                 case Type.Fisher:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         bool flagHasGone = false;
 
-                        if (s.FreeWalking.NegDistance2 > 0)
+                        if (stateData.FreeWalking.NegDistance2 > 0)
                         {
                             if (!DropResource(Resource.Type.Fish))
                             {
@@ -6143,14 +6465,14 @@ namespace Freeserf
                         else
                         {
                             SetState(State.ReadyToEnter);
-                            s.ReadyToEnter.FieldB = 0;
+                            stateData.ReadyToEnter.FieldB = 0;
                             Counter = 0;
                         }
                     }
                     else
                     {
-                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.DistanceX = stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY = stateData.FreeWalking.NegDistance2;
 
                         int fisherAnimation = 0;
 
@@ -6171,28 +6493,28 @@ namespace Freeserf
                         if (fisherAnimation == 0)
                         {
                             // Cannot fish here after all. 
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                         else
                         {
                             SetState(State.Fishing);
-                            s.FreeWalking.NegDistance1 = 0;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = 0;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Animation = fisherAnimation;
                             Counter = CounterFromAnimation[fisherAnimation];
                         }
                     }
                     break;
                 case Type.Farmer:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         bool flagHasGone = false;
 
-                        if (s.FreeWalking.NegDistance2 > 0)
+                        if (stateData.FreeWalking.NegDistance2 > 0)
                         {
                             if (!DropResource(Resource.Type.Wheat))
                             {
@@ -6207,14 +6529,14 @@ namespace Freeserf
                         else
                         {
                             SetState(State.ReadyToEnter);
-                            s.ReadyToEnter.FieldB = 0;
+                            stateData.ReadyToEnter.FieldB = 0;
                             Counter = 0;
                         }
                     }
                     else
                     {
-                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.DistanceX = stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY = stateData.FreeWalking.NegDistance2;
 
                         var obj = map.GetObject(Position);
 
@@ -6224,7 +6546,7 @@ namespace Freeserf
                         {
                             // Existing field. 
                             Animation = 136;
-                            s.FreeWalking.NegDistance1 = 1;
+                            stateData.FreeWalking.NegDistance1 = 1;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else if (obj == Map.Object.None &&
@@ -6232,25 +6554,25 @@ namespace Freeserf
                         {
                             // Empty space. 
                             Animation = 135;
-                            s.FreeWalking.NegDistance1 = 0;
+                            stateData.FreeWalking.NegDistance1 = 0;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
                             // Space not available after all. 
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
                             break;
                         }
 
                         SetState(State.Farming);
-                        s.FreeWalking.NegDistance2 = 0;
+                        stateData.FreeWalking.NegDistance2 = 0;
                     }
                     break;
                 case Type.Geologist:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         if (map.GetObject(Position) == Map.Object.Flag &&
                             map.GetOwner(Position) == Player)
@@ -6261,28 +6583,28 @@ namespace Freeserf
                         else
                         {
                             SetState(State.Lost);
-                            s.Lost.FieldB = 0;
+                            stateData.Lost.FieldB = 0;
                             Counter = 0;
                         }
                     }
                     else
                     {
-                        s.FreeWalking.DistanceX = s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY = s.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.DistanceX = stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY = stateData.FreeWalking.NegDistance2;
 
                         if (map.GetObject(Position) == Map.Object.None)
                         {
                             SetState(State.SamplingGeoSpot);
-                            s.FreeWalking.NegDistance1 = 0;
+                            stateData.FreeWalking.NegDistance1 = 0;
                             Animation = 141;
                             Counter = CounterFromAnimation[Animation];
                         }
                         else
                         {
                             // Destination is not a free space after all. 
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = 0;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
                     }
@@ -6292,7 +6614,7 @@ namespace Freeserf
                 case Type.Knight2:
                 case Type.Knight3:
                 case Type.Knight4:
-                    if (s.FreeWalking.NegDistance1 == -128)
+                    if (stateData.FreeWalking.NegDistance1 == -128)
                     {
                         FindInventory();
                     }
@@ -6319,18 +6641,18 @@ namespace Freeserf
             int distanceX = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
             int distanceY = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-            Log.Verbose.Write(ErrorSystemType.Serf, $"serf {Index}: free walking: dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
+            Log.Verbose.Write(ErrorSystemType.Serf, $"serf {Index}: free walking: dest {stateData.FreeWalking.DistanceX}, {stateData.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
 
-            s.FreeWalking.DistanceX -= distanceX;
-            s.FreeWalking.DistanceY -= distanceY;
+            stateData.FreeWalking.DistanceX -= distanceX;
+            stateData.FreeWalking.DistanceY -= distanceY;
 
             StartWalking(direction, 32, true);
 
-            if (s.FreeWalking.DistanceX == 0 &&
-                s.FreeWalking.DistanceY == 0)
+            if (stateData.FreeWalking.DistanceX == 0 &&
+                stateData.FreeWalking.DistanceY == 0)
             {
                 // Arriving to destination 
-                s.FreeWalking.Flags = Misc.Bit(3);
+                stateData.FreeWalking.Flags = Misc.Bit(3);
             }
         }
 
@@ -6367,16 +6689,16 @@ namespace Freeserf
                 int distanceX = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) < 2) ? 1 : 0);
                 int distanceY = (((int)direction < 3) ? 1 : -1) * ((((int)direction % 3) > 0) ? 1 : 0);
 
-                Log.Verbose.Write(ErrorSystemType.Serf, $"free walking (switch): dest {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"free walking (switch): dest {stateData.FreeWalking.DistanceX}, {stateData.FreeWalking.DistanceY}, move {distanceX}, {distanceY}");
 
-                s.FreeWalking.DistanceX -= distanceX;
-                s.FreeWalking.DistanceY -= distanceY;
+                stateData.FreeWalking.DistanceX -= distanceX;
+                stateData.FreeWalking.DistanceY -= distanceY;
 
-                if (s.FreeWalking.DistanceX == 0 &&
-                    s.FreeWalking.DistanceY == 0)
+                if (stateData.FreeWalking.DistanceX == 0 &&
+                    stateData.FreeWalking.DistanceY == 0)
                 {
                     // Arriving to destination 
-                    s.FreeWalking.Flags = Misc.Bit(3);
+                    stateData.FreeWalking.Flags = Misc.Bit(3);
                 }
 
                 // Switch with other serf. 
@@ -6440,21 +6762,21 @@ namespace Freeserf
             Direction[] directions;
             int directionIndex;
 
-            if (Misc.BitTest(s.FreeWalking.Flags, 3))
+            if (Misc.BitTest(stateData.FreeWalking.Flags, 3))
             {
                 // Follow right-hand edge 
                 directions = DirectionLeftEdge;
-                directionIndex = (s.FreeWalking.Flags & 7) - 1;
+                directionIndex = (stateData.FreeWalking.Flags & 7) - 1;
             }
             else
             {
                 // Follow right-hand edge 
                 directions = DirectionRightEdge;
-                directionIndex = (s.FreeWalking.Flags & 7) - 1;
+                directionIndex = (stateData.FreeWalking.Flags & 7) - 1;
             }
 
-            int distanceX = s.FreeWalking.DistanceX;
-            int distanceY = s.FreeWalking.DistanceY;
+            int distanceX = stateData.FreeWalking.DistanceX;
+            int distanceY = stateData.FreeWalking.DistanceY;
 
             // Check if destination is only one step away. 
             if (!water && Math.Abs(distanceX) <= 1 && Math.Abs(distanceY) <= 1 &&
@@ -6466,31 +6788,31 @@ namespace Freeserf
 
                 if (!CanPassMapPosition(newPosition))
                 {
-                    if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128)
+                    if (SerfState != State.KnightFreeWalking && stateData.FreeWalking.NegDistance1 != -128)
                     {
-                        s.FreeWalking.DistanceX += s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY += s.FreeWalking.NegDistance2;
-                        s.FreeWalking.NegDistance1 = 0;
-                        s.FreeWalking.NegDistance2 = 0;
-                        s.FreeWalking.Flags = 0;
+                        stateData.FreeWalking.DistanceX += stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY += stateData.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.NegDistance1 = 0;
+                        stateData.FreeWalking.NegDistance2 = 0;
+                        stateData.FreeWalking.Flags = 0;
                         Animation = 82;
                         Counter = CounterFromAnimation[Animation];
                     }
                     else
                     {
                         SetState(State.Lost);
-                        s.Lost.FieldB = 0;
+                        stateData.Lost.FieldB = 0;
                         Counter = 0;
                     }
 
                     return 0;
                 }
 
-                if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128 &&
+                if (SerfState == State.KnightFreeWalking && stateData.FreeWalking.NegDistance1 != -128 &&
                     Game.Map.HasSerf(newPosition))
                 {
                     // Wait for other serfs 
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.Flags = 0;
                     Animation = 82;
                     Counter = CounterFromAnimation[Animation];
                     return 0;
@@ -6519,29 +6841,29 @@ namespace Freeserf
 
             if (checkDirection > Direction.None)
             {
-                int upper = ((s.FreeWalking.Flags >> 4) & 0xf) + (int)checkDirection - 2;
+                int upper = ((stateData.FreeWalking.Flags >> 4) & 0xf) + (int)checkDirection - 2;
 
                 if ((int)checkDirection < 2 && upper < 0)
                 {
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.Flags = 0;
                     HandleSerfFreeWalkingSwitchOnDirection(direction);
                     return 0;
                 }
                 else if ((int)checkDirection > 2 && upper > 15)
                 {
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.Flags = 0;
                 }
                 else
                 {
-                    s.FreeWalking.Flags = (upper << 4) | (s.FreeWalking.Flags & 0x8) | ((int)direction + 1);
+                    stateData.FreeWalking.Flags = (upper << 4) | (stateData.FreeWalking.Flags & 0x8) | ((int)direction + 1);
                     HandleSerfFreeWalkingSwitchOnDirection(direction);
                     return 0;
                 }
             }
             else
             {
-                s.FreeWalking.Flags = (s.FreeWalking.Flags & 0xf8);
-                s.FreeWalking.Flags &= ~Misc.Bit(3);
+                stateData.FreeWalking.Flags = (stateData.FreeWalking.Flags & 0xf8);
+                stateData.FreeWalking.Flags &= ~Misc.Bit(3);
                 HandleSerfFreeWalkingSwitchWithOther();
                 return 0;
             }
@@ -6593,15 +6915,15 @@ namespace Freeserf
         {
             bool water = SerfState == State.FreeSailing;
 
-            if (Misc.BitTest(s.FreeWalking.Flags, 3) &&
-                (s.FreeWalking.Flags & 7) == 0)
+            if (Misc.BitTest(stateData.FreeWalking.Flags, 3) &&
+                (stateData.FreeWalking.Flags & 7) == 0)
             {
                 // Destination reached 
                 HandleSerfFreeWalkingStateDestReached();
                 return;
             }
 
-            if ((s.FreeWalking.Flags & 7) != 0)
+            if ((stateData.FreeWalking.Flags & 7) != 0)
             {
                 // Obstacle encountered, follow along the edge 
                 if (HandleFreeWalkingFollowEdge() >= 0)
@@ -6610,8 +6932,8 @@ namespace Freeserf
 
             // Move fowards 
             int directionIndex;
-            int distance1 = s.FreeWalking.DistanceX;
-            int distance2 = s.FreeWalking.DistanceY;
+            int distance1 = stateData.FreeWalking.DistanceX;
+            int distance2 = stateData.FreeWalking.DistanceY;
 
             if (distance1 < 0)
             {
@@ -6717,25 +7039,25 @@ namespace Freeserf
 
                 if (!CanPassMapPosition(newPosition))
                 {
-                    if (SerfState != State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128)
+                    if (SerfState != State.KnightFreeWalking && stateData.FreeWalking.NegDistance1 != -128)
                     {
-                        s.FreeWalking.DistanceX += s.FreeWalking.NegDistance1;
-                        s.FreeWalking.DistanceY += s.FreeWalking.NegDistance2;
-                        s.FreeWalking.NegDistance1 = 0;
-                        s.FreeWalking.NegDistance2 = 0;
-                        s.FreeWalking.Flags = 0;
+                        stateData.FreeWalking.DistanceX += stateData.FreeWalking.NegDistance1;
+                        stateData.FreeWalking.DistanceY += stateData.FreeWalking.NegDistance2;
+                        stateData.FreeWalking.NegDistance1 = 0;
+                        stateData.FreeWalking.NegDistance2 = 0;
+                        stateData.FreeWalking.Flags = 0;
                     }
                     else
                     {
                         SetState(State.Lost);
-                        s.Lost.FieldB = 0;
+                        stateData.Lost.FieldB = 0;
                         Counter = 0;
                     }
 
                     return;
                 }
 
-                if (SerfState == State.KnightFreeWalking && s.FreeWalking.NegDistance1 != -128
+                if (SerfState == State.KnightFreeWalking && stateData.FreeWalking.NegDistance1 != -128
                     && map.HasSerf(newPosition))
                 {
                     var otherSerf = Game.GetSerfAtPosition(newPosition);
@@ -6765,17 +7087,17 @@ namespace Freeserf
                     if (otherSerf.SerfState == State.Walking ||
                         otherSerf.SerfState == State.Transporting)
                     {
-                        ++s.FreeWalking.NegDistance2;
+                        ++stateData.FreeWalking.NegDistance2;
 
-                        if (s.FreeWalking.NegDistance2 >= 10)
+                        if (stateData.FreeWalking.NegDistance2 >= 10)
                         {
-                            s.FreeWalking.NegDistance2 = 0;
+                            stateData.FreeWalking.NegDistance2 = 0;
 
                             if (otherSerf.SerfState == State.Transporting)
                             {
                                 if (map.HasFlag(newPosition))
                                 {
-                                    if (otherSerf.s.Walking.WaitCounter != -1)
+                                    if (otherSerf.stateData.Walking.WaitCounter != -1)
                                     {
                                         // TODO ?
                                         // int dir = otherSerf.s.Walking.Direction;
@@ -6830,7 +7152,7 @@ namespace Freeserf
 
             int upper = ((int)newDirection / 2) + 1;
 
-            s.FreeWalking.Flags = (upper << 4) | (edge << 3) | ((int)direction + 1);
+            stateData.FreeWalking.Flags = (upper << 4) | (edge << 3) | ((int)direction + 1);
 
             HandleSerfFreeWalkingSwitchOnDirection(direction);
         }
@@ -6855,34 +7177,34 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                ++s.FreeWalking.NegDistance2;
+                ++stateData.FreeWalking.NegDistance2;
 
                 int newObject;
 
-                if (s.FreeWalking.NegDistance1 != 0)
+                if (stateData.FreeWalking.NegDistance1 != 0)
                 {
-                    newObject = (int)Map.Object.FelledTree0 + s.FreeWalking.NegDistance2 - 1;
+                    newObject = (int)Map.Object.FelledTree0 + stateData.FreeWalking.NegDistance2 - 1;
                 }
                 else
                 {
-                    newObject = (int)Map.Object.FelledPine0 + s.FreeWalking.NegDistance2 - 1;
+                    newObject = (int)Map.Object.FelledPine0 + stateData.FreeWalking.NegDistance2 - 1;
                 }
 
                 // Change map object. 
                 Game.Map.SetObject(Position, (Map.Object)newObject, -1);
 
-                if (s.FreeWalking.NegDistance2 < 5)
+                if (stateData.FreeWalking.NegDistance2 < 5)
                 {
-                    Animation = 116 + s.FreeWalking.NegDistance2;
+                    Animation = 116 + stateData.FreeWalking.NegDistance2;
                     Counter += CounterFromAnimation[Animation];
                 }
                 else
                 {
                     SetState(State.FreeWalking);
                     Counter = 0;
-                    s.FreeWalking.NegDistance1 = -128;
-                    s.FreeWalking.NegDistance2 = 1;
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.NegDistance1 = -128;
+                    stateData.FreeWalking.NegDistance2 = 1;
+                    stateData.FreeWalking.Flags = 0;
 
                     return;
                 }
@@ -6904,12 +7226,12 @@ namespace Freeserf
                 if (obj >= Map.Object.Tree0 && obj <= Map.Object.Pine7)
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
-                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
-                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
-                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
-                    s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning logging: tree found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    stateData.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    stateData.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    stateData.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    stateData.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
+                    stateData.LeavingBuilding.NextState = State.FreeWalking;
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning logging: tree found, dist {stateData.LeavingBuilding.FieldB}, {stateData.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -6939,12 +7261,12 @@ namespace Freeserf
                     map.TypeDown(map.MoveUpLeft(position)) == Map.Terrain.Grass1)
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
-                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
-                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
-                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
-                    s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning planting: free space found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    stateData.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    stateData.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    stateData.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    stateData.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
+                    stateData.LeavingBuilding.NextState = State.FreeWalking;
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning planting: free space found, dist {stateData.LeavingBuilding.FieldB}, {stateData.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -6963,12 +7285,12 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDistance2 != 0)
+                if (stateData.FreeWalking.NegDistance2 != 0)
                 {
                     SetState(State.FreeWalking);
-                    s.FreeWalking.NegDistance1 = -128;
-                    s.FreeWalking.NegDistance2 = 0;
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.NegDistance1 = -128;
+                    stateData.FreeWalking.NegDistance2 = 0;
+                    stateData.FreeWalking.Flags = 0;
                     Counter = 0;
 
                     return;
@@ -6983,7 +7305,7 @@ namespace Freeserf
                     map.SetObject(Position, newObject, -1);
                 }
 
-                s.FreeWalking.NegDistance2 = -s.FreeWalking.NegDistance2 - 1;
+                stateData.FreeWalking.NegDistance2 = -stateData.FreeWalking.NegDistance2 - 1;
                 Counter += 128;
             }
         }
@@ -7006,12 +7328,12 @@ namespace Freeserf
                     CanPassMapPosition(position))
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
-                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
-                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
-                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
-                    s.LeavingBuilding.NextState = State.StoneCutterFreeWalking;
-                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning stonecutting: stone found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    stateData.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    stateData.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    stateData.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    stateData.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
+                    stateData.LeavingBuilding.NextState = State.StoneCutterFreeWalking;
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning stonecutting: stone found, dist {stateData.LeavingBuilding.FieldB}, {stateData.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -7035,11 +7357,11 @@ namespace Freeserf
                 if (!map.HasSerf(Position) && map.GetObject(position) >= Map.Object.Stone0 &&
                     map.GetObject(position) <= Map.Object.Stone7)
                 {
-                    s.FreeWalking.NegDistance1 += s.FreeWalking.DistanceX;
-                    s.FreeWalking.NegDistance2 += s.FreeWalking.DistanceY;
-                    s.FreeWalking.DistanceX = 0;
-                    s.FreeWalking.DistanceY = 0;
-                    s.FreeWalking.Flags = 8;
+                    stateData.FreeWalking.NegDistance1 += stateData.FreeWalking.DistanceX;
+                    stateData.FreeWalking.NegDistance2 += stateData.FreeWalking.DistanceY;
+                    stateData.FreeWalking.DistanceX = 0;
+                    stateData.FreeWalking.DistanceY = 0;
+                    stateData.FreeWalking.Flags = 8;
                 }
 
                 HandleFreeWalkingCommon();
@@ -7052,25 +7374,25 @@ namespace Freeserf
             state.Tick = Game.Tick;
             Counter -= delta;
 
-            if (s.FreeWalking.NegDistance1 == 0)
+            if (stateData.FreeWalking.NegDistance1 == 0)
             {
-                if (Counter > s.FreeWalking.NegDistance2)
+                if (Counter > stateData.FreeWalking.NegDistance2)
                     return;
 
-                Counter -= s.FreeWalking.NegDistance2 + 1;
-                s.FreeWalking.NegDistance1 = 1;
+                Counter -= stateData.FreeWalking.NegDistance2 + 1;
+                stateData.FreeWalking.NegDistance1 = 1;
                 Animation = 123;
                 Counter += 1536;
             }
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDistance1 != 1)
+                if (stateData.FreeWalking.NegDistance1 != 1)
                 {
                     SetState(State.FreeWalking);
-                    s.FreeWalking.NegDistance1 = -128;
-                    s.FreeWalking.NegDistance2 = 1;
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.NegDistance1 = -128;
+                    stateData.FreeWalking.NegDistance2 = 1;
+                    stateData.FreeWalking.Flags = 0;
                     Counter = 0;
                     return;
                 }
@@ -7100,19 +7422,19 @@ namespace Freeserf
                 StartWalking(Direction.DownRight, 24, true);
                 state.Tick = Game.Tick;
 
-                s.FreeWalking.NegDistance1 = 2;
+                stateData.FreeWalking.NegDistance1 = 2;
             }
         }
 
         void HandleSerfSawingState()
         {
-            if (s.Sawing.Mode == 0)
+            if (stateData.Sawing.Mode == 0)
             {
                 var building = GetBuildingAtPosition();
 
                 if (building.UseResourceInStock(0))
                 {
-                    s.Sawing.Mode = 1;
+                    stateData.Sawing.Mode = 1;
                     Animation = 124;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
@@ -7130,9 +7452,9 @@ namespace Freeserf
 
                 Game.Map.SetSerfIndex(Position, 0);
                 SetState(State.MoveResourceOut);
-                s.MoveResourceOut.Resource = (uint)Resource.Type.Plank + 1;
-                s.MoveResourceOut.ResourceDestination = 0;
-                s.MoveResourceOut.NextState = State.DropResourceOut;
+                stateData.MoveResourceOut.Resource = (uint)Resource.Type.Plank + 1;
+                stateData.MoveResourceOut.ResourceDestination = 0;
+                stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                 // Update resource stats. 
                 var player = Game.GetPlayer(Player);
@@ -7153,7 +7475,7 @@ namespace Freeserf
                 // Try to find a suitable destination. 
                 for (int i = 0; i < 258; ++i)
                 {
-                    int distance = (s.Lost.FieldB == 0) ? 1 + i : 258 - i;
+                    int distance = (stateData.Lost.FieldB == 0) ? 1 + i : 258 - i;
                     var destination = map.PositionAddSpirally(Position, (uint)distance);
 
                     if (map.HasFlag(destination))
@@ -7174,11 +7496,11 @@ namespace Freeserf
                                 SetState(State.FreeWalking);
                             }
 
-                            s.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * distance];
-                            s.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * distance + 1];
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = -1;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * distance];
+                            stateData.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * distance + 1];
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = -1;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
 
                             return;
@@ -7227,11 +7549,11 @@ namespace Freeserf
                             SetState(State.FreeWalking);
                         }
 
-                        s.FreeWalking.DistanceX = column;
-                        s.FreeWalking.DistanceY = row;
-                        s.FreeWalking.NegDistance1 = -128;
-                        s.FreeWalking.NegDistance2 = -1;
-                        s.FreeWalking.Flags = 0;
+                        stateData.FreeWalking.DistanceX = column;
+                        stateData.FreeWalking.DistanceY = row;
+                        stateData.FreeWalking.NegDistance1 = -128;
+                        stateData.FreeWalking.NegDistance2 = -1;
+                        stateData.FreeWalking.Flags = 0;
                         Counter = 0;
 
                         return;
@@ -7265,11 +7587,11 @@ namespace Freeserf
                         {
                             SetState(State.FreeSailing);
 
-                            s.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * i];
-                            s.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * i + 1];
-                            s.FreeWalking.NegDistance1 = -128;
-                            s.FreeWalking.NegDistance2 = -1;
-                            s.FreeWalking.Flags = 0;
+                            stateData.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * i];
+                            stateData.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * i + 1];
+                            stateData.FreeWalking.NegDistance1 = -128;
+                            stateData.FreeWalking.NegDistance2 = -1;
+                            stateData.FreeWalking.Flags = 0;
                             Counter = 0;
 
                             return;
@@ -7289,11 +7611,11 @@ namespace Freeserf
                     {
                         SetState(State.FreeSailing);
 
-                        s.FreeWalking.DistanceX = column;
-                        s.FreeWalking.DistanceY = row;
-                        s.FreeWalking.NegDistance1 = -128;
-                        s.FreeWalking.NegDistance2 = -1;
-                        s.FreeWalking.Flags = 0;
+                        stateData.FreeWalking.DistanceX = column;
+                        stateData.FreeWalking.DistanceY = row;
+                        stateData.FreeWalking.NegDistance1 = -128;
+                        stateData.FreeWalking.NegDistance2 = -1;
+                        stateData.FreeWalking.Flags = 0;
                         Counter = 0;
 
                         return;
@@ -7313,7 +7635,7 @@ namespace Freeserf
                 if (!Game.Map.IsInWater(Position))
                 {
                     SetState(State.Lost);
-                    s.Lost.FieldB = 0;
+                    stateData.Lost.FieldB = 0;
                     return;
                 }
 
@@ -7331,7 +7653,7 @@ namespace Freeserf
                 state.Tick = Game.Tick;
 
                 SetState(State.Lost);
-                s.Lost.FieldB = 0;
+                stateData.Lost.FieldB = 0;
 
                 Game.AddSerfForDrawing(this, Position);
             }
@@ -7359,9 +7681,9 @@ namespace Freeserf
             {
                 var building = GetBuildingAtPosition();
 
-                Log.Verbose.Write(ErrorSystemType.Serf, $"mining substate: {s.Mining.Substate}.");
+                Log.Verbose.Write(ErrorSystemType.Serf, $"mining substate: {stateData.Mining.Substate}.");
 
-                switch (s.Mining.Substate)
+                switch (stateData.Mining.Substate)
                 {
                     case 0: // Base state
                         {
@@ -7371,11 +7693,11 @@ namespace Freeserf
 
                             if ((random & 7) == 0)
                             {
-                                s.Mining.Substate = 2;
+                                stateData.Mining.Substate = 2;
                             }
                             else
                             {
-                                s.Mining.Substate = 1;
+                                stateData.Mining.Substate = 1;
                             }
 
                             Counter += 100 + (random & 0x1ff);
@@ -7385,7 +7707,7 @@ namespace Freeserf
                         if (building.UseResourceInStock(0))
                         {
                             // Eat the food. 
-                            s.Mining.Substate = 3;
+                            stateData.Mining.Substate = 3;
                             map.SetSerfIndex(Position, (int)Index);
                             Animation = 125;
                             Counter = CounterFromAnimation[Animation];
@@ -7401,13 +7723,13 @@ namespace Freeserf
                         }
                         break;
                     case 2: // Initiate mining without food
-                        s.Mining.Substate = 3;
+                        stateData.Mining.Substate = 3;
                         map.SetSerfIndex(Position, (int)Index);
                         Animation = 125;
                         Counter = CounterFromAnimation[Animation];
                         break;
                     case 3: // Walk to elevator
-                        s.Mining.Substate = 4;
+                        stateData.Mining.Substate = 4;
                         building.StopActivity();
                         Animation = 126;
                         Counter = CounterFromAnimation[Animation];
@@ -7423,22 +7745,22 @@ namespace Freeserf
                     case 6: // Underground mining
                     case 7: // Underground mining
                         {
-                            ++s.Mining.Substate;
+                            ++stateData.Mining.Substate;
 
                             // Look for resource in ground.
                             var destination = map.PositionAddSpirally(Position, (uint)(Game.RandomInt() >> 2) & 0x1f);
 
                             if ((map.GetObject(destination) == Map.Object.None ||
                                  map.GetObject(destination) > Map.Object.Castle) &&
-                                map.GetResourceType(destination) == s.Mining.Deposit &&
+                                map.GetResourceType(destination) == stateData.Mining.Deposit &&
                                 map.GetResourceAmount(destination) > 0)
                             {
                                 // Decrement resource count in ground. 
                                 map.RemoveGroundDeposit(destination, 1);
 
                                 // Hand resource to miner. 
-                                s.Mining.Resource = (uint)ResFromMineType[(int)s.Mining.Deposit - 1] + 1;
-                                s.Mining.Substate = 8;
+                                stateData.Mining.Resource = (uint)ResFromMineType[(int)stateData.Mining.Deposit - 1] + 1;
+                                stateData.Mining.Substate = 8;
                             }
 
                             Counter += 1000;
@@ -7446,33 +7768,33 @@ namespace Freeserf
                         }
                     case 8: // Finished underground mining
                         map.SetSerfIndex(Position, (int)Index);
-                        s.Mining.Substate = 9;
+                        stateData.Mining.Substate = 9;
                         building.StopPlayingSfx();
                         Animation = 127;
                         Counter = CounterFromAnimation[Animation];
                         break;
                     case 9: // Elevator comes up
-                        s.Mining.Substate = 10;
-                        building.IncreaseMining((int)s.Mining.Resource);
+                        stateData.Mining.Substate = 10;
+                        building.IncreaseMining((int)stateData.Mining.Resource);
                         Animation = 128;
                         Counter = CounterFromAnimation[Animation];
                         break;
                     case 10: // Move resource out or finish working
                         map.SetSerfIndex(Position, 0);
-                        if (s.Mining.Resource == 0)
+                        if (stateData.Mining.Resource == 0)
                         {
-                            s.Mining.Substate = 0;
+                            stateData.Mining.Substate = 0;
                             Counter = 0;
                         }
                         else
                         {
-                            uint resource = s.Mining.Resource;
+                            uint resource = stateData.Mining.Resource;
                             map.SetSerfIndex(Position, 0);
 
                             SetState(State.MoveResourceOut);
-                            s.MoveResourceOut.Resource = resource;
-                            s.MoveResourceOut.ResourceDestination = 0;
-                            s.MoveResourceOut.NextState = State.DropResourceOut;
+                            stateData.MoveResourceOut.Resource = resource;
+                            stateData.MoveResourceOut.ResourceDestination = 0;
+                            stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                             // Update resource stats. 
                             var player = Game.GetPlayer(Player);
@@ -7492,15 +7814,15 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
 
-            if (s.Smelting.Mode == 0)
+            if (stateData.Smelting.Mode == 0)
             {
                 if (building.UseResourcesInStocks())
                 {
                     building.StartActivity();
 
-                    s.Smelting.Mode = 1;
+                    stateData.Smelting.Mode = 1;
 
-                    if (s.Smelting.Type == 0)
+                    if (stateData.Smelting.Type == 0)
                     {
                         Animation = 130;
                     }
@@ -7509,7 +7831,7 @@ namespace Freeserf
                         Animation = 129;
                     }
 
-                    s.Smelting.Counter = 20;
+                    stateData.Smelting.Counter = 20;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
 
@@ -7524,15 +7846,15 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    --s.Smelting.Counter;
+                    --stateData.Smelting.Counter;
 
-                    if (s.Smelting.Counter < 0)
+                    if (stateData.Smelting.Counter < 0)
                     {
                         building.StopActivity();
 
                         Resource.Type resource;
 
-                        if (s.Smelting.Type == 0)
+                        if (stateData.Smelting.Type == 0)
                         {
                             resource = Resource.Type.Steel;
                         }
@@ -7543,9 +7865,9 @@ namespace Freeserf
 
                         SetState(State.MoveResourceOut);
 
-                        s.MoveResourceOut.Resource = (uint)resource + 1u;
-                        s.MoveResourceOut.ResourceDestination = 0;
-                        s.MoveResourceOut.NextState = State.DropResourceOut;
+                        stateData.MoveResourceOut.Resource = (uint)resource + 1u;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                         // Update resource stats. 
                         var player = Game.GetPlayer(Player);
@@ -7553,7 +7875,7 @@ namespace Freeserf
 
                         return;
                     }
-                    else if (s.Smelting.Counter == 0)
+                    else if (stateData.Smelting.Counter == 0)
                     {
                         Game.Map.SetSerfIndex(Position, 0);
                     }
@@ -7584,12 +7906,12 @@ namespace Freeserf
                       map.TypeUp(map.MoveUp(destination)) >= Map.Terrain.Grass0)))
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
-                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
-                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
-                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
-                    s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning fishing: lake found, dist {s.LeavingBuilding.FieldB},{s.LeavingBuilding.Destination}");
+                    stateData.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    stateData.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    stateData.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    stateData.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
+                    stateData.LeavingBuilding.NextState = State.FreeWalking;
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning fishing: lake found, dist {stateData.LeavingBuilding.FieldB},{stateData.LeavingBuilding.Destination}");
 
                     return;
                 }
@@ -7606,20 +7928,20 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDistance2 != 0 ||
-                    s.FreeWalking.Flags == 10)
+                if (stateData.FreeWalking.NegDistance2 != 0 ||
+                    stateData.FreeWalking.Flags == 10)
                 {
                     // Stop fishing. Walk back. 
                     SetState(State.FreeWalking);
-                    s.FreeWalking.NegDistance1 = -128;
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.NegDistance1 = -128;
+                    stateData.FreeWalking.Flags = 0;
                     Counter = 0;
 
                     return;
                 }
 
-                s.FreeWalking.NegDistance1 += 1;
-                if ((s.FreeWalking.NegDistance1 % 2) == 0)
+                stateData.FreeWalking.NegDistance1 += 1;
+                if ((stateData.FreeWalking.NegDistance1 % 2) == 0)
                 {
                     Animation -= 2;
                     Counter += 768;
@@ -7658,10 +7980,10 @@ namespace Freeserf
                 {
                     // Caught a fish.
                     map.RemoveFish(map.Move(Position, direction), 1);
-                    s.FreeWalking.NegDistance2 = 1 + (int)Resource.Type.Fish;
+                    stateData.FreeWalking.NegDistance2 = 1 + (int)Resource.Type.Fish;
                 }
 
-                ++s.FreeWalking.Flags;
+                ++stateData.FreeWalking.Flags;
                 Animation += 2;
                 Counter += 128;
             }
@@ -7709,12 +8031,12 @@ namespace Freeserf
                      map.GetObject(destination) <= Map.Object.Field5))
                 {
                     SetState(State.ReadyToLeave);
-                    s.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
-                    s.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
-                    s.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
-                    s.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
-                    s.LeavingBuilding.NextState = State.FreeWalking;
-                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning farming: field spot found, dist {s.LeavingBuilding.FieldB}, {s.LeavingBuilding.Destination}.");
+                    stateData.LeavingBuilding.FieldB = Map.GetSpiralPattern()[2 * distance] - 1;
+                    stateData.LeavingBuilding.Destination = (uint)Map.GetSpiralPattern()[2 * distance + 1] - 1;
+                    stateData.LeavingBuilding.Destination2 = -Map.GetSpiralPattern()[2 * distance] + 1;
+                    stateData.LeavingBuilding.Direction = -Map.GetSpiralPattern()[2 * distance + 1] + 1;
+                    stateData.LeavingBuilding.NextState = State.FreeWalking;
+                    Log.Verbose.Write(ErrorSystemType.Serf, $"planning farming: field spot found, dist {stateData.LeavingBuilding.FieldB}, {stateData.LeavingBuilding.Destination}.");
 
                     return;
                 }
@@ -7734,7 +8056,7 @@ namespace Freeserf
 
             var map = Game.Map;
 
-            if (s.FreeWalking.NegDistance1 == 0)
+            if (stateData.FreeWalking.NegDistance1 == 0)
             {
                 // Sowing. 
                 if (map.GetObject(Position) == 0 && map.Paths(Position) == 0)
@@ -7745,7 +8067,7 @@ namespace Freeserf
             else
             {
                 // Harvesting. 
-                s.FreeWalking.NegDistance2 = 1;
+                stateData.FreeWalking.NegDistance2 = 1;
 
                 if (map.GetObject(Position) == Map.Object.Seeds5)
                 {
@@ -7762,8 +8084,8 @@ namespace Freeserf
             }
 
             SetState(State.FreeWalking);
-            s.FreeWalking.NegDistance1 = -128;
-            s.FreeWalking.Flags = 0;
+            stateData.FreeWalking.NegDistance1 = -128;
+            stateData.FreeWalking.Flags = 0;
             Counter = 0;
         }
 
@@ -7771,13 +8093,13 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
 
-            if (s.Milling.Mode == 0)
+            if (stateData.Milling.Mode == 0)
             {
                 if (building.UseResourceInStock(0))
                 {
                     building.StartActivity();
 
-                    s.Milling.Mode = 1;
+                    stateData.Milling.Mode = 1;
                     Animation = 137;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
@@ -7793,22 +8115,22 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    ++s.Milling.Mode;
+                    ++stateData.Milling.Mode;
 
-                    if (s.Milling.Mode == 5)
+                    if (stateData.Milling.Mode == 5)
                     {
                         // Done milling. 
                         building.StopActivity();
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Flour;
-                        s.MoveResourceOut.ResourceDestination = 0;
-                        s.MoveResourceOut.NextState = State.DropResourceOut;
+                        stateData.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Flour;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                         var player = Game.GetPlayer(Player);
                         player.IncreaseResourceCount(Resource.Type.Flour);
                         return;
                     }
-                    else if (s.Milling.Mode == 3)
+                    else if (stateData.Milling.Mode == 3)
                     {
                         Game.Map.SetSerfIndex(Position, (int)Index);
                         Animation = 137;
@@ -7827,11 +8149,11 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
 
-            if (s.Baking.Mode == 0)
+            if (stateData.Baking.Mode == 0)
             {
                 if (building.UseResourceInStock(0))
                 {
-                    s.Baking.Mode = 1;
+                    stateData.Baking.Mode = 1;
                     Animation = 138;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
@@ -7847,17 +8169,17 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    ++s.Baking.Mode;
+                    ++stateData.Baking.Mode;
 
-                    if (s.Baking.Mode == 3)
+                    if (stateData.Baking.Mode == 3)
                     {
                         // Done baking. 
                         building.StopActivity();
 
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Bread;
-                        s.MoveResourceOut.ResourceDestination = 0;
-                        s.MoveResourceOut.NextState = State.DropResourceOut;
+                        stateData.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Bread;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                         var player = Game.GetPlayer(Player);
                         player.IncreaseResourceCount(Resource.Type.Bread);
@@ -7885,11 +8207,11 @@ namespace Freeserf
 
             var building = GetBuildingAtPosition();
 
-            if (s.PigFarming.Mode == 0)
+            if (stateData.PigFarming.Mode == 0)
             {
                 if (building.UseResourceInStock(0))
                 {
-                    s.PigFarming.Mode = 1;
+                    stateData.PigFarming.Mode = 1;
                     Animation = 139;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
@@ -7905,11 +8227,11 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    ++s.PigFarming.Mode;
+                    ++stateData.PigFarming.Mode;
 
-                    if ((s.PigFarming.Mode & 1) != 0)
+                    if ((stateData.PigFarming.Mode & 1) != 0)
                     {
-                        if (s.PigFarming.Mode != 7)
+                        if (stateData.PigFarming.Mode != 7)
                         {
                             Game.Map.SetSerfIndex(Position, (int)Index);
                             Animation = 139;
@@ -7923,9 +8245,9 @@ namespace Freeserf
                             building.SendPigToButcher();
 
                             SetState(State.MoveResourceOut);
-                            s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Pig;
-                            s.MoveResourceOut.ResourceDestination = 0;
-                            s.MoveResourceOut.NextState = State.DropResourceOut;
+                            stateData.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Pig;
+                            stateData.MoveResourceOut.ResourceDestination = 0;
+                            stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                             // Update resource stats. 
                             var player = Game.GetPlayer(Player);
@@ -7933,7 +8255,7 @@ namespace Freeserf
                         }
                         else if ((Game.RandomInt() & 0xf) != 0)
                         {
-                            s.PigFarming.Mode = 1;
+                            stateData.PigFarming.Mode = 1;
                             Animation = 139;
                             Counter = CounterFromAnimation[Animation];
                             state.Tick = Game.Tick;
@@ -7941,7 +8263,7 @@ namespace Freeserf
                         }
                         else
                         {
-                            s.PigFarming.Mode = 0;
+                            stateData.PigFarming.Mode = 0;
                         }
 
                         return;
@@ -7966,11 +8288,11 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
 
-            if (s.Butchering.Mode == 0)
+            if (stateData.Butchering.Mode == 0)
             {
                 if (building.UseResourceInStock(0))
                 {
-                    s.Butchering.Mode = 1;
+                    stateData.Butchering.Mode = 1;
                     Animation = 140;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
@@ -7990,9 +8312,9 @@ namespace Freeserf
                     Game.Map.SetSerfIndex(Position, 0);
 
                     SetState(State.MoveResourceOut);
-                    s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Meat;
-                    s.MoveResourceOut.ResourceDestination = 0;
-                    s.MoveResourceOut.NextState = State.DropResourceOut;
+                    stateData.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Meat;
+                    stateData.MoveResourceOut.ResourceDestination = 0;
+                    stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                     // Update resource stats. 
                     var player = Game.GetPlayer(Player);
@@ -8005,7 +8327,7 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
 
-            if (s.MakingWeapon.Mode == 0)
+            if (stateData.MakingWeapon.Mode == 0)
             {
                 // One of each resource makes a sword and a shield.
                 // If a sword has been made a shield can be made
@@ -8020,7 +8342,7 @@ namespace Freeserf
 
                 building.StartActivity();
 
-                s.MakingWeapon.Mode = 1;
+                stateData.MakingWeapon.Mode = 1;
                 Animation = 143;
                 Counter = CounterFromAnimation[Animation];
                 state.Tick = Game.Tick;
@@ -8035,9 +8357,9 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    ++s.MakingWeapon.Mode;
+                    ++stateData.MakingWeapon.Mode;
 
-                    if (s.MakingWeapon.Mode == 7)
+                    if (stateData.MakingWeapon.Mode == 7)
                     {
                         // Done making sword or shield. 
                         building.StopActivity();
@@ -8048,9 +8370,9 @@ namespace Freeserf
                         building.FreeShieldPossible = !building.FreeShieldPossible;
 
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Resource = 1 + (uint)resource;
-                        s.MoveResourceOut.ResourceDestination = 0;
-                        s.MoveResourceOut.NextState = State.DropResourceOut;
+                        stateData.MoveResourceOut.Resource = 1 + (uint)resource;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                         // Update resource stats. 
                         var player = Game.GetPlayer(Player);
@@ -8069,11 +8391,11 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
 
-            if (s.MakingTool.Mode == 0)
+            if (stateData.MakingTool.Mode == 0)
             {
                 if (building.UseResourcesInStocks())
                 {
-                    s.MakingTool.Mode = 1;
+                    stateData.MakingTool.Mode = 1;
                     Animation = 144;
                     Counter = CounterFromAnimation[Animation];
                     state.Tick = Game.Tick;
@@ -8089,9 +8411,9 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    ++s.MakingTool.Mode;
+                    ++stateData.MakingTool.Mode;
 
-                    if (s.MakingTool.Mode == 4)
+                    if (stateData.MakingTool.Mode == 4)
                     {
                         // Done making tool. 
                         Game.Map.SetSerfIndex(Position, 0);
@@ -8132,9 +8454,9 @@ namespace Freeserf
                             resource = (int)Resource.Type.Shovel + ((9 * Game.RandomInt()) >> 16);
 
                         SetState(State.MoveResourceOut);
-                        s.MoveResourceOut.Resource = 1 + (uint)resource;
-                        s.MoveResourceOut.ResourceDestination = 0;
-                        s.MoveResourceOut.NextState = State.DropResourceOut;
+                        stateData.MoveResourceOut.Resource = 1 + (uint)resource;
+                        stateData.MoveResourceOut.ResourceDestination = 0;
+                        stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                         // Update resource stats. 
                         player.IncreaseResourceCount((Resource.Type)resource);
@@ -8155,14 +8477,14 @@ namespace Freeserf
             var map = Game.Map;
             var building = GetBuildingAtPosition();
 
-            if (s.BuildingBoat.Mode == 0)
+            if (stateData.BuildingBoat.Mode == 0)
             {
                 if (!building.UseResourceInStock(0))
                     return;
 
                 building.BoatClear();
 
-                s.BuildingBoat.Mode = 1;
+                stateData.BuildingBoat.Mode = 1;
                 Animation = 146;
                 Counter = CounterFromAnimation[Animation];
                 state.Tick = Game.Tick;
@@ -8177,9 +8499,9 @@ namespace Freeserf
 
                 while (Counter < 0)
                 {
-                    ++s.BuildingBoat.Mode;
+                    ++stateData.BuildingBoat.Mode;
 
-                    if (s.BuildingBoat.Mode == 9)
+                    if (stateData.BuildingBoat.Mode == 9)
                     {
                         // Boat done. 
                         var newPosition = map.MoveDownRight(Position);
@@ -8187,7 +8509,7 @@ namespace Freeserf
                         if (map.HasSerf(newPosition))
                         {
                             // Wait for flag to be free. 
-                            --s.BuildingBoat.Mode;
+                            --stateData.BuildingBoat.Mode;
                             Counter = 0;
                         }
                         else
@@ -8197,9 +8519,9 @@ namespace Freeserf
                             map.SetSerfIndex(Position, 0);
 
                             SetState(State.MoveResourceOut);
-                            s.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Boat;
-                            s.MoveResourceOut.ResourceDestination = 0;
-                            s.MoveResourceOut.NextState = State.DropResourceOut;
+                            stateData.MoveResourceOut.Resource = 1 + (uint)Resource.Type.Boat;
+                            stateData.MoveResourceOut.ResourceDestination = 0;
+                            stateData.MoveResourceOut.NextState = State.DropResourceOut;
 
                             // Update resource stats. 
                             var player = Game.GetPlayer(Player);
@@ -8243,13 +8565,13 @@ namespace Freeserf
                         (terrain4 >= Map.Terrain.Tundra0 && terrain4 <= Map.Terrain.Snow0))
                     {
                         SetState(State.FreeWalking);
-                        s.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * distance];
-                        s.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * distance + 1];
-                        s.FreeWalking.NegDistance1 = -Map.GetSpiralPattern()[2 * distance];
-                        s.FreeWalking.NegDistance2 = -Map.GetSpiralPattern()[2 * distance + 1];
-                        s.FreeWalking.Flags = 0;
+                        stateData.FreeWalking.DistanceX = Map.GetSpiralPattern()[2 * distance];
+                        stateData.FreeWalking.DistanceY = Map.GetSpiralPattern()[2 * distance + 1];
+                        stateData.FreeWalking.NegDistance1 = -Map.GetSpiralPattern()[2 * distance];
+                        stateData.FreeWalking.NegDistance2 = -Map.GetSpiralPattern()[2 * distance + 1];
+                        stateData.FreeWalking.Flags = 0;
                         state.Tick = Game.Tick;
-                        Log.Verbose.Write(ErrorSystemType.Serf, $"looking for geo spot: found, dist {s.FreeWalking.DistanceX}, {s.FreeWalking.DistanceY}.");
+                        Log.Verbose.Write(ErrorSystemType.Serf, $"looking for geo spot: found, dist {stateData.FreeWalking.DistanceX}, {stateData.FreeWalking.DistanceY}.");
 
                         return;
                     }
@@ -8263,10 +8585,10 @@ namespace Freeserf
             }
 
             SetState(State.Walking);
-            s.Walking.Destination = 0;
-            s.Walking.Direction1 = -2;
-            s.Walking.Direction = 0;
-            s.Walking.WaitCounter = 0;
+            stateData.Walking.Destination = 0;
+            stateData.Walking.Direction1 = -2;
+            stateData.Walking.Direction = 0;
+            stateData.Walking.WaitCounter = 0;
             Counter = 0;
         }
 
@@ -8280,7 +8602,7 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                if (s.FreeWalking.NegDistance1 == 0 && map.GetObject(Position) == Map.Object.None)
+                if (stateData.FreeWalking.NegDistance1 == 0 && map.GetObject(Position) == Map.Object.None)
                 {
                     if (map.GetResourceType(Position) == Map.Minerals.None ||
                         map.GetResourceAmount(Position) == 0)
@@ -8290,7 +8612,7 @@ namespace Freeserf
                     }
                     else
                     {
-                        s.FreeWalking.NegDistance1 = -1;
+                        stateData.FreeWalking.NegDistance1 = -1;
                         Animation = 142;
 
                         // Select small or large sign with the right resource depicted. 
@@ -8346,9 +8668,9 @@ namespace Freeserf
                 }
 
                 SetState(State.FreeWalking);
-                s.FreeWalking.NegDistance1 = -128;
-                s.FreeWalking.NegDistance2 = 0;
-                s.FreeWalking.Flags = 0;
+                stateData.FreeWalking.NegDistance1 = -128;
+                stateData.FreeWalking.NegDistance2 = 0;
+                stateData.FreeWalking.Flags = 0;
                 Counter = 0;
             }
         }
@@ -8391,11 +8713,11 @@ namespace Freeserf
 
                         var defendingSerf = building.CallDefenderOut();
 
-                        s.Attacking.DefenderIndex = (int)defendingSerf.Index;
+                        stateData.Attacking.DefenderIndex = (int)defendingSerf.Index;
 
                         // Change state of defending knight 
                         SetOtherState(defendingSerf, State.KnightLeaveForFight);
-                        defendingSerf.s.LeavingBuilding.NextState = State.KnightPrepareDefending;
+                        defendingSerf.stateData.LeavingBuilding.NextState = State.KnightPrepareDefending;
                         defendingSerf.Counter = 0;
                         return;
                     }
@@ -8411,7 +8733,7 @@ namespace Freeserf
 
         void HandleSerfKnightPrepareAttacking()
         {
-            var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+            var defendingSerf = Game.GetSerf((uint)stateData.Attacking.DefenderIndex);
 
             if (defendingSerf.SerfState == State.KnightPrepareDefending)
             {
@@ -8470,7 +8792,7 @@ namespace Freeserf
 
         void HandleKnightAttacking()
         {
-            var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+            var defendingSerf = Game.GetSerf((uint)stateData.Attacking.DefenderIndex);
             ushort delta = (ushort)(Game.Tick - state.Tick);
             state.Tick = Game.Tick;
             defendingSerf.state.Tick = state.Tick;
@@ -8479,11 +8801,11 @@ namespace Freeserf
 
             while (Counter < 0)
             {
-                int move = KnightAttackMoves[s.Attacking.Move];
+                int move = KnightAttackMoves[stateData.Attacking.Move];
 
                 if (move < 0)
                 {
-                    if (s.Attacking.AttackerWon == 0)
+                    if (stateData.Attacking.AttackerWon == 0)
                     {
                         // Defender won. 
                         if (SerfState == State.KnightAttackingFree)
@@ -8520,10 +8842,10 @@ namespace Freeserf
                             Animation = 168;
                             Counter = 0;
 
-                            s.AttackingVictoryFree.DefenderIndex = (int)defendingSerf.Index;
-                            s.AttackingVictoryFree.Move = defendingSerf.s.DefendingFree.FieldD;
-                            s.AttackingVictoryFree.DistanceColumn = defendingSerf.s.DefendingFree.OtherDistanceColumn;
-                            s.AttackingVictoryFree.DistanceRow = defendingSerf.s.DefendingFree.OtherDistanceRow;
+                            stateData.AttackingVictoryFree.DefenderIndex = (int)defendingSerf.Index;
+                            stateData.AttackingVictoryFree.Move = defendingSerf.stateData.DefendingFree.FieldD;
+                            stateData.AttackingVictoryFree.DistanceColumn = defendingSerf.stateData.DefendingFree.OtherDistanceColumn;
+                            stateData.AttackingVictoryFree.DistanceRow = defendingSerf.stateData.DefendingFree.OtherDistanceRow;
                         }
                         else
                         {
@@ -8545,12 +8867,12 @@ namespace Freeserf
                 else
                 {
                     // Go to next move in fight sequence. 
-                    ++s.Attacking.Move;
+                    ++stateData.Attacking.Move;
 
-                    if (s.Attacking.AttackerWon == 0)
+                    if (stateData.Attacking.AttackerWon == 0)
                         move = 4 - move;
 
-                    s.Attacking.FieldD = move;
+                    stateData.Attacking.FieldD = move;
 
                     int animationOffset = (Game.RandomInt() * KnightFightAnimMax[move]) >> 16;
                     int knightAnimation = KnightFightAnim[move * 16 + animationOffset];
@@ -8565,7 +8887,7 @@ namespace Freeserf
 
         void HandleSerfKnightAttackingVictoryState()
         {
-            var defendingSerf = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+            var defendingSerf = Game.GetSerf((uint)stateData.Attacking.DefenderIndex);
             ushort delta = (ushort)(Game.Tick - defendingSerf.state.Tick);
             defendingSerf.state.Tick = Game.Tick;
             defendingSerf.Counter -= delta;
@@ -8573,7 +8895,7 @@ namespace Freeserf
             if (defendingSerf.Counter < 0)
             {
                 Game.DeleteSerf(defendingSerf);
-                s.Attacking.DefenderIndex = 0;
+                stateData.Attacking.DefenderIndex = 0;
 
                 SetState(State.KnightEngagingBuilding);
                 state.Tick = Game.Tick;
@@ -8659,7 +8981,7 @@ namespace Freeserf
 
             // Something is wrong. 
             SetState(State.Lost);
-            s.Lost.FieldB = 0;
+            stateData.Lost.FieldB = 0;
             Counter = 0;
         }
 
@@ -8692,22 +9014,22 @@ namespace Freeserf
 
                                 if (CanPassMapPosition(position))
                                 {
-                                    int distanceColumn = s.FreeWalking.DistanceX;
-                                    int distanceRow = s.FreeWalking.DistanceY;
+                                    int distanceColumn = stateData.FreeWalking.DistanceX;
+                                    int distanceRow = stateData.FreeWalking.DistanceY;
 
                                     SetState(State.KnightEngageDefendingFree);
 
-                                    s.DefendingFree.DistanceColumn = distanceColumn;
-                                    s.DefendingFree.DistanceRow = distanceRow;
-                                    s.DefendingFree.OtherDistanceColumn = otherSerf.s.FreeWalking.DistanceX;
-                                    s.DefendingFree.OtherDistanceRow = otherSerf.s.FreeWalking.DistanceY;
-                                    s.DefendingFree.FieldD = 1;
+                                    stateData.DefendingFree.DistanceColumn = distanceColumn;
+                                    stateData.DefendingFree.DistanceRow = distanceRow;
+                                    stateData.DefendingFree.OtherDistanceColumn = otherSerf.stateData.FreeWalking.DistanceX;
+                                    stateData.DefendingFree.OtherDistanceRow = otherSerf.stateData.FreeWalking.DistanceY;
+                                    stateData.DefendingFree.FieldD = 1;
                                     Animation = 99;
                                     Counter = 255;
 
                                     SetOtherState(otherSerf, State.KnightEngageAttackingFree);
-                                    otherSerf.s.Attacking.FieldD = (int)direction;
-                                    otherSerf.s.Attacking.DefenderIndex = (int)Index;
+                                    otherSerf.stateData.Attacking.FieldD = (int)direction;
+                                    otherSerf.stateData.Attacking.DefenderIndex = (int)Index;
                                     return;
                                 }
                             }
@@ -8717,17 +9039,17 @@ namespace Freeserf
 
                                 if (CanPassMapPosition(position))
                                 {
-                                    int distanceColumn = s.FreeWalking.DistanceX;
-                                    int distanceRow = s.FreeWalking.DistanceY;
+                                    int distanceColumn = stateData.FreeWalking.DistanceX;
+                                    int distanceRow = stateData.FreeWalking.DistanceY;
 
                                     SetState(State.KnightEngageDefendingFree);
-                                    s.DefendingFree.DistanceColumn = distanceColumn;
-                                    s.DefendingFree.DistanceRow = distanceRow;
-                                    s.DefendingFree.FieldD = 0;
+                                    stateData.DefendingFree.DistanceColumn = distanceColumn;
+                                    stateData.DefendingFree.DistanceRow = distanceRow;
+                                    stateData.DefendingFree.FieldD = 0;
                                     Animation = 99;
                                     Counter = 255;
 
-                                    var destination = Game.GetFlag(otherSerf.s.Walking.Destination);
+                                    var destination = Game.GetFlag(otherSerf.stateData.Walking.Destination);
                                     var building = destination.Building;
 
                                     if (building != null && !building.HasInventory())
@@ -8736,8 +9058,8 @@ namespace Freeserf
                                     }
 
                                     SetOtherState(otherSerf, State.KnightEngageAttackingFree);
-                                    otherSerf.s.Attacking.FieldD = (int)direction;
-                                    otherSerf.s.Attacking.DefenderIndex = (int)Index;
+                                    otherSerf.stateData.Attacking.FieldD = (int)direction;
+                                    otherSerf.stateData.Attacking.DefenderIndex = (int)Index;
 
                                     return;
                                 }
@@ -8785,30 +9107,30 @@ namespace Freeserf
                 Animation = 168;
                 Counter = 0;
 
-                var other = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+                var other = Game.GetSerf((uint)stateData.Attacking.DefenderIndex);
                 var otherPosition = other.Position;
                 SetOtherState(other, State.KnightPrepareDefendingFree);
                 other.Counter = Counter;
 
                 // Adjust distance to final destination. 
-                var direction = (Direction)s.Attacking.FieldD;
+                var direction = (Direction)stateData.Attacking.FieldD;
 
                 if (direction == Direction.Right || direction == Direction.DownRight)
                 {
-                    --other.s.DefendingFree.DistanceColumn;
+                    --other.stateData.DefendingFree.DistanceColumn;
                 }
                 else if (direction == Direction.Left || direction == Direction.UpLeft)
                 {
-                    ++other.s.DefendingFree.DistanceColumn;
+                    ++other.stateData.DefendingFree.DistanceColumn;
                 }
 
                 if (direction == Direction.DownRight || direction == Direction.Down)
                 {
-                    --other.s.DefendingFree.DistanceRow;
+                    --other.stateData.DefendingFree.DistanceRow;
                 }
                 else if (direction == Direction.UpLeft || direction == Direction.Up)
                 {
-                    ++other.s.DefendingFree.DistanceRow;
+                    ++other.stateData.DefendingFree.DistanceRow;
                 }
 
                 other.StartWalking(direction, 32, false);
@@ -8818,7 +9140,7 @@ namespace Freeserf
 
         void HandleStateKnightPrepareAttackingFree()
         {
-            var other = Game.GetSerf((uint)s.Attacking.DefenderIndex);
+            var other = Game.GetSerf((uint)stateData.Attacking.DefenderIndex);
 
             if (other.SerfState == State.KnightPrepareDefendingFreeWait)
             {
@@ -8847,7 +9169,7 @@ namespace Freeserf
 
         void HandleKnightAttackingVictoryFree()
         {
-            var other = Game.GetSerf((uint)s.AttackingVictoryFree.DefenderIndex);
+            var other = Game.GetSerf((uint)stateData.AttackingVictoryFree.DefenderIndex);
             ushort delta = (ushort)(Game.Tick - other.state.Tick);
             other.state.Tick = Game.Tick;
             other.Counter -= delta;
@@ -8856,23 +9178,23 @@ namespace Freeserf
             {
                 Game.DeleteSerf(other);
 
-                int distanceColumn = s.AttackingVictoryFree.DistanceColumn;
-                int distanceRow = s.AttackingVictoryFree.DistanceRow;
+                int distanceColumn = stateData.AttackingVictoryFree.DistanceColumn;
+                int distanceRow = stateData.AttackingVictoryFree.DistanceRow;
 
                 SetState(State.KnightAttackingFreeWait);
 
-                s.FreeWalking.DistanceX = distanceColumn;
-                s.FreeWalking.DistanceY = distanceRow;
-                s.FreeWalking.NegDistance1 = 0;
-                s.FreeWalking.NegDistance2 = 0;
+                stateData.FreeWalking.DistanceX = distanceColumn;
+                stateData.FreeWalking.DistanceY = distanceRow;
+                stateData.FreeWalking.NegDistance1 = 0;
+                stateData.FreeWalking.NegDistance2 = 0;
 
-                if (s.Attacking.Move != 0)
+                if (stateData.Attacking.Move != 0)
                 {
-                    s.FreeWalking.Flags = 1;
+                    stateData.FreeWalking.Flags = 1;
                 }
                 else
                 {
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.Flags = 0;
                 }
 
                 Animation = 179;
@@ -8896,17 +9218,17 @@ namespace Freeserf
             if (Counter < 0)
             {
                 // Change state of other. 
-                var other = Game.GetSerf((uint)s.Attacking.DefenderIndex);
-                int distanceColumn = other.s.DefendingFree.DistanceColumn;
-                int distanceRow = other.s.DefendingFree.DistanceRow;
+                var other = Game.GetSerf((uint)stateData.Attacking.DefenderIndex);
+                int distanceColumn = other.stateData.DefendingFree.DistanceColumn;
+                int distanceRow = other.stateData.DefendingFree.DistanceRow;
 
                 SetOtherState(other, State.KnightFreeWalking);
 
-                other.s.FreeWalking.DistanceX = distanceColumn;
-                other.s.FreeWalking.DistanceY = distanceRow;
-                other.s.FreeWalking.NegDistance1 = 0;
-                other.s.FreeWalking.NegDistance2 = 0;
-                other.s.FreeWalking.Flags = 0;
+                other.stateData.FreeWalking.DistanceX = distanceColumn;
+                other.stateData.FreeWalking.DistanceY = distanceRow;
+                other.stateData.FreeWalking.NegDistance1 = 0;
+                other.stateData.FreeWalking.NegDistance2 = 0;
+                other.stateData.FreeWalking.Flags = 0;
 
                 other.Animation = 179;
                 other.Counter = 0;
@@ -8926,7 +9248,7 @@ namespace Freeserf
 
             if (Counter < 0)
             {
-                if (s.FreeWalking.Flags != 0)
+                if (stateData.FreeWalking.Flags != 0)
                 {
                     SetState(State.KnightFreeWalking);
                 }
@@ -8961,19 +9283,19 @@ namespace Freeserf
                 // For clean state change, save the values first. 
                 // TODO maybe KnightLeaveForWalkToFight can
                 // share LeavingBuilding state vars.
-                int distanceColumn = s.LeaveForWalkToFight.DistanceColumn;
-                int distanceRow = s.LeaveForWalkToFight.DistanceRow;
-                int fieldD = s.LeaveForWalkToFight.FieldD;
-                int fieldE = s.LeaveForWalkToFight.FieldE;
-                var nextState = s.LeaveForWalkToFight.NextState;
+                int distanceColumn = stateData.LeaveForWalkToFight.DistanceColumn;
+                int distanceRow = stateData.LeaveForWalkToFight.DistanceRow;
+                int fieldD = stateData.LeaveForWalkToFight.FieldD;
+                int fieldE = stateData.LeaveForWalkToFight.FieldE;
+                var nextState = stateData.LeaveForWalkToFight.NextState;
 
                 LeaveBuilding(false);
                 // TODO names for LeavingBuilding vars make no sense here. 
-                s.LeavingBuilding.FieldB = distanceColumn;
-                s.LeavingBuilding.Destination = (uint)distanceRow;
-                s.LeavingBuilding.Destination2 = fieldD;
-                s.LeavingBuilding.Direction = fieldE;
-                s.LeavingBuilding.NextState = nextState;
+                stateData.LeavingBuilding.FieldB = distanceColumn;
+                stateData.LeavingBuilding.Destination = (uint)distanceRow;
+                stateData.LeavingBuilding.Destination2 = fieldD;
+                stateData.LeavingBuilding.Direction = fieldE;
+                stateData.LeavingBuilding.NextState = nextState;
             }
             else
             {
@@ -9016,7 +9338,7 @@ namespace Freeserf
         {
             var map = Game.Map;
 
-            if (s.IdleOnPath.FlagIndex == 0)
+            if (stateData.IdleOnPath.FlagIndex == 0)
             {
                 // this should not happen, but if it happens we should fix it
                 var cycle = DirectionCycleCW.CreateDefault();
@@ -9045,12 +9367,12 @@ namespace Freeserf
                     throw new ExceptionFreeserf(ErrorSystemType.Serf, "Corrupt serf state was found");
                 }
 
-                s.IdleOnPath.FlagIndex = firstFlag.Index;
-                s.IdleOnPath.ReverseDirection = firstFlagReverseDirection;
+                stateData.IdleOnPath.FlagIndex = firstFlag.Index;
+                stateData.IdleOnPath.ReverseDirection = firstFlagReverseDirection;
             }
 
-            var flag = Game.GetFlag(s.IdleOnPath.FlagIndex);
-            var reverseDirection = s.IdleOnPath.ReverseDirection;
+            var flag = Game.GetFlag(stateData.IdleOnPath.FlagIndex);
+            var reverseDirection = stateData.IdleOnPath.ReverseDirection;
 
             if (flag == null) // flag has gone
             {
@@ -9060,7 +9382,7 @@ namespace Freeserf
             else if (flag.IsScheduled(reverseDirection))
             {
                 // Set walking direction in fieldE.
-                s.IdleOnPath.FieldE = (state.Tick & 0xff) + 6;
+                stateData.IdleOnPath.FieldE = (state.Tick & 0xff) + 6;
             }
             else
             {
@@ -9069,7 +9391,7 @@ namespace Freeserf
 
                 if (otherFlag != null && otherFlag.IsScheduled(otherDirection))
                 {
-                    s.IdleOnPath.FieldE = (int)reverseDirection.Reverse();
+                    stateData.IdleOnPath.FieldE = (int)reverseDirection.Reverse();
                 }
                 else
                 {
@@ -9105,12 +9427,12 @@ namespace Freeserf
             map.ClearIdleSerf(Position);
             map.SetSerfIndex(Position, (int)Index);
 
-            int direction = s.IdleOnPath.FieldE;
+            int direction = stateData.IdleOnPath.FieldE;
 
             SetState(State.Transporting);
-            s.Walking.Resource = Resource.Type.None;
-            s.Walking.WaitCounter = 0;
-            s.Walking.Direction = direction;
+            stateData.Walking.Resource = Resource.Type.None;
+            stateData.Walking.WaitCounter = 0;
+            stateData.Walking.Direction = direction;
             state.Tick = Game.Tick;
             Counter = 0;
         }
@@ -9145,11 +9467,11 @@ namespace Freeserf
                         SetState(State.FreeWalking);
                     }
 
-                    s.FreeWalking.DistanceX = column;
-                    s.FreeWalking.DistanceY = row;
-                    s.FreeWalking.NegDistance1 = -128;
-                    s.FreeWalking.NegDistance2 = -1;
-                    s.FreeWalking.Flags = 0;
+                    stateData.FreeWalking.DistanceX = column;
+                    stateData.FreeWalking.DistanceY = row;
+                    stateData.FreeWalking.NegDistance1 = -128;
+                    stateData.FreeWalking.NegDistance2 = -1;
+                    stateData.FreeWalking.Flags = 0;
                     Counter = 0;
 
                     return;
@@ -9164,10 +9486,10 @@ namespace Freeserf
             if (!map.HasSerf(map.MoveDownRight(Position)))
             {
                 SetState(State.ReadyToLeave);
-                s.LeavingBuilding.Destination = 0;
-                s.LeavingBuilding.FieldB = -2;
-                s.LeavingBuilding.Direction = 0;
-                s.LeavingBuilding.NextState = State.Walking;
+                stateData.LeavingBuilding.Destination = 0;
+                stateData.LeavingBuilding.FieldB = -2;
+                stateData.LeavingBuilding.Direction = 0;
+                stateData.LeavingBuilding.NextState = State.Walking;
 
                 if (map.GetSerfIndex(Position) != Index && map.HasSerf(Position))
                 {
@@ -9194,7 +9516,7 @@ namespace Freeserf
                 else
                 {
                     SetState(State.Lost);
-                    s.Lost.FieldB = 0;
+                    stateData.Lost.FieldB = 0;
                 }
             }
         }
@@ -9209,7 +9531,7 @@ namespace Freeserf
             {
                 if (Misc.BitTest(Game.Map.Paths(Position), (int)direction))
                 {
-                    s.IdleOnPath.FieldE = (int)direction;
+                    stateData.IdleOnPath.FieldE = (int)direction;
                     break;
                 }
             }

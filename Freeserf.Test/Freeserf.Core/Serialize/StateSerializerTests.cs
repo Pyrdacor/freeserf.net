@@ -152,24 +152,5 @@ namespace Freeserf.Test.Freeserf.Core.Serialize
             Assert.IsTrue(resultingState.NotSerialized == 0,
                 "Public field without Data attribute is serialized.");
         }
-
-        [TestMethod]
-        public void TestState_IgnoreAttribute_ShouldNotBeSerialized()
-        {
-            using var stream = new MemoryStream();
-            var state = new TestState_IgnoreAttribute();
-            state.Serialized = 100;
-            state.NotSerialized = 100;
-
-            StateSerializer.Serialize(stream, state, true, true);
-            stream.Position = 0;
-            var resultingState = new TestState_IgnoreAttribute();
-            StateSerializer.Deserialize(resultingState, stream);
-
-            Assert.IsTrue(state.Serialized == resultingState.Serialized,
-                "Public field in DataClass without Ignore attribute is not serialized.");
-            Assert.IsTrue(resultingState.NotSerialized == 0,
-                "Public field in DataClass with Ignore attribute is serialized.");
-        }
     }
 }

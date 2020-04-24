@@ -174,7 +174,6 @@ namespace Freeserf
         }
     }
 
-    [DataClass]
     internal class FlagState : State
     {
         private MapPos position = Global.INVALID_MAPPOS;
@@ -209,6 +208,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public MapPos Position
         {
             get => position;
@@ -221,6 +221,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public Direction SearchDirection
         {
             get => searchDirection;
@@ -233,6 +235,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word SearchNumber
         {
             get => searchNumber;
@@ -245,6 +249,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public byte PathConnections
         {
             get => pathConnections;
@@ -257,6 +263,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public EndPointFlags EndPointFlags
         {
             get => endPointFlags;
@@ -269,6 +277,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public TransporterFlags TransporterFlags
         {
             get => transporterFlags;
@@ -281,6 +291,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public FlagBuildingFlags FlagBuildingFlags
         {
             get => flagBuildingFlags;
@@ -293,18 +305,22 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public DirtyArray<byte> FlagPaths { get; } = new DirtyArray<byte>(6);
+        [Data]
         public DirtyArray<word> OtherEndpoints { get; } = new DirtyArray<word>(6);
+        [Data]
         public DirtyArray<byte> OtherEndpointPaths { get; } = new DirtyArray<byte>(6);
+        [Data]
         public DirtyArray<ResourceSlot> Slots { get; } = new DirtyArray<ResourceSlot>(Global.FLAG_MAX_RES_COUNT); // TODO: stock changes have to make the array dirty
 
-        [Ignore]
         public PathConnectionFlags PathConnectionFlags
         {
             get => (PathConnectionFlags)(PathConnections & 0x3f);
             set => PathConnections = (byte)((PathConnections & 0xC0) | ((byte)value & 0x3f));
         }
-        [Ignore]
+
         public byte OwnerIndex
         {
             get => (byte)((PathConnections >> 6) & 0x03);

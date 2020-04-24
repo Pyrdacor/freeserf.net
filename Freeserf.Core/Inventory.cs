@@ -39,12 +39,12 @@ namespace Freeserf
             Out = 3,   // 11
         }
 
-        [DataClass]
         internal class OutQueue : State, IComparable
         {
-            public Resource.Type type;
-            public uint destination;
+            private Resource.Type type;
+            private uint destination;
 
+            [Data]
             public Resource.Type Type
             {
                 get => type;
@@ -57,6 +57,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public uint Destination
             {
                 get => destination;

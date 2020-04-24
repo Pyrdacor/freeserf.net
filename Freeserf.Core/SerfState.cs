@@ -16,7 +16,6 @@ namespace Freeserf
         PlayingSfx = 0x01,
     }
 
-    [DataClass]
     internal class SerfState : State
     {
         private Serf.Type type = Serf.Type.None;
@@ -27,22 +26,11 @@ namespace Freeserf
         private word tick = 0;
         private SerfStateFlags flags = SerfStateFlags.None;
         private byte stateIndex = 0;
-        private DirtyArray<byte> stateData = null;
-
-        public override void ResetDirtyFlag()
-        {
-            lock (dirtyLock)
-            {
-                if (stateData != null)
-                    stateData.ResetDirtyFlag();
-
-                ResetDirtyFlagUnlocked();
-            }
-        }
 
         /// <summary>
         /// Type of this building
         /// </summary>
+        [Data]
         public Serf.Type Type
         {
             get => type;
@@ -55,9 +43,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Owner of this building
         /// </summary>
+        [Data]
         public byte Player
         {
             get => player;
@@ -70,9 +60,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Current animation index
         /// </summary>
+        [Data]
         public byte Animation
         {
             get => animation;
@@ -85,9 +77,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Current animation counter
         /// </summary>
+        [Data]
         public int Counter
         {
             get => counter;
@@ -100,9 +94,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Position of this building
         /// </summary>
+        [Data]
         public MapPos Position
         {
             get => position;
@@ -115,9 +111,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Current tick
         /// </summary>
+        [Data]
         public word Tick
         {
             get => tick;
@@ -130,6 +128,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public SerfStateFlags Flags
         {
             get => flags;
@@ -142,6 +142,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public byte StateIndex
         {
             get => stateIndex;
@@ -154,35 +156,13 @@ namespace Freeserf
                 }
             }
         }
-        /// <summary>
-        /// State data as byte array
-        /// </summary>
-        public DirtyArray<byte> StateData
-        {
-            get => stateData;
-            set
-            {
-                if (stateData != value)
-                {
-                    if (stateData != null)
-                        stateData.RemoveGotDirtyHandlers();
 
-                    stateData = value;
-                    MarkPropertyAsDirty(nameof(StateData));
-
-                    if (stateData != null)
-                        stateData.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(StateData)); };
-                }
-            }
-        }
-
-        [Ignore]
         public Serf.State State
         {
             get => (Serf.State)StateIndex;
             set => StateIndex = (byte)value;
         }
-        [Ignore]
+
         public bool PlayingSfx
         {
             get => Flags.HasFlag(SerfStateFlags.PlayingSfx);

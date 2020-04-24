@@ -97,7 +97,6 @@ namespace Freeserf
         CyclingKnightsSecondPhase = 0x80
     }
 
-    [DataClass]
     internal class PlayerState : State
     {
         private PlayerStateFlags flags = PlayerStateFlags.None;
@@ -118,33 +117,30 @@ namespace Freeserf
         private dword totalLandArea = 0;
         private dword totalBuildingScore = 0;
         private dword totalMilitaryScore = 0;
-        private readonly DirtyArray<dword> serfCounts = new DirtyArray<dword>(Global.NUM_SERF_TYPES);
-        private readonly DirtyArray<dword> resourceCounts = new DirtyArray<dword>(Global.NUM_RESOURCE_TYPES);
-        private readonly DirtyArray<dword> completedBuildingCount = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
-        private readonly DirtyArray<dword> incompleteBuildingCount = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
         private dword militaryMaxGold = 0;
 
         public PlayerState()
         {
-            serfCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(SerfCounts)); };
-            resourceCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ResourceCounts)); };
-            completedBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(CompletedBuildingCount)); };
-            incompleteBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(IncompleteBuildingCount)); };
+            SerfCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(SerfCounts)); };
+            ResourceCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ResourceCounts)); };
+            CompletedBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(CompletedBuildingCount)); };
+            IncompleteBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(IncompleteBuildingCount)); };
         }
 
         public override void ResetDirtyFlag()
         {
             lock (dirtyLock)
             {
-                serfCounts.ResetDirtyFlag();
-                resourceCounts.ResetDirtyFlag();
-                completedBuildingCount.ResetDirtyFlag();
-                incompleteBuildingCount.ResetDirtyFlag();
+                SerfCounts.ResetDirtyFlag();
+                ResourceCounts.ResetDirtyFlag();
+                CompletedBuildingCount.ResetDirtyFlag();
+                IncompleteBuildingCount.ResetDirtyFlag();
 
                 ResetDirtyFlagUnlocked();
             }
         }
 
+        [Data]
         public PlayerStateFlags Flags
         {
             get => flags;
@@ -157,6 +153,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public PlayerFace Face
         {
             get => face;
@@ -169,6 +167,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public Color Color
         {
             get => color;
@@ -181,6 +181,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public MapPos CastlePosition
         {
             get => castlePosition;
@@ -193,6 +195,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public dword CastleInventoryIndex
         {
             get => castleInventoryIndex;
@@ -205,6 +209,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public sbyte CastleScore
         {
             get => castleScore;
@@ -217,6 +223,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public byte CastleKnights
         {
             get => castleKnights;
@@ -229,6 +237,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public dword KnightMorale
         {
             get => knightMorale;
@@ -241,6 +251,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public dword GoldDeposited
         {
             get => goldDeposited;
@@ -253,6 +265,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public byte InitialSupplies
         {
             get => initialSupplies;
@@ -265,6 +279,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public byte Intelligence
         {
             get => intelligence;
@@ -277,6 +293,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public int ReproductionCounter
         {
             get => reproductionCounter;
@@ -289,6 +307,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public word ReproductionReset
         {
             get => reproductionReset;
@@ -301,6 +321,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public int SerfToKnightCounter
         {
             get => serfToKnightCounter;
@@ -313,6 +335,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public int KnightCycleCounter
         {
             get => knightCycleCounter;
@@ -325,6 +349,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public dword TotalLandArea
         {
             get => totalLandArea;
@@ -337,6 +363,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public dword TotalBuildingScore
         {
             get => totalBuildingScore;
@@ -349,6 +377,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public dword TotalMilitaryScore
         {
             get => totalMilitaryScore;
@@ -361,10 +391,17 @@ namespace Freeserf
                 }
             }
         }
-        public DirtyArray<dword> SerfCounts => serfCounts;
-        public DirtyArray<dword> ResourceCounts => resourceCounts;
-        public DirtyArray<dword> CompletedBuildingCount => completedBuildingCount;
-        public DirtyArray<dword> IncompleteBuildingCount => incompleteBuildingCount;
+
+        [Data]
+        public DirtyArray<dword> SerfCounts { get; } = new DirtyArray<dword>(Global.NUM_SERF_TYPES);
+        [Data]
+        public DirtyArray<dword> ResourceCounts { get; } = new DirtyArray<dword>(Global.NUM_RESOURCE_TYPES);
+        [Data]
+        public DirtyArray<dword> CompletedBuildingCount { get; } = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
+        [Data]
+        public DirtyArray<dword> IncompleteBuildingCount { get; } = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
+
+        [Data]
         public dword MilitaryMaxGold
         {
             get => militaryMaxGold;
@@ -378,7 +415,6 @@ namespace Freeserf
             }
         }
 
-        [Ignore]
         public bool HasCastle
         {
             get => Flags.HasFlag(PlayerStateFlags.HasCastle);
@@ -390,7 +426,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.HasCastle;
             }
         }
-        [Ignore]
+
         public bool IsAI
         {
             get => Flags.HasFlag(PlayerStateFlags.IsAI);
@@ -402,7 +438,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.IsAI;
             }
         }
-        [Ignore]
+
         public bool EmergencyProgramActive
         {
             get => Flags.HasFlag(PlayerStateFlags.EmergencyProgramActive);
@@ -414,7 +450,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.EmergencyProgramActive;
             }
         }
-        [Ignore]
+
         public bool EmergencyProgramWasDeactivatedOnce
         {
             get => Flags.HasFlag(PlayerStateFlags.EmergencyProgramWasDeactivatedOnce);
@@ -426,7 +462,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.EmergencyProgramWasDeactivatedOnce;
             }
         }
-        [Ignore]
+
         public bool CanSpawn
         {
             get => Flags.HasFlag(PlayerStateFlags.CanSpawn);
@@ -438,7 +474,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.CanSpawn;
             }
         }
-        [Ignore]
+
         public bool CyclingKnightsInProgress
         {
             get => Flags.HasFlag(PlayerStateFlags.CyclingKnightsInProgress);
@@ -450,7 +486,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.CyclingKnightsInProgress;
             }
         }
-        [Ignore]
+
         public bool CyclingKnightsReducedLevel
         {
             get => Flags.HasFlag(PlayerStateFlags.CyclingKnightsReducedLevel);
@@ -462,7 +498,7 @@ namespace Freeserf
                     Flags &= ~PlayerStateFlags.CyclingKnightsReducedLevel;
             }
         }
-        [Ignore]
+
         public bool CyclingKnightsSecondPhase
         {
             get => Flags.HasFlag(PlayerStateFlags.CyclingKnightsSecondPhase);

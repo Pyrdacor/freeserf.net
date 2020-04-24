@@ -1,7 +1,7 @@
 ﻿/*
  * DataAttribute.cs - C# attributes for data classes
  *
- * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Freeserf.Serialize
 {
@@ -29,20 +30,20 @@ namespace Freeserf.Serialize
         /// <summary>
         /// Marks a member as serializable data.
         /// </summary>
-        /// <param name="dataName">The serialized name</param>
-        public DataAttribute(string dataName = null)
+        /// <param name="order">Serialization order</param>
+        public DataAttribute([CallerLineNumber] int order = 0)
         {
-            DataName = dataName;
+            Order = order;
         }
 
-        public string DataName
+        public int Order
         {
             get;
             private set;
         }
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
     internal class DataClassAttribute : Attribute
     {
         /// <summary>

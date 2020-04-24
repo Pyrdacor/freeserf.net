@@ -1,7 +1,7 @@
 /*
  * StateSerializer.cs - Serializer for state objects
  *
- * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -142,6 +142,9 @@ namespace Freeserf.Serialize
             }
         }
 
+        public delegate object CustomTypeCreator(object parent);
+
+        private static readonly Dictionary<Type, CustomTypeCreator> customTypeCreators = new Dictionary<Type, CustomTypeCreator>();
         private static readonly Dictionary<Type, PropertyMap> propertyMapCache = new Dictionary<Type, PropertyMap>();
         private static readonly Dictionary<Type, List<KeyValuePair<string, bool>>> typeSerializablePropertyCache = new Dictionary<Type, List<KeyValuePair<string, bool>>>();
         /// <summary>
@@ -154,6 +157,17 @@ namespace Freeserf.Serialize
         /// This is part of the data version a communication partner uses.
         /// </summary>
         private const byte DATA_MINOR_VERSION = 0;
+
+        public static void RegisterCustomTypeCreator(Type type, CustomTypeCreator customTypeCreator)
+        {
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            if (customTypeCreator == null)
+                customTypeCreators.Remove(type);
+            else
+                customTypeCreators[type] = customTypeCreator;
+        }
 
         private static bool IsPropertySerializable(PropertyInfo property)
         {
@@ -189,49 +203,33 @@ namespace Freeserf.Serialize
         /// 
         /// Otherwise single properties and fields may have the Data attribute.
         /// </summary>
-        /// <param name="stateType"></param>
-        /// <returns></returns>
         private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(Type stateType)
         {
             if (typeSerializablePropertyCache.ContainsKey(stateType))
                 return typeSerializablePropertyCache[stateType];
 
-            if (stateType.GetCustomAttribute(typeof(DataClassAttribute)) != null)
-            {
-                var properties = stateType.GetProperties()
-                    .Where(property =>
-                        property.GetCustomAttribute(typeof(IgnoreAttribute)) == null &&
-                        property.GetGetMethod() != null &&
-                        IsPropertyDeserializable(property)
-                    )
-                    .Select(property => new KeyValuePair<string, bool>(property.Name, true));
-                var fields = stateType.GetFields()
-                    .Where(field =>
-                        field.GetCustomAttribute(typeof(IgnoreAttribute)) == null
-                    )
-                    .Select(field => new KeyValuePair<string, bool>(field.Name, false));
-                var result = new List<KeyValuePair<string, bool>>(Enumerable.Concat(properties, fields));
-                typeSerializablePropertyCache[stateType] = result;
-                return result;
-            }
-            else
-            {
-                var properties = stateType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(property =>
-                        property.GetCustomAttribute(typeof(DataAttribute)) != null &&
-                        IsPropertySerializable(property) &&
-                        IsPropertyDeserializable(property)
-                    )
-                    .Select(property => new KeyValuePair<string, bool>(property.Name, true));
-                var fields = stateType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(field =>
-                        field.GetCustomAttribute(typeof(DataAttribute)) != null
-                    )
-                    .Select(field => new KeyValuePair<string, bool>(field.Name, false));
-                var result = new List<KeyValuePair<string, bool>>(Enumerable.Concat(properties, fields));
-                typeSerializablePropertyCache[stateType] = result;
-                return result;
-            }
+            var properties = stateType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(property =>
+                    property.GetCustomAttribute(typeof(DataAttribute)) != null &&
+                    IsPropertySerializable(property) &&
+                    IsPropertyDeserializable(property)
+                )
+                .Select(property => new { Name = property.Name, Property = true, Order = ReadOrder(property) });
+            var fields = stateType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(field =>
+                    field.GetCustomAttribute(typeof(DataAttribute)) != null
+                )
+                .Select(field => new { Name = field.Name, Property = false, Order = ReadOrder(field) });
+            var resultWithOrder = Enumerable.Concat(properties, fields).ToList();
+            resultWithOrder.Sort((a, b) => a.Order.CompareTo(b.Order));
+            var result = resultWithOrder.Select(r => new KeyValuePair<string, bool>(r.Name, r.Property)).ToList();
+            typeSerializablePropertyCache[stateType] = result;
+            return result;
+        }
+
+        private static int ReadOrder(MemberInfo memberInfo)
+        {
+            return (memberInfo.GetCustomAttribute(typeof(DataAttribute)) as DataAttribute).Order;
         }
 
         /// <summary>
@@ -241,9 +239,6 @@ namespace Freeserf.Serialize
         /// and the value is a boolean that is true for real properties and false for
         /// fields.
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="onlyDirtyProperties"></param>
-        /// <returns></returns>
         private static IEnumerable<KeyValuePair<string, bool>> GetSerializableProperties(IState state, bool onlyDirtyProperties)
         {
             if (onlyDirtyProperties && state.DirtyProperties.Count == 0)
@@ -373,8 +368,12 @@ namespace Freeserf.Serialize
                 else // possibly a field
                 {
                     var field = type.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var value = field.GetValue(targetObject);
 
-                    field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, field.GetValue(targetObject)));
+                    if (value == null && customTypeCreators.ContainsKey(field.FieldType))
+                        value = customTypeCreators[field.FieldType]?.Invoke(targetObject);
+
+                    field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, value));
                 }
             }
         }
@@ -391,7 +390,15 @@ namespace Freeserf.Serialize
                 if (wasNull && property.GetSetMethod(true) == null)
                     throw new ExceptionFreeserf(ErrorSystemType.Network, "Null-Property without setter.");
 
-                value = DeserializePropertyValue(reader, property.PropertyType, value);
+                if (wasNull && customTypeCreators.ContainsKey(property.PropertyType))
+                {
+                    value = customTypeCreators[property.PropertyType]?.Invoke(targetObject);
+
+                    if (value != null)
+                        value = DeserializePropertyValue(reader, property.PropertyType, value);
+                }
+                else
+                    value = DeserializePropertyValue(reader, property.PropertyType, value);
 
                 if (wasNull)
                     property.SetValue(targetObject, value);

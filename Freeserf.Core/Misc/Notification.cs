@@ -24,7 +24,6 @@ namespace Freeserf
     using Serialize;
     using MapPos = System.UInt32;
 
-    [DataClass]
     public class Notification
     {
         public enum Type
@@ -50,8 +49,11 @@ namespace Freeserf
             CallToStock = 19
         }
 
+        [Data]
         public Type NotificationType { get; set; } = Type.None;
+        [Data]
         public MapPos Position { get; set; } = 0;
+        [Data]
         public uint Data { get; set; } = 0;
     }
 }

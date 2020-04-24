@@ -586,7 +586,6 @@ namespace Freeserf
 
         #endregion
 
-        [DataClass]
         public class LandscapeTile : State, IEquatable<LandscapeTile>
         {
             // Landscape fields
@@ -594,9 +593,7 @@ namespace Freeserf
             Minerals mineral = Minerals.None;
             int resourceAmount = 0;
             Object mapObject = Object.None;
-            [Ignore]
             public Terrain TypeUp = Terrain.Water0;
-            [Ignore]
             public Terrain TypeDown = Terrain.Water0;
             readonly DirtyArray<LandscapeTile> parent;
             readonly int parentIndex;
@@ -630,6 +627,7 @@ namespace Freeserf
                 base.MarkPropertyAsDirty(name);
             }
 
+            [Data]
             public uint Height
             {
                 get => height;
@@ -642,6 +640,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public Minerals Mineral
             {
                 get => mineral;
@@ -654,6 +654,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public int ResourceAmount
             {
                 get => resourceAmount;
@@ -666,6 +668,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public Object Object
             {
                 get => mapObject;
@@ -712,15 +716,14 @@ namespace Freeserf
             }
         }
 
-        [DataClass]
         public class UpdateState : State, IEquatable<UpdateState>
         {
             int removeSignsCounter = 0;
             ushort lastTick = 0;
             int counter = 0;
-            [Ignore]
             public MapPos InitialPosition = 0;
 
+            [Data]
             public int RemoveSignsCounter
             {
                 get => removeSignsCounter;
@@ -733,6 +736,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public ushort LastTick
             {
                 get => lastTick;
@@ -745,6 +750,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public int Counter
             {
                 get => counter;
@@ -787,7 +794,6 @@ namespace Freeserf
             }
         }
 
-        [DataClass]
         class GameTile : State, IEquatable<GameTile>
         {
             uint serf = 0;
@@ -823,6 +829,7 @@ namespace Freeserf
                 base.MarkPropertyAsDirty(name);
             }
 
+            [Data]
             public uint Serf
             {
                 get => serf;
@@ -835,6 +842,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public uint Owner
             {
                 get => owner;
@@ -847,6 +856,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public uint ObjectIndex
             {
                 get => objectIndex;
@@ -859,6 +870,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public byte Paths
             {
                 get => paths;
@@ -871,6 +884,8 @@ namespace Freeserf
                     }
                 }
             }
+
+            [Data]
             public bool IdleSerf
             {
                 get => idleSerf;
@@ -916,13 +931,17 @@ namespace Freeserf
             }
         }
 
-        [DataClass]
         class ObjectChange : IState, IComparable
         {
+            [Data]
             public MapPos Position;
+            [Data]
             public Object OldObject;
+            [Data]
             public Object NewObject;
+            [Data]
             public int OldObjectIndex;
+            [Data]
             public int NewObjectIndex;
 
             static readonly List<string> Names = new List<string>()
@@ -956,11 +975,14 @@ namespace Freeserf
                 return Position.CompareTo(obj.Position);
             }
         }
-        [DataClass]
+
         class PathChange : IState, IComparable
         {
+            [Data]
             public MapPos Position;
+            [Data]
             public uint OldPath;
+            [Data]
             public uint NewPath;
 
             static readonly List<string> Names = new List<string>()

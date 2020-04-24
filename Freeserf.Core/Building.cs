@@ -82,7 +82,6 @@ namespace Freeserf
         // Max number of different types of resources accepted by buildings.
         public const uint MaxStock = 2;
 
-        [DataClass]
         internal class Stock : State, IComparable
         {
             Resource.Type type;
@@ -91,6 +90,7 @@ namespace Freeserf
             byte requested;
             byte maximum;
 
+            [Data]
             public Resource.Type Type
             {
                 get => type;
@@ -103,6 +103,7 @@ namespace Freeserf
                     }
                 }
             }
+            [Data]
             public byte Priority
             {
                 get => priority;
@@ -115,6 +116,7 @@ namespace Freeserf
                     }
                 }
             }
+            [Data]
             public byte Available
             {
                 get => available;
@@ -127,6 +129,7 @@ namespace Freeserf
                     }
                 }
             }
+            [Data]
             public byte Requested
             {
                 get => requested;
@@ -139,6 +142,7 @@ namespace Freeserf
                     }
                 }
             }
+            [Data]
             public byte Maximum
             {
                 get => maximum;

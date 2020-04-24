@@ -46,7 +46,6 @@ namespace Freeserf
         FreeShieldPossible = 0x80,
     }
 
-    [DataClass]
     internal class BuildingState : State
     {
         private Building.Type type = Building.Type.None;
@@ -76,6 +75,7 @@ namespace Freeserf
         /// <summary>
         /// Type of this building
         /// </summary>
+        [Data]
         public Building.Type Type
         {
             get => type;
@@ -88,9 +88,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Position of this building
         /// </summary>
+        [Data]
         public MapPos Position
         {
             get => position;
@@ -103,9 +105,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Index of flag connected to this building
         /// </summary>
+        [Data]
         public word Flag
         {
             get => flag;
@@ -118,9 +122,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Owner of this building
         /// </summary>
+        [Data]
         public byte Player
         {
             get => player;
@@ -133,6 +139,8 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
         public BuildingStateFlags Flags
         {
             get => flags;
@@ -145,9 +153,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Threat level of military building
         /// </summary>
+        [Data]
         public byte ThreatLevel
         {
             get => threatLevel;
@@ -160,9 +170,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Construction progress
         /// </summary>
+        [Data]
         public word Progress
         {
             get => progress;
@@ -175,9 +187,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Index of first knight in military building
         /// </summary>
+        [Data]
         public word FirstKnight
         {
             get => firstKnight;
@@ -190,12 +204,14 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Can be one of 3 things:
         /// - Inventory index (for stocks and castle)
         /// - Tick (for burning buildings)
         /// - Level (for new large buildings that need terrain leveling)
         /// </summary>
+        [Data]
         public word InventoryOrTickOrLevel
         {
             get => inventoryOrTickOrLevel;
@@ -208,9 +224,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Stocks of this building
         /// </summary>
+        [Data]
         public DirtyArray<Building.Stock> Stock { get; } = new DirtyArray<Building.Stock> // TODO: stock changes have to make the array dirty
         (
             new Building.Stock(), new Building.Stock()
@@ -219,32 +237,30 @@ namespace Freeserf
         /// <summary>
         /// Inventory
         /// </summary>
-        [Ignore]
         public word Inventory
         {
             get => InventoryOrTickOrLevel;
             set => InventoryOrTickOrLevel = value;
         }
+
         /// <summary>
         /// Tick
         /// </summary>
-        [Ignore]
         public word Tick
         {
             get => InventoryOrTickOrLevel;
             set => InventoryOrTickOrLevel = value;
         }
+
         /// <summary>
         /// Level
         /// </summary>
-        [Ignore]
         public word Level
         {
             get => InventoryOrTickOrLevel;
             set => InventoryOrTickOrLevel = value;
         }
 
-        [Ignore]
         public bool Constructing
         {
             get => Flags.HasFlag(BuildingStateFlags.Constructing);
@@ -256,7 +272,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.Constructing;
             }
         }
-        [Ignore]
+
         public bool PlayingSfx // Note: This is used for weapon smiths as a flag for free shields. :(
         {
             get => Flags.HasFlag(BuildingStateFlags.PlayingSfx);
@@ -268,7 +284,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.PlayingSfx;
             }
         }
-        [Ignore]
+
         public bool Active
         {
             get => Flags.HasFlag(BuildingStateFlags.Active);
@@ -280,7 +296,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.Active;
             }
         }
-        [Ignore]
+
         public bool Burning
         {
             get => Flags.HasFlag(BuildingStateFlags.Burning);
@@ -292,7 +308,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.Burning;
             }
         }
-        [Ignore]
+
         public bool Holder
         {
             get => Flags.HasFlag(BuildingStateFlags.Holder);
@@ -304,7 +320,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.Holder;
             }
         }
-        [Ignore]
+
         public bool SerfRequested
         {
             get => Flags.HasFlag(BuildingStateFlags.SerfRequested);
@@ -316,7 +332,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.SerfRequested;
             }
         }
-        [Ignore]
+
         public bool SerfRequestFailed
         {
             get => Flags.HasFlag(BuildingStateFlags.SerfRequestFailed);
@@ -328,7 +344,7 @@ namespace Freeserf
                     Flags &= ~BuildingStateFlags.SerfRequestFailed;
             }
         }
-        [Ignore]
+
         public bool FreeShieldPossible
         {
             get => Flags.HasFlag(BuildingStateFlags.FreeShieldPossible);

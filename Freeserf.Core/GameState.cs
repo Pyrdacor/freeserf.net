@@ -10,10 +10,8 @@ namespace Freeserf
     using word = UInt16;
     using dword = UInt32;
 
-    [DataClass]
     internal class GameState : State
     {
-        [Ignore]
         public const int DEFAULT_GAME_SPEED = 2;
 
         private word tick = 0;
@@ -50,6 +48,7 @@ namespace Freeserf
         /// <summary>
         /// Current game tick (game speed dependent)
         /// </summary>
+        [Data]
         public word Tick
         {
             get => tick;
@@ -62,9 +61,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Current constant game tick (not game speed dependent)
         /// </summary>
+        [Data]
         public dword ConstTick 
         {
             get => constTick;
@@ -77,9 +78,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Ticks inside the currently started game time second (may span multiple seconds).
         /// </summary>
+        [Data]
         public word GameTimeTicksOfSecond
         {
             get => gameTimeTicksOfSecond;
@@ -92,9 +95,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Current game time in seconds (will serve for games that last ~136 years).
         /// </summary>
+        [Data]
         public GameTime GameTime
         {
             get => gameTime;
@@ -107,9 +112,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Speed of game.
         /// </summary>
+        [Data]
         public word GameSpeed
         {
             get => gameSpeed;
@@ -122,9 +129,11 @@ namespace Freeserf
                 }
             }
         }
+
         /// <summary>
         /// Random number generator.
         /// </summary>
+        [Data]
         public Random Random
         {
             get => random;
@@ -138,6 +147,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public dword GameStatsCounter
         {
             get => gameStatsCounter;
@@ -151,6 +161,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public dword HistoryCounter
         {
             get => historyCounter;
@@ -164,6 +175,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public word FlagSearchCounter
         {
             get => flagSearchCounter;
@@ -177,6 +189,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public dword GoldTotal
         {
             get => goldTotal;
@@ -190,6 +203,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public dword MapGoldMoraleFactor
         {
             get => mapGoldMoraleFactor;
@@ -203,6 +217,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public int KnightMoraleCounter
         {
             get => knightMoraleCounter;
@@ -216,6 +231,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public int InventoryScheduleCounter
         {
             get => inventoryScheduleCounter;
@@ -229,6 +245,7 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public int ResourceHistoryIndex
         {
             get => resourceHistoryIndex;
@@ -242,7 +259,9 @@ namespace Freeserf
             }
         }
 
+        [Data]
         public DirtyArray<int> PlayerHistoryIndex { get; } = new DirtyArray<int>(4);
+        [Data]
         public DirtyArray<int> PlayerHistoryCounter { get; } = new DirtyArray<int>(3);
     }
 

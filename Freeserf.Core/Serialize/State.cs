@@ -39,14 +39,12 @@ namespace Freeserf.Serialize
 
         public static IReadOnlyList<string> DirtyState(string stateName, bool dirty) => dirty ? new List<string>() { stateName } : new List<string>();
 
-        [Ignore]
         public bool Dirty
         {
             get;
             private set;
         }
 
-        [Ignore]
         public IReadOnlyList<string> DirtyProperties => dirtyProperties.AsReadOnly();
 
         protected virtual void MarkPropertyAsDirty(string name)
