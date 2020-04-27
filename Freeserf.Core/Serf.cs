@@ -159,7 +159,23 @@ namespace Freeserf
         internal class StateData : Serialize.State
         {
             [Data]
-            public StateDataBase Data { get; private set; } = null;
+            private System.Type dataType = null;
+            private StateDataBase data = null;
+            [Data]
+            public StateDataBase Data
+            {
+                get => data;
+                private set
+                {
+                    if (data == value)
+                        return;
+
+                    data = value;
+                    dataType = data == null ? null : Data.GetType();
+                    MarkPropertyAsDirty(nameof(dataType));
+                    MarkPropertyAsDirty(nameof(Data));
+                }
+            }
 
             private readonly Serf serf;
 
@@ -183,11 +199,7 @@ namespace Freeserf
 
             public void Clear()
             {
-                if (Data != null)
-                {
-                    Data = null;
-                    MarkPropertyAsDirty(nameof(Data));
-                }
+                Data = null;
             }
 
             public class StateDataBase : Serialize.State
@@ -335,7 +347,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataIdleInStock(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataIdleInStock;
@@ -441,7 +452,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataWalking(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataWalking;
@@ -499,7 +509,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataEnteringBuilding(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataEnteringBuilding;
@@ -604,7 +613,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataLeavingBuilding(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataLeavingBuilding;
@@ -646,7 +654,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataReadyToEnter(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataReadyToEnter;
@@ -739,7 +746,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataDigging(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataDigging;
@@ -828,7 +834,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataBuilding(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataBuilding;
@@ -870,7 +875,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataBuildingCastle(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataBuildingCastle;
@@ -944,7 +948,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataMoveResourceOut(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataMoveResourceOut;
@@ -1018,7 +1021,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataReadyToLeaveInventory(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataReadyToLeaveInventory;
@@ -1134,7 +1136,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataFreeWalking(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataFreeWalking;
@@ -1179,7 +1180,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataSawing(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataSawing;
@@ -1221,7 +1221,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataLost(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataLost;
@@ -1293,7 +1292,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataMining(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataMining;
@@ -1366,7 +1364,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataSmelting(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataSmelting;
@@ -1410,7 +1407,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataMilling(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataMilling;
@@ -1452,7 +1448,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataBaking(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataBaking;
@@ -1494,7 +1489,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataPigFarming(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataPigFarming;
@@ -1536,7 +1530,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataButchering(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataButchering;
@@ -1578,7 +1571,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataMakingWeapon(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataMakingWeapon;
@@ -1620,7 +1612,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataMakingTool(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataMakingTool;
@@ -1662,7 +1653,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataBuildingBoat(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataBuildingBoat;
@@ -1762,7 +1752,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataAttacking(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataAttacking;
@@ -1850,7 +1839,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataAttackingVictoryFree(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataAttackingVictoryFree;
@@ -1954,7 +1942,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataDefendingFree(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataDefendingFree;
@@ -2056,7 +2043,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataLeaveForWalkToFight(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataLeaveForWalkToFight;
@@ -2133,7 +2119,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataIdleOnPath(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataIdleOnPath;
@@ -2182,7 +2167,6 @@ namespace Freeserf
                         }
 
                         Data = new StateDataDefending(this);
-                        MarkPropertyAsDirty(nameof(Data));
                     }
 
                     return Data as StateDataDefending;

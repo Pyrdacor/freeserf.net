@@ -144,6 +144,8 @@ namespace Freeserf.Serialize
 
         public delegate object CustomTypeCreator(object parent);
 
+        private static readonly BindingFlags propertyFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
         private static readonly Dictionary<Type, CustomTypeCreator> customTypeCreators = new Dictionary<Type, CustomTypeCreator>();
         private static readonly Dictionary<Type, PropertyMap> propertyMapCache = new Dictionary<Type, PropertyMap>();
         private static readonly Dictionary<Type, List<KeyValuePair<string, bool>>> typeSerializablePropertyCache = new Dictionary<Type, List<KeyValuePair<string, bool>>>();
@@ -208,18 +210,18 @@ namespace Freeserf.Serialize
             if (typeSerializablePropertyCache.ContainsKey(stateType))
                 return typeSerializablePropertyCache[stateType];
 
-            var properties = stateType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            var properties = stateType.GetProperties(propertyFlags)
                 .Where(property =>
                     property.GetCustomAttribute(typeof(DataAttribute)) != null &&
                     IsPropertySerializable(property) &&
                     IsPropertyDeserializable(property)
                 )
-                .Select(property => new { Name = property.Name, Property = true, Order = ReadOrder(property) });
-            var fields = stateType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Select(property => new { property.Name, Property = true, Order = ReadOrder(property) });
+            var fields = stateType.GetFields(propertyFlags)
                 .Where(field =>
                     field.GetCustomAttribute(typeof(DataAttribute)) != null
                 )
-                .Select(field => new { Name = field.Name, Property = false, Order = ReadOrder(field) });
+                .Select(field => new { field.Name, Property = false, Order = ReadOrder(field) });
             var resultWithOrder = Enumerable.Concat(properties, fields).ToList();
             resultWithOrder.Sort((a, b) => a.Order.CompareTo(b.Order));
             var result = resultWithOrder.Select(r => new KeyValuePair<string, bool>(r.Name, r.Property)).ToList();
@@ -296,13 +298,13 @@ namespace Freeserf.Serialize
 
                 if (property.Value) // real property
                 {
-                    var propertyInfo = state.GetType().GetProperty(property.Key, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var propertyInfo = state.GetType().GetProperty(property.Key, propertyFlags);
                     propertyValue = propertyInfo.GetValue(state);
                     propertyType = propertyInfo.PropertyType;
                 }
                 else // field
                 {
-                    var fieldInfo = state.GetType().GetField(property.Key, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var fieldInfo = state.GetType().GetField(property.Key, propertyFlags);
                     propertyValue = fieldInfo.GetValue(state);
                     propertyType = fieldInfo.FieldType;
                 }
@@ -359,7 +361,7 @@ namespace Freeserf.Serialize
                 if (propertyName == null)
                     break;
 
-                var property = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                var property = type.GetProperty(propertyName, propertyFlags);
 
                 if (property != null)
                 {
@@ -367,13 +369,39 @@ namespace Freeserf.Serialize
                 }
                 else // possibly a field
                 {
-                    var field = type.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var field = type.GetField(propertyName, propertyFlags);
                     var value = field.GetValue(targetObject);
 
-                    if (value == null && customTypeCreators.ContainsKey(field.FieldType))
-                        value = customTypeCreators[field.FieldType]?.Invoke(targetObject);
+                    if (field.FieldType == typeof(Type))
+                    {
+                        var serializedType = DeserializePropertyValue(reader, field.FieldType, value) as Type;
 
-                    field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, value));
+                        if ((value is null) != (serializedType is null) ||
+                            (value != null && (value as Type).Name != serializedType.Name))
+                        {
+                            // Type switch -> recreate associated property (we can just set it to null here).
+                            if (propertyName.Length < 5 || !propertyName.EndsWith("Type"))
+                                throw new ExceptionFreeserf($"Invalid type property name '{propertyName}'.");
+
+                            propertyName = propertyName[0..^4];
+
+                            var associatedPropertyInfo = GetSerializableProperties(type).FirstOrDefault(p => string.Compare(p.Key, propertyName, true) == 0);
+
+                            if (associatedPropertyInfo.Value) // property
+                                type.GetProperty(associatedPropertyInfo.Key, propertyFlags).SetValue(targetObject, null);
+                            else // field
+                                type.GetField(associatedPropertyInfo.Key, propertyFlags).SetValue(targetObject, null);
+                        }
+
+                        field.SetValue(targetObject, serializedType);
+                    }
+                    else
+                    {
+                        if (value == null && customTypeCreators.ContainsKey(field.FieldType))
+                            value = customTypeCreators[field.FieldType]?.Invoke(targetObject);
+
+                        field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, value));
+                    }
                 }
             }
         }
@@ -543,6 +571,15 @@ namespace Freeserf.Serialize
             {
                 return reader.ReadDecimal();
             }
+            else if (type == typeof(Type))
+            {
+                string typeName = reader.ReadString();
+                return string.IsNullOrEmpty(typeName) ? null : Type.GetType(typeName, null, (Assembly asm, string typeName, bool ignoreCase) =>
+                {
+                    asm ??= Assembly.GetExecutingAssembly();
+                    return asm.GetTypes().FirstOrDefault(t => t.Name == typeName);
+                }, true);
+            }
             else
             {
                 throw new ExceptionFreeserf("Unsupport data type for state deserialization: " + type.Name);
@@ -568,6 +605,10 @@ namespace Freeserf.Serialize
             {
                 writer.Write(0); // count of zero
             }
+            else if (propertyType == typeof(Type))
+            {
+                writer.Write("");
+            }
             else
             {
                 throw new ExceptionFreeserf("Unsupport data type for state serialization: " + propertyType.Name);
@@ -580,29 +621,29 @@ namespace Freeserf.Serialize
             {
                 SerializeWithoutHeader(writer, value as IState, full);
             }
-            else if (value is dword)
+            else if (value is dword dw)
             {
-                writer.Write((dword)value);
+                writer.Write(dw);
             }
-            else if (value is int)
+            else if (value is int n)
             {
-                writer.Write((int)value);
+                writer.Write(n);
             }
-            else if (value is word)
+            else if (value is word w)
             {
-                writer.Write((word)value);
+                writer.Write(w);
             }
-            else if (value is byte)
+            else if (value is byte by)
             {
-                writer.Write((byte)value);
+                writer.Write(by);
             }
-            else if (value is bool)
+            else if (value is bool b)
             {
-                writer.Write((byte)((bool)value ? 1 : 0));
+                writer.Write((byte)(b ? 1 : 0));
             }
-            else if (value is string)
+            else if (value is string str)
             {
-                writer.Write(value as string);
+                writer.Write(str);
             }
             else if (value.GetType().IsEnum)
             {
@@ -671,37 +712,50 @@ namespace Freeserf.Serialize
                     SerializePropertyValue(writer, elementValue, full);
                 }
             }
-            else if (value is char)
+            else if (value is char c)
             {
-                writer.Write((char)value);
+                writer.Write(c);
             }            
-            else if (value is sbyte)
+            else if (value is sbyte sb)
             {
-                writer.Write((sbyte)value);
+                writer.Write(sb);
             }
-            else if (value is short)
+            else if (value is short s)
             {
-                writer.Write((short)value);
+                writer.Write(s);
             }
-            else if (value is long)
+            else if (value is long l)
             {
-                writer.Write((long)value);
+                writer.Write(l);
             }
-            else if (value is qword)
+            else if (value is qword qw)
             {
-                writer.Write((qword)value);
+                writer.Write(qw);
             }
-            else if (value is float)
+            else if (value is float f)
             {
-                writer.Write((float)value);
+                writer.Write(f);
             }
-            else if (value is double)
+            else if (value is double d)
             {
-                writer.Write((double)value);
+                writer.Write(d);
             }
-            else if (value is decimal)
+            else if (value is decimal dec)
             {
-                writer.Write((decimal)value);
+                writer.Write(dec);
+            }
+            else if (value is Type type)
+            {
+                // This is special. If a type is part of the data it gives the type of another
+                // serialized property that may change. The name of the property must have the
+                // form '<propertName>Type' where <propertyName> is the name of the property.
+                // For example: myDataType would specify the type of the property MyData or myData.
+                // The type is serialized as a string which contains only the type name.
+                // The type should always be serialized before the property as it will lead to
+                // a property creation if the type is different. Moreover types should always be
+                // serialized as private fields as only those are considered.
+                writer.Write(type.Name);
+
             }
             else
             {
