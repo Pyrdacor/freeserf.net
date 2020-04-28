@@ -128,6 +128,7 @@ namespace Freeserf.Serialize
             {
                 if (reader.BaseStream.Position == reader.BaseStream.Length)
                     return null;
+
                 char firstCharacter = (char)reader.ReadByte();
 
                 if (firstCharacter == 0)
@@ -296,6 +297,12 @@ namespace Freeserf.Serialize
                 object propertyValue;
                 Type propertyType;
 
+                if (state is IVirtualDataProvider vdp)
+                {
+                    // If the property has changed we store 'true' otherwise 'false'.
+                    writer.Write(vdp.ChangeVirtualDataMembers.Contains(property.Key));
+                }
+
                 if (property.Value) // real property
                 {
                     var propertyInfo = state.GetType().GetProperty(property.Key, propertyFlags);
@@ -361,47 +368,27 @@ namespace Freeserf.Serialize
                 if (propertyName == null)
                     break;
 
+                // We perform a reset (set value to null) when a virtual data provider
+                // notifies about a virtual type change.
+                bool reset = targetObject is IVirtualDataProvider vdp && reader.ReadBoolean();
                 var property = type.GetProperty(propertyName, propertyFlags);
 
                 if (property != null)
                 {
+                    if (reset)
+                        property.SetValue(targetObject, null);
+
                     DeserializePropertyValueInto(targetObject, reader, property);
                 }
                 else // possibly a field
                 {
                     var field = type.GetField(propertyName, propertyFlags);
-                    var value = field.GetValue(targetObject);
+                    var value = reset ? null : field.GetValue(targetObject);
 
-                    if (field.FieldType == typeof(Type))
-                    {
-                        var serializedType = DeserializePropertyValue(reader, field.FieldType, value) as Type;
+                    if (value == null && customTypeCreators.ContainsKey(field.FieldType))
+                        value = customTypeCreators[field.FieldType]?.Invoke(targetObject);
 
-                        if ((value is null) != (serializedType is null) ||
-                            (value != null && (value as Type).Name != serializedType.Name))
-                        {
-                            // Type switch -> recreate associated property (we can just set it to null here).
-                            if (propertyName.Length < 5 || !propertyName.EndsWith("Type"))
-                                throw new ExceptionFreeserf($"Invalid type property name '{propertyName}'.");
-
-                            propertyName = propertyName[0..^4];
-
-                            var associatedPropertyInfo = GetSerializableProperties(type).FirstOrDefault(p => string.Compare(p.Key, propertyName, true) == 0);
-
-                            if (associatedPropertyInfo.Value) // property
-                                type.GetProperty(associatedPropertyInfo.Key, propertyFlags).SetValue(targetObject, null);
-                            else // field
-                                type.GetField(associatedPropertyInfo.Key, propertyFlags).SetValue(targetObject, null);
-                        }
-
-                        field.SetValue(targetObject, serializedType);
-                    }
-                    else
-                    {
-                        if (value == null && customTypeCreators.ContainsKey(field.FieldType))
-                            value = customTypeCreators[field.FieldType]?.Invoke(targetObject);
-
-                        field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, value));
-                    }
+                    field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, value));
                 }
             }
         }
@@ -571,15 +558,6 @@ namespace Freeserf.Serialize
             {
                 return reader.ReadDecimal();
             }
-            else if (type == typeof(Type))
-            {
-                string typeName = reader.ReadString();
-                return string.IsNullOrEmpty(typeName) ? null : Type.GetType(typeName, null, (Assembly asm, string typeName, bool ignoreCase) =>
-                {
-                    asm ??= Assembly.GetExecutingAssembly();
-                    return asm.GetTypes().FirstOrDefault(t => t.Name == typeName);
-                }, true);
-            }
             else
             {
                 throw new ExceptionFreeserf("Unsupport data type for state deserialization: " + type.Name);
@@ -743,19 +721,6 @@ namespace Freeserf.Serialize
             else if (value is decimal dec)
             {
                 writer.Write(dec);
-            }
-            else if (value is Type type)
-            {
-                // This is special. If a type is part of the data it gives the type of another
-                // serialized property that may change. The name of the property must have the
-                // form '<propertName>Type' where <propertyName> is the name of the property.
-                // For example: myDataType would specify the type of the property MyData or myData.
-                // The type is serialized as a string which contains only the type name.
-                // The type should always be serialized before the property as it will lead to
-                // a property creation if the type is different. Moreover types should always be
-                // serialized as private fields as only those are considered.
-                writer.Write(type.Name);
-
             }
             else
             {

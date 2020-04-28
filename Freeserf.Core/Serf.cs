@@ -156,10 +156,9 @@ namespace Freeserf
             KnightAttackingDefeatFree
         }
 
-        internal class StateData : Serialize.State
+        internal class StateData : Serialize.State, IVirtualDataProvider
         {
-            [Data]
-            private System.Type dataType = null;
+            public List<string> ChangeVirtualDataMembers { get; } = new List<string>();
             private StateDataBase data = null;
             [Data]
             public StateDataBase Data
@@ -171,8 +170,8 @@ namespace Freeserf
                         return;
 
                     data = value;
-                    dataType = data == null ? null : Data.GetType();
-                    MarkPropertyAsDirty(nameof(dataType));
+                    if (!ChangeVirtualDataMembers.Contains(nameof(Data)))
+                        ChangeVirtualDataMembers.Add(nameof(Data));
                     MarkPropertyAsDirty(nameof(Data));
                 }
             }
@@ -195,6 +194,13 @@ namespace Freeserf
                     throw new ExceptionFreeserf($"Parent of {nameof(StateData)} is no {nameof(Serf)}.");
 
                 return new StateData(parentSerf);
+            }
+
+            public override void ResetDirtyFlag()
+            {
+                ChangeVirtualDataMembers.Clear();
+
+                base.ResetDirtyFlag();
             }
 
             public void Clear()
