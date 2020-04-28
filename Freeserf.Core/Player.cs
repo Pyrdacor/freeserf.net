@@ -36,7 +36,7 @@ namespace Freeserf
     using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, uint>;
     using SerfMap = Serialize.DirtyArrayWithEnumIndex<Serf.Type, int>;
 
-    internal class Player : GameObject, IState
+    internal class Player : GameObject
     {
         // We only serialize the settings and the player state
         [Data]
@@ -54,9 +54,8 @@ namespace Freeserf
 
         int sendGenericDelay = 0;
         int sendKnightDelay = 0;
-
-        uint[,] playerStatHistory = new uint[16, 112];
-        uint[,] resourceCountHistory = new uint[26, 120];
+        readonly uint[,] playerStatHistory = new uint[16, 112];
+        readonly uint[,] resourceCountHistory = new uint[26, 120];
 
         /// <summary>
         /// Target building that should be attacked.
@@ -112,22 +111,10 @@ namespace Freeserf
             settings.KnightOccupation[3] = 0x43;
 
             settings.SerfToKnightRate = 20000;
-            state.SerfToKnightCounter = 0x8000; // Overflow is important 
-        }
+            state.SerfToKnightCounter = 0x8000; // Overflow is important
 
-        // Used for multiplayer games to see if an update is necessary.
-        public bool Dirty => settings.Dirty || state.Dirty;
-        public IReadOnlyList<string> DirtyProperties
-        {
-            get
-            {
-                var dirtyProperties = new List<string>(2);
-                if (settings.Dirty)
-                    dirtyProperties.Add(nameof(settings));
-                if (state.Dirty)
-                    dirtyProperties.Add(nameof(state));
-                return dirtyProperties;
-            }
+            TrackProperty(nameof(settings), settings);
+            TrackProperty(nameof(state), state);
         }
 
         public bool EmergencyProgramActive
@@ -172,12 +159,6 @@ namespace Freeserf
 
             if (!Face.IsHuman())
                 state.IsAI = true;
-        }
-
-        public void ResetDirtyFlag()
-        {
-            settings.ResetDirtyFlag();
-            state.ResetDirtyFlag();
         }
 
         public PlayerInfo GetPlayerInfo()

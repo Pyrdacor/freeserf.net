@@ -21,7 +21,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Freeserf
@@ -48,7 +47,7 @@ namespace Freeserf
         public uint Phase2;
     }
 
-    internal class Building : GameObject, IState
+    internal class Building : GameObject
     {
         public enum Type : byte
         {
@@ -220,11 +219,8 @@ namespace Freeserf
         public Building(Game game, uint index)
             : base(game, index)
         {
-
+            TrackProperty(nameof(state), state);
         }
-
-        public bool Dirty => state.Dirty;
-        public IReadOnlyList<string> DirtyProperties => State.DirtyState(nameof(state), state.Dirty);
 
         /// <summary>
         /// Map position of the building
@@ -250,11 +246,6 @@ namespace Freeserf
         }
 
         public uint FlagIndex => state.Flag;
-
-        public void ResetDirtyFlag()
-        {
-            state.ResetDirtyFlag();
-        }
 
         public void LinkFlag(uint flagIndex)
         {

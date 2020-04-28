@@ -30,7 +30,7 @@ namespace Freeserf
     using word = UInt16;
     using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, uint>;
 
-    internal class Inventory : GameObject, IState, IDisposable
+    internal class Inventory : GameObject, IDisposable
     {
         public enum Mode
         {
@@ -100,10 +100,9 @@ namespace Freeserf
                 state.OutQueue[i].Type = Resource.Type.None;
                 state.OutQueue[i].Destination = 0;
             }
-        }
 
-        public bool Dirty => state.Dirty;
-        public IReadOnlyList<string> DirtyProperties => State.DirtyState(nameof(state), state.Dirty);
+            TrackProperty(nameof(state), state);
+        }
 
         /// <summary>
         /// Inventory owner
@@ -136,11 +135,6 @@ namespace Freeserf
         {
             get => state.SerfMode;
             set => state.SerfMode = value;
-        }
-
-        public void ResetDirtyFlag()
-        {
-            state.ResetDirtyFlag();
         }
 
         public bool HasAnyOutMode()

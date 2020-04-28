@@ -9,6 +9,6 @@ namespace Freeserf.Serialize
     /// </summary>
     internal interface IVirtualDataProvider : IState
     {
-        List<string> ChangeVirtualDataMembers { get; }
+        List<string> ChangedVirtualDataMembers { get; }
     }
 }

@@ -39,7 +39,7 @@ namespace Freeserf
         public int[] Serfs; // int[16]
     }
 
-    internal class Flag : GameObject, IState
+    internal class Flag : GameObject
     {
         internal class ResourceSlot : State, IComparable
         {
@@ -70,10 +70,9 @@ namespace Freeserf
 
         internal struct OtherEndpoint
         {
-            private object obj;
-            public Building Building { get { return obj as Building; } set { obj = value; } }
-            public Flag Flag { get { return obj as Flag; } set { obj = value; } }
-            public object Object { get { return obj; } set { obj = value; } }
+            public Building Building { get { return Object as Building; } set { Object = value; } }
+            public Flag Flag { get { return Object as Flag; } set { Object = value; } }
+            public object Object { get; set; }
             public Road Road { get; set; }
         }
 
@@ -117,10 +116,9 @@ namespace Freeserf
                 OtherEndPoints[(int)direction].Object = null;
                 OtherEndPoints[(int)direction].Road = null;
             }
-        }
 
-        public bool Dirty => state.Dirty;
-        public IReadOnlyList<string> DirtyProperties => State.DirtyState(nameof(state), state.Dirty);
+            TrackProperty(nameof(state), state);
+        }
 
         internal MapPos Position
         {
@@ -138,11 +136,6 @@ namespace Freeserf
             set => state.SearchDirection = value;
         }
         public int ResourceCount => state.Slots.Count(s => s.Type != Resource.Type.None);
-
-        public void ResetDirtyFlag()
-        {
-            state.ResetDirtyFlag();
-        }
 
         public uint GetCostToNearestInventory(bool inventorySupportsResIn, bool inventorySupportsResOut)
         {

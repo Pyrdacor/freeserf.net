@@ -31,7 +31,7 @@ namespace Freeserf
 
     // TODO: Give the state values plausible names instead of FieldX and so on!
 
-    internal class Serf : GameObject, IState
+    internal class Serf : GameObject
     {
         public enum Type : sbyte
         {
@@ -158,7 +158,7 @@ namespace Freeserf
 
         internal class StateData : Serialize.State, IVirtualDataProvider
         {
-            public List<string> ChangeVirtualDataMembers { get; } = new List<string>();
+            public List<string> ChangedVirtualDataMembers { get; } = new List<string>();
             private StateDataBase data = null;
             [Data]
             public StateDataBase Data
@@ -170,8 +170,8 @@ namespace Freeserf
                         return;
 
                     data = value;
-                    if (!ChangeVirtualDataMembers.Contains(nameof(Data)))
-                        ChangeVirtualDataMembers.Add(nameof(Data));
+                    if (!ChangedVirtualDataMembers.Contains(nameof(Data)))
+                        ChangedVirtualDataMembers.Add(nameof(Data));
                     MarkPropertyAsDirty(nameof(Data));
                 }
             }
@@ -198,7 +198,7 @@ namespace Freeserf
 
             public override void ResetDirtyFlag()
             {
-                ChangeVirtualDataMembers.Clear();
+                ChangedVirtualDataMembers.Clear();
 
                 base.ResetDirtyFlag();
             }
@@ -2427,20 +2427,9 @@ namespace Freeserf
             : base(game, index)
         {
             stateData = new StateData(this);
-        }
 
-        public bool Dirty => state.Dirty || stateData.Dirty;
-        public IReadOnlyList<string> DirtyProperties
-        {
-            get
-            {
-                var dirtyProperties = new List<string>(2);
-                if (state.Dirty)
-                    dirtyProperties.Add(nameof(state));
-                if (stateData.Dirty)
-                    dirtyProperties.Add(nameof(stateData));
-                return dirtyProperties;
-            }
+            TrackProperty(nameof(state), state);
+            TrackProperty(nameof(stateData), stateData);
         }
 
         public uint Player
@@ -2491,11 +2480,6 @@ namespace Freeserf
         {
             get => state.Position;
             set => state.Position = value;
-        }
-
-        public void ResetDirtyFlag()
-        {
-            state.ResetDirtyFlag();
         }
 
         void SetState(State newState, [CallerMemberName] string function = "", [CallerLineNumber] int lineNumber = 0)

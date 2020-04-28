@@ -34,18 +34,30 @@ namespace Freeserf.Serialize
 
     internal abstract class State : IState, System.IComparable
     {
+        private readonly Dictionary<string, IState> trackedProperties = new Dictionary<string, IState>();
         private readonly List<string> dirtyProperties = new List<string>();
         protected object dirtyLock = new object();
 
-        public static IReadOnlyList<string> DirtyState(string stateName, bool dirty) => dirty ? new List<string>() { stateName } : new List<string>();
+        public bool Dirty => dirtyProperties.Count != 0;
 
-        public bool Dirty
+        public IReadOnlyList<string> DirtyProperties
         {
-            get;
-            private set;
+            get
+            {
+                foreach (var trackedProperty in trackedProperties)
+                {
+                    if (trackedProperty.Value.Dirty && !dirtyProperties.Contains(trackedProperty.Key))
+                        dirtyProperties.Add(trackedProperty.Key);
+                }
+
+                return dirtyProperties.AsReadOnly();
+            }
         }
 
-        public IReadOnlyList<string> DirtyProperties => dirtyProperties.AsReadOnly();
+        protected void TrackProperty(string name, IState propertyState)
+        {
+            trackedProperties.Add(name, propertyState);
+        }
 
         protected virtual void MarkPropertyAsDirty(string name)
         {
@@ -53,7 +65,6 @@ namespace Freeserf.Serialize
             {
                 if (!dirtyProperties.Contains(name))
                     dirtyProperties.Add(name);
-                Dirty = true;
             }
         }
 
@@ -68,7 +79,9 @@ namespace Freeserf.Serialize
         protected void ResetDirtyFlagUnlocked()
         {
             dirtyProperties.Clear();
-            Dirty = false;
+
+            foreach (var trackedProperty in trackedProperties)
+                trackedProperty.Value.ResetDirtyFlag();
         }
 
         public virtual int CompareTo(object obj)

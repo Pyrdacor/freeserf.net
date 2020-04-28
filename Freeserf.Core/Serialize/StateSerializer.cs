@@ -300,7 +300,7 @@ namespace Freeserf.Serialize
                 if (state is IVirtualDataProvider vdp)
                 {
                     // If the property has changed we store 'true' otherwise 'false'.
-                    writer.Write(vdp.ChangeVirtualDataMembers.Contains(property.Key));
+                    writer.Write(vdp.ChangedVirtualDataMembers.Contains(property.Key));
                 }
 
                 if (property.Value) // real property

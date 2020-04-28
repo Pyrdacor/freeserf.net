@@ -38,11 +38,24 @@ namespace Freeserf
         void PostDeserialize(bool onlyData);
     }
 
-    internal abstract class GameObject : IGameObject
+    internal abstract class GameObject : Serialize.State, IGameObject
     {
         public const uint INVALID_INDEX = uint.MaxValue;
 
-        public uint Index { get; protected set; }
+        private uint index;
+
+        public uint Index
+        {
+            get => index;
+            protected set
+            {
+                if (index != value)
+                {
+                    index = value;
+                    MarkPropertyAsDirty(nameof(Index));
+                }
+            }
+        }
         public Game Game { get; protected set; }
 
         public GameObject(Game game, uint index)
