@@ -489,16 +489,22 @@ namespace Freeserf
                 if (delta.X == 0 && delta.Y == 0)
                     return;
 
-                gameView.SetCursorPosition(position.X, position.Y);
-
                 UpdateMouseState(buttons);
-
                 if (buttons.HasFlag(MouseButtons.Left) || buttons.HasFlag(MouseButtons.Right))
                 {
                     if (lastDragX == int.MinValue)
                         return;
+                    bool dragAllowed = gameView.NotifyDrag(position.X, position.Y, lastDragX - position.X, lastDragY - position.Y, ConvertMouseButtons(buttons));
 
-                    gameView.NotifyDrag(position.X, position.Y, lastDragX - position.X, lastDragY - position.Y, ConvertMouseButtons(buttons));
+                    // lock the mouse if dragging with right button
+                    if (dragAllowed)
+                    {
+                        mouse.Cursor.CursorMode = CursorMode.Raw;
+                    }
+                    else if (buttons.HasFlag(MouseButtons.Left))
+                    {
+                         gameView.SetCursorPosition(position.X, position.Y);
+                    }
                     lastDragX = position.X;
                     lastDragY = position.Y;
                 }
@@ -506,6 +512,7 @@ namespace Freeserf
                 {
                     lastDragX = int.MinValue;
                     lastDragY = int.MinValue;
+                    gameView.SetCursorPosition(position.X, position.Y);
                 }
             }
             catch (Exception ex)
@@ -519,6 +526,12 @@ namespace Freeserf
         protected override void OnMouseUp(Point position, MouseButtons button)
         {
             UpdateMouseState(button, false);
+
+            // restore cursor from successful locked dragging
+            if (button.HasFlag(MouseButtons.Right))
+            {
+                mouse.Cursor.CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
+            }
 
             base.OnMouseUp(position, button);
         }

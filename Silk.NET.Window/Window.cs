@@ -29,7 +29,7 @@ namespace Silk.NET.Window
         );
 
         readonly IWindow window = null;
-        IMouse mouse = null;
+        public IMouse mouse = null;
         bool cursorVisible = true;
 
         private static WindowOptions CreateOptions(string title, Point position, Size size)

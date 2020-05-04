@@ -542,7 +542,9 @@ namespace Freeserf
 
         bool RunHandler(EventHandler handler, EventArgs args)
         {
-            handler?.Invoke(this, args);
+            bool? h = handler?.Invoke(this, args);
+            if (h.HasValue)
+                args.Done = h.Value;
 
             return args.Done;
         }
