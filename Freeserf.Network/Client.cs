@@ -295,6 +295,7 @@ namespace Freeserf.Network
                             {
                                 Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
                                 Disconnect();
+                                throw ex; // TODO: Close game instead of crash?
                             }
                         }
                         break;
@@ -337,6 +338,7 @@ namespace Freeserf.Network
                             {
                                 Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
                                 Disconnect();
+                                throw ex; // TODO: Close game instead of crash?
                             }
                         }
                         break;
