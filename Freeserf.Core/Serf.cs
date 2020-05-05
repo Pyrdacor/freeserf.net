@@ -1033,9 +1033,9 @@ namespace Freeserf
                 }
             }
 
-            // States: FreeWalking, Logging, Planting, Stonecutting, Fishing,
-            // Farming, SamplingGeoSpot, KnightFreeWalking, KnightAttackingFree,
-            // KnightAttackingFreeWait, FreeSailing, StonecutterFreeWalking
+            // States: Farming, Fishing, FreeSailing, FreeWalking,
+            // KnightAttackingFree, KnightAttackingFreeWait, KnightFreeWalking,
+            // Logging, Planting, SamplingGeoSpot, StonecutterFreeWalking, Stonecutting
             public class StateDataFreeWalking : StateDataBase
             {
                 private int distanceX; // B
@@ -1125,18 +1125,18 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataFreeWalking))
                     {
-                        if (serf.SerfState != State.FreeWalking &&
-                            serf.SerfState != State.Logging &&
-                            serf.SerfState != State.Planting &&
-                            serf.SerfState != State.StoneCutting &&
+                        if (serf.SerfState != State.Farming &&
                             serf.SerfState != State.Fishing &&
-                            serf.SerfState != State.Farming &&
-                            serf.SerfState != State.SamplingGeoSpot &&
-                            serf.SerfState != State.KnightFreeWalking &&
+                            serf.SerfState != State.FreeSailing &&
+                            serf.SerfState != State.FreeWalking &&
                             serf.SerfState != State.KnightAttackingFree &&
                             serf.SerfState != State.KnightAttackingFreeWait &&
-                            serf.SerfState != State.FreeSailing &&
-                            serf.SerfState != State.StoneCutterFreeWalking)
+                            serf.SerfState != State.KnightFreeWalking &&
+                            serf.SerfState != State.Logging &&
+                            serf.SerfState != State.Planting &&
+                            serf.SerfState != State.SamplingGeoSpot &&
+                            serf.SerfState != State.StoneCutterFreeWalking &&
+                            serf.SerfState != State.StoneCutting)
                         {
                             return new StateDataFreeWalking(null);
                         }
@@ -1667,10 +1667,9 @@ namespace Freeserf
 
             // No state data: LookingForGeoSpot 
 
-            // States: KnightEngagingBuilding, KnightPrepareAttacking,
-            // KnightAttackingDefeatFree, KnightAttacking, KnightAttackingVictory,
-            // KnightEngageAttackingFree, KnightEngageAttackingFreeJoin,
-            // KnightAttackingDefeat, KnightPrepareAttackingFree
+            // States: KnightAttacking, KnightAttackingDefeat, KnightAttackingDefeatFree,
+            // KnightAttackingVictory, KnightEngageAttackingFree, KnightEngageAttackingFreeJoin,
+            // KnightEngagingBuilding, KnightPrepareAttacking, KnightPrepareAttackingFree
             public class StateDataAttacking : StateDataBase
             {
                 private int move; // B
@@ -1745,14 +1744,14 @@ namespace Freeserf
                 {
                     if (Data == null || !(Data is StateDataAttacking))
                     {
-                        if (serf.SerfState != State.KnightEngagingBuilding &&
-                            serf.SerfState != State.KnightPrepareAttacking &&
-                            serf.SerfState != State.KnightPrepareDefendingFreeWait &&
+                        if (serf.SerfState != State.KnightAttacking &&
+                            serf.SerfState != State.KnightAttackingDefeat &&
                             serf.SerfState != State.KnightAttackingDefeatFree &&
-                            serf.SerfState != State.KnightAttacking &&
                             serf.SerfState != State.KnightAttackingVictory &&
                             serf.SerfState != State.KnightEngageAttackingFree &&
-                            serf.SerfState != State.KnightEngageAttackingFreeJoin)
+                            serf.SerfState != State.KnightEngageAttackingFreeJoin &&
+                            serf.SerfState != State.KnightEngagingBuilding &&
+                            serf.SerfState != State.KnightPrepareAttacking)
                         {
                             return new StateDataAttacking(null);
                         }
@@ -1851,7 +1850,7 @@ namespace Freeserf
                 }
             }
 
-            // States: KnightDefendingFree, KnightEngageDefendingFree, KnightPrepareDefendingFreeWait
+            // States: KnightDefendingFree, KnightEngageDefendingFree, KnightPrepareDefendingFree, KnightPrepareDefendingFreeWait
             public class StateDataDefendingFree : StateDataBase
             {
                 private int distanceColumn; // B
@@ -1942,7 +1941,9 @@ namespace Freeserf
                     if (Data == null || !(Data is StateDataDefendingFree))
                     {
                         if (serf.SerfState != State.KnightDefendingFree &&
-                            serf.SerfState != State.KnightEngageDefendingFree)
+                            serf.SerfState != State.KnightEngageDefendingFree &&
+                            serf.SerfState != State.KnightPrepareDefendingFree &&
+                            serf.SerfState != State.KnightPrepareDefendingFreeWait)
                         {
                             return new StateDataDefendingFree(null);
                         }

@@ -38,7 +38,7 @@ namespace Freeserf.Serialize
         private readonly List<string> dirtyProperties = new List<string>();
         protected object dirtyLock = new object();
 
-        public bool Dirty => dirtyProperties.Count != 0;
+        public bool Dirty => DirtyProperties.Count != 0;
 
         public IReadOnlyList<string> DirtyProperties
         {
