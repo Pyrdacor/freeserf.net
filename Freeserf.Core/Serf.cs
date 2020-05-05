@@ -2,7 +2,7 @@
  * Serf.cs - Serf related functions
  *
  * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -2421,8 +2421,11 @@ namespace Freeserf
 
         [Data]
         readonly SerfState state = new SerfState();
+        // Note: It is important that 'stateData' is behind 'state' (= has a higher line number).
+        // This is important as the line number decides the serialization order and the client
+        // has to deserialize the serf's state value before the associated state data.
         [Data]
-        readonly StateData stateData = null; // Note: It is important that it is behind 'state' (higher line number)
+        readonly StateData stateData = null;
 
         public Serf(Game game, uint index)
             : base(game, index)
