@@ -653,6 +653,28 @@ namespace Freeserf
             return true;
         }
 
+        public bool CanBuildAnything(MapPos position, Player player)
+        {
+            if (!player.HasCastle)
+                return CanBuildCastle(position, player);
+
+            if (!CanPlayerBuild(position, player))
+                return false;
+
+            if (Map.MapSpaceFromObject[(int)Map.GetObject(position)] != Map.Space.Open)
+                return false;
+
+            if (CanBuildFlag(position, player))
+                return true;
+
+            var flagPosition = Map.MoveDownRight(position);
+
+            if (!Map.HasFlag(flagPosition) && !CanBuildFlag(flagPosition, player))
+                return false;
+
+            return CanBuildSmall(position);
+        }
+
         /// <summary>
         /// Checks whether a building of the specified type is possible at position.
         /// </summary>
@@ -1048,6 +1070,7 @@ namespace Freeserf
         }
 
         // Build building at position. 
+
         public bool BuildBuilding(MapPos position, Building.Type type, Player player)
         {
             if (!CanBuildBuilding(position, type, player))

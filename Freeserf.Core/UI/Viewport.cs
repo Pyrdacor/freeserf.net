@@ -2,7 +2,7 @@
  * Viewport.cs - Viewport GUI component
  *
  * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -409,6 +409,22 @@ namespace Freeserf.UI
             }
             else
             {
+                // Fast building
+                if (interf.GetOption(Option.FastBuilding) && interf.GetMapCursorPosition() == mapPosition)
+                {
+                    var map = interf.Game.Map;
+
+                    if (!interf.Player.HasCastle)
+                    {
+                        if (interf.Game.CanBuildCastle(mapPosition, interf.Player))
+                            interf.BuildCastle();
+                    }
+                    if (map.HasFlag(mapPosition))
+                        interf.BuildRoadBegin();
+                    else if (interf.Game.CanBuildAnything(mapPosition, interf.Player))
+                        interf.OpenPopup(interf.Game.CanBuildLarge(mapPosition) ? PopupBox.Type.BasicBldFlip : PopupBox.Type.BasicBld);
+                }
+
                 interf.UpdateMapCursorPosition(mapPosition);
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
             }

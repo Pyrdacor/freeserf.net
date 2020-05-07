@@ -2,7 +2,7 @@
  * Interface.cs - Top-level GUI interface
  *
  * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -218,7 +218,7 @@ namespace Freeserf.UI
                     {
                         delta = Gui.DeltaToGame(delta, RenderView);
 
-                        if (GetOption(Option.HideCursorWhileScrolling))
+                        if (e.Button == Event.Button.Right && GetOption(Option.HideCursorWhileScrolling))
                             cursorSprite.Visible = false;
                     }
 
