@@ -582,7 +582,7 @@ namespace Freeserf.UI
             int scrollX = totalDragX / RenderMap.TILE_WIDTH;
             int scrollY = totalDragY / RenderMap.TILE_HEIGHT;
 
-            if (interf.GetConfig(1)) // invert scrolling
+            if (interf.GetOption(Option.InvertScrolling)) // invert scrolling
                 map.Scroll(-scrollX, -scrollY);
             else
                 map.Scroll(scrollX, scrollY);

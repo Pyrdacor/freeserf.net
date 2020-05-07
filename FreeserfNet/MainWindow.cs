@@ -490,21 +490,24 @@ namespace Freeserf
                     return;
 
                 UpdateMouseState(buttons);
+
                 if (buttons.HasFlag(MouseButtons.Left) || buttons.HasFlag(MouseButtons.Right))
                 {
                     if (lastDragX == int.MinValue)
                         return;
+
                     bool dragAllowed = gameView.NotifyDrag(position.X, position.Y, lastDragX - position.X, lastDragY - position.Y, ConvertMouseButtons(buttons));
 
                     // lock the mouse if dragging with right button
                     if (dragAllowed)
                     {
-                        mouse.Cursor.CursorMode = CursorMode.Raw;
+                        CursorMode = CursorMode.Raw;
                     }
                     else if (buttons.HasFlag(MouseButtons.Left))
                     {
                          gameView.SetCursorPosition(position.X, position.Y);
                     }
+
                     lastDragX = position.X;
                     lastDragY = position.Y;
                 }
@@ -530,7 +533,13 @@ namespace Freeserf
             // restore cursor from successful locked dragging
             if (button.HasFlag(MouseButtons.Right))
             {
-                mouse.Cursor.CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
+                CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
+                if ((UserConfig.Game.Options & (int)Option.ResetCursorAfterScrolling) != 0)
+                {
+                    CursorPosition = new PointF(Width / 2, Height / 2);
+                    gameView.SetCursorPosition(Width / 2, Height / 2);
+                }
+                gameView.NotifyStopDrag();
             }
 
             base.OnMouseUp(position, button);

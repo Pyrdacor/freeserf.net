@@ -33,8 +33,7 @@ namespace Freeserf
     using EventArgs = Event.EventArgs;
     using EventHandler = Event.EventHandler;
     using EventType = Event.Type;
-    using Data = Data.Data;
-    using Texture = Freeserf.Renderer.Texture;
+    using Texture = Renderer.Texture;
 
     public delegate bool FullscreenRequestHandler(bool fullscreen);
 
@@ -42,7 +41,7 @@ namespace Freeserf
     {
         // these two lines are fore the background map at start
         int mapScrollTicks = 0;
-        Random mapScrollRandom = new Random();
+        readonly Random mapScrollRandom = new Random();
 
         bool disposed = false;
         Context context;
@@ -73,6 +72,7 @@ namespace Freeserf
         public event EventHandler Drag;
         public event EventHandler KeyPress;
         public event EventHandler SystemKeyPress;
+        public event EventHandler StopDrag;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
@@ -543,6 +543,7 @@ namespace Freeserf
         bool RunHandler(EventHandler handler, EventArgs args)
         {
             bool? h = handler?.Invoke(this, args);
+
             if (h.HasValue)
                 args.Done = h.Value;
 
@@ -593,6 +594,11 @@ namespace Freeserf
                 position = new Position();
 
             return RunHandler(Drag, new EventArgs(EventType.Drag, position.X, position.Y, delta.Width, delta.Height, button));
+        }
+
+        public bool NotifyStopDrag()
+        {
+            return RunHandler(StopDrag, new EventArgs(EventType.StopDrag, 0, 0, 0, 0));
         }
 
         public bool NotifyKeyPressed(char key, byte modifier)

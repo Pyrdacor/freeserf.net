@@ -97,16 +97,6 @@ namespace Freeserf.UI
 
         int[] sfxQueue = new int[4];
 
-        // Bit 0: Always 1, is used for messages that should always be notified
-        // Bit 1: Invert scrolling
-        // Bit 2: Fast building
-        // Bit 3: Non-important message. Is only set for message setting "all"
-        // Bit 4: Important messages. Is set for at least message setting "most"
-        // Bit 5: Very important messages. Is set for at least message setting "few"
-        // Bit 6: Pathway scrolling
-        // Bit 7: Fast map click
-        // TODO: Create constants/flag enum values
-        int config = 0x39;
         int msgFlags; // TODO: Create constants/flag enum values for all bits and document possible values
 
         readonly SpriteLocation[] mapCursorSprites = new SpriteLocation[7];
@@ -143,7 +133,7 @@ namespace Freeserf.UI
             TextRenderer = new TextRenderer(renderView);
 
             displayed = true;
-            config = UserConfig.Game.Options;
+            Options = (Option)UserConfig.Game.Options;
 
             mapCursorSprites[0] = new SpriteLocation { Sprite = 31 };
             mapCursorSprites[1] = new SpriteLocation { Sprite = 32 };
@@ -184,7 +174,8 @@ namespace Freeserf.UI
             bool clickEvent = e.Type == Event.Type.Click ||
                               e.Type == Event.Type.DoubleClick ||
                               e.Type == Event.Type.SpecialClick ||
-                              e.Type == Event.Type.Drag;
+                              e.Type == Event.Type.Drag ||
+                              e.Type == Event.Type.StopDrag;
 
             // If the viewport is active and it is a click event
             // we will disable the viewport temporary to avoid
@@ -224,7 +215,12 @@ namespace Freeserf.UI
                     position = Gui.PositionToGame(position, RenderView); // this considers game zoom
 
                     if (e.Type == Event.Type.Drag)
+                    {
                         delta = Gui.DeltaToGame(delta, RenderView);
+
+                        if (GetOption(Option.HideCursorWhileScrolling))
+                            cursorSprite.Visible = false;
+                    }
 
                     try
                     {
@@ -236,6 +232,10 @@ namespace Freeserf.UI
                         throw new ExceptionFreeserf(Game, ex);
                     }
                 }
+                else if (e.Type == Event.Type.StopDrag)
+                {
+                    cursorSprite.Visible = Displayed;
+                }
                 else
                 {
                     Debug.NotReached();
@@ -245,9 +245,22 @@ namespace Freeserf.UI
             return false;
         }
 
+        public override bool Displayed
+        {
+            get => base.Displayed;
+            set
+            {
+                if (base.Displayed == value)
+                    return;
+
+                base.Displayed = value;
+                cursorSprite.Visible = value;
+            }
+        }
+
         protected override void InternalDraw()
         {
-            cursorSprite.Visible = Displayed;
+            // Nothing to do here.
         }
 
         public void SetGame(Game game)
@@ -295,24 +308,29 @@ namespace Freeserf.UI
             return Game.GetPlayer(playerIndex).Color;
         }
 
-        public int GetConfig()
+        public Option Options { get; private set; } = Option.Default;
+
+        public bool GetOption(Option option)
         {
-            return config;
+            return Options.HasFlag(option);
         }
 
-        public bool GetConfig(int i)
+        public void SetOption(Option option)
         {
-            return Misc.BitTest(config, i);
+            Options |= option;
         }
 
-        public void SetConfig(int i)
+        public void ResetOption(Option option)
         {
-            config |= Misc.Bit(i);
+            Options &= ~option;
         }
 
-        public void SwitchConfig(int i)
+        public void SwitchOption(Option option)
         {
-            config = Misc.BitInvert(config, i);
+            if (GetOption(option))
+                ResetOption(option);
+            else
+                SetOption(option);
         }
 
         public MapPos GetMapCursorPosition()
@@ -722,7 +740,7 @@ namespace Freeserf.UI
                 // No existing paths at destination, build segment. 
                 UpdateMapCursorPosition(destination);
 
-                if (GetConfig(6)) // pathway scrolling
+                if (GetOption(Option.PathwayScrolling)) // pathway scrolling
                     Viewport.MoveToMapPosition(destination, true);
             }
             else
@@ -752,7 +770,7 @@ namespace Freeserf.UI
 
             UpdateMapCursorPosition(destination);
 
-            if (GetConfig(6)) // pathway scrolling
+            if (GetOption(Option.PathwayScrolling)) // pathway scrolling
                 Viewport.MoveToMapPosition(destination, true);
 
             return result;
@@ -940,7 +958,7 @@ namespace Freeserf.UI
                     {
                         var notification = Player.PeekNotification();
 
-                        if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
+                        if (GetOption((Option)MsgCategory[(int)notification.NotificationType]))
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Message);
                             msgFlags |= Misc.Bit(0);
@@ -965,7 +983,7 @@ namespace Freeserf.UI
 
                         var notification = Player.PeekNotification();
 
-                        if (Misc.BitTest(config, MsgCategory[(int)notification.NotificationType]))
+                        if (GetOption((Option)MsgCategory[(int)notification.NotificationType]))
                             break;
 
                         Player.PopNotification();

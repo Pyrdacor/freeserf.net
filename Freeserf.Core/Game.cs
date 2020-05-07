@@ -36,7 +36,22 @@ namespace Freeserf
     using Serfs = Collection<Serf>;
     using Players = Collection<Player>;
     using Values = Dictionary<uint, uint>;
-    using Dirs = Stack<Direction>;
+
+    [Flags]
+    public enum Option
+    {
+        MessagesImportant = 0x0001, // This is always set as these messages will always be notified.
+        InvertScrolling = 0x0002,
+        FastBuilding = 0x0004,
+        MessagesAll = 0x0008,
+        MessagesMost = 0x0010,
+        MessagesFew = 0x0020,
+        PathwayScrolling = 0x0040,
+        FastMapClick = 0x0080,
+        HideCursorWhileScrolling = 0x0100,
+        ResetCursorAfterScrolling = 0x0200,
+        Default = 0x0039
+    }
 
     public class Game : Map.Handler
     {

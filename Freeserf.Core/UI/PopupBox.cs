@@ -74,6 +74,7 @@ namespace Freeserf.UI
             SettSelectFile, // UNUSED 
             Options,
             ExtendedOptions,
+            ScrollOptions,
             GameInitOptions,
             ExtendedGameInitOptions,
             CastleResources,
@@ -256,6 +257,7 @@ namespace Freeserf.UI
             ShowQuit,
             ShowOptions,
             ShowExtendedOptions,
+            ShowScrollOptions,
             ShowSave,
             CycleKnights,
             OptionsMessageCount,
@@ -328,6 +330,8 @@ namespace Freeserf.UI
             OptionsFastMapclick,
             OptionsFastBuilding,
             OptionsInvertScrolling,
+            OptionsHideCursorWhileScrolling,
+            OptionsResetCursorAfterScrolling,
             Demolish,
             OptionsSfx,
             Save,
@@ -789,6 +793,7 @@ namespace Freeserf.UI
                 case Type.NoSaveQuitConfirm:
                 case Type.Options:
                 case Type.ExtendedOptions:
+                case Type.ScrollOptions:
                 case Type.GameInitOptions:
                 case Type.ExtendedGameInitOptions:
                 case Type.LoadSave:
@@ -2579,39 +2584,53 @@ namespace Freeserf.UI
 
         void DrawExtendedOptionsBox(Action closeAction)
         {
-            SetText(16, 20, "Pathway-");
-            SetText(16, 29, "Scrolling");
+            SetText(16, 20, "Fast");
+            SetText(16, 29, "Mapclick");
             SetText(16, 45, "Fast");
-            SetText(16, 54, "Mapclick");
-            SetText(16, 70, "Fast");
-            SetText(16, 79, "Building");
-            SetText(16, 95, "Invert");
-            SetText(16, 104, "Scrolling");
+            SetText(16, 54, "Building");
 
-            SetButton(112, 21, interf.GetConfig(6) ? 288u : 220u, Action.OptionsPathwayScrolling);
-            SetButton(112, 47, interf.GetConfig(7) ? 288u : 220u, Action.OptionsFastMapclick);
-            SetButton(112, 73, interf.GetConfig(2) ? 288u : 220u, Action.OptionsFastBuilding);
-            SetButton(112, 98, interf.GetConfig(1) ? 288u : 220u, Action.OptionsInvertScrolling);
+            SetButton(112, 21, interf.GetOption(Option.FastMapClick) ? 288u : 220u, Action.OptionsFastMapclick);
+            SetButton(112, 47, interf.GetOption(Option.FastBuilding) ? 288u : 220u, Action.OptionsFastBuilding);
 
             string value = "All";
 
-            if (!interf.GetConfig(3))
+            if (!interf.GetOption(Option.MessagesAll))
             {
                 value = "Most";
 
-                if (!interf.GetConfig(4))
+                if (!interf.GetOption(Option.MessagesMost))
                 {
                     value = "Few";
 
-                    if (!interf.GetConfig(5))
+                    if (!interf.GetOption(Option.MessagesFew))
                     {
                         value = "None";
                     }
                 }
             }
 
-            SetText(16, 122, "Messages");
-            clickableTextField = SetText(96, 122, value);
+            SetText(16, 104, "Messages");
+            clickableTextField = SetText(96, 104, value);
+
+            SetButton(104, 137, 61u, Action.ShowScrollOptions); // flip
+            SetButton(120, 137, 60u, closeAction); // exit
+        }
+
+        void DrawScrollOptionsBox(Action closeAction)
+        {
+            SetText(16, 20, "Pathway-");
+            SetText(16, 29, "Scrolling");
+            SetText(16, 45, "Invert");
+            SetText(16, 54, "Scrolling");
+            SetText(16, 70, "Hide mouse");
+            SetText(16, 79, "while scr.");
+            SetText(16, 95, "Reset mouse");
+            SetText(16, 104, "after scr.");
+
+            SetButton(112, 21, interf.GetOption(Option.PathwayScrolling) ? 288u : 220u, Action.OptionsPathwayScrolling);
+            SetButton(112, 47, interf.GetOption(Option.InvertScrolling) ? 288u : 220u, Action.OptionsInvertScrolling);
+            SetButton(112, 73, interf.GetOption(Option.HideCursorWhileScrolling) ? 288u : 220u, Action.OptionsHideCursorWhileScrolling);
+            SetButton(112, 98, interf.GetOption(Option.ResetCursorAfterScrolling) ? 288u : 220u, Action.OptionsResetCursorAfterScrolling);
 
             SetButton(104, 137, 61u, Action.ShowOptions); // flip
             SetButton(120, 137, 60u, closeAction); // exit
@@ -3449,7 +3468,11 @@ namespace Freeserf.UI
                     SetBox(Type.Options);
                     break;
                 case Action.ShowExtendedOptions:
-                    SetBox(Type.ExtendedOptions);
+                    SetBox(Box == Type.GameInitOptions ? Type.ExtendedGameInitOptions : Type.ExtendedOptions);
+                    break;
+                case Action.ShowScrollOptions:
+                    // Scroll options are not part of the game init box options so go back to normal options then.
+                    SetBox(Box == Type.ExtendedGameInitOptions ? Type.GameInitOptions : Type.ScrollOptions);
                     break;
                 case Action.ShowQuit:
                     SetBox(Type.QuitConfirm);
@@ -4093,44 +4116,52 @@ namespace Freeserf.UI
                     }
                     break;
                 case Action.OptionsMessageCount:
-                    if (interf.GetConfig(3))
+                    if (interf.GetOption(Option.MessagesAll))
                     {
-                        interf.SwitchConfig(3);
-                        interf.SetConfig(4);
+                        interf.ResetOption(Option.MessagesAll);
+                        interf.SetOption(Option.MessagesMost);
                     }
-                    else if (interf.GetConfig(4))
+                    else if (interf.GetOption(Option.MessagesMost))
                     {
-                        interf.SwitchConfig(4);
-                        interf.SetConfig(5);
+                        interf.ResetOption(Option.MessagesMost);
+                        interf.SetOption(Option.MessagesFew);
                     }
-                    else if (interf.GetConfig(5))
+                    else if (interf.GetOption(Option.MessagesFew))
                     {
-                        interf.SwitchConfig(5);
+                        interf.ResetOption(Option.MessagesFew);
                     }
                     else
                     {
-                        interf.SetConfig(3);
-                        interf.SetConfig(4);
-                        interf.SetConfig(5);
+                        interf.SetOption(Option.MessagesAll);
+                        interf.SetOption(Option.MessagesMost);
+                        interf.SetOption(Option.MessagesFew);
                     }
-                    UserConfig.Game.Options = interf.GetConfig();
+                    UserConfig.Game.Options = (int)interf.Options;
                     SetRedraw();
                     break;
                 case Action.OptionsPathwayScrolling:
-                    interf.SwitchConfig(6);
-                    UserConfig.Game.Options = interf.GetConfig();
+                    interf.SwitchOption(Option.PathwayScrolling);
+                    UserConfig.Game.Options = (int)interf.Options;
                     break;
                 case Action.OptionsFastMapclick:
-                    interf.SwitchConfig(7);
-                    UserConfig.Game.Options = interf.GetConfig();
+                    interf.SwitchOption(Option.FastMapClick);
+                    UserConfig.Game.Options = (int)interf.Options;
                     break;
                 case Action.OptionsFastBuilding:
-                    interf.SwitchConfig(2);
-                    UserConfig.Game.Options = interf.GetConfig();
+                    interf.SwitchOption(Option.FastBuilding);
+                    UserConfig.Game.Options = (int)interf.Options;
                     break;
                 case Action.OptionsInvertScrolling:
-                    interf.SwitchConfig(1);
-                    UserConfig.Game.Options = interf.GetConfig();
+                    interf.SwitchOption(Option.InvertScrolling);
+                    UserConfig.Game.Options = (int)interf.Options;
+                    break;
+                case Action.OptionsHideCursorWhileScrolling:
+                    interf.SwitchOption(Option.HideCursorWhileScrolling);
+                    UserConfig.Game.Options = (int)interf.Options;
+                    break;
+                case Action.OptionsResetCursorAfterScrolling:
+                    interf.SwitchOption(Option.ResetCursorAfterScrolling);
+                    UserConfig.Game.Options = (int)interf.Options;
                     break;
                 case Action.QuitCancel:
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm || Box == Type.DiskMsg)
@@ -4327,6 +4358,9 @@ namespace Freeserf.UI
                     break;
                 case Type.ExtendedOptions:
                     DrawExtendedOptionsBox(Action.ShowSettlerMenu);
+                    break;
+                case Type.ScrollOptions:
+                    DrawScrollOptionsBox(Action.ShowSettlerMenu);
                     break;
                 case Type.GameInitOptions:
                     DrawOptionsBox(Action.CloseBox);

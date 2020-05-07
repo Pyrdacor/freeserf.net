@@ -29,7 +29,8 @@ namespace Freeserf.Event
         SpecialClick, // Left + right button
         Drag,
         KeyPressed,
-        SystemKeyPressed
+        SystemKeyPressed,
+        StopDrag
     }
 
     public enum Button
@@ -108,5 +109,6 @@ namespace Freeserf.Event
         event EventHandler Drag;
         event EventHandler KeyPress;
         event EventHandler SystemKeyPress;
+        event EventHandler StopDrag;
     }
 }

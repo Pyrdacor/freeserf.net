@@ -44,7 +44,7 @@ namespace Freeserf
 
                 // Game
                 if (int.TryParse(configFile.Value("game", "options", "57"), out int options))
-                    Game.Options = options | 0x01; // bit 0 must be set always
+                    Game.Options = options | 0x01; // bit 0 must be always set
                 Game.GraphicDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "graphic_data_usage", Data.DataSourceMixed.DataUsage.PreferDos);
                 Game.SoundDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "sound_data_usage", Data.DataSourceMixed.DataUsage.PreferDos);
                 Game.MusicDataUsage = configFile.Value<Data.DataSourceMixed.DataUsage>("game", "music_data_usage", Data.DataSourceMixed.DataUsage.PreferAmiga);

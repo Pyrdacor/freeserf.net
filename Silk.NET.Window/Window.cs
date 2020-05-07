@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
 using Silk.NET.Input;
@@ -29,7 +30,7 @@ namespace Silk.NET.Window
         );
 
         readonly IWindow window = null;
-        public IMouse mouse = null;
+        IMouse mouse = null;
         bool cursorVisible = true;
 
         private static WindowOptions CreateOptions(string title, Point position, Size size)
@@ -92,6 +93,15 @@ namespace Silk.NET.Window
                 }
             }
         }
+        public CursorMode CursorMode
+        {
+            get => mouse == null ? CursorMode.Disabled : mouse.Cursor.CursorMode;
+            set
+            {
+                if (mouse?.Cursor != null)
+                    mouse.Cursor.CursorMode = value;
+            }
+        }
 
         public bool CursorVisible
         {
@@ -117,6 +127,16 @@ namespace Silk.NET.Window
                 {
                     mouse.Cursor.CursorMode = WindowState == WindowState.Fullscreen ? CursorMode.Disabled : CursorMode.Hidden;
                 }
+            }
+        }
+
+        public PointF CursorPosition
+        {
+            get => mouse == null ? PointF.Empty : mouse.Position;
+            set
+            {
+                if (mouse != null)
+                    mouse.Position = value;
             }
         }
 

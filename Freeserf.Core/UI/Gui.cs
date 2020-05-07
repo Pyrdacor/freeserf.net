@@ -428,6 +428,7 @@ namespace Freeserf.UI
             renderView.Drag += RenderView_Drag;
             renderView.KeyPress += RenderView_KeyPress;
             renderView.SystemKeyPress += RenderView_SystemKeyPress;
+            renderView.StopDrag += RenderView_StopDrag;
         }
 
         void RenderView_ZoomChanged(object sender, EventArgs e)
@@ -511,6 +512,11 @@ namespace Freeserf.UI
 
             args = Event.EventArgs.Transform(args, position.X, position.Y, delta.Width, delta.Height);
 
+            return viewer.SendEvent(args);
+        }
+
+        private bool RenderView_StopDrag(object sender, Event.EventArgs args)
+        {
             return viewer.SendEvent(args);
         }
 
