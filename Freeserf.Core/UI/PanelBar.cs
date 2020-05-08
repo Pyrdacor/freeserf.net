@@ -728,7 +728,6 @@ namespace Freeserf.UI
             return true;
         }
 
-        // TODO: test if the positions are correct later
         protected override bool HandleClickLeft(int x, int y)
         {
             SetRedraw();

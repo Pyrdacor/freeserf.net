@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
 using Silk.NET.Input;
@@ -139,6 +138,8 @@ namespace Silk.NET.Window
                     mouse.Position = value;
             }
         }
+
+        public bool IsMouseButtonPressed(MouseButton button) => mouse.IsButtonPressed(button);
 
         public Rectangle ClientRectangle => new Rectangle(Position, Size);
 

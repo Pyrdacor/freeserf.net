@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Timers;
 using Freeserf.Renderer;
-using Orientation = Freeserf.Renderer.Orientation;
 using Silk.NET.Input.Common;
 using Silk.NET.Window;
 using Silk.NET.Windowing.Common;
@@ -24,13 +22,13 @@ namespace Freeserf
         static MainWindow mainWindow = null;
         GameView gameView = null;
         bool fullscreen = false;
-        bool[] pressedMouseButtons = new bool[3];
-        bool[] keysDown = new bool[(int)Key.LastKey + 1];
+        readonly bool[] pressedMouseButtons = new bool[3];
+        readonly bool[] keysDown = new bool[(int)Key.LastKey + 1];
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
         static Global.InitInfo initInfo = null;
         static Data.DataSource dataSource = null;
-        bool specialClickPerformed = false;
+        bool scrolled = false;
         Point clickPosition = Point.Empty;
 
         private MainWindow(WindowOptions options)
@@ -58,7 +56,9 @@ namespace Freeserf
 
             try
             {
+#if !DEBUG
                 Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+#endif
                 Log.SetLevel(Log.Level.Error);
             }
             catch (IOException)
@@ -501,7 +501,8 @@ namespace Freeserf
                     // lock the mouse if dragging with right button
                     if (dragAllowed)
                     {
-                        CursorMode = CursorMode.Raw;
+                        CursorMode = CursorMode.Disabled;
+                        scrolled = true;
                     }
                     else if (buttons.HasFlag(MouseButtons.Left))
                     {
@@ -534,11 +535,12 @@ namespace Freeserf
             if (button.HasFlag(MouseButtons.Right))
             {
                 CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
-                if ((UserConfig.Game.Options & (int)Option.ResetCursorAfterScrolling) != 0)
+                if (scrolled && (UserConfig.Game.Options & (int)Option.ResetCursorAfterScrolling) != 0)
                 {
                     CursorPosition = new PointF(Width / 2, Height / 2);
                     gameView.SetCursorPosition(Width / 2, Height / 2);
                 }
+                scrolled = false;
                 gameView.NotifyStopDrag();
             }
 
@@ -552,15 +554,13 @@ namespace Freeserf
             clickPosition = position;
 
             // left + right = special click
-            if ((button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right)))
+            if (button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right))
             {
                 if (
                     pressedMouseButtons[(int)MouseButtonIndex.Left] &&
                     pressedMouseButtons[(int)MouseButtonIndex.Right]
                 )
                 {
-                    specialClickPerformed = true;
-
                     try
                     {
                         gameView?.NotifySpecialClick(position.X, position.Y);
@@ -569,9 +569,6 @@ namespace Freeserf
                     {
                         ReportException("MouseDown", ex);
                     }
-
-                    pressedMouseButtons[(int)MouseButtonIndex.Left] = false;
-                    pressedMouseButtons[(int)MouseButtonIndex.Right] = false;
                 }
                 else
                 {
@@ -585,10 +582,14 @@ namespace Freeserf
 
         protected override void OnClick(Point position, MouseButtons button)
         {
-            if (specialClickPerformed && (button == MouseButtons.Right || button == MouseButtons.Left))
+            // left + right = special click
+            if (button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right))
             {
-                specialClickPerformed = false;
-                return;
+                if (
+                    pressedMouseButtons[(int)MouseButtonIndex.Left] &&
+                    pressedMouseButtons[(int)MouseButtonIndex.Right]
+                )
+                return; // special clicks are handled in OnMouseDown
             }
 
             try
