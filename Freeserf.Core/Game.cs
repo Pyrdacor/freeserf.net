@@ -658,14 +658,14 @@ namespace Freeserf
             if (!player.HasCastle)
                 return CanBuildCastle(position, player);
 
+            if (CanBuildFlag(position, player))
+                return true;
+
             if (!CanPlayerBuild(position, player))
                 return false;
 
             if (Map.MapSpaceFromObject[(int)Map.GetObject(position)] != Map.Space.Open)
                 return false;
-
-            if (CanBuildFlag(position, player))
-                return true;
 
             var flagPosition = Map.MoveDownRight(position);
 

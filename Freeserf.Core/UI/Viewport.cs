@@ -410,19 +410,24 @@ namespace Freeserf.UI
             else
             {
                 // Fast building
-                if (interf.GetOption(Option.FastBuilding) && interf.GetMapCursorPosition() == mapPosition)
+                if (interf.AccessRights == Viewer.Access.Player &&
+                    interf.GetOption(Option.FastBuilding) &&
+                    interf.GetMapCursorPosition() == mapPosition)
                 {
-                    var map = interf.Game.Map;
-
                     if (!interf.Player.HasCastle)
                     {
                         if (interf.Game.CanBuildCastle(mapPosition, interf.Player))
                             interf.BuildCastle();
                     }
-                    if (map.HasFlag(mapPosition))
+                    else if (interf.Game.Map.HasFlag(mapPosition))
                         interf.BuildRoadBegin();
                     else if (interf.Game.CanBuildAnything(mapPosition, interf.Player))
-                        interf.OpenPopup(interf.Game.CanBuildLarge(mapPosition) ? PopupBox.Type.BasicBldFlip : PopupBox.Type.BasicBld);
+                    {
+                        if (!interf.Game.CanBuildSmall(mapPosition)) // only flags are possible
+                            interf.BuildFlag();
+                        else
+                            interf.OpenPopup(interf.Game.CanBuildLarge(mapPosition) ? PopupBox.Type.BasicBldFlip : PopupBox.Type.BasicBld);
+                    }
                 }
 
                 interf.UpdateMapCursorPosition(mapPosition);
