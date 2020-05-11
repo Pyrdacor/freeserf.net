@@ -1,5 +1,19 @@
+Version 2.0.0-preview6:
+=======================
+
+- Implemented fast building
+- Improved map scrolling
+- Added more ingame options for scrolling
+- Fixed special click issues
+- GameInitBox will have the same settings after game close
+- Lowered single click delay
+- Fixed disabled bottom panel in AIvsAI
+- Fixed weird bugs with large map sizes
+- Fixed black artifacts in map rendering
+
+
 Version 2.0.0-preview5:
-===============
+=======================
 
 - Improved fullscreen switching
 - Fixed special click issues
@@ -7,7 +21,7 @@ Version 2.0.0-preview5:
 
 
 Version 2.0.0-preview1-4:
-===============
+=========================
 
 - Sound and music support for Linux
 - Sound and music now uses BASS

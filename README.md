@@ -16,7 +16,7 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 | Windows | Linux |
 | ---- | ---- |
-| [v2.0.0-preview5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-preview5/Freeserf.net-Windows.zip "Windows v2.0.0 Preview 5") | [v2.0.0-preview5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-preview5/Freeserf.net-Linux.tar.gz "Linux v2.0.0 Preview 5") |
+| [v2.0.0-preview6](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-preview6/Freeserf.net-Windows.zip "Windows v2.0.0 Preview 6") | [v2.0.0-preview6](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-preview6/Freeserf.net-Linux.tar.gz "Linux v2.0.0 Preview 6") |
 
 Builds for other platforms will follow later. Only recent Ubuntu versions are tested for Linux version.
 
