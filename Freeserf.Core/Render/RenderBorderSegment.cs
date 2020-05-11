@@ -1,10 +1,10 @@
-﻿using System;
-using Freeserf.Data;
+﻿using Freeserf.Data;
+using System;
 
 namespace Freeserf.Render
 {
-    using MapPos = UInt32;
     using Data = Data.Data;
+    using MapPos = UInt32;
 
     internal class RenderBorderSegment : RenderObject
     {

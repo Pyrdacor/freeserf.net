@@ -321,7 +321,7 @@ namespace Freeserf.AIStates
                             }
                         }
                     }
-                }            
+                }
             };
 
             new Thread(new ParameterizedThreadStart(Link)).Start(action);

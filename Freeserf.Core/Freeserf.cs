@@ -20,10 +20,10 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Data;
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Freeserf.Data;
 
 [assembly: InternalsVisibleTo("Freeserf.Test")]
 

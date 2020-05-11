@@ -775,7 +775,7 @@ namespace Freeserf.Data
 
         public override bool Check()
         {
-            return CheckMusic() && CheckSound() && CheckGraphics();            
+            return CheckMusic() && CheckSound() && CheckGraphics();
         }
 
         public override DataLoadResult Load()
@@ -953,7 +953,7 @@ namespace Freeserf.Data
                         Buffer data = new Buffer(shadow);
                         SpriteAmiga m = DecodeMaskSprite(data, 16, 6);
 
-                        m.FillMasked(new Sprite.Color { Blue = 0x00, Green = 0x00, Red = 0x00, Alpha = 0x80});
+                        m.FillMasked(new Sprite.Color { Blue = 0x00, Green = 0x00, Red = 0x00, Alpha = 0x80 });
                         m.SetDelta(2, 0);
                         m.SetOffset(-2, -7);
 
@@ -1012,7 +1012,7 @@ namespace Freeserf.Data
                         if (index == 32u)
                         {
                             s = new SpriteAmiga(32, 21);
-                            var c = new Sprite.Color{ Blue = 0xBB, Green = 0x00, Red = 0x00, Alpha = 0xFF };
+                            var c = new Sprite.Color { Blue = 0xBB, Green = 0x00, Red = 0x00, Alpha = 0xFF };
                             s.Fill(c);
                         }
                         else
@@ -1504,7 +1504,7 @@ namespace Freeserf.Data
 
             ushort height = data.Pop<ushort>();
 
-            SpriteAmiga sprite =  new SpriteAmiga(32, height);
+            SpriteAmiga sprite = new SpriteAmiga(32, height);
             sprite.SetDelta(2, 0);
             sprite.SetOffset(0, 0);
 
@@ -1757,7 +1757,7 @@ namespace Freeserf.Data
             uint shadowWidth = (uint)shadow.Pop<byte>() * 8;
 
             SpriteAmiga sprite = DecodeMaskSprite(shadow, shadowWidth, shadowHeight);
-            sprite.FillMasked(new Sprite.Color{ Blue = 0x00, Green = 0x00, Red = 0x00, Alpha = 0x80});
+            sprite.FillMasked(new Sprite.Color { Blue = 0x00, Green = 0x00, Red = 0x00, Alpha = 0x80 });
             sprite.Clear();
             sprite.SetDelta(0, 0);
             sprite.SetOffset(shadowOffsetX * 8, -shadowOffsetY);
@@ -2018,7 +2018,7 @@ namespace Freeserf.Data
             res.Stick(symbol, 0, 1);
             res.Stick(symbol, 2, 1);
             res.Stick(symbol, 1, 2);
-            res.FillMasked(new Sprite.Color { Blue = 0xFF, Green = 0xFF, Red = 0xFF, Alpha = 0xFF});
+            res.FillMasked(new Sprite.Color { Blue = 0xFF, Green = 0xFF, Red = 0xFF, Alpha = 0xFF });
 
             return res;
         }

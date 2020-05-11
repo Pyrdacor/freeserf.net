@@ -20,8 +20,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using Silk.NET.OpenGL;
 
 namespace Freeserf.Renderer
 {
@@ -45,7 +43,7 @@ namespace Freeserf.Renderer
 
         public ShaderProgram(Shader fragmentShader, Shader vertexShader)
         {
-        	Create();
+            Create();
 
             AttachShader(fragmentShader);
             AttachShader(vertexShader);
@@ -60,9 +58,9 @@ namespace Freeserf.Renderer
 
         public bool SetFragmentColorOutputName(string name)
         {
-        	if (!string.IsNullOrWhiteSpace(name))
+            if (!string.IsNullOrWhiteSpace(name))
             {
-            	fragmentColorOutputName = name;
+                fragmentColorOutputName = name;
                 return true;
             }
 
@@ -71,15 +69,15 @@ namespace Freeserf.Renderer
 
         public void AttachShader(Shader shader)
         {
-        	if (shader == null)
-            	return;
+            if (shader == null)
+                return;
 
             if (shader.ShaderType == Shader.Type.Fragment)
             {
-            	if (fragmentShader == shader)
-                	return;
+                if (fragmentShader == shader)
+                    return;
 
-            	if (fragmentShader != null)
+                if (fragmentShader != null)
                     State.Gl.DetachShader(ProgramIndex, fragmentShader.ShaderIndex);
 
                 fragmentShader = shader;
@@ -87,10 +85,10 @@ namespace Freeserf.Renderer
             }
             else if (shader.ShaderType == Shader.Type.Vertex)
             {
-            	if (vertexShader == shader)
-                	return;
+                if (vertexShader == shader)
+                    return;
 
-            	if (vertexShader != null)
+                if (vertexShader != null)
                     State.Gl.DetachShader(ProgramIndex, vertexShader.ShaderIndex);
 
                 vertexShader = shader;
@@ -105,12 +103,12 @@ namespace Freeserf.Renderer
         {
             if (!Linked)
             {
-            	if (!Loaded)
-            		throw new InvalidOperationException("ShaderProgram.Link: Shader program was not loaded.");
+                if (!Loaded)
+                    throw new InvalidOperationException("ShaderProgram.Link: Shader program was not loaded.");
 
                 State.Gl.LinkProgram(ProgramIndex);
 
-                // Auf Fehler prüfen
+                // Auf Fehler prï¿½fen
                 string infoLog = State.Gl.GetProgramInfoLog(ProgramIndex);
 
                 if (!string.IsNullOrWhiteSpace(infoLog))
@@ -123,7 +121,7 @@ namespace Freeserf.Renderer
 
             if (detachShaders)
             {
-            	if (fragmentShader != null)
+                if (fragmentShader != null)
                 {
                     State.Gl.DetachShader(ProgramIndex, fragmentShader.ShaderIndex);
                     fragmentShader = null;
@@ -141,8 +139,8 @@ namespace Freeserf.Renderer
 
         public void Use()
         {
-        	if (!Linked)
-            	throw new InvalidOperationException("ShaderProgram.Use: Shader program was not linked.");
+            if (!Linked)
+                throw new InvalidOperationException("ShaderProgram.Use: Shader program was not linked.");
 
             State.Gl.UseProgram(ProgramIndex);
             ActiveProgram = this;
@@ -163,8 +161,8 @@ namespace Freeserf.Renderer
 
         public uint BindInputBuffer<T>(string name, BufferObject<T> buffer)
         {
-        	if (ActiveProgram != this)
-            	throw new InvalidOperationException("ShaderProgram.SetInputBuffer: Shader program is not active.");
+            if (ActiveProgram != this)
+                throw new InvalidOperationException("ShaderProgram.SetInputBuffer: Shader program is not active.");
 
             var location = GetLocation(name, true);
 
@@ -209,11 +207,11 @@ namespace Freeserf.Renderer
                     State.Gl.ProgramUniformMatrix4(ProgramIndex, (int)location, 1, transpose, matrix);
                     break;
                 default:
-                	throw new InvalidOperationException("ShaderProgram.SetInputMatrix: Unsupported matrix dimensions. Valid are 2x2, 3x3 or 4x4.");
+                    throw new InvalidOperationException("ShaderProgram.SetInputMatrix: Unsupported matrix dimensions. Valid are 2x2, 3x3 or 4x4.");
             }
         }
 
-		public void SetInput(string name, bool value)
+        public void SetInput(string name, bool value)
         {
             var location = GetLocation(name);
 
@@ -324,7 +322,7 @@ namespace Freeserf.Renderer
                 {
                     if (ProgramIndex != 0)
                     {
-                    	if (ActiveProgram == this)
+                        if (ActiveProgram == this)
                         {
                             State.Gl.UseProgram(0);
                             ActiveProgram = null;
@@ -338,5 +336,5 @@ namespace Freeserf.Renderer
                 }
             }
         }
-   	}
+    }
 }

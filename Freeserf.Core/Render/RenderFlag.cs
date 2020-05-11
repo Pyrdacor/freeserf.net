@@ -19,8 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
 using Freeserf.Data;
+using System;
 
 namespace Freeserf.Render
 {
@@ -29,16 +29,16 @@ namespace Freeserf.Render
 
     internal class RenderFlag : RenderObject
     {
-        Flag flag = null;
+        readonly Flag flag = null;
         // sprite index 128-143 (16 sprites)
         static Position[] spriteOffsets = null;
         static Position[] shadowSpriteOffsets = null;
-        ISprite[] resources = new ISprite[8];
-        ISpriteFactory spriteFactory = null;
+        readonly ISprite[] resources = new ISprite[8];
+        readonly ISpriteFactory spriteFactory = null;
         static Rect[] resourceSpriteInfos = null;
         int maxBaseLine = 0;
 
-        static readonly int[] ResPos = new int[] 
+        static readonly int[] ResPos = new int[]
         {
              6, -4,
             10, -2,

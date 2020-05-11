@@ -163,7 +163,7 @@ namespace Freeserf.Network
                 throw new ExceptionFreeserf("Invalid map seed. Length must be 16.");
 
             unsafe
-            {                
+            {
                 Marshal.Copy(mapSeed, 0, (IntPtr)serverSettings.MapSeed, 16);
             }
 

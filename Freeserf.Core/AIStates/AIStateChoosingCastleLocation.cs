@@ -131,7 +131,7 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = FindMountain(map, position).Success &&  map.GetResourceAmount(position) > 0u,
+                Success = FindMountain(map, position).Success && map.GetResourceAmount(position) > 0u,
                 Data = new KeyValuePair<Map.Minerals, uint>(map.GetResourceType(position), map.GetResourceAmount(position))
             };
         }

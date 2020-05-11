@@ -60,24 +60,24 @@ namespace Freeserf.FileSystem
                 SaveGameFolder += "/.local/share";
             }
             else if (IsWindows())
-            {                       
+            {
                 SaveGameFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Saved Games");
                 UserConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf.net", "user.cfg");
             }
             else if (IsOSX())
-            {                    
+            {
                 SaveGameFolder = Environment.GetEnvironmentVariable("HOME");
                 SaveGameFolder += "/Library/Application Support";
             }
 
-            if(SaveGameFolder == "")
+            if (SaveGameFolder == "")
             {
                 throw new Exception("Unknown platform.");
             }
 
             SaveGameFolder += Path.DirectorySeparatorChar.ToString() + "freeserf";
 
-            if(!IsWindows())
+            if (!IsWindows())
             {
                 UserConfigPath = SaveGameFolder + "/user.cfg";
                 SaveGameFolder += "/saves";

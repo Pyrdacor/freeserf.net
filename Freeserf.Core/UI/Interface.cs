@@ -30,10 +30,10 @@
  * inputs to the original gui locations.
  */
 
+using Freeserf.Render;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Freeserf.Render;
 
 namespace Freeserf.UI
 {
@@ -128,7 +128,7 @@ namespace Freeserf.UI
         {
             RenderView = renderView;
             AudioInterface = audioInterface;
-            Viewer = viewer; 
+            Viewer = viewer;
 
             TextRenderer = new TextRenderer(renderView);
 
@@ -930,7 +930,7 @@ namespace Freeserf.UI
                 /*if (this is RemoteInterface)
                     Game.UpdateVisuals();
                 else*/
-                    Game.Update();
+                Game.Update();
 
                 UpdateBuildingRoadSegments();
 

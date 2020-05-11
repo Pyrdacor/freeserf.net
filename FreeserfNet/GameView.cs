@@ -19,14 +19,14 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using System.Collections.Generic;
-using Silk.NET.OpenGL;
 using Freeserf.Audio;
 using Freeserf.Data;
 using Freeserf.Event;
 using Freeserf.Render;
 using Freeserf.Renderer;
+using Silk.NET.OpenGL;
+using System;
+using System.Collections.Generic;
 
 namespace Freeserf
 {
@@ -76,8 +76,8 @@ namespace Freeserf
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
-            DeviceType deviceType = DeviceType.Desktop, 
-            SizingPolicy sizingPolicy = SizingPolicy.FitRatio, 
+            DeviceType deviceType = DeviceType.Desktop,
+            SizingPolicy sizingPolicy = SizingPolicy.FitRatio,
             OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
         {
             VirtualScreen = new Rect(0, 0, Math.Min(virtualScreenSize.Width, Global.MAX_VIRTUAL_SCREEN_WIDTH), Math.Min(virtualScreenSize.Height, Global.MAX_VIRTUAL_SCREEN_HEIGHT));
@@ -163,7 +163,7 @@ namespace Freeserf
                         };
                     }
                     else if (layer == Layer.GuiFont) // UI Font needs different scaling
-                    {                      
+                    {
                         renderLayer.PositionTransformation = (Position position) =>
                         {
                             float factorX = (float)VirtualScreen.Size.Width / 640.0f;
@@ -354,7 +354,7 @@ namespace Freeserf
                 case DeviceType.MobilePortrait:
                     Resize(width, height, Orientation.PortraitTopDown);
                     break;
-            }            
+            }
         }
 
         public void Resize(int width, int height, Orientation orientation)

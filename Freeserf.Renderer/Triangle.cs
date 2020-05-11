@@ -36,7 +36,7 @@ namespace Freeserf.Renderer
             maskTextureAtlasOffset = new Position(textureAtlasX, textureAtlasY);
         }
 
-         public Position TextureAtlasOffset
+        public Position TextureAtlasOffset
         {
             get => textureAtlasOffset;
             set

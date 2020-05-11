@@ -27,8 +27,8 @@ using System.Linq;
 namespace Freeserf
 {
     using Serialize;
-    using word = UInt16;
     using ResourceMap = Serialize.DirtyMap<Resource.Type, uint>;
+    using word = UInt16;
 
     public class Inventory : GameObject, IState, IDisposable
     {
@@ -49,7 +49,7 @@ namespace Freeserf
                 if (other is OutQueue)
                 {
                     var otherQueue = other as OutQueue;
-                    
+
                     if (Type == otherQueue.Type)
                         return Destination.CompareTo(otherQueue.Destination);
 
@@ -61,11 +61,11 @@ namespace Freeserf
         }
 
         [Data]
-        private InventoryState state = new InventoryState();       
+        private InventoryState state = new InventoryState();
 
         // Count of serfs waiting to move out
         uint serfsOut = 0;
-        
+
         public Inventory(Game game, uint index)
             : base(game, index)
         {

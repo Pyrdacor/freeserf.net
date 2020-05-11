@@ -330,7 +330,7 @@ namespace Freeserf.Data
 
             int halfSize = (int)width * (int)height * 2; // * 2 because 4 bytes per pixel and height * 4 / 2 = height * 2
 
-            int offset = secondHalfFilled ? halfSize : 0; 
+            int offset = secondHalfFilled ? halfSize : 0;
 
             System.Buffer.BlockCopy(Enumerable.Repeat((byte)0xFF, halfSize).ToArray(), 0, sprite.data, offset, halfSize);
 
@@ -576,7 +576,7 @@ namespace Freeserf.Data
                     uint G = Blend(backG, frontG, alpha);
                     uint B = Blend(backB, frontB, alpha);
 
-                    *c++ = new Color { Blue = (byte)B, Green = (byte)G, Red = (byte)R, Alpha = 0xFF};
+                    *c++ = new Color { Blue = (byte)B, Green = (byte)G, Red = (byte)R, Alpha = 0xFF };
                     ++o;
                 }
             }
@@ -592,7 +592,7 @@ namespace Freeserf.Data
             fixed (byte* pointer = data)
             {
                 Color* c = (Color*)pointer;
-                
+
                 for (uint i = 0; i < width * height; ++i)
                 {
                     if (c->Alpha != 0x00)
@@ -618,7 +618,7 @@ namespace Freeserf.Data
                     {
                         c->Alpha = (byte)(c->Alpha - min);
                     }
-                    
+
                     ++c;
                 }
             }

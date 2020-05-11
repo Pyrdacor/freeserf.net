@@ -19,14 +19,14 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
 using Silk.NET.OpenGL;
+using System;
 
 namespace Freeserf.Renderer
 {
     internal class Shader : IDisposable
     {
-    	public enum Type
+        public enum Type
         {
             Fragment,
             Vertex
@@ -40,7 +40,7 @@ namespace Freeserf.Renderer
 
         public Shader(Type type, string code)
         {
-        	ShaderType = type;
+            ShaderType = type;
             this.code = code;
 
             Create();
@@ -55,7 +55,7 @@ namespace Freeserf.Renderer
             State.Gl.ShaderSource(ShaderIndex, 1, new string[] { code }, new Int32[] { code.Length });
             State.Gl.CompileShader(ShaderIndex);
 
-            // Auf Fehler prüfen
+            // Auf Fehler prï¿½fen
             string infoLog = State.Gl.GetShaderInfoLog(ShaderIndex);
 
             if (!string.IsNullOrWhiteSpace(infoLog))
@@ -66,7 +66,7 @@ namespace Freeserf.Renderer
 
         public void AttachToProgram(ShaderProgram program)
         {
-        	program.AttachShader(this);
+            program.AttachShader(this);
         }
 
         public void Dispose()
@@ -90,5 +90,5 @@ namespace Freeserf.Renderer
                 }
             }
         }
-   	}
+    }
 }

@@ -19,9 +19,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Data;
 using System;
 using System.Collections.Generic;
-using Freeserf.Data;
 
 namespace Freeserf.Render
 {
@@ -816,7 +816,7 @@ namespace Freeserf.Render
             int body;
 
             if (map.IsInWater(position))
-            { 
+            {
                 // Sailor 
                 x = 0;
                 y = 0;

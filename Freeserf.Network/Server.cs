@@ -435,7 +435,7 @@ namespace Freeserf.Network
                     // TODO response
                     break;
                 case Request.StartGame:
-                    // This is not allowed while in lobby.
+                // This is not allowed while in lobby.
                 case Request.GameData:
                     // TODO
                     break;
@@ -444,10 +444,10 @@ namespace Freeserf.Network
                     break;
                 case Request.LobbyData:
                     lock (lobbyServerInfo)
-                    lock (lobbyPlayerInfo)
-                    {
-                        client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
-                    }
+                        lock (lobbyPlayerInfo)
+                        {
+                            client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
+                        }
                     break;
                 case Request.MapData:
                     // TODO
@@ -497,7 +497,7 @@ namespace Freeserf.Network
                 listener.Stop();
             }
 
-            cancelTokenSource.Cancel();            
+            cancelTokenSource.Cancel();
 
             if (listenerTask != null)
             {
@@ -673,10 +673,10 @@ namespace Freeserf.Network
             Broadcast((client) =>
             {
                 lock (lobbyServerInfo)
-                lock (lobbyPlayerInfo)
-                {
-                    client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
-                }
+                    lock (lobbyPlayerInfo)
+                    {
+                        client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
+                    }
             });
         }
 

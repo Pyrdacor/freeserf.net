@@ -339,7 +339,7 @@ namespace Freeserf.UI
 
             int eventX = e.X;
             int eventY = e.Y;
-          
+
             if (e.Type == Event.Type.Click ||
                 e.Type == Event.Type.DoubleClick ||
                 e.Type == Event.Type.SpecialClick ||
@@ -385,7 +385,7 @@ namespace Freeserf.UI
                     result = HandleSystemKeyPressed((Event.SystemKey)e.Dx, e.Dy);
                     break;
                 default:
-                  break;
+                    break;
             }
 
             if (result && FocusedObject != this)

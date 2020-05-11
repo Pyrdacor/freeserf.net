@@ -57,7 +57,7 @@ namespace Freeserf
             Offset(position.X, position.Y);
         }
 
-        public static bool operator==(Position position1, Position position2)
+        public static bool operator ==(Position position1, Position position2)
         {
             if (ReferenceEquals(position1, position2))
                 return true;
@@ -68,7 +68,7 @@ namespace Freeserf
             return position1.X == position2.X && position1.Y == position2.Y;
         }
 
-        public static bool operator!=(Position position1, Position position2)
+        public static bool operator !=(Position position1, Position position2)
         {
             if (ReferenceEquals(position1, position2))
                 return false;

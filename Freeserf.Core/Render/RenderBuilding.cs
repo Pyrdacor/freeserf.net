@@ -19,9 +19,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Data;
 using System;
 using System.Collections.Generic;
-using Freeserf.Data;
 
 namespace Freeserf.Render
 {
@@ -869,7 +869,7 @@ namespace Freeserf.Render
             switch (building.BuildingType)
             {
                 case Building.Type.Baker:
-                case Building.Type.Boatbuilder:                
+                case Building.Type.Boatbuilder:
                 case Building.Type.GoldSmelter:
                 case Building.Type.Hut:
                 case Building.Type.SteelSmelter:
@@ -943,7 +943,7 @@ namespace Freeserf.Render
             280,   8,  8,
             140,  -2,  6,
             180,  -8, 13,
-            320,  13, 14,        
+            320,  13, 14,
         };
 
         void UpdateSpecialBuilding(Position renderPosition, int tick)

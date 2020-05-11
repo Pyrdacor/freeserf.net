@@ -361,7 +361,7 @@ namespace Freeserf.Network
                     if (client.Connected)
                         throw;
                 }
-            }            
+            }
         }
 
         public void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players)

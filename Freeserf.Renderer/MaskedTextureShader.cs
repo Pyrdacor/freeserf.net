@@ -88,7 +88,7 @@ namespace Freeserf.Renderer
         };
 
         MaskedTextureShader()
-            : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
+            : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName,
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultColorOverlayName, DefaultAtlasSizeName,
                   DefaultMaskTexCoordName, DefaultLayerName, MaskedTextureFragmentShader, MaskedTextureVertexShader)
         {

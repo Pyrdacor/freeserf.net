@@ -21,7 +21,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 
 namespace Freeserf
 {
@@ -193,7 +192,7 @@ namespace Freeserf
 
         bool IsInWater(MapPos position)
         {
-            return  IsWaterTile(position) &&
+            return IsWaterTile(position) &&
                     IsWaterTile(map.MoveUpLeft(position)) &&
                     tiles[(int)map.MoveLeft(position)].TypeDown <= Map.Terrain.Water3 &&
                     tiles[(int)map.MoveUp(position)].TypeUp <= Map.Terrain.Water3;
@@ -647,7 +646,7 @@ namespace Freeserf
 
             foreach (var position in map.Geometry)
             {
-                if (tiles[(int)position].Height> 0 && tags[(int)position] == 0)
+                if (tiles[(int)position].Height > 0 && tags[(int)position] == 0)
                 {
                     tags[(int)position] = 1;
 
@@ -988,11 +987,11 @@ namespace Freeserf
                 var height = tiles[(int)position].Height;
 
                 if (height >= 26 &&
-                    height >= tiles[(int)map.MoveRight(position)].Height&&
-                    height >= tiles[(int)map.MoveDownRight(position)].Height&&
-                    height >= tiles[(int)map.MoveDown(position)].Height&&
-                    height > tiles[(int)map.MoveLeft(position)].Height&&
-                    height > tiles[(int)map.MoveUpLeft(position)].Height&&
+                    height >= tiles[(int)map.MoveRight(position)].Height &&
+                    height >= tiles[(int)map.MoveDownRight(position)].Height &&
+                    height >= tiles[(int)map.MoveDown(position)].Height &&
+                    height > tiles[(int)map.MoveLeft(position)].Height &&
+                    height > tiles[(int)map.MoveUpLeft(position)].Height &&
                     height > tiles[(int)map.MoveUp(position)].Height)
                 {
                     tiles[(int)position].Object = Map.Object.Cross;

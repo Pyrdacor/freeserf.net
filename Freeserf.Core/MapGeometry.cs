@@ -220,7 +220,6 @@ namespace Freeserf
     public class DirectionCycleCW : DirectionCycle
     {
         Direction Start => base.start;
-        uint Length => base.length;
 
         public class IteratorCW : Iterator
         {
@@ -288,7 +287,6 @@ namespace Freeserf
     public class DirectionCycleCCW : DirectionCycle
     {
         Direction Start => base.start;
-        uint Length => base.length;
 
         public class IteratorCCW : Iterator
         {
@@ -352,7 +350,7 @@ namespace Freeserf
     {
         public class Iterator : Iterator<MapPos>
         {
-            MapGeometry mapGeometry;
+            readonly MapGeometry mapGeometry;
             MapPos position;
 
             internal Iterator(MapGeometry mapGeometry, MapPos position)
@@ -476,12 +474,12 @@ namespace Freeserf
         /// <returns></returns>
         public int DistanceX(MapPos position1, MapPos position2)
         {
-            return (int)Columns/2 - (int)(((int)Columns / 2 + (int)PositionColumn(position1) - (int)PositionColumn(position2)) & ColumnMask);
+            return (int)Columns / 2 - (int)(((int)Columns / 2 + (int)PositionColumn(position1) - (int)PositionColumn(position2)) & ColumnMask);
         }
 
         public int DistanceY(MapPos position1, MapPos position2)
         {
-            return (int)Rows/2 - (int)(((int)Rows/2 + (int)PositionRow(position1) - (int)PositionRow(position2)) & RowMask);
+            return (int)Rows / 2 - (int)(((int)Rows / 2 + (int)PositionRow(position1) - (int)PositionRow(position2)) & RowMask);
         }
 
         /// <summary>

@@ -19,9 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using System.Collections.Generic;
 using Freeserf.Data;
+using System.Collections.Generic;
 
 /*
  * The texture atlas for map tile graphics contains 155 sprites.
@@ -32,8 +31,8 @@ using Freeserf.Data;
 
 namespace Freeserf.Render
 {
-    using MapPos = System.UInt32;
     using Data = Data.Data;
+    using MapPos = System.UInt32;
 
     // Note: Scrolling is only possible by full tile columns or rows
     internal class RenderMap

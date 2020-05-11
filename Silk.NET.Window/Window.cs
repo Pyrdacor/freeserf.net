@@ -1,9 +1,9 @@
-﻿using System;
-using System.Drawing;
-using System.Linq;
-using Silk.NET.Input;
+﻿using Silk.NET.Input;
 using Silk.NET.Input.Common;
 using Silk.NET.Windowing.Common;
+using System;
+using System.Drawing;
+using System.Linq;
 
 namespace Silk.NET.Window
 {
@@ -62,7 +62,7 @@ namespace Silk.NET.Window
         }
 
         public Window(WindowOptions options)
-        {           
+        {
             window = Windowing.Window.Create(options);
             InitEvents();
         }
@@ -330,7 +330,7 @@ namespace Silk.NET.Window
             set
             {
                 doubleClickTime = value;
-                
+
                 if (mouse != null)
                     mouse.DoubleClickTime = value;
             }

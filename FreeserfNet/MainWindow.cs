@@ -1,10 +1,10 @@
-﻿using System;
-using System.Drawing;
-using System.IO;
-using Freeserf.Renderer;
+﻿using Freeserf.Renderer;
 using Silk.NET.Input.Common;
 using Silk.NET.Window;
 using Silk.NET.Windowing.Common;
+using System;
+using System.Drawing;
+using System.IO;
 
 namespace Freeserf
 {
@@ -64,7 +64,7 @@ namespace Freeserf
             catch (IOException)
             {
                 // TODO: logging not possible
-            }            
+            }
 
             initInfo = Global.Init(args); // this may change the log level
 
@@ -356,7 +356,7 @@ namespace Freeserf
             else if (buttons.HasFlag(MouseButtons.Right))
                 return Event.Button.Right;
             else if (buttons.HasFlag(MouseButtons.Middle))
-                return Event.Button.Middle;            
+                return Event.Button.Middle;
             else
                 return Event.Button.None;
         }
@@ -506,7 +506,7 @@ namespace Freeserf
                     }
                     else if (buttons.HasFlag(MouseButtons.Left))
                     {
-                         gameView.SetCursorPosition(position.X, position.Y);
+                        gameView.SetCursorPosition(position.X, position.Y);
                     }
 
                     lastDragX = position.X;
@@ -589,7 +589,7 @@ namespace Freeserf
                     pressedMouseButtons[(int)MouseButtonIndex.Left] &&
                     pressedMouseButtons[(int)MouseButtonIndex.Right]
                 )
-                return; // special clicks are handled in OnMouseDown
+                    return; // special clicks are handled in OnMouseDown
             }
 
             try

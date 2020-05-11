@@ -48,7 +48,7 @@ namespace Freeserf.AIStates
                 else if (numFreeKnights < 10 - ai.Aggressivity + (ai.MilitarySkill + ai.DefendFocus + 1) / 2)
                 {
                     --highKnightOccupationPreference;
-                }                
+                }
             }
 
             int defendingOrientation = Misc.Max(0, ai.DefendFocus - (ai.ExpandFocus + ai.Aggressivity + 1) / 2);

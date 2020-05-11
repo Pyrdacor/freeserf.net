@@ -25,10 +25,10 @@ using System.Threading;
 
 namespace Freeserf.Renderer
 {
-	// VAO
+    // VAO
     internal class VertexArrayObject : IDisposable
     {
-    	uint index = 0;
+        uint index = 0;
         readonly Dictionary<string, PositionBuffer> positionBuffers = new Dictionary<string, PositionBuffer>(4);
         readonly Dictionary<string, BaseLineBuffer> baseLineBuffers = new Dictionary<string, BaseLineBuffer>(1);
         readonly Dictionary<string, ColorBuffer> colorBuffers = new Dictionary<string, ColorBuffer>(4);
@@ -46,7 +46,7 @@ namespace Freeserf.Renderer
         {
             this.program = program;
 
-        	Create();
+            Create();
         }
 
         void Create()
@@ -235,9 +235,9 @@ namespace Freeserf.Renderer
         public static void Bind(VertexArrayObject vao)
         {
             if (vao != null)
-            	vao.Bind();
+                vao.Bind();
             else
-            	Unbind();
+                Unbind();
         }
 
         public static void Unbind()
@@ -259,8 +259,8 @@ namespace Freeserf.Renderer
                 {
                     if (index != 0)
                     {
-                    	if (ActiveVAO == this)
-                    		Unbind();
+                        if (ActiveVAO == this)
+                            Unbind();
 
                         State.Gl.DeleteVertexArray(index);
                         index = 0;
@@ -270,5 +270,5 @@ namespace Freeserf.Renderer
                 }
             }
         }
-   	}
+    }
 }

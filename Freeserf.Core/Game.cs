@@ -20,21 +20,21 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Audio;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Freeserf.Audio;
 
 namespace Freeserf
 {
-    using MapPos = UInt32;
-    using GameTime = UInt32;
-    using Flags = Collection<Flag>;
-    using Inventories = Collection<Inventory>;
     using Buildings = Collection<Building>;
-    using Serfs = Collection<Serf>;
+    using Flags = Collection<Flag>;
+    using GameTime = UInt32;
+    using Inventories = Collection<Inventory>;
+    using MapPos = UInt32;
     using Players = Collection<Player>;
+    using Serfs = Collection<Serf>;
     using Values = Dictionary<uint, uint>;
 
     [Flags]
@@ -499,7 +499,7 @@ namespace Freeserf
                     var building = buildings[Map.GetObjectIndex(adjacentPosition)];
 
                     if (building.IsLeveling)
-                    { 
+                    {
                         // Leveling in progress 
                         uint height = building.Level;
 
@@ -1339,7 +1339,7 @@ namespace Freeserf
             0, 6, 10, 14, 19, 23, 27, 31, -1, -1    // fortress 
         };
 
-        static readonly int[] mapCloseness = new int []
+        static readonly int[] mapCloseness = new int[]
         {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
             1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -1385,7 +1385,7 @@ namespace Freeserf
                     var checkPosition = Map.PositionAdd(position, j, i);
 
                     if (Map.HasBuilding(checkPosition))
-                    { 
+                    {
                         var building = GetBuildingAtPosition(checkPosition);
                         int militaryType = -1;
 
@@ -2237,11 +2237,14 @@ namespace Freeserf
             // TODO: really use random to select the order? There seems to be no fixed order. Maybe use flag priorities of player?
             switch (RandomInt() & 7)
             {
-                case 0: resources = ResourceArray2;
+                case 0:
+                    resources = ResourceArray2;
                     break;
-                case 1: resources = ResourceArray3;
+                case 1:
+                    resources = ResourceArray3;
                     break;
-                default: resources = ResourceArray1;
+                default:
+                    resources = ResourceArray1;
                     break;
             }
 
@@ -2279,7 +2282,7 @@ namespace Freeserf
                                 }
                             }
                             else
-                            { 
+                            {
                                 // Out mode 
                                 int priority = 0;
                                 var type = Resource.Type.None;
@@ -3529,7 +3532,7 @@ namespace Freeserf
             foreach (var player in players.ToList())
             {
                 var playerWriter = writer.AddSection("player", player.Index);
-                
+
                 player.WriteTo(playerWriter);
             }
 

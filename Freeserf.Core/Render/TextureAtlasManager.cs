@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Freeserf.Data;
+using Freeserf.UI;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Freeserf.UI;
-using Freeserf.Data;
 
 namespace Freeserf.Render
 {

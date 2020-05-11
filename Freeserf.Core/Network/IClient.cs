@@ -29,7 +29,7 @@ namespace Freeserf.Network
     {
         IPAddress Ip { get; }
         uint PlayerIndex { get; }
-        
+
         void SendHeartbeat();
         void SendDisconnect();
     }

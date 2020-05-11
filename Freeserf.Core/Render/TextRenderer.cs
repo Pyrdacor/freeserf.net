@@ -361,9 +361,9 @@ namespace Freeserf.Render
 
                         var textureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.UIText, 0);
                         textureAtlasOffset.X += (bytes[i] % Global.UIFontCharactersPerLine) * Global.UIFontCharacterWidth;
-                        textureAtlasOffset.Y += (bytes[i] / Global.UIFontCharactersPerLine) * Global.UIFontCharacterHeight; 
+                        textureAtlasOffset.Y += (bytes[i] / Global.UIFontCharactersPerLine) * Global.UIFontCharacterHeight;
                         sprites[charIndex].Sprite.Layer = layerNewFont;
-                        sprites[charIndex++].Sprite.TextureAtlasOffset = textureAtlasOffset;                        
+                        sprites[charIndex++].Sprite.TextureAtlasOffset = textureAtlasOffset;
                     }
                     else
                     {

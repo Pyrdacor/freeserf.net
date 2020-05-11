@@ -19,8 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
 using Silk.NET.OpenGL;
+using System;
 
 namespace Freeserf.Renderer
 {
@@ -118,8 +118,8 @@ namespace Freeserf.Renderer
                 vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, textureAtlasOffsetBuffer);
         }
 
-        public int GetDrawIndex(Render.IColoredRect coloredRect, 
-            Render.PositionTransformation positionTransformation, 
+        public int GetDrawIndex(Render.IColoredRect coloredRect,
+            Render.PositionTransformation positionTransformation,
             Render.SizeTransformation sizeTransformation)
         {
             var position = new Position(coloredRect.X, coloredRect.Y);

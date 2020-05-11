@@ -1140,7 +1140,7 @@ namespace Freeserf
             else
             {
                 GameTime += game.Tick - lastTick;
-            }            
+            }
 
             if (states.Count == 0)
             {
@@ -1200,7 +1200,7 @@ namespace Freeserf
         void ReadFrom(SaveReaderText reader, Game game, bool firstAI)
         {
             int numStates = reader.Value("num_states").ReadInt();
-            
+
             for (int i = 0; i < numStates; ++i)
             {
                 var state = AIState.Read(game, this, "state" + i, reader);

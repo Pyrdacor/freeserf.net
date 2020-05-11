@@ -1,5 +1,5 @@
-﻿using System;
-using Freeserf.Data;
+﻿using Freeserf.Data;
+using System;
 
 namespace Freeserf.Audio
 {

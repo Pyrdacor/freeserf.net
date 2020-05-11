@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Freeserf.Serialize;
+using System;
 using System.Diagnostics.CodeAnalysis;
-using Freeserf.Serialize;
 
 namespace Freeserf.Test.Freeserf.Core.Serialize
 {
-    using word = UInt16;
     using dword = UInt32;
     using qword = UInt64;
+    using word = UInt16;
 
     [DataClass]
     class TestState : State, IEquatable<TestState>

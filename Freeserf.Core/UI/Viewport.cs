@@ -20,9 +20,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using Freeserf.Render;
 using Freeserf.Data;
+using Freeserf.Render;
+using System;
 
 namespace Freeserf.UI
 {
@@ -526,7 +526,7 @@ namespace Freeserf.UI
                     PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                 }
                 else
-                { 
+                {
                     // Building 
                     if (map.GetOwner(mapPosition) == player.Index || interf.AccessRights != Viewer.Access.Player)
                     {

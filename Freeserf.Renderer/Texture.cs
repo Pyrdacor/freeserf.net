@@ -19,9 +19,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Silk.NET.OpenGL;
 using System;
 using System.IO;
-using Silk.NET.OpenGL;
 
 namespace Freeserf.Renderer
 {

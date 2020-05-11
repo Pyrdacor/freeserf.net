@@ -19,8 +19,6 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System.Collections.Generic;
-
 namespace Freeserf.UI
 {
     internal class ServerInfo

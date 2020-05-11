@@ -1,7 +1,7 @@
+using Freeserf.Serialize;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
-using Freeserf.Serialize;
 
 namespace Freeserf.Test.Freeserf.Core.Serialize
 {

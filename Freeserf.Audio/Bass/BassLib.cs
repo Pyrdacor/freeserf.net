@@ -263,7 +263,7 @@ namespace Freeserf.Audio.Bass
                 {
                     return 0u;
                 }
-  
+
                 return (DWORD)numRead;
             }
 

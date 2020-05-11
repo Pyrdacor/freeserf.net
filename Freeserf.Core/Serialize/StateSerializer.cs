@@ -28,9 +28,9 @@ using System.Text;
 
 namespace Freeserf.Serialize
 {
-    using word = UInt16;
     using dword = UInt32;
     using qword = UInt64;
+    using word = UInt16;
 
     internal static class StateSerializer
     {
@@ -313,7 +313,7 @@ namespace Freeserf.Serialize
                     var field = type.GetField(propertyName);
 
                     field.SetValue(obj, DeserializePropertyValue(reader, field.FieldType, field.GetValue(obj)));
-                }                
+                }
             }
 
             return obj;

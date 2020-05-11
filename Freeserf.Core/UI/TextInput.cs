@@ -42,7 +42,7 @@ namespace Freeserf.UI
         readonly Interface interf = null;
         private int characterGapSize = 9;
         Render.TextRenderType renderType = Render.TextRenderType.Legacy;
-        
+
         public TextInput(Interface interf, int characterGapSize = 9, Render.TextRenderType renderType = Render.TextRenderType.Legacy)
             : base(interf)
         {
@@ -61,7 +61,7 @@ namespace Freeserf.UI
                 colorBackground = value;
 
                 if (!drawFocus || !focused)
-                background.Color = value;
+                    background.Color = value;
             }
         }
 
@@ -83,7 +83,7 @@ namespace Freeserf.UI
             set
             {
                 colorText = value;
-                
+
                 // TODO
             }
         }

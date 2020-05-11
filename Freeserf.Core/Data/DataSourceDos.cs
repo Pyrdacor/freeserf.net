@@ -469,7 +469,7 @@ namespace Freeserf.Data
             else if (resource == Data.Resource.MapObject)
             {
                 if ((index >= 128) && (index <= 143))
-                { 
+                {
                     // Flag sprites
                     uint flagFrame = (index - 128) % 4;
                     data = GetObject(dosRes.Index + 128 + flagFrame);

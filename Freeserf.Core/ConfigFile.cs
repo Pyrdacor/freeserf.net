@@ -27,8 +27,8 @@ using System.Text;
 
 namespace Freeserf
 {
-    using Values = Dictionary<string, string>;
     using Sections = Dictionary<string, Dictionary<string, string>>;
+    using Values = Dictionary<string, string>;
 
     public class ConfigFile
     {

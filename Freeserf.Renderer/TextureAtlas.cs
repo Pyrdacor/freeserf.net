@@ -19,11 +19,10 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Render;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Freeserf.Data;
-using Freeserf.Render;
 
 namespace Freeserf.Renderer
 {

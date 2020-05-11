@@ -402,7 +402,7 @@ namespace Freeserf.UI
                 interf.ClosePopup();
 
                 // jump to map position
-                HandleClickLeft(x, y);                
+                HandleClickLeft(x, y);
             }
 
             return true;
@@ -505,7 +505,7 @@ namespace Freeserf.UI
                     return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
                 }
             }
-            
+
             return base.GetTileColor(position, index);
         }
     }

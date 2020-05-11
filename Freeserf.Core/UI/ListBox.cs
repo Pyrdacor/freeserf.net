@@ -20,10 +20,10 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using System.Collections.Generic;
 using Freeserf.Event;
 using Freeserf.Render;
+using System;
+using System.Collections.Generic;
 
 namespace Freeserf.UI
 {
@@ -246,7 +246,7 @@ namespace Freeserf.UI
         private void SelectAndScroll(int index)
         {
             int lastPossibleFirstVisibleItem = Math.Max(0, items.Count + 1 - (Height + 8) / 9);
-            int newFirstVisibleItem = Math.Min(index, lastPossibleFirstVisibleItem);            
+            int newFirstVisibleItem = Math.Min(index, lastPossibleFirstVisibleItem);
 
             if (firstVisibleItem != newFirstVisibleItem)
             {
@@ -265,7 +265,7 @@ namespace Freeserf.UI
             {
                 if (key == SystemKey.PageUp) // page up
                 {
-                    SelectAndScroll(0);                    
+                    SelectAndScroll(0);
                 }
                 else if (key == SystemKey.PageDown) // page down
                 {

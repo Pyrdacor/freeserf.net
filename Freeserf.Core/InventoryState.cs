@@ -3,10 +3,10 @@
 namespace Freeserf
 {
     using Serialize;
-    using word = UInt16;
     using dword = UInt32;
-    using SerfMap = Serialize.DirtyMap<Serf.Type, UInt32>;
     using ResourceMap = Serialize.DirtyMap<Resource.Type, UInt32>;
+    using SerfMap = Serialize.DirtyMap<Serf.Type, UInt32>;
+    using word = UInt16;
 
     [DataClass]
     internal class InventoryState : State
@@ -33,9 +33,9 @@ namespace Freeserf
                 OutQueue.Dirty = false;
 
                 ResetDirtyFlagUnlocked();
-            }          
+            }
         }
-        
+
         /// <summary>
         /// Owner of this inventory
         /// </summary>

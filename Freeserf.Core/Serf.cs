@@ -3913,7 +3913,7 @@ namespace Freeserf
                 case State.KnightAttacking:
                 case State.KnightAttackingVictory:
                 case State.KnightEngageAttackingFree:
-                case State.KnightEngageAttackingFreeJoin:                
+                case State.KnightEngageAttackingFreeJoin:
                     writer.Value("state.move").Write(s.Attacking.Move);
                     writer.Value("state.field_c").Write(s.Attacking.AttackerWon);
                     writer.Value("state.field_d").Write(s.Attacking.FieldD);
@@ -4843,7 +4843,7 @@ namespace Freeserf
         {
             var building = GetBuildingAtPosition();
             var flag = Game.GetFlag(building.FlagIndex);
-            
+
             building.StockInit(0, resource1, 8);
 
             if (resource2 != Resource.Type.None)
@@ -6119,7 +6119,7 @@ namespace Freeserf
                             s.FreeWalking.Flags = 0;
                             Counter = 0;
                         }
-                    }             
+                    }
                     break;
                 case Type.Fisher:
                     if (s.FreeWalking.NegDistance1 == -128)
@@ -6436,7 +6436,7 @@ namespace Freeserf
         {
             bool water = SerfState == State.FreeSailing;
             Direction[] directions;
-            int directionIndex;            
+            int directionIndex;
 
             if (Misc.BitTest(s.FreeWalking.Flags, 3))
             {
@@ -9017,7 +9017,7 @@ namespace Freeserf
             if (s.IdleOnPath.FlagIndex == 0)
             {
                 // this should not happen, but if it happens we should fix it
-                var cycle = DirectionCycleCW.CreateDefault();                
+                var cycle = DirectionCycleCW.CreateDefault();
                 var firstDirection = Direction.None;
 
                 foreach (Direction direction in cycle)

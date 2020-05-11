@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Freeserf
 {
@@ -62,12 +61,12 @@ namespace Freeserf
 
         public int Count { get; private set; }
 
-        public PriorityQueue() 
+        public PriorityQueue()
             : this(null)
         {
         }
 
-        public PriorityQueue(int capacity) 
+        public PriorityQueue(int capacity)
             : this(capacity, null)
         {
         }
@@ -351,7 +350,7 @@ namespace Freeserf
 
                     // See if neighbour is already in open list. 
                     bool inOpen = false;
-                    
+
                     foreach (var n in open)
                     {
                         if (n.Position == newPosition)
@@ -464,7 +463,7 @@ namespace Freeserf
                     {
                         continue;
                     }
-                    
+
                     uint cost = newRoad.Cost;
 
                     // Check if neighbour is in closed list. 

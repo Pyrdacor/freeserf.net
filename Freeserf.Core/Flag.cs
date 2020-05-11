@@ -28,7 +28,7 @@ namespace Freeserf
 {
     using Serialize;
     using MapPos = UInt32;
-    using word = UInt16;    
+    using word = UInt16;
 
     public class SerfPathInfo
     {
@@ -52,7 +52,7 @@ namespace Freeserf
                 if (other is ResourceSlot)
                 {
                     var otherSlot = other as ResourceSlot;
-                    
+
                     if (Type == otherSlot.Type)
                     {
                         if (Direction == otherSlot.Direction)
@@ -124,7 +124,7 @@ namespace Freeserf
         internal MapPos Position
         {
             get => state.Position;
-            set => state.Position = (word)value;
+            set => state.Position = value;
         }
         internal uint SearchNumber
         {
@@ -439,7 +439,7 @@ namespace Freeserf
         {
             return state.FlagBuildingFlags.HasFlag(FlagBuildingFlags.HasInventory);
         }
-  
+
         // Whether this inventory accepts resources.
         public bool AcceptsResources()
         {
@@ -1169,7 +1169,7 @@ namespace Freeserf
                     {
                         newRoad1.Extend(map, connectDirections[position]);
                         break;
-                    }                    
+                    }
                 }
 
                 position = flag2.Position;

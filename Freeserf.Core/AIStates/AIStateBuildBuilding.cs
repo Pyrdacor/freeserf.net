@@ -111,7 +111,7 @@ namespace Freeserf.AIStates
             }
             finally
             {
-                lock(state.searchingLock)
+                lock (state.searchingLock)
                 {
                     state.searching = false;
                 }
@@ -125,7 +125,7 @@ namespace Freeserf.AIStates
                 searching = false;
             }
 
-            base.Kill(ai);            
+            base.Kill(ai);
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
@@ -156,7 +156,7 @@ namespace Freeserf.AIStates
                         // With a fisher and enough fish, the pincer/hammer for weaponsmith has prio.
                         // As the hammer might be consumed by another serf, we first craft the pincer.
                         else
-                        {                            
+                        {
                             player.SetFullToolPriority(Resource.Type.Pincer);
                         }
                     }

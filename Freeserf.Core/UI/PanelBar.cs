@@ -21,12 +21,10 @@
  */
 
 using System;
-using Audio = Freeserf.Audio;
 
 namespace Freeserf.UI
 {
     using Data = Data.Data;
-    using MapPos = UInt32;
 
     // TODO: Click events for timers
     internal class PanelBar : GuiObject

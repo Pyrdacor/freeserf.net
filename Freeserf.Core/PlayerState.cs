@@ -24,9 +24,9 @@ using System;
 namespace Freeserf
 {
     using Serialize;
-    using word = UInt16;
     using dword = UInt32;
     using MapPos = UInt32;
+    using word = UInt16;
 
     public enum PlayerFace : byte
     {
@@ -57,44 +57,44 @@ namespace Freeserf
     [Flags]
     public enum PlayerStateFlags : byte
     {
-        None =                                  0x00,
+        None = 0x00,
         /// <summary>
         /// The player has built a castle
         /// </summary>
-        HasCastle =                             0x01,
+        HasCastle = 0x01,
         /// <summary>
         /// The player is an AI
         /// </summary>
-        IsAI =                                  0x02,
+        IsAI = 0x02,
         /// <summary>
         /// The emergency program is active
         /// </summary>
-        EmergencyProgramActive =                0x04,
+        EmergencyProgramActive = 0x04,
         /// <summary>
         /// The emergency program was deactivated once before
         /// </summary>
-        EmergencyProgramWasDeactivatedOnce =    0x08,
+        EmergencyProgramWasDeactivatedOnce = 0x08,
         /// <summary>
         /// Can spawn serfs (has castle or inventory)
         /// </summary>
-        CanSpawn =                              0x10,
+        CanSpawn = 0x10,
         /// <summary>
         /// The cycling of knights is active
         /// (swap weak ones with good ones)
         /// </summary>
-        CyclingKnightsInProgress =              0x20,
+        CyclingKnightsInProgress = 0x20,
         /// <summary>
         /// The knight level is reduced due
         /// to knight cycling. Is set to off
         /// when the second phase starts.
         /// </summary>
-        CyclingKnightsReducedLevel =            0x40,
+        CyclingKnightsReducedLevel = 0x40,
         /// <summary>
         /// This will be set later when new
         /// knights are sent out to the military
         /// buildings while cycling knights.
         /// </summary>
-        CyclingKnightsSecondPhase =             0x80
+        CyclingKnightsSecondPhase = 0x80
     }
 
     [DataClass]
@@ -142,7 +142,7 @@ namespace Freeserf
                 incompleteBuildingCount.Dirty = false;
 
                 ResetDirtyFlagUnlocked();
-            }          
+            }
         }
 
         public PlayerStateFlags Flags
@@ -376,7 +376,7 @@ namespace Freeserf
                     MarkPropertyAsDirty(nameof(MilitaryMaxGold));
                 }
             }
-        }       
+        }
 
         [Ignore]
         public bool HasCastle

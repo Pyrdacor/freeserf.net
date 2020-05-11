@@ -19,8 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
 using Freeserf.Render;
+using System;
 
 namespace Freeserf.Renderer
 {
@@ -66,7 +66,7 @@ namespace Freeserf.Renderer
                     return;
 
                 visible = value;
-                
+
                 if (Visible)
                     AddToLayer();
                 else if (!visible)

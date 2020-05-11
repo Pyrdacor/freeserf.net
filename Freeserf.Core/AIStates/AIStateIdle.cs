@@ -121,7 +121,7 @@ namespace Freeserf.AIStates
                         buildNeededBuildingState.Reset();
                         ai.PushState(buildNeededBuildingState);
                     }
-                    
+
                     return;
                 }
             }

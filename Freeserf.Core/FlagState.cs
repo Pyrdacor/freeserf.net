@@ -24,131 +24,131 @@ using System;
 namespace Freeserf
 {
     using Serialize;
-    using word = UInt16;
+    using FlagPath = Flag.FlagPath;
     using MapPos = UInt32;
     using OtherEndpointPath = Flag.OtherEndpointPath;
-    using FlagPath = Flag.FlagPath;
     using ResourceSlot = Flag.ResourceSlot;
+    using word = UInt16;
 
     [Flags]
     public enum PathConnectionFlags : byte
     {
-        None =                      0x00,
+        None = 0x00,
         /// <summary>
         /// Has connected road right
         /// </summary>
-        ConnectedRight =            0x01,
+        ConnectedRight = 0x01,
         /// <summary>
         /// Has connected road down right
         /// </summary>
-        ConnectedDownRight =        0x02,
+        ConnectedDownRight = 0x02,
         /// <summary>
         /// Has connected road down
         /// </summary>
-        ConnectedDown =             0x04,
+        ConnectedDown = 0x04,
         /// <summary>
         /// Has connected road left
         /// </summary>
-        ConnectedLeft =             0x08,
+        ConnectedLeft = 0x08,
         /// <summary>
         /// Has connected road up left
         /// </summary>
-        ConnectedUpLeft =           0x10,
+        ConnectedUpLeft = 0x10,
         /// <summary>
         /// Has connected road up
         /// </summary>
-        ConnectedUp =               0x20,
+        ConnectedUp = 0x20,
         // Note: Bit 6-7 of the byte are reserved for owner index (0-3)
     }
 
     [Flags]
     public enum EndPointFlags : byte
     {
-        None =                      0x00,
+        None = 0x00,
         /// <summary>
         /// Is land road right (otherwise water)
         /// </summary>
-        IsLandRight =               0x01,
+        IsLandRight = 0x01,
         /// <summary>
         /// Is land road down right (otherwise water)
         /// </summary>
-        IsLandDownRight =           0x02,
+        IsLandDownRight = 0x02,
         /// <summary>
         /// Is land road down (otherwise water)
         /// </summary>
-        IsLandDown =                0x04,
+        IsLandDown = 0x04,
         /// <summary>
         /// Is land road left (otherwise water)
         /// </summary>
-        IsLandLeft =                0x08,
+        IsLandLeft = 0x08,
         /// <summary>
         /// Is land road up left (otherwise water)
         /// </summary>
-        IsLandUpLeft =              0x10,
+        IsLandUpLeft = 0x10,
         /// <summary>
         /// Is land road up (otherwise water)
         /// </summary>
-        IsLandUp =                  0x20,
+        IsLandUp = 0x20,
         /// <summary>
         // Has connected building
         /// </summary>
-        HasConnectedBuilding =      0x40,
+        HasConnectedBuilding = 0x40,
         /// <summary>
         // Has unscheduled resources
         /// </summary>
-        HasUnscheduledResources =   0x80,
+        HasUnscheduledResources = 0x80,
     }
 
     [Flags]
     public enum TransporterFlags : byte
     {
-        None =                      0x00,
+        None = 0x00,
         /// <summary>
         /// Has transporter at road right
         /// </summary>
-        IsLandRight =               0x01,
+        IsLandRight = 0x01,
         /// <summary>
         /// Has transporter at road down right
         /// </summary>
-        IsLandDownRight =           0x02,
+        IsLandDownRight = 0x02,
         /// <summary>
         /// Has transporter at road down
         /// </summary>
-        IsLandDown =                0x04,
+        IsLandDown = 0x04,
         /// <summary>
         /// Has transporter at road left
         /// </summary>
-        IsLandLeft =                0x08,
+        IsLandLeft = 0x08,
         /// <summary>
         /// Has transporter at road up left
         /// </summary>
-        IsLandUpLeft =              0x10,
+        IsLandUpLeft = 0x10,
         /// <summary>
         /// Has transporter at road up
         /// </summary>
-        IsLandUp =                  0x20,
+        IsLandUp = 0x20,
         /// <summary>
         // Reserve (unused at the moment)
         /// </summary>
-        Reserve =                   0x40,
+        Reserve = 0x40,
         /// <summary>
         // Serf request failed
         /// </summary>
-        SerfRequestFailed =         0x80,
+        SerfRequestFailed = 0x80,
     }
 
     [Flags]
     public enum FlagBuildingFlags : byte
     {
-        None =                      0x00,
+        None = 0x00,
         /// <summary>
         /// Flag has an associated inventory building
         /// </summary>
-        HasInventory =              0x01,
+        HasInventory = 0x01,
         /// <summary>
         /// Associated invertory building accepts serfs
         /// </summary>
-        InventoryAcceptsSerfs =     0x02,
+        InventoryAcceptsSerfs = 0x02,
         /// <summary>
         /// Associated invertory building accepts resources
         /// </summary>
@@ -379,7 +379,7 @@ namespace Freeserf
             FlagPaths[(int)direction] += count;
         }
 
-        
+
         #region Helpers
 
         private static OtherEndpointPath ToEndpointPath(byte value)

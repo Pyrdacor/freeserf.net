@@ -181,47 +181,47 @@ namespace Freeserf
                 new PlayerInfo.Preset(12, 40, 30, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(2, 12, 15, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 14, 15, 30, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "UNITY",
                 new Random("4632253338621228"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(2, 18, 10, 25, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 18, 10, 25, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "WAVE",
                 new Random("8447342476811762"),
                 new PlayerInfo.Preset(12, 40, 25, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(2, 16, 20, 30, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "EXPORT",
                 new Random("4276472414845177"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 16, 25, 20, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 16, 25, 20, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "OPTION",
                 new Random("2333577877517478"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 20, 12, 14, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(5, 20, 12, 14, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "RECORD",
                 new Random("1416541231242884"),
                 new PlayerInfo.Preset(12, 40, 30, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 22, 30, 30, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "SCALE",
                 new Random("7845187715476348"),
                 new PlayerInfo.Preset(12, 40, 25, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 23, 25, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(6, 24, 25, 30, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "SIGN",
                 new Random("5185768873118642"),
@@ -229,7 +229,7 @@ namespace Freeserf
                 new PlayerInfo.Preset(4, 26, 13, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(5, 28, 13, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(6, 30, 13, 30, PlayerInfo.Position.None)
-			),
+            ),
             new Mission(
                 "ACORN",
                 new Random("3183215728814883"),
@@ -242,7 +242,7 @@ namespace Freeserf
                 new PlayerInfo.Preset(12, 40, 16, 20, new PlayerInfo.Position(16, 42)),
                 new PlayerInfo.Preset(5, 33, 10, 20, new PlayerInfo.Position(52, 25)),
                 new PlayerInfo.Preset(7, 34, 13, 20, new PlayerInfo.Position(23, 12))
-			),
+            ),
             new Mission(
                 "GATE",
                 new Random("6371557668231277"),
@@ -250,7 +250,7 @@ namespace Freeserf
                 new PlayerInfo.Preset(5, 27, 17, 24, new PlayerInfo.Position(27, 10)),
                 new PlayerInfo.Preset(6, 27, 13, 24, new PlayerInfo.Position(29, 38)),
                 new PlayerInfo.Preset(7, 27, 13, 24, new PlayerInfo.Position(15, 32))
-			),
+            ),
             new Mission(
                 "ISLAND",
                 new Random("8473352672411117"),
@@ -263,7 +263,7 @@ namespace Freeserf
                 new PlayerInfo.Preset(12, 40, 20, 23, new PlayerInfo.Position(19,  3)),
                 new PlayerInfo.Preset(6, 28, 16, 20, new PlayerInfo.Position(55,  7)),
                 new PlayerInfo.Preset(8, 28, 16, 20, new PlayerInfo.Position(55, 46))
-			),
+            ),
             new Mission(
                 "PIECE",
                 new Random("2571462671725414"),
@@ -271,13 +271,13 @@ namespace Freeserf
                 new PlayerInfo.Preset(6, 40, 23, 20, new PlayerInfo.Position(19, 49)),
                 new PlayerInfo.Preset(7, 37, 20, 20, new PlayerInfo.Position(58, 52)),
                 new PlayerInfo.Preset(8, 40, 15, 15, new PlayerInfo.Position(43, 31))
-			),
+            ),
             new Mission(
                 "RIVAL",
                 new Random("4563653871271587"),
                 new PlayerInfo.Preset(12, 40, 26, 23, new PlayerInfo.Position(36, 63)),
                 new PlayerInfo.Preset(6, 28, 29, 40, new PlayerInfo.Position(14, 15))
-			),
+            ),
             new Mission(
                 "SAVAGE",
                 new Random("7212145428156114"),
@@ -285,7 +285,7 @@ namespace Freeserf
                 new PlayerInfo.Preset(7, 29, 17, 10, new PlayerInfo.Position(29, 24)),
                 new PlayerInfo.Preset(8, 29, 17, 10, new PlayerInfo.Position(39, 26)),
                 new PlayerInfo.Preset(9, 32, 17, 10, new PlayerInfo.Position(42, 49))
-			),
+            ),
             new Mission(
                 "XAVER",
                 new Random("4276472414435177"),
@@ -298,14 +298,14 @@ namespace Freeserf
                 new Random("7142748441424786"),
                 new PlayerInfo.Preset(12, 40, 30, 20, new PlayerInfo.Position(13, 37)),
                 new PlayerInfo.Preset(7, 40, 20, 20, new PlayerInfo.Position(32, 34))
-			),
+            ),
             new Mission(
                 "BEACON",
                 new Random("6882188351133886"),
                 new PlayerInfo.Preset(12, 40,  9, 10, new PlayerInfo.Position(14, 42)),
                 new PlayerInfo.Preset(8, 40, 16, 22, new PlayerInfo.Position(62, 1)),
                 new PlayerInfo.Preset(9, 40, 16, 23, new PlayerInfo.Position(32, 14))
-			),
+            ),
             new Mission(
                 "PASTURE",
                 new Random("7742136435163436"),
@@ -319,51 +319,51 @@ namespace Freeserf
                 new Random("6764387728224725"),
                 new PlayerInfo.Preset(12, 40, 20, 40, new PlayerInfo.Position(42, 20)),
                 new PlayerInfo.Preset(8, 36, 25, 40, new PlayerInfo.Position(48, 47))
-			),
+            ),
             new Mission(
                 "TRIBUTE",
                 new Random("5848744734731253"),
                 new PlayerInfo.Preset(12, 40,  5, 11, new PlayerInfo.Position(53, 1)),
                 new PlayerInfo.Preset(9, 35, 30, 10, new PlayerInfo.Position(20, 2)),
                 new PlayerInfo.Preset(10, 37, 30, 10, new PlayerInfo.Position(16, 55))
-			),
+            ),
             new Mission(
                 "FOUNTAIN",
                 new Random("6183541838474434"),
                 new PlayerInfo.Preset(12, 40, 20, 12, new PlayerInfo.Position(3, 34)),
                 new PlayerInfo.Preset(9, 30, 25, 10, new PlayerInfo.Position(47, 41)),
                 new PlayerInfo.Preset(10, 30, 26, 10, new PlayerInfo.Position(42, 52))
-			),
+            ),
             new Mission(
                 "CHUDE",
                 new Random("7633126817245833"),
                 new PlayerInfo.Preset(12, 40, 20, 40, new PlayerInfo.Position(23, 38)),
                 new PlayerInfo.Preset(9, 40, 25, 40, new PlayerInfo.Position(57, 52))
-			),
+            ),
             new Mission(
                 "TRAILER",
                 new Random("5554144773646312"),
                 new PlayerInfo.Preset(12, 40, 20, 30, new PlayerInfo.Position(29, 11)),
                 new PlayerInfo.Preset(10, 38, 30, 35, new PlayerInfo.Position(15, 40))
-			),
+            ),
             new Mission(
                 "CANYON",
                 new Random("3122431112682557"),
                 new PlayerInfo.Preset(12, 40, 18, 28, new PlayerInfo.Position(49, 53)),
                 new PlayerInfo.Preset(10, 39, 25, 40, new PlayerInfo.Position(14, 53))
-			),
+            ),
             new Mission(
                 "REPRESS",
                 new Random("2568412624848266"),
                 new PlayerInfo.Preset(12, 40, 20, 40, new PlayerInfo.Position(44, 39)),
                 new PlayerInfo.Preset(10, 39, 25, 40, new PlayerInfo.Position(44, 63))
-			),
+            ),
             new Mission(
                 "YOKI",
                 new Random("3736685353284538"),
                 new PlayerInfo.Preset(12, 40,  5, 22, new PlayerInfo.Position(53, 8)),
                 new PlayerInfo.Preset(11, 40, 15, 20, new PlayerInfo.Position(30, 22))
-			),
+            ),
             new Mission(
                 "PASSIVE",
                 new Random("5471458635555317"),

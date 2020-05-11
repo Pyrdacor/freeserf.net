@@ -57,7 +57,7 @@ namespace Freeserf.Renderer
             header += " precision highp int;\n";
             header += "#endif\n";
             header += "\n";
-            
+
             if (!HasGLFragColor())
                 header += $"out vec4 {DefaultFragmentOutColorName};\n";
 

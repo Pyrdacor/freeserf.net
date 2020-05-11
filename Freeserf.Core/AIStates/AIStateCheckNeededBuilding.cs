@@ -339,7 +339,7 @@ namespace Freeserf.AIStates
                         break;
                     case Building.Type.Hut:
                         if (player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
-                            game.HasAnyOfBuildingCompletedOrMaterialsAtPlace(player, Building.Type.Forester) && 
+                            game.HasAnyOfBuildingCompletedOrMaterialsAtPlace(player, Building.Type.Forester) &&
                             !game.GetPlayerBuildings(player, Building.Type.Hut).Any(building => !building.HasKnight())
                             && ai.GameTime > count * 180 * Global.TICKS_PER_SEC && game.GetPossibleFreeKnightCount(player) > 0)
                             return CheckResult.Needed;
@@ -356,15 +356,15 @@ namespace Freeserf.AIStates
                         if (count == 0)
                             return CheckResult.Needed;
                         break;
-                        // If we have at least one coal and iron, we can build a steelsmelter and a toolmaker to produce a scythe or pincer.
-                        // This can happen with a bit more than minimum supplies or if the mines produce something without a food source.
-                        // We will craft a scythe if we can't build a fisher. We will craft a pincer and/or hammer if we have no more knights.
+                    // If we have at least one coal and iron, we can build a steelsmelter and a toolmaker to produce a scythe or pincer.
+                    // This can happen with a bit more than minimum supplies or if the mines produce something without a food source.
+                    // We will craft a scythe if we can't build a fisher. We will craft a pincer and/or hammer if we have no more knights.
                     case Building.Type.ToolMaker:
                         if (count == 0 && player.GetCompletedBuildingCount(Building.Type.SteelSmelter) != 0)
                             return CheckResult.Needed;
                         break;
                     case Building.Type.SteelSmelter:
-                        if (count == 0 && 
+                        if (count == 0 &&
                             (game.GetResourceAmountInInventories(player, Resource.Type.Coal) != 0 || player.GetCompletedBuildingCount(Building.Type.CoalMine) != 0) &&
                             (game.GetResourceAmountInInventories(player, Resource.Type.IronOre) != 0 || player.GetCompletedBuildingCount(Building.Type.IronMine) != 0))
                             return CheckResult.Needed;

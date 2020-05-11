@@ -20,21 +20,21 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Freeserf.Data;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Globalization;
-using Freeserf.Data;
 
 namespace Freeserf
 {
     using Readers = List<SaveReaderText>;
-    using ReaderValues = Dictionary<string, SaveReaderTextValue>;
-    using WriterValues = Dictionary<string, SaveWriterTextValue>;
-    using Sections = List<SaveWriterTextSection>;
     using ReaderSections = List<SaveReaderTextSection>;
+    using ReaderValues = Dictionary<string, SaveReaderTextValue>;
+    using Sections = List<SaveWriterTextSection>;
+    using WriterValues = Dictionary<string, SaveWriterTextValue>;
 
     public class SaveReaderBinary
     {
@@ -443,7 +443,7 @@ namespace Freeserf
             catch
             {
                 return false;
-            }            
+            }
         }
 
         public bool Write(StreamWriter writer, Game game)
@@ -458,7 +458,7 @@ namespace Freeserf
         protected void Update()
         {
             FindLegacy();
-            FindRegular();            
+            FindRegular();
         }
 
         protected void FindLegacy()

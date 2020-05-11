@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Freeserf
+﻿namespace Freeserf
 {
     public static class UserConfig
     {

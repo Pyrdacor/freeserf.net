@@ -19,8 +19,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
 using Freeserf.Data;
+using System;
 
 namespace Freeserf.Render
 {

@@ -276,7 +276,7 @@ namespace Freeserf.Data
             }
 
             owned = true;
-            this.endianess = ChooseEndianess(endianess);            
+            this.endianess = ChooseEndianess(endianess);
         }
 
         public Buffer(Endianess endianess = Endianess.Default)
@@ -408,7 +408,7 @@ namespace Freeserf.Data
             read += size;
 
             return subBuffer;
-        } 
+        }
 
         public Buffer PopTail()
         {

@@ -27,14 +27,14 @@ using System.Linq;
 namespace Freeserf
 {
     using Serialize;
-    using MapPos = UInt32;
-    using GameTime = UInt32;
-    using word = UInt16;    
     using dword = UInt32;
+    using GameTime = UInt32;
+    using MapPos = UInt32;
     using Notifications = Queue<Notification>;
     using PositionTimers = List<PositionTimer>;
     using ResourceMap = Dictionary<Resource.Type, uint>;
     using SerfMap = Dictionary<Serf.Type, int>;
+    using word = UInt16;
 
     public class Player : GameObject, IState
     {
@@ -43,7 +43,7 @@ namespace Freeserf
         private PlayerSettings settings = new PlayerSettings();
         [Data]
         private PlayerState state = new PlayerState();
-        
+
         // Those are only saved locally
         ushort lastTick = 0;
         bool notificationFlag = false;
@@ -51,13 +51,13 @@ namespace Freeserf
         readonly PositionTimers timers = new PositionTimers();
         readonly Dictionary<MapPos, GameTime> lastUnderAttackNotificationTimes = new Dictionary<MapPos, GameTime>();
         uint selectedBuildingIndex = 0;
-        int knightsToSpawn = 0;       
+        int knightsToSpawn = 0;
 
         int sendGenericDelay = 0;
-        int sendKnightDelay = 0;        
+        int sendKnightDelay = 0;
 
-        uint[,] playerStatHistory = new uint[16,112];
-        uint[,] resourceCountHistory = new uint[26,120];
+        uint[,] playerStatHistory = new uint[16, 112];
+        uint[,] resourceCountHistory = new uint[26, 120];
 
         /// <summary>
         /// Target building that should be attacked.
@@ -188,7 +188,7 @@ namespace Freeserf
 
         public void InitView(Color color, PlayerFace face)
         {
-            state.Face = face;            
+            state.Face = face;
             state.Color = color;
             state.IsAI = !face.IsHuman();
         }
@@ -359,7 +359,7 @@ namespace Freeserf
         /// Set defaults for wheat distribution priorities.
         /// </summary>
         public void ResetWheatPriority()
-		{
+        {
             settings.WheatPigfarm = 65500;
             settings.WheatMill = 32750;
         }
@@ -368,7 +368,7 @@ namespace Freeserf
         /// Set defaults for tool production priorities.
         /// </summary>
         public void ResetToolPriority()
-		{
+        {
             settings.ToolPriorities[0] = 9825;  // SHOVEL
             settings.ToolPriorities[1] = 65500; // HAMMER
             settings.ToolPriorities[2] = 13100; // ROD
@@ -384,7 +384,7 @@ namespace Freeserf
         /// Set defaults for flag priorities.
         /// </summary>
         public void ResetFlagPriority()
-		{
+        {
             settings.FlagPriorities[(int)Resource.Type.GoldOre] = 1;
             settings.FlagPriorities[(int)Resource.Type.GoldBar] = 2;
             settings.FlagPriorities[(int)Resource.Type.Wheat] = 3;
@@ -421,7 +421,7 @@ namespace Freeserf
         /// Set defaults for inventory priorities.
         /// </summary>
         public void ResetInventoryPriority()
-		{
+        {
             settings.InventoryPriorities[(int)Resource.Type.Wheat] = 1;
             settings.InventoryPriorities[(int)Resource.Type.Flour] = 2;
             settings.InventoryPriorities[(int)Resource.Type.Pig] = 3;
@@ -460,7 +460,7 @@ namespace Freeserf
         }
 
         public void ChangeKnightOccupation(int index, bool adjustMax, int delta)
-		{
+        {
             int max = (settings.KnightOccupation[index] >> 4) & 0xf;
             int min = settings.KnightOccupation[index] & 0xf;
 
@@ -524,12 +524,12 @@ namespace Freeserf
         }
 
         public void IncreaseCastleKnightsWanted()
-		{
+        {
             settings.CastleKnightsWanted = (byte)Math.Min(settings.CastleKnightsWanted + 1, 99);
         }
 
         public void DecreaseCastleKnightsWanted()
-		{
+        {
             settings.CastleKnightsWanted = (byte)Math.Max(1, settings.CastleKnightsWanted - 1);
         }
 
@@ -539,7 +539,7 @@ namespace Freeserf
 
         // Turn a number of serfs into knight for the given player. 
         public int PromoteSerfsToKnights(int number)
-		{
+        {
             if (number <= 0)
                 return 0;
 
@@ -566,7 +566,7 @@ namespace Freeserf
         }
 
         public int KnightsAvailableForAttack(MapPos position)
-		{
+        {
             // Reset counters. 
             for (int i = 0; i < 4; ++i)
             {
@@ -687,10 +687,10 @@ namespace Freeserf
         }
 
         public void StartAttack()
-		{
+        {
             var target = Game.GetBuilding((uint)BuildingToAttack);
 
-            if (!target.IsDone   || !target.IsMilitary() ||
+            if (!target.IsDone || !target.IsMilitary() ||
                 !target.IsActive || target.ThreatLevel != 3)
             {
                 return;
@@ -737,7 +737,7 @@ namespace Freeserf
                     // Find most appropriate knight to send according to player settings.
                     var bestType = SendStrongest ? Serf.Type.Knight0 : Serf.Type.Knight4;
                     var knightIndex = building.FirstKnight;
-                    uint bestIndex = 0;                    
+                    uint bestIndex = 0;
 
                     while (knightIndex != 0)
                     {
@@ -786,7 +786,7 @@ namespace Freeserf
         /// knights.
         /// </summary>
         public void CycleKnights()
-		{
+        {
             state.CyclingKnightsInProgress = true;
             state.CyclingKnightsReducedLevel = true;
             state.KnightCycleCounter = 2400;
@@ -796,7 +796,7 @@ namespace Freeserf
         /// Create the initial serfs that occupies the castle.
         /// </summary>
         public void CreateInitialCastleSerfs(Building castle)
-		{
+        {
             // Spawn castle transporter serf
             var inventory = castle.Inventory;
             var serf = inventory.SpawnSerfGeneric();
@@ -911,7 +911,7 @@ namespace Freeserf
         }
 
         public Serf SpawnSerfGeneric()
-		{
+        {
             var serf = Game.CreateSerf();
 
             if (serf == null)
@@ -934,7 +934,7 @@ namespace Freeserf
         /// <param name="wantKnight"></param>
         /// <returns></returns>
         public bool SpawnSerf(Pointer<Serf> serf, Pointer<Inventory> inventory, bool wantKnight)
-		{
+        {
             if (!CanSpawn)
                 return false;
 
@@ -997,7 +997,7 @@ namespace Freeserf
         }
 
         public bool TickSendGenericDelay()
-		{
+        {
             --sendGenericDelay;
 
             if (sendGenericDelay < 0)
@@ -1010,7 +1010,7 @@ namespace Freeserf
         }
 
         public bool TickSendKnightDelay()
-		{
+        {
             --sendKnightDelay;
 
             if (sendKnightDelay < 0)
@@ -1041,7 +1041,7 @@ namespace Freeserf
         }
 
         public void DecreaseSerfCount(Serf.Type type)
-		{
+        {
             if (type == Serf.Type.None || type == Serf.Type.Dead)
                 return;
 
@@ -1075,7 +1075,7 @@ namespace Freeserf
         }
 
         public void BuildingFounded(Building building)
-		{
+        {
             building.Player = Index;
 
             if (building.BuildingType == Building.Type.Castle)
@@ -1095,7 +1095,7 @@ namespace Freeserf
         }
 
         public void BuildingBuilt(Building building)
-		{
+        {
             var type = building.BuildingType;
 
             state.TotalBuildingScore += Building.BuildingGetScoreFromType(type);
@@ -1104,7 +1104,7 @@ namespace Freeserf
         }
 
         public void BuildingCaptured(Building building)
-		{
+        {
             var defendingPlayer = Game.GetPlayer(building.Player);
 
             defendingPlayer.AddNotification(Notification.Type.LoseFight, building.Position, Index);
@@ -1129,11 +1129,11 @@ namespace Freeserf
 
                 // Change owner of building
                 building.Player = Index;
-            }          
+            }
         }
 
         public void BuildingDemolished(Building building)
-		{
+        {
             var buildingType = building.BuildingType;
 
             // Update player fields.
@@ -1221,7 +1221,7 @@ namespace Freeserf
 
         // Update player game state as part of the game progression.
         public void Update()
-		{
+        {
             try
             {
                 ushort delta = (ushort)(Game.Tick - lastTick);
@@ -1408,14 +1408,14 @@ namespace Freeserf
         }
 
         public void UpdateStats(int resource)
-		{
+        {
             resourceCountHistory[resource, Index] = state.ResourceCounts[resource];
             state.ResourceCounts[resource] = 0;
         }
 
         // Stats
         public void UpdateKnightMorale()
-		{
+        {
             uint inventoryGold = 0;
             uint militaryGold = 0;
 
@@ -1991,7 +1991,7 @@ namespace Freeserf
             if (settings.SendStrongest)
                 flags |= 0x02;
             if (state.CyclingKnightsInProgress)
-                flags  |= 0x04;
+                flags |= 0x04;
             if (notificationFlag)
                 flags |= 0x08;
             if (state.CyclingKnightsReducedLevel)
@@ -2036,7 +2036,7 @@ namespace Freeserf
                 writer.Value("incomplete_building_count").Write(state.IncompleteBuildingCount[i]);
             }
 
-            for (int i = 0; i< 64; ++i)
+            for (int i = 0; i < 64; ++i)
             {
                 writer.Value("attacking_buildings").Write(attackingBuildings[i]);
             }

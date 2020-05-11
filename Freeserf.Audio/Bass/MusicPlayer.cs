@@ -1,5 +1,4 @@
-﻿using System;
-using Freeserf.Data;
+﻿using Freeserf.Data;
 
 namespace Freeserf.Audio.Bass
 {

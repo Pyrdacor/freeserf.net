@@ -342,7 +342,7 @@ namespace Freeserf.UI
         void DrawString(int x, int y, TextField textField, string str)
         {
             textField.Text = str;
-            
+
             if (textField.Parent == null)
                 AddChild(textField, x, y);
             else
@@ -364,7 +364,7 @@ namespace Freeserf.UI
                 if (i >= lines.Length)
                 {
                     textFieldMessage[i].Displayed = false;
-                    textFieldMessage[i].Destroy();                    
+                    textFieldMessage[i].Destroy();
                 }
                 else
                 {

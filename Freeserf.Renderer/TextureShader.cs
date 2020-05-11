@@ -84,7 +84,7 @@ namespace Freeserf.Renderer
         };
 
         TextureShader()
-            : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
+            : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName,
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultColorOverlayName,
                   DefaultAtlasSizeName, DefaultLayerName, TextureFragmentShader, TextureVertexShader)
         {

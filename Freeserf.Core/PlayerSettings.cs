@@ -29,28 +29,28 @@ namespace Freeserf
     [Flags]
     internal enum PlayerSettingFlags : byte
     {
-        None =                          0x00,
+        None = 0x00,
         /// <summary>
         /// Send strongest knights to fights
         /// </summary>
-        SendStrongest =                 0x01,
+        SendStrongest = 0x01,
         /// <summary>
         /// The cycling of knights is active
         /// (swap weak ones with good ones)
         /// </summary>
-        CyclingKnightsInProgress =      0x02,
+        CyclingKnightsInProgress = 0x02,
         /// <summary>
         /// The knight level is reduced due
         /// to knight cycling. Is set to off
         /// when the second phase starts.
         /// </summary>
-        CyclingKnightsReducedLevel =    0x04,
+        CyclingKnightsReducedLevel = 0x04,
         /// <summary>
         /// This will be set later when new
         /// knights are sent out to the military
         /// buildings while cycling knights.
         /// </summary>
-        CyclingKnightsSecondPhase =     0x08
+        CyclingKnightsSecondPhase = 0x08
     }
 
     [DataClass]
@@ -96,7 +96,7 @@ namespace Freeserf
                 knightOccupation.Dirty = false;
 
                 ResetDirtyFlagUnlocked();
-            }          
+            }
         }
 
         public PlayerSettingFlags Flags

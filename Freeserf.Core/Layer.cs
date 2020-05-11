@@ -45,7 +45,7 @@ namespace Freeserf
         Paths = 1 << 2,
         Objects = 1 << 3,
         Serfs = 1 << 4,
-        Buildings = 1 << 5,        
+        Buildings = 1 << 5,
         Builds = 1 << 6,
         Gui = 1 << 7,
         GuiBuildings = 1 << 8, // we have to display buildings inside some windows (e.g. build menu)

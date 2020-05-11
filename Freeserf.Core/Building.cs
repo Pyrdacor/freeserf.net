@@ -387,7 +387,7 @@ namespace Freeserf
             state.Progress |= (word)Misc.BitU(0);
         }
 
-        public bool IsUnderAttack =>Misc.BitTest(state.Progress, 0);
+        public bool IsUnderAttack => Misc.BitTest(state.Progress, 0);
 
         /// <summary>
         /// The threat level of the building. Higher values mean that
@@ -502,7 +502,7 @@ namespace Freeserf
                     {
                         serf.CastleDeleted(Position, true);
                     }
-                    
+
                     // TODO: player defeated? mission outro etc?
                 }
 
@@ -719,7 +719,7 @@ namespace Freeserf
         {
             // Remove knight from stats of defending building
             if (HasInventory())
-            { 
+            {
                 // Castle
                 Game.GetPlayer(Player).DecreaseCastleKnights();
             }
@@ -925,7 +925,7 @@ namespace Freeserf
                     if (state.Stock[i].Type == resource)
                     {
                         if (state.Stock[i].Requested == 0)
-                        {                            
+                        {
                             if (Game.GetPlayer(Player).EmergencyProgramActive && !IsDone)
                             {
                                 // In emergency program we set the requested amount to zero for most buildings.
@@ -946,7 +946,7 @@ namespace Freeserf
                             ++state.Stock[i].Available;
                             --state.Stock[i].Requested;
                             return true; // Resource delivered successfully
-                        }                        
+                        }
                     }
                 }
 
@@ -1672,7 +1672,7 @@ namespace Freeserf
                 }
             }
             else
-            { 
+            {
                 // Unfinished
                 switch (BuildingType)
                 {
@@ -2095,7 +2095,7 @@ namespace Freeserf
             public Resource.Type ResourceType2;
         }
 
-        internal static readonly Request[] Requests = new Request[] 
+        internal static readonly Request[] Requests = new Request[]
         {
             new Request(Serf.Type.None       , Resource.Type.None   , Resource.Type.None  ),
             new Request(Serf.Type.Fisher     , Resource.Type.Rod    , Resource.Type.None  ),

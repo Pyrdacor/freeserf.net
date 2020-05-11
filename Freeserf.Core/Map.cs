@@ -64,16 +64,16 @@
   are determined by elevation and _not_ by adjacency.
 */
 
+using Freeserf.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Freeserf.Data;
 
 namespace Freeserf
 {
-    using MapPos = UInt32;
-    using Directions = Stack<Direction>;
     using ChangeHandlers = List<Map.Handler>;
+    using Directions = Stack<Direction>;
+    using MapPos = UInt32;
 
     public class Road : IEquatable<Road>
     {
@@ -178,7 +178,7 @@ namespace Freeserf
             EndPosition = start;
             Cost = 0;
         }
-        
+
         public bool IsValidExtension(Map map, Direction direction)
         {
             if (IsUndo(direction))
@@ -716,17 +716,17 @@ namespace Freeserf
 
         public MapGeometry Geometry { get; }
         LandscapeTile[] landscapeTiles;
-        GameTile[] gameTiles;
-        ushort regions;
+        readonly GameTile[] gameTiles;
+        readonly ushort regions;
         UpdateState updateState = new UpdateState();
-        MapPos[] spiralPosPattern;
+        readonly MapPos[] spiralPosPattern;
 
         // Rendering
-        Render.IRenderView renderView = null;
+        readonly Render.IRenderView renderView = null;
         internal Render.RenderMap RenderMap { get; private set; } = null;
 
         // Callback for map height changes 
-        ChangeHandlers changeHandlers = new ChangeHandlers();
+        readonly ChangeHandlers changeHandlers = new ChangeHandlers();
 
         public Map(MapGeometry geometry, Render.IRenderView renderView)
         {
@@ -1021,7 +1021,7 @@ namespace Freeserf
 
         public bool TypesWithin(MapPos position, Terrain low, Terrain high)
         {
-            return  TypeUp(position) >= low &&
+            return TypeUp(position) >= low &&
                     TypeUp(position) <= high &&
                     TypeDown(position) >= low &&
                     TypeDown(position) <= high &&

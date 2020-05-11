@@ -28,7 +28,7 @@ namespace Freeserf.Data
     {
         Stream baseStream;
         readonly long offset;
-        long length;        
+        long length;
         long position;
         readonly bool disposeBaseStream;
 

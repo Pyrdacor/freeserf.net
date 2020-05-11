@@ -4,11 +4,11 @@ namespace Freeserf.Audio.Bass
 {
     internal class MidiMusic : Music
     {
-         internal MidiMusic(XMI xmi)
-            : base(LoadMidi(xmi))
-         {
+        internal MidiMusic(XMI xmi)
+           : base(LoadMidi(xmi))
+        {
 
-         }
+        }
 
         static uint GetControllerEventType(byte controller)
         {

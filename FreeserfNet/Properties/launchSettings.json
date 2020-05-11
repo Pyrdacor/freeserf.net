@@ -2,6 +2,7 @@
   "profiles": {
     "FreeserfNet": {
       "commandName": "Project",
+      "commandLineArgs": "-d 0",
       "environmentVariables": {
         "WINDOWS": "1"
       }
