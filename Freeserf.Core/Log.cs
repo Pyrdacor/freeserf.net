@@ -2,7 +2,7 @@
  * Log.cs - Logging
  *
  * Copyright (C) 2012-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -23,15 +23,15 @@
 /* Log levels determine the importance of a log message. Use the
    following guidelines when deciding which level to use.
 
-   - ERROR: The _user_ must take action to continue usage.
-   Must usually be followed by exit(..) or abort().
-   - WARN: Warn the _user_ of an important problem that the
-   user might be able to resolve.
-   - INFO: Information that is of general interest to _users_.
-   - DEBUG: Log a problem that a _developer_ should look
-   into and fix.
-   - VERBOSE: Log any other information that a _developer_ might
-   be interested in. */
+   - ERROR:     The user must take action to continue usage.
+                Must usually be followed by an application close.
+   - WARN:      Warn the user of an important problem that the
+                user might be able to resolve.
+   - INFO:      Information that is of general interest to users.
+   - DEBUG:     Log a problem that a developer should look into and fix.
+   - VERBOSE:   Log any other information that a developer might
+                be interested in.
+*/
 
 using System;
 using System.IO;
@@ -52,69 +52,11 @@ namespace Freeserf
             Max
         }
 
-        public class Stream : IDisposable
-        {
-            protected StreamWriter streamWriter;
-
-            public System.IO.Stream UnderlyingStream => streamWriter?.BaseStream ?? streamWriter.BaseStream;
-
-            public Stream(System.IO.Stream stream)
-            {
-                streamWriter = new StreamWriter(stream, Encoding.UTF8, 1024, true);
-            }
-
-            public static Stream operator +(Stream stream, string val)
-            {
-                stream.streamWriter.Write(val);
-                stream.streamWriter.Flush();
-
-                return stream;
-            }
-
-            public static Stream operator +(Stream stream, int val)
-            {
-                stream.streamWriter.Write(val);
-                stream.streamWriter.Flush();
-
-                return stream;
-            }
-
-
-            #region IDisposable Support
-
-            private bool disposed = false;
-
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!disposed)
-                {
-                    if (disposing)
-                    {
-                        if (streamWriter != null)
-                        {
-                            streamWriter.WriteLine();
-                            streamWriter.Flush();
-                        }
-                    }
-
-                    disposed = true;
-                }
-            }
-
-            public void Dispose()
-            {
-                Dispose(true);
-            }
-
-            #endregion
-
-        }
-
         public class Logger
         {
             protected Level level;
             protected string prefix;
-            protected System.IO.Stream stream;
+            protected StreamWriter streamWriter;
 
             public Logger(Level level, string prefix)
             {
@@ -126,46 +68,28 @@ namespace Freeserf
 
             public virtual void Write(ErrorSystemType subsystem, string text)
             {
-                var stream = this[subsystem];
-
-                if (stream == null)
+                if (streamWriter == null)
                     return;
 
-                stream += text;
-                stream += Environment.NewLine;
-
-                this.stream.Flush();
-            }
-
-            public virtual Stream this[ErrorSystemType subsystem]
-            {
-                get
-                {
-                    if (this.stream == null)
-                        return null;
-
-                    var stream = new Stream(this.stream);
-
-                    stream += prefix + ": [" + subsystem.ToString() + "] ";
-
-                    return stream;
-                }
+                streamWriter.Write($"{prefix}: [{subsystem}] ");
+                streamWriter.WriteLine(text);
+                streamWriter.Flush();
             }
 
             public void ApplyLevel()
             {
                 if (level < Log.level)
                 {
-                    stream = null;
+                    streamWriter = null;
                 }
                 else
                 {
-                    stream = Log.stream;
+                    streamWriter = stream == null ? null : new StreamWriter(stream, Encoding.UTF8, 1024, true);
                 }
             }
         }
 
-        public static void SetStream(System.IO.Stream stream)
+        public static void SetStream(Stream stream)
         {
             Log.stream = stream;
 
@@ -189,7 +113,7 @@ namespace Freeserf
         public static Logger Warn = new Logger(Level.Warn, "Warning");
         public static Logger Error = new Logger(Level.Error, "Error");
 
-        protected static System.IO.Stream stream = Console.OpenStandardOutput();
+        protected static Stream stream = Console.OpenStandardOutput();
 
 #if DEBUG
         protected static Level level = Level.Debug;
