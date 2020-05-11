@@ -85,7 +85,7 @@ namespace Freeserf
 
                 if (!data.Load(dataPath, UserConfig.Game.GraphicDataUsage, UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
                 {
-                    Console.WriteLine("Error: Error loading DOS data.");
+                    Log.Error.Write(ErrorSystemType.Data, "Error: Error loading DOS data.");
                     return null;
                 }
 
