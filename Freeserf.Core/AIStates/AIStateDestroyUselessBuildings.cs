@@ -77,7 +77,7 @@ namespace Freeserf.AIStates
 
                 foreach (var stonecutter in stonecutters)
                 {
-                    if (game.Map.FindInArea(stonecutter.Position, 8, FindStone, 1).Count == 0)
+                    if (game.Map.FindInArea(stonecutter.Position, 6, FindStone, 1).Count == 0)
                     {
                         game.DemolishBuilding(stonecutter.Position, player);
                     }
@@ -91,7 +91,8 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7
+                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7 &&
+                    Map.MapSpaceFromObject[(int)map.GetObject(map.MoveDownRight(position))] <= Map.Space.Semipassable
             };
         }
     }

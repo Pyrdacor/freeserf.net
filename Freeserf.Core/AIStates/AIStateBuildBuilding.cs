@@ -606,12 +606,17 @@ namespace Freeserf.AIStates
                 {
                     if (AmountInArea(game.Map, randomBuilding.Position, 8, CountFish, FindFish) > 0)
                     {
-                        Func<Map, uint, bool> findFish = (Map map, MapPos position) =>
+                        Func<Map, uint, bool> findShore = (Map map, MapPos position) =>
                         {
-                            return FindFish(map, position).Success;
+                            return map.GetObject(position) == Map.Object.None &&
+                                map.Paths(position) == 0 &&
+                                ((map.TypeDown(position) <= Map.Terrain.Water3 &&
+                                  map.TypeUp(map.MoveUpLeft(position)) >= Map.Terrain.Grass0) ||
+                                 (map.TypeDown(map.MoveLeft(position)) <= Map.Terrain.Water3 &&
+                                  map.TypeUp(map.MoveUp(position)) >= Map.Terrain.Grass0));
                         };
 
-                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findFish, game.GetRandom(), 1);
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findShore, game.GetRandom(), 1);
 
                         return FindSpotNear(game, player, spot, 4);
                     }
@@ -641,7 +646,7 @@ namespace Freeserf.AIStates
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Lumberjack, maxInArea))
                 {
-                    if (AmountInArea(game.Map, randomBuilding.Position, 8, CountMapObjects, FindTree) >= minTrees)
+                    if (AmountInArea(game.Map, randomBuilding.Position, 6, CountMapObjects, FindTree) >= minTrees)
                     {
                         Func<Map, uint, bool> findTree = (Map map, MapPos position) =>
                         {
@@ -682,7 +687,7 @@ namespace Freeserf.AIStates
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Stonecutter, maxInArea))
                 {
-                    if (AmountInArea(game.Map, randomBuilding.Position, 8, CountMapObjects, FindStone) > 0)
+                    if (AmountInArea(game.Map, randomBuilding.Position, 6, CountMapObjects, FindStone) > 0)
                     {
                         Func<Map, uint, bool> findStone = (Map map, MapPos position) =>
                         {
@@ -834,7 +839,8 @@ namespace Freeserf.AIStates
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7
+                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7 &&
+                    Map.MapSpaceFromObject[(int)map.GetObject(map.MoveDownRight(position))] <= Map.Space.Semipassable
             };
         }
 

@@ -472,8 +472,8 @@ namespace Freeserf.AIStates
 
                         float gameTimeFactor = ai.GameTime / (10.0f * Global.TICKS_PER_MIN); // increases every 10 minutes
                         gameTimeFactor = Math.Min(100.0f, gameTimeFactor * gameTimeFactor); // 10 min -> 1, 20 min -> 4, 30 min -> 9, 40 min -> 16, ... 100 min -> 100
-                        long numPerLand = (focus * 50 + player.LandArea * 3 - 400) / (135 - Misc.Round(gameTimeFactor));
-                        long numPerTime = (focus / 2 + 1) * (1 + Misc.Round(gameTimeFactor));
+                        long numPerLand = (focus * 50 + player.LandArea * 3 - 400) / (235 - Misc.Round(gameTimeFactor));
+                        long numPerTime = (focus / 2 + 1) * Misc.Round(gameTimeFactor / 16);
 
                         if (CanBuildMilitary(ai, game, player) &&
                             count < focus + numPerLand + numPerTime &&
@@ -489,7 +489,7 @@ namespace Freeserf.AIStates
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((20 - Misc.Max(ai.GoldFocus, ai.SteelFocus, ai.MilitaryFocus) * 2) * Global.TICKS_PER_MIN)))
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((80 - Misc.Max(ai.GoldFocus, ai.SteelFocus, ai.MilitaryFocus) * 10) * Global.TICKS_PER_MIN)))
                     {
                         uint numIronMines = player.GetCompletedBuildingCount(Building.Type.IronMine);
                         uint numGoldMines = player.GetCompletedBuildingCount(Building.Type.GoldMine);
@@ -506,7 +506,7 @@ namespace Freeserf.AIStates
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((24 - Misc.Max(ai.SteelFocus, ai.MilitaryFocus) * 2) * Global.TICKS_PER_MIN)))
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((100 - Misc.Max(ai.SteelFocus, ai.MilitaryFocus) * 10) * Global.TICKS_PER_MIN)))
                     {
                         uint numCoalMines = player.GetCompletedBuildingCount(Building.Type.CoalMine);
 
@@ -521,7 +521,7 @@ namespace Freeserf.AIStates
                     {
                         return NeedBuilding(ai, game, player, type);
                     }
-                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((32 - Misc.Max(ai.GoldFocus, ai.MilitaryFocus - 1) * 4) * Global.TICKS_PER_MIN)))
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 30 * Global.TICKS_PER_MIN) / ((160 - Misc.Max(ai.GoldFocus, ai.MilitaryFocus - 1) * 10) * Global.TICKS_PER_MIN)))
                     {
                         uint numCoalMines = player.GetCompletedBuildingCount(Building.Type.CoalMine);
 
@@ -534,9 +534,10 @@ namespace Freeserf.AIStates
                 case Building.Type.StoneMine:
                     if (count < 1 && ai.GameTime > (120 - Math.Max(ai.BuildingFocus, ai.ConstructionMaterialFocus) * 20 - intelligence / 10) * 5 * Global.TICKS_PER_SEC)
                     {
-                        return NeedBuilding(ai, game, player, type);
+                        if (ai.ConstructionMaterialFocus == 2 || game.GetTotalResourceCount(player, Resource.Type.Stone) < 45 - ai.ConstructionMaterialFocus * 15)
+                            return NeedBuilding(ai, game, player, type);
                     }
-                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 40 * Global.TICKS_PER_MIN) / ((40 - ai.ConstructionMaterialFocus * 4) * Global.TICKS_PER_MIN)))
+                    else if (count > 0 && count < Math.Max(0, (ai.GameTime - 40 * Global.TICKS_PER_MIN) / ((200 - ai.ConstructionMaterialFocus * 15) * Global.TICKS_PER_MIN)))
                     {
                         uint numSawMills = player.GetCompletedBuildingCount(Building.Type.Sawmill);
 

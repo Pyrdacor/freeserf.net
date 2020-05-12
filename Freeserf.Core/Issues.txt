@@ -61,8 +61,6 @@ Misc:
 - After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
 - Hard time should be also possible in later game (e.g. after losing land). In this case miners could not be available for iron or coal because
   they are used for gold or stone mines. This must be considered then and maybe those mines should be demolished to free miners.
-- The check stone and gather stone radius of stonecutters should be equal so that stonecutters who won't gather anymore stone should be demolished immediately (this is crucial in hard times).
-  Stones that are not reachable due to obstacles must be also considered. Especially in hard times!
 
 Mining / finding minerals:
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.
@@ -72,6 +70,8 @@ Mining / finding minerals:
 - Sometimes there are way too many geologist out there. This also causes traffic. It seems that every single hammer is used to train a geologist.
 
 Finish attacking logic!
+
+Test play performance of specific characters. Better characters should play better and win more often than weaker ones. They also should win 1vs1.
 
 
 Performance:

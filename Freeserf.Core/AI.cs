@@ -265,13 +265,13 @@ namespace Freeserf
         /// <summary>
         /// The ai will try to gather prioritized food if possible
         /// </summary>
-        int[] foodSourcePriorities = new int[3]; // 0 - 2 for fish, bread and meat
+        readonly int[] foodSourcePriorities = new int[3]; // 0 - 2 for fish, bread and meat
         /// <summary>
         /// The ai will try to build prioritized military buildings if possible
         /// </summary>
-        int[] militaryBuildingPriorities = new int[3]; // 0 - 2 for hut, tower and fortress
-        int[] minPlanksForMilitaryBuildings = new int[2]; // minimum free planks for tower and fortress
-        int[] minStonesForMilitaryBuildings = new int[2]; // minimum free stones for tower and fortress
+        readonly int[] militaryBuildingPriorities = new int[3]; // 0 - 2 for hut, tower and fortress
+        readonly int[] minPlanksForMilitaryBuildings = new int[2]; // minimum free planks for tower and fortress
+        readonly int[] minStonesForMilitaryBuildings = new int[2]; // minimum free stones for tower and fortress
         /// <summary>
         /// The ai may prioritize specific targets when attacking
         /// </summary>
@@ -320,7 +320,7 @@ namespace Freeserf
         /// <returns></returns>
         public int GetMilitaryBuildingPercentage(Building.Type type)
         {
-            int index = 0;
+            int index;
 
             switch (type)
             {
@@ -348,19 +348,15 @@ namespace Freeserf
             if (!CanExpand)
                 return false;
 
-            switch (type)
+            return type switch
             {
-                default:
-                    return false;
-                case Building.Type.Hut:
-                    return true;
-                case Building.Type.Tower:
-                    return player.Game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= minPlanksForMilitaryBuildings[0] &&
-                        player.Game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= minStonesForMilitaryBuildings[0];
-                case Building.Type.Fortress:
-                    return player.Game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= minPlanksForMilitaryBuildings[1] &&
-                        player.Game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= minStonesForMilitaryBuildings[1];
-            }
+                Building.Type.Hut => true,
+                Building.Type.Tower => player.Game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= minPlanksForMilitaryBuildings[0] &&
+                    player.Game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= minStonesForMilitaryBuildings[0],
+                Building.Type.Fortress => player.Game.GetResourceAmountInInventories(player, Resource.Type.Plank) >= minPlanksForMilitaryBuildings[1] &&
+                    player.Game.GetResourceAmountInInventories(player, Resource.Type.Stone) >= minStonesForMilitaryBuildings[1],
+                _ => false,
+            };
         }
 
         /* Military Focus

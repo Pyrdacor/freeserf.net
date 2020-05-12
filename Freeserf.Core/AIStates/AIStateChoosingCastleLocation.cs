@@ -103,7 +103,7 @@ namespace Freeserf.AIStates
                 GoToState(ai, AI.State.CastleBuilt);
         }
 
-        Map.FindData FindTree(Map map, MapPos position)
+        static Map.FindData FindTree(Map map, MapPos position)
         {
             return new Map.FindData()
             {
@@ -111,15 +111,16 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindStone(Map map, MapPos position)
+        static Map.FindData FindStone(Map map, MapPos position)
         {
             return new Map.FindData()
             {
-                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7
+                Success = map.GetObject(position) >= Map.Object.Stone0 && map.GetObject(position) <= Map.Object.Stone7 &&
+                    Map.MapSpaceFromObject[(int)map.GetObject(map.MoveDownRight(position))] <= Map.Space.Semipassable
             };
         }
 
-        Map.FindData FindFish(Map map, MapPos position)
+        static Map.FindData FindFish(Map map, MapPos position)
         {
             return new Map.FindData()
             {
@@ -127,7 +128,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindMineral(Map map, MapPos position)
+        static Map.FindData FindMineral(Map map, MapPos position)
         {
             return new Map.FindData()
             {
@@ -136,7 +137,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindMountain(Map map, MapPos position)
+        static Map.FindData FindMountain(Map map, MapPos position)
         {
             return new Map.FindData()
             {
@@ -145,7 +146,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindWater(Map map, MapPos position)
+        static Map.FindData FindWater(Map map, MapPos position)
         {
             return new Map.FindData()
             {
@@ -154,7 +155,7 @@ namespace Freeserf.AIStates
             };
         }
 
-        Map.FindData FindDesert(Map map, MapPos position)
+        static Map.FindData FindDesert(Map map, MapPos position)
         {
             return new Map.FindData()
             {

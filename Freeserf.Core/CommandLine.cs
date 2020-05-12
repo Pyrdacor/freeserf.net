@@ -121,7 +121,7 @@ namespace Freeserf
         protected string path = "";
         protected string programName = "";
         protected string comment = "";
-        Dictionary<char, Option> options = new Dictionary<char, Option>();
+        readonly Dictionary<char, Option> options = new Dictionary<char, Option>();
 
         public bool Process(string[] args)
         {
