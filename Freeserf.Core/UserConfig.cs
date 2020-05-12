@@ -33,7 +33,23 @@
 
                 if (!configFile.Load(filename))
                 {
+                    Log.Info.Write(ErrorSystemType.Config, "Fallback to default settings.");
                     SetDefaults();
+                    
+                    try
+                    {
+                        if (Save(filename))
+                        {
+                            Log.Info.Write(ErrorSystemType.Config, $"Saved default settings to config file '{filename}'.");
+                            return false;
+                        }
+                    }
+                    catch
+                    {
+                        // ignore
+                    }
+
+                    Log.Info.Write(ErrorSystemType.Config, $"Failed to save settings to config file '{filename}'.");
                     return false;
                 }
 

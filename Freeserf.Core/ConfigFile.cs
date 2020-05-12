@@ -32,13 +32,13 @@ namespace Freeserf
 
     public class ConfigFile
     {
-        Sections data = new Sections();
+        readonly Sections data = new Sections();
 
         public bool Load(string path)
         {
             if (!File.Exists(path))
             {
-                Log.Error.Write(ErrorSystemType.Config, $"Failed to open config file '{path}'.");
+                Log.Info.Write(ErrorSystemType.Config, $"Failed to open config file '{path}'.");
                 return false;
             }
 
