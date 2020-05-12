@@ -69,7 +69,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="log.txt" />
+    <None Remove="freeserf.log" />
     <None Remove="*.PA" />
   </ItemGroup>
 

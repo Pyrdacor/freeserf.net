@@ -34,22 +34,116 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
 namespace Freeserf
 {
+    public class LogFileStream : Stream
+    {
+        readonly string filename;
+        FileStream logFileStream;
+
+        public LogFileStream(string filename)
+        {
+            this.filename = filename;
+        }
+
+        public override bool CanRead => false;
+
+        public override bool CanSeek => logFileStream == null ? false : logFileStream.CanSeek;
+
+        public override bool CanWrite => true;
+
+        public override long Length
+        {
+            get
+            {
+                EnsureFile();
+                return logFileStream.Length;
+            }
+        }
+
+        public override long Position
+        {
+            get
+            {
+                EnsureFile();
+                return logFileStream.Position;
+            }
+            set
+            {
+                EnsureFile();
+                logFileStream.Position = value;
+            }
+        }
+
+        private void EnsureFile()
+        {
+            if (logFileStream == null)
+                logFileStream = File.Create(filename);
+        }
+
+        public override void Flush()
+        {
+            EnsureFile();
+            logFileStream.Flush();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException("Log stream reading is not supported.");
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            EnsureFile();
+            return logFileStream.Seek(offset, origin);
+        }
+
+        public override void SetLength(long value)
+        {
+            EnsureFile();
+            logFileStream.SetLength(value);
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            EnsureFile();
+            logFileStream.Write(buffer, offset, count);
+        }
+
+        public void PopFrontText(int length)
+        {
+            logFileStream?.Close();
+
+            File.WriteAllText(filename, File.ReadAllText(filename).Substring(length));
+
+            logFileStream = File.OpenWrite(filename);
+            logFileStream.Position = logFileStream.Length;
+        }
+    }
+
     public class Log
     {
         public enum Level
         {
+#if DEBUG
             Verbose = 0,
             Debug,
-            Info,
+#endif
+            Info = 2,
             Warn,
             Error,
 
-            Max
+            Max,
+
+#if DEBUG
+            Min = Verbose
+#else
+            Min = Info
+#endif
         }
 
         public class Logger
@@ -66,14 +160,39 @@ namespace Freeserf
                 ApplyLevel();
             }
 
+            private void PopLine()
+            {
+                int lineSize = lineSizes.Dequeue();
+                (streamWriter.BaseStream as LogFileStream).PopFrontText(lineSize);
+                currentSize -= lineSize;
+            }
+
+            private void Write(string text)
+            {
+                if (MaxSize != null)
+                {
+                    if (MaxSize < text.Length)
+                    {
+                        Write(text.Substring(0, (int)MaxSize - 3) + "...");
+                        return;
+                    }
+
+                    while (currentSize + text.Length > MaxSize)
+                        PopLine();
+                }
+
+                currentSize += text.Length + Environment.NewLine.Length;
+                lineSizes.Enqueue(text.Length + Environment.NewLine.Length);
+                streamWriter.WriteLine(text);
+                streamWriter.Flush();
+            }
+
             public virtual void Write(ErrorSystemType subsystem, string text)
             {
                 if (streamWriter == null)
                     return;
 
-                streamWriter.Write($"{prefix}: [{subsystem}] ");
-                streamWriter.WriteLine(text);
-                streamWriter.Flush();
+                Write($"{prefix}: [{subsystem}] { text}");
             }
 
             public void ApplyLevel()
@@ -89,9 +208,27 @@ namespace Freeserf
             }
         }
 
+        public class NullLogger : Logger
+        {
+            public NullLogger()
+                : base(Level.Max, null)
+            {
+
+            }
+
+            public override void Write(ErrorSystemType subsystem, string text)
+            {
+                // do nothing
+            }
+        }
+
         public static void SetStream(Stream stream)
         {
+            if (Log.stream == stream)
+                return;
+
             Log.stream = stream;
+            currentSize = 0;
 
             SetLevel(level); // this will attach the streams to the levels
         }
@@ -107,8 +244,15 @@ namespace Freeserf
             Error.ApplyLevel();
         }
 
+        public static Level LogLevel => level;
+
+#if DEBUG
         public static Logger Verbose = new Logger(Level.Verbose, "Verbose");
         public static Logger Debug = new Logger(Level.Debug, "Debug");
+#else
+        public static Logger Verbose = new NullLogger();
+        public static Logger Debug = new NullLogger();
+#endif
         public static Logger Info = new Logger(Level.Info, "Info");
         public static Logger Warn = new Logger(Level.Warn, "Warning");
         public static Logger Error = new Logger(Level.Error, "Error");
@@ -118,8 +262,11 @@ namespace Freeserf
 #if DEBUG
         protected static Level level = Level.Debug;
 #else
-        protected static Level level = Level.Info;
+        protected static Level level = UserConfig.DefaultLogLevel;
 #endif
 
+        static int currentSize = 0;
+        static readonly Queue<int> lineSizes = new Queue<int>();
+        public static long? MaxSize { get; set; } = UserConfig.DefaultMaxLogSize;
     }
 }

@@ -27,6 +27,11 @@ Long AI Games:
 
 - Sometimes no more builders are sent to construction site
 - Sometimes no stones are sent to construction site
+- Way too many mines are built
+- Many resources are placed at flags and are never taken away
+    - Saw a sawmiller who stopped working/moving planks out
+    - Sometimes transporters seem to prefer other stuff
+    - Too few stocks? Bad road system?
 
 
 AI:
@@ -57,6 +62,7 @@ Misc:
 - Hard time should be also possible in later game (e.g. after losing land). In this case miners could not be available for iron or coal because
   they are used for gold or stone mines. This must be considered then and maybe those mines should be demolished to free miners.
 - The check stone and gather stone radius of stonecutters should be equal so that stonecutters who won't gather anymore stone should be demolished immediately (this is crucial in hard times).
+  Stones that are not reachable due to obstacles must be also considered. Especially in hard times!
 
 Mining / finding minerals:
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.

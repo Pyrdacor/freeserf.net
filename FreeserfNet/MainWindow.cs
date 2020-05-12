@@ -57,41 +57,59 @@ namespace Freeserf
             try
             {
 #if !DEBUG
-                Log.SetStream(File.Create(Path.Combine(Program.ExecutablePath, "log.txt")));
+                Log.SetStream(new LogFileStream(Path.Combine(Program.ExecutablePath, UserConfig.DefaultLogFile)));
+                Log.MaxSize = UserConfig.DefaultMaxLogSize;
+#else
+                Log.MaxSize = null; // Console output is not limited
 #endif
-                Log.SetLevel(Log.Level.Error);
+                Log.SetLevel(UserConfig.DefaultLogLevel);
+                
             }
             catch (IOException)
             {
                 // TODO: logging not possible
             }
 
-            initInfo = Global.Init(args); // this may change the log level
+            initInfo = Global.Init(args);
 
             try
             {
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
 
-                if (initInfo.ConsoleWindow)
-                {
-                    // TODO
-                }
-
                 UserConfig.Load(FileSystem.Paths.UserConfigPath);
 
+#if !DEBUG
+                if (initInfo.ConsoleWindow || UserConfig.Logging.LogToConsole)
+                {
+                    Log.SetStream(Console.OpenStandardOutput());
+                    Log.MaxSize = null; // Console output is not limited
+                }
+                else
+                {
+                    string logFile = string.IsNullOrWhiteSpace(UserConfig.Logging.LogFileName) ? UserConfig.DefaultLogFile : UserConfig.Logging.LogFileName;
+
+                    if (!Path.IsPathRooted(logFile))
+                        logFile = Path.Combine(Program.ExecutablePath, logFile);
+
+                    Log.SetStream(new LogFileStream(logFile));
+                    Log.MaxSize = UserConfig.Logging.MaxLogSize;
+                }
+
+                if (!initInfo.LogLevelSet && UserConfig.Logging.LogLevel != Log.LogLevel)
+                    Log.SetLevel(UserConfig.Logging.LogLevel);
+#endif
+
                 var data = Data.Data.GetInstance();
-                string dataPath = Program.ExecutablePath;// Path.Combine(Program.ExecutablePath, UserConfig.Game.DataFile);
+                string dataPath = Program.ExecutablePath;
 
                 if (!data.Load(dataPath, UserConfig.Game.GraphicDataUsage, UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
                 {
-                    Log.Error.Write(ErrorSystemType.Data, "Error: Error loading DOS data.");
+                    Log.Error.Write(ErrorSystemType.Data, "Error loading game data.");
                     return null;
                 }
 
                 dataSource = data.GetDataSource();
-
-                // TODO: use the rest of the command line and maybe extend the command line
 
                 if (UserConfig.Video.ResolutionWidth < 640)
                     UserConfig.Video.ResolutionWidth = 640;

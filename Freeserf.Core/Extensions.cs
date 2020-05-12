@@ -58,6 +58,9 @@ namespace Freeserf
             if (typeof(T).IsEnum)
                 return (T)Enum.Parse(typeof(T), value);
 
+            if (typeof(T) == typeof(bool))
+                return (T)(object)(value == "1" || value.ToLower() == "true");
+
             return (T)Convert.ChangeType(value, typeof(T));
         }
     }

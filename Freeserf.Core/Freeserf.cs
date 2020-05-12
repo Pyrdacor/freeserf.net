@@ -52,6 +52,7 @@ namespace Freeserf
             public int ScreenHeight = -1;
             public bool? Fullscreen = null;
             public bool ConsoleWindow = false;
+            public bool LogLevelSet = false;
         }
 
         public static InitInfo Init(string[] args)
@@ -63,9 +64,10 @@ namespace Freeserf
             {
                 s.Retrieve(out int d);
 
-                if (d >= 0 && d < (int)Log.Level.Max)
+                if (d >= (int)Log.Level.Min && d < (int)Log.Level.Max)
                 {
                     Log.SetLevel((Log.Level)d);
+                    initInfo.LogLevelSet = true;
                 }
 
                 return true;
