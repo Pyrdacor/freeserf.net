@@ -77,6 +77,7 @@ namespace Freeserf.UI
             ScrollOptions,
             GameInitOptions,
             ExtendedGameInitOptions,
+            GameInitScrollOptions,
             CastleResources,
             MineOutput,
             OrderedBld,
@@ -796,6 +797,7 @@ namespace Freeserf.UI
                 case Type.ScrollOptions:
                 case Type.GameInitOptions:
                 case Type.ExtendedGameInitOptions:
+                case Type.GameInitScrollOptions:
                 case Type.LoadSave:
                     pattern = BackgroundPattern.DiagonalGreen;
                     break;
@@ -3471,8 +3473,7 @@ namespace Freeserf.UI
                     SetBox(Box == Type.GameInitOptions ? Type.ExtendedGameInitOptions : Type.ExtendedOptions);
                     break;
                 case Action.ShowScrollOptions:
-                    // Scroll options are not part of the game init box options so go back to normal options then.
-                    SetBox(Box == Type.ExtendedGameInitOptions ? Type.GameInitOptions : Type.ScrollOptions);
+                    SetBox(Box == Type.ExtendedGameInitOptions ? Type.GameInitScrollOptions : Type.ScrollOptions);
                     break;
                 case Action.ShowQuit:
                     SetBox(Type.QuitConfirm);
@@ -4367,6 +4368,9 @@ namespace Freeserf.UI
                     break;
                 case Type.ExtendedGameInitOptions:
                     DrawExtendedOptionsBox(Action.CloseBox);
+                    break;
+                case Type.GameInitScrollOptions:
+                    DrawScrollOptionsBox(Action.CloseBox);
                     break;
                 case Type.CastleResources:
                     DrawCastleResourcesBox();
