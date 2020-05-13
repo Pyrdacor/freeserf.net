@@ -1,4 +1,4 @@
-# Freeserf configurations
+# Freeserf configuration
 
 ## User config
 
@@ -8,9 +8,9 @@ The file is located inside the users application data path in the sub-directory 
 
 ### Location
 
-- **Windows**: C:\Users\\<username>\AppData\Roaming\freeserf\user.cfg (%APPDATA%\freeserf\user.cfg)
-- **Linux**: <HOME>/.local/share/freeserf/user.cfg
-- **OSX**: <HOME>/Library/Application Support/freeserf/user.cfg
+- **Windows**: C:\Users\USERNAME\AppData\Roaming\freeserf\user.cfg (%APPDATA%\freeserf\user.cfg)
+- **Linux**: HOME/.local/share/freeserf/user.cfg
+- **OSX**: HOME/Library/Application Support/freeserf/user.cfg
 
 ### Usage
 
