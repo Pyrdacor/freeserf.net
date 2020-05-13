@@ -8,7 +8,6 @@
     - Also seen roads with invalid directions at one end (not even leading to the flag).
       Happened with double-click. Couldn't even remove it and no serfs could use it. But it blocked other road building.
 - Minimap clicks will result in a map position that is a bit above the clicked spot
-- Dragging the minimap with LMB should also lock mouse at center (or remove LMB dragging all together as RMB works too)
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
 - When loading a game and there is an exception during loading (e.g. in AI loading at end) the background intro game seems to be drawn messed up.

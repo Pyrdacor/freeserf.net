@@ -1,8 +1,8 @@
 ﻿/*
  * Minimap.cs - Minimap GUI component
  *
- * Copyright (C) 2013   Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018   Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -29,16 +29,16 @@ namespace Freeserf.UI
     using MapPos = UInt32;
 
     // Note: The minimap is drawn as 128x128.
-    // TODO: Dragging is very slow (especially when zoomed)
     internal class Minimap : GuiObject
     {
+        const int MinScale = 1;
         const int MaxScale = 8;
 
         protected readonly Interface interf = null;
         readonly ILayerSprite sprite = null;
         protected Map map = null;
         MapPos mapOffset = Global.INVALID_MAPPOS;
-        int scale = 1; // 1-8
+        int scale = MinScale;
         protected static readonly Color GridColor = new Color(0x01, 0x01, 0x01);
 
         public Minimap(Interface interf, Map map = null)
@@ -69,10 +69,10 @@ namespace Freeserf.UI
 
         public void SetScale(int scale)
         {
-            if (scale < 1)
-                scale = 1;
-            else if (scale > 8)
-                scale = 8;
+            if (scale < MinScale)
+                scale = MinScale;
+            else if (scale > MaxScale)
+                scale = MaxScale;
 
             if (this.scale == scale)
                 return;
@@ -133,7 +133,7 @@ namespace Freeserf.UI
             int visibleWidth = Math.Min(128, (int)map.Columns) / scale;
             int visibleHeight = Math.Min(128, (int)map.Rows) / scale;
             var position = offset;
-            Color tileColor = null;
+            Color tileColor;
             int index = 0;
 
             if (visibleWidth * scale < 128)
@@ -244,24 +244,6 @@ namespace Freeserf.UI
             int hOff = h2 - h1 + 8;
 
             return Colors[typeOff + hOff];
-        }
-
-        protected override bool HandleDrag(int x, int y, int dx, int dy, Event.Button button)
-        {
-            if (!interf.Ingame)
-                return false;
-
-            if (button != Event.Button.Left)
-                return true;
-
-            // Note: The viewport is disabled during this stage.
-            // But we can safely enable it here.
-
-            interf.Viewport.Enabled = true;
-            interf.Viewport.HandleEvent(new EventArgs(Type.Drag, x, y, dx * 20, dy * 20, Event.Button.Right));
-            interf.Viewport.Enabled = false;
-
-            return true;
         }
 
         protected override bool HandleClickLeft(int x, int y)
