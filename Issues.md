@@ -14,11 +14,11 @@
   I guess because map and stuff are loaded but then are discarded?
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.").
   Not seen for a long time. Maybe only when setting the castle knights manually?
+- When saving a game it is not present in load game menu. Only after game restart.
 
 
 ## Rendering
 
-- Improve grid drawing in minimap?
 - In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
 	- This is fixed but remains true for military building white flags
 - Notification Box

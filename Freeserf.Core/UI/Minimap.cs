@@ -24,7 +24,6 @@ using System;
 
 namespace Freeserf.UI
 {
-    using Freeserf.Event;
     using Freeserf.Render;
     using MapPos = UInt32;
 
@@ -158,14 +157,15 @@ namespace Freeserf.UI
                     if (((column == viewRectX || column == viewRectX + viewRectWidth) && row >= viewRectY && row < viewRectY + viewRectHeight) ||
                         ((row == viewRectY || row == viewRectY + viewRectHeight) && column >= viewRectX && column < viewRectX + viewRectWidth))
                     {
-                        SetGridColor(minimapData, column, row, scale);
+                        // Draw the view area box
+                        SetGridColor(minimapData, column, row, scale, false, map.PositionColumn(position), map.PositionRow(position));
                     }
                     else
                     {
                         tileColor = GetTileColor(position, index++);
 
-                        if (tileColor == GridColor)
-                            SetGridColor(minimapData, column, row, scale);
+                        if (tileColor == GridColor) // Grid
+                            SetGridColor(minimapData, column, row, scale, true, map.PositionColumn(position), map.PositionRow(position));
                         else
                             SetColor(minimapData, column, row, scale, tileColor);
                     }
@@ -206,7 +206,7 @@ namespace Freeserf.UI
             }
         }
 
-        void SetGridColor(byte[] data, int x, int y, int scale)
+        void SetGridColor(byte[] data, int x, int y, int scale, bool mapGrid, uint mapColumn, uint mapRow)
         {
             int xOffset = x * scale;
             int yOffset = y * scale;
@@ -218,10 +218,30 @@ namespace Freeserf.UI
             {
                 for (int column = 0; column < scale; ++column)
                 {
-                    if ((y + x) % 2 == 0)
-                        color = Color.White;
+                    if (mapGrid)
+                    {
+                        if (mapColumn == 0)
+                        {
+                            if (mapRow % 2 == 1)
+                                color = Color.White;
+                            else
+                                color = GridColor;
+                        }
+                        else
+                        {
+                            if ((mapColumn + mapRow) % 2 == 0)
+                                color = Color.White;
+                            else
+                                color = GridColor;
+                        }
+                    }
                     else
-                        color = GridColor;
+                    {
+                        if ((x + y) % 2 == 0)
+                            color = Color.White;
+                        else
+                            color = GridColor;
+                    }
 
                     data[index++] = color.B;
                     data[index++] = color.G;
