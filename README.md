@@ -23,16 +23,7 @@ Builds for other platforms will follow later. Only recent Ubuntu versions are te
 Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. You can also use the Amiga files (either the disk files "*.adf" or the extracted files like "sounds" and "music" will work).
 Amiga music and sounds work well but the map tiles are not displayed properly.
 
-You can combine DOS and Amiga data (e.g. music from Amiga and graphics from DOS). There should be a user.cfg in your user directory with those settings
-(%APPDATA%\freeserf.net on Windows, ~/.local/share/freeserf on Ubuntu). Change the following settings:
-
-```
-graphic_data_usage = PreferDos
-sound_data_usage = PreferAmiga
-music_data_usage = PreferAmiga
-```
-
-Possible values are `PreferDos`, `PreferAmiga`, `ForceDos` and `ForceAmiga`. The force options will disable music or sound if the specific data files are not present. In case of graphics the game won't even start then.
+You can combine DOS and Amiga data (e.g. music from Amiga and graphics from DOS). See [configuration](https://github.com/Pyrdacor/freeserf.net/blob/master/Configuration.md) for more information about the Freeserf.net configuration.
 
 For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
 
@@ -111,4 +102,4 @@ The main program is based on netcore 3.1 and should run at least on Windows and 
 
 If you need help or want to help developing, just [contact me](mailto:trobt@web.de). You can also contact me via [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues) by adding a new issue and tag it as question.
 
-There is a more or less up-to-date [list with open issues](https://github.com/Pyrdacor/freeserf.net/blob/master/Issues.MD) of several relevances and importances.
+There is a more or less up-to-date [list with open issues](https://github.com/Pyrdacor/freeserf.net/blob/master/Issues.md) of several relevances and importances.

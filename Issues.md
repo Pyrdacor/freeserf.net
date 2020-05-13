@@ -153,6 +153,8 @@
 - Localization (texts should be of the right language later)
 - Rework whole serf, flag and path logic. Flag searches should be eased by the stored road instances of each flag.
 - See also "New feature candidates" below
+- Add log filename and max log size to command line
+- Store last game setings in user config (map size, game type, map seed, players and their values, etc)
 
 
 ## New feature candidates

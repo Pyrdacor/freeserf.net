@@ -62,7 +62,7 @@ namespace Freeserf.FileSystem
             else if (IsWindows())
             {
                 SaveGameFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Saved Games");
-                UserConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf.net", "user.cfg");
+                UserConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "freeserf", "user.cfg");
             }
             else if (IsOSX())
             {
