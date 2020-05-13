@@ -39,7 +39,6 @@ namespace Freeserf.UI
 {
     using MapPos = UInt32;
 
-    // TODO: implement fast mapclick and fast building
     internal class Interface : GuiObject
     {
         // Interval between automatic save games

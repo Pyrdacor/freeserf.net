@@ -626,7 +626,7 @@ namespace Freeserf
         {
             try
             {
-                if (button == MouseButtons.Left)
+                if (button == MouseButtons.Left || button == MouseButtons.Right)
                     gameView?.NotifyDoubleClick(position.X, position.Y, ConvertMouseButtons(button));
             }
             catch (Exception ex)

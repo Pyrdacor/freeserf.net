@@ -442,6 +442,13 @@ namespace Freeserf.UI
             if (!interf.Ingame)
                 return false;
 
+            if (button == Event.Button.Right && interf.GetOption(Option.FastMapClick))
+            {
+                // Perform fast map click
+                interf.PanelBar.ToggleMiniMap();
+                return true;
+            }
+
             if (button != Event.Button.Left)
                 return false;
 

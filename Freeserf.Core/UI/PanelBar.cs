@@ -504,6 +504,37 @@ namespace Freeserf.UI
             ButtonClick(1);
         }
 
+        public void ToggleMiniMap()
+        {
+            var popup = interf.PopupBox;
+
+            if (popup != null && popup.Displayed)
+            {
+                interf.ClosePopup();
+            }
+            else
+            {
+                SetButton(0, ButtonId.BuildInactive);
+                SetButton(1, ButtonId.DestroyInactive);
+                SetButton(2, ButtonId.MapStarred);
+                SetButton(3, ButtonId.StatsInactive);
+                SetButton(4, ButtonId.SettInactive);
+
+                interf.OpenPopup(PopupBox.Type.Map);
+
+                // Synchronize minimap window with viewport. 
+                if (popup != null)
+                {
+                    var minimap = popup.MiniMap;
+
+                    if (minimap != null)
+                    {
+                        minimap.UpdateMinimap(true);
+                    }
+                }
+            }
+        }
+
         // Handle a click on the panel buttons. 
         void ButtonClick(int button)
         {
@@ -519,32 +550,7 @@ namespace Freeserf.UI
                 case ButtonId.Map:
                 case ButtonId.MapStarred:
                     PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
-
-                    if (popup != null && popup.Displayed)
-                    {
-                        interf.ClosePopup();
-                    }
-                    else
-                    {
-                        SetButton(0, ButtonId.BuildInactive);
-                        SetButton(1, ButtonId.DestroyInactive);
-                        SetButton(2, ButtonId.MapStarred);
-                        SetButton(3, ButtonId.StatsInactive);
-                        SetButton(4, ButtonId.SettInactive);
-
-                        interf.OpenPopup(PopupBox.Type.Map);
-
-                        // Synchronize minimap window with viewport. 
-                        if (popup != null)
-                        {
-                            var minimap = popup.MiniMap;
-
-                            if (minimap != null)
-                            {
-                                minimap.UpdateMinimap(true);
-                            }
-                        }
-                    }
+                    ToggleMiniMap();                    
                     break;
                 case ButtonId.Sett:
                 case ButtonId.SettStarred:
