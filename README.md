@@ -106,4 +106,9 @@ The core is implemented as a .NET Standard 2.1 DLL. The renderer is also a .NET 
 
 The main program is based on netcore 3.1 and should run at least on Windows and Ubuntu.
 
+
+## Contribution
+
 If you need help or want to help developing, just [contact me](mailto:trobt@web.de). You can also contact me via [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues) by adding a new issue and tag it as question.
+
+There is a more or less up-to-date [list with open issues](https://github.com/Pyrdacor/freeserf.net/raw/master/Issues.MD) of several relevances and importances.
