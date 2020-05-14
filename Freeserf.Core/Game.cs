@@ -653,14 +653,8 @@ namespace Freeserf
             return true;
         }
 
-        public bool CanBuildAnything(MapPos position, Player player)
+        public bool CanBuildAnyBuilding(MapPos position, Player player)
         {
-            if (!player.HasCastle)
-                return CanBuildCastle(position, player);
-
-            if (CanBuildFlag(position, player))
-                return true;
-
             if (!CanPlayerBuild(position, player))
                 return false;
 
@@ -672,7 +666,7 @@ namespace Freeserf
             if (!Map.HasFlag(flagPosition) && !CanBuildFlag(flagPosition, player))
                 return false;
 
-            return CanBuildSmall(position);
+            return CanBuildSmall(position) || CanBuildMine(position);
         }
 
         /// <summary>
