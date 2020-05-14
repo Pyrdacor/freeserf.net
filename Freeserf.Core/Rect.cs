@@ -111,6 +111,15 @@ namespace Freeserf
             Clip(rect.Left, rect.Top, rect.Right, rect.Bottom);
         }
 
+        public Rect CreateShrinked(int shrinkAmount)
+        {
+            if (size.Width <= 2 * shrinkAmount ||
+                size.Height <= 2 * shrinkAmount)
+                return new Rect(0, 0, 0, 0);
+
+            return new Rect(position.X + shrinkAmount, position.Y + shrinkAmount, size.Width - 2 * shrinkAmount, size.Height - 2 * shrinkAmount);
+        }
+
         public bool Contains(int x, int y)
         {
             if (Empty)

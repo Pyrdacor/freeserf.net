@@ -91,6 +91,7 @@ namespace Freeserf.UI
         uint lastConstTick;
 
         Road buildingRoad;
+        MapPos lastPathwayScrollPosition = Global.INVALID_MAPPOS;
         int buildingRoadValidDir;
         readonly Stack<RenderRoadSegment> buildingRoadSegments = new Stack<RenderRoadSegment>();
 
@@ -668,6 +669,7 @@ namespace Freeserf.UI
             buildingRoad.Invalidate();
             buildingRoad.Start(mapCursorPosition);
             UpdateMapCursorPosition(mapCursorPosition);
+            lastPathwayScrollPosition = mapCursorPosition;
 
             PanelBar?.Update();
         }
@@ -739,9 +741,7 @@ namespace Freeserf.UI
             {
                 // No existing paths at destination, build segment. 
                 UpdateMapCursorPosition(destination);
-
-                if (GetOption(Option.PathwayScrolling)) // pathway scrolling
-                    Viewport.MoveToMapPosition(destination, true);
+                ScrollPath(destination); // pathway scrolling
             }
             else
             {
@@ -769,11 +769,32 @@ namespace Freeserf.UI
             }
 
             UpdateMapCursorPosition(destination);
-
-            if (GetOption(Option.PathwayScrolling)) // pathway scrolling
-                Viewport.MoveToMapPosition(destination, true);
+            ScrollPath(destination); // pathway scrolling
 
             return result;
+        }
+
+        private void ScrollPath(MapPos destination)
+        {
+            if (GetOption(Option.PathwayScrolling) && ShouldPathwayScroll(destination)) 
+            {
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.PathScrolling);
+                Viewport.MoveToMapPosition(destination, true);
+                lastPathwayScrollPosition = destination;
+            }
+        }
+
+        private bool ShouldPathwayScroll(MapPos destination)
+        {
+            var map = Game.Map;
+
+            if (map.Distance(lastPathwayScrollPosition, destination) > 3)
+                return true;
+
+            var viewPosition = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(destination);
+            var viewRectWithBorder = RenderView.VirtualScreen.CreateShrinked(40);
+
+            return !viewRectWithBorder.Contains(viewPosition);
         }
 
         // Extend currently constructed road with an array of directions. 
