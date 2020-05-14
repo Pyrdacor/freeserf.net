@@ -20,7 +20,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
+using System.Timers;
 
 namespace Freeserf.UI
 {
@@ -97,15 +97,15 @@ namespace Freeserf.UI
             6, 312, 0,
         };
 
-        Interface interf = null;
-        Button messageIcon = null;
-        Button returnIcon = null;
-        Button[] panelButtons = new Button[5];
-        ButtonId[] panelButtonIds = new ButtonId[5];
-        Render.ILayerSprite[] background = new Render.ILayerSprite[20];
-        System.Timers.Timer blinkTimer = new System.Timers.Timer();
+        readonly Interface interf = null;
+        readonly Button messageIcon = null;
+        readonly Button returnIcon = null;
+        readonly Button[] panelButtons = new Button[5];
+        readonly ButtonId[] panelButtonIds = new ButtonId[5];
+        readonly Render.ILayerSprite[] background = new Render.ILayerSprite[20];
+        readonly Timer blinkTimer = new Timer();
         bool blinkTrigger = false;
-        Render.IColoredRect playerColorIndicator = null;
+        readonly Render.IColoredRect playerColorIndicator = null;
 
         public PanelBar(Interface interf)
             : base(interf)
@@ -732,8 +732,11 @@ namespace Freeserf.UI
             return true;
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             SetRedraw();
 
             if (x >= 41 && x < 53)

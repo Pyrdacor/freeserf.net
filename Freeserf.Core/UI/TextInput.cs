@@ -201,9 +201,11 @@ namespace Freeserf.UI
             this.filter = filter;
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            SetFocused();
+            if (!delayed)
+                SetFocused();
+
             return true;
         }
 

@@ -25,6 +25,7 @@ namespace Freeserf.Event
     public enum Type
     {
         Click,
+        DelayedClick, // Click that has waited for double click max delay
         DoubleClick,
         SpecialClick, // Left + right button
         Drag,

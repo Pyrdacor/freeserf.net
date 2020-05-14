@@ -171,6 +171,7 @@ namespace Freeserf.UI
             bool viewportActive = Ingame && Viewport != null;
             bool viewportEnabled = Viewport != null && Viewport.Enabled;
             bool clickEvent = e.Type == Event.Type.Click ||
+                              e.Type == Event.Type.DelayedClick ||
                               e.Type == Event.Type.DoubleClick ||
                               e.Type == Event.Type.SpecialClick ||
                               e.Type == Event.Type.Drag ||
@@ -368,9 +369,9 @@ namespace Freeserf.UI
             if (PopupBox == null)
                 PopupBox = new PopupBox(this);
 
-            if (initBox != null && initBox.Displayed)
+            if (initBox != null && initBox.Displayed && !initBox.HasChild(PopupBox))
                 initBox.AddChild(PopupBox, 0, 0);
-            else
+            else if (!HasChild(PopupBox))
                 AddChild(PopupBox, 0, 0);
 
             Layout();

@@ -69,9 +69,9 @@ namespace Freeserf.UI
             return true;
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            base.HandleClickLeft(x, y);
+            base.HandleClickLeft(x, y, delayed);
 
             savedText = Text;
             Text = "";
@@ -1368,8 +1368,11 @@ namespace Freeserf.UI
             return base.HandleEvent(e);
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             var clickPosition = new Position(x, y);
 
             for (uint i = 0; i < 4; ++i)

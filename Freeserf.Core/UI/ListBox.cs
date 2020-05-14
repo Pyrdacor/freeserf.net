@@ -195,8 +195,11 @@ namespace Freeserf.UI
             return text.Substring(0, maxLength - 2) + "..";
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             SetFocused();
 
             y -= TotalY;

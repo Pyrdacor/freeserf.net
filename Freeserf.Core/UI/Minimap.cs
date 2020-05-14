@@ -266,8 +266,11 @@ namespace Freeserf.UI
             return Colors[typeOff + hOff];
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             x -= TotalX;
             y -= TotalY;
 
@@ -404,7 +407,7 @@ namespace Freeserf.UI
                 interf.ClosePopup();
 
                 // jump to map position
-                HandleClickLeft(x, y);
+                HandleClickLeft(x, y, false);
             }
 
             return true;

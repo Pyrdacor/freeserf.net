@@ -4418,8 +4418,11 @@ namespace Freeserf.UI
             base.InternalDraw();
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             if (Box == Type.PlayerFaces)
             {
                 SetBox(Type.PlayerStatistics);
@@ -4490,7 +4493,7 @@ namespace Freeserf.UI
                 }
             }
 
-            base.HandleClickLeft(x, y);
+            base.HandleClickLeft(x, y, delayed);
 
             return true; // always return true to avoid passing click events through
         }

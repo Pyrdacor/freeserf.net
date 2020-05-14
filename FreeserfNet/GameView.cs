@@ -44,7 +44,7 @@ namespace Freeserf
         readonly Random mapScrollRandom = new Random();
 
         bool disposed = false;
-        Context context;
+        readonly Context context;
         Rect virtualScreenDisplay;
         readonly SizingPolicy sizingPolicy;
         readonly OrientationPolicy orientationPolicy;
@@ -550,7 +550,7 @@ namespace Freeserf
             return args.Done;
         }
 
-        public bool NotifyClick(int x, int y, Button button)
+        public bool NotifyClick(int x, int y, Button button, bool delayed)
         {
             // transform from screen to view
             var position = ScreenToView(new Position(x, y));
@@ -558,7 +558,7 @@ namespace Freeserf
             if (position == null)
                 return false;
 
-            return RunHandler(Click, new EventArgs(EventType.Click, position.X, position.Y, 0, 0, button));
+            return RunHandler(Click, new EventArgs(delayed ? EventType.DelayedClick : EventType.Click, position.X, position.Y, 0, 0, button));
         }
 
         public bool NotifyDoubleClick(int x, int y, Button button)

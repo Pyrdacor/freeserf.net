@@ -190,7 +190,7 @@ namespace Freeserf.UI
             // empty
         }
 
-        protected virtual bool HandleClickLeft(int x, int y)
+        protected virtual bool HandleClickLeft(int x, int y, bool delayed)
         {
             return false;
         }
@@ -264,6 +264,11 @@ namespace Freeserf.UI
 
             if (Parent != null)
                 Parent.SetRedraw();
+        }
+
+        public bool HasChild(GuiObject obj)
+        {
+            return children.Contains(obj);
         }
 
         public void AddChild(GuiObject obj, int x, int y, bool displayed = true)
@@ -341,6 +346,7 @@ namespace Freeserf.UI
             int eventY = e.Y;
 
             if (e.Type == Event.Type.Click ||
+                e.Type == Event.Type.DelayedClick ||
                 e.Type == Event.Type.DoubleClick ||
                 e.Type == Event.Type.SpecialClick ||
                 e.Type == Event.Type.Drag)
@@ -369,7 +375,11 @@ namespace Freeserf.UI
             {
                 case Event.Type.Click:
                     if (e.Button == Event.Button.Left)
-                        result = HandleClickLeft(eventX, eventY);
+                        result = HandleClickLeft(eventX, eventY, false);
+                    break;
+                case Event.Type.DelayedClick:
+                    if (e.Button == Event.Button.Left)
+                        result = HandleClickLeft(eventX, eventY, true);
                     break;
                 case Event.Type.Drag:
                     result = HandleDrag(e.X, e.Y, e.Dx, e.Dy, e.Button);
@@ -521,6 +531,15 @@ namespace Freeserf.UI
         }
 
         private bool RenderView_DoubleClick(object sender, Event.EventArgs args)
+        {
+            var position = PositionToGui(new Position(args.X, args.Y));
+
+            args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
+
+            return viewer.SendEvent(args);
+        }
+
+        private bool RenderView_DelayedClick(object sender, Event.EventArgs args)
         {
             var position = PositionToGui(new Position(args.X, args.Y));
 

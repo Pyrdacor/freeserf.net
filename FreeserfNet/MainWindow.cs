@@ -211,7 +211,7 @@ namespace Freeserf
                     SetFullscreen(true);
 
                 CursorVisible = false; // hide cursor
-                DoubleClickTime = 150;
+                DoubleClickTime = 300;
 
                 gameView.Closed += GameView_Closed;
                 Closing += MainWindow_Closing;
@@ -574,24 +574,25 @@ namespace Freeserf
             // left + right = special click
             if (button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right))
             {
-                if (
-                    pressedMouseButtons[(int)MouseButtonIndex.Left] &&
-                    pressedMouseButtons[(int)MouseButtonIndex.Right]
-                )
+                try
                 {
-                    try
+                    if (pressedMouseButtons[(int)MouseButtonIndex.Left] &&
+                       pressedMouseButtons[(int)MouseButtonIndex.Right])
                     {
+
                         gameView?.NotifySpecialClick(position.X, position.Y);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        ReportException("MouseDown", ex);
+                        lastDragX = position.X;
+                        lastDragY = position.Y;
+
+                        gameView?.NotifyClick(position.X, position.Y, ConvertMouseButtons(button), false);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    lastDragX = position.X;
-                    lastDragY = position.Y;
+                    ReportException("MouseDown", ex);
                 }
             }
 
@@ -607,12 +608,12 @@ namespace Freeserf
                     pressedMouseButtons[(int)MouseButtonIndex.Left] &&
                     pressedMouseButtons[(int)MouseButtonIndex.Right]
                 )
-                    return; // special clicks are handled in OnMouseDown
+                return; // special clicks are handled in OnMouseDown
             }
 
             try
             {
-                gameView?.NotifyClick(clickPosition.X, clickPosition.Y, ConvertMouseButtons(button));
+                gameView?.NotifyClick(clickPosition.X, clickPosition.Y, ConvertMouseButtons(button), true);
             }
             catch (Exception ex)
             {

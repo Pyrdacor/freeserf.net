@@ -276,7 +276,11 @@ namespace Freeserf.UI
             {
                 case Event.Type.Click:
                     if (e.Button == Event.Button.Left)
-                        result = HandleClickLeft(e.X, e.Y);
+                        result = HandleClickLeft(e.X, e.Y, false);
+                    break;
+                case Event.Type.DelayedClick:
+                    if (e.Button == Event.Button.Left)
+                        result = HandleClickLeft(e.X, e.Y, true);
                     break;
                 case Event.Type.Drag:
                     result = HandleDrag(e.X, e.Y, e.Dx, e.Dy, e.Button);
@@ -298,8 +302,11 @@ namespace Freeserf.UI
             return result;
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             if (!interf.Ingame)
                 return false;
 

@@ -251,9 +251,10 @@ namespace Freeserf.UI
             DrawNotification(notificationViews[notification.NotificationType]);
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            Displayed = false;
+            if (!delayed)
+                Displayed = false;
 
             return true;
         }

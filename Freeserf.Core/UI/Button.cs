@@ -48,9 +48,11 @@ namespace Freeserf.UI
 
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            Clicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
+            // If the button has a double click handler, a normal click must be delayed
+            if (DoubleClicked != null == delayed)
+                Clicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
 
             return true;
         }
@@ -75,9 +77,10 @@ namespace Freeserf.UI
 
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            Clicked?.Invoke(this, new Button.ClickEventArgs(x - TotalX, y - TotalY));
+            if (!delayed)
+                Clicked?.Invoke(this, new Button.ClickEventArgs(x - TotalX, y - TotalY));
 
             return true;
         }

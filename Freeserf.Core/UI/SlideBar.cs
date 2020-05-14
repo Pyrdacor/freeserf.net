@@ -89,8 +89,11 @@ namespace Freeserf.UI
             fillRect.DisplayLayer = (byte)(BaseDisplayLayer + displayLayerOffset + 12);
         }
 
-        protected override bool HandleClickLeft(int x, int y)
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (delayed)
+                return true;
+
             int relX = x - TotalX;
 
             if (relX < 7)
