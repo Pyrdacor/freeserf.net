@@ -539,15 +539,6 @@ namespace Freeserf.UI
             return viewer.SendEvent(args);
         }
 
-        private bool RenderView_DelayedClick(object sender, Event.EventArgs args)
-        {
-            var position = PositionToGui(new Position(args.X, args.Y));
-
-            args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
-
-            return viewer.SendEvent(args);
-        }
-
         private bool RenderView_Click(object sender, Event.EventArgs args)
         {
             var position = PositionToGui(new Position(args.X, args.Y));
