@@ -46,7 +46,7 @@ namespace Freeserf.Audio
             Message = 1,
             Accepted = 2,
             NotAccepted = 4,
-            Undo = 6,
+            PathScrolling = 6,
             Click = 8,
             Fight01 = 10,
             Fight02 = 14,
@@ -68,11 +68,11 @@ namespace Freeserf.Audio
             Digging = 50,
             Mowing = 52,
             FishingRodReel = 54,
-            Unknown21 = 58,
+            Hmpf = 58,
             PigOink = 60,
             GoldBoils = 62,
             Rowing = 64,
-            Unknown25 = 66,
+            Crush = 66,
             SerfDying = 69,
             BirdChirp0 = 70,
             BirdChirp1 = 74,
@@ -80,8 +80,8 @@ namespace Freeserf.Audio
             BirdChirp2 = 78,
             BirdChirp3 = 82,
             Burning = 84,
-            Unknown28 = 86,
-            Unknown29 = 88
+            Waves = 86,
+            WindBlowing = 88
         }
 
         // Only track 0 is used at the moment? What's with the other ones?
