@@ -49,12 +49,12 @@ The game options are as follows:
 ```
 MessagesImportant = Bit 0 -> 1 // This is always set as these messages will always be notified.
 InvertScrolling = Bit 1 -> 2 // Map scrolling is inverted
-FastBuilding = Bit 2 -> 4 // Fast building
+FastBuilding = Bit 2 -> 4 // Fast building (second left clicks on flags or free spots starts building roads, flags or buildings)
 MessagesAll = Bit 3 -> 8 // Alert on all notifications
 MessagesMost = Bit 4 -> 16 // Alert on most notifications
 MessagesFew = Bit 5 -> 32 // Alert on only a few notifications
 PathwayScrolling = Bit 6 -> 64 // Scrolls the map while building roads
-FastMapClick = Bit 7 -> 128 // Fast map click
+FastMapClick = Bit 7 -> 128 // Fast map click (double right click opens/closes the map)
 HideCursorWhileScrolling = Bit 8 -> 256 // Hide cursor while scrolling the map
 ResetCursorAfterScrolling = Bit 9 -> 512 // After map scrolling ends, place the cursor at the center of the screen
 ```
