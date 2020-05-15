@@ -12,7 +12,6 @@
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.").
   Not seen for a long time. Maybe only when setting the castle knights manually?
-- When saving a game it is not present in load game menu. Only after game restart.
 
 
 ## Rendering

@@ -852,6 +852,7 @@ namespace Freeserf.UI
                     {
                         randomInput.Displayed = false;
                         fileList.Displayed = true;
+                        fileList.Update();
                         fileList.Select(0);
                         serverList.Displayed = false;
                         SetRedraw();
