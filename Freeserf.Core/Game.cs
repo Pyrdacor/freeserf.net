@@ -2099,16 +2099,10 @@ namespace Freeserf
             // Update land ownership 
             UpdateLandOwnership(building.Position);
 
-            // Create notifications for lost land and buildings 
+            // Create notifications for lost land
             foreach (var player in players.ToList())
             {
-                if (buildingsBefore[(int)player.Index] > player.BuildingScore)
-                {
-                    player.AddNotification(Notification.Type.LostBuildings,
-                                           building.Position,
-                                           building.Player);
-                }
-                else if (landBefore[(int)player.Index] > player.LandArea)
+                if (landBefore[(int)player.Index] > player.LandArea)
                 {
                     player.AddNotification(Notification.Type.LostLand,
                                            building.Position,

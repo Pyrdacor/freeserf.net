@@ -38,7 +38,6 @@ namespace Freeserf
             KnightOccupied = 6,
             NewStock = 7,
             LostLand = 8,
-            LostBuildings = 9,
             EmergencyActive = 10,
             EmergencyNeutral = 11,
             FoundGold = 12,

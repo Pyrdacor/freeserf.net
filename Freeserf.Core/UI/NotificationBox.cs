@@ -89,11 +89,6 @@ namespace Freeserf.UI
                 Decoration.Opponent,
                 0,
                 "Because of this\nenemy building\nyou lost some\nland") },
-            { Notification.Type.LostBuildings, new NotificationView(Notification.Type.LostBuildings,
-                Decoration.Opponent,
-                0,
-                "Because of this\nenemy building\nyou lost some\n" +
-                "land and\nsome buildings") },
             { Notification.Type.EmergencyActive, new NotificationView(Notification.Type.EmergencyActive,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingFrameSprite[(int)Building.Type.Stock],
@@ -143,7 +138,7 @@ namespace Freeserf.UI
             0xea, 0xeb, 0x12a, 0x12b
         };
 
-        Interface interf = null;
+        readonly Interface interf = null;
         Notification notification = null;
 
         // rendering
@@ -153,7 +148,7 @@ namespace Freeserf.UI
         Render.IColoredRect playerFaceBackground = null;
         Icon playerFace = null;
         BuildingIcon building = null; // cross, mine, stock, castle or military buildings
-        TextField[] textFieldMessage = new TextField[5]; // max 5 lines
+        readonly TextField[] textFieldMessage = new TextField[5]; // max 5 lines
 
         public NotificationBox(Interface interf)
             : base
@@ -232,7 +227,7 @@ namespace Freeserf.UI
                 return;
             }
 
-            this.notification = message;
+            notification = message;
             Displayed = true;
             checkBox.Displayed = true;
         }

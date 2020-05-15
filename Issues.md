@@ -16,15 +16,6 @@
 
 - In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
 	- This is fixed but remains true for military building white flags
-- Notification Box
-    - Bad display of text/image. (Test again because font char gaps should be smaller now!)
-        - Text too long for:
-	        - FoundStone
-            - MineEmpty
-            - OneHourSinceSave
-            - UnderAttack
-        - Total chaos for:
-            - LostBuildings
 
 
 ## AI
