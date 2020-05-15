@@ -10,8 +10,6 @@
 - Minimap clicks will result in a map position that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- When loading a game and there is an exception during loading (e.g. in AI loading at end) the background intro game seems to be drawn messed up.
-  I guess because map and stuff are loaded but then are discarded?
 - If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.").
   Not seen for a long time. Maybe only when setting the castle knights manually?
 - When saving a game it is not present in load game menu. Only after game restart.

@@ -1835,7 +1835,7 @@ namespace Freeserf
             var sourceDirection = GetOtherEndDirection(direction);
 
             state.SearchDirection = Direction.Right;
-            sourceFlag.state.SearchDirection = Direction.DownRight;
+            sourceFlag.state.SearchDirection = Direction.DownRight; // TODO: sometimes sourceFlag is null here -> exception
 
             var search = new FlagSearch(Game);
             search.AddSource(this);

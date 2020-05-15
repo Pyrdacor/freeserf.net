@@ -927,8 +927,7 @@ namespace Freeserf.UI
 
                             if (!GameManager.Instance.LoadGame(path, interf.RenderView, interf.AudioInterface, ref viewer))
                             {
-                                interf.OpenGameInit(GameType.Load);
-
+                                interf.OpenGameInit(GameType.Load); // this also starts the intro game
                                 interf.OpenPopup(PopupBox.Type.DiskMsg);
 
                                 return;

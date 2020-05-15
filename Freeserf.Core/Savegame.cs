@@ -346,8 +346,10 @@ namespace Freeserf
             }
         }
 
-        public bool Load(string path, Game game)
+        public bool Load(string path, Func<Game> gameCreator, out Game game)
         {
+            game = null;
+
             try
             {
                 if (!File.Exists(path))
@@ -363,11 +365,13 @@ namespace Freeserf
                 {
                     try
                     {
+                        game = gameCreator();
                         game.ReadFrom(new SaveReaderTextFile(readerText));
                     }
                     catch (ExceptionFreeserf ex1)
                     {
                         readerText.Close();
+                        game.Close();
 
                         Log.Warn.Write(ErrorSystemType.Savegame, "Unable to load save game: " + ex1.Message);
                         Log.Warn.Write(ErrorSystemType.Savegame, "Trying compatibility mode...");
@@ -376,10 +380,12 @@ namespace Freeserf
 
                         try
                         {
+                            game = gameCreator();
                             game.ReadFrom(new SaveReaderBinary(readerBinary));
                         }
                         catch (ExceptionFreeserf ex2)
                         {
+                            game.Close();
                             LastOperationResult = LastOperationStatus.LoadFail;
                             Log.Error.Write(ErrorSystemType.Savegame, "Failed to load save game: " + ex2.Message);
                             return false;

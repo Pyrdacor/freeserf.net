@@ -134,14 +134,12 @@ namespace Freeserf
 
         public bool LoadGame(string path, Render.IRenderView renderView, Audio.IAudioInterface audioInterface, ref Viewer viewer)
         {
-            var newGame = new Game(renderView, audioInterface);
+            CloseGame();
 
-            if (!GameStore.Instance.Load(path, newGame))
+            if (!GameStore.Instance.Load(path, () => new Game(renderView, audioInterface), out Game newGame))
             {
                 return false;
             }
-
-            CloseGame();
 
             if (newGame.GetPlayer(0).IsAI)
                 viewer = viewer.ChangeTo(Viewer.Type.LocalSpectator);
