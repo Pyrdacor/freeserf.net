@@ -3404,7 +3404,6 @@ namespace Freeserf.UI
             var player = interf.Player;
             bool spectator = interf.AccessRights != Viewer.Access.Player;
 
-            // TODO
             switch (action)
             {
                 case Action.CloseBox:
@@ -4427,6 +4426,12 @@ namespace Freeserf.UI
             }
 
             base.InternalDraw();
+        }
+
+        protected override bool HandleDoubleClick(int x, int y, Event.Button button)
+        {
+            // This prevents the popup from closing when double clicking it.
+            return true;
         }
 
         protected override bool HandleClickLeft(int x, int y, bool delayed)
