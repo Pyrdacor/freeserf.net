@@ -1034,7 +1034,18 @@ namespace Freeserf.UI
 
         #region Buttons
 
-        void SetButton(int x, int y, uint spriteIndex, object tag, Data.Resource resourceType = Data.Resource.Icon)
+        void UpdateButtonHandlers(Button button, bool doubleClick)
+        {
+            button.Clicked -= PopupBox_ButtonClicked;
+            button.DoubleClicked -= PopupBox_ButtonDoubleClicked;
+
+            if (doubleClick)
+                button.DoubleClicked += PopupBox_ButtonDoubleClicked;
+            else
+                button.Clicked += PopupBox_ButtonClicked;
+        }
+
+        void SetButton(int x, int y, uint spriteIndex, object tag, bool doubleClick = false, Data.Resource resourceType = Data.Resource.Icon)
         {
             var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
             byte displayLayer = (byte)(Math.Min(255, iconLayer++));
@@ -1050,6 +1061,7 @@ namespace Freeserf.UI
                     button.MoveTo(x, y);
                     button.Displayed = Displayed;
                     button.SetDisplayLayerOffset(displayLayer);
+                    UpdateButtonHandlers(button, doubleClick);
                     buttons[button] = true;
                     return;
                 }
@@ -1059,8 +1071,7 @@ namespace Freeserf.UI
 
             newButton.Tag = tag;
             newButton.Displayed = Displayed;
-            newButton.Clicked += PopupBox_ButtonClicked;
-            newButton.DoubleClicked += PopupBox_ButtonDoubleClicked;
+            UpdateButtonHandlers(newButton, doubleClick);         
             AddChild(newButton, x, y, true);
 
             buttons.Add(newButton, true);
@@ -2899,7 +2910,7 @@ namespace Freeserf.UI
             var flag = interf.Game.GetFlag(interf.Player.SelectedObjectIndex);
 
             if (flag.CanMergeNearbyPaths())
-                SetButton(64, 60, 0x135, Action.MergePaths);
+                SetButton(64, 60, 0x135, Action.MergePaths, true);
 
             SetFlagIcon(72, 49);
 
@@ -3119,17 +3130,17 @@ namespace Freeserf.UI
             {
                 case Inventory.Mode.In:
                     SetIcon(80, 25, 288);
-                    SetButton(80, 41, 220, Action.ResourceModeStop);
-                    SetButton(80, 57, 220, Action.ResourceModeOut);
+                    SetButton(80, 41, 220, Action.ResourceModeStop, true);
+                    SetButton(80, 57, 220, Action.ResourceModeOut, true);
                     break;
                 case Inventory.Mode.Stop:
-                    SetButton(80, 25, 220, Action.ResourceModeIn);
+                    SetButton(80, 25, 220, Action.ResourceModeIn, true);
                     SetIcon(80, 41, 288);
-                    SetButton(80, 57, 220, Action.ResourceModeOut);
+                    SetButton(80, 57, 220, Action.ResourceModeOut, true);
                     break;
                 case Inventory.Mode.Out:
-                    SetButton(80, 25, 220, Action.ResourceModeIn);
-                    SetButton(80, 41, 220, Action.ResourceModeStop);
+                    SetButton(80, 25, 220, Action.ResourceModeIn, true);
+                    SetButton(80, 41, 220, Action.ResourceModeStop, true);
                     SetIcon(80, 57, 288);
                     break;
             }
@@ -3138,17 +3149,17 @@ namespace Freeserf.UI
             {
                 case Inventory.Mode.In:
                     SetIcon(80, 89, 288);
-                    SetButton(80, 105, 220, Action.SerfModeStop);
-                    SetButton(80, 121, 220, Action.SerfModeOut);
+                    SetButton(80, 105, 220, Action.SerfModeStop, true);
+                    SetButton(80, 121, 220, Action.SerfModeOut, true);
                     break;
                 case Inventory.Mode.Stop:
-                    SetButton(80, 89, 220, Action.SerfModeIn);
+                    SetButton(80, 89, 220, Action.SerfModeIn, true);
                     SetIcon(80, 105, 288);
-                    SetButton(80, 121, 220, Action.SerfModeOut);
+                    SetButton(80, 121, 220, Action.SerfModeOut, true);
                     break;
                 case Inventory.Mode.Out:
-                    SetButton(80, 89, 220, Action.SerfModeIn);
-                    SetButton(80, 105, 220, Action.SerfModeStop);
+                    SetButton(80, 89, 220, Action.SerfModeIn, true);
+                    SetButton(80, 105, 220, Action.SerfModeStop, true);
                     SetIcon(80, 121, 288);
                     break;
             }
@@ -3211,7 +3222,7 @@ namespace Freeserf.UI
             }
 
             // cycle knights
-            SetButton(88, 93, 301u, Action.CycleKnights);
+            SetButton(88, 93, 301u, Action.CycleKnights, true);
 
             // exit
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
