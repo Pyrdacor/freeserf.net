@@ -12,7 +12,7 @@ namespace Freeserf.Audio
             {
                 int value = data.Pop<byte>();
 
-                value = value + level;
+                value += level;
 
                 if (invert)
                 {

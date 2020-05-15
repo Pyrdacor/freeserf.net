@@ -503,7 +503,7 @@ namespace Freeserf
                         serf.CastleDeleted(Position, true);
                     }
 
-                    // TODO: player defeated? mission outro etc?
+                    Game.PlayerDefeated(player);
                 }
 
                 if (!state.Constructing && IsMilitary())
@@ -1523,7 +1523,7 @@ namespace Freeserf
 
                             if (state.Holder &&
                                 !inventory.HasAnyOutMode() && // Not serf or resource OUT mode 
-                                inventory.FreeSerfCount() == 0)
+                                inventory.FreeSerfCount == 0)
                             {
                                 if (player.TickSendGenericDelay())
                                 {
@@ -1923,7 +1923,7 @@ namespace Freeserf
 
             if (state.Holder &&
                 !inventory.HasAnyOutMode() && // Not serf or resource OUT mode
-                inventory.FreeSerfCount() == 0)
+                inventory.FreeSerfCount == 0)
             {
                 if (player.TickSendGenericDelay())
                 {

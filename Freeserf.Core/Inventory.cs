@@ -209,10 +209,7 @@ namespace Freeserf
             ++state.GenericCount;
         }
 
-        public uint FreeSerfCount()
-        {
-            return state.GenericCount;
-        }
+        public uint FreeSerfCount => state.GenericCount;
 
         public bool HasSerf(Serf.Type type)
         {

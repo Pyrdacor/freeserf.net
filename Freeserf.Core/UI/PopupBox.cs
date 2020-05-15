@@ -3190,7 +3190,7 @@ namespace Freeserf.UI
             foreach (var inventory in interf.Game.GetPlayerInventories(player))
             {
                 uint count = Math.Min(inventory.GetCountOf(Resource.Type.Sword), inventory.GetCountOf(Resource.Type.Shield));
-                numConvertibleToKnights += Math.Min(count, inventory.FreeSerfCount());
+                numConvertibleToKnights += Math.Min(count, inventory.FreeSerfCount);
             }
 
             SetNumberText(104, 49, numConvertibleToKnights);

@@ -10,8 +10,6 @@
 - Minimap clicks will result in a map position that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- If not debugging there is sometimes an exception in PopupBox.DrawResourceDirectionBox ("Not a knight among the castle defenders.").
-  Not seen for a long time. Maybe only when setting the castle knights manually?
 
 
 ## Rendering
@@ -151,6 +149,8 @@
 - See also "New feature candidates" below
 - Add log filename and max log size to command line
 - Store last game setings in user config (map size, game type, map seed, players and their values, etc)
+- Show game speed, add icons for game speed change and pause/resume?
+- Music should not restart at game start
 
 
 ## New feature candidates

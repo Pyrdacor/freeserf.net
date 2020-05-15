@@ -182,6 +182,16 @@ namespace Freeserf
             Map.Close();
         }
 
+        public void PlayerDefeated(Player player)
+        {
+            // TODO: no more AI actions, no more client input, show outro, etc
+        }
+
+        public void PlayerSurrender(Player player)
+        {
+            // TODO: similar to PlayerDefeated
+        }
+
         public void AddGoldTotal(int delta)
         {
             if (delta < 0)
@@ -2462,7 +2472,7 @@ namespace Freeserf
             {
                 if (inventory.HasSerf((Serf.Type)type))
                 {
-                    if (type != (int)Serf.Type.Generic || inventory.FreeSerfCount() > 4)
+                    if (type != (int)Serf.Type.Generic || inventory.FreeSerfCount > 4)
                     {
                         var serf = inventory.CallOutSerf((Serf.Type)type);
                         int mode;

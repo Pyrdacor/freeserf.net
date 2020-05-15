@@ -956,12 +956,12 @@ namespace Freeserf
                     {
                         continue;
                     }
-                    else if (loopInventory.FreeSerfCount() == 0)
+                    else if (loopInventory.FreeSerfCount == 0)
                     {
                         spawnInventory = loopInventory;
                         break;
                     }
-                    else if (spawnInventory == null || loopInventory.FreeSerfCount() < spawnInventory.FreeSerfCount())
+                    else if (spawnInventory == null || loopInventory.FreeSerfCount < spawnInventory.FreeSerfCount)
                     {
                         spawnInventory = loopInventory;
                     }
@@ -1568,7 +1568,7 @@ namespace Freeserf
             // Sum up potential serfs of all inventories.
             foreach (var inventory in Game.GetPlayerInventories(this))
             {
-                if (inventory.FreeSerfCount() > 0)
+                if (inventory.FreeSerfCount > 0)
                 {
                     for (int i = 0; i < 27; ++i)
                     {
