@@ -43,6 +43,8 @@ namespace Freeserf.UI
         readonly IColoredRect selectionBackground = null;
         readonly List<TextField> textEntries = new List<TextField>();
 
+        public event Action<int> ItemDoubleClicked;
+
         public ListBox(Interface interf, TextRenderType renderType = TextRenderType.NewUI)
             : base(interf)
         {
@@ -216,6 +218,25 @@ namespace Freeserf.UI
             }
 
             return true;
+        }
+
+        protected override bool HandleDoubleClick(int x, int y, Event.Button button)
+        {
+            y -= TotalY;
+            y -= 3;
+
+            if (y >= 0)
+            {
+                y = firstVisibleItem + (y / 9);
+
+                if (y >= 0 && y < items.Count)
+                {
+                    ItemDoubleClicked?.Invoke(y);
+                    return true;
+                }
+            }
+
+            return base.HandleDoubleClick(x, y, button);
         }
 
         protected override bool HandleDrag(int x, int y, int dx, int dy, Event.Button button)
