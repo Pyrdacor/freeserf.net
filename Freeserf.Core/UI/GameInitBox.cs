@@ -702,13 +702,15 @@ namespace Freeserf.UI
 
                     if (gameType == GameType.MultiplayerClient)
                     {
-                        DrawBoxString(10, 18, textFieldName, "Server:");
+                        /*DrawBoxString(10, 18, textFieldName, "Server:");
                         string serverName = GetServerName();
 
                         if (serverName.Length > 15)
                             serverName = serverName.Substring(0, 12) + "...";
 
-                        DrawBoxString(18, 18, textFieldValue, serverName);
+                        DrawBoxString(18, 18, textFieldValue, serverName);*/
+                        HideBoxString(textFieldName);
+                        HideBoxString(textFieldValue);
                         DrawBoxString(24, 139, textCreateServer, "Create server");
 
                         buttonUp.Displayed = false;
@@ -756,7 +758,7 @@ namespace Freeserf.UI
                 case GameType.Load:
                     {
                         DrawBoxString(10, 2, textFieldHeader, "Load game");
-                        DrawBoxString(10, 18, textFieldName, "File:");
+                        /*DrawBoxString(10, 18, textFieldName, "File:");
 
                         string path = fileList.GetSelected()?.Path;
                         string saveGameName = string.IsNullOrWhiteSpace(path) ? "" : System.IO.Path.GetFileNameWithoutExtension(path);
@@ -764,7 +766,9 @@ namespace Freeserf.UI
                         if (saveGameName.Length > 17)
                             saveGameName = saveGameName.Substring(0, 14) + "...";
 
-                        DrawBoxString(16, 18, textFieldValue, saveGameName);
+                        DrawBoxString(16, 18, textFieldValue, saveGameName);*/
+                        HideBoxString(textFieldName);
+                        HideBoxString(textFieldValue);
                         HideBoxString(textCreateServer);
 
                         buttonUp.Displayed = false;

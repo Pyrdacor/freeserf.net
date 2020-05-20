@@ -438,21 +438,6 @@ namespace Freeserf
                         gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
                         break;
                     default:
-                        {
-                            if ((int)key >= 32 && (int)key < 128) // only valid ascii characters
-                            {
-                                byte modifier = 0;
-
-                                if (modifiers.HasFlag(KeyModifiers.Control))
-                                    modifier |= 1;
-                                if (modifiers.HasFlag(KeyModifiers.Shift))
-                                    modifier |= 2;
-                                if (modifiers.HasFlag(KeyModifiers.Alt))
-                                    modifier |= 4;
-
-                                gameView?.NotifyKeyPressed((char)key, modifier);
-                            }
-                        }
                         break;
                 }
             }
@@ -468,23 +453,24 @@ namespace Freeserf
         {
             try
             {
+                if (character >= 32 && character < 128)
+                    gameView?.NotifyKeyPressed(character, 0);
+
                 switch (character)
                 {
+                    // TODO: if < and > should be entered into a text input, this code will still zoom the map!
                     case '<':
                         ZoomOut();
                         break;
                     case '>':
                         ZoomIn();
                         break;
-                    case '+':
-                    case '-':
                     case 'ä':
                     case 'Ä':
                     case 'ö':
                     case 'Ö':
                     case 'ü':
                     case 'Ü':
-                        // TODO: Encoding
                         gameView?.NotifyKeyPressed(character, 0);
                         break;
                 }

@@ -441,11 +441,17 @@ namespace Freeserf.UI
                 return false;
             }
 
-            if ((key >= '0' && key <= '9') ||
+            if (
+                (key >= '0' && key <= '9') ||
+                (key >= 'a' && key <= 'z') ||
                 (key >= 'A' && key <= 'Z') ||
-                (key == 'Ä' || key == 'Ö' || key == 'Ü') ||
-                (key == 'ä' || key == 'ö' || key == 'ü') ||
-                (key == ' ' || key == '-'))
+                key == 'Ä' || key == 'Ö' || key == 'Ü' ||
+                key == 'ä' || key == 'ö' || key == 'ü' ||
+                key == ' ' || key == '-' || key == '@' ||
+                key == '#' || key == '!' || key == '~' ||
+                key == ',' || key == ';' || key == '+' ||
+                key == '_' || key == '=' || key == '$'
+            )
             {
                 return true;
             }
@@ -475,7 +481,7 @@ namespace Freeserf.UI
             this.interf = interf;
             MiniMap = new MinimapGame(interf, interf.Game);
             fileList = new ListSavedFiles(interf);
-            fileField = new TextInput(interf, 8);
+            fileField = new TextInput(interf, 6, Render.TextRenderType.NewUI);
 
             CurrentTransportPriorityItem = 8;
             CurrentInventoryPriorityItem = 15;

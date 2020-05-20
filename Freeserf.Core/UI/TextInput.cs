@@ -230,7 +230,8 @@ namespace Freeserf.UI
             }
 
             // invalid character
-            if (key != ' ' && !Render.TextRenderer.ValidCharacters.Any(c => c == key))
+            var validCharacters = Render.TextRenderer.ValidCharacters(renderType);
+            if (key != ' ' && validCharacters != null && !validCharacters.Any(c => c == key))
             {
                 return true;
             }

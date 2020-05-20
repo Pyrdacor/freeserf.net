@@ -28,7 +28,8 @@ namespace Freeserf.Render
     {
         static readonly Encoding encoding = Encoding.GetEncoding("iso-8859-1");
         // this are the valid input characters
-        public static readonly byte[] ValidCharacters = encoding.GetBytes("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-:?%äÄöÖüÜ");
+        static readonly byte[] ValidLegcyCharacters = encoding.GetBytes("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-:?%äÄöÖüÜ");
+        public static byte[] ValidCharacters(TextRenderType renderType) => renderType == TextRenderType.NewUI ? null : ValidLegcyCharacters;
 
         class SpriteInfo
         {
@@ -352,13 +353,10 @@ namespace Freeserf.Render
             // the length of sprites is the same than the text length
             for (int i = 0; i < bytes.Length; ++i)
             {
-                if (bytes[i] != 32) // space
+                if (bytes[i] > 32) // no sys chars nor spaces
                 {
                     if (renderType == TextRenderType.NewUI)
                     {
-                        if (bytes[i] >= 128)
-                            bytes[i] = 0; // map to unsupported character
-
                         var textureAtlasOffset = UI.GuiObject.GetTextureAtlasOffset(Data.Resource.UIText, 0);
                         textureAtlasOffset.X += (bytes[i] % Global.UIFontCharactersPerLine) * Global.UIFontCharacterWidth;
                         textureAtlasOffset.Y += (bytes[i] / Global.UIFontCharactersPerLine) * Global.UIFontCharacterHeight;
