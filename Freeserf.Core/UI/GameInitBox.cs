@@ -417,16 +417,30 @@ namespace Freeserf.UI
 
             fileList = new ListSavedFiles(interf);
             fileList.SetSize(310, 104);
+            fileList.ItemDoubleClicked += FileList_ItemDoubleClicked;
             AddChild(fileList, 20, 55, false);
 
             serverList = new ListServers(interf);
             serverList.SetSize(310, 95);
+            serverList.ItemDoubleClicked += ServerList_ItemDoubleClicked;
             AddChild(serverList, 20, 55, false);
 
             this.gameType = gameType;
             UpdateGameType();
 
             InitRenderComponents();
+        }
+
+        void ServerList_ItemDoubleClicked(int selectedIndex)
+        {
+            // Double click on a server to join.
+            HandleAction(Action.StartGame);
+        }
+
+        void FileList_ItemDoubleClicked(int selectedIndex)
+        {
+            // Double click on a savegame to load.
+            HandleAction(Action.StartGame);
         }
 
         void InitRenderComponents()
