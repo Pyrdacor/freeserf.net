@@ -364,12 +364,12 @@ namespace Freeserf.UI
 
                         return true;
                     }
-                }
 
-                if (clickedNewMapPosition)
-                {
-                    interf.UpdateMapCursorPosition(mapPosition);
-                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
+                    if (clickedNewMapPosition)
+                    {
+                        interf.UpdateMapCursorPosition(mapPosition);
+                        PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
+                    }
                 }
 
                 return true;
@@ -522,19 +522,21 @@ namespace Freeserf.UI
                         }
                         else
                         {
-                            if (interf.Game.BuildFlag(interf.MapCursorPosition, player))
+                            interf.UpdateMapCursorPosition(interf.GetBuildingRoad().EndPosition);
+
+                            if (mapPosition == interf.MapCursorPosition && interf.Game.BuildFlag(mapPosition, player))
                             {
                                 if (interf.Viewer is ClientViewer clientViewer)
                                     clientViewer.SendUserAction(Network.UserActionData.CreatePlaceFlagUserAction(Network.Global.SpontaneousMessage, interf.Game, interf.MapCursorPosition));
                                 else if (interf.Viewer.ViewerType == Viewer.Type.Server)
                                     interf.Server.GameDirty = true;
 
-                                interf.BuildRoad();
-                                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                                if (!interf.BuildRoad())
+                                    interf.UpdateMapCursorPosition(interf.GetBuildingRoad().EndPosition);
                             }
                             else
                             {
-                                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
+                                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                             }
                         }
                     }
@@ -554,7 +556,8 @@ namespace Freeserf.UI
                         else if (interf.Viewer.ViewerType == Viewer.Type.Server)
                             interf.Server.GameDirty = true;
 
-                        interf.BuildRoad();
+                        if (!interf.BuildRoad())
+                            interf.UpdateMapCursorPosition(interf.GetBuildingRoad().EndPosition);
                     }
                     else
                     {

@@ -759,15 +759,7 @@ namespace Freeserf.UI
             AddBuildingRoadSegment(buildingRoad.EndPosition, direction);
             buildingRoad.Extend(Game.Map, direction);
 
-            MapPos destination = 0;
-            bool water = false;
-            int result = Game.CanBuildRoad(buildingRoad, Player, ref destination, ref water, roadEndsThere);
-
-            if (result <= 0)
-            {
-                // Invalid construction, undo. 
-                return RemoveRoadSegment();
-            }
+            MapPos destination = buildingRoad.EndPosition;
 
             if (Game.Map.GetObject(destination) == Map.Object.Flag)
             {
@@ -797,7 +789,11 @@ namespace Freeserf.UI
             }
             else
             {
-                // TODO fast split path and connect on double click 
+                if (Game.CanBuildFlag(destination, Player))
+                    return 0;
+
+                RemoveRoadSegment();
+                
                 return -1;
             }
 
@@ -991,12 +987,12 @@ namespace Freeserf.UI
             UpdateMapCursorPosition(mapCursorPosition);
         }
 
-        public void BuildRoad()
+        public bool BuildRoad()
         {
             if (AccessRights != Viewer.Access.Player)
-                return;
+                return false;
 
-            if (!Game.BuildRoad(buildingRoad.Copy(), Player))
+            if (!Game.BuildRoad(buildingRoad.Copy(), Player, true))
             {
                 if (Viewer is ClientViewer clientViewer)
                     clientViewer.SendUserAction(Network.UserActionData.CreateDemolishFlagUserAction(Network.Global.SpontaneousMessage, Game, mapCursorPosition));
@@ -1005,6 +1001,8 @@ namespace Freeserf.UI
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                 Game.DemolishFlag(mapCursorPosition, Player);
+
+                return false;
             }
             else
             {
@@ -1015,6 +1013,8 @@ namespace Freeserf.UI
 
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                 BuildRoadEnd();
+
+                return true;
             }
         }
 
