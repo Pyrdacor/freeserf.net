@@ -756,6 +756,7 @@ namespace Freeserf.UI
 
             buildingRoad.Cost += Pathfinder.ActualCost(Game.Map, buildingRoad.EndPosition, direction);
 
+            var lastPosition = buildingRoad.EndPosition;
             AddBuildingRoadSegment(buildingRoad.EndPosition, direction);
             buildingRoad.Extend(Game.Map, direction);
 
@@ -783,9 +784,18 @@ namespace Freeserf.UI
             }
             else if (Game.Map.Paths(destination) == 0)
             {
-                // No existing paths at destination, build segment. 
-                UpdateMapCursorPosition(destination);
-                ScrollPath(destination); // pathway scrolling
+                // No existing paths at destination, build segment if possible.
+                if (Game.Map.IsRoadSegmentValid(lastPosition, direction, roadEndsThere))
+                {
+                    UpdateMapCursorPosition(destination);
+                    ScrollPath(destination); // pathway scrolling
+                }
+                else
+                {
+                    RemoveRoadSegment();
+
+                    return -1;
+                }
             }
             else
             {
