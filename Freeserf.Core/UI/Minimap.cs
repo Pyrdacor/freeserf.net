@@ -112,7 +112,7 @@ namespace Freeserf.UI
         // Initialize minimap data. 
         public void UpdateMinimap(bool force = false)
         {
-            if (map == null)
+            if (!Displayed || map == null)
                 return;
 
             var offset = map.RenderMap.GetCenteredPosition();

@@ -461,6 +461,7 @@ namespace Freeserf.UI
         }
 
         public bool Ingame => viewer.Ingame;
+        public bool CanZoom => viewer.MainInterface.CanZoom;
 
         public void DrawCursor(int x, int y)
         {

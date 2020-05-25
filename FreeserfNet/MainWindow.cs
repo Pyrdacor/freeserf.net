@@ -417,25 +417,34 @@ namespace Freeserf
                         HandleKeyDrag();
                         break;
                     case Key.PageUp:
-                        gameView?.NotifySystemKeyPressed(Event.SystemKey.PageUp, 0);
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.PageUp, (byte)modifiers);
                         break;
                     case Key.PageDown:
-                        gameView?.NotifySystemKeyPressed(Event.SystemKey.PageDown, 0);
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.PageDown, (byte)modifiers);
                         break;
                     case Key.Escape:
                         gameView?.NotifySystemKeyPressed(Event.SystemKey.Escape, 0);
+                        break;
+                    case Key.F5:
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.F5, 0);
+                        break;
+                    case Key.F6:
+                        gameView?.NotifySystemKeyPressed(Event.SystemKey.F6, 0);
                         break;
                     case Key.F11:
                         ToggleFullscreen();
                         break;
                     case Key.Enter:
-                        gameView?.NotifyKeyPressed(Event.SystemKeys.Return, 0);
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Return, (byte)modifiers);
                         break;
                     case Key.Backspace:
-                        gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, 0);
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Backspace, (byte)modifiers);
                         break;
                     case Key.Delete:
-                        gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, 0);
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Delete, (byte)modifiers);
+                        break;
+                    case Key.Tab:
+                        gameView?.NotifyKeyPressed(Event.SystemKeys.Tab, (byte)modifiers);
                         break;
                     default:
                         break;
@@ -449,21 +458,27 @@ namespace Freeserf
             base.OnKeyDown(key, modifiers);
         }
 
-        protected override void OnKeyChar(char character)
+        protected override void OnKeyChar(char character, KeyModifiers modifiers)
         {
             try
             {
                 if (character >= 32 && character < 128)
-                    gameView?.NotifyKeyPressed(character, 0);
+                    gameView?.NotifyKeyPressed(character, (byte)modifiers);
 
                 switch (character)
                 {
                     // TODO: if < and > should be entered into a text input, this code will still zoom the map!
                     case '<':
-                        ZoomOut();
+                        if (gameView.CanZoom)
+                            ZoomOut();
+                        else
+                            gameView?.NotifyKeyPressed(character, (byte)modifiers);
                         break;
                     case '>':
-                        ZoomIn();
+                        if (gameView.CanZoom)
+                            ZoomIn();
+                        else
+                            gameView?.NotifyKeyPressed(character, (byte)modifiers);
                         break;
                     case 'ä':
                     case 'Ä':
@@ -471,7 +486,7 @@ namespace Freeserf
                     case 'Ö':
                     case 'ü':
                     case 'Ü':
-                        gameView?.NotifyKeyPressed(character, 0);
+                        gameView?.NotifyKeyPressed(character, (byte)modifiers);
                         break;
                 }
             }
@@ -480,7 +495,7 @@ namespace Freeserf
                 ReportException("KeyPress", ex);
             }
 
-            base.OnKeyChar(character);
+            base.OnKeyChar(character, modifiers);
         }
 
         protected override void OnMouseMoveDelta(Point position, MouseButtons buttons, Point delta)

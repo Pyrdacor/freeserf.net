@@ -162,6 +162,9 @@ namespace Freeserf.UI
             cursorSprite.Y = y - cursorSprite.Height / 2;
         }
 
+        public bool CanZoom => Ingame && Viewport != null && Viewport.Enabled &&
+            NotificationBox?.Displayed != true && PopupBox?.Displayed != true;
+
         public override bool HandleEvent(Event.EventArgs e)
         {
             if (!Enabled || !Displayed)
@@ -1388,6 +1391,22 @@ namespace Freeserf.UI
                     BuildRoadEnd();
                 }
             }
+            else if (key == Event.SystemKey.F5)
+            {
+                // quick save
+                if (!IsRemote)
+                {
+                    Log.Info.Write(ErrorSystemType.Savegame, "Quick saving game");
+
+                    if (!GameStore.Instance.QuickSave("quicksave", Game))
+                        Log.Error.Write(ErrorSystemType.Savegame, "Failed to save game");
+                }
+            }
+            else if (key == Event.SystemKey.F6)
+            {
+                // save
+                OpenPopup(PopupBox.Type.LoadSave);
+            }
 
             return true;
         }
@@ -1397,22 +1416,11 @@ namespace Freeserf.UI
             if (!Ingame)
                 return false;
 
+            var modifiers = (Event.KeyModifiers)modifier;
+
             switch (key)
             {
-                // Interface control 
-                case Event.SystemKeys.Tab:
-                    {
-                        if ((modifier & 2) != 0)
-                        {
-                            ReturnFromMessage();
-                        }
-                        else
-                        {
-                            OpenMessage();
-                        }
-                        break;
-                    }
-                // Game speed 
+                // Game speed
                 case '+':
                     {
                         if (!IsRemote)
@@ -1431,14 +1439,14 @@ namespace Freeserf.UI
                             Game.ResetSpeed();
                         break;
                     }
-                case 'P':
+                case 'p':
                     {
                         if (!IsRemote)
                             Game.TogglePause();
                         break;
                     }
 
-                // Audio 
+                // Audio
                 case 'S':
                     {
                         var soundPlayer = Audio?.GetSoundPlayer();
@@ -1462,13 +1470,32 @@ namespace Freeserf.UI
                         break;
                     }
 
-                // Game control 
-                case 'B':
+                // Game control
+                case Event.SystemKeys.Tab:
                     {
-                        Viewport.ShowPossibleBuilds = !Viewport.ShowPossibleBuilds;
+                        if (modifiers.HasFlag(Event.KeyModifiers.Control))
+                        {
+                            ReturnFromMessage();
+                        }
+                        else
+                        {
+                            OpenMessage();
+                        }
                         break;
                     }
-                case 'J':
+                case 'b':
+                    {
+                        if (Viewer.AccessRights == Viewer.Access.Player && PanelBar != null && PanelBar.Displayed)
+                            Viewport.ShowPossibleBuilds = !Viewport.ShowPossibleBuilds;
+                        break;
+                    }
+                case 'h':
+                    {
+                        if (Viewer.AccessRights == Viewer.Access.Player && PanelBar != null && PanelBar.Displayed)
+                            GotoCastle();
+                        break;
+                    }
+                case 'j':
                     {
                         if (Viewer.AccessRights != Viewer.Access.Player)
                         {
@@ -1479,25 +1506,14 @@ namespace Freeserf.UI
 
                         break;
                     }
-                case 'Z':
-                    if ((modifier & 1) != 0)
+                case 'm':
                     {
-                        if (!IsRemote)
-                            GameStore.Instance.QuickSave("quicksave", Game);
+                        if (PanelBar != null && PanelBar.Displayed)
+                            PanelBar.ToggleMiniMap();
+                        break;
                     }
-                    break;
-                case 'N':
-                    if ((modifier & 1) != 0)
-                    {
-                        if (!IsRemote)
-                            OpenGameInit();
-                    }
-                    break;
-                case 'C':
-                    if ((modifier & 1) != 0)
-                    {
-                        OpenPopup(PopupBox.Type.QuitConfirm);
-                    }
+                case 'Q':
+                    OpenPopup(PopupBox.Type.QuitConfirm);
                     break;
                 case Event.SystemKeys.Delete:
                     if (PanelBar != null && PanelBar.Displayed && PanelBar.CanDemolish())

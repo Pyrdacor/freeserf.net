@@ -212,6 +212,8 @@ namespace Freeserf
             Closed?.Invoke(this, System.EventArgs.Empty);
         }
 
+        public bool CanZoom => gui.CanZoom;
+
         public float Zoom
         {
             get => context.Zoom;

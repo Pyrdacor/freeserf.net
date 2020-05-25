@@ -20,6 +20,8 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
+
 namespace Freeserf.Event
 {
     public enum Type
@@ -51,7 +53,17 @@ namespace Freeserf.Event
         Up,
         Down,
         Left,
-        Right
+        Right,
+        F5,
+        F6
+    }
+
+    [Flags]
+    public enum KeyModifiers
+    {
+        Shift = 1 << 0,
+        Control = 1 << 1,
+        Alt = 1 << 2,
     }
 
     public static class SystemKeys

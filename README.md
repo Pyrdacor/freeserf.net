@@ -103,3 +103,30 @@ The main program is based on netcore 3.1 and should run at least on Windows and 
 If you need help or want to help developing, just [contact me](mailto:trobt@web.de). You can also contact me via [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues) by adding a new issue and tag it as question.
 
 There is a more or less up-to-date [list with open issues](https://github.com/Pyrdacor/freeserf.net/blob/master/Issues.md) of several relevances and importances.
+
+
+## Ingame key shortcuts
+
+Key|Description
+--------|--------
+DEL|Demolish active building, road or flag
+ESC|Abort road building, close ingame windows
+TAB|Open notification
+Ctrl+TAB|Return to last map position after notification
+Shift+M|Toggle music
+Shift+S|Toggle sound effects
+0|Reset game speed to normal
+p|Pause or resume game
++|Increase game speed
+-|Decrease game speed
+>|Zoom in
+<|Zoom out
+F11|Toggle fullscreen mode
+Ctrl+F|Toggle fullscreen mode
+F5|Quick save
+F6|Open save dialog
+Shift+Q|Open quit dialog
+B|Toggle possible builds
+H|Go to your own castle
+J|Jump between players (AIvsAI and spectators only)
+M|Toggle minimap

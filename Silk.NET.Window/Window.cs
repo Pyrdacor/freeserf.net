@@ -4,6 +4,7 @@ using Silk.NET.Windowing.Common;
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 
 namespace Silk.NET.Window
 {
@@ -234,21 +235,33 @@ namespace Silk.NET.Window
             }
         }
 
-        private const int KeyModifierMask = 0x07;
-
-        private void OnKeyDown(IKeyboard keyboard, Key key, int modifiers)
+        private static KeyModifiers GetModifiers(IKeyboard keyboard)
         {
-            OnKeyDown(key, (KeyModifiers)(modifiers & KeyModifierMask));
+            var modifiers = (KeyModifiers)0;
+
+            if (keyboard.IsKeyPressed(Key.ShiftLeft) || keyboard.IsKeyPressed(Key.ShiftRight))
+                modifiers |= KeyModifiers.Shift;
+            if (keyboard.IsKeyPressed(Key.ControlLeft) || keyboard.IsKeyPressed(Key.ControlRight))
+                modifiers |= KeyModifiers.Control;
+            if (keyboard.IsKeyPressed(Key.AltLeft) || keyboard.IsKeyPressed(Key.AltRight))
+                modifiers |= KeyModifiers.Alt;
+
+            return modifiers;
         }
 
-        private void OnKeyUp(IKeyboard keyboard, Key key, int modifiers)
+        private void OnKeyDown(IKeyboard keyboard, Key key, int code)
         {
-            OnKeyUp(key, (KeyModifiers)(modifiers & KeyModifierMask));
+            OnKeyDown(key, GetModifiers(keyboard));
+        }
+
+        private void OnKeyUp(IKeyboard keyboard, Key key, int code)
+        {
+            OnKeyUp(key, GetModifiers(keyboard));
         }
 
         private void OnKeyChar(IKeyboard keyboard, char character)
         {
-            OnKeyChar(character);
+            OnKeyChar(character, GetModifiers(keyboard));
         }
 
         protected virtual void OnKeyDown(Key key, KeyModifiers modifiers)
@@ -261,9 +274,9 @@ namespace Silk.NET.Window
             KeyUp?.Invoke(key, modifiers);
         }
 
-        protected virtual void OnKeyChar(char character)
+        protected virtual void OnKeyChar(char character, KeyModifiers modifiers)
         {
-            KeyChar?.Invoke(character);
+            KeyChar?.Invoke(character, modifiers);
         }
 
         /// <summary>
@@ -286,8 +299,9 @@ namespace Silk.NET.Window
         /// Called when a printable character is entered.
         /// 
         /// First argument: Character
+        /// Second argument: Key modifiers
         /// </summary>
-        public event Action<char> KeyChar;
+        public event Action<char, KeyModifiers> KeyChar;
 
         #endregion
 
