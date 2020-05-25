@@ -887,11 +887,16 @@ namespace Freeserf.UI
                     }
                 case GameType.MultiplayerClient:
                     {
+#if true
+                        // TODO
+                        HandleAction(Action.ToggleGameType);
+#else
                         randomInput.Displayed = false;
                         fileList.Displayed = false;
                         serverList.Displayed = true;
                         serverList.Select(0);
                         SetRedraw();
+#endif
                         return;
                     }
                 case GameType.Tutorial:
