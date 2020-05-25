@@ -5,8 +5,6 @@
 
 - Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
 	- This also hinders road building sometimes
-    - Also seen roads with invalid directions at one end (not even leading to the flag).
-      Happened with double-click. Couldn't even remove it and no serfs could use it. But it blocked other road building.
 - Minimap clicks will result in a map position that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
