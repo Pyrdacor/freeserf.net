@@ -278,6 +278,9 @@ namespace Freeserf
             if (maxLength < 1)
                 return new Road();
 
+            if (buildingRoad != null && buildingRoad.HasPosition(map, end))
+                return new Road();
+
             var startTime = DateTime.Now;
             var open = new PriorityQueue<SearchNode>(new SearchNodeComparer());
             var closed = new Dictionary<MapPos, SearchNode>();
@@ -331,7 +334,7 @@ namespace Freeserf
                     if (node.GScore + cost > maxCost)
                         continue; // exceeded max length / max cost
 
-                    // Check if neighbour is valid. 
+                    // Check if neighbour is valid.
                     if (!map.IsRoadSegmentValid(node.Position, direction, endThere && node.Position == end) ||
                         (map.GetObject(newPosition) == Map.Object.Flag && newPosition != start))
                     {
