@@ -10,6 +10,8 @@
 - Minimap clicks will result in a map position that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
+- After closing a popup the delayed click handler will be raised when the box is already closed and therefore will count as a map click.
+  This should be avoided somehow.
 
 
 ## Rendering
