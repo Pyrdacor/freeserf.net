@@ -10,7 +10,6 @@
 - Minimap clicks will result in a map position that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- Centering a map position will move the map a bit too far to the right
 - Double click on a flag does not open flag menu if "fast build" is active
 
 

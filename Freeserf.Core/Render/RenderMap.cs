@@ -370,25 +370,10 @@ namespace Freeserf.Render
 
         public void CenterMapPosition(MapPos position)
         {
-            var mapPosition = CoordinateSpace.TileSpaceToMapSpace(position);
+            int columns = (int)numColumns / 2;
+            int rows = (int)numRows / 2;
 
-            mapPosition.X -= (int)numColumns * TILE_WIDTH / 2;
-            mapPosition.Y -= (int)numRows * TILE_HEIGHT / 2;
-
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
-
-            if (mapPosition.Y < 0)
-            {
-                mapPosition.Y += lheight;
-                mapPosition.X -= (int)map.Rows * TILE_WIDTH / 2;
-            }
-            else if (mapPosition.Y >= lheight)
-            {
-                mapPosition.Y -= lheight;
-                mapPosition.X += (int)map.Rows * TILE_WIDTH / 2;
-            }
-
-            ScrollToMapPosition(CoordinateSpace.MapSpaceToTileSpace(mapPosition));
+            ScrollToMapPosition(map.PositionAdd(position, -columns - rows / 2, -rows));
         }
 
         void UpdateTriangleUp(int index, int yOffset, int height, int left, int right, MapPos position)
