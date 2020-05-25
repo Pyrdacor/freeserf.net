@@ -42,6 +42,7 @@ namespace Freeserf.UI
         readonly IRenderLayer buildsLayer = null;
         readonly ILayerSprite[,] builds = null;
         readonly ILayerSprite[] mapCursorSprites = new ILayerSprite[7];
+        bool clickedNewMapPosition = false;
 
         public bool ShowPossibleBuilds { get; set; } = false;
 
@@ -325,18 +326,56 @@ namespace Freeserf.UI
 
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            if (delayed)
-                return true;
-
             if (!interf.Ingame)
                 return false;
 
-            // if clicked into the viewport, close notifications and other popups
-            interf.CloseMessage();
-            interf.ClosePopup();
-
             var position = new Position(x, y);
             var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
+
+            if (delayed)
+            {
+                // if clicked into the viewport, close notifications and other popups
+                interf.CloseMessage();
+                interf.ClosePopup();
+
+                if (!interf.IsBuildingRoad)
+                {
+                    // Fast building
+                    if (interf.AccessRights == Viewer.Access.Player &&
+                        interf.GetOption(Option.FastBuilding) &&
+                        !clickedNewMapPosition)
+                    {
+                        if (!interf.Player.HasCastle)
+                        {
+                            if (interf.Game.CanBuildCastle(mapPosition, interf.Player))
+                                interf.BuildCastle();
+                        }
+                        else if (interf.Game.Map.HasFlag(mapPosition))
+                            interf.BuildRoadBegin();
+                        else if (interf.Game.CanBuildAnyBuilding(mapPosition, interf.Player))
+                        {
+                            if (interf.Game.CanBuildMine(mapPosition))
+                                interf.OpenPopup(PopupBox.Type.MineBuilding);
+                            else
+                                interf.OpenPopup(interf.Game.CanBuildLarge(mapPosition) ? PopupBox.Type.BasicBldFlip : PopupBox.Type.BasicBld);
+                        }
+                        else if (interf.Game.CanBuildFlag(mapPosition, interf.Player))
+                            interf.BuildFlag();
+
+                        return true;
+                    }
+                }
+
+                if (clickedNewMapPosition)
+                {
+                    interf.UpdateMapCursorPosition(mapPosition);
+                    PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
+                }
+
+                return true;
+            }
+
+            clickedNewMapPosition = interf.MapCursorPosition != mapPosition;
 
             if (interf.IsBuildingRoad)
             {
@@ -434,34 +473,6 @@ namespace Freeserf.UI
                         }
                     }
                 }
-            }
-            else
-            {
-                // Fast building
-                if (interf.AccessRights == Viewer.Access.Player &&
-                    interf.GetOption(Option.FastBuilding) &&
-                    interf.MapCursorPosition == mapPosition)
-                {
-                    if (!interf.Player.HasCastle)
-                    {
-                        if (interf.Game.CanBuildCastle(mapPosition, interf.Player))
-                            interf.BuildCastle();
-                    }
-                    else if (interf.Game.Map.HasFlag(mapPosition))
-                        interf.BuildRoadBegin();
-                    else if (interf.Game.CanBuildAnyBuilding(mapPosition, interf.Player))
-                    {
-                        if (interf.Game.CanBuildMine(mapPosition))
-                            interf.OpenPopup(PopupBox.Type.MineBuilding);
-                        else
-                            interf.OpenPopup(interf.Game.CanBuildLarge(mapPosition) ? PopupBox.Type.BasicBldFlip : PopupBox.Type.BasicBld);
-                    }
-                    else if (interf.Game.CanBuildFlag(mapPosition, interf.Player))
-                        interf.BuildFlag();
-                }
-
-                interf.UpdateMapCursorPosition(mapPosition);
-                PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
             }
 
             return true;
