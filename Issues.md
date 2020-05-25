@@ -10,11 +10,13 @@
 - Minimap clicks will result in a map position that is a bit above the clicked spot
 - Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
+- Centering a map position will move the map a bit too far to the right
+- Double click on a flag does not open flag menu if "fast build" is active
 
 
 ## Rendering
 
-- In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change it flickers.
+- In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change there is flickering.
 	- This is fixed but remains true for military building white flags
 
 
@@ -119,10 +121,7 @@
 
 - Multiplayer
     - Multiplayer should support coop mode (one player is played by two or more clients)
-- Ground analysis for local spectators?
-- Possible builds for local spectators?
 - Disable some features in multiplayer (e.g. game speed)
-- Add more game options (like tutorial)
 - End game screens, Intro, Outro, etc
 	- AI players and other human players should be able to surrender
 	- Missions should have targets to reach to get the win (e.g. less than x enemy buildings left, etc)
@@ -142,6 +141,9 @@
 - Store last game setings in user config (map size, game type, map seed, players and their values, etc)
 - Show game speed, add icons for game speed change and pause/resume?
 - Music should not restart at game start
+- Ground analysis for local spectators?
+- Possible builds for local spectators?
+- Add more game options (like tutorial)
 
 
 ## New feature candidates
