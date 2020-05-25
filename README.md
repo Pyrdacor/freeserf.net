@@ -116,11 +116,11 @@ Ctrl+TAB|Return to last map position after notification
 Shift+M|Toggle music
 Shift+S|Toggle sound effects
 0|Reset game speed to normal
-p|Pause or resume game
+P|Pause or resume game
 +|Increase game speed
 -|Decrease game speed
->|Zoom in
-<|Zoom out
+&gt;|Zoom in
+&lt;|Zoom out
 F11|Toggle fullscreen mode
 Ctrl+F|Toggle fullscreen mode
 F5|Quick save

@@ -162,7 +162,7 @@ namespace Freeserf.UI
             cursorSprite.Y = y - cursorSprite.Height / 2;
         }
 
-        public bool CanZoom => Ingame && Viewport != null && Viewport.Enabled &&
+        public bool CanZoom => Ingame && Viewport?.Enabled == true &&
             NotificationBox?.Displayed != true && PopupBox?.Displayed != true;
 
         public override bool HandleEvent(Event.EventArgs e)
@@ -1404,8 +1404,11 @@ namespace Freeserf.UI
             }
             else if (key == Event.SystemKey.F6)
             {
-                // save
-                OpenPopup(PopupBox.Type.LoadSave);
+                if (!IsRemote)
+                {
+                    // save
+                    OpenPopup(PopupBox.Type.LoadSave);
+                }
             }
 
             return true;
