@@ -3,6 +3,8 @@
 namespace Freeserf
 {
     using Render;
+    using System.Collections.Generic;
+    using System.Linq;
     using MapPos = UInt32;
 
     /* Space transformations.
@@ -60,27 +62,15 @@ namespace Freeserf
 
         public Position TileSpaceToMapSpace(MapPos position)
         {
-            int lwidth = (int)map.Columns * RenderMap.TILE_WIDTH;
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
-
             int column = (int)map.PositionColumn(position);
             int row = (int)map.PositionRow(position);
 
-            int x = RenderMap.TILE_WIDTH * column - (RenderMap.TILE_WIDTH / 2) * row;
+            int x = column * RenderMap.TILE_WIDTH - row * RenderMap.TILE_WIDTH / 2;
             int y = row * RenderMap.TILE_HEIGHT;
 
             y -= 4 * (int)map.GetHeight(position);
 
-            /*if (y < 0)
-            {
-                x -= (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-                y += lheight;
-            }*/
-
-            if (x < 0)
-                x += lwidth;
-            /*else if (x >= lwidth)
-                x -= lwidth;*/
+            NormalizeMapPosition(ref x, ref y);
 
             return new Position(x, y);
         }
@@ -90,36 +80,45 @@ namespace Freeserf
             return MapSpaceToViewSpace(TileSpaceToMapSpace(position));
         }
 
+        private int ScrollX => renderMap == null ? 0 : (int)renderMap.ScrollX;
+        private int ScrollY => renderMap == null ? 0 : (int)renderMap.ScrollY;
+
         public Position MapSpaceToViewSpace(int x, int y)
         {
-            int lwidth = (int)map.Columns * RenderMap.TILE_WIDTH;
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
+            int mapWidth = (int)map.Columns * RenderMap.TILE_WIDTH;
+            int mapHeight = (int)map.Rows * RenderMap.TILE_HEIGHT;
 
-            int renderX = (int)renderMap.ScrollX * RenderMap.TILE_WIDTH;
-            int renderY = (int)renderMap.ScrollY * RenderMap.TILE_HEIGHT;
+            int renderX = ScrollX * RenderMap.TILE_WIDTH;
+            int renderY = ScrollY * RenderMap.TILE_HEIGHT;
 
             x -= renderX;
             y -= renderY;
 
-            int yDifference = Math.Min(0, -(lheight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
+            /*int yDifference = Math.Min(0, -(mapHeight - Global.MAX_VIRTUAL_SCREEN_HEIGHT));
 
             while (y < yDifference)
             {
-                x -= (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-                y += lheight;
+                x -= mapWidth / columnRowFactor;
+                y += mapHeight;
+            }*/
+
+            while (y < 0)
+            {
+                x -= mapWidth / columnRowFactor;
+                y += mapHeight;
             }
 
-            while (y >= lheight)
+            while (y >= mapHeight)
             {
-                x += (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-                y -= lheight;
+                x += mapWidth / columnRowFactor;
+                y -= mapHeight;
             }
 
             while (x < 0)
-                x += lwidth;
+                x += mapWidth;
 
-            while (x >= lwidth)
-                x -= lwidth;
+            while (x >= mapWidth)
+                x -= mapWidth;
 
             return new Position(x, y);
         }
@@ -131,32 +130,32 @@ namespace Freeserf
 
         public Position ViewSpaceToMapSpace(int x, int y)
         {
-            int lwidth = (int)map.Columns * RenderMap.TILE_WIDTH;
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
+            int mapWidth = (int)map.Columns * RenderMap.TILE_WIDTH;
+            int mapHeight = (int)map.Rows * RenderMap.TILE_HEIGHT;
 
-            int renderX = (int)renderMap.ScrollX * RenderMap.TILE_WIDTH;
-            int renderY = (int)renderMap.ScrollY * RenderMap.TILE_HEIGHT;
+            int renderX = ScrollX * RenderMap.TILE_WIDTH;
+            int renderY = ScrollY * RenderMap.TILE_HEIGHT;
 
             x += renderX;
             y += renderY;
 
             while (y < 0)
             {
-                x += (columnRowFactor - 1) * (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-                y += lheight;
+                x += (columnRowFactor - 1) * mapWidth / columnRowFactor;
+                y += mapHeight;
             }
 
-            while (y >= lheight)
+            while (y >= mapHeight)
             {
-                x -= (columnRowFactor - 1) * (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-                y -= lheight;
+                x -= (columnRowFactor - 1) * mapWidth / columnRowFactor;
+                y -= mapHeight;
             }
 
             while (x < 0)
-                x += lwidth;
+                x += mapWidth;
 
-            while (x >= lwidth)
-                x -= lwidth;
+            while (x >= mapWidth)
+                x -= mapWidth;
 
             return new Position(x, y);
         }
@@ -166,106 +165,86 @@ namespace Freeserf
             return ViewSpaceToMapSpace(position.X, position.Y);
         }
 
-        public MapPos MapSpaceToTileSpace(int x, int y)
+        void NormalizeMapPosition(ref int x, ref int y)
         {
-            int lwidth = (int)map.Columns * RenderMap.TILE_WIDTH;
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
+            int mapWidth = (int)map.Columns * RenderMap.TILE_WIDTH;
+            int mapHeight = (int)map.Rows * RenderMap.TILE_HEIGHT;
 
             while (y < 0)
-                y += lheight;
+            {
+                x -= mapWidth / columnRowFactor;
+                y += mapHeight;
+            }
 
-            while (y >= lheight)
-                y -= lheight;
+            while (y >= mapHeight)
+            {
+                x += mapWidth / columnRowFactor;
+                y -= mapHeight;
+            }
 
             while (x < 0)
-                x += lwidth;
+                x += mapWidth;
 
-            while (x >= lwidth)
-                x -= lwidth;
+            while (x >= mapWidth)
+                x -= mapWidth;
+        }
 
-            int mappedX = (x + (y * RenderMap.TILE_WIDTH) / (2 * RenderMap.TILE_HEIGHT));// % lwidth;
-            int column = mappedX / RenderMap.TILE_WIDTH;
-            int row = y / RenderMap.TILE_HEIGHT;
-            int lastDistance = int.MaxValue;
-            var position = map.MoveUp(map.Position((uint)column, 0u));
+        double SquaredDistanceToMapPosition(MapPos position, int x, int y)
+        {
+            int mapWidth = (int)map.Columns * RenderMap.TILE_WIDTH;
+            int mapHeight = (int)map.Rows * RenderMap.TILE_HEIGHT;
+            var mapPosition = TileSpaceToMapSpace(position);
+            int distanceX = Math.Abs(x - mapPosition.X);
+            int distanceY = Math.Abs(y - mapPosition.Y);
 
-            position = map.MoveDownN(position, row);
-            var lastPosition = position;
-
-            while (true)
+            if (distanceY > mapHeight / 2)
             {
-                int rowY = TileSpaceToMapSpace(position).Y;
+                distanceY = mapHeight - distanceY;
 
-                int distance = Math.Abs(rowY - y);
+                mapPosition.X += mapWidth / columnRowFactor;
+                mapPosition.X -= mapWidth;
 
-                if (distance >= lheight / 2)
-                    distance = Math.Abs(distance - lheight);
+                distanceX = Math.Abs(x - mapPosition.X);
+            }
 
-                if (lastDistance < distance)
-                {
-                    var mapPosition = TileSpaceToMapSpace(lastPosition);
+            if (distanceX > mapWidth / 2)
+                distanceX = mapWidth - distanceX;
 
-                    int xOffset = x - mapPosition.X;
+            // We only use the distances for comparing so the squared values are sufficient.
+            // Square roots will waste too much performance.
+            return distanceX * distanceX + distanceY * distanceY;
+        }
 
-                    if (xOffset >= lwidth)
-                        xOffset -= lwidth;
-                    else if (xOffset <= -lwidth)
-                        xOffset += lwidth;
+        public MapPos MapSpaceToTileSpace(int x, int y)
+        {
+            NormalizeMapPosition(ref x, ref y);
 
-                    if (xOffset >= lwidth / 2)
-                        xOffset -= lwidth / 2;
-                    else if (xOffset <= -lwidth / 2)
-                        xOffset += lwidth / 2;
+            int row = (y / RenderMap.TILE_HEIGHT) % (int)map.Rows;
+            int column = ((x + row * RenderMap.TILE_WIDTH / 2) / RenderMap.TILE_WIDTH) % (int)map.Columns;
+            var position = map.Position((uint)column, (uint)row);
+            var mapPosition = TileSpaceToMapSpace(position);
+            bool down = map.RenderMap == null ? true : map.RenderMap.ScrollY % 2 == 0;
 
-                    if (xOffset >= lwidth / 4)
-                        xOffset -= lwidth / 4;
-                    else if (xOffset <= -lwidth / 4)
-                        xOffset += lwidth / 4;
+            if (mapPosition.Y > y)
+                mapPosition.Y -= (int)map.Rows * RenderMap.TILE_HEIGHT;
 
-                    bool moved = true;
+            while (mapPosition.Y < y)
+            {
+                int height = (int)map.GetHeight(position);
 
-                    if (xOffset >= RenderMap.TILE_WIDTH / 2)
-                        lastPosition = map.MoveRight(lastPosition);
-                    else if (xOffset < -RenderMap.TILE_WIDTH / 2)
-                        lastPosition = map.MoveLeft(lastPosition);
-                    else
-                        moved = false;
-
-                    // re-check y distance
-                    if (moved)
-                    {
-                        // TODO: as we moved to left or right, the height may lead to a wrong tile
-                        /*rowY = TileSpaceToMapSpace(lastPosition).Y;
-
-                        if (rowY < y - RenderMap.TILE_HEIGHT / 2)
-                        {
-                            if (xOffset < 0)
-                                lastPosition = map.MoveUpLeft(lastPosition);
-                            else
-                                lastPosition = map.MoveUp(lastPosition);
-                        }
-                        else if (rowY > y + RenderMap.TILE_HEIGHT / 2)
-                        {
-                            if (xOffset < 0)
-                                lastPosition = map.MoveDown(lastPosition);
-                            else
-                                lastPosition = map.MoveDownRight(lastPosition);
-                        }*/
-                    }
-
-                    return lastPosition;
-                }
-
-                lastDistance = distance;
-                lastPosition = position;
-
-                if (row % 2 == 0)
+                if (down)
                     position = map.MoveDown(position);
                 else
                     position = map.MoveDownRight(position);
 
-                ++row;
+                mapPosition.Y += RenderMap.TILE_HEIGHT - ((int)map.GetHeight(position) - height) * 4;
+
+                down = !down;
             }
+
+            // Search the 6 spots around the position and consider the position itself too.
+            return Enumerable.Range(0, 7).Select(offset => map.PositionAddSpirally(position, (uint)offset))
+                .OrderBy(tile => SquaredDistanceToMapPosition(tile, x, y)).First();
         }
 
         public MapPos MapSpaceToTileSpace(Position position)

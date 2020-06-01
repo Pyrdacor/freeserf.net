@@ -689,6 +689,7 @@ namespace Freeserf.UI
             }
 
             UpdateInterface();
+            Viewport?.UpdateMapCursor();
         }
 
         public bool IsBuildingRoad => buildingRoad != null && buildingRoad.Valid;

@@ -545,9 +545,9 @@ namespace Freeserf
 
         protected void Init()
         {
-            if (Size > 20)
+            if (Size > 23)
             {
-                throw new ExceptionFreeserf(ErrorSystemType.Map, "Above size 20 the map positions can no longer fit in a 32-bit integer.");
+                throw new ExceptionFreeserf(ErrorSystemType.Map, "Above size 23 the map positions can no longer fit into a 32-bit integer.");
             }
 
             ColumnSize = 5 + Size / 2;

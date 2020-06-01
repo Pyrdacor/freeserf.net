@@ -43,8 +43,27 @@ namespace Freeserf.UI
         readonly ILayerSprite[,] builds = null;
         readonly ILayerSprite[] mapCursorSprites = new ILayerSprite[7];
         bool clickedNewMapPosition = false;
+        bool recheckMapCursorSprites = true;
+        bool recheckPossibleBuilds = true;
+        bool showPossibleBuilds = false;
 
-        public bool ShowPossibleBuilds { get; set; } = false;
+        public bool ShowPossibleBuilds
+        {
+            get => showPossibleBuilds;
+            set
+            {
+                if (showPossibleBuilds == value)
+                    return;
+
+                showPossibleBuilds = value;
+                recheckPossibleBuilds = true;
+            }
+        }
+
+        public void UpdateMapCursor()
+        {
+            recheckMapCursorSprites = true;
+        }
 
         public Viewport(Interface interf, Map map)
             : base(interf)
@@ -141,6 +160,8 @@ namespace Freeserf.UI
                 map.RenderMap.ScrollToMapPosition(position);
 
             interf.UpdateMinimap();
+            recheckMapCursorSprites = true;
+            recheckPossibleBuilds = true;
         }
 
         protected override void InternalHide()
@@ -163,20 +184,30 @@ namespace Freeserf.UI
 
         void DrawMapCursor()
         {
-            if (ShowPossibleBuilds)
-                DrawMapCursorPossibleBuild();
-            else
-                ClearMapCursorPossibleBuild();
-
-            var position = interf.MapCursorPosition;
-
-            DrawMapCursorSprite(position, 0, interf.GetMapCursorSprite(0));
-
-            var cycle = DirectionCycleCW.CreateDefault();
-
-            foreach (var direction in cycle)
+            if (recheckPossibleBuilds)
             {
-                DrawMapCursorSprite(map.Move(position, direction), 1 + (int)direction, interf.GetMapCursorSprite(1 + (int)direction));
+                if (ShowPossibleBuilds)
+                    DrawMapCursorPossibleBuild();
+                else
+                    ClearMapCursorPossibleBuild();
+
+                recheckPossibleBuilds = false;
+            }
+
+            if (recheckMapCursorSprites)
+            {
+                var position = interf.MapCursorPosition;
+
+                DrawMapCursorSprite(position, 0, interf.GetMapCursorSprite(0));
+
+                var cycle = DirectionCycleCW.CreateDefault();
+
+                foreach (var direction in cycle)
+                {
+                    DrawMapCursorSprite(map.Move(position, direction), 1 + (int)direction, interf.GetMapCursorSprite(1 + (int)direction));
+                }
+
+                recheckMapCursorSprites = false;
             }
 
             // Hide map cursor sprites if the viewport is not enabled
@@ -199,7 +230,7 @@ namespace Freeserf.UI
             mapCursorSprites[index].TextureAtlasOffset = textureAtlas.GetOffset(spriteIndex);
         }
 
-        void SetBuildSprite(uint column, uint row, int spriteIndex)
+        void SetBuildSprite(uint column, uint row, MapPos position, int spriteIndex)
         {
             if (spriteIndex >= 0)
             {
@@ -218,7 +249,7 @@ namespace Freeserf.UI
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
-                var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(column, row));
+                var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
 
                 builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
                 builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;
@@ -237,7 +268,7 @@ namespace Freeserf.UI
             {
                 for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
                 {
-                    SetBuildSprite(column, row, -1);
+                    SetBuildSprite(column, row, 0u, -1);
                 }
             }
         }
@@ -245,13 +276,15 @@ namespace Freeserf.UI
         void DrawMapCursorPossibleBuild()
         {
             var game = interf.Game;
+            var columnStart = map.RenderMap.GetMapOffset();
 
-            for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
+            for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
             {
-                for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
-                {
-                    var position = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(column, row);
+                bool down = map.RenderMap.ScrollY % 2 == 0;
+                var position = columnStart;
 
+                for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
+                {
                     // Draw possible building 
                     int sprite = -1;
 
@@ -277,8 +310,17 @@ namespace Freeserf.UI
                         }
                     }
 
-                    SetBuildSprite(column, row, sprite);
+                    SetBuildSprite(column, row, position, sprite);
+
+                    if (down)
+                        position = map.MoveDown(position);
+                    else
+                        position = map.MoveDownRight(position);
+
+                    down = !down;
                 }
+
+                columnStart = map.MoveRight(columnStart);
             }
         }
 
@@ -670,6 +712,8 @@ namespace Freeserf.UI
                 map.Scroll(scrollX, scrollY);
 
             interf.UpdateMinimap();
+            recheckMapCursorSprites = true;
+            recheckPossibleBuilds = true;
 
             totalDragX -= scrollX * RenderMap.TILE_WIDTH;
             totalDragY -= scrollY * RenderMap.TILE_HEIGHT;

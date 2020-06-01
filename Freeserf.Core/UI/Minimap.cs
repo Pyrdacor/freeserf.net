@@ -279,10 +279,6 @@ namespace Freeserf.UI
 
             int visibleWidth = Math.Min(128, (int)map.Columns / scale);
             int visibleHeight = Math.Min(128, (int)map.Rows / scale);
-            var mapPosition = map.RenderMap.CoordinateSpace.TileSpaceToMapSpace(mapOffset);
-
-            mapPosition.X -= RenderMap.TILE_WIDTH / 2;
-            mapPosition.Y -= RenderMap.TILE_HEIGHT;
 
             if (visibleWidth * scale < 128)
                 visibleWidth = 128 / scale;
@@ -293,24 +289,8 @@ namespace Freeserf.UI
             int relX = x - visibleWidth / 2;
             int relY = y - visibleHeight / 2;
 
-            mapPosition.X += relX * RenderMap.TILE_WIDTH;
-            mapPosition.Y += relY * RenderMap.TILE_HEIGHT;
-
-            int lheight = (int)map.Rows * RenderMap.TILE_HEIGHT;
-
-            if (mapPosition.Y < 0)
-            {
-                mapPosition.Y += lheight;
-                mapPosition.X -= (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-            }
-            else if (mapPosition.Y >= lheight)
-            {
-                mapPosition.Y -= lheight;
-                mapPosition.X += (int)map.Rows * RenderMap.TILE_WIDTH / 2;
-            }
-
-            // TODO: y regarding the grid seems to be 3 pixels to high (with scale 1). Maybe the grid is out of place as other positions work.
-            var position = map.RenderMap.CoordinateSpace.MapSpaceToTileSpace(mapPosition.X, mapPosition.Y);
+            var position = map.MoveDownN(mapOffset, relY);
+            position = map.MoveRightN(position, relX + relY / 2);
 
             interf.GotoMapPosition(position);
 
