@@ -2,6 +2,8 @@
 
 Freeserf.net is an authentic remake of the game **The Settlers I** by BlueByte.
 
+_**Announcement**_: *2.0 is out now. The game should now be in a stable state and run on Windows and Ubuntu.*
+
 _**Announcement**_: *Multiplayer is coming. The progress with multiplayer implementation took a huge step forward. Soon first test releases will come. Stay tuned. :)*
 
 To avoid copyright issues I won't provide any copyrighted data from the original game like music or graphics. To play the game you will therefore need the original DOS or Amiga data files.
@@ -16,7 +18,7 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 | Windows | Linux |
 | ---- | ---- |
-| [v2.0.0-preview7](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-preview7/Freeserf.net-Windows.zip "Windows v2.0.0 Preview 7") | [v2.0.0-preview7](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0-preview7/Freeserf.net-Linux.tar.gz "Linux v2.0.0 Preview 7") |
+| [v2.0.0](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0/Freeserf.net-Windows.zip "Windows v2.0.0") | [v2.0.0](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.0/Freeserf.net-Linux.tar.gz "Linux v2.0.0") |
 
 Builds for other platforms will follow later. Only recent Ubuntu versions are tested for Linux version.
 

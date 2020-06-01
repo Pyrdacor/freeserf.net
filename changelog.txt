@@ -1,3 +1,22 @@
+Version 2.0.0:
+==============
+
+- Improved map click position detection
+- Fixed possible build icons
+- Fixed minimap click positions
+- Improved minimap grid drawing
+- Improved pathway scrolling
+- Improved road building and fixed several issues
+- Added command line log filtering and improved
+  command line options and documentation
+- Added timestamp to logs
+- Saved games are immediately visible in load menu
+- Double-clicking list items like savegames will
+  perform the default action (e.g. loading the game)
+- Improved font for savegames or other lists
+- Several minor fixed and improvements
+
+
 Version 2.0.0-preview7:
 =======================
 
