@@ -84,6 +84,7 @@ namespace Freeserf.UI
         readonly object gameLock = new object();
         public GameInitBox GameInitBox { get; private set; }
 
+        bool ignoreNextDelayedClick = false;
         protected MapPos mapCursorPosition = 0u;
         CursorType mapCursorType = CursorType.None;
         BuildPossibility buildPossibility = BuildPossibility.None;
@@ -215,6 +216,11 @@ namespace Freeserf.UI
                     if (viewportEnabled && Viewport != null)
                         Viewport.Enabled = true;
 
+                    // If it is an undelayed click the associated
+                    // delayed click should be avoided as well
+                    // for the viewport (e.g. when a popup is closed).
+                    ignoreNextDelayedClick = e.Type == Event.Type.Click;
+
                     return true; // handled
                 }
             }
@@ -227,6 +233,12 @@ namespace Freeserf.UI
             if (viewportActive && clickEvent && viewportEnabled)
             {
                 Viewport.Enabled = true;
+
+                if (e.Type == Event.Type.DelayedClick && ignoreNextDelayedClick)
+                {
+                    ignoreNextDelayedClick = false;
+                    return true;
+                }
 
                 if (e.UntransformedArgs != null)
                 {
