@@ -934,6 +934,7 @@ namespace Freeserf.UI
                     Server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, ServerGameInfo.MapSize, randomInput.Text, ServerGameInfo.Players);
                     Server.ClientJoined += Server_ClientJoined;
                     Server.ClientLeft += Server_ClientLeft;
+                    Server.ClientChangedFace += Server_ClientChangedFace;
                     break;
                 case Action.StartGame:
                     {
@@ -1027,6 +1028,7 @@ namespace Freeserf.UI
                             {
                                 Server.ClientJoined -= Server_ClientJoined;
                                 Server.ClientLeft -= Server_ClientLeft;
+                                Server.ClientChangedFace -= Server_ClientChangedFace;
 
                                 GameManager.Instance.CloseGame();
                                 interf = interf.Viewer.ChangeTo(Viewer.Type.Server).MainInterface;
@@ -1250,6 +1252,39 @@ namespace Freeserf.UI
                 default:
                     break;
             }
+        }
+
+        private void Server_ClientChangedFace(ILocalServer server, IRemoteClient client, PlayerFace face)
+        {
+            if (client == null || !playerClientMapping.Values.Contains(client) || client.PlayerIndex > ServerGameInfo.PlayerCount)
+                return;
+
+            if (face >= PlayerFace.You && face <= PlayerFace.FriendYellow)
+            {
+                bool failed = false;
+
+                lock (ServerGameInfo)
+                {
+                    for (int i = 0; i < ServerGameInfo.PlayerCount; ++i)
+                    {
+                        if (i != client.PlayerIndex && CompareFace(ServerGameInfo.Players[i].Face, face))
+                        {
+                            failed = true;
+                            break;
+                        }
+
+                    }
+
+                    if (!failed)
+                    {
+                        ServerGameInfo.Players[(int)client.PlayerIndex].SetCharacter(face);
+                        ServerUpdate();
+                        SetRedraw();
+                    }
+                }
+            }
+
+            server.BroadcastLobbyData();
         }
 
         private void Client_GameStarted(object sender, System.EventArgs e)
@@ -1480,6 +1515,37 @@ namespace Freeserf.UI
             return playerInfo;
         }
 
+        static readonly PlayerFace[] MultiplayerFaceOrder =
+        {
+            PlayerFace.You, PlayerFace.YouRed, PlayerFace.YouMagenta, PlayerFace.YouYellow,
+            PlayerFace.FriendBlue, PlayerFace.Friend, PlayerFace.FriendMagenta, PlayerFace.FriendYellow
+        };
+
+        static bool CompareFace(PlayerFace face1, PlayerFace face2)
+        {
+            if (face1 == face2)
+                return true;
+
+            // In multiplayer games the same color can't be taken twice.
+            if (face1 >= PlayerFace.You && face2 >= PlayerFace.You)
+            {
+                return face1 switch
+                {
+                    PlayerFace.You => face2 == PlayerFace.FriendBlue,
+                    PlayerFace.YouRed => face2 == PlayerFace.Friend,
+                    PlayerFace.YouMagenta => face2 == PlayerFace.FriendMagenta,
+                    PlayerFace.YouYellow => face2 == PlayerFace.FriendYellow,
+                    PlayerFace.FriendBlue => face2 == PlayerFace.You,
+                    PlayerFace.Friend => face2 == PlayerFace.YouRed,
+                    PlayerFace.FriendMagenta => face2 == PlayerFace.YouMagenta,
+                    PlayerFace.FriendYellow => face2 == PlayerFace.YouYellow,
+                    _ => false
+                };
+            }
+
+            return false;
+        }
+
         bool HandlePlayerClick(uint playerIndex, int cx, int cy)
         {
             if (cx < 8 || cx > 8 + 64 || cy < 8 || cy > 76)
@@ -1553,10 +1619,18 @@ namespace Freeserf.UI
             if (cx < 8 + 32 && cy < 72) // click on face
             {
                 bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
-                                    gameType == GameType.MultiplayerJoined || // TODO: maybe later choose between some special faces
                                     gameType == GameType.Mission ||
                                     gameType == GameType.Tutorial ||
                                     gameType == GameType.Load;
+
+                if (gameType == GameType.MultiplayerServer)
+                {
+                    canNotChange = playerIndex != 0 && player.Face >= PlayerFace.You;
+                }
+                else if (gameType == GameType.MultiplayerJoined)
+                {
+                    canNotChange = playerIndex != Client.PlayerIndex;
+                }
 
                 if (!canNotChange)
                 {
@@ -1565,10 +1639,19 @@ namespace Freeserf.UI
 
                     do
                     {
-                        uint next = ((uint)player.Face + 1) % 11; // Note: Use 12 here to also allow the last enemy as a custom game player
-                        next = Math.Max(1u, next);
+                        PlayerFace next;
+                        
+                        if (gameType == GameType.MultiplayerServer || gameType == GameType.MultiplayerJoined)
+                        {
+                            int index = (MultiplayerFaceOrder.ToList().IndexOf(player.Face) + 1) % 8;
+                            next = MultiplayerFaceOrder[index];
+                        }
+                        else
+                        {
+                            next = (PlayerFace)(((int)player.Face + 1) % 11); // Note: Use 12 here to also allow the last enemy as a custom game player
+                        }
 
-                        player.SetCharacter((PlayerFace)next);
+                        player.SetCharacter(next);
 
                         // Check that face is not already in use by another player 
                         inUse = false;
@@ -1576,7 +1659,7 @@ namespace Freeserf.UI
                         for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                         {
                             if (playerIndex != i &&
-                                ServerGameInfo.GetPlayer(i).Face == (PlayerFace)next)
+                                CompareFace(ServerGameInfo.GetPlayer(i).Face, next))
                             {
                                 inUse = true;
                                 break;
@@ -1587,6 +1670,8 @@ namespace Freeserf.UI
 
                     if (gameType == GameType.MultiplayerServer)
                         ServerUpdate();
+                    else if (gameType == GameType.MultiplayerJoined)
+                        Client.SendUserAction(UserActionData.CreateChangeFaceUserAction(Network.Global.SpontaneousMessage, player.Face));
                 }
             }
             else if (cx >= 8 + 32 && cx < 8 + 32 + 8 && cy >= 8 && cy < 24) // click on copy values button

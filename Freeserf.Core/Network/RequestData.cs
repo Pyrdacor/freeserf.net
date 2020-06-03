@@ -43,7 +43,7 @@ namespace Freeserf.Network
         public const byte SpontaneousMessage = 0xff;
 
         static byte CurrentMessageIndex = 0;
-        static object MessageIndexLock = new object();
+        static readonly object MessageIndexLock = new object();
 
         public static byte GetNextMessageIndex()
         {

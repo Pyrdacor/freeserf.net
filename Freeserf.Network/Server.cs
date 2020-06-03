@@ -170,6 +170,7 @@ namespace Freeserf.Network
         public event ClientJoinedHandler ClientJoined;
         public event ClientLeftHandler ClientLeft;
         public event GameReadyHandler GameReady;
+        public event ClientChangedFaceHandler ClientChangedFace;
 
         public void Run(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed,
             IEnumerable<PlayerInfo> players, CancellationToken cancellationToken)
@@ -517,9 +518,7 @@ namespace Freeserf.Network
                     {
                         case ServerState.Lobby:
                             {
-                                // TODO allow user actions in lobby? can clients do something in lobby?
-
-                                if (networkData.Type != NetworkDataType.Request)
+                                if (networkData.Type != NetworkDataType.Request && networkData.Type != NetworkDataType.UserActionData)
                                 {
                                     client.SendResponse(networkData.MessageIndex, ResponseType.BadState);
                                     throw new ExceptionFreeserf("Request expected.");
@@ -597,10 +596,19 @@ namespace Freeserf.Network
             {
                 case ServerState.Lobby:
                     {
-                        // TODO: assert that it is a request (checked before in HandleData)
-                        var request = networkData as RequestData;
+                        if (networkData is RequestData request)
+                            HandleLobbyRequest(client, request.MessageIndex, request.Request, responseHandler);
+                        else if (networkData is UserActionData userAction)
+                        {
+                            if (userAction.UserAction != UserAction.ChangeFace)
+                            {
+                                Log.Error.Write(ErrorSystemType.Network, $"Received user action {userAction.UserAction} in lobby.");
+                                responseHandler?.Invoke(ResponseType.BadState);
+                                return;
+                            }
 
-                        HandleLobbyRequest(client, request.MessageIndex, request.Request, responseHandler);
+                            ClientChangedFace?.Invoke(this, client, (PlayerFace)userAction.Parameters[0]);
+                        }
 
                         break;
                     }
@@ -705,10 +713,10 @@ namespace Freeserf.Network
                 case Request.LobbyData:
                     // TODO: check if the client just requested it (bruteforce attacks should be avoided)
                     lock (lobbyServerInfo)
-                        lock (lobbyPlayerInfo)
-                        {
-                            client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
-                        }
+                    lock (lobbyPlayerInfo)
+                    {
+                        client.SendLobbyDataUpdate(messageIndex, lobbyServerInfo, lobbyPlayerInfo);
+                    }
                     break;
                 default:
                     responseHandler?.Invoke(ResponseType.BadRequest);
@@ -955,17 +963,17 @@ namespace Freeserf.Network
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client));
         }
 
-        private void BroadcastLobbyData()
+        public void BroadcastLobbyData()
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast lobby data to {clients.Count} clients.");
 
             Broadcast((client) =>
             {
                 lock (lobbyServerInfo)
-                    lock (lobbyPlayerInfo)
-                    {
-                        client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
-                    }
+                lock (lobbyPlayerInfo)
+                {
+                    client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
+                }
             });
         }
 

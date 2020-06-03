@@ -57,6 +57,7 @@ namespace Freeserf.Network
     public delegate void ClientJoinedHandler(ILocalServer server, IRemoteClient client);
     public delegate void ClientLeftHandler(ILocalServer server, IRemoteClient client);
     public delegate bool GameReadyHandler(bool ready);
+    public delegate void ClientChangedFaceHandler(ILocalServer server, IRemoteClient client, PlayerFace face);
 
     public interface ILocalServer : IServer, INetworkDataHandler
     {
@@ -70,10 +71,12 @@ namespace Freeserf.Network
         void DisconnectClient(IRemoteClient client, bool sendNotificationToClient);
         void BroadcastHeartbeat();
         void BroadcastDisconnect();
+        void BroadcastLobbyData();
 
         event ClientJoinedHandler ClientJoined;
         event ClientLeftHandler ClientLeft;
         event GameReadyHandler GameReady;
+        event ClientChangedFaceHandler ClientChangedFace;
 
         /// <summary>
         /// List of all connected clients.

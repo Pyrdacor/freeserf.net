@@ -182,6 +182,11 @@ namespace Freeserf.Network
         /// </summary>
         Unknown,
         /// <summary>
+        /// Change player face (and color). In lobby only.
+        /// Byte 0: Face index
+        /// </summary>
+        ChangeFace,
+        /// <summary>
         /// Change a game-relevant settings.
         /// Byte 0: The setting (see <see cref="UserActionGameSetting"/>)
         /// See <see cref="UserActionGameSetting"/> for additional bytes/parameters.
@@ -368,6 +373,11 @@ namespace Freeserf.Network
                 rawData.Add(0);
 
             destination.Send(rawData.ToArray());
+        }
+
+        internal static UserActionData CreateChangeFaceUserAction(byte number, PlayerFace face)
+        {
+            return new UserActionData(number, 0u, UserAction.ChangeFace, new byte[1] { (byte)face });
         }
 
         internal static UserActionData CreateChangeSettingUserAction(byte number, Game game, UserActionGameSetting setting, params byte[] values)

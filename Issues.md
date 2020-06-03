@@ -10,6 +10,7 @@
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
 - After closing a popup the delayed click handler will be raised when the box is already closed and therefore will count as a map click.
   This should be avoided somehow.
+- New faces represent colors which should be adjusted accordingly in multiplayer games.
 
 
 ## Rendering
