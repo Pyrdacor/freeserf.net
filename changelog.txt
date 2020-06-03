@@ -1,3 +1,12 @@
+Version 2.0.2:
+==============
+
+- Multiplayer menu is now availble
+  (But this feature is still in early alpha!)
+- New colored player faces for multiplayer games
+- Fixed missing cursor in AIvsAI
+
+
 Version 2.0.1:
 ==============
 
