@@ -509,7 +509,7 @@ namespace Freeserf.UI
                 return;
 
             if (this.viewer != null)
-                this.viewer.Destroy();
+                this.viewer.Destroy(viewer == null || this.viewer.MainInterface != viewer.MainInterface);
 
             this.viewer = viewer;
 

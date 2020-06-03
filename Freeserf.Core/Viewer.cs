@@ -140,13 +140,15 @@ namespace Freeserf
             initialized = true;
         }
 
-        public virtual void Destroy()
+        public virtual void Destroy(bool destroyInterface)
         {
             if (!initialized)
                 return;
 
             GameManager.Instance.DeleteHandler(this);
-            MainInterface.Destroy();
+
+            if (destroyInterface)
+                MainInterface.Destroy();
 
             initialized = false;
         }
