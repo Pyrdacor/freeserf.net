@@ -204,7 +204,7 @@ namespace Freeserf.UI
             bool visible = false;
             int x = -1;
             int y = -1;
-            int playerFace = -1;
+            PlayerFace playerFace = PlayerFace.None;
             int valueBaseLineY = 0;
             bool showActivationButton = false;
             bool showCopyValueButton = false;
@@ -231,7 +231,7 @@ namespace Freeserf.UI
                         return;
 
                     showCopyValueButton = value;
-                    copyValuesButton.Visible = visible && showCopyValueButton && playerFace != -1;
+                    copyValuesButton.Visible = visible && showCopyValueButton && playerFace != PlayerFace.None;
                 }
             }
 
@@ -289,12 +289,12 @@ namespace Freeserf.UI
                     playerImage.Visible = visible;
                     playerValueBox.Visible = visible;
                     activationButton.Visible = visible && showActivationButton;
-                    copyValuesButton.Visible = visible && showCopyValueButton && playerFace != -1;
+                    copyValuesButton.Visible = visible && showCopyValueButton && playerFace != PlayerFace.None;
 
                     for (int i = 0; i < 5; ++i)
                         borders[i].Visible = visible;
 
-                    if (playerFace != -1 && visible)
+                    if (playerFace != PlayerFace.None && visible)
                     {
                         suppliesValue.Visible = true;
                         intelligenceValue.Visible = true;
@@ -362,24 +362,23 @@ namespace Freeserf.UI
                 child.Y = baseY + y + 16;
             }
 
-            public void SetPlayerFace(int face)
+            public void SetPlayerFace(PlayerFace face)
             {
                 playerFace = face;
+                playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, face.GetGraphicIndex());
 
-                if (playerFace == -1)
+                if (playerFace == PlayerFace.None)
                 {
-                    playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 281u);
                     activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 287u);
                     copyValuesButton.Visible = false;
                 }
                 else
                 {
-                    playerImage.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 268u + (uint)playerFace - 1u);
                     activationButton.TextureAtlasOffset = GetTextureAtlasOffset(Data.Resource.Icon, 259u);
                     copyValuesButton.Visible = visible && showCopyValueButton;
                 }
 
-                bool showValues = playerFace != -1 && visible;
+                bool showValues = playerFace != PlayerFace.None && visible;
 
                 suppliesValue.Visible = showValues;
                 intelligenceValue.Visible = showValues;
@@ -819,13 +818,13 @@ namespace Freeserf.UI
                 {
                     if (i >= ServerGameInfo.PlayerCount || ServerGameInfo.Players[i] == null)
                     {
-                        playerBoxes[i].SetPlayerFace(-1);
+                        playerBoxes[i].SetPlayerFace(PlayerFace.None);
                     }
                     else
                     {
                         var player = ServerGameInfo.GetPlayer((uint)i);
 
-                        playerBoxes[i].SetPlayerFace((int)player.Face);
+                        playerBoxes[i].SetPlayerFace(player.Face);
                         playerBoxes[i].SetPlayerValues(player.Supplies, player.Intelligence, player.Reproduction);
                     }
 
@@ -887,16 +886,11 @@ namespace Freeserf.UI
                     }
                 case GameType.MultiplayerClient:
                     {
-#if true
-                        // TODO
-                        HandleAction(Action.ToggleGameType);
-#else
                         randomInput.Displayed = false;
                         fileList.Displayed = false;
                         serverList.Displayed = true;
                         serverList.Select(0);
                         SetRedraw();
-#endif
                         return;
                     }
                 case GameType.Tutorial:
@@ -1335,8 +1329,7 @@ namespace Freeserf.UI
 
                 var freeSlot = ServerGameInfo.Players.Select((p, index) => new { p, index }).FirstOrDefault(r => r.p == null);
 
-                // TODO: every face < PlayerFace.You is treated as AI so we only can have 2 human players (= 1 client) for now
-                //       we should add two more human player faces later
+                // every face < PlayerFace.You is treated as AI
 
                 if (freeSlot != null)
                 {

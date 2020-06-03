@@ -136,7 +136,7 @@ namespace Freeserf
 
         internal void SetCharacter(PlayerFace character)
         {
-            Face = Characters[(int)character].Face;
+            Face = character;
         }
 
         public bool HasCastle => CastlePosition.Column >= 0;

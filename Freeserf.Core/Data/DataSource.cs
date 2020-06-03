@@ -55,7 +55,7 @@ namespace Freeserf.Data
     public class Sprite : IDisposable
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct Color
+        public struct Color : IEquatable<Color>
         {
             public byte Blue;
             public byte Green;
@@ -63,6 +63,35 @@ namespace Freeserf.Data
             public byte Alpha;
 
             public static readonly Color Transparent = new Color() { Blue = 0, Green = 0, Red = 0, Alpha = 0 };
+
+            public bool Equals(Color other)
+            {
+                return Blue == other.Blue && Green == other.Green && Red == other.Red && Alpha == other.Alpha;
+            }
+
+            public static bool operator==(Color self, Color other)
+            {
+                return self.Equals(other);
+            }
+
+            public static bool operator!=(Color self, Color other)
+            {
+                return !self.Equals(other);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj switch
+                {
+                    Color color => Equals(color),
+                    _ => false
+                };
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Blue, Green, Red, Alpha);
+            }
         }
 
         protected int deltaX = 0;
@@ -423,6 +452,68 @@ namespace Freeserf.Data
             }
 
             return result;
+        }
+
+        static Color ChangeColorBrightness(Color color, float correctionFactor)
+        {
+            float red = (float)color.Red;
+            float green = (float)color.Green;
+            float blue = (float)color.Blue;
+
+            if (correctionFactor < 0)
+            {
+                correctionFactor = 1 + correctionFactor;
+                red *= correctionFactor;
+                green *= correctionFactor;
+                blue *= correctionFactor;
+            }
+            else
+            {
+                red = (255 - red) * correctionFactor + red;
+                green = (255 - green) * correctionFactor + green;
+                blue = (255 - blue) * correctionFactor + blue;
+            }
+
+            return new Color
+            {
+                Red = (byte)Math.Min(255, red),
+                Green = (byte)Math.Min(255, green),
+                Blue = (byte)Math.Min(255, blue),
+                Alpha = 255
+            };
+        }
+
+        public Sprite GetMaskFilled(Sprite.Color color, Sprite mask)
+        {
+            var sprite = new Sprite(this);
+            System.Buffer.BlockCopy(data, 0, sprite.data, 0, data.Length);
+            sprite.FillMasked(color, mask);
+            return sprite;
+        }
+
+        unsafe protected virtual void FillMasked(Sprite.Color color, Sprite mask)
+        {
+            if (mask == null || mask.Width != Width || mask.Height != Height)
+                throw new ExceptionFreeserf(ErrorSystemType.Data, "Invalid mask");
+
+            fixed (byte* pointer = data)
+            fixed (byte* maskPointer = mask.data)
+            {
+                Color* mc = (Color*)maskPointer;
+                Color* c = (Color*)pointer;
+
+                for (uint i = 0; i < (width * height); ++i)
+                {
+                    if (mc->Red != 0)
+                    {
+                        float factor = (mc->Red * mc->Red / 65025.0f) - 0.5f;
+                        *c = ChangeColorBrightness(color, factor);
+                    }
+
+                    mc++;
+                    c++;
+                }
+            }
         }
 
         unsafe public virtual void Fill(Sprite.Color color)

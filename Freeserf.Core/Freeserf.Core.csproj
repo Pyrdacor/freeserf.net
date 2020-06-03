@@ -70,7 +70,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="assets\friendmask.png" />
+    <None Remove="assets\youmask.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets\friendmask.png" />
     <EmbeddedResource Include="assets\ui_font.png" />
+    <EmbeddedResource Include="assets\youmask.png" />
   </ItemGroup>
 
   <ItemGroup>

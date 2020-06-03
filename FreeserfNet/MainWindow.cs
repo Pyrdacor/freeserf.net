@@ -183,7 +183,7 @@ namespace Freeserf
                     Global.VERSION,
                     state,
                     state == WindowState.Normal ? WindowBorder.Fixed : WindowBorder.Hidden,
-                    VSyncMode.Off,
+                    VSyncMode.Adaptive,
                     10,
                     false,
                     new VideoMode(),

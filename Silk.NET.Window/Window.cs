@@ -4,7 +4,6 @@ using Silk.NET.Windowing.Common;
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Net;
 
 namespace Silk.NET.Window
 {
@@ -45,9 +44,9 @@ namespace Silk.NET.Window
         }
 
         public Window()
+            : this(DefaultOptions)
         {
-            window = Windowing.Window.Create(DefaultOptions);
-            InitEvents();
+
         }
 
         public Window(string title, Point position, Size size)

@@ -510,6 +510,44 @@ namespace Freeserf.Render
 
             AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 500u, loadIcon);
 
+            // Add additional colored player sprites for multiplayer games
+            var youBaseSprite = data.GetSprite(Data.Resource.Icon,
+                PlayerFace.You.GetGraphicIndex(), color);
+            var friendBaseSprite = data.GetSprite(Data.Resource.Icon,
+                PlayerFace.Friend.GetGraphicIndex(), color);
+            var youMask = Sprite.CreateFromStream
+            (
+                Assembly.GetExecutingAssembly().GetManifestResourceStream("Freeserf.assets.youmask.png")
+            );
+            var friendMask = Sprite.CreateFromStream
+            (
+                Assembly.GetExecutingAssembly().GetManifestResourceStream("Freeserf.assets.friendmask.png")
+            );
+            Sprite.Color[] youColors =
+            {
+                new Sprite.Color { Red = 167, Green = 39, Blue = 39, Alpha = 255 },
+                new Sprite.Color { Red = 167, Green = 69, Blue = 192, Alpha = 255 },
+                new Sprite.Color { Red = 201, Green = 183, Blue = 59, Alpha = 255 },
+            };
+            for (i = 0; i < 3; ++i)
+            {
+                // Add 3 main player sprites with colors red, magenta and yellow
+                var paintedSprite = youBaseSprite.GetMaskFilled(youColors[i], youMask);
+                AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 600u + i, paintedSprite);
+            }
+            Sprite.Color[] friendColors =
+            {
+                new Sprite.Color { Red = 23, Green = 124, Blue = 157, Alpha = 255 },
+                youColors[1],
+                youColors[2]
+            };
+            for (i = 0; i < 3; ++i)
+            {
+                // Add 3 friend player sprites with colors blue, magenta and yellow
+                var paintedSprite = friendBaseSprite.GetMaskFilled(friendColors[i], friendMask);
+                AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 603u + i, paintedSprite);
+            }
+
             #endregion
 
 

@@ -43,7 +43,13 @@ namespace Freeserf
         Sollok,
         Enemy,
         You,
-        Friend
+        Friend,
+        YouRed,
+        YouMagenta,
+        YouYellow,
+        FriendBlue,
+        FriendMagenta,
+        FriendYellow
     }
 
     public static class PlayerFaceExtensions
@@ -51,6 +57,17 @@ namespace Freeserf
         public static bool IsHuman(this PlayerFace face)
         {
             return face == PlayerFace.You || face == PlayerFace.Friend;
+        }
+
+        public static uint GetGraphicIndex(this PlayerFace face)
+        {
+            if (face == PlayerFace.None)
+                return 281u;
+
+            if (face <= PlayerFace.Friend)
+                return 267u + (uint)face;
+
+            return 600u + (uint)face - (uint)PlayerFace.YouRed;
         }
     }
 

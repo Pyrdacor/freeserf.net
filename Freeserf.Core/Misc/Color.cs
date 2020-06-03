@@ -38,5 +38,10 @@ namespace Freeserf
         public IReadOnlyList<string> DirtyProperties { get; } = new List<string>();
 
         public void ResetDirtyFlag() { }
+
+        public Data.Sprite.Color ToSpriteColor() => new Data.Sprite.Color
+        {
+            Blue = Blue, Green = Green, Red = Red, Alpha = 255
+        };
     }
 }
