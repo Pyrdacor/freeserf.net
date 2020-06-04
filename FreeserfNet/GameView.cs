@@ -1,5 +1,5 @@
 ﻿/*
- * GameView.cs - Implementation of a OpenTK-based render view
+ * GameView.cs - Implementation of a game render view
  *
  * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
@@ -73,7 +73,7 @@ namespace Freeserf
         public event EventHandler SystemKeyPress;
         public event EventHandler StopDrag;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
-        public Network.INetworkDataReceiver NetworkDataReceiver { get; set; }
+        public INetworkDataReceiver NetworkDataReceiver { get; set; }
 
         public GameView(DataSource dataSource, Size virtualScreenSize,
             DeviceType deviceType = DeviceType.Desktop,
@@ -202,10 +202,7 @@ namespace Freeserf
 
         public void Close()
         {
-            var game = GameManager.Instance.GetCurrentGame();
-
-            if (game != null)
-                game.Close();
+            GameManager.Instance.GetCurrentGame()?.Close();
 
             Dispose();
 
@@ -540,10 +537,10 @@ namespace Freeserf
 
         bool RunHandler(EventHandler handler, EventArgs args)
         {
-            bool? h = handler?.Invoke(this, args);
+            bool? handlerResult = handler?.Invoke(this, args);
 
-            if (h.HasValue)
-                args.Done = h.Value;
+            if (handlerResult.HasValue)
+                args.Done = handlerResult.Value;
 
             return args.Done;
         }

@@ -1,3 +1,24 @@
+/*
+ * MainWindow.cs - Main game window
+ *
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ *
+ * This file is part of freeserf.net. freeserf.net is based on freeserf.
+ *
+ * freeserf.net is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * freeserf.net is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 using System;
 using System.Drawing;
 using System.IO;
@@ -8,8 +29,6 @@ using Silk.NET.Windowing.Common;
 
 namespace Freeserf
 {
-    // TODO: The Render event is called independently of input events. This can cause problem if the input events change something while the render/update events work with something.
-    // TODO: This has to be fixed in a way that this event behavior is valid (e.g. locking mutexes inside the viewers, gui or interface).
     class MainWindow : Window, IDisposable
     {
         enum MouseButtonIndex
@@ -407,19 +426,15 @@ namespace Freeserf
                 {
                     case Key.Left:
                         gameView?.NotifySystemKeyPressed(Event.SystemKey.Left, 0);
-                        HandleKeyDrag();
                         break;
                     case Key.Right:
                         gameView?.NotifySystemKeyPressed(Event.SystemKey.Right, 0);
-                        HandleKeyDrag();
                         break;
                     case Key.Up:
                         gameView?.NotifySystemKeyPressed(Event.SystemKey.Up, 0);
-                        HandleKeyDrag();
                         break;
                     case Key.Down:
                         gameView?.NotifySystemKeyPressed(Event.SystemKey.Down, 0);
-                        HandleKeyDrag();
                         break;
                     case Key.PageUp:
                         gameView?.NotifySystemKeyPressed(Event.SystemKey.PageUp, (byte)modifiers);
@@ -515,7 +530,7 @@ namespace Freeserf
 
                 UpdateMouseState(buttons);
 
-                if (buttons.HasFlag(MouseButtons.Left) || buttons.HasFlag(MouseButtons.Right))
+                if (buttons.HasFlag(MouseButtons.Right))
                 {
                     if (lastDragX == int.MinValue)
                         return;
@@ -558,14 +573,16 @@ namespace Freeserf
             // restore cursor from successful locked dragging
             if (button.HasFlag(MouseButtons.Right))
             {
+                lastDragX = int.MinValue;
+                lastDragY = int.MinValue;
                 CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
                 if (scrolled && (UserConfig.Game.Options & (int)Option.ResetCursorAfterScrolling) != 0)
                 {
                     CursorPosition = new PointF(Width / 2, Height / 2);
                     gameView.SetCursorPosition(Width / 2, Height / 2);
                 }
-                scrolled = false;
-                gameView.NotifyStopDrag();
+                scrolled = false;                
+                gameView.NotifyStopDrag();                
             }
 
             base.OnMouseUp(position, button);
@@ -583,9 +600,8 @@ namespace Freeserf
                 try
                 {
                     if (pressedMouseButtons[(int)MouseButtonIndex.Left] &&
-                       pressedMouseButtons[(int)MouseButtonIndex.Right])
+                        pressedMouseButtons[(int)MouseButtonIndex.Right])
                     {
-
                         gameView?.NotifySpecialClick(position.X, position.Y);
                     }
                     else
@@ -677,30 +693,6 @@ namespace Freeserf
                 pressedMouseButtons[(int)MouseButtonIndex.Left] = buttons.HasFlag(MouseButtons.Left);
                 pressedMouseButtons[(int)MouseButtonIndex.Right] = buttons.HasFlag(MouseButtons.Right);
                 pressedMouseButtons[(int)MouseButtonIndex.Middle] = buttons.HasFlag(MouseButtons.Middle);
-            }
-        }
-
-        void HandleKeyDrag()
-        {
-            int dx = 0;
-            int dy = 0;
-
-            if (keysDown[(int)Key.Left])
-                dx += 32;
-            if (keysDown[(int)Key.Right])
-                dx -= 32;
-            if (keysDown[(int)Key.Up])
-                dy -= 32;
-            if (keysDown[(int)Key.Down])
-                dy += 32;
-
-            try
-            {
-                gameView?.NotifyDrag(0, 0, -dx, dy, Event.Button.Right);
-            }
-            catch (Exception ex)
-            {
-                ReportException("KeyDrag", ex);
             }
         }
 
