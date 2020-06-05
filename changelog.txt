@@ -1,3 +1,9 @@
+Version 2.0.3:
+==============
+
+- Fixed scroll hopping on some platforms
+
+
 Version 2.0.2:
 ==============
 
