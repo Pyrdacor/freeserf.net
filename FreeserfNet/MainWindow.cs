@@ -540,7 +540,6 @@ namespace Freeserf
                     // lock the mouse if dragging with right button
                     if (dragAllowed)
                     {
-                        CursorMode = CursorMode.Disabled;
                         scrolled = true;
                     }
                     else if (buttons.HasFlag(MouseButtons.Left))
@@ -608,6 +607,9 @@ namespace Freeserf
                     {
                         lastDragX = position.X;
                         lastDragY = position.Y;
+
+                        if (button.HasFlag(MouseButtons.Right))
+                            CursorMode = CursorMode.Disabled;
 
                         gameView?.NotifyClick(position.X, position.Y, ConvertMouseButtons(button), false);
                     }
