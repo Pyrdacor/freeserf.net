@@ -484,6 +484,7 @@ namespace Freeserf
             state.Serfs[Serf.Type.Generic] = 0;
 
             serf.SerfType = Serf.Type.Knight0;
+            Game.AddKnight(serf);
 
             return true;
         }

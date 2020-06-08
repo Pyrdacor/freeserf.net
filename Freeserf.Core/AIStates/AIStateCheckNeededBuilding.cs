@@ -277,22 +277,25 @@ namespace Freeserf.AIStates
                 return CheckResult.NotNeeded;
 
             // Ensure there is a source for planks and stones before building more
-            if (player.GetCompletedBuildingCount(Building.Type.Sawmill) == 0 ||
-                player.GetCompletedBuildingCount(Building.Type.Lumberjack) == 0)
+            if (type != Building.Type.Lumberjack && type != Building.Type.Sawmill &&
+                (player.GetCompletedBuildingCount(Building.Type.Sawmill) == 0 ||
+                 player.GetCompletedBuildingCount(Building.Type.Lumberjack) == 0))
             {
                 if ((ai.HardTimes && game.GetResourceAmountInInventories(player, Resource.Type.Plank) < 5) ||
                     player.GetIncompleteBuildingCount(Building.Type.Sawmill) == 0 ||
                     player.GetIncompleteBuildingCount(Building.Type.Lumberjack) == 0)
                     return CheckResult.NotNeeded;
             }
-            if (player.GetCompletedBuildingCount(Building.Type.Stonecutter) == 0 &&
-                player.GetCompletedBuildingCount(Building.Type.StoneMine) == 0)
+            if (type != Building.Type.Stonecutter && type != Building.Type.StoneMine &&
+                (player.GetCompletedBuildingCount(Building.Type.Stonecutter) == 0 &&
+                 player.GetCompletedBuildingCount(Building.Type.StoneMine) == 0))
             {
                 if ((ai.HardTimes && game.GetResourceAmountInInventories(player, Resource.Type.Plank) < 3) ||
                     (player.GetIncompleteBuildingCount(Building.Type.Stonecutter) == 0 &&
                     player.GetIncompleteBuildingCount(Building.Type.StoneMine) == 0))
                 {
-                    if (game.Map.FindInTerritory(player.Index, FindStoneNear).Count > 0)
+                    if (ai.GameTime < 10 * Global.TICKS_PER_MIN && player.GetResourceCount(Resource.Type.Stone) < 10 &&
+                        game.Map.FindInTerritory(player.Index, FindStoneNear).Count > 0)
                         return CheckResult.NotNeeded;
                 }
             }

@@ -625,6 +625,8 @@ namespace Freeserf
                     break;
             }
 
+            game.InitKnights();
+
             return game;
         }
     }

@@ -1944,6 +1944,7 @@ namespace Freeserf
                         inventory.GetCountOf(Resource.Type.Shield) != 0)
                     {
                         var serf = inventory.SpecializeFreeSerf(Serf.Type.Knight0);
+                        Game.AddKnight(serf);
                         inventory.CallInternal(serf);
 
                         serf.AddToDefendingQueue(state.FirstKnight, false);

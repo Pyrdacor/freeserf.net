@@ -65,10 +65,11 @@ namespace Freeserf
         internal Inventories Inventories { get; }
         internal Buildings Buildings { get; }
         internal Serfs Serfs { get; }
+        readonly List<Serf>[] knights = new List<Serf>[MAX_PLAYER_COUNT];
 
         // Rendering
-        Render.IRenderView renderView = null;
-        IAudioInterface audioInterface = null;
+        readonly Render.IRenderView renderView = null;
+        readonly IAudioInterface audioInterface = null;
         readonly ConcurrentDictionary<Serf, Render.RenderSerf> renderSerfs = new ConcurrentDictionary<Serf, Render.RenderSerf>();
         readonly ConcurrentDictionary<Building, Render.RenderBuilding> renderBuildings = new ConcurrentDictionary<Building, Render.RenderBuilding>();
         readonly ConcurrentDictionary<Flag, Render.RenderFlag> renderFlags = new ConcurrentDictionary<Flag, Render.RenderFlag>();
@@ -317,6 +318,31 @@ namespace Freeserf
             state.GoldTotal = Map.GetGoldDeposit();
 
             return true;
+        }
+
+        internal void InitKnights()
+        {
+            for (int i = 0; i < MAX_PLAYER_COUNT; ++i)
+            {
+                if (i >= PlayerCount)
+                {
+                    knights[i] = null;
+                }
+                else
+                {
+                    knights[i] = Serfs.Where(s => s.Player == i && s.IsKnight).ToList();
+                }
+            }
+        }
+
+        internal void AddKnight(Serf serf)
+        {
+            knights[serf.Player].Add(serf);
+        }
+
+        internal void RemoveKnight(Serf serf)
+        {
+            knights[serf.Player].Remove(serf);
         }
 
         /// <summary>
@@ -1756,6 +1782,7 @@ namespace Freeserf
                     building.KnightRequestGranted();
 
                     serf.SerfType = Serf.Type.Knight0;
+                    AddKnight(serf);
                     serf.GoOutFromInventory(inventory.Index, building.FlagIndex, -1);
 
                     inventory.PopResource(Resource.Type.Sword);
@@ -1842,6 +1869,9 @@ namespace Freeserf
         {
             if (Map != null && serf.Position != Global.INVALID_MAPPOS && Map.GetSerfIndex(serf.Position) == serf.Index)
                 Map.SetSerfIndex(serf.Position, 0);
+
+            if (serf.IsKnight)
+                RemoveKnight(serf);
 
             RemoveSerfFromDrawing(serf);
 
@@ -1948,8 +1978,8 @@ namespace Freeserf
 
         internal int GetFreeKnightCount(Player player)
         {
-            return Math.Max(0, Serfs.Count(serf =>
-                serf.Player == player.Index && serf.IsKnight && serf.SerfState == Serf.State.IdleInStock) - ((int)player.CastleKnightsWanted - (int)player.CastleKnights));
+            return Math.Max(0, knights[player.Index].Count(k => k.SerfState == Serf.State.IdleInStock)
+                - ((int)player.CastleKnightsWanted - (int)player.CastleKnights));
         }
 
         internal int GetPossibleFreeKnightCount(Player player)
@@ -3261,8 +3291,8 @@ namespace Freeserf
 
             reader.Skip(45);
 
-            // Load players state from save game. 
-            for (uint i = 0; i < 4; ++i)
+            // Load players state from save game.
+            for (uint i = 0; i < MAX_PLAYER_COUNT; ++i)
             {
                 var playerReader = reader.Extract(8628);
                 playerReader.Skip(130);
@@ -3276,6 +3306,7 @@ namespace Freeserf
                     player.ReadFrom(playerReader);
                 }
             }
+            InitKnights();
 
             // Load map state from save game. 
             uint tileCount = Map.Columns * Map.Rows;
@@ -3373,6 +3404,8 @@ namespace Freeserf
                 var player = Players.GetOrInsert((uint)subreader.Number);
                 player.ReadFrom(subreader);
             }
+
+            InitKnights();
 
             foreach (var subreader in reader.GetSections("flag"))
             {
