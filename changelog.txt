@@ -1,3 +1,12 @@
+Version 2.0.4:
+==============
+
+- Performance improvements
+- AI improvements
+- Fixed several crashes
+- Fixed character rotation
+
+
 Version 2.0.3:
 ==============
 
