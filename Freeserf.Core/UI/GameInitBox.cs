@@ -1649,6 +1649,9 @@ namespace Freeserf.UI
                         else
                         {
                             next = (PlayerFace)(((int)player.Face + 1) % 11); // Note: Use 12 here to also allow the last enemy as a custom game player
+
+                            if (next == PlayerFace.None)
+                                next = PlayerFace.LadyAmalie;
                         }
 
                         player.SetCharacter(next);
