@@ -4494,6 +4494,12 @@ namespace Freeserf
         // Precondition: serf state is in WALKING or TRANSPORTING state 
         void TransporterMoveToFlag(Flag flag)
         {
+            if (flag == null)
+            {
+                SetLostState();
+                return;
+            }
+
             var direction = (Direction)stateData.Walking.Direction;
 
             if (flag.IsScheduled(direction))

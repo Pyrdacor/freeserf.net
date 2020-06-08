@@ -108,20 +108,6 @@ namespace Freeserf
 
     // TODO: The AI should not try to build a fisher when there is no water. Instead it must switch to a different food resource.
 
-    /*
-     * AIs with higher intelligence should be more clever when dealing
-     * with low starting resources:
-     * 
-     * Instead of building a toolmaker without having materials for
-     * crafting tools the AI should focus on finding coal and iron
-     * and expand their territory to get them. Then build mines and
-     * a steel smelter and distribute food in a clever way to the
-     * mines. An early fisher is prefered too.
-     * 
-     * The castle spot picking should consider mountains and a lake
-     * for this purpose.
-     */
-
     /// <summary>
     /// Note: The ai will not be the same as in the original game.
     /// But it will reflect some of the ai character descriptions.

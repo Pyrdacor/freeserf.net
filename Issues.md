@@ -25,27 +25,29 @@
 
 - Linking flags should also allow for merging paths
 - AIs with much resources build so much buildings at a time that no one is finished in a reasonable time. Maybe limit the number of constructed buildings. This will also relax traffic a bit.
-- Building military buildings is either to slow for expansion or not well placed. In any case the territory is too full most of the time and expansion very slow.
+- Building military buildings is either too slow for expansion or not well placed. In any case the territory is too full most of the time and expansion very slow.
 - At some territory size the AIs will stop building military buildings and therefore expansion stops.
 - There are too much mines at the same mountain after some time.
 - Mine amount should be limited in relation to food sources. Saw games with dozens of mines but only one fisher. This should not happen.
 - Sometimes the AI tries very hard to build something in a non-linkable place and burns it down and rebuilds it forever (e.g. a fisher behind the pond).
 - Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have all).
+- Sometimes (with few space) foresters are built far away from lumberjacks. This is useless and should be avoided in any case.
 - Rarely captured buildings are not connected to own road system
 - Positions for stocks are not so good any time. It should be far away from other stocks and near some production that needs to store goods in a stock (e.g. weapon, gold bars, tools, planks, food, etc).
 - Sometimes additional paths should be built to avoid congestions
+    - Avoid congestion state is not implemented yet!
 
 ### Misc
 
-- Castle position seem to be very important. Higher players should also care about the flag of the castle and try to create 5 roads out of it.
 - Balduin builds much large buildings but no stock for a long time -> too much traffic.
     - Too much buildings and too few expansion to keep all those buildings inside borders.
     - A stock should be build after x buildings have been built
 - Higher characters should be smarter in general than lower characters
+    - Sollok the Joker seem to lose against much lower characters (at least in building huts)
 - Non-hard-times AIs with low materials should not plan many buildings and then all materials are gone
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
-- After hard times start the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
+- After hard times starts the game time is very high so AI decisions depending on game time seem strange then (e.g. building many farms at once).
 - Hard time should be also possible in later game (e.g. after losing land). In this case miners could not be available for iron or coal because
   they are used for gold or stone mines. This must be considered then and maybe those mines should be demolished to free miners.
 
@@ -59,7 +61,6 @@
 
 ### Open points
 
-- Finish attacking logic
 - Test play performance of specific characters. Better characters should play better and win more often than weaker ones. They also should win 1vs1.
 
 ### Performance
