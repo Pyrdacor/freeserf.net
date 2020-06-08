@@ -802,11 +802,15 @@ namespace Freeserf.AIStates
                 foreach (var inventory in inventories)
                 {
                     var inventoryBuilding = game.GetBuilding(inventory.Building);
+                    var shortestRoad = Pathfinder.FindShortestRoad(game.Map, game.GetFlag(inventoryBuilding.FlagIndex), flag, out uint cost);
 
-                    int distance = Pathfinder.FindShortestRoad(game.Map, game.GetFlag(inventoryBuilding.FlagIndex), flag, out uint cost).Count;
+                    if (shortestRoad != null)
+                    {
+                        int distance = shortestRoad.Count;
 
-                    if (distance < buildingDistance)
-                        buildingDistance = distance;
+                        if (distance < buildingDistance)
+                            buildingDistance = distance;
+                    }
                 }
 
                 if (buildingDistance > bestBuildingInventoryDist)
