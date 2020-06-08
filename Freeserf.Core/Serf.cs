@@ -5863,6 +5863,14 @@ namespace Freeserf
                     // 34CDC: Looking for a place to dig 
                     Log.Verbose.Write(ErrorSystemType.Serf, $"substate 0: looking for place to dig {stateData.Digging.DigPosition}, {stateData.Digging.HeightIndex}");
 
+                    var building = GetBuildingAtPosition();
+
+                    if (building == null) // Demolished building while digging
+                    {
+                        SetLostState();
+                        return;
+                    }
+
                     do
                     {
                         int heightDifference = DiggingHeightDifferences[stateData.Digging.HeightIndex] + (int)stateData.Digging.TargetHeight;
@@ -5925,15 +5933,12 @@ namespace Freeserf
                     if (stateData.Digging.HeightIndex < 0)
                     {
                         // Done digging 
-                        var building = GetBuildingAtPosition();
                         building.DoneLeveling();
                         SetState(State.ReadyToLeave);
                         stateData.LeavingBuilding.Destination = 0;
                         stateData.LeavingBuilding.FieldB = -2;
                         stateData.LeavingBuilding.Direction = 0;
                         stateData.LeavingBuilding.NextState = State.Walking;
-                        HandleSerfReadyToLeaveState();  // TODO(jonls): why isn't a state switch enough?
-
                         return;
                     }
                 }
