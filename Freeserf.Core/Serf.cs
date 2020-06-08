@@ -4427,8 +4427,17 @@ namespace Freeserf
                 var otherSerf = Game.GetSerfAtPosition(newPosition);
                 var otherDirection = Direction.None;
 
+                if (otherSerf == null)
+                {
+                    // This happens if the map stores a serf index != 0
+                    // but the game has no serf with that index anymore.
+                    // Maybe a blocking knight was killed?
+                    map.SetSerfIndex(newPosition, 0);
+                    ChangeDirection(direction, altEnd); // re-run this method without the serf
+                    return;
+                }
+
                 // Sometimes an idle serf blocks us. This should be avoided.
-                // TODO: Maybe check later why this even happens and look if this helps.
                 if (otherSerf.SerfState == State.IdleOnPath ||
                     otherSerf.SerfState == State.WaitIdleOnPath)
                 {
