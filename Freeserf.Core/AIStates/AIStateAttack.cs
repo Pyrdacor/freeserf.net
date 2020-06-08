@@ -35,6 +35,9 @@ namespace Freeserf.AIStates
 
         int GetTargetPlayer(AI ai, Game game, uint selfIndex)
         {
+            if (game.PlayerCount == 1) // The AI plays alone
+                return -1;
+
             List<int> players = new List<int>(3);
             List<int> humanPlayers = new List<int>(3);
             List<int> aiPlayers = new List<int>(3);
@@ -52,166 +55,45 @@ namespace Freeserf.AIStates
                 }
             }
 
-            if (players.Count == 0)
-                return -1;
-
-            switch (ai.PrioritizedPlayer)
+            switch (ai.PrimaryPrioritizedPlayerCriteria)
             {
                 default:
-                case AI.AttackPlayer.Random:
+                case AI.PrimaryAttackPlayerCriteria.Any:
                     break;
-                case AI.AttackPlayer.RandomHuman:
+                case AI.PrimaryAttackPlayerCriteria.Human:
                     if (humanPlayers.Count != 0)
                         players = new List<int>(humanPlayers);
                     break;
-                case AI.AttackPlayer.RandomAI:
+                case AI.PrimaryAttackPlayerCriteria.AI:
                     if (aiPlayers.Count != 0)
                         players = new List<int>(aiPlayers);
                     break;
-                case AI.AttackPlayer.Weakest:
-                    {
-                        Player weakestPlayer = null;
-
-                        for (int i = 0; i < game.PlayerCount; ++i)
-                        {
-                            var player = game.GetPlayer((uint)i);
-
-                            if (weakestPlayer == null || weakestPlayer.TotalMilitaryScore > player.TotalMilitaryScore)
-                                weakestPlayer = player;
-                        }
-
-                        return (int)weakestPlayer.Index;
-                    }
-                case AI.AttackPlayer.Worst:
-                    {
-                        Player worst = null;
-
-                        for (int i = 0; i < game.PlayerCount; ++i)
-                        {
-                            var player = game.GetPlayer((uint)i);
-
-                            if (worst == null || worst.Score > player.Score)
-                                worst = player;
-                        }
-
-                        return (int)worst.Index;
-                    }
-                case AI.AttackPlayer.WorstProtected:
-                    {
-                        // Here more than one player could be selected. Just remove indices from the lists above.
-                        int minOccupation = 4;
-                        List<int> playersToRemove = new List<int>(2);
-
-                        for (int i = 0; i < players.Count; ++i)
-                        {
-                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3) >> 4) & 0x7);
-
-                            if (occupation < minOccupation)
-                            {
-                                for (int j = 0; j < i; ++j)
-                                {
-                                    if (!playersToRemove.Contains(players[j]))
-                                        playersToRemove.Add(players[j]);
-                                }
-
-                                minOccupation = occupation;
-                            }
-                            else if (occupation > minOccupation)
-                            {
-                                playersToRemove.Add(players[i]);
-                            }
-                        }
-
-                        foreach (var player in playersToRemove)
-                        {
-                            players.Remove(player);
-                            humanPlayers.Remove(player);
-                            aiPlayers.Remove(player);
-                        }
-                    }
-                    break;
             }
 
-            switch (ai.SecondPrioritizedPlayer)
+            if (players.Count == 1)
+                return players[0];
+
+            switch (ai.SecondaryPrioritizedPlayerCriteria)
             {
+                case AI.SecondaryAttackPlayerCriteria.Random:
                 default:
-                case AI.AttackPlayer.Random:
-                    break;
-                case AI.AttackPlayer.RandomHuman:
-                    if (humanPlayers.Count != 0)
-                        players = new List<int>(humanPlayers);
-                    break;
-                case AI.AttackPlayer.RandomAI:
-                    if (aiPlayers.Count != 0)
-                        players = new List<int>(aiPlayers);
-                    break;
-                case AI.AttackPlayer.Weakest:
-                    if (players.Count != 0)
+                    return players[game.RandomInt() % players.Count];
+                case AI.SecondaryAttackPlayerCriteria.Weakest:
+                        return players.OrderBy(p => game.GetPlayer((uint)p).TotalMilitaryScore).First();
+                case AI.SecondaryAttackPlayerCriteria.Worst:
+                        return players.OrderBy(p => game.GetPlayer((uint)p).Score).First();
+                case AI.SecondaryAttackPlayerCriteria.WorstProtected:
                     {
-                        Player weakestPlayer = null;
-
-                        foreach (var i in players)
-                        {
-                            var player = game.GetPlayer((uint)i);
-
-                            if (weakestPlayer == null || weakestPlayer.TotalMilitaryScore > player.TotalMilitaryScore)
-                                weakestPlayer = player;
-                        }
-
-                        return (int)weakestPlayer.Index;
+                        // First criteria is the maximum occupation setting for highest treat level.
+                        // Second criteria is the minimum occupation setting for highest treat level.
+                        // And third criteria is the total amount of knights.
+                        // TODO: Consider knight levels?
+                        return
+                            players.GroupBy(p => (game.GetPlayer((uint)p).GetKnightOccupation(3) >> 4) & 0x7).First()
+                            .GroupBy(p => game.GetPlayer((uint)p).GetKnightOccupation(3) & 0x7).First()
+                            .OrderBy(p => game.GetPlayer((uint)p).TotalKnightCount).First();
                     }
-                    break;
-                case AI.AttackPlayer.Worst:
-                    if (players.Count != 0)
-                    {
-                        Player worst = null;
-
-                        foreach (var i in players)
-                        {
-                            var player = game.GetPlayer((uint)i);
-
-                            if (worst == null || worst.Score > player.Score)
-                                worst = player;
-                        }
-
-                        return (int)worst.Index;
-                    }
-                    break;
-                case AI.AttackPlayer.WorstProtected:
-                    if (players.Count != 0)
-                    {
-                        int minOccupation = 4;
-                        List<int> playersToRemove = new List<int>(2);
-
-                        for (int i = 0; i < players.Count; ++i)
-                        {
-                            int occupation = (int)((game.GetPlayer((uint)players[i]).GetKnightOccupation(3) >> 4) & 0x7);
-
-                            if (occupation < minOccupation)
-                            {
-                                for (int j = 0; j < i; ++j)
-                                {
-                                    if (!playersToRemove.Contains(players[j]))
-                                        playersToRemove.Add(players[j]);
-                                }
-
-                                minOccupation = occupation;
-                            }
-                            else if (occupation > minOccupation)
-                            {
-                                playersToRemove.Add(players[i]);
-                            }
-                        }
-
-                        foreach (var player in playersToRemove)
-                        {
-                            players.Remove(player);
-                        }
-                    }
-                    break;
             }
-
-            return (players.Count == 0) ? -1 : players[game.RandomInt() % players.Count];
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
@@ -360,9 +242,12 @@ namespace Freeserf.AIStates
         {
             var targetPlayer = game.GetPlayer(targetPlayerIndex);
             var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(building => building.IsMilitary(true) && building.KnightCount < 4)
-                .GroupBy(building => building.KnightCount).OrderBy(g => g.First().KnightCount).First().ToList();
+                .GroupBy(building => building.KnightCount).OrderBy(g => g.First().KnightCount).FirstOrDefault();
 
-            return AttackRandom(ai, game, player, intelligence, targetPlayerMilitaryBuildings);
+            if (targetPlayerMilitaryBuildings == null)
+                return false;
+
+            return AttackRandom(ai, game, player, intelligence, targetPlayerMilitaryBuildings.ToList());
         }
 
         List<Building> FindAttackBuildingsWithNearbySpots(Game game, Player targetPlayer, Func<uint, bool> spotCondition, int searchRange)

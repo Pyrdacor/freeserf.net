@@ -161,13 +161,18 @@ namespace Freeserf
             Stocks
         }
 
-        public enum AttackPlayer
+        public enum PrimaryAttackPlayerCriteria
+        {
+            Any,
+            Human,
+            AI
+        }
+
+        public enum SecondaryAttackPlayerCriteria
         {
             Random,
             Weakest, // military
             Worst, // all statistics
-            RandomHuman,
-            RandomAI,
             WorstProtected // least military building occupation
         }
 
@@ -286,11 +291,11 @@ namespace Freeserf
         /// <summary>
         /// The ai may prioritize specific players when attacking
         /// </summary>
-        public AttackPlayer PrioritizedPlayer { get; private set; } = AttackPlayer.Random;
+        public PrimaryAttackPlayerCriteria PrimaryPrioritizedPlayerCriteria { get; private set; } = PrimaryAttackPlayerCriteria.Any;
         /// <summary>
         /// The ai may prioritize specific players when attacking
         /// </summary>
-        public AttackPlayer SecondPrioritizedPlayer { get; private set; } = AttackPlayer.Random;
+        public SecondaryAttackPlayerCriteria SecondaryPrioritizedPlayerCriteria { get; private set; } = SecondaryAttackPlayerCriteria.Random;
 
         /// <summary>
         /// Priorities can be 0, 1 or 2 (each value can only be used once).
@@ -418,8 +423,7 @@ namespace Freeserf
                     foodSourcePriorities[1] = 2; // bread
                     foodSourcePriorities[2] = 1; // meat
                     FoodFocus = 1;
-                    PrioritizedPlayer = AttackPlayer.RandomAI;
-                    SecondPrioritizedPlayer = AttackPlayer.Random;
+                    PrimaryPrioritizedPlayerCriteria = PrimaryAttackPlayerCriteria.AI;
                     break;
                 case PlayerFace.KumpyOnefinger:
                     GoldFocus = 2;
@@ -447,6 +451,7 @@ namespace Freeserf
                     ExpandFocus = 1;
                     MilitarySkill = 2;
                     PrioritizedAttackTarget = AttackTarget.FoodProduction;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.Worst;
                     break;
                 case PlayerFace.Rasparuk:
                     Smartness = 1;
@@ -462,7 +467,7 @@ namespace Freeserf
                     militaryBuildingPriorities[1] = 2; // tower
                     militaryBuildingPriorities[2] = 0; // fortress
                     PrioritizedAttackTarget = AttackTarget.SmallMilitary;
-                    PrioritizedPlayer = AttackPlayer.WorstProtected;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.Weakest;
                     break;
                 case PlayerFace.CountAldaba:
                     Smartness = 1;
@@ -481,7 +486,7 @@ namespace Freeserf
                     foodSourcePriorities[2] = 0; // meat
                     PrioritizedAttackTarget = AttackTarget.Stocks;
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
-                    PrioritizedPlayer = AttackPlayer.WorstProtected;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.Weakest;
                     break;
                 case PlayerFace.KingRolph:
                     Smartness = 2;
@@ -503,8 +508,7 @@ namespace Freeserf
                     foodSourcePriorities[2] = 2; // meat
                     PrioritizedAttackTarget = AttackTarget.MaterialProduction;
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
-                    PrioritizedPlayer = AttackPlayer.WorstProtected;
-                    SecondPrioritizedPlayer = AttackPlayer.Weakest;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.WorstProtected;
                     break;
                 case PlayerFace.HomenDoublehorn:
                     Smartness = 2;
@@ -529,8 +533,7 @@ namespace Freeserf
                     foodSourcePriorities[2] = 1; // meat
                     PrioritizedAttackTarget = AttackTarget.Stocks;
                     SecondPrioritizedAttackTarget = AttackTarget.SmallMilitary;
-                    PrioritizedPlayer = AttackPlayer.WorstProtected;
-                    SecondPrioritizedPlayer = AttackPlayer.Weakest;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.WorstProtected;
                     break;
                 case PlayerFace.Sollok:
                     Smartness = 2;
@@ -546,8 +549,7 @@ namespace Freeserf
                     ConstructionMaterialFocus = 2;
                     PrioritizedAttackTarget = AttackTarget.MaterialProduction;
                     SecondPrioritizedAttackTarget = AttackTarget.WeaponProduction;
-                    PrioritizedPlayer = AttackPlayer.WorstProtected;
-                    SecondPrioritizedPlayer = AttackPlayer.Weakest;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.WorstProtected;
                     break;
                 case PlayerFace.Enemy:
                     Smartness = 2;
@@ -574,8 +576,8 @@ namespace Freeserf
                     minStonesForMilitaryBuildings[1] = 22; // fortress
                     PrioritizedAttackTarget = AttackTarget.Mines;
                     SecondPrioritizedAttackTarget = AttackTarget.MaterialProduction;
-                    PrioritizedPlayer = AttackPlayer.WorstProtected;
-                    SecondPrioritizedPlayer = AttackPlayer.RandomHuman;
+                    PrimaryPrioritizedPlayerCriteria = PrimaryAttackPlayerCriteria.Human;
+                    SecondaryPrioritizedPlayerCriteria = SecondaryAttackPlayerCriteria.WorstProtected;
                     break;
                 default:
                     break;
