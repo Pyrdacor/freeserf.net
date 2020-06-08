@@ -1826,6 +1826,31 @@ namespace Freeserf
             return findings;
         }
 
+        public bool FindAny(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc, int minDistance = 0)
+        {
+            if (searchRange <= 0)
+                return false;
+
+            if (searchRange > 9)
+                searchRange = 9;
+
+            int minSum = (minDistance * minDistance + minDistance) / 2;
+            int sum = (searchRange * searchRange + searchRange) / 2;
+            int spiralOffset = (minSum == 0) ? 0 : 1 + (minSum - 1) * 6;
+            int spiralNum = 1 + sum * 6;
+            var spots = new List<MapPos>();
+
+            for (int i = spiralOffset; i < spiralNum; ++i)
+            {
+                var position = PositionAddSpirally(basePosition, (uint)i);
+
+                if (searchFunc(this, position))
+                    return true;
+            }
+
+            return false;
+        }
+
         public MapPos FindSpotNear(MapPos basePosition, int searchRange, Func<Map, MapPos, bool> searchFunc,
             Func<Map, MapPos, int> rateFunc, int minDistance = 0)
         {

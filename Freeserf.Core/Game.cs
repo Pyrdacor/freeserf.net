@@ -2049,69 +2049,6 @@ namespace Freeserf
             return amount;
         }
 
-        internal int GetTotalResourceCount(Player player, Resource.Type type)
-        {
-            int count = 0;
-
-            foreach (var inventory in GetPlayerInventories(player))
-            {
-                count += (int)inventory.GetCountOf(type);
-            }
-
-            foreach (var flag in GetPlayerFlags(player))
-            {
-                if (flag.HasResources)
-                {
-                    for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
-                    {
-                        if (flag.GetResourceAtSlot(i) == type)
-                            ++count;
-                        else if (flag.GetResourceAtSlot(i) == Resource.Type.None)
-                            break;
-                    }
-                }
-            }
-
-            foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Transporter))
-            {
-                if (transporter.TransportedResource == type)
-                    ++count;
-            }
-
-            return count;
-        }
-
-        internal bool HasAnyOfResource(Player player, Resource.Type type)
-        {
-            foreach (var inventory in GetPlayerInventories(player))
-            {
-                if (inventory.GetCountOf(type) > 0)
-                    return true;
-            }
-
-            foreach (var flag in GetPlayerFlags(player))
-            {
-                if (flag.HasResources)
-                {
-                    for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
-                    {
-                        if (flag.GetResourceAtSlot(i) == type)
-                            return true;
-                        else if (flag.GetResourceAtSlot(i) == Resource.Type.None)
-                            break;
-                    }
-                }
-            }
-
-            foreach (var transporter in GetPlayerSerfs(player).Where(serf => serf.SerfType == Serf.Type.Transporter))
-            {
-                if (transporter.TransportedResource == type)
-                    return true;
-            }
-
-            return false;
-        }
-
         internal Player GetNextPlayer(Player player)
         {
             bool next = false;

@@ -1,7 +1,7 @@
 ﻿/*
  * AI.cs - Character AI logic
  *
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -86,7 +86,6 @@ namespace Freeserf
             if (NextState == null)
                 writer.Value($"{name}.next_state.type").Write(AI.State.None);
             else
-                // TODO: Could we come to an infinite recursive loop here?
                 NextState.WriteTo($"{name}.next_state", writer);
 
             writer.Value($"{name}.delay").Write(Delay);
@@ -172,8 +171,8 @@ namespace Freeserf
             WorstProtected // least military building occupation
         }
 
-        Player player = null;
-        PlayerInfo playerInfo = null;
+        readonly Player player = null;
+        readonly PlayerInfo playerInfo = null;
         readonly Stack<AIState> states = new Stack<AIState>();
         int lastTick = 0;
         long lastUpdate = 0;
@@ -218,6 +217,10 @@ namespace Freeserf
             return memorizedMineralSpots[mineral].Where(spot => !large || spot.Large).Select(s => s.Position);
         }
 
+        /// <summary>
+        /// General smartness to make better decisions then other characters.
+        /// </summary>
+        public int Smartness { get; private set; } = 0; // 0 - 2
         /// <summary>
         /// How aggressive (2 = very aggressive)
         /// </summary>
@@ -386,6 +389,7 @@ namespace Freeserf
         void Init()
         {
             // Default values
+            Smartness = 0;
             Aggressivity = 0;
             MilitarySkill = 0;
             MilitaryFocus = 0;
@@ -438,12 +442,14 @@ namespace Freeserf
                     ExpandFocus = 2;
                     break;
                 case PlayerFace.Kallina:
+                    Smartness = 1;
                     Aggressivity = 1;
                     ExpandFocus = 1;
                     MilitarySkill = 2;
                     PrioritizedAttackTarget = AttackTarget.FoodProduction;
                     break;
                 case PlayerFace.Rasparuk:
+                    Smartness = 1;
                     Aggressivity = 1;
                     GoldFocus = 1;
                     SteelFocus = 1;
@@ -459,6 +465,7 @@ namespace Freeserf
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     break;
                 case PlayerFace.CountAldaba:
+                    Smartness = 1;
                     Aggressivity = 2;
                     MilitarySkill = 2;
                     MilitaryFocus = 1;
@@ -477,6 +484,7 @@ namespace Freeserf
                     PrioritizedPlayer = AttackPlayer.WorstProtected;
                     break;
                 case PlayerFace.KingRolph:
+                    Smartness = 2;
                     Aggressivity = 2;
                     MilitarySkill = 2;
                     MilitaryFocus = 2;
@@ -499,6 +507,7 @@ namespace Freeserf
                     SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
                 case PlayerFace.HomenDoublehorn:
+                    Smartness = 2;
                     Aggressivity = 2;
                     RushAffinity = 1;
                     MilitarySkill = 2;
@@ -524,6 +533,7 @@ namespace Freeserf
                     SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
                 case PlayerFace.Sollok:
+                    Smartness = 2;
                     Aggressivity = 2;
                     RushAffinity = 2;
                     MilitarySkill = 2;
@@ -540,6 +550,7 @@ namespace Freeserf
                     SecondPrioritizedPlayer = AttackPlayer.Weakest;
                     break;
                 case PlayerFace.Enemy:
+                    Smartness = 2;
                     Aggressivity = 2;
                     RushAffinity = 1;
                     MilitarySkill = 2;
@@ -622,31 +633,32 @@ namespace Freeserf
 
                 if (player.GetSerfCount(Serf.Type.WeaponSmith) == 0)
                 {
-                    if (tool != Resource.Type.Pincer && !game.HasAnyOfResource(player, Resource.Type.Pincer))
+                    if (tool != Resource.Type.Pincer && player.GetResourceCount(Resource.Type.Pincer) == 0)
                     {
                         player.SetFullToolPriority(Resource.Type.Pincer);
                         return;
                     }
-                    else if (tool != Resource.Type.Hammer && !game.HasAnyOfResource(player, Resource.Type.Hammer))
+                    else if (tool != Resource.Type.Hammer && player.GetResourceCount(Resource.Type.Hammer) == 0)
                     {
                         player.SetFullToolPriority(Resource.Type.Hammer);
                         return;
                     }
                 }
 
-                if (tool != Resource.Type.Scythe && player.GetSerfCount(Serf.Type.Farmer) == 0 && !game.HasAnyOfResource(player, Resource.Type.Scythe))
+                if (tool != Resource.Type.Scythe && player.GetSerfCount(Serf.Type.Farmer) == 0 && player.GetResourceCount(Resource.Type.Scythe) == 0)
                 {
                     player.SetFullToolPriority(Resource.Type.Scythe);
                     return;
                 }
 
-                if (tool != Resource.Type.Axe && player.GetSerfCount(Serf.Type.Lumberjack) < 2 && !game.HasAnyOfResource(player, Resource.Type.Axe))
+                if (tool != Resource.Type.Axe && player.GetSerfCount(Serf.Type.Lumberjack) < 2 && player.GetResourceCount(Resource.Type.Axe) == 0)
                 {
                     player.SetFullToolPriority(Resource.Type.Axe);
                     return;
                 }
 
-                if (tool != Resource.Type.Pick && player.GetSerfCount(Serf.Type.Stonecutter) + player.GetSerfCount(Serf.Type.Miner) < 4 && !game.HasAnyOfResource(player, Resource.Type.Pick))
+                if (tool != Resource.Type.Pick && player.GetSerfCount(Serf.Type.Stonecutter) + player.GetSerfCount(Serf.Type.Miner) < 4 &&
+                    player.GetResourceCount(Resource.Type.Pick) == 0)
                 {
                     player.SetFullToolPriority(Resource.Type.Pick);
                     return;

@@ -28,6 +28,7 @@ using System.Linq;
 namespace Freeserf.UI
 {
     using Freeserf.Data;
+    using Freeserf.Serialize;
     using ResourceMap = Serialize.DirtyArrayWithEnumIndex<Resource.Type, uint>;
 
     // TODO: If stats should reflect the current state we have
@@ -3349,7 +3350,7 @@ namespace Freeserf.UI
         void MoveTransportItem(bool up, bool toEnd)
         {
             var player = interf.Player;
-            byte[] priorities;
+            DirtyArrayWithEnumIndex<Resource.Type, byte> priorities;
             int currentItem;
 
             if (Box == Type.TransportPriorities)

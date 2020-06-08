@@ -234,7 +234,7 @@ namespace Freeserf
 
         public uint GetSerfCount(Serf.Type type)
         {
-            return state.SerfCounts[(int)type];
+            return state.SerfCounts[type];
         }
 
         public uint TotalKnightCount =>
@@ -249,7 +249,7 @@ namespace Freeserf
             if (resource <= Resource.Type.None || resource >= Resource.Type.GroupFood)
                 return 0;
 
-            return settings.FlagPriorities[(int)resource];
+            return settings.FlagPriorities[resource];
         }
 
         // Enqueue a new notification message for player.
@@ -377,36 +377,36 @@ namespace Freeserf
         /// </summary>
         public void ResetFlagPriority()
         {
-            settings.FlagPriorities[(int)Resource.Type.GoldOre] = 1;
-            settings.FlagPriorities[(int)Resource.Type.GoldBar] = 2;
-            settings.FlagPriorities[(int)Resource.Type.Wheat] = 3;
-            settings.FlagPriorities[(int)Resource.Type.Flour] = 4;
-            settings.FlagPriorities[(int)Resource.Type.Pig] = 5;
+            settings.FlagPriorities[Resource.Type.GoldOre] = 1;
+            settings.FlagPriorities[Resource.Type.GoldBar] = 2;
+            settings.FlagPriorities[Resource.Type.Wheat] = 3;
+            settings.FlagPriorities[Resource.Type.Flour] = 4;
+            settings.FlagPriorities[Resource.Type.Pig] = 5;
 
-            settings.FlagPriorities[(int)Resource.Type.Boat] = 6;
-            settings.FlagPriorities[(int)Resource.Type.Pincer] = 7;
-            settings.FlagPriorities[(int)Resource.Type.Scythe] = 8;
-            settings.FlagPriorities[(int)Resource.Type.Rod] = 9;
-            settings.FlagPriorities[(int)Resource.Type.Cleaver] = 10;
+            settings.FlagPriorities[Resource.Type.Boat] = 6;
+            settings.FlagPriorities[Resource.Type.Pincer] = 7;
+            settings.FlagPriorities[Resource.Type.Scythe] = 8;
+            settings.FlagPriorities[Resource.Type.Rod] = 9;
+            settings.FlagPriorities[Resource.Type.Cleaver] = 10;
 
-            settings.FlagPriorities[(int)Resource.Type.Saw] = 11;
-            settings.FlagPriorities[(int)Resource.Type.Axe] = 12;
-            settings.FlagPriorities[(int)Resource.Type.Pick] = 13;
-            settings.FlagPriorities[(int)Resource.Type.Shovel] = 14;
-            settings.FlagPriorities[(int)Resource.Type.Hammer] = 15;
+            settings.FlagPriorities[Resource.Type.Saw] = 11;
+            settings.FlagPriorities[Resource.Type.Axe] = 12;
+            settings.FlagPriorities[Resource.Type.Pick] = 13;
+            settings.FlagPriorities[Resource.Type.Shovel] = 14;
+            settings.FlagPriorities[Resource.Type.Hammer] = 15;
 
-            settings.FlagPriorities[(int)Resource.Type.Shield] = 16;
-            settings.FlagPriorities[(int)Resource.Type.Sword] = 17;
-            settings.FlagPriorities[(int)Resource.Type.Bread] = 18;
-            settings.FlagPriorities[(int)Resource.Type.Meat] = 19;
-            settings.FlagPriorities[(int)Resource.Type.Fish] = 20;
+            settings.FlagPriorities[Resource.Type.Shield] = 16;
+            settings.FlagPriorities[Resource.Type.Sword] = 17;
+            settings.FlagPriorities[Resource.Type.Bread] = 18;
+            settings.FlagPriorities[Resource.Type.Meat] = 19;
+            settings.FlagPriorities[Resource.Type.Fish] = 20;
 
-            settings.FlagPriorities[(int)Resource.Type.IronOre] = 21;
-            settings.FlagPriorities[(int)Resource.Type.Lumber] = 22;
-            settings.FlagPriorities[(int)Resource.Type.Coal] = 23;
-            settings.FlagPriorities[(int)Resource.Type.Steel] = 24;
-            settings.FlagPriorities[(int)Resource.Type.Stone] = 25;
-            settings.FlagPriorities[(int)Resource.Type.Plank] = 26;
+            settings.FlagPriorities[Resource.Type.IronOre] = 21;
+            settings.FlagPriorities[Resource.Type.Lumber] = 22;
+            settings.FlagPriorities[Resource.Type.Coal] = 23;
+            settings.FlagPriorities[Resource.Type.Steel] = 24;
+            settings.FlagPriorities[Resource.Type.Stone] = 25;
+            settings.FlagPriorities[Resource.Type.Plank] = 26;
         }
 
         /// <summary>
@@ -414,36 +414,36 @@ namespace Freeserf
         /// </summary>
         public void ResetInventoryPriority()
         {
-            settings.InventoryPriorities[(int)Resource.Type.Wheat] = 1;
-            settings.InventoryPriorities[(int)Resource.Type.Flour] = 2;
-            settings.InventoryPriorities[(int)Resource.Type.Pig] = 3;
-            settings.InventoryPriorities[(int)Resource.Type.Bread] = 4;
-            settings.InventoryPriorities[(int)Resource.Type.Fish] = 5;
+            settings.InventoryPriorities[Resource.Type.Wheat] = 1;
+            settings.InventoryPriorities[Resource.Type.Flour] = 2;
+            settings.InventoryPriorities[Resource.Type.Pig] = 3;
+            settings.InventoryPriorities[Resource.Type.Bread] = 4;
+            settings.InventoryPriorities[Resource.Type.Fish] = 5;
 
-            settings.InventoryPriorities[(int)Resource.Type.Meat] = 6;
-            settings.InventoryPriorities[(int)Resource.Type.Lumber] = 7;
-            settings.InventoryPriorities[(int)Resource.Type.Plank] = 8;
-            settings.InventoryPriorities[(int)Resource.Type.Boat] = 9;
-            settings.InventoryPriorities[(int)Resource.Type.Stone] = 10;
+            settings.InventoryPriorities[Resource.Type.Meat] = 6;
+            settings.InventoryPriorities[Resource.Type.Lumber] = 7;
+            settings.InventoryPriorities[Resource.Type.Plank] = 8;
+            settings.InventoryPriorities[Resource.Type.Boat] = 9;
+            settings.InventoryPriorities[Resource.Type.Stone] = 10;
 
-            settings.InventoryPriorities[(int)Resource.Type.Coal] = 11;
-            settings.InventoryPriorities[(int)Resource.Type.IronOre] = 12;
-            settings.InventoryPriorities[(int)Resource.Type.Steel] = 13;
-            settings.InventoryPriorities[(int)Resource.Type.Shovel] = 14;
-            settings.InventoryPriorities[(int)Resource.Type.Hammer] = 15;
+            settings.InventoryPriorities[Resource.Type.Coal] = 11;
+            settings.InventoryPriorities[Resource.Type.IronOre] = 12;
+            settings.InventoryPriorities[Resource.Type.Steel] = 13;
+            settings.InventoryPriorities[Resource.Type.Shovel] = 14;
+            settings.InventoryPriorities[Resource.Type.Hammer] = 15;
 
-            settings.InventoryPriorities[(int)Resource.Type.Rod] = 16;
-            settings.InventoryPriorities[(int)Resource.Type.Cleaver] = 17;
-            settings.InventoryPriorities[(int)Resource.Type.Scythe] = 18;
-            settings.InventoryPriorities[(int)Resource.Type.Axe] = 19;
-            settings.InventoryPriorities[(int)Resource.Type.Saw] = 20;
+            settings.InventoryPriorities[Resource.Type.Rod] = 16;
+            settings.InventoryPriorities[Resource.Type.Cleaver] = 17;
+            settings.InventoryPriorities[Resource.Type.Scythe] = 18;
+            settings.InventoryPriorities[Resource.Type.Axe] = 19;
+            settings.InventoryPriorities[Resource.Type.Saw] = 20;
 
-            settings.InventoryPriorities[(int)Resource.Type.Pick] = 21;
-            settings.InventoryPriorities[(int)Resource.Type.Pincer] = 22;
-            settings.InventoryPriorities[(int)Resource.Type.Shield] = 23;
-            settings.InventoryPriorities[(int)Resource.Type.Sword] = 24;
-            settings.InventoryPriorities[(int)Resource.Type.GoldOre] = 25;
-            settings.InventoryPriorities[(int)Resource.Type.GoldBar] = 26;
+            settings.InventoryPriorities[Resource.Type.Pick] = 21;
+            settings.InventoryPriorities[Resource.Type.Pincer] = 22;
+            settings.InventoryPriorities[Resource.Type.Shield] = 23;
+            settings.InventoryPriorities[Resource.Type.Sword] = 24;
+            settings.InventoryPriorities[Resource.Type.GoldOre] = 25;
+            settings.InventoryPriorities[Resource.Type.GoldBar] = 26;
         }
 
         public uint GetKnightOccupation(int threatLevel)
@@ -923,7 +923,7 @@ namespace Freeserf
 
             serf.Player = Index;
 
-            ++state.SerfCounts[(int)Serf.Type.Generic];
+            ++state.SerfCounts[Serf.Type.Generic];
 
             return serf;
         }
@@ -1041,7 +1041,7 @@ namespace Freeserf
             if (type == Serf.Type.None || type == Serf.Type.Dead)
                 return;
 
-            ++state.SerfCounts[(int)type];
+            ++state.SerfCounts[type];
         }
 
         public void DecreaseSerfCount(Serf.Type type)
@@ -1049,12 +1049,12 @@ namespace Freeserf
             if (type == Serf.Type.None || type == Serf.Type.Dead)
                 return;
 
-            if (state.SerfCounts[(int)type] == 0)
+            if (state.SerfCounts[type] == 0)
             {
                 throw new ExceptionFreeserf(Game, ErrorSystemType.Player, "Failed to decrease serf count");
             }
 
-            --state.SerfCounts[(int)type];
+            --state.SerfCounts[type];
         }
 
         public DirtyArray<uint> GetSerfCounts()
@@ -1070,12 +1070,17 @@ namespace Freeserf
 
         public void IncreaseResourceCount(Resource.Type type)
         {
-            ++state.ResourceCounts[(int)type];
+            ++state.ResourceCounts[type];
         }
 
         public void DecreaseResourceCount(Resource.Type type)
         {
-            --state.ResourceCounts[(int)type];
+            --state.ResourceCounts[type];
+        }
+
+        public uint GetResourceCount(Resource.Type type)
+        {
+            return state.ResourceCounts[type];
         }
 
         public void BuildingFounded(Building building)
@@ -1094,7 +1099,7 @@ namespace Freeserf
             }
             else
             {
-                ++state.IncompleteBuildingCount[(int)building.BuildingType];
+                ++state.IncompleteBuildingCount[building.BuildingType];
             }
         }
 
@@ -1103,8 +1108,8 @@ namespace Freeserf
             var type = building.BuildingType;
 
             state.TotalBuildingScore += Building.BuildingGetScoreFromType(type);
-            ++state.CompletedBuildingCount[(int)type];
-            --state.IncompleteBuildingCount[(int)type];
+            ++state.CompletedBuildingCount[type];
+            --state.IncompleteBuildingCount[type];
         }
 
         public void BuildingCaptured(Building building)
@@ -1125,11 +1130,11 @@ namespace Freeserf
                 // Update player scores.
                 defendingPlayer.state.TotalBuildingScore -= Building.BuildingGetScoreFromType(buildingType);
                 defendingPlayer.state.TotalLandArea -= 7;
-                --defendingPlayer.state.CompletedBuildingCount[(int)buildingType];
+                --defendingPlayer.state.CompletedBuildingCount[buildingType];
 
                 state.TotalBuildingScore += Building.BuildingGetScoreFromType(buildingType);
                 state.TotalLandArea += 7;
-                ++state.CompletedBuildingCount[(int)buildingType];
+                ++state.CompletedBuildingCount[buildingType];
 
                 // Change owner of building
                 building.Player = Index;
@@ -1147,17 +1152,17 @@ namespace Freeserf
 
                 if (buildingType != Building.Type.Castle)
                 {
-                    --state.CompletedBuildingCount[(int)buildingType];
+                    --state.CompletedBuildingCount[buildingType];
 
                     if (!HasCastle && buildingType == Building.Type.Stock &&
-                        state.CompletedBuildingCount[(int)buildingType] == 0)
+                        state.CompletedBuildingCount[buildingType] == 0)
                     {
                         state.CanSpawn = false;
                     }
                 }
                 else
                 {
-                    if (state.CompletedBuildingCount[(int)Building.Type.Stock] == 0)
+                    if (state.CompletedBuildingCount[Building.Type.Stock] == 0)
                         state.CanSpawn = false;
 
                     --state.CastleScore;
@@ -1165,18 +1170,18 @@ namespace Freeserf
             }
             else
             {
-                --state.IncompleteBuildingCount[(int)buildingType];
+                --state.IncompleteBuildingCount[buildingType];
             }
         }
 
         public uint GetCompletedBuildingCount(Building.Type type)
         {
-            return state.CompletedBuildingCount[(int)type];
+            return state.CompletedBuildingCount[type];
         }
 
         public uint GetIncompleteBuildingCount(Building.Type type)
         {
-            return state.IncompleteBuildingCount[(int)type];
+            return state.IncompleteBuildingCount[type];
         }
 
         public uint GetTotalBuildingCount(Building.Type type)
@@ -1206,9 +1211,9 @@ namespace Freeserf
             SetToolPriority(tool - Resource.Type.Shovel, ushort.MaxValue);
         }
 
-        public void MoveTransportItemPriority(bool up, bool toEnd, byte[] priorities, Resource.Type type)
+        public void MoveTransportItemPriority(bool up, bool toEnd, DirtyArrayWithEnumIndex<Resource.Type, byte> priorities, Resource.Type type)
         {
-            int currentValue = priorities[(int)type];
+            int currentValue = priorities[type];
             int nextValue;
 
             if (up)
@@ -1246,21 +1251,21 @@ namespace Freeserf
                         priorities[i] = (byte)(priorities[i] + delta);
                 }
 
-                priorities[(int)type] = (byte)nextValue;
+                priorities[type] = (byte)nextValue;
             }
         }
 
-        public DirtyArray<byte> GetFlagPriorities()
+        public DirtyArrayWithEnumIndex<Resource.Type, byte> GetFlagPriorities()
         {
             return settings.FlagPriorities;
         }
 
         public byte GetInventoryPriority(Resource.Type type)
         {
-            return settings.InventoryPriorities[(int)type];
+            return settings.InventoryPriorities[type];
         }
 
-        public DirtyArray<byte> GetInventoryPriorities()
+        public DirtyArrayWithEnumIndex<Resource.Type, byte> GetInventoryPriorities()
         {
             return settings.InventoryPriorities;
         }

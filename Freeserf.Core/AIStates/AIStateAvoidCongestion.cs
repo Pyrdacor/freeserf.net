@@ -36,6 +36,12 @@ namespace Freeserf.AIStates
             // Step 1: Find flags with high traffic (waiting serfs, many resources)
             // Step 2: Do something to decongest the nearby roads
 
+            // Strategies:
+            // - Build roads around
+            // - Demolish roads
+            // - Build stocks
+            // - Build another building which processes a good
+
             Kill(ai);
         }
     }

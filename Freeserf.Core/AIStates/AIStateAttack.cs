@@ -1,7 +1,7 @@
 ﻿/*
  * AIStateAttack.cs - AI state for attacking
  *
- * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -19,12 +19,12 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Freeserf.AIStates
 {
-    // TODO: Attack enemy buildings and find good spots to attack.
     class AIStateAttack : AIState
     {
         public AIStateAttack()
@@ -295,7 +295,7 @@ namespace Freeserf.AIStates
             Kill(ai);
         }
 
-        bool Attack(AI ai, Game game, Player player, uint targetPosition)
+        bool Attack(AI ai, Player player, uint targetPosition)
         {
             if (!player.PrepareAttack(targetPosition, 4 + 3 * Misc.Max(ai.Aggressivity, ai.ExpandFocus, ai.MilitaryFocus, ai.MilitarySkill + 1)))
                 return false;
@@ -305,7 +305,7 @@ namespace Freeserf.AIStates
             return true;
         }
 
-        bool AttackRandom(AI ai, Game game, Player player, List<Building> possibleTargets)
+        bool AttackRandom(AI ai, Game game, Player player, int intelligence, List<Building> possibleTargets)
         {
             List<uint> bestTargets = new List<uint>();
             int bestBuildingScore = int.MinValue;
@@ -335,11 +335,17 @@ namespace Freeserf.AIStates
             if (bestBuildingScore == int.MinValue)
                 return false; // no valid target
 
-            // TODO: smart players should think twice if they attack and the score is too bad
+            if (intelligence >= 15 && ai.Smartness > 0)
+            {
+                if (bestBuildingScore < ai.Smartness * (3 - ai.Aggressivity / 2))
+                    return false; // winning chance too small
+            }
+            else if (bestBuildingScore <= 0 && intelligence >= 30)
+                return false; // winning chance too small
 
             uint targetPosition = bestTargets[game.RandomInt() % bestTargets.Count];
 
-            return Attack(ai, game, player, targetPosition);
+            return Attack(ai, player, targetPosition);
         }
 
         void AttackRandom(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
@@ -347,43 +353,108 @@ namespace Freeserf.AIStates
             var targetPlayer = game.GetPlayer(targetPlayerIndex);
             var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(building => building.IsMilitary(true)).ToList();
 
-            AttackRandom(ai, game, player, targetPlayerMilitaryBuildings);
+            AttackRandom(ai, game, player, intelligence, targetPlayerMilitaryBuildings);
         }
 
         bool AttackSmallMilitary(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
-            // TODO
-            return false;
+            var targetPlayer = game.GetPlayer(targetPlayerIndex);
+            var targetPlayerMilitaryBuildings = game.GetPlayerBuildings(targetPlayer).Where(building => building.IsMilitary(true) && building.KnightCount < 4)
+                .GroupBy(building => building.KnightCount).OrderBy(g => g.First().KnightCount).First().ToList();
+
+            return AttackRandom(ai, game, player, intelligence, targetPlayerMilitaryBuildings);
+        }
+
+        List<Building> FindAttackBuildingsWithNearbySpots(Game game, Player targetPlayer, Func<uint, bool> spotCondition, int searchRange)
+        {
+            bool FindSpot(Map map, uint spot)
+            {
+                return spotCondition(spot);
+            }
+
+            return game.GetPlayerBuildings(targetPlayer).Where(building => building.IsMilitary(true) &&
+                game.Map.FindAny(building.Position, searchRange, FindSpot, 1)).ToList();
         }
 
         bool AttackFoodProduction(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
-            // TODO
-            return false;
+            bool HasFoodProduction(uint spot)
+            {
+                var building = game.GetBuildingAtPosition(spot);
+
+                return building != null &&
+                    (building.BuildingType == Building.Type.Fisher ||
+                     building.BuildingType == Building.Type.Farm ||
+                     building.BuildingType == Building.Type.Mill ||
+                     building.BuildingType == Building.Type.Baker ||
+                     building.BuildingType == Building.Type.PigFarm ||
+                     building.BuildingType == Building.Type.Butcher);
+            }
+
+            return AttackRandom(ai, game, player, intelligence,
+                FindAttackBuildingsWithNearbySpots(game, game.GetPlayer(targetPlayerIndex), HasFoodProduction, 4));
         }
 
         bool AttackMaterialProduction(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
-            // TODO
-            return false;
+            bool HasMaterialProduction(uint spot)
+            {
+                var building = game.GetBuildingAtPosition(spot);
+
+                return building != null &&
+                    (building.BuildingType == Building.Type.Lumberjack ||
+                     building.BuildingType == Building.Type.Sawmill ||
+                     building.BuildingType == Building.Type.Stonecutter ||
+                     building.BuildingType == Building.Type.StoneMine);
+            }
+
+            return AttackRandom(ai, game, player, intelligence,
+                FindAttackBuildingsWithNearbySpots(game, game.GetPlayer(targetPlayerIndex), HasMaterialProduction, 4));
         }
 
         bool AttackMines(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
-            // TODO
-            return false;
+            bool HasMine(uint spot)
+            {
+                var building = game.GetBuildingAtPosition(spot);
+
+                return building != null &&
+                    (building.BuildingType == Building.Type.CoalMine ||
+                     building.BuildingType == Building.Type.IronMine ||
+                     building.BuildingType == Building.Type.GoldMine ||
+                     building.BuildingType == Building.Type.StoneMine);
+            }
+
+            return AttackRandom(ai, game, player, intelligence,
+                FindAttackBuildingsWithNearbySpots(game, game.GetPlayer(targetPlayerIndex), HasMine, 5));
         }
 
         bool AttackWeaponProduction(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
-            // TODO
-            return false;
+            bool HasWeaponProduction(uint spot)
+            {
+                var building = game.GetBuildingAtPosition(spot);
+
+                return building != null &&
+                    (building.BuildingType == Building.Type.WeaponSmith ||
+                     building.BuildingType == Building.Type.SteelSmelter);
+            }
+
+            return AttackRandom(ai, game, player, intelligence,
+                FindAttackBuildingsWithNearbySpots(game, game.GetPlayer(targetPlayerIndex), HasWeaponProduction, 3));
         }
 
         bool AttackStocks(AI ai, Game game, Player player, int intelligence, uint targetPlayerIndex)
         {
-            // TODO
-            return false;
+            bool HasStock(uint spot)
+            {
+                var building = game.GetBuildingAtPosition(spot);
+
+                return building != null && building.BuildingType == Building.Type.Stock;
+            }
+
+            return AttackRandom(ai, game, player, intelligence,
+                FindAttackBuildingsWithNearbySpots(game, game.GetPlayer(targetPlayerIndex), HasStock, 4));
         }
 
         // The higher the return value, the better is this target in terms of winning chance.
@@ -395,6 +466,8 @@ namespace Freeserf.AIStates
                 return int.MinValue;
 
             int numKnights = (int)game.GetBuildingAtPosition(position).KnightCount;
+
+            // TODO: consider knight levels?
 
             return numMaxAttackKnights - numKnights;
         }

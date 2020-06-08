@@ -85,9 +85,10 @@ namespace Freeserf
 #endif
                 Log.SetLevel(UserConfig.DefaultLogLevel);
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                // TODO: logging not possible
+                // Logging not possible. We can just write to a console here.
+                Console.WriteLine("Error initializing logging: " + ex.Message);
             }
 
             initInfo = Global.Init(args);
@@ -269,8 +270,6 @@ namespace Freeserf
             // TODO
             //if (debugConsole != null)
             //    debugConsole.Close();
-
-            // Cursor = MouseCursor.Default;
 
             if (gameView != null)
             {
@@ -487,7 +486,6 @@ namespace Freeserf
 
                 switch (character)
                 {
-                    // TODO: if < and > should be entered into a text input, this code will still zoom the map!
                     case '<':
                         if (gameView.CanZoom)
                             ZoomOut();

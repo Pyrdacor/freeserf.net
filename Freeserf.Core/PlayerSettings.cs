@@ -114,9 +114,9 @@ namespace Freeserf
         [Data]
         public DirtyArray<word> ToolPriorities { get; } = new DirtyArray<word>(Global.NUM_TOOL_TYPES);
         [Data]
-        public DirtyArray<byte> FlagPriorities { get; } = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
+        public DirtyArrayWithEnumIndex<Resource.Type, byte> FlagPriorities { get; } = new DirtyArrayWithEnumIndex<Resource.Type, byte>(Global.NUM_RESOURCE_TYPES);
         [Data]
-        public DirtyArray<byte> InventoryPriorities { get; } = new DirtyArray<byte>(Global.NUM_RESOURCE_TYPES);
+        public DirtyArrayWithEnumIndex<Resource.Type, byte> InventoryPriorities { get; } = new DirtyArrayWithEnumIndex<Resource.Type, byte>(Global.NUM_RESOURCE_TYPES);
         /// <summary>
         /// Lower 4 bits = min level, higher 4 bits = max level
         /// </summary>

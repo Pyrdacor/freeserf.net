@@ -1,7 +1,7 @@
 ﻿/*
  * AIStateChoosingCastleLocation.cs - AI state to find a good castle location
  *
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -62,7 +62,7 @@ namespace Freeserf.AIStates
             for (int i = 0; i < scansPerUpdate; ++i)
             {
                 var position = game.Map.GetRandomCoordinate(game.GetRandom());
-                int foundPosition = CheckCastleSpot(game, player, position, (int)playerInfo.Intelligence);
+                int foundPosition = CheckCastleSpot(ai, game, player, position, (int)playerInfo.Intelligence);
 
                 if (foundPosition != -1 && game.CanBuildCastle((uint)foundPosition, player))
                 {
@@ -164,14 +164,14 @@ namespace Freeserf.AIStates
             };
         }
 
-        int CheckCastleSpot(Game game, Player player, MapPos position, int intelligence)
+        int CheckCastleSpot(AI ai, Game game, Player player, MapPos position, int intelligence)
         {
             var map = game.Map;
 
             int treeCount = map.FindInArea(position, 5, FindTree, 1).Count;
             int stoneCount = map.FindInArea(position, 5, FindStone, 1).Count;
             int fishCount = map.FindInArea(position, 7, FindFish, 1).Count;
-            int mountainCountNear = map.FindInArea(position, 3, FindMountain, 0).Count;
+            int mountainCountNear = map.FindInArea(position, 4, FindMountain, 0).Count;
             int mountainCountFar = map.FindInArea(position, 9, FindMountain, 4).Count;
             int desertCount = map.FindInArea(position, 6, FindDesert, 0).Count;
             int waterCount = map.FindInArea(position, 6, FindWater, 0).Count;
@@ -325,6 +325,10 @@ namespace Freeserf.AIStates
             int numLarge = 0;
             List<uint> largeSpots = new List<uint>();
 
+            // If the AI is smart we better use a spot with more large spots.
+            if (numTries < 25 + map.Size * 5)
+                numLargeSpots += ai.Smartness;
+
             for (int i = 0; i < 100; ++i)
             {
                 uint checkPosition = map.PositionAddSpirally(position, (uint)i);
@@ -340,9 +344,32 @@ namespace Freeserf.AIStates
                     ++numSmall;
                 }
 
-                // TODO: What if a building would block another building spot.
                 if (numLarge >= numLargeSpots && (numSmall - numLargeSpots) >= numSmallSpots)
-                    return (int)largeSpots[0];
+                {
+                    if (ai.Smartness == 0)
+                        return (int)largeSpots[0];
+                    else
+                    {
+                        foreach (var spot in largeSpots)
+                        {
+                            var flagPosition = map.MoveDownRight(spot);
+                            var directions = new DirectionCycleCW(Direction.Up, 5);
+                            bool obstacleFound = false;
+
+                            foreach (var direction in directions)
+                            {
+                                if (Map.MapSpaceFromObject[(int)map.GetObject(map.Move(flagPosition, direction))] >= Map.Space.Semipassable)
+                                {
+                                    obstacleFound = true;
+                                    break;
+                                }
+                            }
+
+                            if (!obstacleFound)
+                                return (int)spot;
+                        }
+                    }
+                }
             }
 
             return -1;

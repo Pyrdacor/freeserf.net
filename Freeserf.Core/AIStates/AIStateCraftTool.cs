@@ -27,14 +27,14 @@ namespace Freeserf.AIStates
         Player player = null;
         int triesBuildToolmaker = 0;
         int tries = 0;
-        int previousCount = -1;
+        uint previousCount = 0u;
 
         public AIStateCraftTool(Game game, Player player, Resource.Type tool)
             : base(AI.State.CraftTool)
         {
             this.tool = tool;
 
-            previousCount = (tool == Resource.Type.None) ? 0 : GetCurrentToolCount(game, player);
+            previousCount = (tool == Resource.Type.None) ? 0u : GetCurrentToolCount(player);
         }
 
         protected override void ReadFrom(Game game, AI ai, string name, SaveReaderText reader)
@@ -44,7 +44,7 @@ namespace Freeserf.AIStates
             tool = reader.Value($"{name}.tool").ReadResource();
             triesBuildToolmaker = reader.Value($"{name}.tries_build_toolmaker").ReadInt();
             tries = reader.Value($"{name}.tries").ReadInt();
-            previousCount = reader.Value($"{name}.previous_count").ReadInt();
+            previousCount = reader.Value($"{name}.previous_count").ReadUInt();
         }
 
         public override void WriteTo(string name, SaveWriterText writer)
@@ -58,52 +58,50 @@ namespace Freeserf.AIStates
         }
 
         // This includes tool count and amount of serfs that use the tool.
-        int GetCurrentToolCount(Game game, Player player)
+        uint GetCurrentToolCount(Player player)
         {
-            int count = game.GetTotalResourceCount(player, tool);
+            uint count = player.GetResourceCount(tool);
 
             switch (tool)
             {
                 case Resource.Type.Axe:
-                    count += (int)player.GetSerfCount(Serf.Type.Lumberjack);
+                    count += player.GetSerfCount(Serf.Type.Lumberjack);
                     break;
                 case Resource.Type.Cleaver:
-                    count += (int)player.GetSerfCount(Serf.Type.Butcher);
+                    count += player.GetSerfCount(Serf.Type.Butcher);
                     break;
                 case Resource.Type.Hammer:
-                    count += (int)player.GetSerfCount(Serf.Type.BoatBuilder);
-                    count += (int)player.GetSerfCount(Serf.Type.Builder);
-                    count += (int)player.GetSerfCount(Serf.Type.Geologist);
-                    count += (int)player.GetSerfCount(Serf.Type.Toolmaker);
-                    count += (int)player.GetSerfCount(Serf.Type.WeaponSmith);
+                    count += player.GetSerfCount(Serf.Type.BoatBuilder);
+                    count += player.GetSerfCount(Serf.Type.Builder);
+                    count += player.GetSerfCount(Serf.Type.Geologist);
+                    count += player.GetSerfCount(Serf.Type.Toolmaker);
+                    count += player.GetSerfCount(Serf.Type.WeaponSmith);
                     break;
                 case Resource.Type.Pick:
-                    count += (int)player.GetSerfCount(Serf.Type.Miner);
-                    count += (int)player.GetSerfCount(Serf.Type.Stonecutter);
+                    count += player.GetSerfCount(Serf.Type.Miner);
+                    count += player.GetSerfCount(Serf.Type.Stonecutter);
                     break;
                 case Resource.Type.Pincer:
-                    count += (int)player.GetSerfCount(Serf.Type.WeaponSmith);
+                    count += player.GetSerfCount(Serf.Type.WeaponSmith);
                     break;
                 case Resource.Type.Rod:
-                    count += (int)player.GetSerfCount(Serf.Type.Fisher);
+                    count += player.GetSerfCount(Serf.Type.Fisher);
                     break;
                 case Resource.Type.Saw:
-                    count += (int)player.GetSerfCount(Serf.Type.Sawmiller);
-                    count += (int)player.GetSerfCount(Serf.Type.Toolmaker);
+                    count += player.GetSerfCount(Serf.Type.Sawmiller);
+                    count += player.GetSerfCount(Serf.Type.Toolmaker);
                     break;
                 case Resource.Type.Scythe:
-                    count += (int)player.GetSerfCount(Serf.Type.Farmer);
+                    count += player.GetSerfCount(Serf.Type.Farmer);
                     break;
                 case Resource.Type.Shovel:
-                    count += (int)player.GetSerfCount(Serf.Type.Digger);
+                    count += player.GetSerfCount(Serf.Type.Digger);
                     break;
             }
 
             return count;
         }
 
-        // TODO: If we don't have steel or planks and not are able to get some, this will run forever
-        // and will block other AI states that might be necessary to get other stuff!
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
             this.player = player;
@@ -121,8 +119,8 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            // tool was crafted?
-            if (GetCurrentToolCount(game, player) > previousCount)
+            // Tool was crafted?
+            if (GetCurrentToolCount(player) > previousCount)
             {
                 // After crafting reset the values.
                 // This can be changed by another craft tool state
@@ -137,11 +135,24 @@ namespace Freeserf.AIStates
                 return;
             }
 
-            // give planks and steel to toolmaker
+            // Can we even provide enough steel?
+            if (player.GetResourceCount(Resource.Type.Steel) == 0)
+            {
+                if ((player.GetResourceCount(Resource.Type.Coal) == 0 &&
+                    player.GetCompletedBuildingCount(Building.Type.CoalMine) == 0) ||
+                    (player.GetResourceCount(Resource.Type.IronOre) == 0 &&
+                    player.GetCompletedBuildingCount(Building.Type.IronMine) == 0))
+                {
+                    Kill(ai);
+                    return;
+                }
+            }
+
+            // Give planks and steel to toolmaker
             player.PlanksToolmaker = ushort.MaxValue;
             player.SteelToolmaker = ushort.MaxValue;
 
-            // set the priority for the tool to 100%
+            // Set the priority for the tool to 100%
             player.SetFullToolPriority(tool);
 
             if (++tries == 20) // don't block for too long

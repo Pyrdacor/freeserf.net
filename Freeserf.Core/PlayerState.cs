@@ -410,13 +410,13 @@ namespace Freeserf
         }
 
         [Data]
-        public DirtyArray<dword> SerfCounts { get; } = new DirtyArray<dword>(Global.NUM_SERF_TYPES);
+        public DirtyArrayWithEnumIndex<Serf.Type, dword> SerfCounts { get; } = new DirtyArrayWithEnumIndex<Serf.Type, dword>(Global.NUM_SERF_TYPES);
         [Data]
-        public DirtyArray<dword> ResourceCounts { get; } = new DirtyArray<dword>(Global.NUM_RESOURCE_TYPES);
+        public DirtyArrayWithEnumIndex<Resource.Type, dword> ResourceCounts { get; } = new DirtyArrayWithEnumIndex<Resource.Type, dword>(Global.NUM_RESOURCE_TYPES);
         [Data]
-        public DirtyArray<dword> CompletedBuildingCount { get; } = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
+        public DirtyArrayWithEnumIndex<Building.Type, dword> CompletedBuildingCount { get; } = new DirtyArrayWithEnumIndex<Building.Type, dword>(Global.NUM_BUILDING_TYPES);
         [Data]
-        public DirtyArray<dword> IncompleteBuildingCount { get; } = new DirtyArray<dword>(Global.NUM_BUILDING_TYPES);
+        public DirtyArrayWithEnumIndex<Building.Type, dword> IncompleteBuildingCount { get; } = new DirtyArrayWithEnumIndex<Building.Type, dword>(Global.NUM_BUILDING_TYPES);
 
         [Data]
         public dword MilitaryMaxGold
