@@ -3,20 +3,16 @@
 
 ## Non-working code
 
-- Map clicks are not always at the right spot/tile (I guess this is caused by tile heights)
-	- This also hinders road building sometimes
-- Minimap clicks will result in a map position that is a bit above the clicked spot
-- Possible builds contain not all possible building locations (e.g. for the castle)
 - After saving the quit confirm will not ask for saving even if the game progressed a good amount of time
-- After closing a popup the delayed click handler will be raised when the box is already closed and therefore will count as a map click.
-  This should be avoided somehow.
 - New faces represent colors which should be adjusted accordingly in multiplayer games.
 
 
 ## Rendering
 
-- In rare cases a flag seems to have the same baseline as an adjacent building. Due to animation baseline change there is flickering.
-	- This is fixed but remains true for military building white flags
+- In very rare cases a military building white flag seems to have the same baseline as an adjacent building.
+  Due to animation baseline change there is flickering then.
+- If a rock is very closely behind a building and the stonecutter goes on top of the rock he is sometimes
+  in front of the building.
 
 
 ## AI
@@ -43,7 +39,7 @@
     - Too much buildings and too few expansion to keep all those buildings inside borders.
     - A stock should be build after x buildings have been built
 - Higher characters should be smarter in general than lower characters
-    - Sollok the Joker seem to lose against much lower characters (at least in building huts)
+    - Sollok the Joker seems to lose against much lower characters (at least in building huts)
 - Non-hard-times AIs with low materials should not plan many buildings and then all materials are gone
 - Maybe smart AIs should hold enough planks to rebuild a destroyed sawmill and lumberjack.
 	- This is only necessary if an enemy is near enough.
@@ -56,17 +52,11 @@
 - Finding minerals and mine spots is not good yet. The search spots should change from time to time but changing doesn't mean putting hundreds of flags at the same mountain.
 - In hard times the search for mountains should be better (look specific for coal and iron spots).
 - Flags for geologists are too far away from mountains.
-- Remove mines from AIStateBuildBuilding as AIStateFindMinerals handles them.
 - Sometimes there are way too many geologist out there. This also causes traffic. It seems that every single hammer is used to train a geologist.
 
 ### Open points
 
 - Test play performance of specific characters. Better characters should play better and win more often than weaker ones. They also should win 1vs1.
-
-### Performance
-
-- While debugging the game pauses from time to time (more game time = longer and more pauses). The game is unplayable very quick.
-- There seem to be issues with progressed games and many serfs/buildings. Some performance tests are necessary.
 
 ### Long AI Games
 
@@ -96,6 +86,7 @@
 ## Game Logic
 
 - Serfs should not be leaving the stock/castle if there are waiting serfs around the flag
+- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice at all.
 - Seen roads without a serf (previously there was one). Sometimes a new serf approaches after a while.
 - A transporter first walks to the last flag and then goes back to the beginning of the road to go to idle mode.
     - I think in original game the transporter went straight to idle mode when he was at the right location.
@@ -112,8 +103,6 @@
     - Sometimes resources are no longer delivered to a construction site even if there are enough in the castle
         - I guess this happens when the emergency program gets activated at a specific time.
         - The workaround was building.RemoveRequestedMaterials(); in Player.UpdateEmergencyProgram. But this can lead to an exception in Building.RequestedResourceDelivered.
-- Seen a knight that was turning left and right on the same map spot (either it was only a display bug or a logic bug). It was after capturing a building.
-- Approaching serfs at flags should change. Sometimes one path will always win and there might be so much resources, that others have no choice at all.
 - When the castle is blocked by fighting knights, the transporter will go back into the castle and won't ever come back
 
 

@@ -129,7 +129,7 @@ namespace Freeserf
             CheckNeededBuilding,
             CraftWeapons,
             CraftTool,
-            FindOre,
+            FindMinerals,
             AdjustSettings,
             Attack,
             AvoidCongestion,
@@ -935,7 +935,7 @@ namespace Freeserf
                     return new AIStates.AIStateCraftTool(player.Game, player, param == null ? Resource.Type.None : (Resource.Type)param);
                 case State.CraftWeapons:
                     return new AIStates.AIStateCraftWeapons();
-                case State.FindOre:
+                case State.FindMinerals:
                     return new AIStates.AIStateFindMinerals(param == null ? Map.Minerals.None : (Map.Minerals)param);
                 case State.AdjustSettings:
                     return new AIStates.AIStateAdjustSettings();

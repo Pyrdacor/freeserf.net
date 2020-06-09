@@ -33,7 +33,7 @@ namespace Freeserf.AIStates
         Map.Minerals mineralType = Map.Minerals.None;
 
         public AIStateFindMinerals(Map.Minerals mineralType)
-            : base(AI.State.FindOre)
+            : base(AI.State.FindMinerals)
         {
             this.mineralType = mineralType;
         }
@@ -145,7 +145,7 @@ namespace Freeserf.AIStates
                         {
                             // TODO: what should we do then? -> try to craft a hammer? wait for generics? abort?
                             Kill(ai);
-                            ai.CreateRandomDelayedState(AI.State.FindOre, 10000, (120 - (int)playerInfo.Intelligence) * 2000, mineralType);
+                            ai.CreateRandomDelayedState(AI.State.FindMinerals, 10000, (120 - (int)playerInfo.Intelligence) * 2000, mineralType);
                             return;
                         }
                     }
@@ -168,7 +168,7 @@ namespace Freeserf.AIStates
                         {
                             Kill(ai);
                             // check again in a while
-                            ai.CreateRandomDelayedState(AI.State.FindOre, 30000, (120 - (int)playerInfo.Intelligence) * 2000, mineralType);
+                            ai.CreateRandomDelayedState(AI.State.FindMinerals, 30000, (120 - (int)playerInfo.Intelligence) * 2000, mineralType);
                             return;
                         }
                     }

@@ -114,7 +114,7 @@ namespace Freeserf.AIStates
                     if (result == CheckResult.Needed)
                     {
                         if (type >= Building.Type.StoneMine && type <= Building.Type.GoldMine)
-                            GoToState(ai, AI.State.FindOre, MineralFromMine[type - Building.Type.StoneMine]);
+                            GoToState(ai, AI.State.FindMinerals, MineralFromMine[type - Building.Type.StoneMine]);
                         else
                             GoToState(ai, AI.State.BuildBuilding, type);
 
