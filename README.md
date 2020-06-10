@@ -129,6 +129,7 @@ Ctrl+F|Toggle fullscreen mode
 F5|Quick save
 F6|Open save dialog
 Shift+Q|Open quit dialog
+Shift+P|Open player overview
 B|Toggle possible builds
 H|Go to your own castle
 J|Jump between players (AIvsAI and spectators only)

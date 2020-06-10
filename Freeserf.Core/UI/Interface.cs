@@ -1631,6 +1631,9 @@ namespace Freeserf.UI
                 case 'Q':
                     OpenPopup(PopupBox.Type.QuitConfirm);
                     break;
+                case 'P':
+                    OpenPopup(PopupBox.Type.PlayerFaces);
+                    break;
                 case Event.SystemKeys.Delete:
                     if (PanelBar != null && PanelBar.Displayed && PanelBar.CanDemolish())
                     {
