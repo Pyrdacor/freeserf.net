@@ -118,6 +118,7 @@ Ctrl+TAB|Return to last map position after notification
 Shift+M|Toggle music
 Shift+S|Toggle sound effects
 0|Reset game speed to normal
+9|Maximize game speed
 P|Pause or resume game
 +|Increase game speed
 -|Decrease game speed
