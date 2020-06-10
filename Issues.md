@@ -26,7 +26,10 @@
 - There are too much mines at the same mountain after some time.
 - Mine amount should be limited in relation to food sources. Saw games with dozens of mines but only one fisher. This should not happen.
 - Sometimes the AI tries very hard to build something in a non-linkable place and burns it down and rebuilds it forever (e.g. a fisher behind the pond).
-- Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have all).
+  Buildings that can't be connected should never be placed (just to burn them down afterwards).
+- Associated buildings should be well distributed (e.g. each lumberjack should have at least one forester and not one have them all).
+- Associated buildings (e.g. farm + mill) should also be connected directly and not only placed nearby
+  (in some cases the connection between them leads through several flags even if the buildings are close together).
 - Sometimes (with few space) foresters are built far away from lumberjacks. This is useless and should be avoided in any case.
 - Rarely captured buildings are not connected to own road system
 - Positions for stocks are not so good any time. It should be far away from other stocks and near some production that needs to store goods in a stock (e.g. weapon, gold bars, tools, planks, food, etc).
@@ -35,6 +38,8 @@
 
 ### Misc
 
+- Intelligence should have more impact (int 0 high char should struggle against int 40 lower char)
+- Maybe stupid AIs should do some really stupid stuff or do nothing for longer times
 - Balduin builds much large buildings but no stock for a long time -> too much traffic.
     - Too much buildings and too few expansion to keep all those buildings inside borders.
     - A stock should be build after x buildings have been built
@@ -118,6 +123,10 @@
 
 ## Nice to have
 
+- Possibility to show possible buildings as spectator?
+- Max game speed keyboard shortcut
+- Keyboard shortcut for payer face popup
+- Possibility to copy the map seed number
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
   Maybe just add a directory called ".." in every directory inside the savegame list which performs a "up" operation.
 - When switching player in AIvsAI (e.g. with key 'j') the currently opened menu should be updated.
