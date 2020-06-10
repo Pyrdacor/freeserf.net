@@ -483,7 +483,7 @@ namespace Freeserf
 
         public void IncreaseSpeed()
         {
-            if (state.GameSpeed < 40) // TODO: adjust later maybe
+            if (state.GameSpeed < Global.MAX_GAME_SPEED)
             {
                 ++state.GameSpeed;
                 Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
@@ -502,6 +502,12 @@ namespace Freeserf
         public void ResetSpeed()
         {
             state.GameSpeed = GameState.DEFAULT_GAME_SPEED;
+            Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
+        }
+
+        public void MaximizeSpeed()
+        {
+            state.GameSpeed = Global.MAX_GAME_SPEED;
             Log.Info.Write(ErrorSystemType.Game, $"Game speed: {state.GameSpeed}");
         }
 

@@ -34,5 +34,6 @@ namespace Freeserf
         public const int NUM_TREATMENT_LEVEL_TYPES = 4;
         public const MapPos INVALID_MAPPOS = MapPos.MaxValue;
         public const int FLAG_MAX_RES_COUNT = 8;
+        public const int MAX_GAME_SPEED = 40;
     }
 }

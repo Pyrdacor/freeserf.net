@@ -1549,6 +1549,12 @@ namespace Freeserf.UI
                             Game.ResetSpeed();
                         break;
                     }
+                case '9':
+                    {
+                        if (!IsRemote)
+                            Game.MaximizeSpeed();
+                        break;
+                    }
                 case 'p':
                     {
                         if (!IsRemote)
