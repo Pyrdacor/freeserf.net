@@ -809,9 +809,7 @@ namespace Freeserf.AIStates
             }
 
             if (bestBuildingPosition == Global.INVALID_MAPPOS)
-            {
                 return bestBuildingPosition;
-            }
 
             return game.Map.FindSpotNear(bestBuildingPosition, 6, CanBuildLarge, game.GetRandom(), 1);
         }

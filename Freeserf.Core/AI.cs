@@ -768,8 +768,15 @@ namespace Freeserf
 
             foreach (var flag in flags)
             {
-                if (Pathfinder.FindShortestPath(map, flagPosition, (uint)flag, null, 15).Length != 0)
+                var road = Pathfinder.FindShortestPath(map, flagPosition, (uint)flag, null, 15);
+
+                if (road != null && road.Valid)
+                {
+                    if (noWater && road.IsWaterPath(map))
+                        return false;
+
                     return true;
+                }
             }
 
             return false;
@@ -1024,7 +1031,15 @@ namespace Freeserf
             if (HardTimes) // no stupid decisions in hard times (the game would be quickly over otherwise)
                 return false;
 
-            return random.Next() > 42000 + (int)playerInfo.Intelligence * 500;
+            // Intelligence | Chance for a stupid decision
+            // -------------------------------------------
+            // 0            | ~44%
+            // 10           | ~33%
+            // 20           | ~22%
+            // 30           | ~11%
+            // 40           | <1%
+            // Each intelligence point decreases the chance by ~1,07%.
+            return random.Next() > 37000 + (int)playerInfo.Intelligence * 700;
         }
 
         internal bool Chance(int percentage)
