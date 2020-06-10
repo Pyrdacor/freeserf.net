@@ -1,3 +1,12 @@
+Version 2.0.5:
+==============
+
+- AI improvements
+- Added key shortcuts
+  - 9: Set game speed to max
+  - Shift+P: Opens player overview
+
+
 Version 2.0.4:
 ==============
 
