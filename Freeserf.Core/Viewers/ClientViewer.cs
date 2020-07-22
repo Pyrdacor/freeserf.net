@@ -39,11 +39,14 @@ namespace Freeserf
 
         public void SendUserAction(Network.UserActionData userActionData)
         {
-            client.SendUserAction(userActionData, response =>
+            if (client?.Connected == true)
             {
-                if (response != Network.ResponseType.Ok)
-                    client.RequestGameStateUpdate();
-            });
+                client.SendUserAction(userActionData, response =>
+                {
+                    if (response != Network.ResponseType.Ok)
+                        client.RequestGameStateUpdate();
+                });
+            }
         }
 
         private void Client_Disconnected(object sender, System.EventArgs e)

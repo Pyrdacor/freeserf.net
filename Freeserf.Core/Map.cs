@@ -1068,7 +1068,7 @@ namespace Freeserf
         {
             if (fullSync)
             {
-                for (MapPos i = 0; i < Size; ++i)
+                for (MapPos i = 0; i < landscapeTiles.Length; ++i)
                 {
                     var newObject = GetObject(i);
 

@@ -293,6 +293,7 @@ namespace Freeserf
         {
             var gameCopy = new Game(game.Map);
             GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true), true, false);
+            gameCopy.InitKnights();
             return new SavedGameState(gameCopy);
         }
 
