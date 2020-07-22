@@ -207,17 +207,20 @@ namespace Freeserf.Network
 
             if (Game != null && client != null && client.Connected)
             {
-                var gameTime = Game.GameTime;
-
-                // Save game state from time to time to avoid huge syncs.
-                if (gameTime - lastSavedGameStateGameTime >= SavedGameState.SyncDelay && SavedGameState.TimeToSync(Game))
+                lock (Game)
                 {
-                    Log.Verbose.Write(ErrorSystemType.Network, $"Saving game state with game time {Misc.SecondsToTime(gameTime)}.");
+                    var gameTime = Game.GameTime;
 
-                    lastSavedGameStateGameTime = gameTime;
-                    lastSavedGameStates.Add(gameTime, SavedGameState.FromGame(Game));
+                    // Save game state from time to time to avoid huge syncs.
+                    if (gameTime - lastSavedGameStateGameTime >= SavedGameState.SyncDelay && SavedGameState.TimeToSync(Game))
+                    {
+                        Log.Verbose.Write(ErrorSystemType.Network, $"Saving game state with game time {Misc.SecondsToTime(gameTime)}.");
 
-                    Log.Verbose.Write(ErrorSystemType.Network, $"Finished saving game state with game time {Misc.SecondsToTime(gameTime)}.");
+                        lastSavedGameStateGameTime = gameTime;
+                        lastSavedGameStates.Add(gameTime, SavedGameState.FromGame(Game));
+
+                        Log.Verbose.Write(ErrorSystemType.Network, $"Finished saving game state with game time {Misc.SecondsToTime(gameTime)}.");
+                    }
                 }
             }
         }
@@ -324,11 +327,14 @@ namespace Freeserf.Network
                                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
                                 Log.Verbose.Write(ErrorSystemType.Network, "Processing sync ... ");
 #endif
-                                lastSavedGameStates.Clear();
-                                bool full = syncData.Full && lastVerifiedSavedGameState != null; // first sync should not be handled as full
-                                if (lastVerifiedSavedGameState == null)
-                                    lastVerifiedSavedGameState = SavedGameState.FromGame(Game);
-                                lastVerifiedSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastVerifiedSavedGameState, syncData.SerializedData, full);
+                                lock (Game)
+                                {
+                                    lastSavedGameStates.Clear();
+                                    bool full = syncData.Full && lastVerifiedSavedGameState != null; // first sync should not be handled as full
+                                    if (lastVerifiedSavedGameState == null)
+                                        lastVerifiedSavedGameState = SavedGameState.FromGame(Game);
+                                    lastVerifiedSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastVerifiedSavedGameState, syncData.SerializedData, full);
+                                }
 
 #if DEBUG
                                 Log.Verbose.Write(ErrorSystemType.Network, $"Processing sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");
@@ -344,7 +350,7 @@ namespace Freeserf.Network
                         break;
                     }
                 default:
-                    // Should be handled by Server_DataReceived already.
+                    // Should have been handled by Server_DataReceived already.
                     break;
             }
         }

@@ -388,6 +388,10 @@ namespace Freeserf.Serialize
                     if (value == null && customTypeCreators.ContainsKey(field.FieldType))
                         value = customTypeCreators[field.FieldType]?.Invoke(targetObject);
 
+                    // The serf state data needs some special care.
+                    if (value is Serf.StateData serfStateData)
+                        serfStateData.Update();
+
                     field.SetValue(targetObject, DeserializePropertyValue(reader, field.FieldType, value));
                 }
             }
@@ -413,7 +417,9 @@ namespace Freeserf.Serialize
                         value = DeserializePropertyValue(reader, property.PropertyType, value);
                 }
                 else
+                {
                     value = DeserializePropertyValue(reader, property.PropertyType, value);
+                }
 
                 if (wasNull)
                     property.SetValue(targetObject, value);

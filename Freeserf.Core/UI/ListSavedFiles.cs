@@ -23,8 +23,8 @@ namespace Freeserf.UI
 {
     internal class ListSavedFiles : ListBox<GameStore.SaveInfo>
     {
-        GameStore saveGame = null;
-        Interface interf = null;
+        readonly GameStore saveGame = null;
+        readonly Interface interf = null;
 
         public ListSavedFiles(Interface interf)
             : base(interf, Render.TextRenderType.NewUI)

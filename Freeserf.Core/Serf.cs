@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Freeserf
@@ -176,6 +177,14 @@ namespace Freeserf
                 }
             }
 
+            public void Update()
+            {
+                var temp = StateDataBase.Create(this) as StateDataBase;
+
+                if (Data == null || temp == null || temp.GetType() != Data.GetType())
+                    Data = temp;
+            }
+
             private readonly Serf serf;
 
             static StateData()
@@ -222,7 +231,7 @@ namespace Freeserf
                     this.parent = parent;
                 }
 
-                private static object Create(object parent)
+                internal static object Create(object parent)
                 {
                     if (!(parent is StateData parentStateData))
                         throw new ExceptionFreeserf($"Parent of {nameof(StateDataBase)} is no {nameof(StateData)}.");
@@ -341,6 +350,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataIdleInStock IdleInStock
             {
                 get
@@ -444,6 +454,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataWalking Walking
             {
                 get
@@ -503,6 +514,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataEnteringBuilding EnteringBuilding
             {
                 get
@@ -605,6 +617,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataLeavingBuilding LeavingBuilding
             {
                 get
@@ -648,6 +661,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataReadyToEnter ReadyToEnter
             {
                 get
@@ -740,6 +754,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataDigging Digging
             {
                 get
@@ -828,6 +843,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataBuilding Building
             {
                 get
@@ -869,6 +885,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataBuildingCastle BuildingCastle
             {
                 get
@@ -941,6 +958,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataMoveResourceOut MoveResourceOut
             {
                 get
@@ -1015,6 +1033,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataReadyToLeaveInventory ReadyToLeaveInventory
             {
                 get
@@ -1119,6 +1138,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataFreeWalking FreeWalking
             {
                 get
@@ -1174,6 +1194,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataSawing Sawing
             {
                 get
@@ -1215,6 +1236,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataLost Lost
             {
                 get
@@ -1286,6 +1308,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataMining Mining
             {
                 get
@@ -1358,6 +1381,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataSmelting Smelting
             {
                 get
@@ -1401,6 +1425,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataMilling Milling
             {
                 get
@@ -1442,6 +1467,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataBaking Baking
             {
                 get
@@ -1483,6 +1509,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataPigFarming PigFarming
             {
                 get
@@ -1524,6 +1551,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataButchering Butchering
             {
                 get
@@ -1565,6 +1593,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataMakingWeapon MakingWeapon
             {
                 get
@@ -1606,6 +1635,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataMakingTool MakingTool
             {
                 get
@@ -1647,6 +1677,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataBuildingBoat BuildingBoat
             {
                 get
@@ -1738,6 +1769,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataAttacking Attacking
             {
                 get
@@ -1832,6 +1864,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataAttackingVictoryFree AttackingVictoryFree
             {
                 get
@@ -1934,6 +1967,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataDefendingFree DefendingFree
             {
                 get
@@ -2038,6 +2072,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataLeaveForWalkToFight LeaveForWalkToFight
             {
                 get
@@ -2111,6 +2146,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataIdleOnPath IdleOnPath
             {
                 get
@@ -2159,6 +2195,7 @@ namespace Freeserf
                     }
                 }
             }
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public StateDataDefending Defending
             {
                 get

@@ -29,15 +29,14 @@ namespace Freeserf.UI
 {
     internal class ListBox<T> : GuiObject
     {
-        Render.Color colorFocus = new Render.Color(0x60, 0x70, 0x60);//new Color(0x00, 0x8b, 0x47);
-        Render.Color colorText = Render.Color.Green;
-        Render.Color colorBackground = Render.Color.Black;
+        static readonly Render.Color colorFocus = new Render.Color(0x60, 0x70, 0x60);//new Color(0x00, 0x8b, 0x47);
+        static readonly Render.Color colorBackground = Render.Color.Black;
 
         int firstVisibleItem = 0;
         int selectedItem = -1;
         Action<T> selectionHandler = null;
         protected readonly List<T> items = new List<T>();
-        TextRenderType renderType = TextRenderType.NewUI;
+        readonly TextRenderType renderType = TextRenderType.NewUI;
 
         readonly IColoredRect background = null;
         readonly IColoredRect selectionBackground = null;

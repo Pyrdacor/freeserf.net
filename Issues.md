@@ -123,7 +123,6 @@
 
 ## Nice to have
 
-- Possibility to show possible buildings as spectator?
 - Possibility to copy the map seed number
 - The list of savegames should also allow subdirs with savegames in them. But then there must be a possibility to go up and down the directory hierarchy.
   Maybe just add a directory called ".." in every directory inside the savegame list which performs a "up" operation.

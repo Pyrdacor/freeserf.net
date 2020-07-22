@@ -154,6 +154,8 @@ namespace Freeserf
 
             if (map != null)
                 Map = new Map(map.Geometry, null, map);
+
+            InitKnights();
         }
 
         internal Game(Render.IRenderView renderView, IAudioInterface audioInterface)
