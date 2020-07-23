@@ -2756,7 +2756,7 @@ namespace Freeserf
                 {
                     foreach (var player in playerList)
                     {
-                        player.UpdateStats(resource);
+                        player.UpdateStats(resource, index);
                     }
                 }
 

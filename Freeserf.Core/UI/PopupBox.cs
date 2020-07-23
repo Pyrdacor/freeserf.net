@@ -1617,8 +1617,8 @@ namespace Freeserf.UI
             uint[] axisIcons7 = { 125, 124, 122, 120 };
             uint[] axisIcons8 = { 128, 127, 126, 123 };
 
-            uint[] axisIcons = null;
-            int multiplier = 0;
+            uint[] axisIcons;
+            int multiplier;
 
             if (maxValue <= 64)
             {

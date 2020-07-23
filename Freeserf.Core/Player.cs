@@ -54,6 +54,7 @@ namespace Freeserf
 
         int sendGenericDelay = 0;
         int sendKnightDelay = 0;
+        // TODO: move to state as multiplayer games won't have the info otherwise
         readonly uint[,] playerStatHistory = new uint[16, 112];
         readonly uint[,] resourceCountHistory = new uint[26, 120];
 
@@ -1476,9 +1477,9 @@ namespace Freeserf
             }
         }
 
-        public void UpdateStats(int resource)
+        public void UpdateStats(int resource, int index)
         {
-            resourceCountHistory[resource, Index] = state.ResourceCounts[resource];
+            resourceCountHistory[resource, index] = state.ResourceCounts[resource];
             state.ResourceCounts[resource] = 0;
         }
 
