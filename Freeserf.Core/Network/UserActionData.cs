@@ -938,8 +938,34 @@ namespace Freeserf.Network
                             return game.DemolishRoad(mapPosition, source) ? ResponseType.Ok : ResponseType.Failed;
                         }
                     case UserAction.Surrender:
-                        // TODO
+                        // Should be handled before.
                         return ResponseType.Ok;
+                    case UserAction.MergePaths:
+                        {
+                            EnsureParameters(4);
+                            MapPos mapPosition = BitConverter.ToUInt32(Parameters, 0);
+                            var flag = game.GetFlagAtPosition(mapPosition);
+
+                            if (flag == null)
+                                return ResponseType.Failed;
+                            
+                            return flag.MergeNearbyPaths() ? ResponseType.Ok : ResponseType.Failed;
+                        }
+                    case UserAction.SetInventoryMode:
+                        {
+                            uint inventoryIndex = BitConverter.ToUInt32(Parameters, 0);
+                            var inventory = game.GetInventory(inventoryIndex);
+
+                            if (inventory == null)
+                                return ResponseType.Failed;
+
+                            byte modes = Parameters[4];
+
+                            inventory.SerfMode = (Inventory.Mode)(modes & 0x03);
+                            inventory.ResourceMode = (Inventory.Mode)((modes >> 2) & 0x03);
+
+                            return ResponseType.Ok;
+                        }
                 }
             }
             catch

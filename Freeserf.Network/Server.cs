@@ -645,6 +645,12 @@ namespace Freeserf.Network
                         else if (networkData.Type == NetworkDataType.UserActionData)
                         {
                             var userAction = networkData as UserActionData;
+
+                            if (userAction.UserAction == UserAction.Surrender)
+                            {
+                                // TODO
+                            }
+
                             var response = userAction.ApplyToGame(game, client.PlayerIndex);
 
                             if (response == ResponseType.Ok)
