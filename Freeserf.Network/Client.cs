@@ -330,10 +330,9 @@ namespace Freeserf.Network
                                 lock (Game)
                                 {
                                     lastSavedGameStates.Clear();
-                                    bool full = syncData.Full && lastVerifiedSavedGameState != null; // first sync should not be handled as full
                                     if (lastVerifiedSavedGameState == null)
                                         lastVerifiedSavedGameState = SavedGameState.FromGame(Game);
-                                    lastVerifiedSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastVerifiedSavedGameState, syncData.SerializedData, full);
+                                    lastVerifiedSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastVerifiedSavedGameState, syncData.SerializedData, syncData.Full);
                                 }
 
 #if DEBUG

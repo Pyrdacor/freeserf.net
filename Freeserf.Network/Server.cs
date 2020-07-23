@@ -392,7 +392,7 @@ namespace Freeserf.Network
                     if (GameDirty)
                     {
                         inSyncCancelTokenSource.Cancel(); // Cancel pending in-sync broadcasts.
-                        BroadcastGameStateUpdate(currentGame, false);
+                        BroadcastGameStateUpdate(currentGame, true); // TODO: Change to false
                         lastUserActionOrInSyncGameTime = currentGame.GameTime;
                     }
                     else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >= SavedGameState.SyncDelay &&

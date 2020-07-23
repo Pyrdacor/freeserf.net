@@ -1098,10 +1098,13 @@ namespace Freeserf
 
                         foreach (var direction in cycle)
                         {
-                            foreach (var handler in changeHandlers)
+                            if (HasPath(i, direction))
                             {
-                                // We act as if there was no path before.
-                                handler.OnRoadSegmentPlaced(i, direction);
+                                foreach (var handler in changeHandlers)
+                                {
+                                    // We act as if there was no path before.
+                                    handler.OnRoadSegmentPlaced(i, direction);
+                                }
                             }
                         }
                     }

@@ -745,6 +745,8 @@ namespace Freeserf
                         var otherFlagOutRoad = otherFlag.GetRoad(otherFlagOutDir);
                         OtherEndPoints[directionIndex].Road = otherFlagOutRoad ?? newRoad;
                         OtherEndPoints[directionIndex].Flag = otherFlag;
+                        otherFlag.OtherEndPoints[(int)otherFlagOutDir].Road = OtherEndPoints[directionIndex].Road;
+                        otherFlag.OtherEndPoints[(int)otherFlagOutDir].Flag = this;
                     }
                     else
                     {
