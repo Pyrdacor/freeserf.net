@@ -14,11 +14,12 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 | ---- | ---- | ---- |
 | [![Build status](https://ci.appveyor.com/api/projects/status/github/pyrdacor/freeserf.net?branch=master&svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master) | [![Build Status](https://travis-ci.org/Pyrdacor/freeserf.net.svg?branch=master)](https://travis-ci.org/Pyrdacor/freeserf.net/branches) | [![Build Status](https://dev.azure.com/Pyrdacor/Freeserf.net/_apis/build/status/Pyrdacor.freeserf.net?branchName=master)](https://dev.azure.com/Pyrdacor/Freeserf.net/_build/latest?definitionId=2&branchName=master) |
 
+
 ## Download the game
 
 | Windows | Linux |
 | ---- | ---- |
-| [v2.0.5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.5/Freeserf.net-Windows.zip "Windows v2.0.5") | [v2.0.5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.5/Freeserf.net-Linux.tar.gz "Linux v2.0.5") |
+| [v2.0.6](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.6/Freeserf.net-Windows.zip "Windows v2.0.6") | [v2.0.6](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.0.6/Freeserf.net-Linux.tar.gz "Linux v2.0.6") |
 
 Builds for other platforms will follow later. Only recent Ubuntu versions are tested for Linux version.
 
@@ -43,6 +44,11 @@ You can also flattr.
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=Pyrdacor&url=https://github.com/Pyrdacor/freeserf.net&title=Freeserf.net&language=C#&tags=github&category=software)
 
 Thank you very much.
+
+You may also be interested in my other projects:
+
+- [Ambermoon.net](https://github.com/Pyrdacor/Ambermoon.net) - a C# rework of the Amiga classic Ambermoon
+- [Ambermoon](https://github.com/Pyrdacor/Ambermoon) - a research project to track findings of Ambermoon data decryption
 
 
 ## Current State
