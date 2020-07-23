@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Freeserf.Network;
 
 namespace Freeserf.UI
 {
@@ -571,52 +572,95 @@ namespace Freeserf.UI
             var player = interf.Player;
             uint realAmount = (uint)slideBars[index].Fill * SlideBarFactor;
 
-            // TODO: CLIENT
-
             switch (Box)
             {
                 case Type.FoodDistribution:
                     if (index == 0) // stonemine food
+                    {
                         player.FoodStonemine = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.FoodStonemine, (ushort)realAmount);
+                    }
                     else if (index == 1) // coalmine food
+                    {
                         player.FoodCoalmine = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.FoodCoalmine, (ushort)realAmount);
+                    }
                     else if (index == 2) // ironmine food
+                    {
                         player.FoodIronmine = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.FoodIronmine, (ushort)realAmount);
+                    }
                     else if (index == 3) // goldmine food
+                    {
                         player.FoodGoldmine = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.FoodGoldmine, (ushort)realAmount);
+                    }
                     break;
                 case Type.PlanksAndSteelDistribution:
                     if (index == 0) // construction planks
+                    {
                         player.PlanksConstruction = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.PlanksConstruction, (ushort)realAmount);
+                    }
                     else if (index == 1) // boatbuilder planks
+                    {
                         player.PlanksBoatbuilder = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.PlanksBoatbuilder, (ushort)realAmount);
+                    }
                     else if (index == 2) // toolmaker planks
+                    {
                         player.PlanksToolmaker = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.PlanksToolmaker, (ushort)realAmount);
+                    }
                     else if (index == 3) // toolmaker steel
+                    {
                         player.SteelToolmaker = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.SteelToolmaker, (ushort)realAmount);
+                    }
                     else if (index == 4) // weaponsmith steel
+                    {
                         player.SteelWeaponsmith = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.SteelWeaponsmith, (ushort)realAmount);
+                    }
                     break;
                 case Type.CoalAndWheatDistribution:
                     if (index == 0) // steelsmelter coal
+                    {
                         player.CoalSteelsmelter = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.CoalSteelsmelter, (ushort)realAmount);
+                    }
                     else if (index == 1) // goldsmelter coal
+                    {
                         player.CoalGoldsmelter = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.CoalGoldsmelter, (ushort)realAmount);
+                    }
                     else if (index == 2) // weaponsmith coal
+                    {
                         player.CoalWeaponsmith = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.CoalWeaponsmith, (ushort)realAmount);
+                    }
                     else if (index == 3) // pigfarm wheat
+                    {
                         player.WheatPigfarm = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.WheatPigfarm, (ushort)realAmount);
+                    }
                     else if (index == 4) // mill wheat
+                    {
                         player.WheatMill = realAmount;
+                        SendClientSettingChange(UserActionGameSetting.WheatMill, (ushort)realAmount);
+                    }
                     break;
                 case Type.ToolmakerPriorities:
                     player.SetToolPriority(index, (int)realAmount);
+                    SendClientSettingChange(UserActionGameSetting.ToolPriority, new byte[] { (byte)index, (byte)(realAmount & 0xff), (byte)((realAmount >> 8) & 0xff) });
                     break;
                 case Type.KnightSettings:
                     if (index == 0) // serf to knight rate
+                    {
                         player.SerfToKnightRate = (int)realAmount;
+                        SendClientSettingChange(UserActionGameSetting.SerfToKnightRate, (ushort)realAmount);
+                    }
                     break;
-                    // TODO ...
             }
         }
 
@@ -3365,6 +3409,34 @@ namespace Freeserf.UI
             }
 
             player.MoveTransportItemPriority(up, toEnd, priorities, (Resource.Type)currentItem);
+
+            byte clientMoveFlags = 0;
+
+            if (up)
+                clientMoveFlags |= 0x01;
+            if (toEnd)
+                clientMoveFlags |= 0x02;
+
+            if (Box == Type.TransportPriorities)
+                SendClientSettingChange(UserActionGameSetting.FlagPriority, (byte)currentItem, clientMoveFlags);
+            else
+                SendClientSettingChange(UserActionGameSetting.InventoryPriority, (byte)currentItem, clientMoveFlags);
+        }
+
+        void SendClientSettingChange(UserActionGameSetting setting, params byte[] values)
+        {
+            SendClientUserAction(() => UserActionData.CreateChangeSettingUserAction(Network.Global.SpontaneousMessage, interf.Game, setting, values));
+        }
+
+        void SendClientSettingChange(UserActionGameSetting setting, ushort value)
+        {
+            SendClientUserAction(() => UserActionData.CreateChangeSettingUserAction(Network.Global.SpontaneousMessage, interf.Game, setting, value));
+        }
+
+        void SendClientUserAction(Func<UserActionData> userActionDataProvider)
+        {
+            if (interf.Viewer is ClientViewer clientViewer)
+                clientViewer.SendUserAction(userActionDataProvider?.Invoke());
         }
 
         void HandleAction(Action action, int x, int y, object tag = null)
@@ -3465,8 +3537,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         player.ResetFoodPriority();
+                        SendClientSettingChange(UserActionGameSetting.ResetFoodDistribution);
                     }
                     break;
                 case Action.DefaultPlanksAndSteelDistribution:
@@ -3476,9 +3548,10 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         player.ResetPlanksPriority();
                         player.ResetSteelPriority();
+                        SendClientSettingChange(UserActionGameSetting.ResetPlankDistribution);
+                        SendClientSettingChange(UserActionGameSetting.ResetSteelDistribution);
                     }
                     break;
                 case Action.DefaultCoalAndWheatDistribution:
@@ -3488,9 +3561,10 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         player.ResetCoalPriority();
                         player.ResetWheatPriority();
+                        SendClientSettingChange(UserActionGameSetting.ResetCoalDistribution);
+                        SendClientSettingChange(UserActionGameSetting.ResetWheatDistribution);
                     }
                     break;
                 case Action.DefaultToolmakerPriorities:
@@ -3500,8 +3574,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         player.ResetToolPriority();
+                        SendClientSettingChange(UserActionGameSetting.ToolPriority, (byte)0xff);
                     }
                     break;
                 case Action.DefaultTransportPriorities:
@@ -3511,11 +3585,16 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         if (Box == Type.TransportPriorities)
+                        {
                             player.ResetFlagPriority();
+                            SendClientSettingChange(UserActionGameSetting.FlagPriority, (byte)0xff);
+                        }
                         else
+                        {
                             player.ResetInventoryPriority();
+                            SendClientSettingChange(UserActionGameSetting.InventoryPriority, (byte)0xff);
+                        }
                     }
                     break;
                 case Action.TransportPriorityToTop:
@@ -3525,7 +3604,6 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         MoveTransportItem(true, true);
                     }
                     break;
@@ -3536,7 +3614,6 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         MoveTransportItem(false, true);
                     }
                     break;
@@ -3547,7 +3624,6 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         MoveTransportItem(true, false);
                     }
                     break;
@@ -3558,7 +3634,6 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         MoveTransportItem(false, false);
                     }
                     break;
@@ -3666,7 +3741,6 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         // the button/icon is 32x32
                         if (x < 16)
                         {
@@ -3703,9 +3777,9 @@ namespace Freeserf.UI
                     {
                         if (player.SendStrongest)
                         {
-                            // TODO: CLIENT
                             player.SendStrongest = false;
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                            SendClientSettingChange(UserActionGameSetting.SendWeakest);
                         }
                     }
                     break;
@@ -3718,9 +3792,9 @@ namespace Freeserf.UI
                     {
                         if (!player.SendStrongest)
                         {
-                            // TODO: CLIENT
                             player.SendStrongest = true;
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                            SendClientSettingChange(UserActionGameSetting.SendStrongest);
                         }
                     }
                     break;
@@ -3731,9 +3805,9 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         player.CycleKnights();
                         PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                        SendClientUserAction(() => UserActionData.CreateCycleKnightsUserAction(Network.Global.SpontaneousMessage, interf.Game));
                     }
                     break;
                 case Action.DecreaseCastleKnights:
@@ -3743,8 +3817,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.DecreaseCastleKnightsWanted();
+                        if (player.DecreaseCastleKnightsWanted())
+                            SendClientSettingChange(UserActionGameSetting.CastleKnightsWanted, (byte)player.CastleKnightsWanted);
                     }
                     break;
                 case Action.IncreaseCastleKnights:
@@ -3754,8 +3828,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.IncreaseCastleKnightsWanted();
+                        if (player.IncreaseCastleKnightsWanted())
+                            SendClientSettingChange(UserActionGameSetting.CastleKnightsWanted, (byte)player.CastleKnightsWanted);
                     }
                     break;
                 case Action.KnightLevelClosestMinDec:
@@ -3765,8 +3839,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(3, false, -1);
+                        if (player.ChangeKnightOccupation(3, false, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelClosestMinInc:
@@ -3776,8 +3850,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(3, false, 1);
+                        if (player.ChangeKnightOccupation(3, false, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelClosestMaxDec:
@@ -3787,8 +3861,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(3, true, -1);
+                        if (player.ChangeKnightOccupation(3, true, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelClosestMaxInc:
@@ -3798,8 +3872,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(3, true, 1);
+                        if (player.ChangeKnightOccupation(3, true, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelCloseMinDec:
@@ -3809,8 +3883,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(2, false, -1);
+                        if (player.ChangeKnightOccupation(2, false, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelCloseMinInc:
@@ -3820,8 +3894,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(2, false, 1);
+                        if (player.ChangeKnightOccupation(2, false, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelCloseMaxDec:
@@ -3831,8 +3905,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(2, true, -1);
+                        if (player.ChangeKnightOccupation(2, true, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelCloseMaxInc:
@@ -3842,8 +3916,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(2, true, 1);
+                        if (player.ChangeKnightOccupation(2, true, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarMinDec:
@@ -3853,8 +3927,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(1, false, -1);
+                        if (player.ChangeKnightOccupation(1, false, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarMinInc:
@@ -3864,8 +3938,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(1, false, 1);
+                        if (player.ChangeKnightOccupation(1, false, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarMaxDec:
@@ -3875,8 +3949,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(1, true, -1);
+                        if (player.ChangeKnightOccupation(1, true, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarMaxInc:
@@ -3886,8 +3960,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(1, true, 1);
+                        if (player.ChangeKnightOccupation(1, true, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarthestMinDec:
@@ -3897,8 +3971,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(0, false, -1);
+                        if (player.ChangeKnightOccupation(0, false, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarthestMinInc:
@@ -3908,8 +3982,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(0, false, 1);
+                        if (player.ChangeKnightOccupation(0, false, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarthestMaxDec:
@@ -3919,8 +3993,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(0, true, -1);
+                        if (player.ChangeKnightOccupation(0, true, -1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.KnightLevelFarthestMaxInc:
@@ -3930,8 +4004,8 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
-                        player.ChangeKnightOccupation(0, true, 1);
+                        if (player.ChangeKnightOccupation(0, true, 1))
+                            SendClientSettingChange(UserActionGameSetting.KnightOccupation, player.GetKnightOccupations());
                     }
                     break;
                 case Action.ShowCastleResources:
@@ -3955,7 +4029,6 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        // TODO: CLIENT
                         SetInventoryMode(action);
                     }
                     break;
@@ -3993,8 +4066,8 @@ namespace Freeserf.UI
                         }
                         else
                         {
-                            // TODO: CLIENT
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                            SendClientUserAction(() => UserActionData.CreateSendGeologistUserAction(Network.Global.SpontaneousMessage, interf.Game, position));
                             interf.ClosePopup();
                         }
                     }
@@ -4015,8 +4088,8 @@ namespace Freeserf.UI
                         }
                         else
                         {
-                            // TODO: CLIENT
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                            SendClientUserAction(() => UserActionData.CreateMergePathsUserAction(Network.Global.SpontaneousMessage, interf.Game, position));
                             interf.ClosePopup();
                         }
                     }
@@ -4026,9 +4099,11 @@ namespace Freeserf.UI
                     {
                         if (player.AttackingBuildingCount > 0)
                         {
-                            // TODO: CLIENT
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
                             player.StartAttack();
+                            var position = interf.Game.GetBuilding((uint)player.BuildingToAttack).Position;
+                            SendClientUserAction(() => UserActionData.CreateAttackUserAction(Network.Global.SpontaneousMessage, interf.Game, position, player.TotalKnightsAttacking));
+                            // TODO: I guess we need a full player sync including knights for each attack
                         }
 
                         interf.ClosePopup();
@@ -4526,7 +4601,10 @@ namespace Freeserf.UI
             if (player.PromoteSerfsToKnights(number) == 0)
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
             else
+            {
                 PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+                SendClientUserAction(() => UserActionData.CreateTrainKnightsUserAction(Network.Global.SpontaneousMessage, interf.Game, (byte)number));
+            }
         }
 
         void SetInventoryMode(Action action)
@@ -4559,6 +4637,7 @@ namespace Freeserf.UI
             }
 
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+            SendClientUserAction(() => UserActionData.CreateSetInventoryModeUserAction(Network.Global.SpontaneousMessage, interf.Game, inventory));
         }
     }
 }

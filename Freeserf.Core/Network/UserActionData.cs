@@ -265,9 +265,9 @@ namespace Freeserf.Network
         Surrender,
         /// <summary>
         /// Merge a path.
-        /// TODO
+        /// Byte 0-3: Map position
         /// </summary>
-        MergePaths, // TODO
+        MergePaths,
         /// <summary>
         /// Sets the mode of an inventory.
         /// - Serfs in
@@ -276,9 +276,12 @@ namespace Freeserf.Network
         /// - Resources in
         /// - Resources stop
         /// - Resources out
-        /// TODO
+        /// Byte 0-3: Inventory index (also transferred to be on the safe side)
+        /// Byte 4: Modes
+        /// - Bit 0-1: 00 = Serfs in, 01 = Serfs stop, 11 = Serfs out, 10 = Invalid
+        /// - Bit 2-3: 00 = Resources in, 01 = Resources stop, 11 = Resources out, 10 = Invalid
         /// </summary>
-        SetInventoryMode // TODO
+        SetInventoryMode
     }
 
     public class UserActionData : INetworkData
@@ -508,6 +511,24 @@ namespace Freeserf.Network
             return new UserActionData(number, game.GameTime, UserAction.Surrender, null);
         }
 
+        internal static UserActionData CreateMergePathsUserAction(byte number, Game game, MapPos mapPosition)
+        {
+            return new UserActionData(number, game.GameTime, UserAction.MergePaths, BitConverter.GetBytes(mapPosition));
+        }
+
+        internal static UserActionData CreateSetInventoryModeUserAction(byte number, Game game, Inventory inventory)
+        {
+            byte modes = (byte)((int)inventory.SerfMode | ((int)inventory.ResourceMode << 2));
+
+            return new UserActionData(number, game.GameTime, UserAction.SetInventoryMode,
+                CreateParameters
+                (
+                    inventory.Index,
+                    modes
+                )
+            );
+        }
+
         private static byte[] CreateParameters(params object[] parameters)
         {
             var result = new List<byte>(20);
@@ -561,7 +582,7 @@ namespace Freeserf.Network
                 {
                     case UserActionGameSetting.ToolPriority:
                         {
-                            EnsureParameters(4);
+                            EnsureParameters(2);
                             var toolIndex = Parameters[1];
                             if (toolIndex == 0xff)
                             {
@@ -570,13 +591,14 @@ namespace Freeserf.Network
                             }
                             if (toolIndex >= 9)
                                 return ResponseType.BadRequest;
+                            EnsureParameters(4);
                             var value = BitConverter.ToUInt16(Parameters, 2);
                             source.SetToolPriority(toolIndex, value);
                             return ResponseType.Ok;
                         }
                     case UserActionGameSetting.FlagPriority:
                         {
-                            EnsureParameters(3);
+                            EnsureParameters(2);
                             var resourceIndex = Parameters[1];
                             if (resourceIndex == 0xff)
                             {
@@ -585,6 +607,7 @@ namespace Freeserf.Network
                             }
                             if (resourceIndex > (byte)Resource.Type.MaxValue)
                                 return ResponseType.BadRequest;
+                            EnsureParameters(3);
                             var value = Parameters[2];
                             bool up = (value & 0x01) != 0;
                             bool toEnd = (value & 0x02) != 0;
@@ -593,7 +616,7 @@ namespace Freeserf.Network
                         }
                     case UserActionGameSetting.InventoryPriority:
                         {
-                            EnsureParameters(3);
+                            EnsureParameters(2);
                             var resourceIndex = Parameters[1];
                             if (resourceIndex == 0xff)
                             {
@@ -602,6 +625,7 @@ namespace Freeserf.Network
                             }
                             if (resourceIndex > (byte)Resource.Type.MaxValue)
                                 return ResponseType.BadRequest;
+                            EnsureParameters(3);
                             var value = Parameters[2];
                             bool up = (value & 0x01) != 0;
                             bool toEnd = (value & 0x02) != 0;

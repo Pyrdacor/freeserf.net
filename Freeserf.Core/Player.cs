@@ -446,15 +446,21 @@ namespace Freeserf
             settings.InventoryPriorities[Resource.Type.GoldBar] = 26;
         }
 
+        public byte[] GetKnightOccupations()
+        {
+            return settings.KnightOccupation;
+        }
+
         public uint GetKnightOccupation(int threatLevel)
         {
             return settings.KnightOccupation[threatLevel];
         }
 
-        public void ChangeKnightOccupation(int index, bool adjustMax, int delta)
+        public bool ChangeKnightOccupation(int threatLevel, bool adjustMax, int delta)
         {
-            int max = (settings.KnightOccupation[index] >> 4) & 0xf;
-            int min = settings.KnightOccupation[index] & 0xf;
+            byte oldValue = settings.KnightOccupation[threatLevel];
+            int max = (oldValue >> 4) & 0xf;
+            int min = oldValue & 0xf;
 
             if (adjustMax)
             {
@@ -465,7 +471,9 @@ namespace Freeserf
                 min = Misc.Clamp(0, min + delta, max);
             }
 
-            settings.KnightOccupation[index] = (byte)((max << 4) | min);
+            settings.KnightOccupation[threatLevel] = (byte)((max << 4) | min);
+
+            return oldValue != settings.KnightOccupation[threatLevel];
         }
 
         public void SetLowKnightOccupation()
@@ -524,14 +532,22 @@ namespace Freeserf
             settings.CastleKnightsWanted = (byte)Misc.Clamp(1, amount, 99);
         }
 
-        public void IncreaseCastleKnightsWanted()
+        public bool IncreaseCastleKnightsWanted()
         {
-            settings.CastleKnightsWanted = (byte)Math.Min(settings.CastleKnightsWanted + 1, 99);
+            if (settings.CastleKnightsWanted == 99)
+                return false;
+
+            settings.CastleKnightsWanted = (byte)(settings.CastleKnightsWanted + 1);
+            return true;
         }
 
-        public void DecreaseCastleKnightsWanted()
+        public bool DecreaseCastleKnightsWanted()
         {
-            settings.CastleKnightsWanted = (byte)Math.Max(1, settings.CastleKnightsWanted - 1);
+            if (settings.CastleKnightsWanted == 0)
+                return false;
+
+            settings.CastleKnightsWanted = (byte)(settings.CastleKnightsWanted - 1);
+            return true;
         }
 
         public uint KnightMorale => state.KnightMorale;
