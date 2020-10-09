@@ -7763,17 +7763,16 @@ namespace Freeserf
                 {
                     case 0: // Base state
                         {
-                            /* There is a small chance that the miner will
-                               not require food and skip to state 2. */
+                            // There is a small chance that the miner will require food.
                             int random = Game.RandomInt();
 
                             if ((random & 7) == 0)
                             {
-                                stateData.Mining.Substate = 2;
+                                stateData.Mining.Substate = 1;
                             }
                             else
                             {
-                                stateData.Mining.Substate = 1;
+                                stateData.Mining.Substate = 2;
                             }
 
                             Counter += 100 + (random & 0x1ff);
