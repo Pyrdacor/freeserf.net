@@ -261,7 +261,8 @@ __pycache__/
 *.pyc
 
 # Test data resources
-SPAE.*
+SPA*.PA
+SOUNDS.PA
 gfxchip
 gfxfast
 gfxheader
