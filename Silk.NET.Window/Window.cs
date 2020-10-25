@@ -250,11 +250,17 @@ namespace Silk.NET.Window
 
         private void OnKeyDown(IKeyboard keyboard, Key key, int code)
         {
+            if (key == Key.Unknown)
+                return;
+
             OnKeyDown(key, GetModifiers(keyboard));
         }
 
         private void OnKeyUp(IKeyboard keyboard, Key key, int code)
         {
+            if (key == Key.Unknown)
+                return;
+
             OnKeyUp(key, GetModifiers(keyboard));
         }
 
