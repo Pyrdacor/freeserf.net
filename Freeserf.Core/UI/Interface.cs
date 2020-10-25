@@ -1350,9 +1350,31 @@ namespace Freeserf.UI
                         mapCursorSprites[2].Sprite = 32u;
                         break;
                     case CursorType.Building:
-                        mapCursorSprites[0].Sprite = 31u;
+                        if (Game.GetBuildingAtPosition(mapCursorPosition).Player == Player.Index)
+                        {
+                            if (Game.CanBuildMine(mapCursorPosition))
+                            {
+                                mapCursorSprites[0].Sprite = 47u;
+                            }
+                            else if(Game.CanBuildLarge(mapCursorPosition))
+                            {
+                                mapCursorSprites[0].Sprite = 49u;
+                            }
+                            else if(Game.CanBuildSmall(mapCursorPosition))
+                            {
+                                mapCursorSprites[0].Sprite = 48u;
+                            }
+                            else
+                            {
+                                mapCursorSprites[0].Sprite = 31u;
+                            }
+                        }
+                        else
+                        {
+                            mapCursorSprites[0].Sprite = 31u;
+                        }
                         mapCursorSprites[2].Sprite = 32u;
-                        break;
+                    break;
                     case CursorType.Path:
                         mapCursorSprites[0].Sprite = 51u;
                         mapCursorSprites[2].Sprite = 32u;
