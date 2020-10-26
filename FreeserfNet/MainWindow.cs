@@ -78,7 +78,10 @@ namespace Freeserf
             try
             {
 #if !DEBUG
-                Log.SetStream(new LogFileStream(Path.Combine(Program.ExecutablePath, UserConfig.DefaultLogFile)));
+                string logDirectory = FileSystem.Paths.IsWindows() ? Program.ExecutablePath : "/var/log/freeserf.net";
+                string logPath = Path.Combine(logDirectory, UserConfig.DefaultLogFile);
+                Directory.CreateDirectory(logDirectory);
+                Log.SetStream(new LogFileStream(logPath));
                 Log.MaxSize = UserConfig.DefaultMaxLogSize;
 #else
                 Log.MaxSize = null; // Console output is not limited

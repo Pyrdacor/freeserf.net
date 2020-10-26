@@ -152,14 +152,12 @@ namespace Freeserf.Data
         {
             List<string> searchPaths = new List<string>();
 
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                searchPaths = GetStandardSearchPaths();
-            }
-            else
+            if (!string.IsNullOrWhiteSpace(path))
             {
                 searchPaths.Add(path);
             }
+
+            searchPaths.AddRange(GetStandardSearchPaths());
 
             foreach (var searchPath in searchPaths)
             {
