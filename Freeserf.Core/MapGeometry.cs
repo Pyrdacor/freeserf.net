@@ -89,6 +89,19 @@ namespace Freeserf
         {
             return Turn(direction, 3);
         }
+
+        internal static Direction DirectionTo(this Map map, MapPos position, MapPos otherPosition)
+        {
+            var cycle = DirectionCycleCW.CreateDefault();
+
+            foreach (var direction in cycle)
+            {
+                if (map.Move(position, direction) == otherPosition)
+                    return direction;
+            }
+
+            return Direction.None;
+        }
     }
 
     // Cycle direction (clockwise or counter-clockwise)

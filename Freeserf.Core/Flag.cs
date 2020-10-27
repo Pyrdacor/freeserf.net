@@ -1206,60 +1206,33 @@ namespace Freeserf
                     continue;
 
                 var road = pathEntry.Key;
-                var flag1 = Game.GetFlagAtPosition(road.StartPosition);
-                var flag2 = Game.GetFlagAtPosition(road.EndPosition);
+                var point1 = pathEntry.Value[0];
+                var point2 = pathEntry.Value[1];
 
-                // build two new roads from the old roads (one from each end flag)
-                var roadInverseDirections = road.Directions.ToList();
-                var roadDirections = new List<Direction>(roadInverseDirections);
-                roadDirections.Reverse();
-
-                for (int i = 0; i < roadInverseDirections.Count; ++i)
+                // 1. Remove the path between the two points
+                void SetSerfOnPathLost(MapPos position, Direction direction)
                 {
-                    roadInverseDirections[i] = roadInverseDirections[i].Reverse();
+                    var serf = Game.GetSerfAtPosition(position);
+
+                    if (serf != null && (serf.SerfState == Serf.State.Walking ||
+                        serf.SerfState == Serf.State.Transporting) && serf.WalkingDirection == (int)direction)
+                        serf.SetLostState();
                 }
+                var pathDirection = map.DirectionTo(point1, point2);
+                SetSerfOnPathLost(point1, pathDirection);
+                SetSerfOnPathLost(point2, pathDirection.Reverse());
+                map.DeletePath(point1, pathDirection);
+                map.DeletePath(point2, pathDirection.Reverse());
 
-                var position = flag1.Position;
-                var newRoad1 = new Road();
-                newRoad1.Start(position);
+                // 2. Add a path between the flag and the two points
+                var direction1 = map.DirectionTo(point1, Position);
+                map.AddPath(point1, direction1);
+                map.AddPath(Position, direction1.Reverse());
+                var direction2 = map.DirectionTo(point2, Position);
+                map.AddPath(point2, direction2);
+                map.AddPath(Position, direction2.Reverse());
 
-                foreach (var direction in roadDirections)
-                {
-                    position = map.Move(position, direction);
-                    newRoad1.Extend(map, direction);
-
-                    if (pathEntry.Value.Contains(position))
-                    {
-                        newRoad1.Extend(map, connectDirections[position]);
-                        break;
-                    }
-                }
-
-                position = flag2.Position;
-                var newRoad2 = new Road();
-                newRoad2.Start(position);
-
-                foreach (var direction in roadInverseDirections)
-                {
-                    position = map.Move(position, direction);
-                    newRoad2.Extend(map, direction);
-
-                    if (pathEntry.Value.Contains(position))
-                    {
-                        newRoad2.Extend(map, connectDirections[position]);
-                        break;
-                    }
-                }
-
-                // delete the old road
-                Game.RemoveRoad(road);
-
-                var player = Game.GetPlayer(Player);
-
-                // build new roads
-                if (!Game.BuildRoad(newRoad1, player, true) ||
-                    !Game.BuildRoad(newRoad2, player, true))
-                    return false;
+                Game.BuildFlagSplitPath(Position);
             }
 
             return true;
@@ -1414,7 +1387,7 @@ namespace Freeserf
             }
 
             // Trace along the path to the flag at the other end.
-            int paths = 0;
+            int paths;
 
             while (true)
             {

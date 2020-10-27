@@ -2892,7 +2892,7 @@ namespace Freeserf
                         if (walkingDirection < 0)
                             walkingDirection += 6;
 
-                        if (direction != Direction.None && walkingDirection == (int)direction.Reverse()) // TODO: shouldn't this be walkingDirection == (int)inDirection.Reverse() ?
+                        if (direction != Direction.None && walkingDirection == (int)direction.Reverse())
                         {
                             serf.SetLostState();
                         }
@@ -2977,7 +2977,7 @@ namespace Freeserf
         /// Build flag on existing path. Path must be split in two segments.
         /// </summary>
         /// <param name="position"></param>
-        void BuildFlagSplitPath(MapPos position)
+        internal void BuildFlagSplitPath(MapPos position)
         {
             // Find directions of path segments to be split. 
             var path1Direction = Direction.None;
