@@ -263,7 +263,7 @@ namespace Freeserf
                         State.KnightAttacking => new StateDataAttacking(parentStateData),
                         State.KnightAttackingDefeat => new StateDataAttacking(parentStateData),
                         State.KnightAttackingDefeatFree => new StateDataAttacking(parentStateData),
-                        State.KnightAttackingFree => new StateDataFreeWalking(parentStateData),
+                        State.KnightAttackingFree => new StateDataAttacking(parentStateData),
                         State.KnightAttackingFreeWait => new StateDataFreeWalking(parentStateData),
                         State.KnightAttackingVictory => new StateDataAttacking(parentStateData),
                         State.KnightAttackingVictoryFree => new StateDataAttackingVictoryFree(parentStateData),
@@ -1053,7 +1053,7 @@ namespace Freeserf
             }
 
             // States: Farming, Fishing, FreeSailing, FreeWalking,
-            // KnightAttackingFree, KnightAttackingFreeWait, KnightFreeWalking,
+            // KnightAttackingFreeWait, KnightFreeWalking,
             // Logging, Planting, SamplingGeoSpot, StonecutterFreeWalking, Stonecutting
             public class StateDataFreeWalking : StateDataBase
             {
@@ -1149,7 +1149,6 @@ namespace Freeserf
                             serf.SerfState != State.Fishing &&
                             serf.SerfState != State.FreeSailing &&
                             serf.SerfState != State.FreeWalking &&
-                            serf.SerfState != State.KnightAttackingFree &&
                             serf.SerfState != State.KnightAttackingFreeWait &&
                             serf.SerfState != State.KnightFreeWalking &&
                             serf.SerfState != State.Logging &&
@@ -1700,7 +1699,8 @@ namespace Freeserf
 
             // States: KnightAttacking, KnightAttackingDefeat, KnightAttackingDefeatFree,
             // KnightAttackingVictory, KnightEngageAttackingFree, KnightEngageAttackingFreeJoin,
-            // KnightEngagingBuilding, KnightPrepareAttacking, KnightPrepareAttackingFree
+            // KnightEngagingBuilding, KnightPrepareAttacking, KnightPrepareAttackingFree,
+            // KnightAttackingFree
             public class StateDataAttacking : StateDataBase
             {
                 private int move; // B
@@ -1780,6 +1780,7 @@ namespace Freeserf
                             serf.SerfState != State.KnightAttackingDefeat &&
                             serf.SerfState != State.KnightAttackingDefeatFree &&
                             serf.SerfState != State.KnightAttackingVictory &&
+                            serf.SerfState != State.KnightAttackingFree &&
                             serf.SerfState != State.KnightEngageAttackingFree &&
                             serf.SerfState != State.KnightEngageAttackingFreeJoin &&
                             serf.SerfState != State.KnightEngagingBuilding &&
@@ -4011,7 +4012,6 @@ namespace Freeserf
                 case State.Farming:
                 case State.SamplingGeoSpot:
                 case State.KnightFreeWalking:
-                case State.KnightAttackingFree:
                 case State.KnightAttackingFreeWait:
                     stateData.FreeWalking.DistanceX = reader.Value("state.dist1").ReadInt();
                     stateData.FreeWalking.DistanceY = reader.Value("state.dist2").ReadInt();
@@ -4073,6 +4073,7 @@ namespace Freeserf
                 case State.KnightAttackingDefeatFree:
                 case State.KnightAttacking:
                 case State.KnightAttackingVictory:
+                case State.KnightAttackingFree:
                 case State.KnightEngageAttackingFree:
                 case State.KnightEngageAttackingFreeJoin:
                     if (reader.HasValue("state.move"))
@@ -4228,7 +4229,6 @@ namespace Freeserf
                 case State.Farming:
                 case State.SamplingGeoSpot:
                 case State.KnightFreeWalking:
-                case State.KnightAttackingFree:
                 case State.KnightAttackingFreeWait:
                     writer.Value("state.dist1").Write(stateData.FreeWalking.DistanceX);
                     writer.Value("state.dist2").Write(stateData.FreeWalking.DistanceY);
@@ -4290,6 +4290,7 @@ namespace Freeserf
                 case State.KnightAttackingDefeatFree:
                 case State.KnightAttacking:
                 case State.KnightAttackingVictory:
+                case State.KnightAttackingFree:
                 case State.KnightEngageAttackingFree:
                 case State.KnightEngageAttackingFreeJoin:                
                     writer.Value("state.move").Write(stateData.Attacking.Move);

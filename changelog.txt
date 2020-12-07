@@ -1,3 +1,13 @@
+Version 2.1.0:
+==============
+
+- Fixed fighting of knights in free space (not at a military building)
+    - Fixed missing animation of defending serf
+    - Fixed infinite fighting
+    - Fixed crash after fight
+    - Unfortunately old savegames with free fighting knights won't work with this version
+
+
 Version 2.0.8:
 ==============
 
