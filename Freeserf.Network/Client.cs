@@ -674,7 +674,7 @@ namespace Freeserf.Network
             {
                 try
                 {
-                    client.GetStream().Write(rawData, 0, rawData.Length);
+                    Host.WriteData(client.GetStream(), rawData);
                 }
                 catch (System.IO.IOException)
                 {

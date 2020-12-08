@@ -63,7 +63,7 @@ namespace Freeserf.Network
             GameTime = gameTime;
             SerializedData = serializedData;
             Full = full;
-            Size = 11 + serializedData.Length;
+            Size = 12 + serializedData.Length;
         }
 
         public int Size
@@ -78,9 +78,6 @@ namespace Freeserf.Network
         {
             if (rawData.Length - offset == 2)
                 throw new ExceptionFreeserf("Empty sync data received.");
-
-            if (rawData.Length - offset < Size)
-                throw new ExceptionFreeserf($"Sync data length must be {Size}.");
 
             MessageIndex = rawData[offset + 2];
             GameTime = BitConverter.ToUInt32(rawData, offset + 3);

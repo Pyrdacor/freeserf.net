@@ -104,8 +104,7 @@ namespace Freeserf.Serialize
 
                     bool wasDirty = Dirty;
 
-                    if (!dirtyIndices.Contains(index))
-                        dirtyIndices.Add(index);
+                    MarkIndexAsDirty(index);
 
                     if (!wasDirty)
                         GotDirty?.Invoke(this, EventArgs.Empty);
@@ -150,7 +149,7 @@ namespace Freeserf.Serialize
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

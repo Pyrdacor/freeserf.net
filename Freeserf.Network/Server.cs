@@ -32,19 +32,71 @@ namespace Freeserf.Network
 {
     internal class Host
     {
-        internal static byte[] ReadData(NetworkStream stream)
+        const byte ProtocolVersion = 0;
+
+        internal static byte[] ReadData(NetworkStream stream, int length)
         {
-            List<byte> largeBuffer = new List<byte>(4);
+            List<byte> largeBuffer = new List<byte>(1024);
             byte[] buffer = new byte[1024];
             int numRead;
 
             do
             {
-                numRead = stream.Read(buffer, 0, buffer.Length);
+                while (!stream.DataAvailable)
+                    Thread.Sleep(5);
+
+                numRead = stream.Read(buffer, 0, Math.Min(buffer.Length, length));
                 largeBuffer.AddRange(buffer.Take(numRead));
-            } while (numRead == buffer.Length);
+                length -= numRead;
+            } while (length != 0);
 
             return largeBuffer.ToArray();
+        }
+
+        internal static byte[] ReadData(NetworkStream stream)
+        {
+            // 'F' 'S' 'N' 0xVV 0xSSSSSSSS where the last 4 bytes give the length of the arriving data.
+            // VV is the protocol version (0 for now).
+            var header = ReadData(stream, 8);
+
+            if (header[0] != 'F' || header[1] != 'S' || header[2] != 'N')
+            {
+                Log.Debug.Write(ErrorSystemType.Network, $"Package with unknown header arrived and was discarded.");
+                return null; // Not for freeserf.net
+            }
+
+            if (ProtocolVersion < header[3])
+            {
+                Log.Debug.Write(ErrorSystemType.Network, $"Package with unsupported protocol version 0x{header[3]:x2} arrived and was discarded.");
+                return null; // We do not support the given protocol version
+            }
+
+            uint length = BitConverter.ToUInt32(header, 4);
+
+            if (length == 0)
+            {
+                Log.Debug.Write(ErrorSystemType.Network, $"Package with a size of 0 bytes arrived and was discarded.");
+                return null;
+            }
+
+            if (length > int.MaxValue)
+            {
+                Log.Debug.Write(ErrorSystemType.Network, $"Package with an out-of-bounds size of {length} bytes arrived and was discarded.");
+                return null;
+            }
+
+            return ReadData(stream, (int)(length & 0x7fffffff));
+        }
+
+        internal static void WriteData(NetworkStream stream, byte[] data)
+        {
+            byte[] header = new byte[]
+            {
+                (byte)'F', (byte)'S', (byte)'N', ProtocolVersion
+            };
+            stream.Write(header);
+            stream.Write(BitConverter.GetBytes((uint)data.Length));
+            stream.Write(data);
         }
 
         internal static IPAddress GetLocalIpAddress()
@@ -458,7 +510,7 @@ namespace Freeserf.Network
 
                         var data = Host.ReadData(stream);
 
-                        if (data.Length > 0)
+                        if (data != null && data.Length > 0)
                         {
                             server.HandleData(client, data);
                         }
@@ -1067,14 +1119,14 @@ namespace Freeserf.Network
 
                             var data = Host.ReadData(stream);
 
-                            if (data.Length > 0)
+                            if (data != null && data.Length > 0)
                             {
                                 DataReceived?.Invoke(this, data);
                             }
                         }
                         catch (ObjectDisposedException)
                         {
-                            if (localClient.Connected)
+                            if (localClient?.Connected == true)
                             {
                                 // TODO: connected but disposed? should not happen.
                             }
@@ -1105,7 +1157,7 @@ namespace Freeserf.Network
         public void Send(byte[] rawData)
         {
             if (localClient != null && localClient.Connected)
-                localClient.GetStream().Write(rawData, 0, rawData.Length);
+                Host.WriteData(localClient.GetStream(), rawData);
         }
     }
 
