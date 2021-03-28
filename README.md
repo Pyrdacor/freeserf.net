@@ -39,6 +39,8 @@ You can also flattr.
 
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=Pyrdacor&url=https://github.com/Pyrdacor/freeserf.net&title=Freeserf.net&language=C#&tags=github&category=software)
 
+Or you can become a github sponsor or a patreon (see bottom of this page).
+
 Thank you very much.
 
 You may also be interested in my other projects:
