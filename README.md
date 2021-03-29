@@ -31,7 +31,8 @@ Audio is provided by [BASS](http://www.un4seen.com/ "BASS"). The assemblies are 
 
 ## Support development
 
-If you want to support this project or other project of me you can do so here. \
+If you want to support this project or other projects of me you can do so here.
+
 <a href="https://www.patreon.com/bePatron?u=44764566"><img src="https://github.com/Pyrdacor/github-images/blob/main/patreon.svg" width="140" height="28" alt="Become a patron" /></a>
 <a href="https://github.com/sponsors/Pyrdacor"><img src="https://github.com/Pyrdacor/github-images/blob/main/sponsor.svg" width="70" height="24" alt="Sponsor" /></a>
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=76DV5MK5GNEMS&source=url) [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=Pyrdacor&url=https://github.com/Pyrdacor/freeserf.net&title=Freeserf.net&language=C#&tags=github&category=software) \
