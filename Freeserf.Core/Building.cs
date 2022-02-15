@@ -651,14 +651,18 @@ namespace Freeserf
 
         public void KnightRequestGranted()
         {
-            ++state.Stock[0].Requested;
-            state.SerfRequested = false;
+            if ( !HasInventory() ) 
+            {
+            	++state.Stock[0].Requested;
+            	state.SerfRequested = false;
+            }
         }
 
         // Building has inventory and the inventory pointer is valid.
         public bool HasInventory()
         {
-            return state.Stock[0].Requested == 0xff;
+            return BuildingType == Type.Castle //workaorund for save games where castle inventory marker is corrupt because of bug
+                   || state.Stock[0].Requested == 0xff;
         }
 
         public Inventory Inventory
