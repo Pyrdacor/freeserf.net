@@ -514,9 +514,15 @@ namespace Freeserf
                 settings.KnightOccupation[0] = values[i];
         }
 
+        public void IncreaseCastleKnightsRequested()
+        {
+            ++state.CastleKnightsRequested;
+        }
+
         public void IncreaseCastleKnights()
         {
             ++state.CastleKnights;
+            if ( CastleKnightsRequested > 0 ) --state.CastleKnightsRequested;
         }
 
         public void DecreaseCastleKnights()
@@ -1289,6 +1295,8 @@ namespace Freeserf
 
         public uint TotalMilitaryScore => state.TotalMilitaryScore;
 
+        public byte CastleKnightsRequested => state.CastleKnightsRequested;
+
         // Update player game state as part of the game progression.
         public void Update()
         {
@@ -1764,6 +1772,7 @@ namespace Freeserf
             get => settings.WheatMill;
             set => settings.WheatMill = (word)value;
         }
+
         public uint GetWheatMill() { return WheatMill; }
 
         static readonly int[] minLevelHut = new int[] { 1, 1, 2, 2, 3 };
@@ -2040,6 +2049,11 @@ namespace Freeserf
             state.CastleScore = (sbyte)reader.Value("castle_score").ReadInt();
             state.CastleKnights = (byte)reader.Value("castle_knights").ReadUInt();
             settings.CastleKnightsWanted = (byte)reader.Value("castle_knights_wanted").ReadUInt();
+            try { 
+                state.CastleKnightsRequested = (byte)reader.Value("castle_knights_requested").ReadUInt();
+            } catch { 
+                state.CastleKnightsRequested = 0; //dont break old save games, assume 0
+            }
         }
 
         /// <summary>
@@ -2146,6 +2160,7 @@ namespace Freeserf
 
             writer.Value("castle_knights").Write(state.CastleKnights);
             writer.Value("castle_knights_wanted").Write(settings.CastleKnightsWanted);
+            writer.Value("castle_knights_requested").Write(state.CastleKnightsRequested);
         }
     }
 }

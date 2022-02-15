@@ -431,6 +431,8 @@ namespace Freeserf
                 }
             }
         }
+        [Data]
+        public byte CastleKnightsRequested { get; set; }
 
         public bool HasCastle
         {
