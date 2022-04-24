@@ -75,10 +75,12 @@ namespace Freeserf
             if (mainWindow != null)
                 throw new ExceptionFreeserf(ErrorSystemType.Application, "A main window can not be created twice.");
 
+            string logDirectory = string.Empty;
+
             try
             {
 #if !DEBUG
-                string logDirectory = FileSystem.Paths.IsWindows() ? Program.ExecutablePath : "/var/log/freeserf.net";
+                logDirectory = FileSystem.Paths.IsWindows() ? Program.ExecutablePath : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/freeserf";
                 string logPath = Path.Combine(logDirectory, UserConfig.DefaultLogFile);
                 Directory.CreateDirectory(logDirectory);
                 Log.SetStream(new LogFileStream(logPath));
@@ -114,7 +116,7 @@ namespace Freeserf
                     string logFile = string.IsNullOrWhiteSpace(UserConfig.Logging.LogFileName) ? UserConfig.DefaultLogFile : UserConfig.Logging.LogFileName;
 
                     if (!Path.IsPathRooted(logFile))
-                        logFile = Path.Combine(Program.ExecutablePath, logFile);
+                        logFile = Path.Combine(logDirectory, logFile);
 
                     Log.SetStream(new LogFileStream(logFile));
                     Log.MaxSize = UserConfig.Logging.MaxLogSize;
