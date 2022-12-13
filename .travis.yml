@@ -52,7 +52,7 @@ before_deploy:
 deploy:
     provider: releases
     api_key:
-      secure: ZFMzgJw5vKrmPOcOL/6SCMzo0GgT40n9aG0iDDIfcEeyZYGKQ347mPZnNMaHt6Q0ZBmOF6xW57+qhOA8nQxklj+68EhBL/kkptZAiyk8RAJ6BBqLPzGcSGZeBeEZ7G/A1bf8MMCMLyphI1y1VfaqM4Rj16TrZthGqBfhGivlERZoicn5u9ITLiOoooYO+xCMmO7v4RhP7H1t1taHHvfBxfqh/Heq/QcGaW9tfT9xxFK5maNruifL2U58alCnnANFub2B1FUhV+VeboQzFKvdzbd1lW/FuowSIfxNZhQYdfyqD9Vmb6JHXeVSexcCTjyMg2hiKKkbbY0WJb8nKPn1OyqO0+bJNaEBqiGHCVnmHxTct6wtBGkfW5W6g09qTCoeOMw+VIvU2WDkfvflFYtkX3wyzM4TvHcZu2on3ooG15fbUOf0Q8nGFLp7Tfj3SqAxgqbqHw7AkQdiNEkyqvrZk22plV+2vLMtQcXeIFGDxfX9Y21cheenU2mHfCr9IdesYQzIXUy/OLK5/ey0LQgLhv/BMpPJkmgu2XbgAfBLt8K3cTf3T3VS/9q0VPoNOSshn0Goc77F5C0nWGIrwF2/MW4fiHjZ6tOaXlIWwHBsOUJHGzdUSwCJyIxd/iiivFha/WoeyRbh5VGjdFlrhmT6QEEzBRAfLUR+CaKpjdRKBc8=
+      secure: ku89dMTVkz+PE5bvxWQCLG9PbNTa9tQUsidZ/7726rLEZjIAvDcxEC668Ix9zYmw
     file: Freeserf.net-Linux.tar.gz
     skip_cleanup: true
     draft: true
