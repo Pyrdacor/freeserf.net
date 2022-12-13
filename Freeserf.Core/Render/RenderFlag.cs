@@ -147,11 +147,9 @@ namespace Freeserf.Render
                     int baselineOffset = (i < 3) ? -2 : 2;
                     var info = resourceSpriteInfos[(int)resource];
 
-                    if (resources[i] == null)
-                    {
-                        var spriteOffset = textureAtlas.GetOffset(2000u + (uint)resource);
-                        resources[i] = spriteFactory.Create(info.Size.Width, info.Size.Height, spriteOffset.X, spriteOffset.Y, false, false);
-                    }
+                    var spriteOffset = textureAtlas.GetOffset(2000u + (uint)resource);
+                    resources[i]?.Delete();
+                    resources[i] = spriteFactory.Create(info.Size.Width, info.Size.Height, spriteOffset.X, spriteOffset.Y, false, false);
 
                     // resource at slot 2 may be hidden by castle/stock so adjust baseline in this case
                     if (i == 2 && flag.HasBuilding)
