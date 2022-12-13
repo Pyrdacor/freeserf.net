@@ -35,7 +35,7 @@ namespace Freeserf.Renderer
 
         public override int Size => size;
 
-        public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedInt;
+        public override GLEnum Type => GLEnum.UnsignedInt;
 
         public override int Dimension => 6;
 

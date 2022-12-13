@@ -198,13 +198,13 @@ namespace Freeserf.Renderer
             switch (matrix.Length)
             {
                 case 4: // 2x2
-                    State.Gl.ProgramUniformMatrix2(ProgramIndex, (int)location, 1, transpose, matrix);
+                    State.Gl.ProgramUniformMatrix2(ProgramIndex, (int)location, transpose, matrix);
                     break;
                 case 9: // 3x3
-                    State.Gl.ProgramUniformMatrix3(ProgramIndex, (int)location, 1, transpose, matrix);
+                    State.Gl.ProgramUniformMatrix3(ProgramIndex, (int)location, transpose, matrix);
                     break;
                 case 16: // 4x4
-                    State.Gl.ProgramUniformMatrix4(ProgramIndex, (int)location, 1, transpose, matrix);
+                    State.Gl.ProgramUniformMatrix4(ProgramIndex, (int)location, transpose, matrix);
                     break;
                 default:
                     throw new InvalidOperationException("ShaderProgram.SetInputMatrix: Unsupported matrix dimensions. Valid are 2x2, 3x3 or 4x4.");

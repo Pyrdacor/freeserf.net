@@ -58,6 +58,7 @@ namespace Freeserf
         readonly AudioFactory audioFactory = null;
         readonly UI.Gui gui = null;
         bool fullscreen = false;
+        int failedRenderFrames = 0;
 
         float sizeFactorX = 1.0f;
         float sizeFactorY = 1.0f;
@@ -434,30 +435,63 @@ namespace Freeserf
             if (disposed)
                 return;
 
-            context.SetRotation(rotation);
-
-            State.Gl.Clear((uint)ClearBufferMask.ColorBufferBit | (uint)ClearBufferMask.DepthBufferBit);
-
-            if (!gui.Ingame)
+            try
             {
-                // if we did not start a game the map in the background is scrolled
-                if (++mapScrollTicks >= 250)
+                context.SetRotation(rotation);
+
+                State.Gl.Clear((uint)ClearBufferMask.ColorBufferBit | (uint)ClearBufferMask.DepthBufferBit);
+
+                if (!gui.Ingame)
                 {
-                    GameManager.Instance.GetCurrentGame()?.ScrollMapRandomly();
-                    mapScrollTicks = 0;
+                    // if we did not start a game the map in the background is scrolled
+                    if (++mapScrollTicks >= 250)
+                    {
+                        GameManager.Instance.GetCurrentGame()?.ScrollMapRandomly();
+                        mapScrollTicks = 0;
+                    }
+                }
+
+                if (layers[Layer.Gui].Visible)
+                {
+                    // TODO gui.Draw draws/prepares everything at the moment
+                    // TODO separate rendering from game logic/update
+                    gui.Draw(); // this will prepare gui components for rendering
+                    gui.DrawCursor(cursorPosition.X, cursorPosition.Y);
+                }
+
+                try
+                {
+                    foreach (var layer in layers)
+                        layer.Value.Render();
+                    failedRenderFrames = 0;
+                }
+                catch
+                {
+                    if (++failedRenderFrames == 10)
+                        throw;
                 }
             }
-
-            if (layers[Layer.Gui].Visible)
+            catch
             {
-                // TODO gui.Draw draws/prepares everything at the moment
-                // TODO separate rendering from game logic/update
-                gui.Draw(); // this will prepare gui components for rendering
-                gui.DrawCursor(cursorPosition.X, cursorPosition.Y);
-            }
+                if (gui.Ingame)
+                {
+                    var game = GameManager.Instance.GetCurrentGame();
 
-            foreach (var layer in layers)
-                layer.Value.Render();
+                    if (game != null)
+                    {
+                        try
+                        {
+                            GameStore.Instance.QuickSave("crash", game);
+                        }
+                        catch
+                        {
+                            // ignore
+                        }
+                    }
+                }
+
+                throw;
+            }
         }
 
         public void SetCursorPosition(int x, int y)

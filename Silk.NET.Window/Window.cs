@@ -1,28 +1,27 @@
-﻿using Silk.NET.Input;
-using Silk.NET.Input.Common;
-using Silk.NET.Windowing.Common;
+﻿using Silk.NET.Core.Contexts;
+using Silk.NET.Input;
+using Silk.NET.Maths;
+using Silk.NET.Windowing;
 using System;
-using System.Drawing;
 using System.Linq;
+using System.Numerics;
 
 namespace Silk.NET.Window
 {
-    public class Window
+    public class Window : IGLContextSource
     {
         private static WindowOptions DefaultOptions = new WindowOptions
         (
             true,
-            true,
-            new Point(-1, -1),
-            new Size(1024, 768),
+            new Vector2D<int>(-1, -1),
+            new Vector2D<int>(1024, 768),
             60.0,
             60.0,
             GraphicsAPI.Default,
             "",
             WindowState.Normal,
             WindowBorder.Resizable,
-            VSyncMode.Adaptive,
-            10,
+            true,
             false,
             new VideoMode(),
             24
@@ -32,7 +31,7 @@ namespace Silk.NET.Window
         IMouse mouse = null;
         bool cursorVisible = true;
 
-        private static WindowOptions CreateOptions(string title, Point position, Size size)
+        private static WindowOptions CreateOptions(string title, Vector2D<int> position, Vector2D<int> size)
         {
             var options = DefaultOptions;
 
@@ -49,14 +48,14 @@ namespace Silk.NET.Window
 
         }
 
-        public Window(string title, Point position, Size size)
+        public Window(string title, Vector2D<int> position, Vector2D<int> size)
             : this(CreateOptions(title, position, size))
         {
 
         }
 
-        public Window(string title, Size size)
-            : this(title, Point.Empty, size)
+        public Window(string title, Vector2D<int> size)
+            : this(title, Vector2D<int>.Zero, size)
         {
 
         }
@@ -67,13 +66,13 @@ namespace Silk.NET.Window
             InitEvents();
         }
 
-        public Point Position
+        public Vector2D<int> Position
         {
             get => window.Position;
             set => window.Position = value;
         }
 
-        public Size Size
+        public Vector2D<int> Size
         {
             get => window.Size;
             set => window.Size = value;
@@ -129,9 +128,9 @@ namespace Silk.NET.Window
             }
         }
 
-        public PointF CursorPosition
+        public Vector2 CursorPosition
         {
-            get => mouse == null ? PointF.Empty : mouse.Position;
+            get => mouse == null ? Vector2.Zero : mouse.Position;
             set
             {
                 if (mouse != null)
@@ -141,7 +140,7 @@ namespace Silk.NET.Window
 
         public bool IsMouseButtonPressed(MouseButton button) => mouse.IsButtonPressed(button);
 
-        public Rectangle ClientRectangle => new Rectangle(Position, Size);
+        public Box2D<int> ClientRectangle => new Box2D<int>(Position, Position + Size);
 
         public bool Initialized { get; private set; } = false;
 
@@ -169,7 +168,7 @@ namespace Silk.NET.Window
             remove { window.Closing -= value; }
         }
 
-        public event Action<Size> Resize
+        public event Action<Vector2D<int>> Resize
         {
             add { window.Resize += value; }
             remove { window.Resize -= value; }
@@ -335,7 +334,7 @@ namespace Silk.NET.Window
 
         private int doubleClickRange = 4;
         private int doubleClickTime = 200;
-        private PointF lastMousePosition = PointF.Empty;
+        private Vector2 lastMousePosition = Vector2.Zero;
 
         /// <summary>
         /// Maximum time in milliseconds for which two subsequent
@@ -373,6 +372,8 @@ namespace Silk.NET.Window
             }
         }
 
+        public IGLContext GLContext => window.GLContext;
+
         private static MouseButtons GetMouseButtons(IMouse mouse)
         {
             var buttons = MouseButtons.None;
@@ -392,9 +393,9 @@ namespace Silk.NET.Window
             return (MouseButtons)(1 << (int)button);
         }
 
-        private static Point ConvertMousePosition(PointF position)
+        private static Vector2D<int> ConvertMousePosition(Vector2 position)
         {
-            return new Point((int)Math.Round(position.X), (int)Math.Round(position.Y));
+            return new Vector2D<int>((int)Math.Round(position.X), (int)Math.Round(position.Y));
         }
 
         private void OnMouseDown(IMouse mouse, MouseButton mouseButton)
@@ -407,23 +408,23 @@ namespace Silk.NET.Window
             OnMouseUp(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
         }
 
-        private void OnMouseClick(IMouse mouse, MouseButton mouseButton)
+        private void OnMouseClick(IMouse mouse, MouseButton mouseButton, Vector2 position)
         {
-            OnClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
+            OnClick(ConvertMousePosition(position), ConvertMouseButton(mouseButton));
         }
 
-        private void OnMouseDoubleClick(IMouse mouse, MouseButton mouseButton)
+        private void OnMouseDoubleClick(IMouse mouse, MouseButton mouseButton, Vector2 position)
         {
-            OnDoubleClick(ConvertMousePosition(mouse.Position), ConvertMouseButton(mouseButton));
+            OnDoubleClick(ConvertMousePosition(position), ConvertMouseButton(mouseButton));
         }
 
-        private void OnMouseMove(IMouse mouse, PointF position)
+        private void OnMouseMove(IMouse mouse, Vector2 position)
         {
             var roundedPosition = ConvertMousePosition(position);
             var buttons = GetMouseButtons(mouse);
-            var delta = new PointF(position.X - lastMousePosition.X, position.Y - lastMousePosition.Y);
+            var delta = new Vector2(position.X - lastMousePosition.X, position.Y - lastMousePosition.Y);
             var roundedLastPosition = ConvertMousePosition(lastMousePosition);
-            var roundedDelta = new Point(roundedPosition.X - roundedLastPosition.X, roundedPosition.Y - roundedLastPosition.Y);
+            var roundedDelta = new Vector2D<int>(roundedPosition.X - roundedLastPosition.X, roundedPosition.Y - roundedLastPosition.Y);
 
             OnMouseMove(roundedPosition, buttons);
             OnMouseMovePrecise(mouse.Position, buttons);
@@ -458,12 +459,12 @@ namespace Silk.NET.Window
             }
         }
 
-        protected virtual void OnMouseDown(Point position, MouseButtons button)
+        protected virtual void OnMouseDown(Vector2D<int> position, MouseButtons button)
         {
             MouseDown?.Invoke(position, button);
         }
 
-        protected virtual void OnMouseUp(Point position, MouseButtons button)
+        protected virtual void OnMouseUp(Vector2D<int> position, MouseButtons button)
         {
             MouseUp?.Invoke(position, button);
         }
@@ -478,37 +479,37 @@ namespace Silk.NET.Window
             MouseLeave?.Invoke();
         }
 
-        protected virtual void OnMouseMove(Point position, MouseButtons buttons)
+        protected virtual void OnMouseMove(Vector2D<int> position, MouseButtons buttons)
         {
             MouseMove?.Invoke(position, buttons);
         }
 
-        protected virtual void OnMouseMovePrecise(PointF position, MouseButtons buttons)
+        protected virtual void OnMouseMovePrecise(Vector2 position, MouseButtons buttons)
         {
             MouseMovePrecise?.Invoke(position, buttons);
         }
 
-        protected virtual void OnMouseMoveDelta(Point position, MouseButtons buttons, Point delta)
+        protected virtual void OnMouseMoveDelta(Vector2D<int> position, MouseButtons buttons, Vector2D<int> delta)
         {
             MouseMoveDelta?.Invoke(position, buttons, delta);
         }
 
-        protected virtual void OnMouseMoveDeltaPrecise(PointF position, MouseButtons buttons, PointF delta)
+        protected virtual void OnMouseMoveDeltaPrecise(Vector2 position, MouseButtons buttons, Vector2 delta)
         {
             MouseMoveDeltaPrecise?.Invoke(position, buttons, delta);
         }
 
-        protected virtual void OnClick(Point position, MouseButtons button)
+        protected virtual void OnClick(Vector2D<int> position, MouseButtons button)
         {
             Click?.Invoke(position, button);
         }
 
-        protected virtual void OnDoubleClick(Point position, MouseButtons button)
+        protected virtual void OnDoubleClick(Vector2D<int> position, MouseButtons button)
         {
             DoubleClick?.Invoke(position, button);
         }
 
-        protected virtual void OnMouseWheel(Point position, float delta)
+        protected virtual void OnMouseWheel(Vector2D<int> position, float delta)
         {
             MouseWheel?.Invoke(position, delta);
         }
@@ -519,7 +520,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Pressed button
         /// </summary>
-        public event Action<Point, MouseButtons> MouseDown;
+        public event Action<Vector2D<int>, MouseButtons> MouseDown;
 
         /// <summary>
         /// Called when a mouse button is released.
@@ -527,7 +528,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Pressed button
         /// </summary>
-        public event Action<Point, MouseButtons> MouseUp;
+        public event Action<Vector2D<int>, MouseButtons> MouseUp;
 
         /// <summary>
         /// Called when the mouse is entering the window.
@@ -545,7 +546,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Pressed button
         /// </summary>
-        public event Action<Point, MouseButtons> MouseMove;
+        public event Action<Vector2D<int>, MouseButtons> MouseMove;
 
         /// <summary>
         /// Called when the mouse is moved.
@@ -553,16 +554,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Pressed button
         /// </summary>
-        public event Action<PointF, MouseButtons> MouseMovePrecise;
-
-        /// <summary>
-        /// Called when the mouse is moved.
-        /// 
-        /// First argument: Mouse position
-        /// Second argument: Pressed button
-        /// Third argument: Position delta
-        /// </summary>
-        public event Action<Point, MouseButtons, Point> MouseMoveDelta;
+        public event Action<Vector2, MouseButtons> MouseMovePrecise;
 
         /// <summary>
         /// Called when the mouse is moved.
@@ -571,7 +563,16 @@ namespace Silk.NET.Window
         /// Second argument: Pressed button
         /// Third argument: Position delta
         /// </summary>
-        public event Action<PointF, MouseButtons, PointF> MouseMoveDeltaPrecise;
+        public event Action<Vector2D<int>, MouseButtons, Vector2D<int>> MouseMoveDelta;
+
+        /// <summary>
+        /// Called when the mouse is moved.
+        /// 
+        /// First argument: Mouse position
+        /// Second argument: Pressed button
+        /// Third argument: Position delta
+        /// </summary>
+        public event Action<Vector2, MouseButtons, Vector2> MouseMoveDeltaPrecise;
 
         /// <summary>
         /// Called when a mouse click is performed.
@@ -579,7 +580,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Pressed button
         /// </summary>
-        public event Action<Point, MouseButtons> Click;
+        public event Action<Vector2D<int>, MouseButtons> Click;
 
         /// <summary>
         /// Called when a mouse double click is performed.
@@ -587,7 +588,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Pressed button
         /// </summary>
-        public event Action<Point, MouseButtons> DoubleClick;
+        public event Action<Vector2D<int>, MouseButtons> DoubleClick;
 
         /// <summary>
         /// Called when the main mouse wheel is scrolled.
@@ -595,7 +596,7 @@ namespace Silk.NET.Window
         /// First argument: Mouse position
         /// Second argument: Scroll delta
         /// </summary>
-        public event Action<Point, float> MouseWheel;
+        public event Action<Vector2D<int>, float> MouseWheel;
 
         #endregion
     }

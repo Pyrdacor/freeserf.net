@@ -246,9 +246,9 @@ namespace Freeserf
         public abstract SaveWriterText AddSection(string name, uint number);
     }
 
-    internal class GameStore
+    public class GameStore
     {
-        public class SaveInfo
+        internal class SaveInfo
         {
             public enum Type
             {
@@ -285,10 +285,10 @@ namespace Freeserf
 
         protected static GameStore instance = null;
 
-        public string FolderPath { get; protected set; } = "";
-        protected List<SaveInfo> savedGames = new List<SaveInfo>();
+        internal string FolderPath { get; private protected set; } = "";
+        private protected List<SaveInfo> savedGames = new List<SaveInfo>();
 
-        public enum LastOperationStatus
+        internal enum LastOperationStatus
         {
             None,
             SaveSuccess,
@@ -297,7 +297,7 @@ namespace Freeserf
             LoadFail
         }
 
-        public LastOperationStatus LastOperationResult { get; private set; } = LastOperationStatus.None;
+        internal LastOperationStatus LastOperationResult { get; private set; } = LastOperationStatus.None;
 
         public static GameStore Instance
         {
@@ -310,7 +310,7 @@ namespace Freeserf
             }
         }
 
-        public List<SaveInfo> GetSavedGames()
+        internal List<SaveInfo> GetSavedGames()
         {
             savedGames.Clear();
 
@@ -346,7 +346,7 @@ namespace Freeserf
             }
         }
 
-        public bool Load(string path, Func<Game> gameCreator, out Game game)
+        internal bool Load(string path, Func<Game> gameCreator, out Game game)
         {
             game = null;
 
@@ -436,7 +436,7 @@ namespace Freeserf
             return Save(savedPath, game);
         }
 
-        public bool Read(StreamReader reader, Game game)
+        internal bool Read(StreamReader reader, Game game)
         {
             try
             {
@@ -452,7 +452,7 @@ namespace Freeserf
             }
         }
 
-        public bool Write(StreamWriter writer, Game game)
+        internal bool Write(StreamWriter writer, Game game)
         {
             var writerText = new SaveWriterTextSection("game", 0);
 
@@ -461,13 +461,13 @@ namespace Freeserf
             return writerText.Write(writer);
         }
 
-        protected void Update()
+        private protected void Update()
         {
             FindLegacy();
             FindRegular();
         }
 
-        protected void FindLegacy()
+        private protected void FindLegacy()
         {
             string archive = Path.Combine(FolderPath + "ARCHIV.DS");
 
@@ -497,7 +497,7 @@ namespace Freeserf
             }
         }
 
-        protected void FindRegular()
+        private protected void FindRegular()
         {
             foreach (var file in Directory.GetFiles(FolderPath, "*.save", SearchOption.TopDirectoryOnly))
             {

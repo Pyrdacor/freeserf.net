@@ -104,6 +104,12 @@ namespace Freeserf
             TrackProperty(nameof(state), state);
         }
 
+        public void MarkSerfAsDirty()
+        {
+            state.Serfs.MarkAllAsDirty();
+            MarkPropertyAsDirty(nameof(state));            
+        }
+
         /// <summary>
         /// Inventory owner
         /// </summary>

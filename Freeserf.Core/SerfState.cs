@@ -28,7 +28,7 @@ namespace Freeserf
         private byte stateIndex = 0;
 
         /// <summary>
-        /// Type of this building
+        /// Type of this serf
         /// </summary>
         [Data]
         public Serf.Type Type
@@ -45,7 +45,7 @@ namespace Freeserf
         }
 
         /// <summary>
-        /// Owner of this building
+        /// Owner of this serf
         /// </summary>
         [Data]
         public byte Player
@@ -96,7 +96,7 @@ namespace Freeserf
         }
 
         /// <summary>
-        /// Position of this building
+        /// Position of this serf
         /// </summary>
         [Data]
         public MapPos Position

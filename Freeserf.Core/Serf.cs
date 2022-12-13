@@ -2,7 +2,7 @@
  * Serf.cs - Serf related functions
  *
  * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2021  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *

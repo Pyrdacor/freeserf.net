@@ -93,6 +93,12 @@ namespace Freeserf.Serialize
                 dirtyIndices.Add(index);
         }
 
+        public void MarkAllAsDirty()
+        {
+            dirtyIndices.Clear();
+            dirtyIndices.AddRange(Enumerable.Range(0, Length));
+        }
+
         public T this[int index]
         {
             get => array[index];

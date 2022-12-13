@@ -52,7 +52,7 @@ namespace Freeserf.Renderer
                 GLEnum.FragmentShader :
                 GLEnum.VertexShader);
 
-            State.Gl.ShaderSource(ShaderIndex, 1, new string[] { code }, new Int32[] { code.Length });
+            State.Gl.ShaderSource(ShaderIndex, code);
             State.Gl.CompileShader(ShaderIndex);
 
             // Auf Fehler pr�fen
