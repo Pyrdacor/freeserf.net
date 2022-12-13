@@ -32,7 +32,7 @@ deploy:
     release: $(APPVEYOR_REPO_TAG_NAME)
     description: 'Release $(APPVEYOR_REPO_TAG_NAME)'
     auth_token:
-      secure: CP6qsCjIlyJrYsuHs4tzdrYUWOO83Jlx6/U0Gqtl/SicGmBaN1hrYUEk6RSL6D8j
+      secure: ku89dMTVkz+PE5bvxWQCLG9PbNTa9tQUsidZ/7726rLEZjIAvDcxEC668Ix9zYmw
     draft: true
     prerelease: false
     force_update: true
