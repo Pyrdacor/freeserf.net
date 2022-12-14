@@ -45,7 +45,7 @@ for:
 platform: Any CPU
 
 before_build:
-  - dotnet restore FreeserfNet.net.sln --verbosity normal
+  - dotnet restore FreeserfNet.sln --verbosity normal
 
 build:
   parallel: true
