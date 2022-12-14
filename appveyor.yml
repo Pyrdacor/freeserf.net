@@ -1,33 +1,84 @@
-image: Visual Studio 2019
+image:
+  - Visual Studio 2022
+  - Ubuntu
 
 environment:
-  WINDOWS: 1
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+
+for:
+-
+  matrix:
+    only:
+      - image: Ubuntu
+
+  build_script:
+  - dotnet msbuild -p:Configuration=LinuxRelease -p:DefineConstants=LINUX FreeserfNet.sln
+  test_script:
+  - dotnet test FreeserfNet.sln -c LinuxRelease --no-build --verbosity normal
+  after_test:
+  - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=LINUX -p:PublishSingleFile=true -r ubuntu-x64
+  before_deploy:
+  - mkdir deploy
+  - cd deploy
+  - mkdir FreeserfNet
+  - cd ..
+  - cp -r "%APPVEYOR_BUILD_FOLDER%/FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/." deploy/FreeserfNet/
+  - cp "%APPVEYOR_BUILD_FOLDER%/changelog.txt" deploy/FreeserfNet/changelog
+  - cp "%APPVEYOR_BUILD_FOLDER%/FreeserfNet/bass/linux-x64/*.so" deploy/FreeserfNet/
+  - cd deploy
+  - cd FreeserfNet
+  - chmod +x FreeserfNet
+  - cd ..
+  - tar -czf ../Freeserf.net-Linux.tar.gz FreeserfNet
+  - cd ..
+-
+  matrix:
+    only:
+      - image: Visual Studio 2022
+
+  build_script:
+  - dotnet msbuild -p:Configuration=WindowsRelease -p:DefineConstants=WINDOWS FreeserfNet.sln
+  test_script:
+  - dotnet test FreeserfNet.sln -c WindowsRelease --no-build --verbosity normal
+  after_test:
+  - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=WINDOWS -p:PublishSingleFile=true -r win-x64
+  before_deploy:
+  - 7z a Freeserf.net-Windows.zip "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bin\Any CPU\WindowsRelease\win-x64\publish\FreeserfNet.exe" "%APPVEYOR_BUILD_FOLDER%\changelog.txt" "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bass\win-x64\*.dll"
 
 platform: Any CPU
-configuration: WindowsRelease
 
-install:
-  - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-  - dotnet restore FreeserfNet.sln --verbosity normal
-  - dotnet msbuild -p:Configuration=WindowsRelease -p:DefineConstants=WINDOWS FreeserfNet.sln
-  - dotnet test FreeserfNet.sln -c WindowsRelease --no-build --verbosity normal
-  - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=WINDOWS -p:PublishSingleFile=true -r win-x64
+before_build:
+  - dotnet restore FreeserfNet.net.sln --verbosity normal
 
 build:
+  parallel: true
   project: FreeserfNet.sln
 
 artifacts:
   - path: Freeserf.net-Windows.zip
     name: Freeserf.net-Windows
+  - path: Freeserf.net-Linux.tar.gz
+    name: Freeserf.net-Linux
 
-after_build:
-  - 7z a Freeserf.net-Windows.zip "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bin\Any CPU\WindowsRelease\win-x64\publish\FreeserfNet.exe" "%APPVEYOR_BUILD_FOLDER%\changelog.txt" "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bass\win-x64\*.dll"
-
-test: off
+test: on
 
 deploy:
   - provider: GitHub
     name: Freeserf.net-Windows
+    tag: $(APPVEYOR_REPO_TAG_NAME)
+    release: $(APPVEYOR_REPO_TAG_NAME)
+    description: 'Release $(APPVEYOR_REPO_TAG_NAME)'
+    auth_token:
+      secure: ku89dMTVkz+PE5bvxWQCLG9PbNTa9tQUsidZ/7726rLEZjIAvDcxEC668Ix9zYmw
+    draft: true
+    prerelease: false
+    force_update: true
+    on:
+      APPVEYOR_REPO_TAG: true
+  - provider: GitHub
+    name: Freeserf.net-Linux
     tag: $(APPVEYOR_REPO_TAG_NAME)
     release: $(APPVEYOR_REPO_TAG_NAME)
     description: 'Release $(APPVEYOR_REPO_TAG_NAME)'
