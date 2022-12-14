@@ -19,9 +19,9 @@ for:
   - cd deploy
   - mkdir FreeserfNet
   - cd ..
-  - cp -r "%APPVEYOR_BUILD_FOLDER%/FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/." deploy/FreeserfNet/
-  - cp "%APPVEYOR_BUILD_FOLDER%/changelog.txt" deploy/FreeserfNet/changelog
-  - cp "%APPVEYOR_BUILD_FOLDER%/FreeserfNet/bass/linux-x64/*.so" deploy/FreeserfNet/
+  - cp -r "$APPVEYOR_BUILD_FOLDER/FreeserfNet/bin/LinuxRelease/ubuntu-x64/publish/." deploy/FreeserfNet/
+  - cp "$APPVEYOR_BUILD_FOLDER/changelog.txt" deploy/FreeserfNet/changelog
+  - cp "$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/linux-x64/*.so" deploy/FreeserfNet/
   - cd deploy
   - cd FreeserfNet
   - chmod +x FreeserfNet
