@@ -6,7 +6,7 @@ To avoid copyright issues I won't provide any copyrighted data from the original
 
 Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeserf/freeserf).
 
-| [![Build status](https://ci.appveyor.com/api/projects/status/github/pyrdacor/freeserf.net?branch=master&svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/pyrdacor/freeserf.net?branch=master&svg=true)](https://ci.appveyor.com/project/Pyrdacor/freeserf-net/history?branch=master)
 
 
 ## Download the game
