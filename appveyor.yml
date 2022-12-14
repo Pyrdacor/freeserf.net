@@ -1,5 +1,5 @@
 image:
-  - Visual Studio 2022
+  #- Visual Studio 2022
   - Ubuntu
 
 for:
@@ -21,6 +21,9 @@ for:
   - cd ..
   - cp -r "$APPVEYOR_BUILD_FOLDER/FreeserfNet/bin/Any CPU/LinuxRelease/ubuntu-x64/publish/." deploy/FreeserfNet/
   - cp "$APPVEYOR_BUILD_FOLDER/changelog.txt" deploy/FreeserfNet/changelog
+  - ls ""$APPVEYOR_BUILD_FOLDER/FreeserfNet/"
+  - ls ""$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/"
+  - ls ""$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/linux-x64/"
   - cp "$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/linux-x64/*.so" deploy/FreeserfNet/
   - cd deploy
   - cd FreeserfNet
