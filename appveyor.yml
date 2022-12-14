@@ -15,22 +15,8 @@ for:
   after_test:
   - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=LINUX -p:PublishSingleFile=true -r ubuntu-x64
   before_deploy:
-  - mkdir deploy
-  - cd deploy
-  - mkdir FreeserfNet
-  - cd ..
-  - cp -r "$APPVEYOR_BUILD_FOLDER/FreeserfNet/bin/Any CPU/LinuxRelease/ubuntu-x64/publish/." deploy/FreeserfNet/
-  - cp "$APPVEYOR_BUILD_FOLDER/changelog.txt" deploy/FreeserfNet/changelog
-  - ls ""$APPVEYOR_BUILD_FOLDER/FreeserfNet/"
-  - ls ""$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/"
-  - ls ""$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/linux-x64/"
-  - cp "$APPVEYOR_BUILD_FOLDER/FreeserfNet/bass/linux-x64/*.so" deploy/FreeserfNet/
-  - cd deploy
-  - cd FreeserfNet
-  - chmod +x FreeserfNet
-  - cd ..
-  - tar -czf ../Freeserf.net-Linux.tar.gz FreeserfNet
-  - cd ..
+  - 7z a Freeserf.net-Linux.tar "./FreeserfNet/bin/Any CPU/LinuxRelease/ubuntu-x64/publish/." "./changelog.txt" "./FreeserfNet/bass/linux-x64/*.so"
+  - 7z a Freeserf.net-Linux.tar.gz Freeserf.net-Linux.tar -mx9
 -
   matrix:
     only:
