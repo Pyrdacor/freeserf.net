@@ -1,7 +1,7 @@
 ﻿/*
  * State.cs - OpenGL state
  *
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2023  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -19,6 +19,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using Silk.NET.Core.Contexts;
 using Silk.NET.OpenGL;
 using System;
 using System.Collections.Generic;
@@ -28,19 +29,19 @@ namespace Freeserf.Renderer
 {
     public static class State
     {
-        public static readonly int OpenGLVersionMajor = 0;
-        public static readonly int OpenGLVersionMinor = 0;
-        public static readonly int GLSLVersionMajor = 0;
-        public static readonly int GLSLVersionMinor = 0;
-        public static readonly GL Gl = null;
+        public static int OpenGLVersionMajor { get; private set; } = 0;
+        public static int OpenGLVersionMinor { get; private set; } = 0;
+        public static int GLSLVersionMajor { get; private set; } = 0;
+        public static int GLSLVersionMinor { get; private set; } = 0;
+        public static GL Gl { get; private set; } = null;
 
-        static State()
+        public static void Init(IGLContextSource contextSource)
         {
-            Gl = GL.GetApi();
+            Gl = GL.GetApi(contextSource);
 
-            var openGLVersion = Gl.GetString(StringName.Version).TrimStart();
+            var openGLVersion = Gl.GetStringS(StringName.Version).TrimStart();
 
-            Regex versionRegex = new Regex(@"([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
+            Regex versionRegex = new(@"([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
 
             var match = versionRegex.Match(openGLVersion);
 
@@ -54,7 +55,7 @@ namespace Freeserf.Renderer
 
             if (OpenGLVersionMajor >= 2) // glsl is supported since OpenGL 2.0
             {
-                var glslVersion = Gl.GetString(StringName.ShadingLanguageVersion);
+                var glslVersion = Gl.GetStringS(StringName.ShadingLanguageVersion);
 
                 match = versionRegex.Match(glslVersion);
 

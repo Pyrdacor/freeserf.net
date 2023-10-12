@@ -37,7 +37,7 @@ namespace Freeserf.Renderer
 
         public override int Size => size;
 
-        public override VertexAttribPointerType Type => VertexAttribPointerType.Short;
+        public override VertexAttribIType Type => VertexAttribIType.Short;
 
         public override int Dimension => 2;
 

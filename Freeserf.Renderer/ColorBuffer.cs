@@ -37,7 +37,7 @@ namespace Freeserf.Renderer
 
         public override int Size => size;
 
-        public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedByte;
+        public override VertexAttribIType Type => VertexAttribIType.UnsignedByte;
 
         public override int Dimension => 4;
 

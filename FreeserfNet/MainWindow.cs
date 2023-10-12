@@ -22,14 +22,17 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Numerics;
 using Freeserf.Renderer;
-using Silk.NET.Input.Common;
+using Silk.NET.Input;
+using Silk.NET.Maths;
 using Silk.NET.Window;
-using Silk.NET.Windowing.Common;
+using Silk.NET.Windowing;
 
 namespace Freeserf
 {
-    class MainWindow : Window, IDisposable
+    class MainWindow : Silk.NET.Window.Window, IDisposable
     {
         enum MouseButtonIndex
         {
@@ -43,30 +46,32 @@ namespace Freeserf
         readonly Network.INetworkDataReceiver networkDataReceiver;
         bool fullscreen = false;
         readonly bool[] pressedMouseButtons = new bool[3];
-        readonly bool[] keysDown = new bool[(int)Key.LastKey + 1];
+        readonly bool[] keysDown;
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
         static Global.InitInfo initInfo = null;
         static Data.DataSource dataSource = null;
         bool scrolled = false;
-        Point clickPosition = Point.Empty;
+        Vector2D<int> clickPosition = Vector2D<int>.Zero;
 
         private MainWindow(WindowOptions options)
             : base(options)
         {
+            var keyMaxValue = Enum.GetValues(typeof(Key)).Cast<int>().Max();
+            keysDown = new bool[keyMaxValue + 1];
             networkDataReceiver = new Network.NetworkDataReceiverFactory().CreateReceiver();
             Load += MainWindow_Load;
         }
 
         private int Width
         {
-            get => Size.Width;
-            set => Size = new System.Drawing.Size(value, Size.Height);
+            get => Size.X;
+            set => Size = new Vector2D<int>(value, Size.Y);
         }
         private int Height
         {
-            get => Size.Height;
-            set => Size = new System.Drawing.Size(Size.Width, value);
+            get => Size.Y;
+            set => Size = new Vector2D<int>(Size.X, value);
         }
 
 
@@ -199,17 +204,15 @@ namespace Freeserf
                 var state = (initInfo.Fullscreen.HasValue && initInfo.Fullscreen.Value) ? WindowState.Fullscreen : WindowState.Normal;
                 var options = new WindowOptions(
                     true,
-                    true,
-                    new Point(20, 40),
-                    new System.Drawing.Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
+                    new Vector2D<int>(20, 40),
+                    new Vector2D<int>(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     50.0,
                     50.0,
                     GraphicsAPI.Default,
                     Global.VERSION,
                     state,
                     state == WindowState.Normal ? WindowBorder.Fixed : WindowBorder.Hidden,
-                    VSyncMode.Adaptive,
-                    10,
+                    true,
                     false,
                     new VideoMode(),
                     24
@@ -228,6 +231,7 @@ namespace Freeserf
         {
             try
             {
+                State.Init(this);
                 gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
@@ -352,9 +356,9 @@ namespace Freeserf
                 gameView.Zoom -= 0.5f;
         }
 
-        private void MainWindow_Resize(System.Drawing.Size size)
+        private void MainWindow_Resize(Vector2D<int> size)
         {
-            gameView.Resize(size.Width, size.Height);
+            gameView.Resize(size.X, size.Y);
         }
 
         private void MainWindow_Render(double delta)
@@ -521,7 +525,7 @@ namespace Freeserf
             base.OnKeyChar(character, modifiers);
         }
 
-        protected override void OnMouseMoveDelta(Point position, MouseButtons buttons, Point delta)
+        protected override void OnMouseMoveDelta(Vector2D<int> position, MouseButtons buttons, Vector2D<int> delta)
         {
             if (gameView == null)
                 return;
@@ -568,7 +572,7 @@ namespace Freeserf
             base.OnMouseMoveDelta(position, buttons, delta);
         }
 
-        protected override void OnMouseUp(Point position, MouseButtons button)
+        protected override void OnMouseUp(Vector2D<int> position, MouseButtons button)
         {
             UpdateMouseState(button, false);
 
@@ -580,7 +584,7 @@ namespace Freeserf
                 CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
                 if (scrolled && (UserConfig.Game.Options & (int)Option.ResetCursorAfterScrolling) != 0)
                 {
-                    CursorPosition = new PointF(Width / 2, Height / 2);
+                    CursorPosition = new Vector2(Width / 2, Height / 2);
                     gameView.SetCursorPosition(Width / 2, Height / 2);
                 }
                 scrolled = false;                
@@ -590,7 +594,7 @@ namespace Freeserf
             base.OnMouseUp(position, button);
         }
 
-        protected override void OnMouseDown(Point position, MouseButtons button)
+        protected override void OnMouseDown(Vector2D<int> position, MouseButtons button)
         {
             UpdateMouseState(button, true);
 
@@ -626,7 +630,7 @@ namespace Freeserf
             base.OnMouseDown(position, button);
         }
 
-        protected override void OnClick(Point position, MouseButtons button)
+        protected override void OnClick(Vector2D<int> position, MouseButtons button)
         {
             // left + right = special click
             if (button.HasFlag(MouseButtons.Left) || button.HasFlag(MouseButtons.Right))
@@ -650,7 +654,7 @@ namespace Freeserf
             base.OnClick(position, button);
         }
 
-        protected override void OnDoubleClick(Point position, MouseButtons button)
+        protected override void OnDoubleClick(Vector2D<int> position, MouseButtons button)
         {
             try
             {
@@ -665,7 +669,7 @@ namespace Freeserf
             base.OnDoubleClick(position, button);
         }
 
-        protected override void OnMouseWheel(Point position, float delta)
+        protected override void OnMouseWheel(Vector2D<int> position, float delta)
         {
             try
             {

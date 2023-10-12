@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+	<TargetFramework>net7.0</TargetFramework>
     <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
   </PropertyGroup>
 
@@ -50,6 +50,10 @@
     <DefineConstants>DEBUG;TRACE;MAC</DefineConstants>
     <Optimize>false</Optimize>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.Input.Desktop" Version="1.9.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />

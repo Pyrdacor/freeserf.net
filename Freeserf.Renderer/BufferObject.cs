@@ -29,7 +29,7 @@ namespace Freeserf.Renderer
         public abstract int Dimension { get; }
         public bool Normalized { get; protected set; } = false;
         public abstract int Size { get; }
-        public abstract VertexAttribPointerType Type { get; }
+        public abstract VertexAttribIType Type { get; }
 
         public abstract void Dispose();
 
