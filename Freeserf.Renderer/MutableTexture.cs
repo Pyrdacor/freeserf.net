@@ -50,9 +50,9 @@ namespace Freeserf.Renderer
         {
             int index = y * Width + x;
 
-            data[index * 4 + 0] = r;
+            data[index * 4 + 0] = b;
             data[index * 4 + 1] = g;
-            data[index * 4 + 2] = b;
+            data[index * 4 + 2] = r;
             data[index * 4 + 3] = a;
         }
 
@@ -91,27 +91,26 @@ namespace Freeserf.Renderer
 
         public Render.Texture GetMinimapTexture()
         {
-            if (minimap == null)
-                minimap = new MutableTexture(128, 128);
+            minimap ??= new MutableTexture(128, 128);
 
             return minimap;
         }
 
         public void FillMinimapTexture(byte[] colorData)
         {
-            if (!(minimap is MutableTexture))
+            if (minimap is not MutableTexture)
                 throw new ExceptionFreeserf(ErrorSystemType.Textures, "The given minimap texture is no mutable texture known by this renderer.");
 
-            (minimap as MutableTexture).SetPixels(colorData);
-            (minimap as MutableTexture).Finish(0);
+            minimap.SetPixels(colorData);
+            minimap.Finish(0);
         }
 
         public void ResizeMinimapTexture(int width, int height)
         {
-            if (!(minimap is MutableTexture))
+            if (minimap is not MutableTexture)
                 throw new ExceptionFreeserf(ErrorSystemType.Textures, "The given minimap texture is no mutable texture known by this renderer.");
 
-            (minimap as MutableTexture).Resize(width, height);
+            minimap.Resize(width, height);
         }
     }
 }

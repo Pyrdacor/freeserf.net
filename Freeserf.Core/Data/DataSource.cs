@@ -153,9 +153,9 @@ namespace Freeserf.Data
                 for (int x = 0; x < image.Width; x++)
                 {
                     Rgba32 pixel = image[x, y];
-                    data[index++] = pixel.R;
-                    data[index++] = pixel.G;
                     data[index++] = pixel.B;
+                    data[index++] = pixel.G;
+                    data[index++] = pixel.R;
                     data[index++] = pixel.A;
                 }
             }
