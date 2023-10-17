@@ -2,7 +2,7 @@
  * DataSource.cs - Game resources file functions
  *
  * Copyright (C) 2015-2017  Wicked_Digger <wicked_digger@mail.ru>
- * Copyright (C) 2018       Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2023  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -22,11 +22,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Freeserf.Data
 {
@@ -132,13 +132,8 @@ namespace Freeserf.Data
 
         public static Sprite CreateFromStream(Stream stream, Color? colorkey = null, KeyValuePair<Color, Color>? colorReplacing = null)
         {
-            var image = new Bitmap(stream);
+            var image = Image.Load<Rgba32>(stream);
             var sprite = new Sprite();
-
-            if (image.PixelFormat != PixelFormat.Format32bppArgb &&
-                image.PixelFormat != PixelFormat.Format24bppRgb &&
-                image.PixelFormat != PixelFormat.Format8bppIndexed)
-                throw new NotSupportedException("Unsupported image format: " + image.PixelFormat.ToString());
 
             sprite.width = (uint)image.Width;
             sprite.height = (uint)image.Height;
@@ -147,85 +142,25 @@ namespace Freeserf.Data
             return sprite;
         }
 
-        private static byte[] GetImageData(Bitmap image, Color? colorkey, KeyValuePair<Color, Color>? colorReplacing)
+        private static byte[] GetImageData(Image<Rgba32> image, Color? colorkey, KeyValuePair<Color, Color>? colorReplacing)
         {
-            Rectangle area = new Rectangle(0, 0, image.Width, image.Height);
-            var imageData = image.LockBits(area, ImageLockMode.ReadOnly, image.PixelFormat);
-            int bytesPerPixel = image.PixelFormat switch
-            {
-                PixelFormat.Format32bppArgb => 4,
-                PixelFormat.Format24bppRgb => 3,
-                PixelFormat.Format8bppIndexed => 1,
-                _ => throw new NotSupportedException("Unsupported image format: " + image.PixelFormat.ToString())
-            };
+            const int bytesPerPixel = 4;
             byte[] data = new byte[image.Width * image.Height * bytesPerPixel];
+            int index = 0;
 
-            try
+            for (int y = 0; y < image.Height; y++)
             {
-                IntPtr dataPointer = imageData.Scan0;
-                Marshal.Copy(dataPointer, data, 0, data.Length);
-            }
-            finally
-            {
-                image.UnlockBits(imageData);
-            }
-
-            if (bytesPerPixel == 1)
-            {
-                if (image.Palette == null)
-                    throw new InvalidDataException("No palette provided.");
-
-                byte[] temp = new byte[image.Width * image.Height * 4];
-
-                for (int i = 0; i < data.Length; ++i)
+                for (int x = 0; x < image.Width; x++)
                 {
-                    var color = image.Palette.Entries[data[i]];
-                    temp[i * 4 + 0] = color.B;
-                    temp[i * 4 + 1] = color.G;
-                    temp[i * 4 + 2] = color.R;
-                    temp[i * 4 + 3] = color.A;
+                    Rgba32 pixel = image[x, y];
+                    data[index++] = pixel.R;
+                    data[index++] = pixel.G;
+                    data[index++] = pixel.B;
+                    data[index++] = pixel.A;
                 }
-
-                data = temp;
             }
-            else if (bytesPerPixel == 3)
-            {
-                byte[] temp = new byte[image.Width * image.Height * 4];
 
-                for (int i = 0; i < data.Length / 3; ++i)
-                {
-                    if (colorkey != null &&
-                        data[i * 3 + 0] == colorkey.Value.Blue &&
-                        data[i * 3 + 1] == colorkey.Value.Green &&
-                        data[i * 3 + 2] == colorkey.Value.Red)
-                    {
-                        temp[i * 4 + 0] = 0;
-                        temp[i * 4 + 1] = 0;
-                        temp[i * 4 + 2] = 0;
-                        temp[i * 4 + 3] = 0;
-                    }
-                    else if (colorReplacing != null &&
-                        data[i * 3 + 0] == colorReplacing.Value.Key.Blue &&
-                        data[i * 3 + 1] == colorReplacing.Value.Key.Green &&
-                        data[i * 3 + 2] == colorReplacing.Value.Key.Red)
-                    {
-                        temp[i * 4 + 0] = colorReplacing.Value.Value.Blue;
-                        temp[i * 4 + 1] = colorReplacing.Value.Value.Green;
-                        temp[i * 4 + 2] = colorReplacing.Value.Value.Red;
-                        temp[i * 4 + 3] = 255;
-                    }
-                    else
-                    {
-                        temp[i * 4 + 0] = data[i * 3 + 0];
-                        temp[i * 4 + 1] = data[i * 3 + 1];
-                        temp[i * 4 + 2] = data[i * 3 + 2];
-                        temp[i * 4 + 3] = 255;
-                    }
-                }
-
-                data = temp;
-            }
-            else if (colorkey != null)
+            if (colorkey != null)
             {
                 for (int i = 0; i < data.Length / 4; ++i)
                 {
