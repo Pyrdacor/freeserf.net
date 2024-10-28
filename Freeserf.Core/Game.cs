@@ -499,6 +499,11 @@ namespace Freeserf
             }
         }
 
+        public void SetSpeed(uint speed)
+        {
+            state.GameSpeed = Convert.ToUInt16(speed);
+        }
+        
         public void ResetSpeed()
         {
             state.GameSpeed = GameState.DEFAULT_GAME_SPEED;
