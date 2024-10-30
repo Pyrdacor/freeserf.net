@@ -2072,7 +2072,7 @@ namespace Freeserf.UI
             SetIcon(40, 41, 0xad);
             SetIcon(40, 49, 0xa8);
             SetIcon(40, 69, 0xac);
-            SetIcon(40, 73, 0xaa);
+            SetIcon(40, 93, 0xaa);
             SetIcon(40, 117, 0xbb);
             SetIcon(56, 41, 0xa4);
             SetIcon(56, 105, 0xe); // sawmiller 
