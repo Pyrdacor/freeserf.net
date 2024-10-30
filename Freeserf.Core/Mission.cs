@@ -608,15 +608,6 @@ namespace Freeserf
                     }
 
                     player.InitView(playerInfo.Color, playerInfo.Face);
-
-                    var castlePos = playerInfo.CastlePosition;
-
-                    if (castlePos.Column > -1 && castlePos.Row > -1)
-                    {
-                        var position = game.Map.Position((MapPos)castlePos.Column, (MapPos)castlePos.Row);
-
-                        game.BuildCastle(position, player);
-                    }
                 }
 
                 ++playerIndex;
@@ -626,6 +617,15 @@ namespace Freeserf
             }
 
             game.InitKnights();
+
+            ////Build Castles with predetermined positions
+            foreach (var playerInfo in players.Where(p => !p.CastlePosition.Equals(PlayerInfo.Position.None)))
+            {
+                var player = game.Players.GetOrInsert((uint)players.IndexOf(playerInfo));
+                var castlePos = playerInfo.CastlePosition;
+                var position = game.Map.Position((MapPos)castlePos.Column, (MapPos)castlePos.Row);
+                game.BuildCastle(position, player);
+            }
 
             return game;
         }
