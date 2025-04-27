@@ -1,3 +1,12 @@
+Version 2.1.2:
+==============
+
+- Updated to .NET 8 (Thanks to dos-ise)
+- Fixed crash of missions with starting castle (Thanks to dos-ise)
+- Fixed corrupted inventory markers (Thanks to athach)
+- Fixed castle defender handling (Thanks to athach)
+
+
 Version 2.1.1:
 ==============
 
