@@ -475,8 +475,8 @@ namespace Freeserf
 
         public Position ScreenToView(Position position)
         {
-            if (!virtualScreenDisplay.Contains(position))
-                return null;
+            position.X = Math.Min(virtualScreenDisplay.Right, Math.Max(virtualScreenDisplay.Left, position.X));
+            position.Y = Math.Min(virtualScreenDisplay.Bottom, Math.Max(virtualScreenDisplay.Top, position.Y));
 
             int relX = position.X - virtualScreenDisplay.Left;
             int relY = position.Y - virtualScreenDisplay.Top;

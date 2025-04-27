@@ -100,6 +100,8 @@ namespace Freeserf.UI
         readonly Interface interf = null;
         readonly Button messageIcon = null;
         readonly Button returnIcon = null;
+
+        readonly Button[] gameSpeedButtons = new Button[5];
         readonly Button[] panelButtons = new Button[5];
         readonly ButtonId[] panelButtonIds = new ButtonId[5];
         readonly Render.ILayerSprite[] background = new Render.ILayerSprite[20];
@@ -121,6 +123,25 @@ namespace Freeserf.UI
             returnIcon = new Button(interf, 8, 10, Data.Resource.FrameBottom, 4u, layerOffset);
             returnIcon.Clicked += ReturnIcon_Clicked;
             AddChild(returnIcon, 40, 28, true);
+
+            gameSpeedButtons[0] = new Button(interf, 7, 7, Data.Resource.FrameBottom, 4u, layerOffset);
+            gameSpeedButtons[1] = new Button(interf, 7, 7, Data.Resource.FrameBottom, 4u, layerOffset);
+            gameSpeedButtons[2] = new Button(interf, 7, 7, Data.Resource.FrameBottom, 4u, layerOffset);
+            gameSpeedButtons[3] = new Button(interf, 7, 7, Data.Resource.FrameBottom, 4u, layerOffset);
+            gameSpeedButtons[4] = new Button(interf, 7, 7, Data.Resource.FrameBottom, 4u, layerOffset);
+
+            int gameSpeedButtonsOffSet = 0;
+            foreach (Button button in gameSpeedButtons)
+            {
+                AddChild(button, 295, gameSpeedButtonsOffSet, true);
+                gameSpeedButtonsOffSet += 7;
+            }
+
+            gameSpeedButtons[0].Clicked += (sender, e) => SetGameSpeed(0);
+            gameSpeedButtons[1].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED);
+            gameSpeedButtons[2].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED * 7);
+            gameSpeedButtons[3].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED * 14);
+            gameSpeedButtons[4].Clicked += (sender, e) => SetGameSpeed(Global.MAX_GAME_SPEED);
 
             panelButtons[0] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.BuildInactive, layerOffset);
             panelButtons[1] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.DestroyInactive, layerOffset);
@@ -165,6 +186,14 @@ namespace Freeserf.UI
             blinkTimer.Interval = 700;
             blinkTimer.Elapsed += BlinkTimer_Elapsed;
             blinkTimer.Start();
+        }
+
+        private void SetGameSpeed(uint v)
+        {
+            if (interf.Player.Game.GameSpeed != v)
+            {
+                interf.Player.Game.SetSpeed(v);
+            }
         }
 
         private void GotoCastle(object sender, Button.ClickEventArgs args)
@@ -233,6 +262,9 @@ namespace Freeserf.UI
 
                     messageIcon.Displayed = true;
                     returnIcon.Displayed = true;
+
+                    foreach (var speedButton in gameSpeedButtons)
+                        speedButton.Displayed = true;
                 }
             }
         }
