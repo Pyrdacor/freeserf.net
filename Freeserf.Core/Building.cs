@@ -1927,7 +1927,7 @@ namespace Freeserf
                     lastKnight.SerfType = bestKnightType;
                 }
             }
-            else if (player.CastleKnights < player.CastleKnightsWanted)
+            else if (player.CastleKnights + player.CastleKnightsRequested < player.CastleKnightsWanted)
             {
                 var knightType = Serf.Type.None;
 
@@ -1958,8 +1958,10 @@ namespace Freeserf
                     else
                     {
                         // if we don't have a knight, send one
-                        if (player.TickSendKnightDelay())
+                        if (player.TickSendKnightDelay()) { 
+                            player.IncreaseCastleKnightsRequested();
                             SendKnightToBuilding();
+                        }
                     }
                 }
                 else
@@ -1971,7 +1973,7 @@ namespace Freeserf
                     player.IncreaseCastleKnights();
                 }
             }
-            else
+            else if (player.CastleKnights > player.CastleKnightsWanted)
             {
                 player.DecreaseCastleKnights();
 
