@@ -13,8 +13,8 @@ for:
   test_script:
   - dotnet test FreeserfNet.sln -c LinuxRelease --no-build --verbosity normal
   after_test:
-  - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=LINUX -p:PublishSingleFile=true -r ubuntu-x64
-  - 7z a Freeserf.net-Linux.tar "./FreeserfNet/bin/Any CPU/LinuxRelease/ubuntu-x64/publish/FreeserfNet" "./changelog.txt" "./FreeserfNet/bass/linux-x64/*.so"
+  - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=LINUX -p:PublishSingleFile=true -r linux-x64
+  - 7z a Freeserf.net-Linux.tar "./FreeserfNet/bin/Any CPU/LinuxRelease/linux-x64/publish/FreeserfNet" "./changelog.txt" "./FreeserfNet/bass/linux-x64/*.so"
   - 7z a Freeserf.net-Linux.tar.gz Freeserf.net-Linux.tar -mx9
 -
   matrix:

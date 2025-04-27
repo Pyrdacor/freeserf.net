@@ -58,7 +58,7 @@ A full sync can be necessary and it may lag but following syncs should then be s
 
 Syncing is done whenever the host or a client performs a user action of one of the following types:
 
-- Change a setting which effects the game (so settings that are not only affecting the client like changing the audio volume)
+- Change a setting which affects the game (so settings that are not only affecting the client like changing the audio volume)
 - Start an attack
 - Send a geologist
 - Cycle knights
@@ -103,7 +103,7 @@ S2C = Server to client
 
 - Request
 	- Heartbeat (S2C, C2S) \
-        Request to get a life sign from a participant. Can be used as a "last chance to response" request.
+        Request to get a life sign from a participant. Can be used as a "last chance to respond" request.
     - StartGame (S2C, C2S) \
         Request for starting the game. Server sends this to all clients when it starts the game. \
         All clients will then start their local games and pause it immediately. Then they send a StartGame back to the host. \
