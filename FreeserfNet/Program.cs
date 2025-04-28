@@ -71,19 +71,17 @@ namespace Freeserf
             // that the audio library is able to find bass at the right spot.
             DllImportResolver resolver = (string libraryName, Assembly asm, DllImportSearchPath? dllImportSearchPath) =>
                 DynamicLibrary.Load(libraryName, Program.ExecutablePath);
-            string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            string path = AppContext.BaseDirectory;
             string audioDllPath = Path.Combine(path, "Freeserf.Audio.dll");
             // Set the resolver for our audio DLL
             NativeLibrary.SetDllImportResolver(Assembly.LoadFrom(audioDllPath), resolver);
 #endif
 
             try
-            {
-                using (var mainWindow = MainWindow.Create(args))
-                {
-                    if (mainWindow != null)
-                        mainWindow.Run();
-                }
+            {                
+                using var mainWindow = MainWindow.Create(args);
+                
+                mainWindow?.Run();
             }
             catch (Exception ex)
             {
