@@ -137,6 +137,16 @@
   <ItemGroup Condition="'$(Configuration)'=='MacRelease'">
     <BassLib Include="bass\osx\*.*" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Release'">
+    <None Include="bass\win-x64\bass.dll">
+      <Link>bass.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="bass\win-x64\bassmidi.dll">
+	  <Link>bassmidi.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
   <Target Name="CopyPackages" BeforeTargets="BeforeCompile">
     <ItemGroup>

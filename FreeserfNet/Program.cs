@@ -64,17 +64,17 @@ namespace Freeserf
         {
 #if LINUX
             // This is needed on linux as it will load the libs with
-            // RTLD_GLOBAL instead ot RTLD_LOCAL. Otherwise bassmidi won't
+            // RTLD_GLOBAL instead of RTLD_LOCAL. Otherwise bassmidi won't
             // work on linux unfortunately.
             // Moreover as we publish freeserf as a single file it will
             // be extracted to a temporary directory. So we will ensure
             // that the audio library is able to find bass at the right spot.
-            DllImportResolver resolver = (string libraryName, Assembly asm, DllImportSearchPath? dllImportSearchPath) =>
-                DynamicLibrary.Load(libraryName, Program.ExecutablePath);
-            string path = AppContext.BaseDirectory;
-            string audioDllPath = Path.Combine(path, "Freeserf.Audio.dll");
-            // Set the resolver for our audio DLL
-            NativeLibrary.SetDllImportResolver(Assembly.LoadFrom(audioDllPath), resolver);
+            static nint ResolveLibraries(string libraryName, Assembly assembly, DllImportSearchPath? dllImportSearchPath)
+            {
+                return DynamicLibrary.Load(libraryName, Program.ExecutablePath);
+            }
+
+            NativeLibrary.SetDllImportResolver(typeof(Audio.AudioFactory).Assembly, ResolveLibraries);
 #endif
 
             try

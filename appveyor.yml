@@ -44,8 +44,6 @@ artifacts:
   - path: Freeserf.net-Linux.tar.gz
     name: Freeserf.net-Linux
 
-test: on
-
 deploy:
   - provider: GitHub
     name: Freeserf.net-Windows
