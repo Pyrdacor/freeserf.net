@@ -389,8 +389,26 @@ namespace Freeserf
             }
         }
 
+        private float? preMinimizedVolume = null;
+
         private void MainWindow_StateChanged(WindowState state)
         {
+            // Mute audio while minimized
+            if (state == WindowState.Minimized)
+            {
+                var volumeControl = gameView.AudioFactory.GetAudio()?.GetVolumeController();
+
+                preMinimizedVolume = volumeControl?.Volume;
+                volumeControl?.SetVolume(0.0f);
+            }
+            else if (preMinimizedVolume != null)
+            {
+                var volumeControl = gameView.AudioFactory.GetAudio()?.GetVolumeController();
+
+                preMinimizedVolume = null;
+                volumeControl?.SetVolume(preMinimizedVolume.Value);
+            }
+
             if (state == WindowState.Maximized)
             {
                 SetFullscreen(true, true);

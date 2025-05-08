@@ -967,6 +967,7 @@ namespace Freeserf
 
             if (HasInventory())
             {
+                // TODO: Crash (issue #156). Most likely GetInventory returned null.
                 Game.GetInventory(state.Inventory).PushResource(resource);
                 return true;
             }
