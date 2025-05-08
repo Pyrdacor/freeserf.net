@@ -36,13 +36,14 @@ namespace Freeserf.UI
 
     internal class ListServers : ListBox<ServerInfo>
     {
+        readonly Interface interf = null;
+
         public ListServers(Interface interf)
             : base(interf, Render.TextRenderType.NewUI)
         {
-            // TODO
-            AddServer("Test Server", "localhost", 1, Game.MAX_PLAYER_COUNT);
-
             Init(interf);
+
+            this.interf = interf;
         }
 
         public void AddServer(string serverName, string hostName, int currentPlayers, int maxPlayers = Game.MAX_PLAYER_COUNT)
@@ -54,6 +55,8 @@ namespace Freeserf.UI
                 CurrentPlayers = currentPlayers,
                 MaxPlayers = maxPlayers
             });
+
+            Update(interf);
         }
     }
 }

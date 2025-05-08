@@ -181,7 +181,7 @@ namespace Freeserf.UI
                 //textEntries[i].Color = (i == selectedItem) ? Color.Black : colorText;
             }
 
-            selectionBackground.Visible = Displayed && selectedItem != -1 && textEntries[selectedItem].Displayed;
+            selectionBackground.Visible = textEntries.Count != 0 && Displayed && selectedItem != -1 && textEntries[selectedItem].Displayed;
         }
 
         string TrimText(string text)

@@ -180,32 +180,13 @@ namespace Silk.NET.Window
             remove { window.StateChanged -= value; }
         }
 
-        public void Run()
-        {
-            window?.Run();
-        }
+        public void Run() => window?.Run();
 
-        public void Close()
-        {
-            window?.Close();
-        }
+        public void Close() => window?.Close();
 
-        public void MakeCurrent()
-        {
-            try
-            {
-                window?.MakeCurrent();
-            }
-            catch
-            {
-                Console.WriteLine("Warning: MakeCurrent failed.");
-            }
-        }
+        public void MakeCurrent() => window?.MakeCurrent();
 
-        public void SwapBuffers()
-        {
-            window?.SwapBuffers();
-        }
+        public void SwapBuffers() => window?.SwapBuffers();
 
         private void InitEvents()
         {

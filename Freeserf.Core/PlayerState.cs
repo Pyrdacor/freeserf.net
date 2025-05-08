@@ -23,6 +23,7 @@ using System;
 
 namespace Freeserf
 {
+    using Freeserf.Render;
     using Serialize;
     using dword = UInt32;
     using MapPos = UInt32;
@@ -56,7 +57,7 @@ namespace Freeserf
     {
         public static bool IsHuman(this PlayerFace face)
         {
-            return face == PlayerFace.You || face == PlayerFace.Friend;
+            return face >= PlayerFace.You;
         }
 
         public static uint GetGraphicIndex(this PlayerFace face)
@@ -68,6 +69,22 @@ namespace Freeserf
                 return 267u + (uint)face;
 
             return 600u + (uint)face - (uint)PlayerFace.YouRed;
+        }
+
+        public static int GetColorIndex(this PlayerFace playerFace)
+        {
+            return playerFace switch
+            {
+                PlayerFace.You => 0,
+                PlayerFace.FriendBlue => 0,
+                PlayerFace.YouRed => 1,
+                PlayerFace.Friend => 1,
+                PlayerFace.YouMagenta => 2,
+                PlayerFace.FriendMagenta => 2,
+                PlayerFace.YouYellow => 3,
+                PlayerFace.FriendYellow => 3,
+                _ => -1
+            };
         }
     }
 

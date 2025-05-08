@@ -248,6 +248,8 @@ namespace Freeserf
                 Update += MainWindow_Update;
                 Resize += MainWindow_Resize;
                 StateChanged += MainWindow_StateChanged;
+
+                MakeCurrent();
             }
             catch (Exception ex)
             {
@@ -364,8 +366,6 @@ namespace Freeserf
         {
             if (!Initialized)
                 return;
-
-            MakeCurrent();
 
             try
             {
@@ -581,7 +581,7 @@ namespace Freeserf
                 lastDragX = int.MinValue;
                 lastDragY = int.MinValue;
                 CursorMode = CursorVisible ? CursorMode.Normal : CursorMode.Hidden;
-                if (scrolled && (UserConfig.Game.Options & (int)Option.ResetCursorAfterScrolling) != 0)
+                if (scrolled && UserConfig.Game.Options.HasFlag(Option.ResetCursorAfterScrolling))
                 {
                     CursorPosition = new Vector2(Width / 2, Height / 2);
                     gameView.SetCursorPosition(Width / 2, Height / 2);

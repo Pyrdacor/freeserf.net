@@ -2,7 +2,7 @@
  * GameInitBox.cs - Game initialization GUI component
  *
  * Copyright (C) 2013-2016  Jon Lund Steffensen <jonlst@gmail.com>
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2025  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -430,6 +430,9 @@ namespace Freeserf.UI
             serverList.SetSize(310, 95);
             serverList.ItemDoubleClicked += ServerList_ItemDoubleClicked;
             AddChild(serverList, 20, 55, false);
+
+            // TODO
+            serverList.AddServer("Test Server", "localhost", 0, Game.MAX_PLAYER_COUNT);
 
             this.gameType = gameType;
             UpdateGameType();
@@ -921,8 +924,7 @@ namespace Freeserf.UI
             {
                 case Action.CreateServer:
                     gameType = GameType.MultiplayerServer;
-                    ServerGameInfo = new GameInfo(new Random(), false);
-                    ServerGameInfo.RemoveAllPlayers();
+                    ServerGameInfo = GameInfo.CreateServerGameInfo();
                     ServerGameInfo.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
                     randomInput.Displayed = true;
                     randomInput.SetRandom(ServerGameInfo.RandomBase);
@@ -931,7 +933,7 @@ namespace Freeserf.UI
                     SetRedraw();
                     Server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", ServerGameInfo); // TODO: name should be editable
                     Server.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
-                    Server.Init(checkBoxSameValues.Checked, checkBoxServerValues.Checked, ServerGameInfo.MapSize, randomInput.Text, ServerGameInfo.Players);
+                    Server.Init(checkBoxServerValues.Checked, checkBoxSameValues.Checked, ServerGameInfo.MapSize, randomInput.Text, ServerGameInfo.Players);
                     Server.ClientJoined += Server_ClientJoined;
                     Server.ClientLeft += Server_ClientLeft;
                     Server.ClientChangedFace += Server_ClientChangedFace;
@@ -1389,8 +1391,8 @@ namespace Freeserf.UI
         private void ServerUpdate()
         {
             Server.Update(
-                checkBoxSameValues.Checked,
                 checkBoxServerValues.Checked,
+                checkBoxSameValues.Checked,
                 ServerGameInfo.MapSize,
                 randomInput.Text,
                 ServerGameInfo.Players

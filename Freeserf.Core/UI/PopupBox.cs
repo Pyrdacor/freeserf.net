@@ -4227,32 +4227,32 @@ namespace Freeserf.UI
                         interf.SetOption(Option.MessagesMost);
                         interf.SetOption(Option.MessagesFew);
                     }
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     SetRedraw();
                     break;
                 case Action.OptionsPathwayScrolling:
                     interf.SwitchOption(Option.PathwayScrolling);
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     break;
                 case Action.OptionsFastMapclick:
                     interf.SwitchOption(Option.FastMapClick);
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     break;
                 case Action.OptionsFastBuilding:
                     interf.SwitchOption(Option.FastBuilding);
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     break;
                 case Action.OptionsInvertScrolling:
                     interf.SwitchOption(Option.InvertScrolling);
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     break;
                 case Action.OptionsHideCursorWhileScrolling:
                     interf.SwitchOption(Option.HideCursorWhileScrolling);
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     break;
                 case Action.OptionsResetCursorAfterScrolling:
                     interf.SwitchOption(Option.ResetCursorAfterScrolling);
-                    UserConfig.Game.Options = (int)interf.Options;
+                    UserConfig.Game.Options = interf.Options;
                     break;
                 case Action.QuitCancel:
                     if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm || Box == Type.DiskMsg)

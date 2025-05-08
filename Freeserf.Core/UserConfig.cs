@@ -27,7 +27,7 @@ namespace Freeserf
     public static class UserConfig
     {
         // Game
-        const Option DefaultOptions = (Option)0x39;
+        const Option DefaultOptions = Option.MessagesImportant | Option.MessagesAll | Option.MessagesMost | Option.MessagesFew;
         const DataSourceMixed.DataUsage DefaultGraphicDataUsage = DataSourceMixed.DataUsage.PreferDos;
         const DataSourceMixed.DataUsage DefaultSoundDataUsage = DataSourceMixed.DataUsage.PreferDos;
         const DataSourceMixed.DataUsage DefaultMusicDataUsage = DataSourceMixed.DataUsage.PreferAmiga;
@@ -52,7 +52,7 @@ namespace Freeserf
 
         public static class Game
         {
-            public static int Options { get; set; } = (int)DefaultOptions;
+            public static Option Options { get; set; } = DefaultOptions;
             public static DataSourceMixed.DataUsage GraphicDataUsage { get; set; } = DefaultGraphicDataUsage;
             public static DataSourceMixed.DataUsage SoundDataUsage { get; set; } = DefaultSoundDataUsage;
             public static DataSourceMixed.DataUsage MusicDataUsage { get; set; } = DefaultMusicDataUsage;
@@ -112,8 +112,8 @@ namespace Freeserf
 
                 // Game
                 const string game = "game";
-                if (int.TryParse(configFile.Value(game, "options", DefaultOptions.ToString()), out int options))
-                    Game.Options = options | 0x01; // bit 0 must be always set
+                if (int.TryParse(configFile.Value(game, "options", ((int)DefaultOptions).ToString()), out int options))
+                    Game.Options = (Option)options | Option.MessagesImportant; // MessagesImportant must be always set
                 Game.GraphicDataUsage = configFile.Value(game, "graphic_data_usage", DefaultGraphicDataUsage);
                 Game.SoundDataUsage = configFile.Value(game, "sound_data_usage", DefaultSoundDataUsage);
                 Game.MusicDataUsage = configFile.Value(game, "music_data_usage", DefaultMusicDataUsage);
@@ -197,7 +197,7 @@ namespace Freeserf
 
         public static void SetDefaults()
         {
-            Game.Options = (int)DefaultOptions;
+            Game.Options = DefaultOptions;
             Game.GraphicDataUsage = DefaultGraphicDataUsage;
             Game.SoundDataUsage = DefaultSoundDataUsage;
             Game.MusicDataUsage = DefaultMusicDataUsage;

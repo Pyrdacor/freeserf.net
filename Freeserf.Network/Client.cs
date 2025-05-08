@@ -145,7 +145,7 @@ namespace Freeserf.Network
                 client = new TcpClient(new IPEndPoint(Ip, 0));
 
                 if (IPAddress.IsLoopback(ip))
-                    client.Connect(Host.GetLocalIpAddress(), Global.NetworkPort);
+                    client.Connect(Ip, Global.NetworkPort);
                 else
                     client.Connect(ip, Global.NetworkPort);
 
@@ -193,9 +193,9 @@ namespace Freeserf.Network
         {
             void handleReceivedData(IRemote source, INetworkData data, ResponseHandler responseHandler)
             {
-                if (!(source is IRemoteServer server))
+                if (source is not IRemoteServer server)
                 {
-                    Log.Error.Write(ErrorSystemType.Network, "Client received data from a non-server.");
+                    Log.Error.Write(ErrorSystemType.Network, "Client received data from an unsupported server.");
                     responseHandler?.Invoke(ResponseType.BadDestination);
                     return;
                 }
@@ -216,8 +216,8 @@ namespace Freeserf.Network
                     {
                         Log.Verbose.Write(ErrorSystemType.Network, $"Saving game state with game time {Misc.SecondsToTime(gameTime)}.");
 
-                        lastSavedGameStateGameTime = gameTime;
                         lastSavedGameStates.Add(gameTime, SavedGameState.FromGame(Game));
+                        lastSavedGameStateGameTime = gameTime;
 
                         Log.Verbose.Write(ErrorSystemType.Network, $"Finished saving game state with game time {Misc.SecondsToTime(gameTime)}.");
                     }

@@ -44,8 +44,8 @@ namespace Freeserf
 
     public class PlayerInfo
     {
-        internal static readonly Character[] Characters = new Character[]
-        {
+        internal static readonly Character[] Characters =
+        [
             new Character(PlayerFace.None, "ERROR", "ERROR"),
             new Character(PlayerFace.LadyAmalie, "Lady Amalie", "An inoffensive lady, reserved, who goes about her work peacefully."),
             new Character(PlayerFace.KumpyOnefinger, "Kumpy Onefinger", "A very hostile character, who loves gold above all else."),
@@ -60,15 +60,25 @@ namespace Freeserf
             new Character(PlayerFace.Enemy, "Enemy", "Last enemy."),
             new Character(PlayerFace.You, "You", "You."),
             new Character(PlayerFace.Friend, "Friend", "Your partner.")
-        };
+        ];
 
-        internal static readonly Color[] PlayerColors = new Color[4]
+        internal static readonly Color[] PlayerColors =
+        [
+            new() {Red = 0x00, Green = 0xe3, Blue = 0xe3}, // Blue
+            new() {Red = 0xcf, Green = 0x63, Blue = 0x63}, // Red
+            new() {Red = 0xdf, Green = 0x7f, Blue = 0xef}, // Magenta
+            new() {Red = 0xef, Green = 0xef, Blue = 0x8f}  // Yellow
+        ];
+
+        public static PlayerInfo Create(uint playerIndex, PlayerFace character, uint intelligence, uint supplies, uint reproduction)
         {
-            new Color() {Red = 0x00, Green = 0xe3, Blue = 0xe3},
-            new Color() {Red = 0xcf, Green = 0x63, Blue = 0x63},
-            new Color() {Red = 0xdf, Green = 0x7f, Blue = 0xef},
-            new Color() {Red = 0xef, Green = 0xef, Blue = 0x8f}
-        };
+            int colorIndex = character.GetColorIndex();
+
+            if (colorIndex == -1)
+                colorIndex = (int)playerIndex;
+
+            return new PlayerInfo(character, PlayerColors[colorIndex], intelligence, supplies, reproduction);
+        }
 
         internal struct Position
         {
@@ -134,7 +144,7 @@ namespace Freeserf
             CastlePosition = Position.None;
         }
 
-        internal void SetCharacter(PlayerFace character)
+        public void SetCharacter(PlayerFace character)
         {
             Face = character;
         }
@@ -381,6 +391,8 @@ namespace Freeserf
 
         public uint MapSize { get; set; }
 
+        public string Seed => RandomBase.ToString();
+
         internal Random RandomBase { get; private set; }
 
         public uint PlayerCount => (uint)players.Count;
@@ -398,9 +410,9 @@ namespace Freeserf
             }
         }
 
-        internal IReadOnlyList<PlayerInfo> Players => players.AsReadOnly();
+        public IReadOnlyList<PlayerInfo> Players => players.AsReadOnly();
 
-        readonly List<PlayerInfo> players = new List<PlayerInfo>(4);
+        readonly List<PlayerInfo> players = new(4);
         readonly string name = "";
         readonly bool intro = false;
 
@@ -424,6 +436,14 @@ namespace Freeserf
             }
         }
 
+        public static GameInfo CreateServerGameInfo()
+        {
+            var serverGameInfo = new GameInfo(new Random(), false);
+            serverGameInfo.RemoveAllPlayers();
+
+            return serverGameInfo;
+        }
+
         internal GameInfo(Random randomBase, bool aiPlayersOnly)
         {
             MapSize = 3;
@@ -431,7 +451,7 @@ namespace Freeserf
             SetRandomBase(randomBase, aiPlayersOnly);
         }
 
-        internal PlayerInfo GetPlayer(uint player)
+        public PlayerInfo GetPlayer(uint player)
         {
             return players[(int)player];
         }
@@ -502,7 +522,7 @@ namespace Freeserf
             }
         }
 
-        internal void AddPlayer(PlayerInfo player)
+        public void AddPlayer(PlayerInfo player)
         {
             players.Add(player);
         }
@@ -514,7 +534,7 @@ namespace Freeserf
             AddPlayer(new PlayerInfo(character, color, intelligence, supplies, reproduction));
         }
 
-        internal void ReplacePlayer(int playerIndex, PlayerInfo player)
+        public void ReplacePlayer(int playerIndex, PlayerInfo player)
         {
             players[playerIndex] = player;
         }
@@ -524,7 +544,7 @@ namespace Freeserf
             players.Clear();
         }
 
-        internal void RemovePlayer(uint index, bool multiplayer)
+        public void RemovePlayer(uint index, bool multiplayer)
         {
             if (index >= players.Count)
                 return;
