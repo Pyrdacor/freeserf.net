@@ -126,7 +126,8 @@ namespace Freeserf.Data
             Sound,
             Music,
             Cursor,
-            UIText // new UI text font
+            UIText, // new UI text font
+            SpeedButtons // new speed buttons (custom)
         }
 
         protected DataSource dataSource = null;

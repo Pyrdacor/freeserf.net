@@ -124,10 +124,45 @@ namespace Freeserf.Data
 
         public static Sprite CreateFromFile(string filename, Color? colorkey = null, KeyValuePair<Color, Color>? colorReplacing = null)
         {
-            using (var stream = File.OpenRead(filename))
+            using var stream = File.OpenRead(filename);
+
+            return CreateFromStream(stream, colorkey, colorReplacing);
+        }
+
+        public static Sprite CreateFromData(uint width, uint height, ReadOnlySpan<byte> data)
+        {
+            if (data.Length != width * height * 4)
+                throw new ArgumentOutOfRangeException(nameof(data));
+
+            var sprite = new Sprite(width, height);
+
+            sprite.data = data.ToArray();
+
+            return sprite;
+        }
+
+        public static Sprite CreateFromPixels(uint width, uint height, ReadOnlySpan<Color> pixels)
+        {
+            if (pixels.Length != width * height)
+                throw new ArgumentOutOfRangeException(nameof(pixels));
+
+            var sprite = new Sprite(width, height);
+
+            sprite.data = new byte[width * height * 4];
+
+            int index = 0;
+
+            for (int i = 0; i < pixels.Length; i++)
             {
-                return CreateFromStream(stream, colorkey, colorReplacing);
+                var pixel = pixels[i];
+
+                sprite.data[index++] = pixel.Blue;
+                sprite.data[index++] = pixel.Green;
+                sprite.data[index++] = pixel.Red;
+                sprite.data[index++] = pixel.Alpha;
             }
+
+            return sprite;
         }
 
         public static Sprite CreateFromStream(Stream stream, Color? colorkey = null, KeyValuePair<Color, Color>? colorReplacing = null)
@@ -138,6 +173,20 @@ namespace Freeserf.Data
             sprite.width = (uint)image.Width;
             sprite.height = (uint)image.Height;
             sprite.data = GetImageData(image, colorkey, colorReplacing);
+
+            return sprite;
+        }
+
+        public static Sprite CreateCompound(uint width, uint height, params (int, int, Sprite)[] sprites)
+        {
+            var sprite = new Sprite(width, height);
+
+            foreach (var spriteInfo in sprites)
+            {
+                var (x, y, s) = spriteInfo;
+
+                sprite.Add(x, y, s);
+            }
 
             return sprite;
         }
@@ -845,9 +894,7 @@ namespace Freeserf.Data
                 return null;
             }
 
-            Tuple<Sprite, Sprite> ms = GetSpriteParts(resource, index);
-            Sprite mask = ms.Item1;
-            Sprite image = ms.Item2;
+            var (mask, image) = GetSpriteParts(resource, index);
 
             if (mask != null)
             {

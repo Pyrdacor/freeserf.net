@@ -49,7 +49,7 @@ namespace Freeserf.Renderer
 
     public class TextureAtlasBuilder : ITextureAtlasBuilder
     {
-        readonly Dictionary<uint, Data.Sprite> sprites = new Dictionary<uint, Data.Sprite>();
+        readonly Dictionary<uint, Data.Sprite> sprites = [];
 
         // key = max height of category
         class SpriteCategorySorter : IComparer<KeyValuePair<uint, List<uint>>>
@@ -72,10 +72,10 @@ namespace Freeserf.Renderer
             // sort sprites by similar heights (16-pixel bands)
             // heights of items are < key * 16
             // value = list of sprite indices
-            Dictionary<uint, List<uint>> spriteCategories = new Dictionary<uint, List<uint>>();
-            Dictionary<uint, uint> spriteCategoryMinValues = new Dictionary<uint, uint>();
-            Dictionary<uint, uint> spriteCategoryMaxValues = new Dictionary<uint, uint>();
-            Dictionary<uint, uint> spriteCategoryTotalWidth = new Dictionary<uint, uint>();
+            Dictionary<uint, List<uint>> spriteCategories = [];
+            Dictionary<uint, uint> spriteCategoryMinValues = [];
+            Dictionary<uint, uint> spriteCategoryMaxValues = [];
+            Dictionary<uint, uint> spriteCategoryTotalWidth = [];
 
             foreach (var sprite in sprites)
             {
@@ -83,7 +83,7 @@ namespace Freeserf.Renderer
 
                 if (!spriteCategories.ContainsKey(category))
                 {
-                    spriteCategories.Add(category, new List<uint>());
+                    spriteCategories.Add(category, []);
                     spriteCategoryMinValues.Add(category, sprite.Value.Height);
                     spriteCategoryMaxValues.Add(category, sprite.Value.Height);
                     spriteCategoryTotalWidth.Add(category, sprite.Value.Width);
@@ -129,7 +129,7 @@ namespace Freeserf.Renderer
             uint height = 0u;
             uint xOffset = 0u;
             uint yOffset = 0u;
-            Dictionary<uint, Position> textureOffsets = new Dictionary<uint, Position>();
+            Dictionary<uint, Position> textureOffsets = [];
 
             // create texture offsets
             foreach (var category in filteredSpriteCategories)
@@ -174,7 +174,7 @@ namespace Freeserf.Renderer
             }
 
             // create texture
-            MutableTexture texture = new MutableTexture((int)width, (int)height);
+            var texture = new MutableTexture((int)width, (int)height);
 
             foreach (var offset in textureOffsets)
             {
