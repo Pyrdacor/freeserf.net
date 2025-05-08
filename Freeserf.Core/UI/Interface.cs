@@ -137,7 +137,7 @@ namespace Freeserf.UI
             TextRenderer = new TextRenderer(renderView);
 
             displayed = true;
-            Options = (Option)UserConfig.Game.Options;
+            Options = UserConfig.Game.Options;
 
             mapCursorSprites[0] = new SpriteLocation { Sprite = 31 };
             mapCursorSprites[1] = new SpriteLocation { Sprite = 32 };
@@ -1041,11 +1041,11 @@ namespace Freeserf.UI
             }
         }
 
-        static readonly int[] MsgCategory = new int[]
-        {
+        static readonly int[] MsgCategory =
+        [
             -1, 5, 5, 5, 4, 0, 4, 3, 4, 5,
             5, 5, 4, 4, 4, 4, 0, 0, 0, 0
-        };
+        ];
 
         // Called periodically when the game progresses. 
         public virtual void Update()
@@ -1089,7 +1089,7 @@ namespace Freeserf.UI
                     {
                         var notification = Player.PeekNotification();
 
-                        if (GetOption((Option)MsgCategory[(int)notification.NotificationType]))
+                        if (GetOption((Option)(1 << MsgCategory[(int)notification.NotificationType])))
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Message);
                             msgFlags |= Misc.Bit(0);
@@ -1114,7 +1114,7 @@ namespace Freeserf.UI
 
                         var notification = Player.PeekNotification();
 
-                        if (GetOption((Option)MsgCategory[(int)notification.NotificationType]))
+                        if (GetOption((Option)(1 << MsgCategory[(int)notification.NotificationType])))
                             break;
 
                         Player.PopNotification();
