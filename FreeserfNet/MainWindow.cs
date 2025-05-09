@@ -471,15 +471,9 @@ namespace Freeserf
             else if (preMinimizedVolume != null)
             {
                 var volumeControl = gameView.AudioFactory.GetAudio()?.GetVolumeController();
-
-                preMinimizedVolume = null;
+                
                 volumeControl?.SetVolume(preMinimizedVolume.Value);
-            }
-
-            if (state == WindowState.Maximized)
-            {
-                SetFullscreen(true, true);
-                return;
+                preMinimizedVolume = null;
             }
         }
 
