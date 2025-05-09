@@ -1,3 +1,9 @@
+Version 2.2.1:
+==============
+
+- Windows releases now contain the glfw3.dll so it should run out of the box
+
+
 Version 2.2.0:
 ==============
 

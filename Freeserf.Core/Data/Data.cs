@@ -240,7 +240,7 @@ namespace Freeserf.Data
             if (Environment.OSVersion.Platform == PlatformID.Win32Windows)
             {
                 // Look in the same directory as the freeserf.exe app.
-                addEnvPath(Assembly.GetEntryAssembly().Location, "../");
+                addEnvPath(AppContext.BaseDirectory, "../");
 
                 // Look in windows XDG_DATA_HOME equivalents.
                 addEnvPath(Environment.GetEnvironmentVariable("userprofile"), ".local/share/freeserf");
