@@ -48,6 +48,9 @@ namespace Freeserf
             public CommandLine CommandLine;
             public string DataDirectory;
             public string SaveGame;
+            public int MonitorIndex = -1;
+            public int WindowX = -1;
+            public int WindowY = -1;
             public int ScreenWidth = -1;
             public int ScreenHeight = -1;
             public bool? Fullscreen = null;

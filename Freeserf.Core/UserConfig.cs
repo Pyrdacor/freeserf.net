@@ -36,6 +36,9 @@ namespace Freeserf
         const bool DefaultSound = true;
         const float DefaultVolume = 1.0f;
         // Video
+        public const int DefaultMonitorIndex = 0;
+        public const int DefaultWindowX = 20;
+        public const int DefaultWindowY = 40;
         const int DefaultResolutionX = 1280;
         const int DefaultResolutionY = 960;
         const bool DefaultFullscreen = false;
@@ -68,6 +71,9 @@ namespace Freeserf
 
         public static class Video
         {
+            public static int MonitorIndex { get; set; } = DefaultMonitorIndex;
+            public static int WindowX { get; set; } = DefaultWindowX;
+            public static int WindowY { get; set; } = DefaultWindowY;
             public static int ResolutionWidth { get; set; } = DefaultResolutionX;
             public static int ResolutionHeight { get; set; } = DefaultResolutionY;
             public static bool Fullscreen { get; set; } = DefaultFullscreen;
@@ -130,6 +136,12 @@ namespace Freeserf
 
                 // Video
                 const string video = "video";
+                if (int.TryParse(configFile.Value(video, "monitor_index", DefaultMonitorIndex.ToString()), out int monitorIndex))
+                    Video.MonitorIndex = monitorIndex;
+                if (int.TryParse(configFile.Value(video, "window_x", DefaultWindowX.ToString()), out int windowX))
+                    Video.WindowX = windowX;
+                if (int.TryParse(configFile.Value(video, "window_y", DefaultWindowY.ToString()), out int windowY))
+                    Video.WindowY = windowY;
                 if (int.TryParse(configFile.Value(video, "resolution_width", DefaultResolutionX.ToString()), out int resolutionWidth))
                     Video.ResolutionWidth = resolutionWidth;
                 if (int.TryParse(configFile.Value(video, "resolution_height", DefaultResolutionY.ToString()), out int resolutionHeight))
@@ -176,6 +188,9 @@ namespace Freeserf
 
                 // Video
                 const string video = "video";
+                configFile.SetValue(video, "monitor_index", Video.MonitorIndex);
+                configFile.SetValue(video, "window_x", Video.WindowX);
+                configFile.SetValue(video, "window_y", Video.WindowY);
                 configFile.SetValue(video, "resolution_width", Video.ResolutionWidth);
                 configFile.SetValue(video, "resolution_height", Video.ResolutionHeight);
                 configFile.SetValue(video, "fullscreen", Video.Fullscreen);
@@ -206,6 +221,9 @@ namespace Freeserf
             Audio.Sound = DefaultSound;
             Audio.Volume = DefaultVolume;
 
+            Video.MonitorIndex = DefaultMonitorIndex;
+            Video.WindowX = DefaultWindowX;
+            Video.WindowY = DefaultWindowY;
             Video.ResolutionWidth = DefaultResolutionX;
             Video.ResolutionHeight = DefaultResolutionY;
             Video.Fullscreen = DefaultFullscreen;

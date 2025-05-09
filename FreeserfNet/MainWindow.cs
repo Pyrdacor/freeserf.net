@@ -150,6 +150,12 @@ namespace Freeserf
                 if (UserConfig.Video.ResolutionHeight > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
                     UserConfig.Video.ResolutionHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
 
+                if (initInfo.MonitorIndex == -1)
+                    initInfo.MonitorIndex = UserConfig.Video.MonitorIndex;
+                if (initInfo.WindowX == -1)
+                    initInfo.WindowX = UserConfig.Video.WindowX;
+                if (initInfo.WindowY == -1)
+                    initInfo.WindowY = UserConfig.Video.WindowY;
                 if (initInfo.ScreenWidth == -1)
                     initInfo.ScreenWidth = UserConfig.Video.ResolutionWidth;
                 if (initInfo.ScreenHeight == -1)
@@ -196,13 +202,16 @@ namespace Freeserf
                     initInfo.ScreenHeight = Misc.Round(initInfo.ScreenWidth / ratio);
                 }*/
 
+                UserConfig.Video.MonitorIndex = initInfo.MonitorIndex;
+                UserConfig.Video.WindowX = initInfo.WindowX;
+                UserConfig.Video.WindowY = initInfo.WindowY;
                 UserConfig.Video.ResolutionWidth = initInfo.ScreenWidth;
                 UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
                 UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
 
                 var options = new WindowOptions(
                     true,
-                    new Vector2D<int>(20, 40),
+                    new Vector2D<int>(initInfo.WindowX, initInfo.WindowY),
                     new Vector2D<int>(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     50.0,
                     50.0,
@@ -225,18 +234,63 @@ namespace Freeserf
             }
         }
 
+        private IMonitor GetMonitorByIndex(int index)
+        {
+            try
+            {
+                return Silk.NET.Windowing.Window.GetWindowPlatform(false).GetMonitors().FirstOrDefault(m => m.Index == index);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private void MainWindow_Load()
         {
             try
             {
+                if (Monitor != null && UserConfig.Video.MonitorIndex != Monitor.Index)
+                {
+                    int configMonitorIndex = UserConfig.Video.MonitorIndex;
+                    IMonitor monitor = GetMonitorByIndex(configMonitorIndex);
+
+                    // Monitor not found, try default monitor or keep the one currently used.
+                    if (monitor == null)
+                    {
+                        if (Monitor.Index == UserConfig.DefaultMonitorIndex)
+                        {
+                            monitor = Monitor;
+                        }
+                        else
+                        {
+                            monitor = GetMonitorByIndex(UserConfig.DefaultMonitorIndex) ?? Monitor;
+                        }
+
+                        UserConfig.Video.MonitorIndex = monitor.Index;
+                    }
+
+                    // Move it there
+                    var origin = monitor.Bounds.Origin;
+
+                    if (configMonitorIndex == monitor.Index)
+                    {
+                        Position = new Vector2D<int>(origin.X + UserConfig.Video.WindowX, origin.Y + UserConfig.Video.WindowY);
+                    }
+                    else
+                    {
+                        UserConfig.Video.WindowX = UserConfig.DefaultWindowX;
+                        UserConfig.Video.WindowY = UserConfig.DefaultWindowY;
+
+                        Position = new Vector2D<int>(origin.X + UserConfig.DefaultWindowX, origin.Y + UserConfig.DefaultWindowY);
+                    }
+                }
+
                 State.Init(this);
                 gameView = new(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
                 gameView.Resize(Width, Height);
-
-                if (initInfo.Fullscreen == true)
-                    SetFullscreen(true);
 
                 CursorVisible = false; // hide cursor
                 DoubleClickTime = 300;
@@ -247,13 +301,29 @@ namespace Freeserf
                 Update += MainWindow_Update;
                 Resize += MainWindow_Resize;
                 StateChanged += MainWindow_StateChanged;
+                WindowAreaChanged += MainWindow_WindowAreaChanged;
 
                 MakeCurrent();
+
+                if (initInfo.Fullscreen == true)
+                    SetFullscreen(true);
             }
             catch (Exception ex)
             {
                 ReportException("Load", ex);
             }
+        }
+
+        private void MainWindow_WindowAreaChanged(IMonitor monitor, Vector2D<int> position, Vector2D<int> size, bool fullscreen)
+        {
+            if (monitor != null)
+                UserConfig.Video.MonitorIndex = monitor.Index;
+
+            UserConfig.Video.WindowX = position.X;
+            UserConfig.Video.WindowY = position.Y;
+            UserConfig.Video.ResolutionWidth = size.X;
+            UserConfig.Video.ResolutionHeight = size.Y;
+            UserConfig.Video.Fullscreen = fullscreen;
         }
 
         private static void Exit()

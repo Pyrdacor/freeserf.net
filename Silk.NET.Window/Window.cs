@@ -69,10 +69,15 @@ namespace Silk.NET.Window
             normalPosition = Position;
             normalSize = Size;
 
+            WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
+
             window.Move += (position) =>
             {
                 if (!fullscreen && WindowState != WindowState.Minimized)
                     normalPosition = position;
+
+                if (WindowState != WindowState.Minimized)
+                    WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
             };
         }
 
@@ -85,6 +90,8 @@ namespace Silk.NET.Window
                     normalPosition = value;
 
                 window.Position = value;
+
+                WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
             }
         }
 
@@ -97,6 +104,8 @@ namespace Silk.NET.Window
                     normalSize = value;
 
                 window.Size = value;
+
+                WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
             }
         }
 
@@ -116,7 +125,9 @@ namespace Silk.NET.Window
                     fullscreen = true;
 
                     window.Size = monitor?.Bounds.Size ?? window.Size;
-                    window.Position = monitor?.Bounds.Origin ?? Vector2D<int>.Zero;                    
+                    window.Position = monitor?.Bounds.Origin ?? Vector2D<int>.Zero;
+
+                    WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
                 }
                 else if (value == WindowState.Minimized)
                 {
@@ -158,8 +169,12 @@ namespace Silk.NET.Window
                 newY = Math.Max(upperLeft.Y + BorderSize.Origin.Y, upperLeft.Y + bounds.Value.Size.Y - normalSize.Y - BorderSize.Origin.Y - BorderSize.Size.Y);
             }
 
-            Position = new(newX ?? normalPosition.X, newY ?? normalPosition.Y);
+            normalPosition = new(newX ?? normalPosition.X, newY ?? normalPosition.Y);
+
+            window.Position = normalPosition;
             window.Size = normalSize;
+
+            WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
         }
 
         public CursorMode CursorMode
@@ -252,6 +267,8 @@ namespace Silk.NET.Window
             add { window.StateChanged += value; }
             remove { window.StateChanged -= value; }
         }
+
+        public event Action<IMonitor, Vector2D<int>, Vector2D<int>, bool> WindowAreaChanged;
 
         public void Run() => window?.Run();
 
