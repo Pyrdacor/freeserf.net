@@ -1,10 +1,11 @@
 Version 2.2.0:
 ==============
 
-- Fixed fullscreen (now used full-sized window instead)
-- Window position and monitor are now stored in config
+- Fixed fullscreen (now uses full-sized window instead and it uses the window's monitor)
+- Window position and monitor are now stored in config (so they are preserved for next start)
 - Added nicer game speed buttons
 - Fixed missing notifications
+- Music and sounds are now muted when window is minimized
 
 
 Version 2.1.2:
