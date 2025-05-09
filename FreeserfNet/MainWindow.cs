@@ -1,7 +1,7 @@
 /*
  * MainWindow.cs - Main game window
  *
- * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2019-2025  Robert Schneckenhaus <robert.schneckenhaus@web.de>
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -200,7 +200,6 @@ namespace Freeserf
                 UserConfig.Video.ResolutionHeight = initInfo.ScreenHeight;
                 UserConfig.Video.Fullscreen = initInfo.Fullscreen.Value;
 
-                var state = (initInfo.Fullscreen.HasValue && initInfo.Fullscreen.Value) ? WindowState.Fullscreen : WindowState.Normal;
                 var options = new WindowOptions(
                     true,
                     new Vector2D<int>(20, 40),
@@ -209,8 +208,8 @@ namespace Freeserf
                     50.0,
                     GraphicsAPI.Default,
                     Global.VERSION,
-                    state,
-                    state == WindowState.Normal ? WindowBorder.Fixed : WindowBorder.Hidden,
+                    WindowState.Normal,
+                    WindowBorder.Fixed,
                     true,
                     false,
                     new VideoMode(),
@@ -231,7 +230,7 @@ namespace Freeserf
             try
             {
                 State.Init(this);
-                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
+                gameView = new(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
                 gameView.Resize(Width, Height);
@@ -260,8 +259,6 @@ namespace Freeserf
         private static void Exit()
         {
             mainWindow?.Close();
-            // TODO: Silk has still problems to trigger the closing event on manual close.
-            mainWindow?.MainWindow_Closing(); // Remove this later if Silk is fixed.
         }
 
         private void GameView_Closed(object sender, EventArgs e)
@@ -318,7 +315,7 @@ namespace Freeserf
             {
                 this.fullscreen = fullscreen;
 
-                WindowState = (fullscreen) ? WindowState.Fullscreen : WindowState.Normal;
+                WindowState = fullscreen ? WindowState.Fullscreen : WindowState.Normal;
             }
 
             return true;

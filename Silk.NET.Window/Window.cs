@@ -30,6 +30,9 @@ namespace Silk.NET.Window
         readonly IWindow window = null;
         IMouse mouse = null;
         bool cursorVisible = true;
+        Vector2D<int> normalPosition;
+        Vector2D<int> normalSize;
+        bool fullscreen = false;
 
         private static WindowOptions CreateOptions(string title, Vector2D<int> position, Vector2D<int> size)
         {
@@ -51,46 +54,114 @@ namespace Silk.NET.Window
         public Window(string title, Vector2D<int> position, Vector2D<int> size)
             : this(CreateOptions(title, position, size))
         {
-
         }
 
         public Window(string title, Vector2D<int> size)
             : this(title, Vector2D<int>.Zero, size)
         {
-
         }
 
         public Window(WindowOptions options)
         {
             window = Windowing.Window.Create(options);
             InitEvents();
+
+            normalPosition = Position;
+            normalSize = Size;
+
+            window.Move += (position) =>
+            {
+                if (!fullscreen && WindowState != WindowState.Minimized)
+                    normalPosition = position;
+            };
         }
 
         public Vector2D<int> Position
         {
             get => window.Position;
-            set => window.Position = value;
+            set
+            {
+                if (!fullscreen && WindowState != WindowState.Minimized)
+                    normalPosition = value;
+
+                window.Position = value;
+            }
         }
 
         public Vector2D<int> Size
         {
             get => window.Size;
-            set => window.Size = value;
+            set
+            {
+                if (!fullscreen && WindowState != WindowState.Minimized)
+                    normalSize = value;
+
+                window.Size = value;
+            }
         }
+
+        public Rectangle<int> BorderSize => window.BorderSize;
 
         public WindowState WindowState
         {
             get => window.WindowState;
             set
             {
-                window.WindowState = value;
-
-                if (mouse != null && !CursorVisible)
+                if (value == WindowState.Maximized || value == WindowState.Fullscreen)
                 {
-                    mouse.Cursor.CursorMode = WindowState == WindowState.Fullscreen ? CursorMode.Disabled : CursorMode.Hidden;
+                    var monitor = window.Monitor;
+
+                    window.WindowState = WindowState.Normal;
+                    window.WindowBorder = WindowBorder.Fixed;
+                    fullscreen = true;
+
+                    window.Size = monitor?.Bounds.Size ?? window.Size;
+                    window.Position = monitor?.Bounds.Origin ?? Vector2D<int>.Zero;                    
+                }
+                else if (value == WindowState.Minimized)
+                {
+                    window.WindowState = WindowState.Minimized;
+                }
+                else
+                {
+                    window.WindowState = WindowState.Normal;
+                    window.WindowBorder = WindowBorder.Fixed;
+                    fullscreen = false;
+
+                    EnsureWindowOnMonitor();
                 }
             }
         }
+
+        void EnsureWindowOnMonitor()
+        {
+            var bounds = Monitor?.Bounds;
+            Vector2D<int> upperLeft = bounds?.Origin ?? new(0, 0);
+            int? newX = null;
+            int? newY = null;
+
+            if (normalPosition.X - BorderSize.Origin.X < upperLeft.X)
+            {
+                newX = upperLeft.X + BorderSize.Origin.X;
+            }
+            else if (bounds != null && normalPosition.X + normalSize.X >= upperLeft.X + bounds.Value.Size.X)
+            {
+                newX = Math.Max(upperLeft.X + BorderSize.Origin.X, upperLeft.X + bounds.Value.Size.X - normalSize.X - BorderSize.Origin.X - BorderSize.Size.X);
+            }
+
+            if (normalPosition.Y - BorderSize.Origin.Y < upperLeft.Y)
+            {
+                newY = upperLeft.Y + BorderSize.Origin.Y;
+            }
+            else if (bounds != null && normalPosition.Y + normalSize.Y >= upperLeft.Y + bounds.Value.Size.Y)
+            {
+                newY = Math.Max(upperLeft.Y + BorderSize.Origin.Y, upperLeft.Y + bounds.Value.Size.Y - normalSize.Y - BorderSize.Origin.Y - BorderSize.Size.Y);
+            }
+
+            Position = new(newX ?? normalPosition.X, newY ?? normalPosition.Y);
+            window.Size = normalSize;
+        }
+
         public CursorMode CursorMode
         {
             get => mouse == null ? CursorMode.Disabled : mouse.Cursor.CursorMode;
@@ -123,7 +194,7 @@ namespace Silk.NET.Window
                 }
                 else
                 {
-                    mouse.Cursor.CursorMode = WindowState == WindowState.Fullscreen ? CursorMode.Disabled : CursorMode.Hidden;
+                    mouse.Cursor.CursorMode = CursorMode.Hidden;
                 }
             }
         }
@@ -137,6 +208,8 @@ namespace Silk.NET.Window
                     mouse.Position = value;
             }
         }
+
+        public IMonitor Monitor => window.Monitor;
 
         public bool IsMouseButtonPressed(MouseButton button) => mouse.IsButtonPressed(button);
 
