@@ -342,7 +342,8 @@ namespace Freeserf.UI
             JumpToPlayer1,
             JumpToPlayer2,
             JumpToPlayer3,
-            JumpToPlayer4
+            JumpToPlayer4,
+            FindRequestedSerf
         }
 
         Interface interf;
@@ -3072,6 +3073,12 @@ namespace Freeserf.UI
 
             SetIcon(16, 45, serfSprite);
 
+            if (!building.HasSerf && building.SerfRequested)
+            {
+                SetIcon(16, 45 + 16 + 4, 237u); // Big arrow up
+                SetButton(16, 45 + 32 + 8, 0x82, Action.FindRequestedSerf); // serf with question mark
+            }
+
             // draw building
             var info = interf.RenderView.DataSource.GetSpriteInfo(Data.Resource.MapObject, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
 
@@ -4305,9 +4312,36 @@ namespace Freeserf.UI
                         SetBox(Type.PlayerStatistics);
                     }
                     break;
+                case Action.FindRequestedSerf:
+                    FindRequestedSerf(interf.Game.GetBuilding(interf.Player.SelectedObjectIndex));
+                    break;
                 default:
                     Log.Warn.Write(ErrorSystemType.UI, "unhandled action " + action.ToString());
                     break;
+            }
+        }
+
+        void FindRequestedSerf(Building building)
+        {
+            if (building.HasSerf)
+                return;
+
+            var serf = interf.Game.Serfs.FirstOrDefault(serf =>
+                serf.SerfState == Serf.State.Walking && serf.WalkingDestination == building.FlagIndex);
+            uint position = serf?.Position ?? 0;
+
+            if (serf == null)
+            {
+                serf = interf.Game.Serfs.FirstOrDefault(serf => serf.SerfState == Serf.State.ReadyToLeaveInventory && serf.LeaveInventoryDestination == building.FlagIndex);
+
+                if (serf != null)
+                    position = interf.Game.GetFlag(interf.Game.GetInventory(serf.LeaveInventoryIndex).Flag).Position;
+            }
+
+            if (serf != null)
+            {
+                interf.Viewport.MoveToMapPosition(position, true);
+                interf.UpdateMapCursorPosition(position);
             }
         }
 

@@ -612,6 +612,8 @@ namespace Freeserf
             set => state.FreeShieldPossible = value;
         }
 
+        public bool SerfRequested => state.SerfRequested;
+
         // Building has succesfully requested a serf.
         public void SerfRequestGranted()
         {

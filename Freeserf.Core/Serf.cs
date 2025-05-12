@@ -2479,6 +2479,7 @@ namespace Freeserf
             get => state.Player;
             set => state.Player = (byte)value;
         }
+
         public State SerfState
         {
             get => state.State;
@@ -3258,7 +3259,11 @@ namespace Freeserf
 
         internal Resource.Type TransportedResource => stateData.Walking.Resource;
 
-        internal uint TransportDestination => stateData.Walking.Destination;
+        internal uint WalkingDestination => stateData.Walking.Destination;
+
+        internal uint LeaveInventoryDestination => stateData.ReadyToLeaveInventory.Destination;
+
+        internal uint LeaveInventoryIndex => stateData.ReadyToLeaveInventory.InventoryIndex;
 
         internal int AttackingFieldD => stateData.Attacking.FieldD;
 
