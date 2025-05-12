@@ -3076,7 +3076,7 @@ namespace Freeserf.UI
             if (!building.HasSerf && building.SerfRequested)
             {
                 SetIcon(16, 45 + 16 + 4, 237u); // Big arrow up
-                SetButton(16, 45 + 32 + 8, 0x82, Action.FindRequestedSerf); // serf with question mark
+                SetButton(16, 45 + 32 + 8, MapBuildingSerfSprite[(int)building.BuildingType], Action.FindRequestedSerf);
             }
 
             // draw building
