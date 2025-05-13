@@ -3416,8 +3416,6 @@ namespace Freeserf
                 player.ReadFrom(subreader);
             }
 
-            InitKnights();
-
             foreach (var subreader in reader.GetSections("flag"))
             {
                 var flag = Flags.GetOrInsert((uint)subreader.Number);
@@ -3510,6 +3508,7 @@ namespace Freeserf
 
             Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
+            InitKnights();
             InitLandOwnership();
             PostLoadRoads();
 
