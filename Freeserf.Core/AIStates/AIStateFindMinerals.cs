@@ -103,6 +103,7 @@ namespace Freeserf.AIStates
 
                 if (!canBuild)
                 {
+                    Kill(ai);
                     ai.PushState(ai.CreateState(AI.State.CraftTool, Resource.Type.Pick));
                     break;
                 }
