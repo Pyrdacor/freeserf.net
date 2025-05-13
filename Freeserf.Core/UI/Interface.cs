@@ -339,13 +339,13 @@ namespace Freeserf.UI
 
             if (Viewport == null)
             {
-                Viewport = new Viewport(this, Game.Map);
+                Viewport = new(this, Game.Map);
                 Viewport.Displayed = true;
                 AddChild(Viewport, 0, 0);
             }
 
-            if (PanelBar == null)
-                PanelBar = new PanelBar(this);
+            PanelBar ??= new PanelBar(this);
+
             if (Ingame)
             {
                 PanelBar.Displayed = true;

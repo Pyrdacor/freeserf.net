@@ -26,7 +26,6 @@ namespace Freeserf.UI
 {
     using Data = Data.Data;
 
-    // TODO: Click events for timers
     internal class PanelBar : GuiObject
     {
         enum ButtonId
@@ -97,11 +96,17 @@ namespace Freeserf.UI
             6, 312, 0,
         ];
 
+        static readonly int[] NotificationMinutes =
+        [
+            1, 5, 10, 30, 60
+        ];
+
         readonly Interface interf = null;
         readonly Button messageIcon = null;
         readonly Button returnIcon = null;
 
         readonly Button[] gameSpeedButtons = new Button[5];
+        readonly InvisibleButton[] notificationButtons = new InvisibleButton[5];
         readonly Button[] panelButtons = new Button[5];
         readonly ButtonId[] panelButtonIds = new ButtonId[5];
         readonly Render.ILayerSprite[] background = new Render.ILayerSprite[20];
@@ -144,6 +149,15 @@ namespace Freeserf.UI
             gameSpeedButtons[2].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED * 7);
             gameSpeedButtons[3].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED * 14);
             gameSpeedButtons[4].Clicked += (sender, e) => SetGameSpeed(Global.MAX_GAME_SPEED);
+
+            for (int i = 0; i < notificationButtons.Length; i++)
+            {
+                int minutes = NotificationMinutes[i];
+                notificationButtons[i] = new InvisibleButton(interf);
+                notificationButtons[i].SetSize(7, 7);
+                notificationButtons[i].DoubleClicked += (sender, e) => AddTimedNotification(minutes);
+                AddChild(notificationButtons[i], 294 + 10, 1 + i * 7, true);
+            }
 
             panelButtons[0] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.BuildInactive, layerOffset);
             panelButtons[1] = new Button(interf, 32, 32, Data.Resource.PanelButton, (uint)ButtonId.DestroyInactive, layerOffset);
@@ -188,6 +202,13 @@ namespace Freeserf.UI
             blinkTimer.Interval = 700;
             blinkTimer.Elapsed += BlinkTimer_Elapsed;
             blinkTimer.Start();
+        }
+
+        private void AddTimedNotification(int minutes)
+        {
+            interf.Player.AddPositionTimer(minutes * 60 * Global.TICKS_PER_SEC, interf.MapCursorPosition);
+
+            PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
         }
 
         private void SetGameSpeed(uint speed)
@@ -267,6 +288,9 @@ namespace Freeserf.UI
 
                     foreach (var speedButton in gameSpeedButtons)
                         speedButton.Displayed = true;
+
+                    foreach (var notificationButton in notificationButtons)
+                        notificationButton.Displayed = true;
                 }
             }
         }
@@ -773,56 +797,8 @@ namespace Freeserf.UI
 
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
-            if (delayed)
-                return true;
-
-            SetRedraw();
-
-            if (x >= 41 && x < 53)
-            {
-                // Message bar click 
-                if (y < 16)
-                {
-                    // Message icon 
-                    interf.OpenMessage();
-                }
-                else if (y >= 28)
-                {
-                    // Return arrow 
-                    interf.ReturnFromMessage();
-                }
-            }
-            else if (x >= 301 && x < 313)
-            {
-                // Timer bar click 
-                // Call to map position 
-                int timerLength;
-
-                if (y < 7)
-                {
-                    timerLength = 5 * 60;
-                }
-                else if (y < 14)
-                {
-                    timerLength = 10 * 60;
-                }
-                else if (y < 21)
-                {
-                    timerLength = 20 * 60;
-                }
-                else if (y < 28)
-                {
-                    timerLength = 30 * 60;
-                }
-                else
-                {
-                    timerLength = 60 * 60;
-                }
-
-                interf.Player.AddPositionTimer(timerLength * Global.TICKS_PER_SEC, interf.MapCursorPosition);
-
-                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
-            }
+            if (!delayed)
+                SetRedraw();
 
             return true;
         }

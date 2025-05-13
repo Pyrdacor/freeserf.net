@@ -21,6 +21,7 @@
 
 namespace Freeserf.UI
 {
+    using static Freeserf.UI.Button;
     using Data = Data.Data;
 
     internal class Button : Icon
@@ -83,6 +84,35 @@ namespace Freeserf.UI
                 Clicked?.Invoke(this, new Button.ClickEventArgs(x - TotalX, y - TotalY));
 
             return true;
+        }
+    }
+
+    internal class InvisibleButton(Interface interf) : GuiObject(interf)
+    {
+        public delegate void ClickEventHandler(object sender, ClickEventArgs args);
+
+        public event ClickEventHandler Clicked;
+        public event ClickEventHandler DoubleClicked;
+
+        protected override bool HandleClickLeft(int x, int y, bool delayed)
+        {
+            // If the button has a double click handler, a normal click must be delayed
+            if (DoubleClicked != null == delayed)
+                Clicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
+
+            return true;
+        }
+
+        protected override bool HandleDoubleClick(int x, int y, Event.Button button)
+        {
+            DoubleClicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
+
+            return true;
+        }
+
+        protected override void InternalDraw()
+        {
+            // do nothing
         }
     }
 }
