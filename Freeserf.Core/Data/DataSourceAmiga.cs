@@ -995,7 +995,7 @@ namespace Freeserf.Data
 
                         if (mask != null)
                         {
-                            SpriteAmiga s = GetMirroredHorizontalySprite(mask);
+                            SpriteAmiga s = GetMirroredHorizontallySprite(mask);
                             s.SetOffset(0, -((int)s.Height - 1));
                             sprite = s;
                         }
@@ -1535,14 +1535,14 @@ namespace Freeserf.Data
             return sprite;
         }
 
-        unsafe SpriteAmiga GetMirroredHorizontalySprite(Sprite sprite)
+        unsafe SpriteAmiga GetMirroredHorizontallySprite(Sprite sprite)
         {
             if (sprite == null)
             {
                 return null;
             }
 
-            SpriteAmiga result = new SpriteAmiga(sprite.Width, sprite.Height);
+            var result = new SpriteAmiga(sprite.Width, sprite.Height);
             result.SetDelta(sprite.DeltaX, sprite.DeltaY);
             result.SetOffset(sprite.OffsetX, sprite.OffsetY);
 

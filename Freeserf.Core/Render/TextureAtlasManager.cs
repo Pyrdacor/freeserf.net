@@ -568,66 +568,8 @@ namespace Freeserf.Render
             uint speedButtonIndex = guiResourceOffsets[Data.Resource.UIText] + 10u;
             guiResourceOffsets.Add(Data.Resource.SpeedButtons, speedButtonIndex);
 
-            var tran = new PixelColor() { Red = 0, Green = 0, Blue = 0, Alpha = 0 };
-            var shad = new PixelColor() { Red = 0x4f, Green = 0x4f, Blue = 0x4f, Alpha = 0x80 };
-            var edge = new PixelColor() { Red = 0x4f, Green = 0x4f, Blue = 0x4f, Alpha = 0xff };
-            var fill = new PixelColor() { Red = 0xef, Green = 0xef, Blue = 0xef, Alpha = 0xff };
-
-            var smallTriangle = Sprite.CreateFromPixels(5, 7,
-            [
-                edge, edge, shad, tran, tran,
-                edge, fill, edge, tran, tran,
-                edge, fill, fill, shad, tran,
-                edge, fill, fill, fill, shad,
-                edge, fill, fill, shad, tran,
-                edge, fill, edge, tran, tran,
-                edge, edge, shad, tran, tran,
-            ]);
-            var smallOpenTriangle = Sprite.CreateFromPixels(5, 7,
-            [
-                edge, edge, shad, tran, tran,
-                edge, fill, edge, tran, tran,
-                shad, fill, fill, shad, tran,
-                fill, fill, fill, fill, shad,
-                shad, fill, fill, shad, tran,
-                edge, fill, edge, tran, tran,
-                edge, edge, shad, tran, tran,
-            ]);
-
-            Sprite[] speedButtonSprites =
-            [
-                // First speed button: pause (2 white bars)
-                Sprite.CreateFromPixels(8, 7,
-                [
-                    edge, edge, edge, edge, edge, edge, edge, edge,
-                    edge, fill, fill, edge, edge, fill, fill, edge,
-                    edge, fill, fill, edge, edge, fill, fill, edge,
-                    edge, fill, fill, edge, edge, fill, fill, edge,
-                    edge, fill, fill, edge, edge, fill, fill, edge,
-                    edge, fill, fill, edge, edge, fill, fill, edge,
-                    edge, edge, edge, edge, edge, edge, edge, edge,
-                ]),
-                // Second speed button: play (big triangle)
-                Sprite.CreateFromPixels(8, 7,
-                [
-                    edge, edge, edge, shad, tran, tran, tran, tran,
-                    edge, fill, fill, edge, shad, tran, tran, tran,
-                    edge, fill, fill, fill, fill, edge, edge, shad,
-                    edge, fill, fill, fill, fill, fill, fill, shad,
-                    edge, fill, fill, fill, fill, edge, edge, shad,
-                    edge, fill, fill, edge, shad, tran, tran, tran,
-                    edge, edge, edge, shad, tran, tran, tran, tran,
-                ]),
-                // Third to fifth buttons: 2 to 4 small triangles
-                Sprite.CreateCompound(8, 7, (0, 0, smallTriangle), (3, 0, smallOpenTriangle)),
-                Sprite.CreateCompound(11, 7, (0, 0, smallTriangle), (3, 0, smallOpenTriangle), (6, 0, smallOpenTriangle)),
-                Sprite.CreateCompound(14, 7, (0, 0, smallTriangle), (3, 0, smallOpenTriangle), (6, 0, smallOpenTriangle), (9, 0, smallOpenTriangle)),
-            ];
-
-            for (i = 0; i < speedButtonSprites.Length; ++i)
-            {
-                AddSprite(Layer.Gui, speedButtonIndex++, speedButtonSprites[i]);
-            }
+            var speedButtons = CustomSprites.SpeedButtons;
+            AddSprite(Layer.Gui, speedButtonIndex, speedButtons);
 
             #endregion
 

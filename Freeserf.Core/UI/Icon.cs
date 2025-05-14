@@ -95,6 +95,16 @@ namespace Freeserf.UI
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(ResourceType, SpriteIndex);
         }
 
+        public void SetRelativeTextureAtlasOffset(int x, int y)
+        {
+            var totalOffset = GetTextureAtlasOffset(ResourceType, SpriteIndex);
+
+            totalOffset.X += x;
+            totalOffset.Y += y;
+
+            sprite.TextureAtlasOffset = totalOffset;
+        }
+
         public void SetSpriteIndex(uint spriteIndex)
         {
             sprite.TextureAtlasOffset = GetTextureAtlasOffset(ResourceType, spriteIndex);

@@ -130,16 +130,19 @@ namespace Freeserf.UI
             AddChild(returnIcon, 40, 28, true);
 
             gameSpeedButtons[0] = new Button(interf, 8, 7, Data.Resource.SpeedButtons, 0u, layerOffset);
-            gameSpeedButtons[1] = new Button(interf, 8, 7, Data.Resource.SpeedButtons, 1u, layerOffset);
-            gameSpeedButtons[2] = new Button(interf, 8, 7, Data.Resource.SpeedButtons, 2u, layerOffset);
-            gameSpeedButtons[3] = new Button(interf, 11, 7, Data.Resource.SpeedButtons, 3u, layerOffset);
-            gameSpeedButtons[4] = new Button(interf, 14, 7, Data.Resource.SpeedButtons, 4u, layerOffset);
+            gameSpeedButtons[1] = new Button(interf, 8, 7, Data.Resource.SpeedButtons, 0u, layerOffset);
+            gameSpeedButtons[2] = new Button(interf, 8, 7, Data.Resource.SpeedButtons, 0u, layerOffset);
+            gameSpeedButtons[3] = new Button(interf, 11, 7, Data.Resource.SpeedButtons, 0u, layerOffset);
+            gameSpeedButtons[4] = new Button(interf, 14, 7, Data.Resource.SpeedButtons, 0u, layerOffset);
 
+            int[] offsets = [ 0, 8, 16, 24, 35 ];
             int gameSpeedButtonY = 1;
+            int index = 0;
 
             foreach (Button button in gameSpeedButtons)
             {
                 AddChild(button, 294 + 8 - button.Width, gameSpeedButtonY, true);
+                gameSpeedButtons[index].SetRelativeTextureAtlasOffset(offsets[index++], 0);
 
                 gameSpeedButtonY += 7;
             }
