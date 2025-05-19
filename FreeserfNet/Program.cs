@@ -77,6 +77,9 @@ namespace Freeserf
             NativeLibrary.SetDllImportResolver(typeof(Audio.AudioFactory).Assembly, ResolveLibraries);
 #endif
 
+            // TODO: REMOVE
+            Log.SetLogFilter((ErrorSystemType type, string _) => type == ErrorSystemType.Network);
+
             try
             {                
                 using var mainWindow = MainWindow.Create(args);
