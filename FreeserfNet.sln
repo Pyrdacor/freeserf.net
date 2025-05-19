@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Core", "D:\Projects\freeserf.net\Freeserf.Core\Freeserf.Core.csproj", "{EEFCF9AA-D472-4B79-AD82-C1871BB60DBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Core", "Freeserf.Core\Freeserf.Core.csproj", "{EEFCF9AA-D472-4B79-AD82-C1871BB60DBA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Network", "D:\Projects\freeserf.net\Freeserf.Network\Freeserf.Network.csproj", "{CDCEFBBE-DF01-4454-BA67-49F4B846A5B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Network", "Freeserf.Network\Freeserf.Network.csproj", "{CDCEFBBE-DF01-4454-BA67-49F4B846A5B1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FreeserfNet", "D:\Projects\freeserf.net\FreeserfNet\FreeserfNet.csproj", "{BEA0643A-664B-48BC-ACA4-36E49BEA2EFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FreeserfNet", "FreeserfNet\FreeserfNet.csproj", "{BEA0643A-664B-48BC-ACA4-36E49BEA2EFA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2ACA94E3-5288-4E69-B92F-74AADD92CE12}"
 	ProjectSection(SolutionItems) = preProject
@@ -22,17 +22,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Renderer", "D:\Projects\freeserf.net\Freeserf.Renderer\Freeserf.Renderer.csproj", "{93AD316F-2A18-48E8-8865-75E9EC01093C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Renderer", "Freeserf.Renderer\Freeserf.Renderer.csproj", "{93AD316F-2A18-48E8-8865-75E9EC01093C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Silk.NET.Window", "D:\Projects\freeserf.net\Silk.NET.Window\Silk.NET.Window.csproj", "{BB8FA6E1-F9DB-4F39-B53D-0BFD92CF554F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Silk.NET.Window", "Silk.NET.Window\Silk.NET.Window.csproj", "{BB8FA6E1-F9DB-4F39-B53D-0BFD92CF554F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Test", "D:\Projects\freeserf.net\Freeserf.Test\Freeserf.Test.csproj", "{B2FEC47F-6033-43EC-A1F4-B5D5983CBB8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Test", "Freeserf.Test\Freeserf.Test.csproj", "{B2FEC47F-6033-43EC-A1F4-B5D5983CBB8E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Audio", "D:\Projects\freeserf.net\Freeserf.Audio\Freeserf.Audio.csproj", "{E7355C62-2C99-48CF-99C9-40AE9EC9886F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeserfDedicatedServer", "D:\Projects\freeserf.net\FreeserfDedicatedServer\FreeserfDedicatedServer.csproj", "{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomImageProcessor", "CustomImageProcessor\CustomImageProcessor.csproj", "{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freeserf.Audio", "Freeserf.Audio\Freeserf.Audio.csproj", "{E7355C62-2C99-48CF-99C9-40AE9EC9886F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -398,102 +394,6 @@ Global
 		{E7355C62-2C99-48CF-99C9-40AE9EC9886F}.WindowsRelease|x64.Build.0 = Release|Any CPU
 		{E7355C62-2C99-48CF-99C9-40AE9EC9886F}.WindowsRelease|x86.ActiveCfg = Release|Any CPU
 		{E7355C62-2C99-48CF-99C9-40AE9EC9886F}.WindowsRelease|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Debug|x64.Build.0 = Debug|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Debug|x86.Build.0 = Debug|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxDebug|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxDebug|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxDebug|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxDebug|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxDebug|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxDebug|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxRelease|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxRelease|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxRelease|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxRelease|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.LinuxRelease|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacDebug|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacDebug|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacDebug|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacDebug|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacDebug|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacDebug|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacRelease|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacRelease|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacRelease|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacRelease|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.MacRelease|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Release|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Release|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Release|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.Release|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsDebug|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsDebug|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsDebug|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsDebug|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsDebug|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsDebug|x86.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsRelease|Any CPU.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsRelease|x64.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsRelease|x64.Build.0 = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsRelease|x86.ActiveCfg = Release|Any CPU
-		{323BCD12-B3AC-423E-885B-C6FE6CF85D7B}.WindowsRelease|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Debug|x64.Build.0 = Debug|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Debug|x86.Build.0 = Debug|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxDebug|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxDebug|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxDebug|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxDebug|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxDebug|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxDebug|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxRelease|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxRelease|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxRelease|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxRelease|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.LinuxRelease|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacDebug|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacDebug|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacDebug|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacDebug|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacDebug|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacDebug|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacRelease|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacRelease|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacRelease|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacRelease|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.MacRelease|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Release|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Release|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Release|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.Release|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsDebug|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsDebug|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsDebug|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsDebug|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsDebug|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsDebug|x86.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsRelease|Any CPU.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsRelease|x64.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsRelease|x64.Build.0 = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsRelease|x86.ActiveCfg = Release|Any CPU
-		{5B0E7F04-1DFE-FC1C-1956-DC05C13BF79F}.WindowsRelease|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
