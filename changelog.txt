@@ -4,7 +4,7 @@ Version 2.2.2:
 - Timed notification buttons (clocks) now work.
 - Visually improved the game speed buttons.
 - Fixed a bug where the AI got stuck.
-- Fixed wrong knight cound after game load (which blocked AI from expanding).
+- Fixed wrong knight count after game load (which blocked AI from expanding).
 - When a serf is requested for a building you can now jump to that serf from the building popup.
 
 
