@@ -106,6 +106,7 @@ namespace Freeserf.Audio.Bass
                 Ticks = events[xmi.NumEvents - 1].Ticks + (uint)ticksPerQuarterNote * 5u, // Small pause between songs
             };
 
+
             return BassLib.LoadMidiMusic(events, ticksPerQuarterNote, 44100u);
         }
 
