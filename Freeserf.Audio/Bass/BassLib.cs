@@ -96,53 +96,83 @@ namespace Freeserf.Audio.Bass
         }
         public static int LoadMidiMusic(BassLib.MidiEvent[] events, int pulsesPerQuarterNote, uint frequency)
         {
-            return 0;
-        //    if (soundFont == 0)
-        //    {
-        //        var assembly = Assembly.GetExecutingAssembly();
-        //        var stream = assembly.GetManifestResourceStream(SoundFontResource);
+            // Convert your custom events → ManagedBass events
+            ManagedBass.Midi.MidiEvent[] ev = ConvertEvent(events);
 
-        //        soundFontProcs = new FileProcedures
-        //        {
-        //            Close = user => { },
-        //            Length = user => stream.Length,
-        //            Read = (void* buffer, int length, IntPtr user) =>
-        //            {
-        //                var span = new Span<byte>(buffer, length);
-        //                return stream.Read(span);
-        //            },
-        //            Seek = (offset, user) =>
-        //            {
-        //                stream.Seek((long)offset, SeekOrigin.Begin);
-        //                return true;
-        //            }
-        //        };
+            // Initialize SoundFont once
+            if (soundFont == 0)
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var stream = assembly.GetManifestResourceStream(SoundFontResource); // do NOT dispose
 
-        //        soundFont = BassMidi.FontInitUser(soundFontProcs, IntPtr.Zero, 0);
-        //    }
+                soundFontProcs = new FileProcedures
+                {
+                    Close = user => { },
+                    Length = user => stream.Length,
+                    Read = (IntPtr buffer, int length, IntPtr user) =>
+                    {
+                        unsafe
+                        {
+                            var span = new Span<byte>((void*)buffer, length);
+                            return stream.Read(span);
+                        }
+                    },
+                    Seek = (offset, user) =>
+                    {
+                        stream.Seek((long)offset, SeekOrigin.Begin);
+                        return true;
+                    }
+                };
 
-        //    const MidiEventMode Loop = MidiEventMode.Loop;
+                soundFont = ManagedBass.Midi.BassMidi.FontInit(soundFontProcs, IntPtr.Zero, 0);
+            }
 
-        //    int music = BassMidi.CreateStream(
-        //        events,
-        //        pulsesPerQuarterNote,
-        //        Loop,
-        //        (int)frequency
-        //    );
+            // Loop flag for MIDI event streams
+    
 
-        //    var fonts = new MidiFont[]
-        //    {
-        //new MidiFont
-        //{
-        //    Handle = soundFont,
-        //    Preset = -1,
-        //    Bank = 0
-        //}
-        //    };
+            // Create the MIDI stream from events
+            int music = ManagedBass.Midi.BassMidi.CreateStream(
+                ev,
+                pulsesPerQuarterNote, 
+                BassFlags.Loop,
+                (int)frequency
+            );
 
-        //    BassMidi.StreamSetFonts(music, fonts, fonts.Length);
+            // Assign the SoundFont
+            var fonts = new ManagedBass.Midi.MidiFont[]
+            {
+                new ManagedBass.Midi.MidiFont
+                {
+                    Handle = soundFont,
+                    Preset = -1,
+                    Bank = 0
+                }
+            };
 
-        //    return music;
+            ManagedBass.Midi.BassMidi.StreamSetFonts(music, fonts, fonts.Length);
+
+            return music;
+        }
+
+
+        private static ManagedBass.Midi.MidiEvent[] ConvertEvent(MidiEvent[] events)
+        {
+            var result = new ManagedBass.Midi.MidiEvent[events.Length];
+
+            for (int i = 0; i < events.Length; i++)
+            {
+                var src = events[i];
+
+                result[i] = new ManagedBass.Midi.MidiEvent
+                {
+                    Ticks = (int)src.Ticks,
+                    EventType = (ManagedBass.Midi.MidiEventType)src.Event,
+                    Channel = (int)src.Channel,
+                    Parameter = (int)src.Parameter
+                };
+            }
+
+            return result;
         }
 
 
