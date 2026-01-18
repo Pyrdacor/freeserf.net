@@ -6,12 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using MBass = ManagedBass.Bass;
 
 namespace Freeserf.Audio.Bass
 {
-    using DWORD = UInt32;
-    using QWORD = UInt64;
-
     internal static class BassLib
     {
         public static bool Initialized { get; private set; } = false;
@@ -25,7 +23,7 @@ namespace Freeserf.Audio.Bass
         {
             if (!Initialized)
             {
-                Initialized = ManagedBass.Bass.Init(-1, 44100, 0u, 0, IntPtr.Zero);
+                Initialized = MBass.Init(-1, 44100, 0u, 0, IntPtr.Zero);
             }
         }
 
@@ -51,7 +49,7 @@ namespace Freeserf.Audio.Bass
 
                 streamProviders.Clear();
 
-                ManagedBass.Bass.Free();
+                MBass.Free();
             }
         }
 
@@ -59,7 +57,7 @@ namespace Freeserf.Audio.Bass
         {
             const BassFlags MusicPT1Mod = BassFlags.MusicPT1Mod;
 
-            int music = ManagedBass.Bass.MusicLoad(
+            int music = MBass.MusicLoad(
                 Memory: data,
                 Offset: 0,
                 Length: data.Length,
@@ -81,7 +79,7 @@ namespace Freeserf.Audio.Bass
             // ManagedBass uses the same delegate type
             StreamProcedure streamProc = streamProvider.StreamProcedure;
 
-            int stream = ManagedBass.Bass.CreateStream(
+            int stream = MBass.CreateStream(
                 Frequency: 8000,
                 Channels: 1,
                 Flags: Mono,
@@ -94,11 +92,9 @@ namespace Freeserf.Audio.Bass
 
             return stream;
         }
-        public static int LoadMidiMusic(BassLib.MidiEvent[] events, int pulsesPerQuarterNote, uint frequency)
-        {
-            // Convert your custom events → ManagedBass events
-            ManagedBass.Midi.MidiEvent[] ev = ConvertEvent(events);
 
+        public static int LoadMidiMusic(ManagedBass.Midi.MidiEvent[] events, int pulsesPerQuarterNote, uint frequency)
+        {
             // Initialize SoundFont once
             if (soundFont == 0)
             {
@@ -132,7 +128,7 @@ namespace Freeserf.Audio.Bass
 
             // Create the MIDI stream from events
             int music = ManagedBass.Midi.BassMidi.CreateStream(
-                ev,
+                events,
                 pulsesPerQuarterNote, 
                 BassFlags.Loop,
                 (int)frequency
@@ -154,95 +150,63 @@ namespace Freeserf.Audio.Bass
             return music;
         }
 
-
-        private static ManagedBass.Midi.MidiEvent[] ConvertEvent(MidiEvent[] events)
-        {
-            var result = new ManagedBass.Midi.MidiEvent[events.Length];
-
-            for (int i = 0; i < events.Length; i++)
-            {
-                var src = events[i];
-
-                result[i] = new ManagedBass.Midi.MidiEvent
-                {
-                    Ticks = (int)src.Ticks,
-                    EventType = (ManagedBass.Midi.MidiEventType)src.Event,
-                    Channel = (int)src.Channel,
-                    Parameter = (int)src.Parameter
-                };
-            }
-
-            return result;
-        }
-
-
         public static void FreeModMusic(int music)
         {
             createdChannels.Remove(music);
-            ManagedBass.Bass.MusicFree(music);
+            MBass.MusicFree(music);
         }
 
 
         public static void FreeSfxMusic(int music)
         {
             createdChannels.Remove(music);
-            ManagedBass.Bass.StreamFree(music);
+            MBass.StreamFree(music);
         }
 
         public static void FreeMidiMusic(int music)
         {
             createdChannels.Remove(music);
-            ManagedBass.Bass.StreamFree(music);
+            MBass.StreamFree(music);
         }
 
         public static void StartAll()
         {
-            ManagedBass.Bass.Start();
+            MBass.Start();
         }
 
         public static void StopAll()
         {
-            ManagedBass.Bass.Stop();
+            MBass.Stop();
         }
 
         public static void PauseAll()
         {
-            ManagedBass.Bass.Pause();
+            MBass.Pause();
         }
 
         public static void Play(int music, bool restart)
         {
-            ManagedBass.Bass.ChannelPlay(music, restart);
+            MBass.ChannelPlay(music, restart);
         }
 
         public static void Stop(int music)
         {
-            ManagedBass.Bass.ChannelStop(music);
+            MBass.ChannelStop(music);
         }
 
         public static void Pause(int music)
         {
-            ManagedBass.Bass.ChannelPause(music);
+            MBass.ChannelPause(music);
         }
 
 
         public static void SetVolume(int music, float volume)
         {
-            ManagedBass.Bass.ChannelSetAttribute(music, ChannelAttribute.Volume, volume);
+            MBass.ChannelSetAttribute(music, ChannelAttribute.Volume, volume);
         }
 
-        public static string LastError => ManagedBass.Bass.LastError.ToString();
+        public static string LastError => MBass.LastError.ToString();
 
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct MidiEvent
-        {
-            public DWORD Event;
-            public DWORD Parameter;
-            public DWORD Channel;
-            public DWORD Ticks;
-            public DWORD Pos;
-        }
 
         private class WaveStreamProvider
         {

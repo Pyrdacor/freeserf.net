@@ -1,96 +1,100 @@
-﻿using System;
+﻿using ManagedBass.Midi;
+using System;
 
 namespace Freeserf.Audio.Bass
 {
     internal class MidiMusic : Music
     {
-        internal MidiMusic(XMI xmi)
-           : base(LoadMidi(xmi))
+        internal MidiMusic(XMI xmi) : base(LoadMidi(xmi))
         {
-
         }
 
-        static uint GetControllerEventType(byte controller)
+        static MidiEventType GetControllerEventType(byte controller)
         {
             return controller switch
             {
-                0 => 10,    // Bank select
-                1 => 11,    // Modulation
-                5 => 20,    // Portamento time
-                7 => 12,    // Volume level
-                10 => 13,   // Pan
-                11 => 14,   // Expression
-                64 => 15,   // Sustain
-                65 => 19,   // Portamento
-                66 => 76,   // Sostenuto
-                67 => 60,   // Soft pedal
-                71 => 26,   // Low-pass resonance
-                72 => 27,   // Release time
-                73 => 28,   // Attack time
-                74 => 25,   // Low-pass cutoff
-                84 => 21,   // Portamento start key
-                91 => 23,   // Reverb
-                93 => 24,   // Chorus
-                _ => 42,    // Map everything else to user effect to ignore it.
+                // Standard GM controllers with dedicated event types
+                0 => MidiEventType.Bank,             // Bank Select MSB
+                1 => MidiEventType.Modulation,       // Modulation
+                5 => MidiEventType.PortamentoTime,   // Portamento Time
+                7 => MidiEventType.Volume,           // Channel Volume
+                10 => MidiEventType.Pan,              // Pan
+                11 => MidiEventType.Expression,       // Expression
+                64 => MidiEventType.Sustain,          // Sustain Pedal
+                65 => MidiEventType.Portamento,       // Portamento Switch
+                66 => MidiEventType.Sostenuto,        // Sostenuto Pedal
+                67 => MidiEventType.Soft,             // Soft Pedal
+                71 => MidiEventType.Resonance,        // Filter Resonance
+                72 => MidiEventType.Release,          // Release Time
+                73 => MidiEventType.Attack,           // Attack Time
+                74 => MidiEventType.CutOff,           // Filter Cutoff
+                84 => MidiEventType.PortamentoNote,   // Portamento Control Key
+                91 => MidiEventType.Reverb,           // Reverb Send
+                93 => MidiEventType.Chorus,           // Chorus Send
+
+                // Special GM controllers with dedicated event types
+                120 => MidiEventType.SoundOff,         // All Sound Off
+                121 => MidiEventType.Reset,            // Reset All Controllers
+                123 => MidiEventType.NotesOff,         // All Notes Off
+                126 => MidiEventType.Mode,             // Mono Mode
+                127 => MidiEventType.Mode,             // Poly Mode
+
+                // Everything else is a generic controller event
+                _ => MidiEventType.Control
             };
         }
 
         static int LoadMidi(XMI xmi)
         {
-            const int MidiEnd = 0;
-            const int MidiNote = 1;
-            const int MidiProgram = 2;
-            const int MidiTempo = 62;
-
-            var events = new BassLib.MidiEvent[xmi.NumEvents + 1];
+            var events = new ManagedBass.Midi.MidiEvent[xmi.NumEvents + 1];
 
             for (int i = 0; i < xmi.NumEvents; ++i)
             {
-                var evt = new BassLib.MidiEvent();
+                var evt = new ManagedBass.Midi.MidiEvent();
                 var xmiEvent = xmi.GetEvent(i);
 
-                evt.Ticks = xmiEvent.Ticks;
+                evt.Ticks = (int)xmiEvent.Ticks;
 
                 if (xmiEvent is XMI.PlayNoteEvent)
                 {
                     var playNoteEvent = xmiEvent as XMI.PlayNoteEvent;
-                    evt.Event = MidiNote;
+                    evt.EventType = MidiEventType.Note;
                     evt.Channel = playNoteEvent.Channel;
-                    evt.Parameter = (uint)(playNoteEvent.Note | (playNoteEvent.Velocity << 8));
+                    evt.Parameter = (playNoteEvent.Note | (playNoteEvent.Velocity << 8));
                 }
                 else if (xmiEvent is XMI.StopNoteEvent)
                 {
                     var stopNoteEvent = xmiEvent as XMI.StopNoteEvent;
-                    evt.Event = MidiNote;
+                    evt.EventType = MidiEventType.Note;
                     evt.Channel = stopNoteEvent.Channel;
                     evt.Parameter = stopNoteEvent.Note;
                 }
                 else if (xmiEvent is XMI.SetInstrumentEvent)
                 {
                     var setInstrumentEvent = xmiEvent as XMI.SetInstrumentEvent;
-                    evt.Event = MidiProgram;
+                    evt.EventType = MidiEventType.Program;
                     evt.Channel = setInstrumentEvent.Channel;
                     evt.Parameter = setInstrumentEvent.Instrument;
                 }
                 else if (xmiEvent is XMI.SetControllerValueEvent)
                 {
                     var setControllerValueEvent = xmiEvent as XMI.SetControllerValueEvent;
-                    evt.Event = GetControllerEventType(setControllerValueEvent.Controller);
+                    evt.EventType = GetControllerEventType(setControllerValueEvent.Controller);
                     evt.Channel = setControllerValueEvent.Channel;
                     evt.Parameter = setControllerValueEvent.Value;
                 }
                 else if (xmiEvent is XMI.SetTempoEvent)
                 {
                     var setTempoEvent = xmiEvent as XMI.SetTempoEvent;
-                    evt.Event = MidiTempo;
-                    evt.Parameter = setTempoEvent.MicroSecondsPerQuarterNote;
+                    evt.EventType = MidiEventType.Tempo;
+                    evt.Parameter = (int)setTempoEvent.MicroSecondsPerQuarterNote;
                 }
 
                 events[i] = evt;
             }
 
             int ticksPerQuarterNote = 100;
-            if (events[0].Event == MidiTempo)
+            if (events[0].EventType == MidiEventType.Tempo)
             {
                 // Parameter: tempo in microseconds per quarter note
                 // Midi sound uses 120 Hz
@@ -100,10 +104,10 @@ namespace Freeserf.Audio.Bass
                 ticksPerQuarterNote = (int)Math.Round(120 * events[0].Parameter / 1_000_000.0);
             }
 
-            events[xmi.NumEvents] = new BassLib.MidiEvent()
+            events[xmi.NumEvents] = new ManagedBass.Midi.MidiEvent()
             {
-                Event = MidiEnd,
-                Ticks = events[xmi.NumEvents - 1].Ticks + (uint)ticksPerQuarterNote * 5u, // Small pause between songs
+                EventType = MidiEventType.End,
+                Ticks = (int)(events[xmi.NumEvents - 1].Ticks + (uint)ticksPerQuarterNote * 5u), // Small pause between songs
             };
 
 
