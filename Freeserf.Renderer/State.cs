@@ -31,42 +31,43 @@ namespace Freeserf.Renderer
     {
         public static int OpenGLVersionMajor { get; private set; } = 0;
         public static int OpenGLVersionMinor { get; private set; } = 0;
+
         public static int GLSLVersionMajor { get; private set; } = 0;
         public static int GLSLVersionMinor { get; private set; } = 0;
+        public static string GLSLVersionSuffix { get; private set; } = string.Empty;
         public static GL Gl { get; private set; } = null;
 
         public static void Init(IGLContextSource contextSource)
         {
             Gl = GL.GetApi(contextSource);
 
-            var openGLVersion = Gl.GetStringS(StringName.Version).TrimStart();
+            string openGLVersion = Gl.GetStringS(StringName.Version).Trim();
+            string glslVersion = Gl.GetStringS(StringName.ShadingLanguageVersion).Trim();
 
             Regex versionRegex = new(@"([0-9]+)\.([0-9]+)", RegexOptions.Compiled);
 
-            var match = versionRegex.Match(openGLVersion);
+            // Detect ES context
+            bool isES = openGLVersion.Contains("OpenGL ES", StringComparison.OrdinalIgnoreCase) ||
+                        glslVersion.Contains("ES", StringComparison.OrdinalIgnoreCase);
 
-            //Some linux distros report gl like this "OpenGL ES 3.2 v1.r54p1-11eac0.bf6659b634cc4428261e868dd766545b" therefor we can not assume the match is at index 0
-            if (!match.Success || match.Groups.Count < 3)
-            {
-                throw new Exception("OpenGL is not supported or the version could not be determined.");
-            }
+            // Parse numeric GL version
+            var match = versionRegex.Match(openGLVersion);
+            if (!match.Success)
+                throw new Exception($"Could not parse GL version from: {openGLVersion}");
 
             OpenGLVersionMajor = int.Parse(match.Groups[1].Value);
             OpenGLVersionMinor = int.Parse(match.Groups[2].Value);
 
-            if (OpenGLVersionMajor >= 2) // glsl is supported since OpenGL 2.0
+            // Parse GLSL version
+            match = versionRegex.Match(glslVersion);
+            if (match.Success)
             {
-                var glslVersion = Gl.GetStringS(StringName.ShadingLanguageVersion);
-
-                match = versionRegex.Match(glslVersion);
-
-                if (match.Success && match.Index == 0 && match.Groups.Count >= 3)
-                {
-                    GLSLVersionMajor = int.Parse(match.Groups[1].Value);
-                    GLSLVersionMinor = int.Parse(match.Groups[2].Value);
-                }
-            }
+                GLSLVersionMajor = int.Parse(match.Groups[1].Value);
+                GLSLVersionMinor = int.Parse(match.Groups[2].Value); 
+                GLSLVersionSuffix = isES ? " es" : string.Empty;
+            } 
         }
+
 
         public static bool ShadersAvailable => OpenGLVersionMajor >= 2 && GLSLVersionMajor > 0;
 

@@ -22,6 +22,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Freeserf.FileSystem
 {
@@ -83,7 +84,7 @@ namespace Freeserf.FileSystem
                 SaveGameFolder += "/saves";
             }
 
-            GameDataFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            GameDataFolder = Path.GetDirectoryName(typeof(Paths).Assembly.Location);
         }
     }
 }

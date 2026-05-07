@@ -1,7 +1,7 @@
 ﻿/*
  * TextureShader.cs - Shader for textured objects
  *
- * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
+ * Copyright (C) 2018-2019  Robert Schneckenhaus
  *
  * This file is part of freeserf.net. freeserf.net is based on freeserf.
  *
@@ -9,14 +9,6 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * freeserf.net is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Freeserf.Renderer
@@ -36,59 +28,199 @@ namespace Freeserf.Renderer
         readonly string colorOverlayName;
         readonly string atlasSizeName;
 
+        // -------------------------------------------------------------
+        // Local GLSL / GLES helpers
+        // -------------------------------------------------------------
+
+        private static bool IsGLES()
+        {
+            return !string.IsNullOrEmpty(State.GLSLVersionSuffix) &&
+                   State.GLSLVersionSuffix.ToLower().Contains("es");
+        }
+
+        private static bool IsLegacyGL()
+        {
+            return !IsGLES() && State.GLSLVersionMajor == 1 && State.GLSLVersionMinor < 3;
+        }
+
+        private static string GLSLVersionHeader()
+        {
+            if (IsGLES())
+            {
+                if (State.GLSLVersionMajor == 1 && State.GLSLVersionMinor == 0)
+                {
+                    return "#version 100\n" +
+                           "precision mediump float;\n" +
+                           "precision mediump int;\n\n";
+                }
+
+                return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor} es\n" +
+                       "precision mediump float;\n" +
+                       "precision mediump int;\n\n";
+            }
+
+            return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor} {State.GLSLVersionSuffix}\n\n";
+        }
+
+        private static string InQualifier(bool fragment)
+        {
+            if (IsLegacyGL())
+                return fragment ? "varying" : "attribute";
+
+            return "in";
+        }
+
+        private static string OutQualifier()
+        {
+            if (IsLegacyGL())
+                return "varying";
+
+            return "out";
+        }
+
+        private static bool SupportsIntegerAttributes()
+        {
+            if (IsLegacyGL())
+                return false;
+
+            if (IsGLES() && State.GLSLVersionMajor < 3)
+                return false;
+
+            return true;
+        }
+
+        private static bool UsesLegacyFragColor()
+        {
+            if (IsLegacyGL())
+                return true;
+
+            if (IsGLES() && State.GLSLVersionMajor < 3)
+                return true;
+
+            return false;
+        }
+
+        // -------------------------------------------------------------
+        // Unified shader generators
+        // -------------------------------------------------------------
+
+        private static string GenerateTextureVertexShader()
+        {
+            string header = GLSLVersionHeader();
+
+            bool ints = SupportsIntegerAttributes();
+
+            // GLES2 path → all floats
+            string posType = ints ? "ivec2" : "vec2";
+            string texType = ints ? "ivec2" : "vec2";
+            string layerType = ints ? "uint" : "float";
+            string atlasType = ints ? "uvec2" : "vec2";
+
+            string atlasFactorExpr = ints
+                ? $"    vec2 atlasFactor = vec2(1.0 / float({DefaultAtlasSizeName}.x), 1.0 / float({DefaultAtlasSizeName}.y));"
+                : $"    vec2 atlasFactor = vec2(1.0 / {DefaultAtlasSizeName}.x, 1.0 / {DefaultAtlasSizeName}.y);";
+
+            string posExpr = ints
+                ? $"    vec2 pos = vec2(float({DefaultPositionName}.x) + 0.49, float({DefaultPositionName}.y) + 0.49);"
+                : $"    vec2 pos = {DefaultPositionName} + vec2(0.49, 0.49);";
+
+            string texExpr = ints
+                ? $"    varTexCoord = vec2({DefaultTexCoordName}.x, {DefaultTexCoordName}.y);"
+                : $"    varTexCoord = {DefaultTexCoordName};";
+
+            // Layer handling
+            string layerExpr = ints
+                ? $"    float layerValue = float({DefaultLayerName});"
+                : $"    float layerValue = {DefaultLayerName};";
+
+            return string.Join("\n", new[]
+            {
+                header,
+                $"{InQualifier(false)} {posType} {DefaultPositionName};",
+                $"{InQualifier(false)} {texType} {DefaultTexCoordName};",
+                $"{InQualifier(false)} {layerType} {DefaultLayerName};",
+                $"uniform {atlasType} {DefaultAtlasSizeName};",
+                $"uniform float {DefaultZName};",
+                $"uniform mat4 {DefaultProjectionMatrixName};",
+                $"uniform mat4 {DefaultModelViewMatrixName};",
+                $"{OutQualifier()} vec2 varTexCoord;",
+                "",
+                "void main()",
+                "{",
+                atlasFactorExpr,
+                posExpr,
+                texExpr,
+                layerExpr,
+                "",
+                $"    varTexCoord *= atlasFactor;",
+                $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0 - {DefaultZName} - layerValue * 0.00001, 1.0);",
+                "}"
+            });
+        }
+
+        private static string GenerateTextureFragmentShader()
+        {
+            string header = GLSLVersionHeader();
+
+            bool legacyFragColor = UsesLegacyFragColor();
+
+            string outputDecl = legacyFragColor
+                ? ""
+                : $"out vec4 {DefaultFragmentOutColorName};\n";
+
+            string outputAssign = legacyFragColor
+                ? "gl_FragColor = pixelColor;"
+                : $"{DefaultFragmentOutColorName} = pixelColor;";
+
+            return string.Join("\n", new[]
+            {
+                header,
+                outputDecl,
+                $"uniform vec3 {DefaultColorKeyName};",
+                $"uniform vec4 {DefaultColorOverlayName};",
+                $"uniform sampler2D {DefaultSamplerName};",
+                $"{InQualifier(true)} vec2 varTexCoord;",
+                "",
+                "void main()",
+                "{",
+                $"    vec4 pixelColor = texture({DefaultSamplerName}, varTexCoord);",
+                "",
+                $"    if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
+                $"        pixelColor.a = 0.0;",
+                $"    else",
+                $"        pixelColor *= {DefaultColorOverlayName};",
+                "",
+                $"    if (pixelColor.a < 0.5)",
+                $"        discard;",
+                $"    else",
+                $"        {outputAssign}",
+                "}"
+            });
+        }
+
+        // -------------------------------------------------------------
+        // Static shader arrays
+        // -------------------------------------------------------------
+
         static readonly string[] TextureFragmentShader = new string[]
         {
-            GetFragmentShaderHeader(),
-            $"uniform vec3 {DefaultColorKeyName} = vec3(1, 0, 1);",
-            $"uniform vec4 {DefaultColorOverlayName} = vec4(1, 1, 1, 1);",
-            $"uniform sampler2D {DefaultSamplerName};",
-            $"{GetInName(true)} vec2 varTexCoord;",
-            $"",
-            $"void main()",
-            $"{{",
-            $"    vec4 pixelColor = texture({DefaultSamplerName}, varTexCoord);",
-            $"    ",
-            $"    if (pixelColor.r == {DefaultColorKeyName}.r && pixelColor.g == {DefaultColorKeyName}.g && pixelColor.b == {DefaultColorKeyName}.b)",
-            $"        pixelColor.a = 0;",
-            $"    else",
-            $"        pixelColor *= {DefaultColorOverlayName};",
-            $"    ",
-            $"    if (pixelColor.a < 0.5)",
-            $"        discard;",
-            $"    else",
-            $"        {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = pixelColor;",
-            $"}}"
+            GenerateTextureFragmentShader()
         };
 
         static readonly string[] TextureVertexShader = new string[]
         {
-            GetVertexShaderHeader(),
-            $"{GetInName(false)} ivec2 {DefaultPositionName};",
-            $"{GetInName(false)} ivec2 {DefaultTexCoordName};",
-            $"{GetInName(false)} uint {DefaultLayerName};",
-            $"uniform uvec2 {DefaultAtlasSizeName};",
-            $"uniform float {DefaultZName};",
-            $"uniform mat4 {DefaultProjectionMatrixName};",
-            $"uniform mat4 {DefaultModelViewMatrixName};",
-            $"{GetOutName()} vec2 varTexCoord;",
-            $"",
-            $"void main()",
-            $"{{",
-            $"    vec2 atlasFactor = vec2(1.0f / {DefaultAtlasSizeName}.x, 1.0f / {DefaultAtlasSizeName}.y);",
-            $"    vec2 pos = vec2(float({DefaultPositionName}.x) + 0.49f, float({DefaultPositionName}.y) + 0.49f);",
-            $"    varTexCoord = vec2({DefaultTexCoordName}.x, {DefaultTexCoordName}.y);",
-            $"    ",
-            $"    varTexCoord *= atlasFactor;",
-            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultLayerName}) * 0.00001f, 1.0f);",
-            $"}}"
+            GenerateTextureVertexShader()
         };
+
+        // -------------------------------------------------------------
+        // Constructors
+        // -------------------------------------------------------------
 
         TextureShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName,
                   DefaultTexCoordName, DefaultSamplerName, DefaultColorKeyName, DefaultColorOverlayName,
                   DefaultAtlasSizeName, DefaultLayerName, TextureFragmentShader, TextureVertexShader)
         {
-
         }
 
         protected TextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
@@ -102,6 +234,10 @@ namespace Freeserf.Renderer
             this.colorOverlayName = colorOverlayName;
             this.atlasSizeName = atlasSizeName;
         }
+
+        // -------------------------------------------------------------
+        // Uniform setters
+        // -------------------------------------------------------------
 
         public void SetSampler(int textureUnit = 0)
         {
@@ -122,6 +258,10 @@ namespace Freeserf.Renderer
         {
             shaderProgram.SetInputVector2(atlasSizeName, width, height);
         }
+
+        // -------------------------------------------------------------
+        // Singleton
+        // -------------------------------------------------------------
 
         public new static TextureShader Instance
         {

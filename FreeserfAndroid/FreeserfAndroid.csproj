@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0-android</TargetFramework>
+		<SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+		<OutputType>Exe</OutputType>
+		<RuntimeIdentifiers>android-arm64;android-x86;android-arm;android-x64</RuntimeIdentifiers>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Silk.NET.Core" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.OpenGL" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.Windowing" Version="2.22.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Freeserf.Audio\Freeserf.Audio.csproj" />
+		<ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
+		<ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
+		<ProjectReference Include="..\Freeserf.Renderer\Freeserf.Renderer.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AndroidNativeLibrary Include="lib\**\*.so" />
+	</ItemGroup>
+</Project>

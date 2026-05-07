@@ -31,9 +31,9 @@ namespace Freeserf
 {
     public static partial class Global
     {
-        public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        public static readonly string VERSION = $"{Assembly.GetEntryAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}";
-        public static readonly string EXTENDED_VERSION = $"{Assembly.GetEntryAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
+        public static readonly Version Version = AssemblyNameProvider.GetName().Version;
+        public static readonly string VERSION = $"{AssemblyNameProvider.GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}";
+        public static readonly string EXTENDED_VERSION = $"{AssemblyNameProvider.GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
 
         // The length between game updates in milliseconds. 
         public const int TICK_LENGTH = 20;
@@ -168,5 +168,28 @@ namespace Freeserf
 
             return initInfo;
         }
+    }
+
+    public static class AssemblyNameProvider
+    {
+        private static readonly AssemblyName _name;
+
+        static AssemblyNameProvider()
+        {
+            // Try entry assembly first (works on desktop apps)
+            var entry = Assembly.GetEntryAssembly();
+
+            if (entry != null)
+            {
+                _name = entry.GetName();
+                return;
+            }
+
+            // Fallback: use the assembly containing this class
+            var fallback = typeof(AssemblyNameProvider).Assembly;
+            _name = fallback.GetName();
+        }
+
+        public static AssemblyName GetName() => _name;
     }
 }
