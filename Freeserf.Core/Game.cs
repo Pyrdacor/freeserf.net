@@ -882,41 +882,7 @@ namespace Freeserf
 
         internal bool CanBuildFlag(MapPos position, Player player)
         {
-            // Check owner of land 
-            if (!Map.HasOwner(position) || Map.GetOwner(position) != player.Index)
-            {
-                return false;
-            }
-
-            // Check that land is clear 
-            if (Map.MapSpaceFromObject[(int)Map.GetObject(position)] != Map.Space.Open)
-            {
-                return false;
-            }
-
-            // Check whether cursor is in water 
-            if (Map.TypeUp(position) <= Map.Terrain.Water3 &&
-                Map.TypeDown(position) <= Map.Terrain.Water3 &&
-                Map.TypeDown(Map.MoveLeft(position)) <= Map.Terrain.Water3 &&
-                Map.TypeUp(Map.MoveUpLeft(position)) <= Map.Terrain.Water3 &&
-                Map.TypeDown(Map.MoveUpLeft(position)) <= Map.Terrain.Water3 &&
-                Map.TypeUp(Map.MoveUp(position)) <= Map.Terrain.Water3)
-            {
-                return false;
-            }
-
-            // Check that no flags are nearby 
-            var cycle = DirectionCycleCW.CreateDefault();
-
-            foreach (var direction in cycle)
-            {
-                if (Map.GetObject(Map.Move(position, direction)) == Map.Object.Flag)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return Map.CanBuildFlag(position, player.Index);
         }
 
         /// <summary>

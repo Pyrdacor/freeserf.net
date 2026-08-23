@@ -1319,6 +1319,22 @@ namespace Freeserf.UI
                         sprite = 43;
                     }
                 }
+                else if (Player != null &&
+                    buildingRoad.IsValidExtension(map, direction) &&
+                    map.CanRoadEndOnExistingRoad(position, direction, Player.Index))
+                {
+                    // The road can end here by placing a flag on the existing road
+                    // which will split it. Show the height indicator like the
+                    // original game did.
+                    //
+                    // Note: The direction is not marked as valid on purpose. A single
+                    // click must not connect the road here as that would leave the road
+                    // on top of the existing one without a flag. Only a double click
+                    // (or the left+right special click) will place the flag and connect
+                    // the road (see Viewport.HandleDoubleClick).
+                    int heightDifference = (int)map.GetHeight(map.Move(position, direction)) - height;
+                    sprite = (uint)(38 + heightDifference); // height indicators
+                }
                 else
                 {
                     sprite = 43; // striped 

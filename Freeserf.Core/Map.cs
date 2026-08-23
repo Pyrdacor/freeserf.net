@@ -2627,6 +2627,96 @@ namespace Freeserf
             return true;
         }
 
+        /// <summary>
+        /// Returns true if a flag can be built at the given position by the
+        /// given player.
+        ///
+        /// Note that a position which is part of an existing road is a valid
+        /// flag position as well. Building the flag will split the existing
+        /// road (see Game.BuildFlag).
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="ownerIndex">Index of the player who wants to build the flag</param>
+        /// <returns></returns>
+        public bool CanBuildFlag(MapPos position, uint ownerIndex)
+        {
+            // Check owner of land
+            if (!HasOwner(position) || GetOwner(position) != ownerIndex)
+            {
+                return false;
+            }
+
+            // Check that land is clear
+            if (MapSpaceFromObject[(int)GetObject(position)] != Space.Open)
+            {
+                return false;
+            }
+
+            // Check whether cursor is in water
+            if (TypeUp(position) <= Terrain.Water3 &&
+                TypeDown(position) <= Terrain.Water3 &&
+                TypeDown(MoveLeft(position)) <= Terrain.Water3 &&
+                TypeUp(MoveUpLeft(position)) <= Terrain.Water3 &&
+                TypeDown(MoveUpLeft(position)) <= Terrain.Water3 &&
+                TypeUp(MoveUp(position)) <= Terrain.Water3)
+            {
+                return false;
+            }
+
+            // Check that no flags are nearby
+            var cycle = DirectionCycleCW.CreateDefault();
+
+            foreach (var direction in cycle)
+            {
+                if (GetObject(Move(position, direction)) == Object.Flag)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if a road that is currently built can end in the given
+        /// direction by placing a new flag there, even though that position is
+        /// already part of an existing road.
+        ///
+        /// Building the flag will split the existing road (see Game.BuildFlag)
+        /// and the road under construction is then connected to that new flag.
+        /// This was possible in the original game.
+        ///
+        /// Positions which are not part of an existing road are not handled
+        /// here. Those are covered by <see cref="IsRoadSegmentValid"/>. Note
+        /// that a road may only *end* here. Passing through an existing road
+        /// is never allowed as only the destination of a road may have a flag
+        /// (see Game.CanBuildRoad).
+        /// </summary>
+        /// <param name="position">Current end of the road under construction</param>
+        /// <param name="direction">Direction to extend the road to</param>
+        /// <param name="ownerIndex">Index of the player who builds the road</param>
+        /// <returns></returns>
+        public bool CanRoadEndOnExistingRoad(MapPos position, Direction direction, uint ownerIndex)
+        {
+            var otherPosition = Move(position, direction);
+
+            // Only existing roads without a flag are handled here.
+            if (Paths(otherPosition) == 0 || HasFlag(otherPosition))
+            {
+                return false;
+            }
+
+            // The road has to be built on the player's own land.
+            if (!HasOwner(position) || GetOwner(position) != ownerIndex)
+            {
+                return false;
+            }
+
+            // Note: There is no need to check for a water crossing here as the
+            // road ends at this position (see IsRoadSegmentValid).
+            return CanBuildFlag(otherPosition, ownerIndex);
+        }
+
         public void ReadFrom(SaveReaderBinary reader)
         {
             var geometry = Geometry;
