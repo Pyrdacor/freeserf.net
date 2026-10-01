@@ -178,7 +178,7 @@ so Android surface lifecycle events were never processed. Combined with no activ
 state tracking, the EGL surface became invalid while the render loop continued calling
 `eglSwapBuffers`. The fix is to add both `DoEvents()` and proper lifecycle handling.
 
-### Fix applied (commit `df2bb1e`)
+### Fix applied (commit `16f3179`)
 
 - Added `enum ActivityState { Active, Paused, Stopped }` + `static volatile ActivityState activityState = ActivityState.Active;`
 - Added `view.DoEvents();` as the first line of the render loop in `OnRun()`
@@ -234,8 +234,8 @@ adb shell wm dismiss-keyguard
 
 ### Next steps (completed)
 
-- [x] Add `DoEvents()` to render loop — commit `df2bb1e`
-- [x] Add `ActivityState` tracking with lifecycle overrides — commit `df2bb1e`
+- [x] Add `DoEvents()` to render loop — commit `16f3179`
+- [x] Add `ActivityState` tracking with lifecycle overrides — commit `16f3179`
 - [x] Verify app runs on device — confirmed, no EGL_BAD_SURFACE when screen is awake
 - [ ] Update SQL todo statuses as work progresses
 
@@ -245,19 +245,95 @@ adb shell wm dismiss-keyguard
 - [x] Logging to logcat fixed (`Log.SetStream` + `ConsoleStream`), same commit.
 - [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted).
 - [x] GLSL ES shader compilation errors fixed (`db096be`).
-- [x] **EGL_BAD_SURFACE in render loop** — shaders compile, but `eglSwapBuffers` fails with `EGL_BAD_SURFACE`; screen stays black. **FIXED**: Added `DoEvents()` and activity state tracking (commit `df2bb1e`). App now runs on device without EGL errors when the screen is awake.
+- [x] **EGL_BAD_SURFACE in render loop** — shaders compile, but `eglSwapBuffers` fails with `EGL_BAD_SURFACE`; screen stays black. **FIXED**: Added `DoEvents()` and activity state tracking (commit `16f3179`). App now runs on device without EGL errors when the screen is awake.
 - [ ] Consider switching the build to `dotnet publish` + Ambermoon's `AndroidLinkMode=None` settings for reproducible builds.
 
-## Current state / next steps
+## Issue 4: App runs but background is black — map not rendering (OPEN)
+
+### Symptom
+
+- App launches cleanly: full init sequence logged (`OnRun` → `Window_Load` → `GameView`
+  created → `Window_Render`), **no crashes, no EGL errors** (EGL_BAD_SURFACE fix works).
+- Render loop is actively running (freeserf at ~60% CPU — no frame limiting, not frozen).
+- **The screen is almost entirely black (0,0,0).** Only a small, sparse content area
+  renders at screen coords x=958-1532, y=344-594 on the 2400x1080 Pixel 8a.
+- Only ~1490 non-black pixels (sampled every 2px) exist in that 575x251 box — the
+  content is thin lines and small solid bars, not a filled dialog or map.
+
+### Content structure (from pixel analysis of `fs_clean.png`)
+
+1. **Vertical line** at x≈958-960 spanning y=344-422 (3px wide, 78px tall).
+2. **4 horizontal bands** at y=362, 382, 402, 422 — exactly **20px apart
+   (= TILE_HEIGHT)**, spanning x≈958-997 (39px wide).
+3. **5 solid-color vertical bars** at y=506-594 (growing from 4px to 52px wide):
+   - x=972-978: bright green (107,171,59) — grass color, full height
+   - x=1152-1172: bright green, from y≈540 down
+   - x=1318-1326: teal (0,147,135) — water color, from y≈540 down
+   - x=1498-1506: teal, from y≈530 down
+   - plus thin vertical lines at x≈1138-1146 and x≈958-992
+
+The bright-green/teal bars are Freeserf palette colors (grass/water), which is why the
+earlier reading looked like "map tiles" — but they are solid bars, not diamond-shaped
+tiles, and they sit inside the GameInitBox area (see geometry below).
+
+### Geometry reconciliation (important)
+
+- Content at window (960,344)-(1532,592) = **VirtualScreen (427,306)-(935,526)**.
+- The GameInitBox is **centered** by `Interface.Layout()` (Interface.cs line 1453) at
+  GUI (144,140)-(496,340) → window (804,315)-(1596,765).
+- **The content is INSIDE the GameInitBox area** — it is a *partial render of the
+  GameInitBox dialog* (right-center portion), NOT the game map.
+- The GameInitBox **background** (which would cover the whole 352x200 box) is **not
+  rendering** — only some elements (thin lines + a few solid bars) show.
+
+### Root cause hypothesis (OPEN)
+
+- The intro mission map (Landscape layer, `RenderMap` triangles) is **not rendering at
+  all** — the map should fill the viewport (VirtualScreen 1280x960) with tiles.
+- The GameInitBox background sprites are also not rendering.
+- Only a few GUI elements render. Possible causes to investigate:
+  - Viewport clipping / letterboxing (virtualScreenDisplay Rect(480,0,1440,1080))
+  - Texture atlas / sprite visibility issue (`Box.cs` BackgroundPattern.Draw line 106,
+    sprite visibility check line 220)
+  - Landscape layer not visible / map not attached (`EnsureViewport()` Interface.cs
+    line 330)
+  - Masked triangle shader issue on this platform (map uses `MaskedTriangleShader`)
+- The map scrolls randomly when not ingame (`GameView.Render()` line ~445) — the
+  content did not change between screenshots, suggesting the map layer truly isn't
+  drawing.
+
+### YouTube behind freeserf (CRITICAL for screenshots)
+
+- `dumpsys window windows` shows freeserf's window is **`fmt=TRANSLUCENT`** — content
+  behind it shows through wherever the game isn't rendering.
+- **YouTube was running behind freeserf** (Window #9 `com.google.android.youtube`,
+  `isOnScreen=true`) and its video showed through the translucent window — this
+  explained the "video at top-left" that doesn't belong to the app.
+- **For clean screenshots, force-stop YouTube first:**
+  ```powershell
+  adb shell am force-stop com.google.android.youtube
+  ```
+  After stopping it, freeserf is the focused window and screenshots show only the app.
+
+### Analysis gotcha (fine-grid sampling bug)
+
+- An earlier fine-grid analysis (sampling every ~8px) produced a misleading "map tiles
+  with trees/water" reading. The bug: the row offset was **double-counted**
+  (`$miny += $ch` AND `$y = $miny + $r*$ch`), so rows sampled far below their labels.
+- **Reliable method: row/column histograms sampling every 2px** (count non-black
+  pixels per row/column). Always verify suspicious pixels with direct `GetPixel`.
+
+### Current state / next steps
 
 - [x] Startup crash fixed (`GetExecutingAssembly`), committed as `356a131`, pushed to
       `origin/android`.
 - [x] Logging to logcat fixed (`Log.SetStream` + `ConsoleStream`), same commit.
 - [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted).
 - [x] GLSL ES shader compilation errors fixed (`db096be`).
-- [ ] **EGL_BAD_SURFACE in render loop** — shaders compile, but `eglSwapBuffers` fails
-      with `EGL_BAD_SURFACE`; screen stays black. See "Issue 3" above. Working
-      hypothesis: missing `DoEvents()` in the render loop + missing surface/lifecycle
-      handling in `MainActivity.cs` (Ambermoon.net handles both).
+- [x] **EGL_BAD_SURFACE in render loop** — FIXED via `DoEvents()` + `ActivityState`
+      tracking (commits `16f3179` + `4d32277`, pushed to `origin/android`). App runs
+      without EGL errors; pause/resume verified working.
+- [ ] **Black background (Issue 4)** — map + GameInitBox background not rendering;
+      only a partial dialog render shows. Root cause under investigation.
 - [ ] Consider switching the build to `dotnet publish` + Ambermoon's
       `AndroidLinkMode=None` settings for reproducible builds.
