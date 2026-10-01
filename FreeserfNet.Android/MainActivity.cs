@@ -57,6 +57,17 @@ namespace Freeserf.Android
         static bool initialized = false;
         static bool renderTraced = false;
 
+        // Tracks the Android activity lifecycle so the render loop can stop
+        // swapping buffers while the EGL surface is being destroyed/recreated.
+        enum ActivityState
+        {
+            Active,
+            Paused,
+            Stopped
+        }
+
+        static volatile ActivityState activityState = ActivityState.Active;
+
         // mouse emulation state (SDL maps single finger touch to left mouse button)
         static int lastDragX = int.MinValue;
         static int lastDragY = int.MinValue;
@@ -107,6 +118,11 @@ namespace Freeserf.Android
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: initialized, calling Run");
                 view.Run(() =>
                 {
+                    // Pump SDL events. On Android this drives the EGL surface
+                    // lifecycle (pause/resume coordination with the Java side);
+                    // without it the surface is destroyed while we keep
+                    // swapping, causing EGL_BAD_SURFACE.
+                    view.DoEvents();
                     if (!view.IsClosing)
                         view.DoUpdate();
                     if (!view.IsClosing)
@@ -192,6 +208,12 @@ namespace Freeserf.Android
         static void Window_Render(double delta)
         {
             if (!initialized)
+                return;
+
+            // While the activity is paused/stopped the EGL surface is being
+            // destroyed (or is gone); rendering and swapping against it would
+            // raise EGL_BAD_SURFACE. Skip until the activity is active again.
+            if (activityState != ActivityState.Active)
                 return;
 
             try
@@ -472,6 +494,7 @@ namespace Freeserf.Android
         protected override void OnPause()
         {
             base.OnPause();
+            activityState = ActivityState.Paused;
 
             if (gameView != null)
             {
@@ -480,9 +503,22 @@ namespace Freeserf.Android
             }
         }
 
+        protected override void OnStop()
+        {
+            base.OnStop();
+            activityState = ActivityState.Stopped;
+        }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+            activityState = ActivityState.Active;
+        }
+
         protected override void OnResume()
         {
             base.OnResume();
+            activityState = ActivityState.Active;
 
             if (gameView != null)
             {
