@@ -65,6 +65,7 @@ namespace Freeserf.Android
         {
             Console.SetOut(new AndroidConsole("Freeserf_Info"));
             Console.SetError(new AndroidConsole("Freeserf_Error"));
+            Log.SetStream(new ConsoleStream(Console.Error));
         }
 
         protected override void OnRun()
@@ -497,6 +498,40 @@ namespace Freeserf.Android
         public override void Write(string value)
         {
             lineBuilder.Append(value);
+        }
+    }
+
+    // Stream adapter that forwards writes to a TextWriter (e.g. the Android
+    // logcat console) so the game's Log class can be routed to logcat.
+    class ConsoleStream : Stream
+    {
+        readonly TextWriter writer;
+
+        public ConsoleStream(TextWriter writer)
+        {
+            this.writer = writer;
+        }
+
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+
+        public override long Length => throw new NotSupportedException();
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush() => writer.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            writer.Write(Encoding.UTF8.GetString(buffer, offset, count));
         }
     }
 }

@@ -31,9 +31,9 @@ namespace Freeserf
 {
     public static partial class Global
     {
-        public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        public static readonly string VERSION = $"{Assembly.GetEntryAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}";
-        public static readonly string EXTENDED_VERSION = $"{Assembly.GetEntryAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
+        public static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version;
+        public static readonly string VERSION = $"{Assembly.GetExecutingAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}";
+        public static readonly string EXTENDED_VERSION = $"{Assembly.GetExecutingAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
 
         // The length between game updates in milliseconds. 
         public const int TICK_LENGTH = 20;
