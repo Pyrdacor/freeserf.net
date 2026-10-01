@@ -161,14 +161,109 @@ how a working Silk.NET-on-Android game is structured:
 - `install-release-on-phone.bat` — converts the AAB to a universal APKS with
   `bundletool` and installs it.
 
+## Issue 3: `EGL_BAD_SURFACE` in render loop — black screen (OPEN)
+
+### Symptom
+
+- Shaders now compile (GLSL ES fixes in `db096be`), but the render loop fails with
+  `EGL_BAD_SURFACE` from `eglSwapBuffersWithDamageKHR` — the EGL surface is lost, so
+  the screen stays black.
+- The ANR seen earlier is a symptom of the render errors and should disappear once
+  rendering works.
+
+### Current state of the code (`FreeserfNet.Android/MainActivity.cs`)
+
+- `OnRun()`: registers `SdlWindowing`/`SdlInput` platforms, creates the view with
+  `GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Compatability, ContextFlags.Default,
+  new APIVersion(3, 0))`, attaches `Load`/`Render`/`Update`/`Resize`/`Closing` events,
+  calls `view.Initialize()` then `view.Run(...)` with a custom loop:
+  ```csharp
+  view.Run(() => {
+      if (!view.IsClosing) view.DoUpdate();
+      if (!view.IsClosing) view.DoRender();
+  });
+  ```
+  **No `DoEvents()` call in the loop.**
+- `Window_Load`: `view.MakeCurrent()`, `Global.Init`, `ExtractBundledData()`,
+  `data.Load(...)`, `State.Init(view)`, creates `GameView`, sets `initialized = true`.
+- `Window_Render`: `if (!initialized) return;` then `gameView?.Render()` in try/catch,
+  then **`view.SwapBuffers()` unconditionally**.
+- `OnPause`/`OnResume`: only adjust audio volume — **no surface/EGL handling**.
+
+### Silk.NET internals (decompiled from Silk.NET 2.23.0)
+
+- `ViewImplementationBase.DoRender()`: makes the GL context current (if not already),
+  invokes the `Render` event, then swaps buffers if `ShouldSwapAutomatically`.
+- `ViewImplementationBase.Run(onFrame)`: `while (!IsClosing) onFrame();`.
+- `SdlView.CoreGLContext => _ctx ??= new SdlContext(Sdl, SdlWindow, this)` — the
+  `SdlContext` class owns the EGL surface/context and `SwapBuffers`.
+- `SdlView.CoreReset()`: `CoreGLContext?.Dispose(); Sdl.DestroyWindow(SdlWindow);
+  SdlWindow = null; _ctx = null;`
+- `SilkActivity.Main()` (static, called from native `libmain.so`) → `Instance.Run()`
+  → `OnRun()`.
+- `SDLActivity` exposes static JNI callbacks `OnNativeSurfaceCreated/Changed/Destroyed`
+  — this is how SDL notifies managed code about Android surface lifecycle.
+
+### `SdlContext` mystery (unresolved)
+
+- `SdlView.cs` references `new SdlContext(Sdl, SdlWindow, this)`, but the class was
+  **not found** in any Silk.NET 2.23.0 assembly (`Silk.NET.Windowing.Sdl.dll` android +
+  netstandard2.1, `Silk.NET.Core.dll`, `Silk.NET.SDL.dll`) nor in the GitHub source
+  tree at tag v2.23.0. It presumably owns the EGL surface and
+  `eglSwapBuffersWithDamageKHR` — locating it is a blocker for understanding the exact
+  EGL surface lifecycle.
+
+### Ambermoon.net comparison (the working reference)
+
+Ambermoon.net (same Silk.NET 2.23.0 + SDL stack, working on Android) differs from
+freeserf.net in three important ways:
+
+1. **`DoEvents()` in the render loop** — Ambermoon's `Run()` loop is:
+   ```csharp
+   window.Run(() => {
+       DoEvents();
+       if (!window.IsClosing) window.DoUpdate();
+       if (!window.IsClosing) window.DoRender();
+   });
+   ```
+   freeserf.net's loop omits `DoEvents()`, so SDL events (including surface
+   lifecycle events) are never pumped from the managed side.
+2. **`ActivityState` tracking** — Ambermoon's `MainActivity` overrides
+   `OnPause`/`OnStop`/`OnResume` to set `gameWindow.State` to `Paused`/`Stopped`/`Active`,
+   and `Window_Render` skips rendering **and** `window.SwapBuffers()` when
+   `State == ActivityState.Stopped`. freeserf.net has no lifecycle tracking and calls
+   `view.SwapBuffers()` unconditionally.
+3. **Initial swap in `Window_Load`** — Ambermoon calls `GLContext.SwapBuffers()` once
+   after setup, before the first `DoRender()`.
+
+### Working hypothesis (root cause not yet confirmed)
+
+The EGL surface becomes invalid (`EGL_BAD_SURFACE`) because the render loop keeps
+calling `eglSwapBuffers` with a stale surface — either because the Android surface was
+recreated (activity lifecycle) without the EGL surface being recreated, or because the
+surface is destroyed while the loop still renders. The missing `DoEvents()` and missing
+lifecycle handling in `MainActivity.cs` are the most likely culprits.
+
+### Next steps
+
+- Locate `SdlContext` (check the decompiled `sdl-decomp/` output for a file containing
+  it, or a nested class in `SdlView.cs`).
+- Capture logcat around `SurfaceTexture`/`EGLContext`/`onSurfaceChanged` for the app
+  process to confirm when the surface is lost.
+- Port the Ambermoon pattern: add `DoEvents()` to the render loop, track
+  `ActivityState` in `OnPause`/`OnStop`/`OnResume`, and skip `SwapBuffers()` when the
+  surface is not valid.
+
 ## Current state / next steps
 
 - [x] Startup crash fixed (`GetExecutingAssembly`), committed as `356a131`, pushed to
       `origin/android`.
 - [x] Logging to logcat fixed (`Log.SetStream` + `ConsoleStream`), same commit.
 - [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted).
-- [ ] App runs (SDL main loop active) but the screen was black in earlier tests —
-      verify rendering now that logging is visible in logcat (tag `Freeserf_Error`).
-      Check for "Error loading game data." or renderer/GL init errors.
+- [x] GLSL ES shader compilation errors fixed (`db096be`).
+- [ ] **EGL_BAD_SURFACE in render loop** — shaders compile, but `eglSwapBuffers` fails
+      with `EGL_BAD_SURFACE`; screen stays black. See "Issue 3" above. Working
+      hypothesis: missing `DoEvents()` in the render loop + missing surface/lifecycle
+      handling in `MainActivity.cs` (Ambermoon.net handles both).
 - [ ] Consider switching the build to `dotnet publish` + Ambermoon's
       `AndroidLinkMode=None` settings for reproducible builds.
