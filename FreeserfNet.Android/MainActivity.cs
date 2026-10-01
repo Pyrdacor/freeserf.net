@@ -149,6 +149,12 @@ namespace Freeserf.Android
                 view.MakeCurrent();
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: MakeCurrent done");
 
+                // The TextureAtlasManager is a static singleton that persists across
+                // activity recreations. On recreation the EGL context is lost (GPU
+                // textures invalid), so the atlases must be rebuilt from scratch.
+                Freeserf.Render.TextureAtlasManager.Instance.Reset();
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: TextureAtlasManager.Reset done");
+
                 initInfo = Global.Init(Array.Empty<string>());
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: Global.Init done");
 
@@ -181,6 +187,14 @@ namespace Freeserf.Android
 
                 State.Init(view);
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: State.Init done");
+                try
+                {
+                    global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: glError after State.Init = {Freeserf.Renderer.State.Gl.GetError()}");
+                }
+                catch (Exception ex)
+                {
+                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
+                }
 
                 gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     DeviceType.MobileLandscape, SizingPolicy.FitRatio, OrientationPolicy.Support180DegreeRotation);
@@ -197,6 +211,16 @@ namespace Freeserf.Android
 
                 initialized = true;
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: done, initialized=true");
+
+                try
+                {
+                    var glErr = Freeserf.Renderer.State.Gl.GetError();
+                    global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: glError after init = {glErr}");
+                }
+                catch (Exception ex)
+                {
+                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
+                }
             }
             catch (Exception ex)
             {
@@ -218,12 +242,38 @@ namespace Freeserf.Android
 
             try
             {
+                gameView?.Render();
+
                 if (!renderTraced)
                 {
                     renderTraced = true;
                     global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Render: first render call");
+                    try
+                    {
+                        var game = GameManager.Instance.GetCurrentGame();
+                        var landscape = gameView?.GetLayer(Freeserf.Layer.Landscape);
+                        var guiLayer = gameView?.GetLayer(Freeserf.Layer.Gui);
+                        int landscapeCount = (landscape is Freeserf.Renderer.RenderLayer rl) ? rl.GetDrawCount() : -1;
+                        var glError = Freeserf.Renderer.State.Gl.GetError();
+                        int maxTexSize = Freeserf.Renderer.State.Gl.GetInteger(Silk.NET.OpenGL.GLEnum.MaxTextureSize);
+                        string atlasInfo = "n/a";
+                        if (landscape is Freeserf.Renderer.RenderLayer rl2 && rl2.DebugTexture != null)
+                        {
+                            atlasInfo = $"{rl2.DebugTexture.Width}x{rl2.DebugTexture.Height}";
+                        }
+                        global::Android.Util.Log.Debug("Freeserf_Trace",
+                            $"Window_Render: state game={(game == null ? "null" : "ok")} " +
+                            $"landscapeVisible={landscape?.Visible} landscapeDrawCount={landscapeCount} " +
+                            $"guiVisible={guiLayer?.Visible} viewSize={view?.Size.X}x{view?.Size.Y} " +
+                            $"glError={glError} maxTexSize={maxTexSize} landscapeAtlas={atlasInfo} " +
+                            $"gl={Freeserf.Renderer.State.OpenGLVersionMajor}.{Freeserf.Renderer.State.OpenGLVersionMinor} " +
+                            $"gles={Freeserf.Renderer.State.IsOpenGLES}");
+                    }
+                    catch (Exception ex)
+                    {
+                        global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Render: state dump failed: " + ex.Message);
+                    }
                 }
-                gameView?.Render();
             }
             catch (Exception ex)
             {

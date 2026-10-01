@@ -134,6 +134,15 @@ namespace Freeserf
                     var texture = (layer == Layer.Minimap) ? minimapTextureFactory.GetMinimapTexture() :
                         textureAtlas.GetOrCreate(layer).Texture as Texture;
 
+                    try
+                    {
+                        System.Console.WriteLine($"GameView: layer {layer} texture {texture?.Width}x{texture?.Height} glError={Freeserf.Renderer.State.Gl.GetError()}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine("GameView: glError query failed: " + ex.Message);
+                    }
+
                     var renderLayer = Create(layer, texture,
                         layer == Layer.Gui, // only the gui supports colored rects
                         null, // no color key for now
@@ -195,6 +204,15 @@ namespace Freeserf
                 {
                     throw new ExceptionFreeserf(ErrorSystemType.Render, $"Unable to create layer '{layer.ToString()}': {ex.Message}");
                 }
+            }
+
+            try
+            {
+                System.Console.WriteLine($"GameView: glError after layer creation = {Freeserf.Renderer.State.Gl.GetError()}");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("GameView: glError query failed: " + ex.Message);
             }
 
             gui = new UI.Gui(this, this);

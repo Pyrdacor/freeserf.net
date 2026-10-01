@@ -286,21 +286,47 @@ tiles, and they sit inside the GameInitBox area (see geometry below).
 - The GameInitBox **background** (which would cover the whole 352x200 box) is **not
   rendering** — only some elements (thin lines + a few solid bars) show.
 
-### Root cause hypothesis (OPEN)
+### Root cause (CONFIRMED) — `GL_BGRA` texture format invalid on OpenGL ES
 
-- The intro mission map (Landscape layer, `RenderMap` triangles) is **not rendering at
-  all** — the map should fill the viewport (VirtualScreen 1280x960) with tiles.
-- The GameInitBox background sprites are also not rendering.
-- Only a few GUI elements render. Possible causes to investigate:
-  - Viewport clipping / letterboxing (virtualScreenDisplay Rect(480,0,1440,1080))
-  - Texture atlas / sprite visibility issue (`Box.cs` BackgroundPattern.Draw line 106,
-    sprite visibility check line 220)
-  - Landscape layer not visible / map not attached (`EnsureViewport()` Interface.cs
-    line 330)
-  - Masked triangle shader issue on this platform (map uses `MaskedTriangleShader`)
-- The map scrolls randomly when not ingame (`GameView.Render()` line ~445) — the
-  content did not change between screenshots, suggesting the map layer truly isn't
-  drawing.
+- **Every `glTexImage2D` call with `GL_BGRA` format fails with `GL_INVALID_OPERATION`**
+  on this device (Pixel 8a, Mali-G715, GLES 3.2). `GL_BGRA` is **not core OpenGL ES**
+  (only via the `GL_EXT_texture_format_BGRA8888` extension, which this device does not
+  honor for `glTexImage2D`).
+- All atlas textures are created as `PixelFormat.BGRA8` (`MutableTexture.Finish()` →
+  `Texture.Create(BGRA8, ...)`), and `ToOpenGLPixelFormat(BGRA8)` returns `GLEnum.Bgra`
+  → every atlas texture upload fails → textures are **incomplete** → sampling returns
+  opaque black → map tiles and GUI sprites render black.
+- **Evidence (per-layer `glGetError` instrumentation in `GameView.cs`):**
+  ```
+  GameView: layer Landscape texture 512x410 glError=InvalidOperation
+  GameView: layer Waves texture 480x44 glError=InvalidOperation
+  GameView: layer Paths texture 512x123 glError=InvalidOperation
+  GameView: layer Objects texture 512x412 glError=InvalidOperation
+  GameView: layer Serfs texture 512x631 glError=InvalidOperation
+  GameView: layer Buildings texture 512x761 glError=InvalidOperation
+  GameView: layer Builds texture 282x15 glError=InvalidOperation
+  GameView: layer Gui texture 512x936 glError=InvalidOperation
+  GameView: layer GuiBuildings texture 512x761 glError=NoError   ← reuses Buildings atlas, no new TexImage2D
+  GameView: layer GuiFont texture 256x256 glError=InvalidOperation
+  GameView: layer Minimap texture 128x128 glError=NoError        ← no Finish()/TexImage2D yet
+  GameView: layer Cursor texture 16x16 glError=InvalidOperation
+  ```
+  The only `NoError` cases are exactly the two layers that do **not** call
+  `TexImage2D` at that point (GuiBuildings aliases the already-created Buildings atlas;
+  Minimap is created without `Finish()`). Every real texture upload fails.
+- The small visible colored clusters (teal/green bars) come from **colored rects via
+  `ColorShader`** (no texture needed) — not from atlas textures. They become irrelevant
+  once the texture fix lands.
+
+### Fix (APPLIED) — swizzle BGRA→RGBA in `Texture.Create()`
+
+- `Freeserf.Renderer\Texture.cs` `Create()`: after `ConvertPixelData`, if the format is
+  `BGRA8`/`BGR8`, the pixel data is swizzled in memory to `RGBA8`/`RGB8` and the format
+  is changed accordingly, so `ToOpenGLPixelFormat` returns `GL_RGBA`/`GL_RGB` (core GLES).
+- This is a one-time per-texture conversion, works on **both** desktop OpenGL (where
+  `GL_BGRA` is valid) and OpenGL ES, and needs no extension checks.
+- The minimap data is also stored BGRA (`Minimap.SetColor` writes B,G,R,A) and is
+  covered by the same conversion.
 
 ### YouTube behind freeserf (CRITICAL for screenshots)
 
@@ -333,7 +359,14 @@ tiles, and they sit inside the GameInitBox area (see geometry below).
 - [x] **EGL_BAD_SURFACE in render loop** — FIXED via `DoEvents()` + `ActivityState`
       tracking (commits `16f3179` + `4d32277`, pushed to `origin/android`). App runs
       without EGL errors; pause/resume verified working.
-- [ ] **Black background (Issue 4)** — map + GameInitBox background not rendering;
-      only a partial dialog render shows. Root cause under investigation.
+- [x] **Black background (Issue 4)** — ROOT CAUSE FOUND: `GL_BGRA` texture format is
+      invalid on OpenGL ES → every atlas texture upload fails with
+      `GL_INVALID_OPERATION` → all textures incomplete → black. FIXED by swizzling
+      BGRA→RGBA in `Texture.Create()` (pending device verification).
+- [ ] **Bug #2: activity recreation breaks init** — `TextureAtlasManager` is a static
+      singleton; on activity recreation `AddAll()` throws "Texture atlas already
+      created", the exception is caught in `Window_Load`, and `initialized` stays
+      `false` → black screen. Needs a `Reset()`/idempotent `AddAll` + proper re-init
+      (GPU textures are invalid after EGL context loss).
 - [ ] Consider switching the build to `dotnet publish` + Ambermoon's
       `AndroidLinkMode=None` settings for reproducible builds.

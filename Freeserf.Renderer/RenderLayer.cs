@@ -65,6 +65,9 @@ namespace Freeserf.Renderer
         readonly int layerIndex = 0;
         bool disposed = false;
 
+        // temporary debug accessor
+        public Texture DebugTexture => texture;
+
         public RenderLayer(Layer layer, Texture texture, bool supportColoredRects = false, Render.Color colorKey = null, Render.Color colorOverlay = null)
         {
             var shape = (layer == Layer.Landscape || layer == Layer.Waves) ? Shape.Triangle : Shape.Rect;
@@ -140,6 +143,11 @@ namespace Freeserf.Renderer
                 shader.SetColorOverlay(ColorOverlay.R / 255.0f, ColorOverlay.G / 255.0f, ColorOverlay.B / 255.0f, ColorOverlay.A / 255.0f);
 
             renderBuffer.Render();
+        }
+
+        public int GetDrawCount()
+        {
+            return renderBuffer.GetDrawCount();
         }
 
         public int GetDrawIndex(ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
