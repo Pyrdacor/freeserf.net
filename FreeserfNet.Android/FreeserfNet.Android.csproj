@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationId>net.freeserf.android</ApplicationId>
+    <ApplicationTitle>Freeserf</ApplicationTitle>
+    <RootNamespace>Freeserf.Android</RootNamespace>
+    <AssemblyName>FreeserfNet.Android</AssemblyName>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <DefineConstants>ANDROID</DefineConstants>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.23.0" />
+    <PackageReference Include="Silk.NET.Input.Sdl" Version="2.23.0" />
+    <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
+    <ProjectReference Include="..\Freeserf.Renderer\Freeserf.Renderer.csproj" />
+    <ProjectReference Include="..\Freeserf.Audio\Freeserf.Audio.csproj" />
+    <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- GameView is part of the desktop host project but only depends on the
+         game projects and Silk.NET.OpenGL, so we compile it directly here. -->
+    <Compile Include="..\FreeserfNet\GameView.cs" Link="GameView.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled game data (copyrighted, kept outside the repo).
+         Extracted to app storage on first run. -->
+    <AndroidAsset Include="C:\git\freeserf.net\SPAE.PA" Link="SPAE.PA" />
+  </ItemGroup>
+
+</Project>

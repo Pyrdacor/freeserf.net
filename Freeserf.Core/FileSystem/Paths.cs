@@ -54,7 +54,18 @@ namespace Freeserf.FileSystem
 
         static Paths()
         {
-            if (IsLinux())
+            if (OperatingSystem.IsAndroid())
+            {
+                // On Android the app has its own private storage directory.
+                // It is not writable outside of it, so we use the app's
+                // personal files directory for saves and config.
+                string personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                SaveGameFolder = Path.Combine(personalFolder, "freeserf");
+                UserConfigPath = Path.Combine(SaveGameFolder, "user.cfg");
+                SaveGameFolder = Path.Combine(SaveGameFolder, "saves");
+                GameDataFolder = personalFolder;
+            }
+            else if (IsLinux())
             {
                 SaveGameFolder = Environment.GetEnvironmentVariable("HOME");
                 SaveGameFolder += "/.local/share";
@@ -75,15 +86,18 @@ namespace Freeserf.FileSystem
                 throw new Exception("Unknown platform.");
             }
 
-            SaveGameFolder += Path.DirectorySeparatorChar.ToString() + "freeserf";
-
-            if (!IsWindows())
+            if (!OperatingSystem.IsAndroid())
             {
-                UserConfigPath = SaveGameFolder + "/user.cfg";
-                SaveGameFolder += "/saves";
-            }
+                SaveGameFolder += Path.DirectorySeparatorChar.ToString() + "freeserf";
 
-            GameDataFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                if (!IsWindows())
+                {
+                    UserConfigPath = SaveGameFolder + "/user.cfg";
+                    SaveGameFolder += "/saves";
+                }
+
+                GameDataFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            }
         }
     }
 }
