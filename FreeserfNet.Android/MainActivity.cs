@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MainActivity.cs - Android host for freeserf.net
  *
  * Copyright (C) 2024  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -55,6 +55,7 @@ namespace Freeserf.Android
         static Data.DataSource dataSource;
         static Global.InitInfo initInfo;
         static bool initialized = false;
+        static bool renderTraced = false;
 
         // mouse emulation state (SDL maps single finger touch to left mouse button)
         static int lastDragX = int.MinValue;
@@ -72,9 +73,11 @@ namespace Freeserf.Android
         {
             try
             {
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: start");
                 SdlWindowing.RegisterPlatform();
                 SdlInput.RegisterPlatform();
                 SdlWindowing.Use();
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: platforms registered");
 
                 var options = new WindowOptions(
                     true,
@@ -92,13 +95,16 @@ namespace Freeserf.Android
                     24);
 
                 view = Silk.NET.Windowing.Window.GetView(new ViewOptions(options));
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: view created");
                 view.Load += Window_Load;
                 view.Render += Window_Render;
                 view.Update += Window_Update;
                 view.Resize += Window_Resize;
                 view.Closing += Window_Closing;
 
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: events attached, calling Initialize");
                 view.Initialize();
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: initialized, calling Run");
                 view.Run(() =>
                 {
                     if (!view.IsClosing)
@@ -106,6 +112,7 @@ namespace Freeserf.Android
                     if (!view.IsClosing)
                         view.DoRender();
                 });
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: Run returned");
                 view.Reset();
             }
             catch (Exception ex)
@@ -122,26 +129,33 @@ namespace Freeserf.Android
         {
             try
             {
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: start");
                 view.MakeCurrent();
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: MakeCurrent done");
 
                 initInfo = Global.Init(Array.Empty<string>());
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: Global.Init done");
 
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
 
                 UserConfig.Load(FileSystem.Paths.UserConfigPath);
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: UserConfig.Load done");
 
                 // Extract bundled game data (e.g. SPAE.PA) from the APK assets
                 // to the app's private storage so the data source can find it.
                 ExtractBundledData();
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: ExtractBundledData done");
 
                 var data = Data.Data.GetInstance();
                 if (!data.Load(FileSystem.Paths.GameDataFolder, UserConfig.Game.GraphicDataUsage,
                     UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
                 {
                     Log.Error.Write(ErrorSystemType.Data, "Error loading game data.");
+                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load FAILED");
                     return;
                 }
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load done");
                 dataSource = data.GetDataSource();
 
                 if (initInfo.ScreenWidth == -1)
@@ -150,10 +164,12 @@ namespace Freeserf.Android
                     initInfo.ScreenHeight = UserConfig.Video.ResolutionHeight;
 
                 State.Init(view);
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: State.Init done");
 
                 gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
                     DeviceType.MobileLandscape, SizingPolicy.FitRatio, OrientationPolicy.Support180DegreeRotation);
                 gameView.Resize(view.Size.X, view.Size.Y);
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: GameView created");
 
                 input = view.CreateInput();
                 input.Mice[0].MouseDown += Mouse_MouseDown;
@@ -164,9 +180,11 @@ namespace Freeserf.Android
                 input.Keyboards[0].KeyChar += Keyboard_KeyChar;
 
                 initialized = true;
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: done, initialized=true");
             }
             catch (Exception ex)
             {
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: EXCEPTION: " + ex);
                 Log.Error.Write(ErrorSystemType.Application, "Load: " + ex.Message);
             }
         }
@@ -178,6 +196,11 @@ namespace Freeserf.Android
 
             try
             {
+                if (!renderTraced)
+                {
+                    renderTraced = true;
+                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Render: first render call");
+                }
                 gameView?.Render();
             }
             catch (Exception ex)
@@ -188,7 +211,6 @@ namespace Freeserf.Android
 
             view.SwapBuffers();
         }
-
         static void Window_Update(double delta)
         {
             if (gameView != null)
