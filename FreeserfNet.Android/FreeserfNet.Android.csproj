@@ -34,7 +34,7 @@
     <Compile Include="..\FreeserfNet\GameView.cs" Link="GameView.cs" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="Exists('C:\git\freeserf.net\SPAE.PA')">
     <!-- Bundled game data (copyrighted, kept outside the repo).
          Extracted to app storage on first run. -->
     <AndroidAsset Include="C:\git\freeserf.net\SPAE.PA" Link="SPAE.PA" />
