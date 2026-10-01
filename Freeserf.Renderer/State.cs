@@ -33,6 +33,7 @@ namespace Freeserf.Renderer
         public static int OpenGLVersionMinor { get; private set; } = 0;
         public static int GLSLVersionMajor { get; private set; } = 0;
         public static int GLSLVersionMinor { get; private set; } = 0;
+        public static bool IsOpenGLES { get; private set; } = false;
         public static GL Gl { get; private set; } = null;
 
         public static void Init(IGLContextSource contextSource)
@@ -54,13 +55,17 @@ namespace Freeserf.Renderer
             OpenGLVersionMajor = int.Parse(match.Groups[1].Value);
             OpenGLVersionMinor = int.Parse(match.Groups[2].Value);
 
+            IsOpenGLES = openGLVersion.Contains("ES", StringComparison.OrdinalIgnoreCase);
+
             if (OpenGLVersionMajor >= 2) // glsl is supported since OpenGL 2.0
             {
                 var glslVersion = Gl.GetStringS(StringName.ShadingLanguageVersion);
 
                 match = versionRegex.Match(glslVersion);
 
-                if (match.Success && match.Index == 0 && match.Groups.Count >= 3)
+                // On OpenGL ES the version string is prefixed (e.g. "OpenGL ES GLSL ES 3.20"),
+                // so the version number is not at the start of the string.
+                if (match.Success && match.Groups.Count >= 3)
                 {
                     GLSLVersionMajor = int.Parse(match.Groups[1].Value);
                     GLSLVersionMinor = int.Parse(match.Groups[2].Value);
