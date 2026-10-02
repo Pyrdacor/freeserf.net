@@ -97,6 +97,17 @@ namespace Freeserf.Android
         static int touchLastY = 0;
         static bool touchActive = false;
         static bool touchPanning = false;
+        static bool specialTapCandidate = false;
+        static bool suppressNextPrimaryUp = false;
+        static long specialTapStartTime = 0;
+        static int specialTapX = 0;
+        static int specialTapY = 0;
+        static int specialTapPrimaryPointerId = -1;
+        static int specialTapSecondaryPointerId = -1;
+        static int specialTapPrimaryStartX = 0;
+        static int specialTapPrimaryStartY = 0;
+        static int specialTapSecondaryStartX = 0;
+        static int specialTapSecondaryStartY = 0;
 
         public MainActivity()
         {
@@ -641,20 +652,58 @@ namespace Freeserf.Android
                             touchPanning = true;
                             touchLastX = (int)e.GetX(0);
                             touchLastY = (int)e.GetY(0);
+
+                            if (e.PointerCount == 2)
+                            {
+                                specialTapCandidate = true;
+                                specialTapStartTime = SystemClock.ElapsedRealtime();
+                                specialTapX = specialTapPrimaryStartX = (int)e.GetX(0);
+                                specialTapY = specialTapPrimaryStartY = (int)e.GetY(0);
+                                specialTapSecondaryStartX = (int)e.GetX(1);
+                                specialTapSecondaryStartY = (int)e.GetY(1);
+                                specialTapPrimaryPointerId = e.GetPointerId(0);
+                                specialTapSecondaryPointerId = e.GetPointerId(1);
+                            }
+                            else
+                            {
+                                ResetSpecialTap();
+                            }
                             break;
                         case MotionEventActions.Move:
+                            if (specialTapCandidate &&
+                                SpecialTapMovedBeyondSlop(e, Math.Max(ViewConfiguration.Get(this).ScaledTouchSlop, 1)))
+                            {
+                                specialTapCandidate = false;
+                            }
+
                             pinchCurrentDistance = Math.Max(PinchDistance(e, 0, 1), 1.0f);
                             break;
                         case MotionEventActions.PointerUp:
-                            pinchActive = false;
-                            // One finger remains; anchor drag tracking to it so a
-                            // follow-up pan doesn't jump.
-                            touchLastX = (int)e.GetX(1 - e.ActionIndex);
-                            touchLastY = (int)e.GetY(1 - e.ActionIndex);
+                            if (specialTapCandidate && e.PointerCount == 2 &&
+                                SystemClock.ElapsedRealtime() - specialTapStartTime <= ViewConfiguration.DoubleTapTimeout)
+                            {
+                                int x = specialTapX;
+                                int y = specialTapY;
+                                pendingTouchEvents.Enqueue(view => view.NotifySpecialClick(x, y));
+                                global::Android.Util.Log.Debug("Freeserf_Input", $"Special tap: {x},{y}");
+                                suppressNextPrimaryUp = true;
+                                touchActive = false;
+                                touchPanning = false;
+                            }
+
+                            specialTapCandidate = false;
+                            pinchActive = e.PointerCount > 2;
+                            // At least one finger remains. Keep the first
+                            // non-lifted pointer as the drag anchor; this also
+                            // handles a third finger lifting.
+                            int remainingPointerIndex = e.ActionIndex == 0 ? 1 : 0;
+                            touchLastX = (int)e.GetX(remainingPointerIndex);
+                            touchLastY = (int)e.GetY(remainingPointerIndex);
                             break;
                         case MotionEventActions.Up:
                         case MotionEventActions.Cancel:
                             pinchActive = false;
+                            ResetSpecialTap();
                             if (touchPanning)
                                 pendingTouchEvents.Enqueue(view => view.NotifyStopDrag());
                             touchActive = false;
@@ -714,6 +763,15 @@ namespace Freeserf.Android
                             }
                             break;
                         case MotionEventActions.Up:
+                            if (suppressNextPrimaryUp)
+                            {
+                                suppressNextPrimaryUp = false;
+                                ResetSpecialTap();
+                                touchActive = false;
+                                touchPanning = false;
+                                break;
+                            }
+
                             int touchUpX = (int)e.GetX();
                             int touchUpY = (int)e.GetY();
                             bool wasPanning = touchPanning;
@@ -731,6 +789,7 @@ namespace Freeserf.Android
                             touchPanning = false;
                             break;
                         case MotionEventActions.Cancel:
+                            ResetSpecialTap();
                             if (touchPanning)
                                 pendingTouchEvents.Enqueue(view => view.NotifyStopDrag());
                             touchActive = false;
@@ -749,6 +808,28 @@ namespace Freeserf.Android
             return base.DispatchTouchEvent(e);
         }
 
+        static bool SpecialTapMovedBeyondSlop(MotionEvent e, int slop)
+        {
+            int primaryIndex = e.FindPointerIndex(specialTapPrimaryPointerId);
+            int secondaryIndex = e.FindPointerIndex(specialTapSecondaryPointerId);
+
+            if (primaryIndex < 0 || secondaryIndex < 0)
+                return true;
+
+            return Math.Abs(e.GetX(primaryIndex) - specialTapPrimaryStartX) > slop ||
+                   Math.Abs(e.GetY(primaryIndex) - specialTapPrimaryStartY) > slop ||
+                   Math.Abs(e.GetX(secondaryIndex) - specialTapSecondaryStartX) > slop ||
+                   Math.Abs(e.GetY(secondaryIndex) - specialTapSecondaryStartY) > slop;
+        }
+
+        static void ResetSpecialTap()
+        {
+            specialTapCandidate = false;
+            specialTapStartTime = 0;
+            specialTapPrimaryPointerId = -1;
+            specialTapSecondaryPointerId = -1;
+        }
+
         static float PinchDistance(MotionEvent e, int index0, int index1)
         {
             float dx = e.GetX(index0) - e.GetX(index1);
@@ -763,6 +844,8 @@ namespace Freeserf.Android
             pinchActive = false;
             touchActive = false;
             touchPanning = false;
+            suppressNextPrimaryUp = false;
+            ResetSpecialTap();
 
             if (gameView != null)
             {
@@ -778,6 +861,8 @@ namespace Freeserf.Android
             pinchActive = false;
             touchActive = false;
             touchPanning = false;
+            suppressNextPrimaryUp = false;
+            ResetSpecialTap();
         }
 
         protected override void OnStart()
