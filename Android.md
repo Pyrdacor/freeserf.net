@@ -431,25 +431,27 @@ tiles, and they sit inside the GameInitBox area (see geometry below).
 - [ ] Consider switching the build to `dotnet publish` + Ambermoon's
       `AndroidLinkMode=None` settings for reproducible builds.
 
-## Pinch-to-zoom (implemented)
+## Pinch-to-zoom and finger panning (implemented)
 
-Two-finger pinch zooms the map in/out while ingame, matching the Windows mouse-wheel
-zoom (`gameView.Zoom`, range 0..4, `zoomFactor = 1 + zoom * 0.5` applied around the
-screen center in `Freeserf.Renderer/Context.cs`).
+Two-finger pinch zooms the map in/out while ingame, and single-finger drag pans
+the map, matching the Windows mouse-wheel zoom (`gameView.Zoom`, range 0..4,
+`zoomFactor = 1 + zoom * 0.5` applied around the screen center in
+`Freeserf.Renderer/Context.cs`) and the desktop right-button drag scrolling.
 
 ### Why a custom implementation
 
 Silk.NET 2.23.0 has **no touch abstraction** (no `ITouch`). SDL maps single-finger
 touch to the left mouse button via `SDLSurface.onTouch` → `onNativeTouch`; two-finger
-touch produces no mouse events at all. So pinch must be captured from the raw Android
-`MotionEvent` stream.
+touch produces no mouse events at all. So all touch gestures must be captured from
+the raw Android `MotionEvent` stream.
 
 ### Threading model (critical)
 
 - `DispatchTouchEvent` runs on the **UI thread** and must NOT touch GL state
   (`gameView.Zoom` setter → `Context.ApplyMatrix` → GL matrix stack).
-- Instead it records pinch state in **`volatile` static fields**:
-  `pinchActive`, `pinchStartDistance`, `pinchStartZoom`, `pinchCurrentDistance`.
+- Instead it records gesture state in **`volatile` static fields**:
+  `pinchActive`, `pinchStartDistance`, `pinchStartZoom`, `pinchCurrentDistance`
+  (plus the single-finger pan state fields).
 - `Window_Update` runs on the **SDL thread** every frame and applies the zoom there.
 
 ### How it works (`MainActivity.cs`)
@@ -457,15 +459,26 @@ touch produces no mouse events at all. So pinch must be captured from the raw An
 - `DispatchTouchEvent(MotionEvent e)`:
   - If `e.PointerCount >= 2 && gameView != null && gameView.CanZoom` → handle the
     pinch and **return `true`** (consume, so SDL never sees multi-touch).
+  - If `e.PointerCount == 1 && (touchActive || gameView.CanZoom)` → handle the
+    single-finger gesture (tap vs drag) and **return `true`**.
   - Otherwise → `base.DispatchTouchEvent(e)` (single-finger SDL mouse emulation
-    unchanged).
-  - `ActionMasked` handling:
-    - `PointerDown` (2nd finger down) → start pinch: record
-      `pinchStartDistance` = distance between `(GetX(0),GetY(0))` and
-      `(GetX(1),GetY(1))`, `pinchStartZoom = gameView.Zoom`, `pinchActive = true`.
-    - `Move` → update `pinchCurrentDistance`.
-    - `PointerUp` / `Up` / `Cancel` → `pinchActive = false`.
+    unchanged, e.g. on the main menu or with popups open).
+- **Pinch** (`ActionMasked` handling):
+  - `PointerDown` (2nd finger down) → start pinch: record
+    `pinchStartDistance` = distance between `(GetX(0),GetY(0))` and
+    `(GetX(1),GetY(1))`, `pinchStartZoom = gameView.Zoom`, `pinchActive = true`.
+  - `Move` → update `pinchCurrentDistance`.
+  - `PointerUp` / `Up` / `Cancel` → `pinchActive = false`.
   - Zero distance is guarded with `Math.Max(distance, 1.0f)`.
+- **Single-finger** (tap vs drag disambiguation):
+  - `Down` → record start position, `touchActive = true`, `touchPanning = false`.
+  - `Move` → if moved beyond `ViewConfiguration.ScaledTouchSlop`, the gesture
+    becomes a pan: `gameView.NotifyDrag(x, y, lastX - x, lastY - y,
+    Event.Button.Right)` (the game scrolls the map on right-button drags).
+    Otherwise just `gameView.SetCursorPosition(x, y)` (hover).
+  - `Up` → if it was a pan: `gameView.NotifyStopDrag()`; if it was a tap:
+    `gameView.NotifyClick(x, y, Event.Button.Left, false)`.
+  - `Cancel` → `NotifyStopDrag()` if panning.
 - `Window_Update` (SDL thread), when `pinchActive`:
   ```csharp
   float startFactor = 1.0f + pinchStartZoom * 0.5f;
@@ -476,14 +489,20 @@ touch produces no mouse events at all. So pinch must be captured from the raw An
   Factor-space math (`zoomFactor = 1 + zoom * 0.5`) so zooming works correctly
   starting from `zoom = 0`.
 - `CanZoom` (`Freeserf.Core/UI/Interface.cs:172`) = ingame && viewport enabled &&
-  no notification/popup box — pinch only zooms when that is true.
-- `pinchActive` is reset in `OnPause`/`OnStop` so a stale pinch can't cause a zoom
-  jump after resume.
-- The Bluetooth-mouse `Mouse_Scroll` zoom handler is unchanged.
+  no notification/popup box — pinch and pan only work when that is true.
+- `pinchActive`/`touchActive`/`touchPanning` are reset in `OnPause`/`OnStop` so a
+  stale gesture can't cause a zoom jump or spurious click after resume.
+- The Bluetooth-mouse `Mouse_Scroll` zoom handler and right-button drag are
+  unchanged.
 
-### Known minor edge case (accepted)
+### Known minor edge cases (accepted)
 
-After a pinch ends with one finger still down, SDL may still think the left mouse
-button is held (it never saw the second finger's down/up). The remaining finger's
-moves are passed to SDL and can briefly act as a drag until the last finger lifts.
+- After a pinch ends with one finger still down, SDL may still think the left
+  mouse button is held (it never saw the second finger's down/up). The remaining
+  finger's moves are passed to SDL and can briefly act as a drag until the last
+  finger lifts.
+- After a pinch, the remaining finger continues as a pan (drag) until it lifts —
+  no spurious click is sent.
+- Taps activate on finger release (not press) while ingame; on the main menu and
+  with popups open, taps still activate on press via SDL mouse emulation.
 

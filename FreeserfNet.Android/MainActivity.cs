@@ -81,6 +81,15 @@ namespace Freeserf.Android
         static volatile float pinchStartZoom = 0.0f;
         static volatile float pinchCurrentDistance = 0.0f;
 
+        // single-finger pan state (UI thread). A tap (no significant movement)
+        // becomes a left click; a drag pans the map like a right-button drag.
+        static int touchStartX = 0;
+        static int touchStartY = 0;
+        static int touchLastX = 0;
+        static int touchLastY = 0;
+        static bool touchActive = false;
+        static bool touchPanning = false;
+
         public MainActivity()
         {
             Console.SetOut(new AndroidConsole("Freeserf_Info"));
@@ -569,13 +578,16 @@ namespace Freeserf.Android
             }
         }
 
-        // Two-finger pinch-to-zoom. Runs on the UI thread; only records pinch
-        // state in volatile fields. The actual zoom is applied on the SDL
-        // thread in Window_Update. Multi-touch is consumed here so SDL never
-        // sees it (SDL only maps single-finger touch to the left mouse button).
+        // Touch input. Runs on the UI thread; only records gesture state in
+        // static fields (pinch zoom is applied on the SDL thread in
+        // Window_Update). Multi-touch is consumed here so SDL never sees it
+        // (SDL only maps single-finger touch to the left mouse button).
         public override bool DispatchTouchEvent(MotionEvent e)
         {
-            if (e.PointerCount >= 2 && gameView != null && gameView.CanZoom)
+            if (gameView == null)
+                return base.DispatchTouchEvent(e);
+
+            if (e.PointerCount >= 2 && gameView.CanZoom)
             {
                 try
                 {
@@ -586,20 +598,96 @@ namespace Freeserf.Android
                             pinchStartZoom = gameView.Zoom;
                             pinchCurrentDistance = pinchStartDistance;
                             pinchActive = true;
+                            // The gesture is no longer a tap; don't click when it ends.
+                            touchPanning = true;
+                            touchLastX = (int)e.GetX(0);
+                            touchLastY = (int)e.GetY(0);
                             break;
                         case MotionEventActions.Move:
                             pinchCurrentDistance = Math.Max(PinchDistance(e, 0, 1), 1.0f);
                             break;
                         case MotionEventActions.PointerUp:
+                            pinchActive = false;
+                            // One finger remains; anchor drag tracking to it so a
+                            // follow-up pan doesn't jump.
+                            touchLastX = (int)e.GetX(1 - e.ActionIndex);
+                            touchLastY = (int)e.GetY(1 - e.ActionIndex);
+                            break;
                         case MotionEventActions.Up:
                         case MotionEventActions.Cancel:
                             pinchActive = false;
+                            if (touchPanning)
+                                gameView.NotifyStopDrag();
+                            touchActive = false;
+                            touchPanning = false;
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Error.Write(ErrorSystemType.Application, "Pinch: " + ex.Message);
+                }
+
+                return true;
+            }
+
+            // Single-finger: a tap becomes a left click, a drag pans the map
+            // (like a right-button drag on desktop). Consumed so SDL's mouse
+            // emulation doesn't also fire. Only active ingame (CanZoom).
+            if (e.PointerCount == 1 && (touchActive || gameView.CanZoom))
+            {
+                try
+                {
+                    switch (e.ActionMasked)
+                    {
+                        case MotionEventActions.Down:
+                            touchStartX = touchLastX = (int)e.GetX();
+                            touchStartY = touchLastY = (int)e.GetY();
+                            touchActive = true;
+                            touchPanning = false;
+                            gameView.SetCursorPosition(touchStartX, touchStartY);
+                            break;
+                        case MotionEventActions.Move:
+                            int x = (int)e.GetX();
+                            int y = (int)e.GetY();
+
+                            if (!touchPanning)
+                            {
+                                int slop = Math.Max(ViewConfiguration.Get(this).ScaledTouchSlop, 1);
+                                if (Math.Abs(x - touchStartX) > slop || Math.Abs(y - touchStartY) > slop)
+                                    touchPanning = true;
+                            }
+
+                            if (touchPanning)
+                            {
+                                gameView.NotifyDrag(x, y, touchLastX - x, touchLastY - y, Event.Button.Right);
+                                touchLastX = x;
+                                touchLastY = y;
+                            }
+                            else
+                            {
+                                gameView.SetCursorPosition(x, y);
+                            }
+                            break;
+                        case MotionEventActions.Up:
+                            if (touchPanning)
+                                gameView.NotifyStopDrag();
+                            else
+                                gameView.NotifyClick((int)e.GetX(), (int)e.GetY(), Event.Button.Left, false);
+                            touchActive = false;
+                            touchPanning = false;
+                            break;
+                        case MotionEventActions.Cancel:
+                            if (touchPanning)
+                                gameView.NotifyStopDrag();
+                            touchActive = false;
+                            touchPanning = false;
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error.Write(ErrorSystemType.Application, "Touch: " + ex.Message);
                 }
 
                 return true;
@@ -620,6 +708,8 @@ namespace Freeserf.Android
             base.OnPause();
             activityState = ActivityState.Paused;
             pinchActive = false;
+            touchActive = false;
+            touchPanning = false;
 
             if (gameView != null)
             {
@@ -633,6 +723,8 @@ namespace Freeserf.Android
             base.OnStop();
             activityState = ActivityState.Stopped;
             pinchActive = false;
+            touchActive = false;
+            touchPanning = false;
         }
 
         protected override void OnStart()
