@@ -11,10 +11,11 @@ on this codebase so they don't have to rediscover these issues.
 - It uses **Silk.NET 2.23.0** (`Silk.NET.Windowing.Sdl`, `Silk.NET.Input.Sdl`,
   `Silk.NET.OpenGL`). The activity extends `SilkActivity` from
   `Silk.NET.Windowing.Sdl.Android`, which itself extends SDL's `SDLActivity`.
-- The game data file `SPAE.PA` is **copyrighted and kept outside the repo** at
-  `C:\git\freeserf.net\SPAE.PA`. It is referenced in the csproj as an
-  `<AndroidAsset>` and extracted to app storage on first run
-  (`ExtractBundledData()` in `MainActivity.cs`).
+- The game data file `SPAE.PA` is **copyrighted and kept outside the repo**.
+  Set the `FreeserfGameDataPath` MSBuild property to its location to bundle it;
+  the project retains `C:\git\freeserf.net\SPAE.PA` as a fallback. It is
+  extracted to app storage on first run (`ExtractBundledData()` in
+  `MainActivity.cs`).
 - The desktop host project is `FreeserfNet/`; `GameView.cs` is compiled directly into
   the Android project via a `<Compile Include="..\FreeserfNet\GameView.cs" Link=...>`.
 
@@ -27,6 +28,9 @@ $env:MSBUILDDISABLENODEREUSE = 1
 dotnet build FreeserfNet.Android\FreeserfNet.Android.csproj -c Release `
   -m:1 -nodeReuse:false -p:PublishTrimmed=false -p:RunAOTCompilation=false
 ```
+
+To include an external `SPAE.PA`, add
+`-p:FreeserfGameDataPath="D:\path\to\SPAE.PA"` to the build command.
 
 Output APK: `FreeserfNet.Android\bin\Release\net10.0-android\net.freeserf.android-Signed.apk`
 (~101 MB with trimming/AOT disabled; ~30 MB when trimmed).
@@ -188,10 +192,16 @@ Size DeltaToGui(Size delta)
   `[System.IO.File]::WriteAllBytes` with `adb exec-out screencap -p`. Valid PNG header:
   `137,80,78,71,13,10,26,10`.
 
-## Known non-fatal warnings (ignore)
+## Audio libraries
 
-- `Shared library 'bass' not loaded, p/invoke 'BASS_Init' may fail` — audio library
-  not bundled; audio is unavailable but the game runs.
+- BASS core and BASSMIDI native libraries are bundled for `arm64-v8a`,
+  `armeabi-v7a`, and `x86_64` under `FreeserfNet.Android\lib\<abi>\`. Keep both
+  libraries together when adding an ABI: SFX use BASS core and DOS MIDI music
+  also needs BASSMIDI.
+- Binaries are from the official Un4seen Android packages; BASS is free for
+  non-commercial use. See `sound_android.md` for sources and details.
+
+## Known non-fatal warnings (ignore)
 - `hidapi: One of RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED should be specified...`
   — Silk.NET/SDL hidapi receiver issue; harmless.
 - `Assembly 'de/System.Private.CoreLib.resources' not found` — missing satellite
@@ -530,4 +540,3 @@ SDL thread. The `if (gameView != null)` guard prevents re-entrancy when
 
 The in-game menu's "Quit" (SettlerMenu → QuitConfirm) intentionally returns to
 the main menu on all platforms and is unchanged.
-

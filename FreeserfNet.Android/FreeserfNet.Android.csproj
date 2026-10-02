@@ -13,6 +13,7 @@
     <DefineConstants>ANDROID</DefineConstants>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
+    <FreeserfGameDataPath Condition="'$(FreeserfGameDataPath)' == '' and Exists('C:\git\freeserf.net\SPAE.PA')">C:\git\freeserf.net\SPAE.PA</FreeserfGameDataPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,17 +35,14 @@
     <Compile Include="..\FreeserfNet\GameView.cs" Link="GameView.cs" />
   </ItemGroup>
 
-  <!-- BASS audio (un4seen.com, free for non-commercial use).
-       Native libs under lib/<abi>/ (e.g. lib/arm64-v8a/libbass.so) are
-       auto-included as AndroidNativeLibrary by the Android SDK and land in
-       the APK's lib/<abi>/ folder, where ManagedBass DllImport("bass") /
-       DllImport("bassmidi") resolve to them. Add libbassmidi.so the same way
-       once it is available. -->
+  <!-- BASS audio (Un4seen Developments). Native libraries under lib/<abi>/
+       are auto-included in the APK for each ABI. Keep bass and bassmidi
+       together for every ABI to support sound effects and MIDI music. -->
 
-  <ItemGroup Condition="Exists('C:\git\freeserf.net\SPAE.PA')">
+  <ItemGroup Condition="Exists('$(FreeserfGameDataPath)')">
     <!-- Bundled game data (copyrighted, kept outside the repo).
          Extracted to app storage on first run. -->
-    <AndroidAsset Include="C:\git\freeserf.net\SPAE.PA" Link="SPAE.PA" />
+    <AndroidAsset Include="$(FreeserfGameDataPath)" Link="SPAE.PA" />
   </ItemGroup>
 
 </Project>

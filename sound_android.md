@@ -1,22 +1,14 @@
-# Sound Support Plan (Android port)
+# Android audio support
 
-## Problem
+## Status
 
-On the Pixel 8a the game runs completely silent. The audio system is built on
-**ManagedBass** (the BASS library), but the BASS **native** libraries are not
-bundled in the APK. logcat shows:
+Android audio is enabled with the official Un4seen BASS 2.4 core and BASSMIDI
+2.4 native libraries. `arm64-v8a`, `armeabi-v7a`, and `x86_64` are bundled,
+covering Pixel phones, 32-bit ARM devices, and the Android emulator. SFX and
+MIDI music were verified on the connected SM-A135F (`armeabi-v7a`).
 
-```
-Shared library 'bass' not loaded, p/invoke 'BASS_Init' may fail
-```
-
-`Freeserf.Audio/Audio.cs` calls `Bass.BassLib.EnsureBass()`; when
-`BASS_Init` cannot run (native lib missing), `BassLib.Initialized` stays
-`false` and `AudioImpl` calls `DisableSound()` — the game runs, but music and
-SFX are silently off.
-
-Goal: get music (MIDI via SoundFont, or MOD) and SFX playing on the Pixel 8a
-(arm64-v8a), with graceful degradation if audio init fails.
+BASS is free for non-commercial use; commercial distribution requires the
+appropriate Un4seen licence. See the official [BASS page](https://www.un4seen.com/bass.html).
 
 ## Current audio architecture (what already exists)
 
@@ -39,8 +31,9 @@ Goal: get music (MIDI via SoundFont, or MOD) and SFX playing on the Pixel 8a
 - `FreeserfNet/GameView.cs` (compiled into the Android app) creates
   `AudioFactory` in its constructor and wires `musicPlayer.Enabled` /
   `soundPlayer.Enabled` from `UserConfig.Audio.*`.
-- The Android project already references `Freeserf.Audio.csproj`; the only
-  missing piece is the **native** `libbass.so` / `libbassmidi.so`.
+- The Android project references `Freeserf.Audio.csproj`; its native
+  `libbass.so` and `libbassmidi.so` libraries are in
+  `FreeserfNet.Android/lib/<abi>/` and are included in the APK.
 
 ## Research findings (verified)
 
@@ -109,62 +102,34 @@ Goal: get music (MIDI via SoundFont, or MOD) and SFX playing on the Pixel 8a
   synthesizer + SoundFont — that is exactly what BASS+bassmidi provides, and
   why BASS is the natural primary path here.
 
-## Approach (Option A — primary): bundle BASS native libs
+## Bundled libraries
 
-Keep the entire existing ManagedBass audio stack unchanged; add the native
-libraries to the APK and verify init. This is the smallest, lowest-risk
-change and reuses the desktop-proven code path.
+The native libraries are downloaded from the official Un4seen Android
+archives:
 
-### Step 1 — obtain the native libraries
+- Core BASS 2.4: `https://www.un4seen.com/files/bass24-android.zip`
+- BASSMIDI 2.4: `https://www.un4seen.com/files/bassmidi24-android.zip`
 
-Download from un4seen.com (BASS is free for non-commercial use):
-
-- Core: `https://www.un4seen.com/stuff/bass-android.zip` → `libbass.so`
-- MIDI add-on: `https://www.un4seen.com/files/bassmidi24-android.zip` →
-  `libbassmidi.so` (verify exact URL on the un4seen downloads page)
-
-Extract the **arm64-v8a** builds (Pixel 8a). Optionally also keep
-armeabi-v7a / x86 / x86_64 for other devices.
-
-Place them in the Android project:
+Supported ABIs are checked in:
 
 ```
 FreeserfNet.Android/lib/arm64-v8a/libbass.so
 FreeserfNet.Android/lib/arm64-v8a/libbassmidi.so
+FreeserfNet.Android/lib/armeabi-v7a/libbass.so
+FreeserfNet.Android/lib/armeabi-v7a/libbassmidi.so
+FreeserfNet.Android/lib/x86_64/libbass.so
+FreeserfNet.Android/lib/x86_64/libbassmidi.so
 ```
 
-### Step 2 — `FreeserfNet.Android/FreeserfNet.Android.csproj`
+The .NET Android SDK includes these `.so` files from `lib/<abi>/` in the APK.
+Add the matching core and MIDI libraries together when supporting another ABI.
 
-Add an `AndroidNativeLibrary` item group (ABI is sniffed from the folder
-name):
+## Runtime behavior
 
-```xml
-<ItemGroup>
-  <!-- BASS audio (un4seen.com, free for non-commercial use).
-       ManagedBass DllImport("bass"/"bassmidi") resolves to these. -->
-  <AndroidNativeLibrary Include="lib\arm64-v8a\libbass.so" />
-  <AndroidNativeLibrary Include="lib\arm64-v8a\libbassmidi.so" />
-</ItemGroup>
-```
-
-If other ABIs are added later, add matching folders/items. A single-ABI
-(arm64-v8a) APK is fine for the Pixel 8a; on other ABIs the game simply runs
-silent (existing graceful degradation).
-
-### Step 3 — verify BASS init on Android (no code change expected)
-
-`BassLib.EnsureBass()` already calls `MBass.Init(-1, 44100, 0u, 0,
-IntPtr.Zero)`, which is the correct Android call. For diagnostics, add a
-logcat line in `BassLib.EnsureBass()` on failure:
-
-```csharp
-if (!Initialized)
-{
-    Initialized = MBass.Init(-1, 44100, 0u, 0, IntPtr.Zero);
-    if (!Initialized)
-        Log.Error.Write(ErrorSystemType.Audio, "BASS init failed: " + MBass.LastError);
-}
-```
+`BassLib.EnsureBass()` calls `MBass.Init(-1, 44100, 0u, 0, IntPtr.Zero)`,
+which is the correct Android call and logs an error if initialization fails.
+If the MIDI add-on is unavailable, MIDI playback logs a warning and degrades
+gracefully; BASS core audio and SFX can still work.
 
 (`Freeserf.Audio/Bass/BassLib.cs` — `Log` already routes to logcat on
 Android via `Freeserf_Error`.)
