@@ -516,6 +516,87 @@ the raw Android `MotionEvent` stream.
 - Taps activate on finger release (not press) while ingame; on the main menu and
   with popups open, taps still activate on press via SDL mouse emulation.
 
+## Touchscreen special click (implemented)
+
+### Goal and current semantics
+
+On desktop a simultaneous left and right mouse button press invokes
+`GameView.NotifySpecialClick`. `Gui` handles `Event.Type.SpecialClick` through
+the same path as a left-button double click. On Android, a one-finger tap is a
+left click, a one-finger drag pans the map, a moving two-finger gesture pinches,
+and a stationary two-finger tap produces the special click.
+
+### Implemented gesture: short, stationary two-finger tap
+
+A **two-finger tap** triggers a special click at the first finger's original
+position. The first finger selects the target and the second finger acts as the
+modifier, matching the desktop "left button, then right button" sequence. This
+is preferable to using the midpoint because it gives the user a predictable
+target even when the two fingers are not exactly colocated.
+
+Gesture recognition applies only while `touchInputEnabled` is true (the same
+ingame, non-popup condition used by pan and pinch):
+
+| Gesture | Recognition | Result |
+|---|---|---|
+| One-finger tap | Lift without moving beyond `ScaledTouchSlop` | Left click |
+| One-finger drag | Movement beyond `ScaledTouchSlop` | Right-button map pan |
+| Two-finger pinch | Either tracked finger moves beyond `ScaledTouchSlop` | Existing pinch zoom |
+| Two-finger tap | The first finger lifts within `ViewConfiguration.DoubleTapTimeout` and neither finger moves beyond `ScaledTouchSlop` | `NotifySpecialClick(firstDownX, firstDownY)` |
+
+The two-finger tap takes precedence only while it remains stationary. As soon
+as either finger crosses the movement threshold, discard the candidate and
+continue with the existing pinch logic. A third finger always discards the
+candidate and remains a pinch/multi-touch gesture; it must never trigger a
+special click.
+
+### Implementation outline
+
+`DispatchTouchEvent` maintains:
+
+- `specialTapCandidate`: set when the second pointer goes down.
+- `specialTapStartTime`, `specialTapX`, and `specialTapY`: capture
+  `SystemClock.ElapsedRealtime()` and the primary pointer position at that
+  moment.
+- Per-pointer start positions for the first two fingers, used to compare all
+  movement with `ScaledTouchSlop`.
+- `suppressNextPrimaryUp`: prevents the remaining primary finger's final `Up`
+  from becoming a normal tap or a `NotifyStopDrag` after a recognized
+  two-finger tap.
+
+Process the Android actions as follows:
+
+1. On `PointerDown` for pointer two, start both the existing pinch tracking and
+   the special-tap candidate. Do not emit any game event yet.
+2. On `Move`, cancel the special candidate when either pointer has moved farther
+   than the slop. The existing pinch distance update continues unchanged.
+3. On `PointerUp`, recognize the special tap only if it is still a candidate,
+   exactly two pointers participated, and the first lift is within the
+   double-tap timeout. Queue `view.NotifySpecialClick(specialTapX,
+   specialTapY)` into `pendingTouchEvents`, then set
+   `suppressNextPrimaryUp`.
+4. On the final `Up`, consume and clear the suppression flag. On `Cancel`,
+   `OnPause`, and `OnStop`, clear every special-tap field without emitting an
+   event.
+
+`NotifySpecialClick` must be enqueued through `pendingTouchEvents`; it must
+never be called by `DispatchTouchEvent` directly. This preserves the fix for
+the in-game-menu race: all Core GUI changes occur on the SDL thread in
+`Window_Update`.
+
+### Acceptance tests
+
+1. In a running game, a short two-finger tap on a map tile causes the same game
+   behavior as a desktop simultaneous left/right click at that tile.
+2. A two-finger spread, pinch, or any two-finger movement beyond slop changes
+   zoom only and never invokes `NotifySpecialClick`.
+3. A normal one-finger tap and pan retain their current behavior.
+4. After a special tap, lifting the first finger produces neither an additional
+   left click nor a stray stop-drag event.
+5. Repeated special taps on panel controls and map tiles leave the process
+   alive, with no `Freeserf_Error`, `AndroidRuntime`, or render-loop reset
+   error in logcat.
+
 ## Exit button closes the app (implemented)
 
 The main menu's **Exit** button now closes the app. On desktop this already
@@ -554,8 +635,60 @@ the main menu on all platforms and is unchanged.
   writes `GameView`/GUI state directly.
 - Diagnostics remain enabled: `OnRun` logs complete exceptions and
   `Freeserf_Input` logs the touch coordinates after their queued action is processed.
-- The Release APK builds successfully with this change. The available emulator still
-  has the separate documented black-screen rendering problem, so it cannot currently
-  provide an end-to-end visual test of an in-game panel button.
 - After changing the Android project, do a clean rebuild (delete bin/obj), otherwise
   `n_onStart` UnsatisfiedLinkError occurs (see Crash 2).
+
+## Android device test: 2026-10-02
+
+### Test environment and passed checks
+
+- Device: Android 16 x86_64 emulator (`emulator-5554`, 2400x1080 landscape).
+- Build: Release APK built with
+  `-p:FreeserfGameDataPath="D:\freeserf.net\SPAE.PA"`. The data file must be
+  supplied explicitly because it is not committed to the repository.
+- Startup loaded game data, initialized `GameView`, and rendered the main menu
+  and background map correctly. Logcat reported no `Freeserf_Error` or
+  `AndroidRuntime` error.
+- Background/foreground lifecycle (Home followed by relaunch), raw tap, and
+  raw swipe left the process alive without a crash.
+
+### Reproducible bugs
+
+#### Main-menu buttons ignore Android touch input (BLOCKER)
+
+- **Symptom:** The visible **Start**, **Options**, and **Exit** buttons do not
+  react to touchscreen input. The application stays on the new-game screen;
+  **Exit** also does not close the activity.
+- **Evidence:** `adb shell input tap 615 270`, `1050 270`, and `1056 493`
+  respectively emit `Freeserf_Input: Mouse down: <x>,<y> button=Left`, but
+  produce no UI transition, no popup, and no process exit. The coordinates
+  target the visible centers of the three buttons on the 2400x1080 emulator.
+- **Impact:** A player cannot start a game or open options on Android. This also
+  blocks an end-to-end validation of the in-game menu fix and touchscreen
+  special click.
+- **Investigation starting point:** `Mouse_MouseDown` in
+  `FreeserfNet.Android\MainActivity.cs` receives the SDL mouse event and calls
+  `GameView.NotifyClick`; trace the transformed coordinates and `GameInitBox`
+  button hit-testing from that call to identify why the click is not consumed.
+
+#### Missing-data startup fails unclearly (MEDIUM)
+
+- **Symptom:** A Release APK built without `FreeserfGameDataPath` stays black
+  after launch rather than reporting that copyrighted game data is required.
+- **Evidence:** The APK contains no `SPAE.PA`; `Window_Load` logs
+  `UnauthorizedAccessException: Access to the path '/' is denied` from
+  `DataSourceAmiga.CheckFiles` while `Data.Load` searches fallback paths.
+- **Impact:** The app does not provide a usable failure screen or actionable
+  message when its required external asset was omitted.
+- **Expected behavior:** Catch a missing-data condition before the fallback
+  filesystem scan and show a clear in-app or Android error explaining how to
+  rebuild with `FreeserfGameDataPath`.
+
+### Compatibility risk detected during the build
+
+- The Android SDK emits `XA0141` for `libmain.so` and `libSDL2.so` from
+  `Silk.NET.Windowing.Sdl` 2.23.0: they are not built for Android 16's required
+  16-KB page size. The x86_64 emulator used above runs the APK, so this was not
+  reproduced as a runtime failure; it remains a deployment risk for devices
+  that enforce 16-KB pages. Update or rebuild the upstream SDL dependency
+  before treating Android 16 / 16-KB-page hardware as supported.
