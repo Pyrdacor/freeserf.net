@@ -155,11 +155,18 @@ namespace Freeserf.Android
             }
             catch (Exception ex)
             {
-                Log.Error.Write(ErrorSystemType.Application, "Run: " + ex.Message);
+                Log.Error.Write(ErrorSystemType.Application, "Run: " + ex);
             }
             finally
             {
-                view?.Dispose();
+                try
+                {
+                    view?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error.Write(ErrorSystemType.Application, "View disposal: " + ex);
+                }
             }
         }
 
@@ -430,6 +437,7 @@ namespace Freeserf.Android
 
                 if (button == MouseButton.Left || button == MouseButton.Right)
                 {
+                    global::Android.Util.Log.Debug("Freeserf_Input", $"Mouse down: {position.X},{position.Y} button={button}");
                     lastDragX = (int)position.X;
                     lastDragY = (int)position.Y;
                     gameView.NotifyClick((int)position.X, (int)position.Y, ConvertMouseButtons(button), false);
@@ -664,6 +672,7 @@ namespace Freeserf.Android
                         case MotionEventActions.Down:
                             touchStartX = touchLastX = (int)e.GetX();
                             touchStartY = touchLastY = (int)e.GetY();
+                            global::Android.Util.Log.Debug("Freeserf_Input", $"Touch down: {touchStartX},{touchStartY}");
                             touchActive = true;
                             touchPanning = false;
                             gameView.SetCursorPosition(touchStartX, touchStartY);
@@ -691,6 +700,8 @@ namespace Freeserf.Android
                             }
                             break;
                         case MotionEventActions.Up:
+                            var touchPosition = gameView.ScreenToView(new Freeserf.Position((int)e.GetX(), (int)e.GetY()));
+                            global::Android.Util.Log.Debug("Freeserf_Input", $"Touch up: {e.GetX()},{e.GetY()} -> {touchPosition.X},{touchPosition.Y} panning={touchPanning}");
                             if (touchPanning)
                                 gameView.NotifyStopDrag();
                             else

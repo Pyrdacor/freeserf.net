@@ -540,3 +540,24 @@ SDL thread. The `if (gameView != null)` guard prevents re-entrancy when
 
 The in-game menu's "Quit" (SettlerMenu → QuitConfirm) intentionally returns to
 the main menu on all platforms and is unchanged.
+
+## Open issue: crash when pressing in-game menu button (UNRESOLVED, under investigation)
+
+- Symptom (Pixel 6 emulator, x86_64, Android 16): tapping an in-game panel/menu button
+  kills the app. Logcat shows only the secondary error
+  `InvalidOperationException: You cannot call Reset inside of the render loop!`
+  (`ViewImplementationBase.Reset` <- `Dispose` <- `MainActivity.OnRun`), followed by
+  `SIGABRT` (pthread_mutex_lock on a destroyed mutex). This is probably a follow-up
+  failure during cleanup; the original exception is not yet known.
+- Diagnostics added: `OnRun` now logs the full exception (`ex`, not `ex.Message`) and
+  guards `view.Dispose()`; touch/mouse input is logged under tag `Freeserf_Input`
+  (raw coordinates and the transformed view coordinates).
+- Coordinates: `adb shell input tap` uses landscape coordinates (2400x1080 on the
+  emulator). The virtual screen is 1920x864 (factor 0.8). Panel bar Settler button
+  is at roughly view (1104..1162, 799..857), i.e. tap about (1420,1030).
+  A tap at (1420,1030) was mapped to view (1136,824) with no crash in the last test,
+  so the crash is not yet reliably reproduced with the diagnostic build.
+- Next: reproduce with the diagnostic build, read `Freeserf_Error` / `Freeserf_Input`
+  logs for the original exception, then fix.
+- After changing the Android project, do a clean rebuild (delete bin/obj), otherwise
+  `n_onStart` UnsatisfiedLinkError occurs (see Crash 2).
