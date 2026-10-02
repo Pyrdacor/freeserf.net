@@ -62,6 +62,66 @@ Output APK: `FreeserfNet.Android\bin\Release\net10.0-android\net.freeserf.androi
   with the Ambermoon settings — `dotnet publish` regenerates the type-registration
   table (`libxamarin-app.so`) more reliably than incremental `dotnet build`.
 
+## Widescreen Support (Android port)
+
+### Virtual Screen Size
+
+The virtual screen is computed from the actual device view, preserving aspect ratio,
+capped at `MAX_VIRTUAL_SCREEN_WIDTH=1920`:
+
+```csharp
+int screenW = view.Size.X, screenH = view.Size.Y;
+if (screenH > screenW) { int t = screenW; screenW = screenH; screenH = t; } // ensure landscape
+int virtualWidth = Math.Min(screenW, Global.MAX_VIRTUAL_SCREEN_WIDTH);
+int virtualHeight = Math.Max(1, (int)Math.Round(virtualWidth * (double)screenH / screenW));
+gameView = new GameView(dataSource, new Size(virtualWidth, virtualHeight), ...);
+```
+
+Pixel 8a → 1920×864 (20:9). The map automatically gets more columns (60 vs 40),
+filling the full screen with no black bars.
+
+### GUI Scaling
+
+The GUI (PanelBar, GameInitBox, minimap) is scaled **uniformly** (min ratio) and
+**centered** instead of the previous non-uniform stretch:
+
+```csharp
+float scale = Math.Min((float)VirtualScreen.Size.Width / 640.0f, (float)VirtualScreen.Size.Height / 480.0f);
+int offsetX = Misc.Round((VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
+int offsetY = Misc.Round((VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
+```
+
+- Scale = min(1920/640, 864/480) = 1.8
+- Center offset: offsetX=384, offsetY=0
+- GUI on-screen size unchanged (2.25× design size) — no UX regression
+
+### Input Transformation
+
+`PositionToGui` and `DeltaToGui` use the inverse of the uniform+centered transformation:
+
+```csharp
+Position PositionToGui(Position position)
+{
+    float scale = Math.Min((float)renderView.VirtualScreen.Size.Width / 640.0f, (float)renderView.VirtualScreen.Size.Height / 480.0f);
+    int offsetX = Misc.Round((renderView.VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
+    int offsetY = Misc.Round((renderView.VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
+    return new Position((int)Math.Floor((position.X - offsetX) / scale), (int)Math.Floor((position.Y - offsetY) / scale));
+}
+
+Size DeltaToGui(Size delta)
+{
+    float scale = Math.Min((float)renderView.VirtualScreen.Size.Width / 640.0f, (float)renderView.VirtualScreen.Size.Height / 480.0f);
+    return new Size(Misc.Round(delta.Width / scale), Misc.Round(delta.Height / scale));
+}
+```
+
+### Verification
+
+- No black bars, map fills full width
+- GUI (PanelBar, GameInitBox) undistorted and centered
+- Input works: map tile selection, GUI buttons, scrolling
+- Map cursor aligns with tiles
+
 ## Crash 1: `System.TypeInitializationException` at startup (FIXED)
 
 - Symptom: `FATAL UNHANDLED EXCEPTION: System.TypeInitializationException` →
