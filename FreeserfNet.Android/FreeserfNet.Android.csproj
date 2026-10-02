@@ -34,6 +34,13 @@
     <Compile Include="..\FreeserfNet\GameView.cs" Link="GameView.cs" />
   </ItemGroup>
 
+  <!-- BASS audio (un4seen.com, free for non-commercial use).
+       Native libs under lib/<abi>/ (e.g. lib/arm64-v8a/libbass.so) are
+       auto-included as AndroidNativeLibrary by the Android SDK and land in
+       the APK's lib/<abi>/ folder, where ManagedBass DllImport("bass") /
+       DllImport("bassmidi") resolve to them. Add libbassmidi.so the same way
+       once it is available. -->
+
   <ItemGroup Condition="Exists('C:\git\freeserf.net\SPAE.PA')">
     <!-- Bundled game data (copyrighted, kept outside the repo).
          Extracted to app storage on first run. -->

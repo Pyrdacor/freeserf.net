@@ -24,6 +24,8 @@ namespace Freeserf.Audio.Bass
             if (!Initialized)
             {
                 Initialized = MBass.Init(-1, 44100, 0u, 0, IntPtr.Zero);
+                if (!Initialized)
+                    Log.Error.Write(ErrorSystemType.Audio, "BASS init failed: " + MBass.LastError);
             }
         }
 
@@ -95,59 +97,73 @@ namespace Freeserf.Audio.Bass
 
         public static int LoadMidiMusic(ManagedBass.Midi.MidiEvent[] events, int pulsesPerQuarterNote, uint frequency)
         {
-            // Initialize SoundFont once
-            if (soundFont == 0)
+            try
             {
-                var assembly = Assembly.GetExecutingAssembly();
-                var stream = assembly.GetManifestResourceStream(SoundFontResource); // do NOT dispose
-
-                soundFontProcs = new FileProcedures
+                // Initialize SoundFont once
+                if (soundFont == 0)
                 {
-                    Close = user => { },
-                    Length = user => stream.Length,
-                    Read = (IntPtr buffer, int length, IntPtr user) =>
+                    var assembly = Assembly.GetExecutingAssembly();
+                    var stream = assembly.GetManifestResourceStream(SoundFontResource); // do NOT dispose
+
+                    soundFontProcs = new FileProcedures
                     {
-                        unsafe
+                        Close = user => { },
+                        Length = user => stream.Length,
+                        Read = (IntPtr buffer, int length, IntPtr user) =>
                         {
-                            var span = new Span<byte>((void*)buffer, length);
-                            return stream.Read(span);
+                            unsafe
+                            {
+                                var span = new Span<byte>((void*)buffer, length);
+                                return stream.Read(span);
+                            }
+                        },
+                        Seek = (offset, user) =>
+                        {
+                            stream.Seek((long)offset, SeekOrigin.Begin);
+                            return true;
                         }
-                    },
-                    Seek = (offset, user) =>
+                    };
+
+                    soundFont = ManagedBass.Midi.BassMidi.FontInit(soundFontProcs, IntPtr.Zero, 0);
+                }
+
+                // Create the MIDI stream from events
+                int music = ManagedBass.Midi.BassMidi.CreateStream(
+                    events,
+                    pulsesPerQuarterNote,
+                    BassFlags.Loop,
+                    (int)frequency
+                );
+
+                if (music == 0)
+                {
+                    Log.Warn.Write(ErrorSystemType.Audio, "Failed to create MIDI stream: " + MBass.LastError);
+                    return 0;
+                }
+
+                // Assign the SoundFont
+                var fonts = new ManagedBass.Midi.MidiFont[]
+                {
+                    new ManagedBass.Midi.MidiFont
                     {
-                        stream.Seek((long)offset, SeekOrigin.Begin);
-                        return true;
+                        Handle = soundFont,
+                        Preset = -1,
+                        Bank = 0
                     }
                 };
 
-                soundFont = ManagedBass.Midi.BassMidi.FontInit(soundFontProcs, IntPtr.Zero, 0);
+                ManagedBass.Midi.BassMidi.StreamSetFonts(music, fonts, fonts.Length);
+
+                return music;
             }
-
-            // Loop flag for MIDI event streams
-    
-
-            // Create the MIDI stream from events
-            int music = ManagedBass.Midi.BassMidi.CreateStream(
-                events,
-                pulsesPerQuarterNote, 
-                BassFlags.Loop,
-                (int)frequency
-            );
-
-            // Assign the SoundFont
-            var fonts = new ManagedBass.Midi.MidiFont[]
+            catch (Exception ex)
             {
-                new ManagedBass.Midi.MidiFont
-                {
-                    Handle = soundFont,
-                    Preset = -1,
-                    Bank = 0
-                }
-            };
-
-            ManagedBass.Midi.BassMidi.StreamSetFonts(music, fonts, fonts.Length);
-
-            return music;
+                // e.g. DllNotFoundException when libbassmidi.so is not bundled
+                // (Android). MIDI music is unavailable, but SFX and MOD music
+                // keep working.
+                Log.Warn.Write(ErrorSystemType.Audio, "MIDI music unavailable: " + ex.Message);
+                return 0;
+            }
         }
 
         public static void FreeModMusic(int music)
