@@ -33,6 +33,7 @@ using Silk.NET.Windowing;
 using Silk.NET.Windowing.Sdl;
 using Silk.NET.Windowing.Sdl.Android;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -84,6 +85,9 @@ namespace Freeserf.Android
         static volatile float pinchStartDistance = 0.0f;
         static volatile float pinchStartZoom = 0.0f;
         static volatile float pinchCurrentDistance = 0.0f;
+        static volatile bool touchInputEnabled = false;
+        static volatile float currentZoom = 0.0f;
+        static readonly ConcurrentQueue<Action<GameView>> pendingTouchEvents = new();
 
         // single-finger pan state (UI thread). A tap (no significant movement)
         // becomes a left click; a drag pans the map like a right-button drag.
@@ -323,8 +327,16 @@ namespace Freeserf.Android
         }
         static void Window_Update(double delta)
         {
-            if (gameView != null)
+            var currentGameView = gameView;
+
+            if (currentGameView != null)
             {
+                touchInputEnabled = currentGameView.CanZoom;
+                currentZoom = currentGameView.Zoom;
+
+                while (pendingTouchEvents.TryDequeue(out var touchEvent))
+                    touchEvent(currentGameView);
+
                 if (pinchActive)
                 {
                     // Factor-space math (zoomFactor = 1 + zoom * 0.5) so that
@@ -332,10 +344,10 @@ namespace Freeserf.Android
                     float startFactor = 1.0f + pinchStartZoom * 0.5f;
                     float ratio = pinchCurrentDistance / pinchStartDistance;
                     float newZoom = (startFactor * ratio - 1.0f) * 2.0f;
-                    gameView.Zoom = Math.Clamp(newZoom, 0.0f, 4.0f);
+                    currentGameView.Zoom = Math.Clamp(newZoom, 0.0f, 4.0f);
                 }
 
-                gameView.UpdateNetworkEvents();
+                currentGameView.UpdateNetworkEvents();
             }
         }
 
@@ -607,16 +619,14 @@ namespace Freeserf.Android
             }
         }
 
-        // Touch input. Runs on the UI thread; only records gesture state in
-        // static fields (pinch zoom is applied on the SDL thread in
-        // Window_Update). Multi-touch is consumed here so SDL never sees it
-        // (SDL only maps single-finger touch to the left mouse button).
+        // Touch input runs on the UI thread. It queues GameView work for
+        // Window_Update, because GUI event handlers must run on the SDL thread.
         public override bool DispatchTouchEvent(MotionEvent e)
         {
             if (gameView == null)
                 return base.DispatchTouchEvent(e);
 
-            if (e.PointerCount >= 2 && gameView.CanZoom)
+            if (e.PointerCount >= 2 && touchInputEnabled)
             {
                 try
                 {
@@ -624,7 +634,7 @@ namespace Freeserf.Android
                     {
                         case MotionEventActions.PointerDown:
                             pinchStartDistance = Math.Max(PinchDistance(e, 0, 1), 1.0f);
-                            pinchStartZoom = gameView.Zoom;
+                            pinchStartZoom = currentZoom;
                             pinchCurrentDistance = pinchStartDistance;
                             pinchActive = true;
                             // The gesture is no longer a tap; don't click when it ends.
@@ -646,7 +656,7 @@ namespace Freeserf.Android
                         case MotionEventActions.Cancel:
                             pinchActive = false;
                             if (touchPanning)
-                                gameView.NotifyStopDrag();
+                                pendingTouchEvents.Enqueue(view => view.NotifyStopDrag());
                             touchActive = false;
                             touchPanning = false;
                             break;
@@ -663,7 +673,7 @@ namespace Freeserf.Android
             // Single-finger: a tap becomes a left click, a drag pans the map
             // (like a right-button drag on desktop). Consumed so SDL's mouse
             // emulation doesn't also fire. Only active ingame (CanZoom).
-            if (e.PointerCount == 1 && (touchActive || gameView.CanZoom))
+            if (e.PointerCount == 1 && (touchActive || touchInputEnabled))
             {
                 try
                 {
@@ -675,7 +685,9 @@ namespace Freeserf.Android
                             global::Android.Util.Log.Debug("Freeserf_Input", $"Touch down: {touchStartX},{touchStartY}");
                             touchActive = true;
                             touchPanning = false;
-                            gameView.SetCursorPosition(touchStartX, touchStartY);
+                            int touchDownX = touchStartX;
+                            int touchDownY = touchStartY;
+                            pendingTouchEvents.Enqueue(view => view.SetCursorPosition(touchDownX, touchDownY));
                             break;
                         case MotionEventActions.Move:
                             int x = (int)e.GetX();
@@ -690,28 +702,37 @@ namespace Freeserf.Android
 
                             if (touchPanning)
                             {
-                                gameView.NotifyDrag(x, y, touchLastX - x, touchLastY - y, Event.Button.Right);
+                                int deltaX = touchLastX - x;
+                                int deltaY = touchLastY - y;
+                                pendingTouchEvents.Enqueue(view => view.NotifyDrag(x, y, deltaX, deltaY, Event.Button.Right));
                                 touchLastX = x;
                                 touchLastY = y;
                             }
                             else
                             {
-                                gameView.SetCursorPosition(x, y);
+                                pendingTouchEvents.Enqueue(view => view.SetCursorPosition(x, y));
                             }
                             break;
                         case MotionEventActions.Up:
-                            var touchPosition = gameView.ScreenToView(new Freeserf.Position((int)e.GetX(), (int)e.GetY()));
-                            global::Android.Util.Log.Debug("Freeserf_Input", $"Touch up: {e.GetX()},{e.GetY()} -> {touchPosition.X},{touchPosition.Y} panning={touchPanning}");
-                            if (touchPanning)
-                                gameView.NotifyStopDrag();
-                            else
-                                gameView.NotifyClick((int)e.GetX(), (int)e.GetY(), Event.Button.Left, false);
+                            int touchUpX = (int)e.GetX();
+                            int touchUpY = (int)e.GetY();
+                            bool wasPanning = touchPanning;
+                            pendingTouchEvents.Enqueue(view =>
+                            {
+                                var touchPosition = view.ScreenToView(new Freeserf.Position(touchUpX, touchUpY));
+                                global::Android.Util.Log.Debug("Freeserf_Input", $"Touch up: {touchUpX},{touchUpY} -> {touchPosition.X},{touchPosition.Y} panning={wasPanning}");
+
+                                if (wasPanning)
+                                    view.NotifyStopDrag();
+                                else
+                                    view.NotifyClick(touchUpX, touchUpY, Event.Button.Left, false);
+                            });
                             touchActive = false;
                             touchPanning = false;
                             break;
                         case MotionEventActions.Cancel:
                             if (touchPanning)
-                                gameView.NotifyStopDrag();
+                                pendingTouchEvents.Enqueue(view => view.NotifyStopDrag());
                             touchActive = false;
                             touchPanning = false;
                             break;
