@@ -73,6 +73,14 @@ namespace Freeserf.Android
         static int lastDragY = int.MinValue;
         static bool scrolled = false;
 
+        // pinch-to-zoom state. Written on the UI thread in DispatchTouchEvent,
+        // read on the SDL thread in Window_Update (GL state must only be
+        // touched on the SDL thread).
+        static volatile bool pinchActive = false;
+        static volatile float pinchStartDistance = 0.0f;
+        static volatile float pinchStartZoom = 0.0f;
+        static volatile float pinchCurrentDistance = 0.0f;
+
         public MainActivity()
         {
             Console.SetOut(new AndroidConsole("Freeserf_Info"));
@@ -286,7 +294,19 @@ namespace Freeserf.Android
         static void Window_Update(double delta)
         {
             if (gameView != null)
+            {
+                if (pinchActive)
+                {
+                    // Factor-space math (zoomFactor = 1 + zoom * 0.5) so that
+                    // zooming works correctly starting from zoom = 0.
+                    float startFactor = 1.0f + pinchStartZoom * 0.5f;
+                    float ratio = pinchCurrentDistance / pinchStartDistance;
+                    float newZoom = (startFactor * ratio - 1.0f) * 2.0f;
+                    gameView.Zoom = Math.Clamp(newZoom, 0.0f, 4.0f);
+                }
+
                 gameView.UpdateNetworkEvents();
+            }
         }
 
         static void Window_Resize(Vector2D<int> size)
@@ -541,10 +561,57 @@ namespace Freeserf.Android
             }
         }
 
+        // Two-finger pinch-to-zoom. Runs on the UI thread; only records pinch
+        // state in volatile fields. The actual zoom is applied on the SDL
+        // thread in Window_Update. Multi-touch is consumed here so SDL never
+        // sees it (SDL only maps single-finger touch to the left mouse button).
+        public override bool DispatchTouchEvent(MotionEvent e)
+        {
+            if (e.PointerCount >= 2 && gameView != null && gameView.CanZoom)
+            {
+                try
+                {
+                    switch (e.ActionMasked)
+                    {
+                        case MotionEventActions.PointerDown:
+                            pinchStartDistance = Math.Max(PinchDistance(e, 0, 1), 1.0f);
+                            pinchStartZoom = gameView.Zoom;
+                            pinchCurrentDistance = pinchStartDistance;
+                            pinchActive = true;
+                            break;
+                        case MotionEventActions.Move:
+                            pinchCurrentDistance = Math.Max(PinchDistance(e, 0, 1), 1.0f);
+                            break;
+                        case MotionEventActions.PointerUp:
+                        case MotionEventActions.Up:
+                        case MotionEventActions.Cancel:
+                            pinchActive = false;
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error.Write(ErrorSystemType.Application, "Pinch: " + ex.Message);
+                }
+
+                return true;
+            }
+
+            return base.DispatchTouchEvent(e);
+        }
+
+        static float PinchDistance(MotionEvent e, int index0, int index1)
+        {
+            float dx = e.GetX(index0) - e.GetX(index1);
+            float dy = e.GetY(index0) - e.GetY(index1);
+            return (float)Math.Sqrt(dx * dx + dy * dy);
+        }
+
         protected override void OnPause()
         {
             base.OnPause();
             activityState = ActivityState.Paused;
+            pinchActive = false;
 
             if (gameView != null)
             {
@@ -557,6 +624,7 @@ namespace Freeserf.Android
         {
             base.OnStop();
             activityState = ActivityState.Stopped;
+            pinchActive = false;
         }
 
         protected override void OnStart()

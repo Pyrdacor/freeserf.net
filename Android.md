@@ -370,3 +370,60 @@ tiles, and they sit inside the GameInitBox area (see geometry below).
       (GPU textures are invalid after EGL context loss).
 - [ ] Consider switching the build to `dotnet publish` + Ambermoon's
       `AndroidLinkMode=None` settings for reproducible builds.
+
+## Pinch-to-zoom (implemented)
+
+Two-finger pinch zooms the map in/out while ingame, matching the Windows mouse-wheel
+zoom (`gameView.Zoom`, range 0..4, `zoomFactor = 1 + zoom * 0.5` applied around the
+screen center in `Freeserf.Renderer/Context.cs`).
+
+### Why a custom implementation
+
+Silk.NET 2.23.0 has **no touch abstraction** (no `ITouch`). SDL maps single-finger
+touch to the left mouse button via `SDLSurface.onTouch` → `onNativeTouch`; two-finger
+touch produces no mouse events at all. So pinch must be captured from the raw Android
+`MotionEvent` stream.
+
+### Threading model (critical)
+
+- `DispatchTouchEvent` runs on the **UI thread** and must NOT touch GL state
+  (`gameView.Zoom` setter → `Context.ApplyMatrix` → GL matrix stack).
+- Instead it records pinch state in **`volatile` static fields**:
+  `pinchActive`, `pinchStartDistance`, `pinchStartZoom`, `pinchCurrentDistance`.
+- `Window_Update` runs on the **SDL thread** every frame and applies the zoom there.
+
+### How it works (`MainActivity.cs`)
+
+- `DispatchTouchEvent(MotionEvent e)`:
+  - If `e.PointerCount >= 2 && gameView != null && gameView.CanZoom` → handle the
+    pinch and **return `true`** (consume, so SDL never sees multi-touch).
+  - Otherwise → `base.DispatchTouchEvent(e)` (single-finger SDL mouse emulation
+    unchanged).
+  - `ActionMasked` handling:
+    - `PointerDown` (2nd finger down) → start pinch: record
+      `pinchStartDistance` = distance between `(GetX(0),GetY(0))` and
+      `(GetX(1),GetY(1))`, `pinchStartZoom = gameView.Zoom`, `pinchActive = true`.
+    - `Move` → update `pinchCurrentDistance`.
+    - `PointerUp` / `Up` / `Cancel` → `pinchActive = false`.
+  - Zero distance is guarded with `Math.Max(distance, 1.0f)`.
+- `Window_Update` (SDL thread), when `pinchActive`:
+  ```csharp
+  float startFactor = 1.0f + pinchStartZoom * 0.5f;
+  float ratio = pinchCurrentDistance / pinchStartDistance;
+  float newZoom = (startFactor * ratio - 1.0f) * 2.0f;
+  gameView.Zoom = Math.Clamp(newZoom, 0.0f, 4.0f);
+  ```
+  Factor-space math (`zoomFactor = 1 + zoom * 0.5`) so zooming works correctly
+  starting from `zoom = 0`.
+- `CanZoom` (`Freeserf.Core/UI/Interface.cs:172`) = ingame && viewport enabled &&
+  no notification/popup box — pinch only zooms when that is true.
+- `pinchActive` is reset in `OnPause`/`OnStop` so a stale pinch can't cause a zoom
+  jump after resume.
+- The Bluetooth-mouse `Mouse_Scroll` zoom handler is unchanged.
+
+### Known minor edge case (accepted)
+
+After a pinch ends with one finger still down, SDL may still think the left mouse
+button is held (it never saw the second finger's down/up). The remaining finger's
+moves are passed to SDL and can briefly act as a drag until the last finger lifts.
+
