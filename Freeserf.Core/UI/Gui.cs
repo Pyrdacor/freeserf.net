@@ -529,10 +529,11 @@ namespace Freeserf.UI
 
         Position PositionToGui(Position position)
         {
-            float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)renderView.VirtualScreen.Size.Height;
+            float scale = Math.Min((float)renderView.VirtualScreen.Size.Width / 640.0f, (float)renderView.VirtualScreen.Size.Height / 480.0f);
+            int offsetX = Misc.Round((renderView.VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
+            int offsetY = Misc.Round((renderView.VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
 
-            return new Position((int)Math.Floor(position.X * factorX), (int)Math.Floor(position.Y * factorY));
+            return new Position((int)Math.Floor((position.X - offsetX) / scale), (int)Math.Floor((position.Y - offsetY) / scale));
         }
 
         public static Position PositionToGame(Position position, Render.IRenderView renderView)
@@ -549,10 +550,9 @@ namespace Freeserf.UI
 
         Size DeltaToGui(Size delta)
         {
-            float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)renderView.VirtualScreen.Size.Height;
+            float scale = Math.Min((float)renderView.VirtualScreen.Size.Width / 640.0f, (float)renderView.VirtualScreen.Size.Height / 480.0f);
 
-            return new Size(Misc.Round(delta.Width * factorX), Misc.Round(delta.Height * factorY));
+            return new Size(Misc.Round(delta.Width / scale), Misc.Round(delta.Height / scale));
         }
 
         public static Size DeltaToGame(Size delta, Render.IRenderView renderView)

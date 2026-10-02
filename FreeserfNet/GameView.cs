@@ -150,47 +150,46 @@ namespace Freeserf
 
                     if (layer == Layer.Gui || layer == Layer.GuiBuildings || layer == Layer.Minimap)
                     {
-                        // the gui needs scaling
+                        // the gui needs uniform scaling + centering
+                        float scale = Math.Min((float)VirtualScreen.Size.Width / 640.0f, (float)VirtualScreen.Size.Height / 480.0f);
+                        int offsetX = Misc.Round((VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
+                        int offsetY = Misc.Round((VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
+
                         renderLayer.PositionTransformation = (Position position) =>
                         {
-                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
-
-                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                            return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
                         {
-                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
-
                             // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY);
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * scale);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * scale);
 
                             return new Size(width, height);
                         };
                     }
                     else if (layer == Layer.GuiFont) // UI Font needs different scaling
                     {
+                        // The UI expects 8x8 characters but we may use different sizes.
+                        // So we adjust the scale factors accordingly.
+                        float scale = Math.Min((float)VirtualScreen.Size.Width / 640.0f, (float)VirtualScreen.Size.Height / 480.0f);
+                        int offsetX = Misc.Round((VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
+                        int offsetY = Misc.Round((VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
+
+                        float charScaleX = (8.0f / Global.UIFontCharacterWidth) * scale;
+                        float charScaleY = (8.0f / Global.UIFontCharacterHeight) * scale;
+
                         renderLayer.PositionTransformation = (Position position) =>
                         {
-                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
-
-                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                            return new Position(Misc.Round(position.X * charScaleX + offsetX), Misc.Round(position.Y * charScaleY + offsetY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
                         {
-                            // The UI expects 8x8 characters but we may use different sizes.
-                            // So we adjust the scale factors accordingly.
-                            float factorX = (8.0f / Global.UIFontCharacterWidth) * (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (8.0f / Global.UIFontCharacterHeight) * (float)VirtualScreen.Size.Height / 480.0f;
-
                             // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY);
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * charScaleX);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * charScaleY);
 
                             return new Size(width, height);
                         };

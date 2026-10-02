@@ -204,7 +204,15 @@ namespace Freeserf.Android
                     global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
                 }
 
-                gameView = new GameView(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
+                // Compute widescreen virtual screen size from actual view, preserving aspect ratio,
+                // capped at MAX_VIRTUAL_SCREEN_WIDTH (1920 for Pixel 8a -> 1920x864).
+                int screenW = view.Size.X, screenH = view.Size.Y;
+                if (screenH > screenW) { int t = screenW; screenW = screenH; screenH = t; } // ensure landscape
+                int virtualWidth = Math.Min(screenW, Global.MAX_VIRTUAL_SCREEN_WIDTH);
+                int virtualHeight = Math.Max(1, (int)Math.Round(virtualWidth * (double)screenH / screenW));
+                global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: virtual screen = {virtualWidth}x{virtualHeight}");
+
+                gameView = new GameView(dataSource, new Size(virtualWidth, virtualHeight),
                     DeviceType.MobileLandscape, SizingPolicy.FitRatio, OrientationPolicy.Support180DegreeRotation);
                 gameView.Resize(view.Size.X, view.Size.Y);
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: GameView created");
