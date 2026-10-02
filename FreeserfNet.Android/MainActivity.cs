@@ -57,6 +57,10 @@ namespace Freeserf.Android
         static bool initialized = false;
         static bool renderTraced = false;
 
+        // The activity instance, so static handlers (e.g. GameView.Closed)
+        // can close the app via Finish().
+        static MainActivity instance;
+
         // Tracks the Android activity lifecycle so the render loop can stop
         // swapping buffers while the EGL surface is being destroyed/recreated.
         enum ActivityState
@@ -92,6 +96,7 @@ namespace Freeserf.Android
 
         public MainActivity()
         {
+            instance = this;
             Console.SetOut(new AndroidConsole("Freeserf_Info"));
             Console.SetError(new AndroidConsole("Freeserf_Error"));
             Log.SetStream(new ConsoleStream(Console.Error));
@@ -224,6 +229,7 @@ namespace Freeserf.Android
                 gameView = new GameView(dataSource, new Size(virtualWidth, virtualHeight),
                     DeviceType.MobileLandscape, SizingPolicy.FitRatio, OrientationPolicy.Support180DegreeRotation);
                 gameView.Resize(view.Size.X, view.Size.Y);
+                gameView.Closed += GameView_Closed;
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: GameView created");
 
                 input = view.CreateInput();
@@ -330,6 +336,21 @@ namespace Freeserf.Android
         {
             if (gameView != null)
                 gameView.Resize(size.X, size.Y);
+        }
+
+        // The game view was closed (e.g. the Exit button in the main menu).
+        // Stop the render loop and finish the activity so the app actually
+        // closes. view.Close() alone is not enough on Android: it only stops
+        // the loop, so Finish() is required to close the activity. The Closed
+        // event fires on the SDL thread, hence RunOnUiThread.
+        static void GameView_Closed(object sender, EventArgs e)
+        {
+            if (gameView != null)
+            {
+                gameView = null;
+                view?.Close();
+                instance?.RunOnUiThread(() => instance.Finish());
+            }
         }
 
         static void Window_Closing()

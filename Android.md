@@ -506,3 +506,28 @@ the raw Android `MotionEvent` stream.
 - Taps activate on finger release (not press) while ingame; on the main menu and
   with popups open, taps still activate on press via SDL mouse emulation.
 
+## Exit button closes the app (implemented)
+
+The main menu's **Exit** button now closes the app. On desktop this already
+worked: `GameInitBox` `Action.Close` → `interf.RenderView.Close()` →
+`GameView.Close()` fires the `Closed` event, which `MainWindow` handles by
+closing the window. On Android `MainActivity` never subscribed to
+`GameView.Closed`, so the view was disposed but the app stayed open.
+
+Fix in `FreeserfNet.Android/MainActivity.cs`:
+
+- `MainActivity` keeps a static `instance` reference (set in the constructor).
+- `Window_Load` subscribes `gameView.Closed += GameView_Closed`.
+- `GameView_Closed` nulls `gameView`, calls `view.Close()` (stops the render
+  loop; `Window_Closing` still saves the user config) and then
+  `instance?.RunOnUiThread(() => instance.Finish())`.
+
+Why `Finish()` is required: Silk.NET's `SdlView.Close()` only sets `IsClosing`
+and raises `Closing` — it does not finish the Android activity. `Finish()` is
+marshalled to the UI thread with `RunOnUiThread` because `Closed` fires on the
+SDL thread. The `if (gameView != null)` guard prevents re-entrancy when
+`Window_Closing` itself calls `gameView.Close()`.
+
+The in-game menu's "Quit" (SettlerMenu → QuitConfirm) intentionally returns to
+the main menu on all platforms and is unchanged.
+
