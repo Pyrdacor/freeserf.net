@@ -692,3 +692,100 @@ the main menu on all platforms and is unchanged.
   reproduced as a runtime failure; it remains a deployment risk for devices
   that enforce 16-KB pages. Update or rebuild the upstream SDL dependency
   before treating Android 16 / 16-KB-page hardware as supported.
+
+## Android device test: 2026-10-04 (physical Pixel 8a)
+
+### Test environment
+
+- Device: **Pixel 8a** (`3C211JEKB03986`, arm64, Android 17, 2400x1080
+  landscape), connected via USB, reachable via `adb`.
+- Build: the APK installed on the device (installed 2026-10-02 22:38) contains
+  the touch-queueing fix (`3fad9cb`) and the touchscreen special click
+  (`18afac8`).
+- Device locale is **German (de-DE)** — this matters for the crash signature
+  below.
+
+### In-game menu crash still reproduces (UNFIXED)
+
+The in-game menu crash reported by the user **still happens on the physical
+device** even with the touch-queueing fix from `3fad9cb` applied. The crash
+occurs when the **SettlerMenu** is opened by tapping the **Sett button** in the
+in-game PanelBar.
+
+#### Reproduction
+
+- Start a game, then tap the Sett button (the settler/people icon) in the
+  bottom PanelBar. The app closes immediately.
+- On the 2400x1080 device the Sett button is at physical screen
+  `(1433, 1034)` (tap center). Coordinate chain:
+  physical `(1433, 1034)` → virtual `(1146, 827)` (scale 0.8) → GUI
+  `(423, 459)` (scale 1.8, offsetX 384). The Sett button's GUI rect is
+  `(400, 444)-(432, 476)` (PanelBar at `(144, 440)-(496, 480)`, button 4 at
+  `(256, 4)` + 32x32), so the tap hits it.
+
+#### Logcat evidence (crash at 14:24:31)
+
+```
+Freeserf_Input: Touch down: 1433,1034
+Freeserf_Input: Touch up: 1433,1034 -> 1146,827 panning=False   <- tap, becomes left click
+monodroid-assembly: Assembly 'de-DE/System.Private.CoreLib.resources' (hash ...) not found   (x4)
+monodroid-assembly: Assembly 'de/System.Private.CoreLib.resources' (hash ...) not found      (x4)
+SDL: Finished main function
+WindowManagerShell: Transition type = CLOSE (activity closing)
+SDL: onPause() / onStop() / onDestroy()
+SDL: SDLActivity thread ends (error=Try to release egl_surface with context probably still active)
+```
+
+- **No** `FATAL EXCEPTION`, **no** `AndroidRuntime` error, **no** tombstone in
+  `/data/tombstones/`, **no** `Freeserf_Error` / `Run:` / `Render:` log.
+- The `de-DE/System.Private.CoreLib.resources` warnings are the key signature:
+  they are emitted when the .NET runtime performs a culture-specific operation
+  for the German locale — most commonly **formatting an exception message**.
+
+#### Root cause hypothesis
+
+- An exception is thrown while the SettlerMenu is opened
+  (`Interface.OpenPopup` → `PopupBox.Show(SettlerMenu)` →
+  `SetBox` → `DrawSettlerMenuBox`).
+- Formatting that exception's message triggers the German satellite-resource
+  assembly load (`de-DE/System.Private.CoreLib.resources`), which is not
+  bundled → the `monodroid-assembly` warnings.
+- The exception propagates out of the run loop (`view.Run` → `OnRun`) and the
+  app closes **without logging the exception** (no `Run:`/`Render:`/
+  `Freeserf_Error`). The exact exception type is still unknown.
+- The earlier touch-queueing fix (`3fad9cb`) addressed the UI-thread race, but
+  this crash is a different failure: it happens on the SDL thread while the
+  menu is being opened, not on the UI thread.
+
+#### Next steps to pinpoint the exception
+
+1. Add diagnostics: wrap the `pendingTouchEvents` drain in `Window_Update`
+   with a try/catch that logs the full exception (`Log.Error.Write(..., ex)`
+   and `Android.Util.Log.Debug("Freeserf_Trace", ...)`), and add a
+   `try/catch` around `PopupBox.Show`/`SetBox` in `Interface.OpenPopup`.
+2. Rebuild (clean bin/obj to avoid the Fast-Deployment crash), install, and
+   reproduce the Sett-button tap; the full exception + stack trace will then
+   appear in logcat.
+3. Likely candidates to inspect first: `DrawSettlerMenuBox` sprite lookups
+   (`GetSpriteInfo` returning null → `NullReferenceException` on
+   `info.Width`), the `CheckerdDiagonalBrown` popup background creation, and
+   the BASS `PlaySound(Click)` path.
+
+### Main-menu buttons ignore Android touch input (BLOCKER, confirmed on device)
+
+- **Symptom:** The **Start**, **Options**, and **Exit** buttons on the main
+  menu do not react to touch. The app stays on the new-game screen.
+- **Evidence (physical device):** `adb shell input tap 885 387` (Start button,
+  GUI `(180, 172)`) emits `Freeserf_Input: Mouse down: 885,387 button=Left`
+  but produces no UI transition and no `Freeserf_Error`.
+- **Analysis:** The click chain looks correct in code:
+  `Mouse_MouseDown` → `GameView.NotifyClick` → `ScreenToView` (physical →
+  virtual) → `Gui.RenderView_Click` → `PositionToGui` (virtual → GUI) →
+  `viewer.SendEvent` → `Interface.HandleEvent` → `GameInitBox` hit-test. The
+  tap coordinates map exactly onto the Start button rect, yet the click is not
+  consumed. The break is somewhere in this chain and needs diagnostics
+  (log the transformed coordinates at each step) to locate.
+- **Impact:** Blocks starting a game from the touchscreen, which also blocks
+  end-to-end validation of the in-game menu fix. The crash above was
+  reproduced because the game was already running (started before this test
+  session).
