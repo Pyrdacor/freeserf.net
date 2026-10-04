@@ -11,9 +11,11 @@ on this codebase so they don't have to rediscover these issues.
 - It uses **Silk.NET 2.23.0** (`Silk.NET.Windowing.Sdl`, `Silk.NET.Input.Sdl`,
   `Silk.NET.OpenGL`). The activity extends `SilkActivity` from
   `Silk.NET.Windowing.Sdl.Android`, which itself extends SDL's `SDLActivity`.
-- The game data file `SPAE.PA` is **copyrighted and kept outside the repo**.
-  Set the `FreeserfGameDataPath` MSBuild property to its location to bundle it;
-  the project retains `C:\git\freeserf.net\SPAE.PA` as a fallback. It is
+- The game data file `SPAE.PA` is **copyrighted and kept outside the repo** and
+  is **NOT bundled by default**. On first start the user picks their own data
+  file via the system file picker (`MainActivity.ShowDataImportDialog`), which
+  copies it to app storage. To bundle a data file anyway (e.g. for a private
+  test build), pass `-p:FreeserfGameDataPath="path\to\SPAE.PA"`; it is then
   extracted to app storage on first run (`ExtractBundledData()` in
   `MainActivity.cs`).
 - The desktop host project is `FreeserfNet/`; `GameView.cs` is compiled directly into
@@ -29,11 +31,14 @@ dotnet build FreeserfNet.Android\FreeserfNet.Android.csproj -c Release `
   -m:1 -nodeReuse:false -p:PublishTrimmed=false -p:RunAOTCompilation=false
 ```
 
-To include an external `SPAE.PA`, add
-`-p:FreeserfGameDataPath="D:\path\to\SPAE.PA"` to the build command.
+To include an external `SPAE.PA` (bundled into the APK), add
+`-p:FreeserfGameDataPath="D:\path\to\SPAE.PA"` to the build command. Without
+it, the APK ships without game data and the user imports it via the file
+picker on first start.
 
 Output APK: `FreeserfNet.Android\bin\Release\net10.0-android\net.freeserf.android-Signed.apk`
-(~101 MB with trimming/AOT disabled; ~30 MB when trimmed).
+(~101 MB with trimming/AOT disabled and data bundled; ~30 MB when trimmed;
+~4 MB without bundled data).
 
 ### Why trimming and AOT are disabled (MSB4018)
 

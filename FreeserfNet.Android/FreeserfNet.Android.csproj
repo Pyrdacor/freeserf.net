@@ -14,7 +14,6 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
-    <FreeserfGameDataPath Condition="'$(FreeserfGameDataPath)' == '' and Exists('C:\git\freeserf.net\SPAE.PA')">C:\git\freeserf.net\SPAE.PA</FreeserfGameDataPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +39,12 @@
        are auto-included in the APK for each ABI. Keep bass and bassmidi
        together for every ABI to support sound effects and MIDI music. -->
 
-  <ItemGroup Condition="Exists('$(FreeserfGameDataPath)')">
+  <!-- Game data (copyrighted, kept outside the repo) is NOT bundled by
+       default. On first start the user picks their own data file via the
+       system file picker (see MainActivity.ShowDataImportDialog). To bundle
+       a data file anyway, pass -p:FreeserfGameDataPath="path\to\SPAE.PA". -->
+
+  <ItemGroup Condition="'$(FreeserfGameDataPath)' != '' and Exists('$(FreeserfGameDataPath)')">
     <!-- Bundled game data (copyrighted, kept outside the repo).
          Extracted to app storage on first run. -->
     <AndroidAsset Include="$(FreeserfGameDataPath)" Link="SPAE.PA" />
