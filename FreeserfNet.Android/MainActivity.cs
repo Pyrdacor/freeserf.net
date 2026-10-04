@@ -20,10 +20,13 @@
  */
 
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Provider;
 using Android.Runtime;
 using Android.Views;
+using Android.Widget;
 using Freeserf;
 using Freeserf.Renderer;
 using Silk.NET.Input;
@@ -57,6 +60,12 @@ namespace Freeserf.Android
         static Global.InitInfo initInfo;
         static bool initialized = false;
         static bool renderTraced = false;
+
+        // Game data import (first start without bundled data). The copyrighted
+        // SPAE.PA file is not shipped with the APK, so on first start the user
+        // is asked to pick their own data file via the system file picker.
+        const int RequestImportData = 1001;
+        static bool dataImported = false;
 
         // The activity instance, so static handlers (e.g. GameView.Closed)
         // can close the app via Finish().
@@ -155,15 +164,24 @@ namespace Freeserf.Android
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: initialized, calling Run");
                 view.Run(() =>
                 {
-                    // Pump SDL events. On Android this drives the EGL surface
-                    // lifecycle (pause/resume coordination with the Java side);
-                    // without it the surface is destroyed while we keep
-                    // swapping, causing EGL_BAD_SURFACE.
-                    view.DoEvents();
-                    if (!view.IsClosing)
-                        view.DoUpdate();
-                    if (!view.IsClosing)
-                        view.DoRender();
+                    try
+                    {
+                        // Pump SDL events. On Android this drives the EGL surface
+                        // lifecycle (pause/resume coordination with the Java side);
+                        // without it the surface is destroyed while we keep
+                        // swapping, causing EGL_BAD_SURFACE.
+                        view.DoEvents();
+                        if (!view.IsClosing)
+                            view.DoUpdate();
+                        if (!view.IsClosing)
+                            view.DoRender();
+                    }
+                    catch (Exception ex)
+                    {
+                        global::Android.Util.Log.Debug("Freeserf_Trace", "Run loop EXCEPTION: " + ex);
+                        Log.Error.Write(ErrorSystemType.Application, "Run loop: " + ex);
+                        throw;
+                    }
                 });
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: Run returned");
                 view.Reset();
@@ -213,73 +231,200 @@ namespace Freeserf.Android
                 ExtractBundledData();
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: ExtractBundledData done");
 
-                var data = Data.Data.GetInstance();
-                if (!data.Load(FileSystem.Paths.GameDataFolder, UserConfig.Game.GraphicDataUsage,
-                    UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
+                if (!TryLoadGameData())
                 {
-                    Log.Error.Write(ErrorSystemType.Data, "Error loading game data.");
-                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load FAILED");
+                    // No game data available (not bundled, not imported yet).
+                    // Ask the user to pick their own data file. The copyrighted
+                    // data file is never shipped with the APK.
+                    instance?.RunOnUiThread(() => instance.ShowDataImportDialog());
                     return;
                 }
-                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load done");
-                dataSource = data.GetDataSource();
 
-                if (initInfo.ScreenWidth == -1)
-                    initInfo.ScreenWidth = UserConfig.Video.ResolutionWidth;
-                if (initInfo.ScreenHeight == -1)
-                    initInfo.ScreenHeight = UserConfig.Video.ResolutionHeight;
-
-                State.Init(view);
-                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: State.Init done");
-                try
-                {
-                    global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: glError after State.Init = {Freeserf.Renderer.State.Gl.GetError()}");
-                }
-                catch (Exception ex)
-                {
-                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
-                }
-
-                // Compute widescreen virtual screen size from actual view, preserving aspect ratio,
-                // capped at MAX_VIRTUAL_SCREEN_WIDTH (1920 for Pixel 8a -> 1920x864).
-                int screenW = view.Size.X, screenH = view.Size.Y;
-                if (screenH > screenW) { int t = screenW; screenW = screenH; screenH = t; } // ensure landscape
-                int virtualWidth = Math.Min(screenW, Global.MAX_VIRTUAL_SCREEN_WIDTH);
-                int virtualHeight = Math.Max(1, (int)Math.Round(virtualWidth * (double)screenH / screenW));
-                global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: virtual screen = {virtualWidth}x{virtualHeight}");
-
-                gameView = new GameView(dataSource, new Size(virtualWidth, virtualHeight),
-                    DeviceType.MobileLandscape, SizingPolicy.FitRatio, OrientationPolicy.Support180DegreeRotation);
-                gameView.Resize(view.Size.X, view.Size.Y);
-                gameView.Closed += GameView_Closed;
-                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: GameView created");
-
-                input = view.CreateInput();
-                input.Mice[0].MouseDown += Mouse_MouseDown;
-                input.Mice[0].MouseUp += Mouse_MouseUp;
-                input.Mice[0].MouseMove += Mouse_MouseMove;
-                input.Mice[0].Scroll += Mouse_Scroll;
-                input.Keyboards[0].KeyDown += Keyboard_KeyDown;
-                input.Keyboards[0].KeyChar += Keyboard_KeyChar;
-
-                initialized = true;
-                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: done, initialized=true");
-
-                try
-                {
-                    var glErr = Freeserf.Renderer.State.Gl.GetError();
-                    global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: glError after init = {glErr}");
-                }
-                catch (Exception ex)
-                {
-                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
-                }
+                InitializeAfterDataLoad();
             }
             catch (Exception ex)
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: EXCEPTION: " + ex);
                 Log.Error.Write(ErrorSystemType.Application, "Load: " + ex.Message);
             }
+        }
+
+        static bool TryLoadGameData()
+        {
+            try
+            {
+                var data = Data.Data.GetInstance();
+                if (!data.Load(FileSystem.Paths.GameDataFolder, UserConfig.Game.GraphicDataUsage,
+                    UserConfig.Game.SoundDataUsage, UserConfig.Game.MusicDataUsage))
+                {
+                    Log.Error.Write(ErrorSystemType.Data, "Error loading game data.");
+                    global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load FAILED");
+                    return false;
+                }
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load done");
+                dataSource = data.GetDataSource();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // e.g. UnauthorizedAccessException while scanning fallback paths
+                // when no data file is present. Treat as "no data available" so
+                // the user is asked to import their own data file.
+                Log.Error.Write(ErrorSystemType.Data, "Error loading game data: " + ex.Message);
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: data.Load EXCEPTION: " + ex.Message);
+                return false;
+            }
+        }
+
+        // Runs on the SDL thread (called from Window_Load or Window_Update after
+        // the user imported game data). Requires the GL context to be current.
+        static void InitializeAfterDataLoad()
+        {
+            if (initialized)
+                return;
+
+            // Re-validate the game data (e.g. after the user imported a file).
+            // If the imported file is not valid game data, ask again.
+            if (!TryLoadGameData())
+            {
+                instance?.RunOnUiThread(() => instance.ShowDataImportDialog());
+                return;
+            }
+
+            view.MakeCurrent();
+
+            if (initInfo.ScreenWidth == -1)
+                initInfo.ScreenWidth = UserConfig.Video.ResolutionWidth;
+            if (initInfo.ScreenHeight == -1)
+                initInfo.ScreenHeight = UserConfig.Video.ResolutionHeight;
+
+            State.Init(view);
+            global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: State.Init done");
+            try
+            {
+                global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: glError after State.Init = {Freeserf.Renderer.State.Gl.GetError()}");
+            }
+            catch (Exception ex)
+            {
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
+            }
+
+            // Compute widescreen virtual screen size from actual view, preserving aspect ratio,
+            // capped at MAX_VIRTUAL_SCREEN_WIDTH (1920 for Pixel 8a -> 1920x864).
+            int screenW = view.Size.X, screenH = view.Size.Y;
+            if (screenH > screenW) { int t = screenW; screenW = screenH; screenH = t; } // ensure landscape
+            int virtualWidth = Math.Min(screenW, Global.MAX_VIRTUAL_SCREEN_WIDTH);
+            int virtualHeight = Math.Max(1, (int)Math.Round(virtualWidth * (double)screenH / screenW));
+            global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: virtual screen = {virtualWidth}x{virtualHeight}");
+
+            gameView = new GameView(dataSource, new Size(virtualWidth, virtualHeight),
+                DeviceType.MobileLandscape, SizingPolicy.FitRatio, OrientationPolicy.Support180DegreeRotation);
+            gameView.Resize(view.Size.X, view.Size.Y);
+            gameView.Closed += GameView_Closed;
+            global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: GameView created");
+
+            input = view.CreateInput();
+            input.Mice[0].MouseDown += Mouse_MouseDown;
+            input.Mice[0].MouseUp += Mouse_MouseUp;
+            input.Mice[0].MouseMove += Mouse_MouseMove;
+            input.Mice[0].Scroll += Mouse_Scroll;
+            input.Keyboards[0].KeyDown += Keyboard_KeyDown;
+            input.Keyboards[0].KeyChar += Keyboard_KeyChar;
+
+            initialized = true;
+            global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: done, initialized=true");
+
+            try
+            {
+                var glErr = Freeserf.Renderer.State.Gl.GetError();
+                global::Android.Util.Log.Debug("Freeserf_Trace", $"Window_Load: glError after init = {glErr}");
+            }
+            catch (Exception ex)
+            {
+                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: glError query failed: " + ex.Message);
+            }
+        }
+
+        // Shows the system file picker so the user can import their own game
+        // data file (e.g. SPAE.PA). Runs on the UI thread.
+        void ShowDataImportDialog()
+        {
+            Toast.MakeText(this, "Bitte wählen Sie die Spieldatei (z.B. SPAE.PA) aus.", ToastLength.Long).Show();
+
+            var intent = new Intent(Intent.ActionOpenDocument);
+            intent.AddCategory(Intent.CategoryOpenable);
+            intent.SetType("*/*");
+            StartActivityForResult(intent, RequestImportData);
+        }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
+        {
+            base.OnActivityResult(requestCode, resultCode, data);
+
+            if (requestCode != RequestImportData)
+                return;
+
+            if (resultCode == Result.Ok && data?.Data != null)
+            {
+                try
+                {
+                    CopyImportedData(data.Data);
+                    dataImported = true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error.Write(ErrorSystemType.Data, "Failed to import game data: " + ex.Message);
+                    instance?.RunOnUiThread(() => instance.ShowDataImportDialog());
+                }
+            }
+            else
+            {
+                // User cancelled the picker; ask again.
+                instance?.RunOnUiThread(() => instance.ShowDataImportDialog());
+            }
+        }
+
+        void CopyImportedData(global::Android.Net.Uri uri)
+        {
+            string fileName = GetFileName(uri);
+
+            // The data loader only looks for the known file names, so fall back
+            // to SPAE.PA if the user picked a differently named file.
+            if (!IsKnownDataFileName(fileName))
+                fileName = "SPAE.PA";
+
+            string targetPath = Path.Combine(FileSystem.Paths.GameDataFolder, fileName);
+
+            using (var input = ContentResolver.OpenInputStream(uri))
+            using (var output = File.Create(targetPath))
+            {
+                input.CopyTo(output);
+            }
+
+            Log.Info.Write(ErrorSystemType.Data, $"Imported game data '{fileName}'.");
+        }
+
+        string GetFileName(global::Android.Net.Uri uri)
+        {
+            string name = "SPAE.PA";
+
+            using (var cursor = ContentResolver.Query(uri, null, null, null, null))
+            {
+                if (cursor != null && cursor.MoveToFirst())
+                {
+                    int nameIndex = cursor.GetColumnIndex(IOpenableColumns.DisplayName);
+                    if (nameIndex >= 0)
+                        name = cursor.GetString(nameIndex);
+                }
+            }
+
+            return name;
+        }
+
+        static bool IsKnownDataFileName(string name)
+        {
+            name = name.ToLowerInvariant();
+            return name == "spae.pa" || name == "spad.pa" || name == "spaf.pa" || name == "spau.pa";
         }
 
         static void Window_Render(double delta)
@@ -338,6 +483,14 @@ namespace Freeserf.Android
         }
         static void Window_Update(double delta)
         {
+            // If the user just imported game data, continue the initialization
+            // that was deferred in Window_Load (runs on the SDL thread).
+            if (dataImported && !initialized)
+            {
+                dataImported = false;
+                InitializeAfterDataLoad();
+            }
+
             var currentGameView = gameView;
 
             if (currentGameView != null)
@@ -346,7 +499,17 @@ namespace Freeserf.Android
                 currentZoom = currentGameView.Zoom;
 
                 while (pendingTouchEvents.TryDequeue(out var touchEvent))
-                    touchEvent(currentGameView);
+                {
+                    try
+                    {
+                        touchEvent(currentGameView);
+                    }
+                    catch (Exception ex)
+                    {
+                        global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Update: touch event EXCEPTION: " + ex);
+                        Log.Error.Write(ErrorSystemType.Application, "Touch event: " + ex);
+                    }
+                }
 
                 if (pinchActive)
                 {

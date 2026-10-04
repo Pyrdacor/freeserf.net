@@ -595,6 +595,8 @@ namespace Freeserf.Render
 
                 if (sprite != null)
                     AddSprite(Layer.Gui, index, sprite);
+                else
+                    AddSprite(Layer.Gui, index, new Sprite(1, 1)); // placeholder for missing sprite
 
                 ++index;
             }

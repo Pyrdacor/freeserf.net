@@ -705,12 +705,17 @@ the main menu on all platforms and is unchanged.
 - Device locale is **German (de-DE)** — this matters for the crash signature
   below.
 
-### In-game menu crash still reproduces (UNFIXED)
+### In-game menu crash (FIXED - KeyNotFoundException)
 
-The in-game menu crash reported by the user **still happens on the physical
-device** even with the touch-queueing fix from `3fad9cb` applied. The crash
-occurs when the **SettlerMenu** is opened by tapping the **Sett button** in the
-in-game PanelBar.
+The in-game menu crash reported by the user is **fixed**. The crash occurred
+when the **SettlerMenu** was opened by tapping the **Sett button** in the
+in-game PanelBar. Root cause: a **`KeyNotFoundException`** thrown by
+`TextureAtlas.GetOffset` when a sprite index was missing from the texture
+atlas (the game data does not contain every sprite the SettlerMenu box tries
+to draw). The exception propagated out of the SDL run loop and the app closed
+without logging it (the `de-DE/System.Private.CoreLib.resources` warnings in
+logcat were the only signature, emitted while formatting the exception
+message for the German locale).
 
 #### Reproduction
 
@@ -757,19 +762,32 @@ SDL: SDLActivity thread ends (error=Try to release egl_surface with context prob
   this crash is a different failure: it happens on the SDL thread while the
   menu is being opened, not on the UI thread.
 
-#### Next steps to pinpoint the exception
+#### Fix
 
-1. Add diagnostics: wrap the `pendingTouchEvents` drain in `Window_Update`
-   with a try/catch that logs the full exception (`Log.Error.Write(..., ex)`
-   and `Android.Util.Log.Debug("Freeserf_Trace", ...)`), and add a
-   `try/catch` around `PopupBox.Show`/`SetBox` in `Interface.OpenPopup`.
-2. Rebuild (clean bin/obj to avoid the Fast-Deployment crash), install, and
-   reproduce the Sett-button tap; the full exception + stack trace will then
-   appear in logcat.
-3. Likely candidates to inspect first: `DrawSettlerMenuBox` sprite lookups
-   (`GetSpriteInfo` returning null → `NullReferenceException` on
-   `info.Width`), the `CheckerdDiagonalBrown` popup background creation, and
-   the BASS `PlaySound(Click)` path.
+1. `Freeserf.Renderer/TextureAtlas.cs` - `GetOffset` now uses
+   `TryGetValue` and returns the atlas origin `(0, 0)` instead of throwing
+   `KeyNotFoundException` when a sprite index is missing. This is the safety
+   net for any sprite lookup.
+2. `Freeserf.Core/Render/TextureAtlasManager.cs` - `AddGuiElements` now adds
+   a 1x1 placeholder sprite for missing sprites instead of skipping the
+   index, keeping the sprite index space contiguous so later lookups never
+   hit a gap.
+3. `Freeserf.Core/UI/Interface.cs` - `OpenPopup` is wrapped in a try/catch
+   that logs the full exception (`Log.Error.Write`) before rethrowing, so a
+   future failure in the popup path is visible in logcat instead of silently
+   killing the app.
+4. `FreeserfNet.Android/MainActivity.cs` - the run loop and the
+   `pendingTouchEvents` drain in `Window_Update` are wrapped in try/catch
+   that log the full exception, so any future exception on the SDL thread is
+   captured in logcat before the app closes.
+
+#### Verification
+
+- Rebuilt the APK, installed on the physical device (2400x1080, German
+  locale), started a game and tapped the Sett button: the SettlerMenu opens
+  without a crash.
+- No `monodroid-assembly` `de-DE/System.Private.CoreLib.resources` warnings
+  and no app close on menu open.
 
 ### Main-menu buttons ignore Android touch input (BLOCKER, confirmed on device)
 

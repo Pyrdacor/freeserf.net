@@ -410,17 +410,25 @@ namespace Freeserf.UI
         // Open popup box 
         public void OpenPopup(PopupBox.Type box)
         {
-            if (PopupBox == null)
-                PopupBox = new PopupBox(this);
+            try
+            {
+                if (PopupBox == null)
+                    PopupBox = new PopupBox(this);
 
-            if (GameInitBox != null && GameInitBox.Displayed && !GameInitBox.HasChild(PopupBox))
-                GameInitBox.AddChild(PopupBox, 0, 0);
-            else if (!HasChild(PopupBox))
-                AddChild(PopupBox, 0, 0);
+                if (GameInitBox != null && GameInitBox.Displayed && !GameInitBox.HasChild(PopupBox))
+                    GameInitBox.AddChild(PopupBox, 0, 0);
+                else if (!HasChild(PopupBox))
+                    AddChild(PopupBox, 0, 0);
 
-            Layout();
-            PopupBox.Show(box);
-            PanelBar?.Update();
+                Layout();
+                PopupBox.Show(box);
+                PanelBar?.Update();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Application, "OpenPopup: " + ex);
+                throw;
+            }
         }
 
         // Close the current popup. 

@@ -13,6 +13,7 @@
     <DefineConstants>ANDROID</DefineConstants>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
+    <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
     <FreeserfGameDataPath Condition="'$(FreeserfGameDataPath)' == '' and Exists('C:\git\freeserf.net\SPAE.PA')">C:\git\freeserf.net\SPAE.PA</FreeserfGameDataPath>
   </PropertyGroup>
 
