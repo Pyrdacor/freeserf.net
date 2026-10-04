@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Interface.cs - Top-level GUI interface
  *
  * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
@@ -151,7 +151,8 @@ namespace Freeserf.UI
             cursorSprite.Layer = renderView.GetLayer(Freeserf.Layer.Cursor);
             cursorSprite.Visible = true;
 
-            SetSize(640, 480); // original size
+            var guiScaling = GuiScaling.For(renderView.VirtualScreen.Size);
+            SetSize(guiScaling.LogicalWidth, guiScaling.LogicalHeight); // original size (640x480) unless in touch mode
 
             Viewport = null;
 
@@ -1484,6 +1485,10 @@ namespace Freeserf.UI
                 int popupHeight = 160;
                 int popupX = (PopupBox.Parent.Width - popupWidth) / 2;
                 int popupY = (PopupBox.Parent.Height - popupHeight) / 2;
+
+                // keep the popup above the panel bar in touch mode (the logical GUI is small)
+                if (GuiScaling.TouchMode && PanelBar != null && PopupBox.Parent == this)
+                    popupY = Math.Max(0, Math.Min(popupY, Height - 40 - popupHeight));
                 PopupBox.MoveTo(popupX, popupY);
                 PopupBox.SetSize(popupWidth, popupHeight);
             }

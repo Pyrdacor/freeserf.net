@@ -1,4 +1,4 @@
-﻿/*
+/*
  * GameView.cs - Implementation of a game render view
  *
  * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -151,9 +151,10 @@ namespace Freeserf
                     if (layer == Layer.Gui || layer == Layer.GuiBuildings || layer == Layer.Minimap)
                     {
                         // the gui needs uniform scaling + centering
-                        float scale = Math.Min((float)VirtualScreen.Size.Width / 640.0f, (float)VirtualScreen.Size.Height / 480.0f);
-                        int offsetX = Misc.Round((VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
-                        int offsetY = Misc.Round((VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
+                        var guiScaling = GuiScaling.For(VirtualScreen.Size);
+                        float scale = guiScaling.Scale;
+                        int offsetX = guiScaling.OffsetX;
+                        int offsetY = guiScaling.OffsetY;
 
                         renderLayer.PositionTransformation = (Position position) =>
                         {
@@ -173,9 +174,10 @@ namespace Freeserf
                     {
                         // The UI expects 8x8 characters but we may use different sizes.
                         // So we adjust the scale factors accordingly.
-                        float scale = Math.Min((float)VirtualScreen.Size.Width / 640.0f, (float)VirtualScreen.Size.Height / 480.0f);
-                        int offsetX = Misc.Round((VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
-                        int offsetY = Misc.Round((VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
+                        var guiScaling = GuiScaling.For(VirtualScreen.Size);
+                        float scale = guiScaling.Scale;
+                        int offsetX = guiScaling.OffsetX;
+                        int offsetY = guiScaling.OffsetY;
 
                         float charScaleX = (8.0f / Global.UIFontCharacterWidth) * scale;
                         float charScaleY = (8.0f / Global.UIFontCharacterHeight) * scale;

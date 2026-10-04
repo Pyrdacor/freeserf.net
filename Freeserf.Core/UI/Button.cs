@@ -49,6 +49,8 @@ namespace Freeserf.UI
 
         }
 
+        protected override int HitSlop => 2;
+
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
             // If the button has a double click handler, a normal click must be delayed
@@ -94,6 +96,8 @@ namespace Freeserf.UI
         public event ClickEventHandler Clicked;
         public event ClickEventHandler DoubleClicked;
 
+        protected override int HitSlop => 2;
+
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
             // If the button has a double click handler, a normal click must be delayed
@@ -116,3 +120,4 @@ namespace Freeserf.UI
         }
     }
 }
+

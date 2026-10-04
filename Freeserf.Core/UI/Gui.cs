@@ -196,6 +196,9 @@ namespace Freeserf.UI
             // empty
         }
 
+        // Extra clickable border (in GUI units) used in touch mode
+        protected virtual int HitSlop => 0;
+
         protected virtual bool HandleClickLeft(int x, int y, bool delayed)
         {
             return false;
@@ -372,7 +375,9 @@ namespace Freeserf.UI
                 int objectX = e.X - TotalX;
                 int objectY = e.Y - TotalY;
 
-                if (objectX < 0 || objectY < 0 || objectX > Width || objectY > Height)
+                int slop = GuiScaling.TouchMode ? HitSlop : 0;
+
+                if (objectX < -slop || objectY < -slop || objectX > Width + slop || objectY > Height + slop)
                 {
                     return false;
                 }
@@ -527,14 +532,7 @@ namespace Freeserf.UI
             viewer.DrawCursor(x, y);
         }
 
-        Position PositionToGui(Position position)
-        {
-            float scale = Math.Min((float)renderView.VirtualScreen.Size.Width / 640.0f, (float)renderView.VirtualScreen.Size.Height / 480.0f);
-            int offsetX = Misc.Round((renderView.VirtualScreen.Size.Width - 640.0f * scale) / 2.0f);
-            int offsetY = Misc.Round((renderView.VirtualScreen.Size.Height - 480.0f * scale) / 2.0f);
-
-            return new Position((int)Math.Floor((position.X - offsetX) / scale), (int)Math.Floor((position.Y - offsetY) / scale));
-        }
+        Position PositionToGui(Position position) => GuiScaling.For(renderView.VirtualScreen.Size).ToGui(position);
 
         public static Position PositionToGame(Position position, Render.IRenderView renderView)
         {
@@ -548,12 +546,7 @@ namespace Freeserf.UI
             return new Position(x, y);
         }
 
-        Size DeltaToGui(Size delta)
-        {
-            float scale = Math.Min((float)renderView.VirtualScreen.Size.Width / 640.0f, (float)renderView.VirtualScreen.Size.Height / 480.0f);
-
-            return new Size(Misc.Round(delta.Width / scale), Misc.Round(delta.Height / scale));
-        }
+        Size DeltaToGui(Size delta) => GuiScaling.For(renderView.VirtualScreen.Size).DeltaToGui(delta);
 
         public static Size DeltaToGame(Size delta, Render.IRenderView renderView)
         {
