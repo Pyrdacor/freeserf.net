@@ -933,6 +933,8 @@ namespace Freeserf.Android
                                 else
                                     view.NotifyClick(touchUpX, touchUpY, Event.Button.Left, false);
                             });
+                            if (!wasPanning)
+                                HandleTap(touchUpX, touchUpY);
                             touchActive = false;
                             touchPanning = false;
                             break;
@@ -1008,6 +1010,13 @@ namespace Freeserf.Android
                 longPressHandler.RemoveCallbacks(longPressRunnable);
         }
 
+        static void CancelDelayedClick()
+        {
+            if (delayedClickHandler != null && delayedClickRunnable != null)
+                delayedClickHandler.RemoveCallbacks(delayedClickRunnable);
+            delayedClickPending = false;
+        }
+
         // Runs on the UI thread after the finger rested for LongPressDelayMs.
         void OnLongPress()
         {
@@ -1041,6 +1050,7 @@ namespace Freeserf.Android
             touchActive = false;
             touchPanning = false;
             CancelLongPress();
+            CancelDelayedClick();
             longPressFired = false;
 
             if (gameView != null)
@@ -1058,6 +1068,7 @@ namespace Freeserf.Android
             touchActive = false;
             touchPanning = false;
             CancelLongPress();
+            CancelDelayedClick();
             longPressFired = false;
         }
 
