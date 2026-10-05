@@ -502,12 +502,10 @@ namespace Freeserf.UI
             });
             AddChild(fileList, 10, 22, false);
 
-            // Move the text input field down to avoid overlapping with UI elements.
-            // The previous position (y=125) was too high and caused display issues.
             fileField.Padding = new Position(3, 1);
             fileField.SetSize(124, 11);
             fileField.SetFilter(FileInputFilter);
-            AddChild(fileField, 10, 160, false); // moved from y=125 to y=160
+            AddChild(fileField, 10, 125, false);
 
             flipButton = new Button(interf, 16, 16, Data.Resource.Icon, 61u, 1);
             flipButton.Clicked += FlipButton_Clicked;
