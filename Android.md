@@ -180,7 +180,9 @@ Size DeltaToGui(Size delta)
 
 ## adb / device workflow (Pixel 8a)
 
-- adb is NOT on PATH: `C:\Program Files (x86)\Android\android-sdk\platform-tools\adb.exe`.
+- adb: `C:\Program Files (x86)\Android\android-sdk\platform-tools\adb.exe`. Added to the
+  **user PATH** (2026-10-05) so `adb` works in newly opened terminals. Existing shells
+  still need the full path or a PATH refresh (`$env:Path += ";C:\Program Files (x86)\Android\android-sdk\platform-tools"`).
 - Device: `3C211JEKB03986` (Pixel 8a / akita). MainActivity:
   `net.freeserf.android/crc64bcc776d209640335.MainActivity`.
 - Install / launch / log:
