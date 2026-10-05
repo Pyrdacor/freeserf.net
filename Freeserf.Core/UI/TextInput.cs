@@ -43,6 +43,8 @@ namespace Freeserf.UI
         private int characterGapSize = 9;
         Render.TextRenderType renderType = Render.TextRenderType.Legacy;
 
+        public override bool IsTextInput => true;
+
         public TextInput(Interface interf, int characterGapSize = 9, Render.TextRenderType renderType = Render.TextRenderType.Legacy)
             : base(interf)
         {

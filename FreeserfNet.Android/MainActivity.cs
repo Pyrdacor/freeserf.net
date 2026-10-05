@@ -55,6 +55,7 @@ namespace Freeserf.Android
     {
         static IView view;
         static IInputContext input;
+        static bool textInputFocusSubscribed = false;
         static GameView gameView;
         static Data.DataSource dataSource;
         static Global.InitInfo initInfo;
@@ -332,6 +333,15 @@ namespace Freeserf.Android
             input.Mice[0].Scroll += Mouse_Scroll;
             input.Keyboards[0].KeyDown += Keyboard_KeyDown;
             input.Keyboards[0].KeyChar += Keyboard_KeyChar;
+
+            // Show/hide the on-screen keyboard when a text input (e.g. the save
+            // game name field) gains/loses focus. Without this the user cannot
+            // type a save game name on Android.
+            if (!textInputFocusSubscribed)
+            {
+                Freeserf.UI.Gui.TextInputFocusChanged += OnTextInputFocusChanged;
+                textInputFocusSubscribed = true;
+            }
 
             initialized = true;
             global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: done, initialized=true");
@@ -795,6 +805,27 @@ namespace Freeserf.Android
             }
         }
 
+        // Fired on the SDL thread when a text input in the game GUI gains/loses
+        // focus. BeginInput/EndInput map to SDL_StartTextInput/SDL_StopTextInput,
+        // which show/hide the Android on-screen keyboard.
+        static void OnTextInputFocusChanged(bool focused)
+        {
+            try
+            {
+                if (input == null || input.Keyboards.Count == 0)
+                    return;
+
+                if (focused)
+                    input.Keyboards[0].BeginInput();
+                else
+                    input.Keyboards[0].EndInput();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Application, "Text input focus: " + ex.Message);
+            }
+        }
+
         // Touch input runs on the UI thread. It queues GameView work for
         // Window_Update, because GUI event handlers must run on the SDL thread.
         // Tap = left click, long press = special click, drag = pan the map
@@ -1088,6 +1119,11 @@ namespace Freeserf.Android
                 var volumeControl = gameView.AudioFactory.GetAudio()?.GetVolumeController();
                 volumeControl?.SetVolume(UserConfig.Audio.Volume);
             }
+
+            // Pausing the activity hides the on-screen keyboard. If a text input
+            // (e.g. the save game name field) is still focused, show it again.
+            if (Freeserf.UI.Gui.IsTextInputFocused)
+                OnTextInputFocusChanged(true);
         }
     }
 

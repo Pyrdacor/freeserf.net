@@ -68,6 +68,7 @@ namespace Freeserf.UI
         bool redraw = true;
         protected internal Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
+        internal static bool IsTextInputFocused => FocusedObject?.IsTextInput == true;
         protected bool focused = false;
         protected bool displayed = false;
         GuiObject parent = null;
@@ -306,20 +307,29 @@ namespace Freeserf.UI
             SetRedraw();
         }
 
+        // True for GUI objects that need text input (e.g. TextInput). Platform
+        // hosts use this to show/hide the on-screen keyboard on focus changes.
+        public virtual bool IsTextInput => false;
+
         public void SetFocused()
         {
             if (FocusedObject != this)
             {
                 if (FocusedObject != null)
                 {
+                    bool wasTextInput = FocusedObject.IsTextInput;
                     FocusedObject.focused = false;
                     FocusedObject.HandleFocusLoose();
                     FocusedObject.SetRedraw();
+                    if (wasTextInput)
+                        Gui.NotifyTextInputFocusChanged(false);
                 }
 
                 focused = true;
                 FocusedObject = this;
                 SetRedraw();
+                if (IsTextInput)
+                    Gui.NotifyTextInputFocusChanged(true);
             }
         }
 
@@ -327,9 +337,12 @@ namespace Freeserf.UI
         {
             if (FocusedObject != null)
             {
+                bool wasTextInput = FocusedObject.IsTextInput;
                 FocusedObject.focused = false;
                 FocusedObject.HandleFocusLoose();
                 FocusedObject.SetRedraw();
+                if (wasTextInput)
+                    Gui.NotifyTextInputFocusChanged(false);
             }
 
             FocusedObject = null;
@@ -428,9 +441,12 @@ namespace Freeserf.UI
             {
                 if (FocusedObject != null)
                 {
+                    bool wasTextInput = FocusedObject.IsTextInput;
                     FocusedObject.focused = false;
                     FocusedObject.HandleFocusLoose();
                     FocusedObject.SetRedraw();
+                    if (wasTextInput)
+                        Gui.NotifyTextInputFocusChanged(false);
                     FocusedObject = null;
                 }
             }
@@ -441,6 +457,17 @@ namespace Freeserf.UI
 
     public class Gui : Network.INetworkDataHandler
     {
+        // Fired when a text input gains (true) or loses (false) focus. Platform
+        // hosts (e.g. Android) use this to show/hide the on-screen keyboard.
+        public static event Action<bool> TextInputFocusChanged;
+
+        internal static void NotifyTextInputFocusChanged(bool focused)
+        {
+            TextInputFocusChanged?.Invoke(focused);
+        }
+
+        public static bool IsTextInputFocused => GuiObject.IsTextInputFocused;
+
         readonly Render.IRenderView renderView = null;
         Viewer viewer = null;
 
