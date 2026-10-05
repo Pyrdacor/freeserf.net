@@ -1483,8 +1483,10 @@ namespace Freeserf.UI
             {
                 int popupWidth = 144;
                 int popupHeight = 160;
+                // Add a small top offset to prevent the popup from overlapping with UI elements.
+                int popupYOffset = 25; 
                 int popupX = (PopupBox.Parent.Width - popupWidth) / 2;
-                int popupY = (PopupBox.Parent.Height - popupHeight) / 2;
+                int popupY = (PopupBox.Parent.Height - popupHeight) / 2 + popupYOffset;
 
                 // keep the popup above the panel bar in touch mode (the logical GUI is small)
                 if (GuiScaling.TouchMode && PanelBar != null && PopupBox.Parent == this)
