@@ -14,6 +14,15 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
+    <!-- Reproducible build settings (see Android.md). Trimming/AOT are disabled
+         because MSBuild on this machine cannot spawn the out-of-proc task host
+         (MSB4018); the Ambermoon settings keep the build deterministic. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidLinkTool>none</AndroidLinkTool>
+    <AndroidEnableProguard>false</AndroidEnableProguard>
+    <AndroidEnableR8>false</AndroidEnableR8>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,5 +58,29 @@
          Extracted to app storage on first run. -->
     <AndroidAsset Include="$(FreeserfGameDataPath)" Link="SPAE.PA" />
   </ItemGroup>
+
+  <!-- Force a fresh Android intermediate output on every build (see Android.md,
+       Crash 2). Incremental builds can leave the Mono type-registration table
+       (libxamarin-app.so) stale relative to the generated Java stubs, causing
+       "UnsatisfiedLinkError: No implementation found for ... n_onStart()" at
+       launch. Two distinct .NET Android incremental-build bugs are involved:
+       (1) the linked libxamarin-app.so is not relinked when the native-assembly
+       objects change, and (2) regenerating the marshal methods table without a
+       build-properties change produces an incomplete table. Deleting the
+       _CleanIntermediateIfNeeded stamp makes the SDK's own
+       _CleanMonoAndroidIntermediateDir target run on every build, which cleans
+       the Android intermediate (android\, stamp\, app_shared_libraries\, flags)
+       while keeping the C# compile output and resolved assemblies. This forces
+       a consistent regeneration exactly like a clean build. Disable with
+       -p:ForceFreshTypeRegistration=false if ever needed. -->
+  <PropertyGroup>
+    <ForceFreshTypeRegistration Condition="'$(ForceFreshTypeRegistration)' == ''">true</ForceFreshTypeRegistration>
+  </PropertyGroup>
+
+  <Target Name="ForceFreshTypeRegistration"
+          BeforeTargets="_CleanIntermediateIfNeeded"
+          Condition="'$(ForceFreshTypeRegistration)' == 'true'">
+    <Delete Files="$(IntermediateOutputPath)stamp\_CleanIntermediateIfNeeded.stamp" />
+  </Target>
 
 </Project>

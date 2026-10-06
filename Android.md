@@ -23,6 +23,22 @@ on this codebase so they don't have to rediscover these issues.
 
 ## Building the Release APK
 
+### Canonical build (recommended)
+
+Use the build script — it wraps the working build command with all required flags:
+
+```powershell
+.\build-android.ps1                 # incremental build (safe against Crash 2)
+.\build-android.ps1 -Clean          # full clean rebuild (delete bin/obj first)
+.\build-android.ps1 -FreeserfGameDataPath "D:\path\to\SPAE.PA"   # bundle game data
+```
+
+Smoke-test the result on a connected device/emulator:
+
+```powershell
+.\test-android.ps1                  # install, launch, grep logcat for Crash 2
+```
+
 ### Working build command (Windows, .NET SDK 10.0.400, Android workload 36.1.69)
 
 ```powershell
@@ -30,6 +46,12 @@ $env:MSBUILDDISABLENODEREUSE = 1
 dotnet build FreeserfNet.Android\FreeserfNet.Android.csproj -c Release `
   -m:1 -nodeReuse:false -p:PublishTrimmed=false -p:RunAOTCompilation=false
 ```
+
+`PublishTrimmed`, `RunAOTCompilation`, and the Ambermoon settings
+(`AndroidLinkMode=None`, `AndroidLinkTool=none`, `AndroidEnableProguard=false`,
+`AndroidEnableR8=false`) are now baked into `FreeserfNet.Android.csproj`, so the
+`-p:` flags are optional. The csproj also force-regenerates the type-registration
+table on every build (see Crash 2 below), so incremental builds are safe.
 
 To include an external `SPAE.PA` (bundled into the APK), add
 `-p:FreeserfGameDataPath="D:\path\to\SPAE.PA"` to the build command. Without
@@ -67,9 +89,11 @@ Output APK: `FreeserfNet.Android\bin\Release\net10.0-android\net.freeserf.androi
   <AndroidEnableR8>false</AndroidEnableR8>
   <Optimize>false</Optimize>
   ```
-- If the type-registration crash (below) ever comes back, switch to `dotnet publish`
-  with the Ambermoon settings — `dotnet publish` regenerates the type-registration
-  table (`libxamarin-app.so`) more reliably than incremental `dotnet build`.
+- The type-registration crash (below) is now **prevented automatically**: the
+  `ForceFreshTypeRegistration` target in `FreeserfNet.Android.csproj` regenerates the
+  type-registration table on every build, and the Ambermoon settings are baked into the
+  csproj. `dotnet publish` remains an option if a switch is ever wanted, but is not
+  required.
 
 ## Widescreen Support (Android port)
 
@@ -142,7 +166,7 @@ Size DeltaToGui(Size delta)
 - Note: `Freeserf.Core\FileSystem\Paths.cs` (line ~99) also uses `GetEntryAssembly()`
   but is guarded by `!OperatingSystem.IsAndroid()` — safe.
 
-## Crash 2: `n_onResume` / `n_loadLibraries` UnsatisfiedLinkError (FIXED by clean rebuild)
+## Crash 2: `n_onResume` / `n_loadLibraries` UnsatisfiedLinkError (FIXED + PREVENTED)
 
 - Symptom: `java.lang.UnsatisfiedLinkError: No implementation found for void
   crc64bcc776d209640335.MainActivity.n_onResume()` — app crashes immediately on launch.
@@ -152,12 +176,26 @@ Size DeltaToGui(Size delta)
   (`libxamarin-app.so`) did not match the generated Java stubs. The `n_*` native
   methods in the generated Java wrappers are registered via this table; when it is
   stale, the JVM cannot find the native implementation.
-- Fix: **delete `FreeserfNet.Android\bin` and `FreeserfNet.Android\obj` and rebuild
+- Original fix: **delete `FreeserfNet.Android\bin` and `FreeserfNet.Android\obj` and rebuild
   from scratch.** The clean rebuild produced a working APK (verified: `onResume()`
   runs, `Running main function SDL_main from library libmain.so`, no FATAL).
-- Lesson: after ANY change to the Android project, prefer a clean build
-  (`dotnet clean` or delete bin/obj) to avoid this class of failure. The crash is
-  non-deterministic across incremental builds.
+- **Permanent prevention (implemented):** the `ForceFreshTypeRegistration` MSBuild
+  target in `FreeserfNet.Android.csproj` deletes the `_CleanIntermediateIfNeeded.stamp`
+  before the SDK's `_CleanIntermediateIfNeeded` target on **every** build. This makes
+  the SDK's own `_CleanMonoAndroidIntermediateDir` target run, which cleans the Android
+  intermediate (`android\`, `stamp\`, `app_shared_libraries\`, flags) while keeping the
+  C# compile output and resolved assemblies. The whole stub → typemap → marshal_methods
+  → `.o` → `libxamarin-app.so` chain is then regenerated consistently — exactly what a
+  clean build does for these files. Incremental builds are now safe; no more manual
+  bin/obj deletion. Disable with `-p:ForceFreshTypeRegistration=false` if ever needed.
+  Use `.\build-android.ps1` and `.\test-android.ps1` for the canonical
+  build + smoke-test workflow.
+- **Why a plain incremental build is not safe (two .NET Android bugs):** (1) the linked
+  `libxamarin-app.so` is not relinked when the native-assembly objects change, and
+  (2) regenerating the marshal methods table without a build-properties change produces
+  an **incomplete** table (only the Java.Interop runtime class, no user types) — the
+  `n_*` methods then have no native implementation. Both are avoided by the forced
+  intermediate clean above.
 
 ## Logging to logcat (FIXED)
 
@@ -320,10 +358,12 @@ adb shell wm dismiss-keyguard
 
 - [x] Startup crash fixed (`GetExecutingAssembly`), committed as `356a131`, pushed to `origin/android`.
 - [x] Logging to logcat fixed (`Log.SetStream` + `ConsoleStream`), same commit.
-- [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted).
+- [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted);
+      **permanently prevented** by the `ForceFreshTypeRegistration` csproj target.
 - [x] GLSL ES shader compilation errors fixed (`db096be`).
 - [x] **EGL_BAD_SURFACE in render loop** — shaders compile, but `eglSwapBuffers` fails with `EGL_BAD_SURFACE`; screen stays black. **FIXED**: Added `DoEvents()` and activity state tracking (commit `16f3179`). App now runs on device without EGL errors when the screen is awake.
-- [ ] Consider switching the build to `dotnet publish` + Ambermoon's `AndroidLinkMode=None` settings for reproducible builds.
+- [x] Ambermoon's reproducible build settings (`AndroidLinkMode=None`, etc.) baked into
+      `FreeserfNet.Android.csproj`; `dotnet publish` switch no longer needed.
 
 ## Issue 4: App runs but background is black — map not rendering (OPEN)
 
@@ -431,7 +471,8 @@ tiles, and they sit inside the GameInitBox area (see geometry below).
 - [x] Startup crash fixed (`GetExecutingAssembly`), committed as `356a131`, pushed to
       `origin/android`.
 - [x] Logging to logcat fixed (`Log.SetStream` + `ConsoleStream`), same commit.
-- [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted).
+- [x] `n_onResume` type-registration crash fixed by clean rebuild (bin/obj deleted);
+      **permanently prevented** by the `ForceFreshTypeRegistration` csproj target.
 - [x] GLSL ES shader compilation errors fixed (`db096be`).
 - [x] **EGL_BAD_SURFACE in render loop** — FIXED via `DoEvents()` + `ActivityState`
       tracking (commits `16f3179` + `4d32277`, pushed to `origin/android`). App runs
@@ -445,8 +486,8 @@ tiles, and they sit inside the GameInitBox area (see geometry below).
       created", the exception is caught in `Window_Load`, and `initialized` stays
       `false` → black screen. Needs a `Reset()`/idempotent `AddAll` + proper re-init
       (GPU textures are invalid after EGL context loss).
-- [ ] Consider switching the build to `dotnet publish` + Ambermoon's
-      `AndroidLinkMode=None` settings for reproducible builds.
+- [x] Ambermoon's reproducible build settings (`AndroidLinkMode=None`, etc.) baked into
+      `FreeserfNet.Android.csproj`; `dotnet publish` switch no longer needed.
 
 ## Pinch-to-zoom and finger panning (implemented)
 
@@ -642,8 +683,10 @@ the main menu on all platforms and is unchanged.
   writes `GameView`/GUI state directly.
 - Diagnostics remain enabled: `OnRun` logs complete exceptions and
   `Freeserf_Input` logs the touch coordinates after their queued action is processed.
-- After changing the Android project, do a clean rebuild (delete bin/obj), otherwise
-  `n_onStart` UnsatisfiedLinkError occurs (see Crash 2).
+- No clean rebuild needed after Android project changes: the
+  `ForceFreshTypeRegistration` csproj target regenerates the type-registration table
+  on every build, so the `n_onStart`/`n_onResume` UnsatisfiedLinkError (Crash 2)
+  cannot occur. Use `.\build-android.ps1` + `.\test-android.ps1`.
 
 ## Android device test: 2026-10-02
 
