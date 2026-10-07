@@ -61,6 +61,14 @@ namespace Freeserf.Android
         static Global.InitInfo initInfo;
         static bool initialized = false;
         static bool renderTraced = false;
+        static bool firstFrameRendered = false;
+
+        // Loading overlay shown while the game initializes (game data loading
+        // and shader/atlas setup can take several seconds on slow devices).
+        // It is a native Android view on top of the SDL surface and is hidden
+        // once the first frame (main menu) has been rendered.
+        static View loadingOverlay;
+        static bool loadingOverlayVisible = false;
 
         // Game data import (first start without bundled data). The copyrighted
         // SPAE.PA file is not shipped with the APK, so on first start the user
@@ -125,6 +133,93 @@ namespace Freeserf.Android
             Console.SetOut(new AndroidConsole("Freeserf_Info"));
             Console.SetError(new AndroidConsole("Freeserf_Error"));
             Log.SetStream(new ConsoleStream(Console.Error));
+        }
+
+        protected override void OnCreate(Bundle savedInstanceState)
+        {
+            base.OnCreate(savedInstanceState);
+
+            // Show a loading indicator while the game initializes. On activity
+            // recreation (e.g. configuration change) the game is already
+            // running, so the overlay is only shown on the very first start.
+            if (!initialized)
+                ShowLoadingOverlay();
+        }
+
+        // Shows the loading overlay (spinner + app name) on top of the SDL
+        // surface. Runs on the UI thread (RunOnUiThread is a no-op there).
+        static void ShowLoadingOverlay()
+        {
+            if (loadingOverlayVisible)
+                return;
+            loadingOverlayVisible = true;
+
+            instance?.RunOnUiThread(() =>
+            {
+                if (loadingOverlay != null || instance == null)
+                    return;
+
+                var layout = new LinearLayout(instance)
+                {
+                    Orientation = global::Android.Widget.Orientation.Vertical
+                };
+                layout.SetBackgroundColor(global::Android.Graphics.Color.Black);
+                layout.SetGravity(GravityFlags.Center);
+
+                var spinner = new ProgressBar(instance) { Indeterminate = true };
+                layout.AddView(spinner, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
+
+                var title = new TextView(instance)
+                {
+                    Text = "Freeserf",
+                    TextSize = 28,
+                    Gravity = GravityFlags.Center
+                };
+                title.SetTextColor(global::Android.Graphics.Color.White);
+                var titleParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+                titleParams.TopMargin = DpToPx(24);
+                layout.AddView(title, titleParams);
+
+                var subtitle = new TextView(instance)
+                {
+                    Text = "Lädt…",
+                    TextSize = 16,
+                    Gravity = GravityFlags.Center
+                };
+                subtitle.SetTextColor(global::Android.Graphics.Color.Argb(255, 180, 180, 180));
+                var subtitleParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+                subtitleParams.TopMargin = DpToPx(8);
+                layout.AddView(subtitle, subtitleParams);
+
+                loadingOverlay = layout;
+                instance.AddContentView(layout, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            });
+        }
+
+        // Removes the loading overlay from the view hierarchy. Runs on the UI
+        // thread (RunOnUiThread is a no-op there).
+        static void HideLoadingOverlay()
+        {
+            if (!loadingOverlayVisible)
+                return;
+            loadingOverlayVisible = false;
+
+            instance?.RunOnUiThread(() =>
+            {
+                if (loadingOverlay == null)
+                    return;
+                (loadingOverlay.Parent as ViewGroup)?.RemoveView(loadingOverlay);
+                loadingOverlay = null;
+            });
+        }
+
+        static int DpToPx(int dp)
+        {
+            return (int)(dp * instance.Resources.DisplayMetrics.Density);
         }
 
         protected override void OnRun()
@@ -237,6 +332,7 @@ namespace Freeserf.Android
                     // No game data available (not bundled, not imported yet).
                     // Ask the user to pick their own data file. The copyrighted
                     // data file is never shipped with the APK.
+                    HideLoadingOverlay();
                     instance?.RunOnUiThread(() => instance.ShowDataImportDialog());
                     return;
                 }
@@ -382,6 +478,10 @@ namespace Freeserf.Android
                 {
                     CopyImportedData(data.Data);
                     dataImported = true;
+                    // Loading the imported data and initializing the game can
+                    // take a moment; show the overlay again until the first
+                    // frame (main menu) is rendered.
+                    ShowLoadingOverlay();
                 }
                 catch (Exception ex)
                 {
@@ -453,6 +553,14 @@ namespace Freeserf.Android
             try
             {
                 gameView?.Render();
+
+                // The first rendered frame shows the main menu; the loading
+                // overlay is no longer needed from here on.
+                if (!firstFrameRendered)
+                {
+                    firstFrameRendered = true;
+                    HideLoadingOverlay();
+                }
 
                 if (!renderTraced)
                 {
