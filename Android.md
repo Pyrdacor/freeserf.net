@@ -155,6 +155,37 @@ Size DeltaToGui(Size delta)
 - Input works: map tile selection, GUI buttons, scrolling
 - Map cursor aligns with tiles
 
+## Loading indicator at startup (implemented)
+
+On slow devices the app used to show a black screen for several seconds between
+launch and the main menu, because `Window_Load` (SDL thread) runs
+`Global.Init()`, `UserConfig.Load()`, game data loading (`SPAE.PA`) and
+`InitializeAfterDataLoad()` (GameView, State.Init, shader/atlas setup) before the
+first frame is rendered.
+
+A native Android loading overlay (spinner + "Freeserf" + "Lädt…" on a black
+background) is now shown on top of the SDL surface from activity start until the
+first frame (main menu) is rendered:
+
+- `MainActivity.OnCreate` shows the overlay (only when `!initialized`, so an
+  activity recreation does not re-show it).
+- `Window_Render` hides it after the first rendered frame (`firstFrameRendered`).
+- `Window_Load` hides it when no game data is available and the data import
+  dialog is shown, so the file picker stays usable.
+- After the user imports a data file, the overlay is shown again while the
+  imported data is loaded and the game initializes.
+
+Implementation notes:
+
+- The overlay is a plain Android view (`LinearLayout` with `ProgressBar` +
+  `TextView`s) added via `AddContentView`, i.e. on top of the SDL surface. It
+  does not depend on the GL renderer, which is not available yet during the slow
+  phase.
+- While visible it intercepts touches (intended – no interaction with a
+  half-initialized game).
+- Android 12+ additionally shows the system splash screen (app icon) before the
+  activity; the overlay takes over from there.
+
 ## Crash 1: `System.TypeInitializationException` at startup (FIXED)
 
 - Symptom: `FATAL UNHANDLED EXCEPTION: System.TypeInitializationException` →
