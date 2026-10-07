@@ -15,15 +15,24 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
     <!-- Reproducible build settings (see Android.md). Trimming/AOT are disabled
-         because MSBuild on this machine cannot spawn the out-of-proc task host
-         (MSB4018); the Ambermoon settings keep the build deterministic. -->
-    <PublishTrimmed>false</PublishTrimmed>
+         by default because MSBuild on this machine cannot spawn the out-of-proc
+         task host (MSB4018). Pass -p:PublishTrimmed=true (e.g. in CI) to enable
+         trimming; the link-disabling properties below then stay unset so the
+         Android SDK defaults (AndroidLinkMode=SdkOnly) apply and the trimmed
+         assemblies are produced correctly. -->
+    <PublishTrimmed Condition="'$(PublishTrimmed)' == ''">false</PublishTrimmed>
     <RunAOTCompilation>false</RunAOTCompilation>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <AndroidLinkTool>none</AndroidLinkTool>
+    <AndroidLinkMode Condition="'$(PublishTrimmed)' != 'true'">None</AndroidLinkMode>
+    <AndroidLinkTool Condition="'$(PublishTrimmed)' != 'true'">none</AndroidLinkTool>
     <AndroidEnableProguard>false</AndroidEnableProguard>
     <AndroidEnableR8>false</AndroidEnableR8>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The app uses the DLR (dynamic) in Freeserf.Core (Buffer.cs, Savegame.cs),
+         so keep Microsoft.CSharp.dll (RuntimeBinder) when trimming. -->
+    <TrimmerRootAssembly Include="Microsoft.CSharp" RootMode="All" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.23.0" />
