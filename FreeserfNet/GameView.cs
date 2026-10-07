@@ -184,7 +184,7 @@ namespace Freeserf
 
                         renderLayer.PositionTransformation = (Position position) =>
                         {
-                            return new Position(Misc.Round(position.X * charScaleX + offsetX), Misc.Round(position.Y * charScaleY + offsetY));
+                            return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
