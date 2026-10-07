@@ -888,3 +888,51 @@ SDL: SDLActivity thread ends (error=Try to release egl_surface with context prob
   end-to-end validation of the in-game menu fix. The crash above was
   reproduced because the game was already running (started before this test
   session).
+
+## Multiplayer on Android (crash FIXED + cross-platform groundwork)
+
+### Crash cause (two independent bugs)
+
+1. **Missing `NetworkDataReceiver` on Android.** The desktop host
+   (`FreeserfNet/MainWindow.cs`) creates a `NetworkDataReceiver` and assigns it to
+   `gameView.NetworkDataReceiver` every frame in `MainWindow_Update`. The Android host
+   (`FreeserfNet.Android/MainActivity.cs`) only called `gameView.UpdateNetworkEvents()`
+   without ever assigning the receiver, so `Gui.NetworkDataReceiver` (and therefore
+   `Server/Client.NetworkDataReceiver`) stayed `null`. When a remote participant sent
+   data, `Server.HandleData` threw `ExceptionFreeserf("Network data receiver is not set up.")`
+   *outside* its try/catch, on a background `Task.Run` thread that only catches
+   `ObjectDisposedException` -> unhandled exception on a background thread -> app crash.
+   - Fix: `MainActivity` now creates a receiver in `Window_Load` and assigns it in
+     `Window_Update` (mirrors desktop). `Server.HandleData` now logs + drops instead of throwing.
+
+2. **`Host.GetLocalIpAddress()` used Windows-only APIs.** `UnicastIPAddressInformation.IsDnsEligible`
+   and `PrefixOrigin` are `[SupportedOSPlatform("windows")]` and throw
+   `PlatformNotSupportedException` on Android (visible as CA1416 build warnings). This crashed
+   already when creating `LocalClient` (join) or `LocalServer` (host).
+   - Fix: guard both property accesses with try/catch and fall back to "first usable address".
+
+### Cross-platform multiplayer (PC <-> Android)
+
+- The protocol is plain TCP on port 5067 with custom `FSN` framing, shared `Freeserf.Network`
+  code -> already platform-neutral.
+- `GameInitBox` now has a "Server IP:" text input (default `localhost`, hostname resolution
+  supported) for joining, an editable server name, and shows the host IP in the lobby.
+- `AndroidManifest.xml` gained `ACCESS_NETWORK_STATE` + `ACCESS_WIFI_STATE`.
+- `MainActivity.OnStop` calls `GameView.DisconnectNetwork()` (new, delegates to `Gui`) so
+  connections are closed when the app is backgrounded.
+- LAN play works; internet play (NAT/port forwarding) is out of scope.
+
+### Device test results (Samsung Galaxy A13, 2026-10-07)
+
+- APK installed and launched; no crash. Server creation works: `LocalServer` binds to the
+  WiFi IP (192.168.178.151:5067) and answers a `LobbyData` request with valid lobby data
+  (verified with `nc` from the device itself).
+- **Touch-mode layout overlap (FIXED):** in touch mode the GUI scale is 4.255 (not 1.84),
+  so the first version of the server name input and host IP text overlapped the map seed
+  input and the map size button. Fix: for the MultiplayerServer screen the map seed input
+  is hidden (it is fixed at server creation), the map size button is moved into its place,
+  and the server name input + host IP are shown in the freed rows above the player boxes.
+- **PC <-> Android over LAN:** the code works, but the test network blocked PC<->device
+  traffic (AP client isolation: the device reached the gateway, the PC did not). This is a
+  router configuration issue, not a code issue. For LAN play, both devices must be on the
+  same network without client isolation (or the PC on the same WiFi as the phone).

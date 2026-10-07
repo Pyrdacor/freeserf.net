@@ -173,6 +173,10 @@ namespace Freeserf.UI
         CheckBox checkBoxServerValues = null; // the server sets the values of each player (otherwise each human client can set them for himself)
         CheckBox checkBoxSameValues = null; // the server sets the values and they are used for every player in the game (clients can't set values)
         // TODO: maybe the game speed should be setable (before the game) or changeable (option to change it in the game)
+        // server address to join (client) and server name (host)
+        TextInput serverAddressInput = null;
+        TextInput serverNameInput = null;
+        TextField textFieldServerIp = null;
 
         // used only for multiplayer games
         readonly bool[] playerIsAI = new bool[Game.MAX_PLAYER_COUNT] { false, false, false, false };
@@ -497,6 +501,26 @@ namespace Freeserf.UI
             textFieldVersion = new TextField(interf, 1);
             AddChild(textFieldVersion, 0, 0, false);
 
+            // Server address to join (client) and server name (host). Both are
+            // only shown in the corresponding multiplayer screens. The height
+            // matches the text row so the inputs do not overlap the player
+            // boxes below (which start at y = 40).
+            serverAddressInput = new TextInput(interf, 9, Render.TextRenderType.Legacy);
+            serverAddressInput.SetFilter(ServerAddressFilter);
+            serverAddressInput.SetSize(15 * 9 + 8, 8);
+            serverAddressInput.MaxLength = 15;
+            serverAddressInput.Text = "localhost";
+            AddChild(serverAddressInput, 8 * 20 + 16, 18 + 16, false);
+
+            serverNameInput = new TextInput(interf, 9, Render.TextRenderType.Legacy);
+            serverNameInput.SetSize(13 * 9 + 8, 8);
+            serverNameInput.MaxLength = 13;
+            serverNameInput.Text = "Freeserf";
+            AddChild(serverNameInput, 140, 26, false);
+
+            textFieldServerIp = new TextField(interf, 1, 9);
+            AddChild(textFieldServerIp, 0, 0, false);
+
             buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
             buttonExit.Clicked += ButtonExit_Clicked;
             AddChild(buttonExit, 8 * 38 + 12, 170);
@@ -556,6 +580,16 @@ namespace Freeserf.UI
         private void ButtonCreateServer_Clicked(object sender, Button.ClickEventArgs args)
         {
             HandleAction(Action.CreateServer);
+        }
+
+        // Allows digits, letters, dots, dashes and colons so both IP addresses
+        // (IPv4/IPv6) and hostnames can be entered.
+        static bool ServerAddressFilter(char key, TextInput textInput)
+        {
+            if (char.IsLetterOrDigit(key) || key == '.' || key == '-' || key == ':')
+                return true;
+
+            return false;
         }
 
         private void ButtonStart_Clicked(object sender, Button.ClickEventArgs e)
@@ -628,6 +662,9 @@ namespace Freeserf.UI
 
             for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                 playerBoxes[i].Visible = false;
+
+            serverAddressInput.Displayed = false;
+            serverNameInput.Displayed = false;
         }
 
         ServerInfo GetSelectedServer()
@@ -728,15 +765,12 @@ namespace Freeserf.UI
 
                     if (gameType == GameType.MultiplayerClient)
                     {
-                        /*DrawBoxString(10, 18, textFieldName, "Server:");
-                        string serverName = GetServerName();
-
-                        if (serverName.Length > 15)
-                            serverName = serverName.Substring(0, 12) + "...";
-
-                        DrawBoxString(18, 18, textFieldValue, serverName);*/
-                        HideBoxString(textFieldName);
+                        DrawBoxString(10, 18, textFieldName, "Server IP:");
+                        serverAddressInput.Displayed = Displayed;
+                        serverAddressInput.MoveTo(8 * 20 + 16, 18 + 16);
                         HideBoxString(textFieldValue);
+                        HideBoxString(textFieldServerIp);
+                        serverNameInput.Displayed = false;
                         DrawBoxString(24, 139, textCreateServer, "Create server");
 
                         buttonUp.Displayed = false;
@@ -746,8 +780,38 @@ namespace Freeserf.UI
                     }
                     else
                     {
-                        DrawBoxString(10, 18, textFieldName, "Mapsize:");
-                        DrawBoxString(20, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
+                        serverAddressInput.Displayed = false;
+
+                        if (gameType == GameType.MultiplayerServer)
+                        {
+                            // The map seed is fixed when the server is created, so
+                            // the random input is not needed in the lobby. Hide it
+                            // and move the map size button into its place to make
+                            // room for the server name and host IP.
+                            randomInput.Displayed = false;
+                            buttonMapSize.MoveTo(256, 12);
+
+                            DrawBoxString(10, 10, textFieldName, "Name:");
+                            serverNameInput.Displayed = Displayed;
+                            serverNameInput.MoveTo(140, 26);
+                            HideBoxString(textFieldValue);
+
+                            // Show the host IP so clients know what to enter to join.
+                            if (Server != null && Server.Ip != null)
+                                DrawBoxString(10, 18, textFieldServerIp, "IP: " + Server.Ip);
+                            else
+                                HideBoxString(textFieldServerIp);
+                        }
+                        else
+                        {
+                            buttonMapSize.MoveTo(212, 16);
+
+                            DrawBoxString(10, 18, textFieldName, "Mapsize:");
+                            DrawBoxString(20, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
+                            serverNameInput.Displayed = false;
+                            HideBoxString(textFieldServerIp);
+                        }
+
                         HideBoxString(textCreateServer);
 
                         buttonUp.Displayed = false;
@@ -769,6 +833,9 @@ namespace Freeserf.UI
                     DrawBoxString(10, 18, textFieldName, "Mission:");
                     DrawBoxString(20, 18, textFieldValue, (gameMission + 1).ToString());
                     HideBoxString(textCreateServer);
+                    HideBoxString(textFieldServerIp);
+                    serverAddressInput.Displayed = false;
+                    serverNameInput.Displayed = false;
 
                     buttonUp.Displayed = true;
                     buttonDown.Displayed = true;
@@ -796,6 +863,9 @@ namespace Freeserf.UI
                         HideBoxString(textFieldName);
                         HideBoxString(textFieldValue);
                         HideBoxString(textCreateServer);
+                        HideBoxString(textFieldServerIp);
+                        serverAddressInput.Displayed = false;
+                        serverNameInput.Displayed = false;
 
                         buttonUp.Displayed = false;
                         buttonDown.Displayed = false;
@@ -931,7 +1001,8 @@ namespace Freeserf.UI
                     fileList.Displayed = false;
                     serverList.Displayed = false;
                     SetRedraw();
-                    Server = Network.Network.DefaultServerFactory.CreateLocal("TestServer", ServerGameInfo); // TODO: name should be editable
+                    string serverName = string.IsNullOrWhiteSpace(serverNameInput.Text) ? "Freeserf Server" : serverNameInput.Text.Trim();
+                    Server = Network.Network.DefaultServerFactory.CreateLocal(serverName, ServerGameInfo);
                     Server.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
                     Server.Init(checkBoxServerValues.Checked, checkBoxSameValues.Checked, ServerGameInfo.MapSize, randomInput.Text, ServerGameInfo.Players);
                     Server.ClientJoined += Server_ClientJoined;
@@ -1002,8 +1073,32 @@ namespace Freeserf.UI
 
                                         lock (Client)
                                         {
-                                            // TODO for now we always use localhost as server
-                                            if (!Client.JoinServer("TODO", System.Net.IPAddress.Loopback))
+                                            string hostname = serverAddressInput.Text.Trim();
+
+                                            if (string.IsNullOrEmpty(hostname))
+                                                hostname = GetServerHostname();
+
+                                            if (string.IsNullOrEmpty(hostname))
+                                                hostname = "localhost";
+
+                                            System.Net.IPAddress serverIp;
+
+                                            if (!System.Net.IPAddress.TryParse(hostname, out serverIp))
+                                            {
+                                                // Try to resolve a hostname (e.g. a PC name on the LAN).
+                                                try
+                                                {
+                                                    serverIp = System.Net.Dns.GetHostAddresses(hostname)
+                                                        .FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                                                        ?? System.Net.IPAddress.Loopback;
+                                                }
+                                                catch
+                                                {
+                                                    serverIp = System.Net.IPAddress.Loopback;
+                                                }
+                                            }
+
+                                            if (!Client.JoinServer(GetServerName(), serverIp))
                                             {
                                                 // TODO error
                                                 return;

@@ -101,48 +101,80 @@ namespace Freeserf.Network
 
         internal static IPAddress GetLocalIpAddress()
         {
-            UnicastIPAddressInformation mostSuitableIp = null;
-            var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+            IPAddress mostSuitableIp = null;
+            bool mostSuitableIpIsDnsEligible = false;
 
-            foreach (var network in networkInterfaces)
+            try
             {
-                if (network.OperationalStatus != OperationalStatus.Up)
-                    continue;
+                var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
 
-                var properties = network.GetIPProperties();
-
-                // TODO: do we care?
-                //if (properties.GatewayAddresses.Count == 0)
-                //    continue;
-
-                foreach (var address in properties.UnicastAddresses)
+                foreach (var network in networkInterfaces)
                 {
-                    if (address.Address.AddressFamily != AddressFamily.InterNetwork)
+                    if (network.OperationalStatus != OperationalStatus.Up)
                         continue;
 
-                    if (IPAddress.IsLoopback(address.Address))
-                        continue;
+                    var properties = network.GetIPProperties();
 
-                    if (!address.IsDnsEligible)
+                    // TODO: do we care?
+                    //if (properties.GatewayAddresses.Count == 0)
+                    //    continue;
+
+                    foreach (var address in properties.UnicastAddresses)
                     {
-                        if (mostSuitableIp == null)
-                            mostSuitableIp = address;
-                        continue;
-                    }
+                        if (address.Address.AddressFamily != AddressFamily.InterNetwork)
+                            continue;
 
-                    // The best IP is the IP got from DHCP server
-                    if (address.PrefixOrigin != PrefixOrigin.Dhcp)
-                    {
-                        if (mostSuitableIp == null || !mostSuitableIp.IsDnsEligible)
-                            mostSuitableIp = address;
-                        continue;
-                    }
+                        if (IPAddress.IsLoopback(address.Address))
+                            continue;
 
-                    return address.Address;
+                        // Note: IsDnsEligible and PrefixOrigin are only supported
+                        // on Windows. On other platforms (e.g. Android) accessing
+                        // them throws PlatformNotSupportedException, so we guard
+                        // them and fall back to a simple "first usable address".
+                        bool isDnsEligible = false;
+                        PrefixOrigin prefixOrigin = PrefixOrigin.Other;
+
+                        try
+                        {
+                            isDnsEligible = address.IsDnsEligible;
+                            prefixOrigin = address.PrefixOrigin;
+                        }
+                        catch (PlatformNotSupportedException)
+                        {
+                            // Not available on this platform.
+                        }
+
+                        if (!isDnsEligible)
+                        {
+                            if (mostSuitableIp == null)
+                            {
+                                mostSuitableIp = address.Address;
+                                mostSuitableIpIsDnsEligible = false;
+                            }
+                            continue;
+                        }
+
+                        // The best IP is the IP got from DHCP server
+                        if (prefixOrigin != PrefixOrigin.Dhcp)
+                        {
+                            if (mostSuitableIp == null || !mostSuitableIpIsDnsEligible)
+                            {
+                                mostSuitableIp = address.Address;
+                                mostSuitableIpIsDnsEligible = true;
+                            }
+                            continue;
+                        }
+
+                        return address.Address;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Error retrieving local IP: " + ex.Message);
+            }
 
-            return mostSuitableIp?.Address;
+            return mostSuitableIp;
         }
     }
 
@@ -168,6 +200,13 @@ namespace Freeserf.Network
         {
             Name = name;
             Ip = Host.GetLocalIpAddress();
+
+            if (Ip == null)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Unable to retrieve local IP.");
+                Ip = IPAddress.Loopback; // Is this ok or should we throw here?
+            }
+
             GameInfo = gameInfo;
         }
 
@@ -541,7 +580,12 @@ namespace Freeserf.Network
             Log.Verbose.Write(ErrorSystemType.Network, $"Received {data.Length} byte(s) of data from client '{client.Ip} (player {client.PlayerIndex})'.");
 
             if (NetworkDataReceiver == null)
-                throw new ExceptionFreeserf(ErrorSystemType.Application, "Network data receiver is not set up.");
+            {
+                // A missing receiver must never crash the app on a background
+                // thread. Log it and drop the data instead.
+                Log.Error.Write(ErrorSystemType.Network, "Network data receiver is not set up. Dropping received data.");
+                return;
+            }
 
             try
             {

@@ -651,5 +651,10 @@ namespace Freeserf
             gui.NetworkDataReceiver = NetworkDataReceiver;
             gui.UpdateNetworkEvents();
         }
+
+        public void DisconnectNetwork()
+        {
+            gui.DisconnectNetwork();
+        }
     }
 }

@@ -530,6 +530,32 @@ namespace Freeserf.UI
             }
         }
 
+        // Closes any active multiplayer connection (e.g. when the app is
+        // backgrounded) so no network threads keep running.
+        public void DisconnectNetwork()
+        {
+            if (viewer?.MainInterface == null)
+                return;
+
+            try
+            {
+                viewer.MainInterface.Client?.Disconnect();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Error disconnecting client: " + ex.Message);
+            }
+
+            try
+            {
+                viewer.MainInterface.Server?.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Error closing server: " + ex.Message);
+            }
+        }
+
         void RenderView_ZoomChanged(object sender, EventArgs e)
         {
             viewer.MainInterface.HandleZoomChange();

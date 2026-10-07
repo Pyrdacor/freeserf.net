@@ -63,6 +63,11 @@ namespace Freeserf.Android
         static bool renderTraced = false;
         static bool firstFrameRendered = false;
 
+        // Receives network data on the SDL thread (see Window_Update). Without
+        // this the multiplayer server/client has no data receiver and crashes
+        // when a remote participant sends data.
+        static Network.INetworkDataReceiver networkDataReceiver;
+
         // Loading overlay shown while the game initializes (game data loading
         // and shader/atlas setup can take several seconds on slow devices).
         // It is a native Android view on top of the SDL surface and is hidden
@@ -318,6 +323,7 @@ namespace Freeserf.Android
 
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
+                networkDataReceiver = new Network.NetworkDataReceiverFactory().CreateReceiver();
 
                 UserConfig.Load(FileSystem.Paths.UserConfigPath);
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: UserConfig.Load done");
@@ -641,6 +647,7 @@ namespace Freeserf.Android
                     currentGameView.Zoom = Math.Clamp(newZoom, 0.0f, 4.0f);
                 }
 
+                currentGameView.NetworkDataReceiver = networkDataReceiver;
                 currentGameView.UpdateNetworkEvents();
             }
         }
@@ -1209,6 +1216,18 @@ namespace Freeserf.Android
             CancelLongPress();
             CancelDelayedClick();
             longPressFired = false;
+
+            // Close any active multiplayer connection so no network threads
+            // keep running while the app is backgrounded.
+            try
+            {
+                gameView?.DisconnectNetwork();
+            }
+            catch (Exception ex)
+            {
+                global::Android.Util.Log.Debug("Freeserf_Trace", "OnStop: DisconnectNetwork EXCEPTION: " + ex);
+                Log.Error.Write(ErrorSystemType.Application, "DisconnectNetwork: " + ex);
+            }
         }
 
         protected override void OnStart()
