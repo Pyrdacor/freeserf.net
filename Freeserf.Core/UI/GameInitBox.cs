@@ -146,6 +146,9 @@ namespace Freeserf.UI
             263u
         };
 
+        // Keep the 15-character address field clear of the Options button at x=300.
+        const int ServerAddressInputX = 128;
+
         Interface interf = null;
         GameType gameType = GameType.Custom;
         int gameMission = 0;
@@ -510,7 +513,7 @@ namespace Freeserf.UI
             serverAddressInput.SetSize(15 * 9 + 8, 8);
             serverAddressInput.MaxLength = 15;
             serverAddressInput.Text = "localhost";
-            AddChild(serverAddressInput, 8 * 20 + 16, 18 + 16, false);
+            AddChild(serverAddressInput, ServerAddressInputX, 18 + 16, false);
 
             serverNameInput = new TextInput(interf, 9, Render.TextRenderType.Legacy);
             serverNameInput.SetSize(13 * 9 + 8, 8);
@@ -765,9 +768,9 @@ namespace Freeserf.UI
 
                     if (gameType == GameType.MultiplayerClient)
                     {
-                        DrawBoxString(10, 18, textFieldName, "Server IP:");
+                        DrawBoxString(10, 18, textFieldName, "IP:");
                         serverAddressInput.Displayed = Displayed;
-                        serverAddressInput.MoveTo(8 * 20 + 16, 18 + 16);
+                        serverAddressInput.MoveTo(ServerAddressInputX, 18 + 16);
                         HideBoxString(textFieldValue);
                         HideBoxString(textFieldServerIp);
                         serverNameInput.Displayed = false;

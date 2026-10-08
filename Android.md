@@ -922,7 +922,7 @@ SDL: SDLActivity thread ends (error=Try to release egl_surface with context prob
   connections are closed when the app is backgrounded.
 - LAN play works; internet play (NAT/port forwarding) is out of scope.
 
-### Device test results (Samsung Galaxy A13, 2026-10-07)
+### Device test results (Samsung Galaxy A13, 2026-10-07; retested 2026-10-08)
 
 - APK installed and launched; no crash. Server creation works: `LocalServer` binds to the
   WiFi IP (192.168.178.151:5067) and answers a `LobbyData` request with valid lobby data
@@ -932,6 +932,9 @@ SDL: SDLActivity thread ends (error=Try to release egl_surface with context prob
   input and the map size button. Fix: for the MultiplayerServer screen the map seed input
   is hidden (it is fixed at server creation), the map size button is moved into its place,
   and the server name input + host IP are shown in the freed rows above the player boxes.
+- **Multiplayer join IP input overlap (FIXED):** the 15-character address field extended
+  underneath the Options button. The client screen now uses a compact `IP:` label and moves
+  the field left; the full `192.168.178.151` value was verified on the Galaxy A13 via ADB.
 - **PC <-> Android over LAN:** the code works, but the test network blocked PC<->device
   traffic (AP client isolation: the device reached the gateway, the PC did not). This is a
   router configuration issue, not a code issue. For LAN play, both devices must be on the
