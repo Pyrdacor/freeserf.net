@@ -56,10 +56,18 @@ jobs:
 
           Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
 
-          ### What's new in 1.0.1
+          ### What's new in 1.0.2
 
-          - **Multiplayer fix**: Fixed a crash when hosting or joining multiplayer games on Android.
-          - **Cross-platform play**: Android can now play together with PC players over the network.
+          - **Game logic fixes** ported from the C++ freeserf releases 0.4/0.5:
+            - Transporter no longer duplicate resources when switching at a flag.
+            - Serfs are no longer lost when a road is removed.
+            - Fixed a deadlock of serfs waiting for each other.
+            - Knights can be trained even while a Knight0 is in the stock.
+            - Fixed the military score and the pig farm sounds.
+            - Fixed the DOS smelter sound.
+          - **Save games** keep more state, so a loaded game goes on as the saved one
+            (building counts, burning counters, knight morale, timers, messages,
+            statistics history and more).
 
           ### Install
 
