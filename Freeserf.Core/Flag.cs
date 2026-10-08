@@ -404,6 +404,29 @@ namespace Freeserf
             return false;
         }
 
+        /// <summary>
+        /// Switch the resource of a transporter with the one in the slot, in place
+        /// (Amiga transporter_move_to_flag). An empty slot takes the transporter's
+        /// resource and leaves it empty-handed.
+        /// </summary>
+        public void SwitchResource(uint fromSlot, ref Resource.Type resource, ref uint destination)
+        {
+            if (fromSlot >= Global.FLAG_MAX_RES_COUNT)
+            {
+                throw new ExceptionFreeserf(Game, ErrorSystemType.Flag, "Wrong flag slot index.");
+            }
+
+            state.EndPointFlags |= EndPointFlags.HasUnscheduledResources;
+
+            var tempResource = resource;
+            var tempDestination = destination;
+            resource = state.Slots[fromSlot].Type;
+            destination = state.Slots[fromSlot].DestinationObjectIndex;
+            state.Slots[fromSlot].Type = tempResource;
+            state.Slots[fromSlot].DestinationObjectIndex = (word)tempDestination;
+            state.Slots[fromSlot].Direction = Direction.None;
+        }
+
         public bool HasEmptySlot()
         {
             return state.Slots.Any(slot => slot.Type == Resource.Type.None);
@@ -999,7 +1022,7 @@ namespace Freeserf
                             {
                                 if (waitingCount >= 7)
                                 {
-                                    state.TransporterFlags &= direction.ToTransporterFlag();
+                                    state.TransporterFlags &= ~direction.ToTransporterFlag();
                                 }
                             }
                             else if (FreeTransporterCount(direction) != 0)
@@ -1019,7 +1042,7 @@ namespace Freeserf
 
                             if (waitingCount >= 7 && Misc.BitTest(resourcesWaiting[2], (int)direction))
                             {
-                                state.TransporterFlags &= direction.ToTransporterFlag();
+                                state.TransporterFlags &= ~direction.ToTransporterFlag();
                             }
                         }
                         else

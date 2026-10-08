@@ -197,6 +197,11 @@ namespace Freeserf
             get => state.CastlePosition;
             internal set => state.CastlePosition = value;
         }
+        public uint CastleInventoryIndex
+        {
+            get => state.CastleInventoryIndex;
+            internal set => state.CastleInventoryIndex = value;
+        }
         public bool CanSpawn => state.CanSpawn;
         /// <summary>
         /// Whether the strongest knight should be sent to fight.
@@ -1568,7 +1573,24 @@ namespace Freeserf
         public uint BuildingScore => state.TotalBuildingScore;
 
         // Calculate condensed score from military score and knight morale.
-        public uint MilitaryScore => 2048u + (state.KnightMorale >> 1) * (state.TotalMilitaryScore << 6);
+        /// <summary>
+        /// Condensed score from military score and knight morale:
+        /// ((military << 6) * (0x800 + (morale >> 1))) >> 16, at least 1 when
+        /// there is any military score (as the original game).
+        /// </summary>
+        public uint MilitaryScore
+        {
+            get
+            {
+                ulong military = (uint)(state.TotalMilitaryScore << 6);
+                ulong score = (military * (2048u + (state.KnightMorale >> 1))) >> 16;
+                if (score == 0 && state.TotalMilitaryScore != 0)
+                {
+                    score = 1;
+                }
+                return (uint)score;
+            }
+        }
 
         public void IncreaseMilitaryScore(uint val)
         {
@@ -2008,10 +2030,13 @@ namespace Freeserf
                 MaxAttackingKnightsByDistance[i] = reader.Value("attacking_knights")[i].ReadInt();
             }
 
-            for (int i = 0; i < 23; ++i)
+            // All 24 types; older saves have 23 of them, without the gold smelters.
+            var completed = reader.Value("completed_building_count");
+            var incomplete = reader.Value("incomplete_building_count");
+            for (int i = 0; i < 24 && i < completed.Count && i < incomplete.Count; ++i)
             {
-                state.CompletedBuildingCount[i] = reader.Value("completed_building_count")[i].ReadUInt();
-                state.IncompleteBuildingCount[i] = reader.Value("incomplete_building_count")[i].ReadUInt();
+                state.CompletedBuildingCount[i] = completed[i].ReadUInt();
+                state.IncompleteBuildingCount[i] = incomplete[i].ReadUInt();
             }
 
             for (int i = 0; i < 64; ++i)
@@ -2053,6 +2078,66 @@ namespace Freeserf
                 state.CastleKnightsRequested = (byte)reader.Value("castle_knights_requested").ReadUInt();
             } catch { 
                 state.CastleKnightsRequested = 0; //dont break old save games, assume 0
+            }
+
+            // Older saves did not keep these.
+            if (reader.HasValue("castle_inventory"))
+            {
+                state.CastleInventoryIndex = reader.Value("castle_inventory").ReadUInt();
+            }
+            if (reader.HasValue("send_generic_delay"))
+            {
+                sendGenericDelay = reader.Value("send_generic_delay").ReadInt();
+                sendKnightDelay = reader.Value("send_knight_delay").ReadInt();
+                state.KnightMorale = reader.Value("knight_morale").ReadUInt();
+                state.GoldDeposited = reader.Value("gold_deposited").ReadUInt();
+                state.MilitaryMaxGold = reader.Value("military_max_gold").ReadUInt();
+            }
+            if (reader.HasValue("timers"))
+            {
+                var timersValue = reader.Value("timers");
+                for (int i = 0; i + 1 < timersValue.Count; i += 2)
+                {
+                    var timer = new PositionTimer();
+                    timer.Timeout = timersValue[i].ReadInt();
+                    timer.Position = timersValue[i + 1].ReadUInt();
+                    timers.Add(timer);
+                }
+            }
+            if (reader.HasValue("messages"))
+            {
+                var messagesValue = reader.Value("messages");
+                for (int i = 0; i + 2 < messagesValue.Count; i += 3)
+                {
+                    var notification = new Notification();
+                    notification.NotificationType = (Notification.Type)messagesValue[i].ReadInt();
+                    notification.Position = messagesValue[i + 1].ReadUInt();
+                    notification.Data = messagesValue[i + 2].ReadUInt();
+                    notifications.Enqueue(notification);
+                }
+                HasNotifications = notifications.Count > 0;
+            }
+            if (reader.HasValue("player_stat_history"))
+            {
+                var history = reader.Value("player_stat_history");
+                for (int mode = 0; mode < 16; ++mode)
+                {
+                    for (int i = 0; i < 112; ++i)
+                    {
+                        playerStatHistory[mode, i] = history[mode * 112 + i].ReadUInt();
+                    }
+                }
+            }
+            if (reader.HasValue("resource_count_history"))
+            {
+                var history = reader.Value("resource_count_history");
+                for (int res = 0; res < 26; ++res)
+                {
+                    for (int i = 0; i < 120; ++i)
+                    {
+                        resourceCountHistory[res, i] = history[res * 120 + i].ReadUInt();
+                    }
+                }
             }
         }
 
@@ -2108,7 +2193,7 @@ namespace Freeserf
                 writer.Value("attacking_knights").Write(MaxAttackingKnightsByDistance[i]);
             }
 
-            for (int i = 0; i < 23; ++i)
+            for (int i = 0; i < 24; ++i)
             {
                 writer.Value("completed_building_count").Write(state.CompletedBuildingCount[i]);
                 writer.Value("incomplete_building_count").Write(state.IncompleteBuildingCount[i]);
@@ -2161,6 +2246,43 @@ namespace Freeserf
             writer.Value("castle_knights").Write(state.CastleKnights);
             writer.Value("castle_knights_wanted").Write(settings.CastleKnightsWanted);
             writer.Value("castle_knights_requested").Write(state.CastleKnightsRequested);
+
+            writer.Value("castle_inventory").Write(state.CastleInventoryIndex);
+            writer.Value("send_generic_delay").Write(sendGenericDelay);
+            writer.Value("send_knight_delay").Write(sendKnightDelay);
+            writer.Value("knight_morale").Write(state.KnightMorale);
+            writer.Value("gold_deposited").Write(state.GoldDeposited);
+            writer.Value("military_max_gold").Write(state.MilitaryMaxGold);
+
+            // The timers and messages of the player, as pairs or triples.
+            foreach (var timer in timers)
+            {
+                writer.Value("timers").Write(timer.Timeout);
+                writer.Value("timers").Write(timer.Position);
+            }
+
+            foreach (var notification in notifications)
+            {
+                writer.Value("messages").Write((int)notification.NotificationType);
+                writer.Value("messages").Write(notification.Position);
+                writer.Value("messages").Write(notification.Data);
+            }
+
+            for (int mode = 0; mode < 16; ++mode)
+            {
+                for (int i = 0; i < 112; ++i)
+                {
+                    writer.Value("player_stat_history").Write(playerStatHistory[mode, i]);
+                }
+            }
+
+            for (int res = 0; res < 26; ++res)
+            {
+                for (int i = 0; i < 120; ++i)
+                {
+                    writer.Value("resource_count_history").Write(resourceCountHistory[res, i]);
+                }
+            }
         }
     }
 }
