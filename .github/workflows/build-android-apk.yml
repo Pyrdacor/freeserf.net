@@ -87,7 +87,7 @@ jobs:
           EOF
           TAG="${{ github.event.inputs.release_tag }}"
           VERSION="${TAG#android-}"
-          gh release create "$TAG" apk/*.apk \
+          gh release create "$TAG" apk/*-Signed.apk \
             --repo "${{ github.repository }}" \
             --title "Freeserf for Android $VERSION" \
             --notes-file release-notes.md
