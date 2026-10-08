@@ -4,6 +4,14 @@ on:
   push:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to publish (e.g. android-1.0.1). Leave empty to only build and upload the artifact.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -25,3 +33,61 @@ jobs:
         with:
           name: apk-release
           path: FreeserfNet.Android/bin/Release/net10.0-android/*.apk
+
+  release:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v6
+        with:
+          name: apk-release
+          path: apk
+
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## Freeserf for Android
+
+          Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
+
+          ### What's new in 1.0.1
+
+          - **Multiplayer fix**: Fixed a crash when hosting or joining multiplayer games on Android.
+          - **Cross-platform play**: Android can now play together with PC players over the network.
+
+          ### Install
+
+          1. Download the **net.freeserf.android-Signed.apk** below.
+          2. Open the file on your Android device (or transfer it and tap it).
+          3. If prompted, allow installation from unknown sources.
+          4. On first start, the game asks you to pick your game data file (see below).
+
+          ### Requirements
+
+          - Android 5.0 (API 21) or newer
+          - OpenGL ES 3.0
+          - ~100 MB free storage
+
+          ### Game data
+
+          The game data file (SPAE.PA) is copyrighted and therefore **not** included. On first start, use the built-in file picker to select your own data file (e.g. from the original game or the free demo). The game remembers the selection for later starts.
+
+          ### What's included
+
+          - Full game engine (single player and network)
+          - Touch controls and on-screen keyboard for save game names
+          - Sound effects and MIDI music (BASS)
+          - ARM (32/64-bit) and x86_64 support
+          EOF
+          TAG="${{ github.event.inputs.release_tag }}"
+          VERSION="${TAG#android-}"
+          gh release create "$TAG" apk/*.apk \
+            --repo "${{ github.repository }}" \
+            --title "Freeserf for Android $VERSION" \
+            --notes-file release-notes.md
