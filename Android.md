@@ -203,11 +203,13 @@ now offers both options.
 
 Flow (all in `FreeserfNet.Android/Ubisoft/`):
 
-1. **Login** (`UbisoftLogin.cs`): `POST https://public-ubiservices.ubi.com/v3/profiles/sessions`
-   with `Authorization: Basic base64(email:password)`, `Ubi-AppId` and
-   `Ubi-RequestedPlatformType: uplay`. Two-factor authentication is supported
-   (second POST with `ubi_2fa_v1 t=...` + `Ubi-2FACode`). The password is never
-   stored.
+1. **Web login** (`MainActivity.ShowUbisoftLoginDialog`): a full-screen WebView
+   opens Ubisoft's official login page
+   (`https://connect.ubisoft.com/login?appId=...&genomeId=...`). The user logs
+   in on Ubisoft's own page — no password is ever typed into the app. After
+   login the session (ticket + sessionId) is read from the page's localStorage
+   (`PRODloginData`) and renewed under the app id
+   (`UbisoftLogin.RenewSessionAsync`, `PUT /v3/profiles/sessions`).
 2. **Demux socket** (`DemuxClient.cs`): TLS 1.2 to `dmx.upc.ubisoft.com:443`,
    protobuf framing (4-byte big-endian length prefix; some pushes arrive raw
    with first byte `0x12`). Authenticates with the login ticket and opens
@@ -219,12 +221,13 @@ Flow (all in `FreeserfNet.Android/Ubisoft/`):
    for the manifest and for individual slices.
 5. **Manifest** (`ManifestParser.cs`): the manifest file is downloaded, the
    356-byte header skipped, zlib-decompressed and parsed as protobuf
-   `Mg.Protocol.Download.Manifest`. Only the `SPAE.PA` file entry is used.
+   `Mg.Protocol.Download.Manifest`. Only the `SPAE.PA` file entry is used
+   (matched by name, also with a path prefix like `loca/SPAE.PA`).
 6. **Slices** (`SpaeDownloader.cs`): the slices of `SPAE.PA` are downloaded
-   (path `slices/{sha1}` or `slices_v3/{dir}/{sha1}` for manifest version 3),
-   decompressed (zstd via `ZstdSharp.Port`, deflate via `ZLibStream`; lzham is
-   not supported on Android) and concatenated into `SPAE.PA` in the game data
-   folder.
+   (path `slices/{sha1}` or `slices_v3/{dir}/{sha1}` for manifest version 3;
+   uppercase hex, the CDN is case-sensitive), decompressed (zstd via
+   `ZstdSharp.Port`, deflate via `ZLibStream`; lzham is not supported on
+   Android) and concatenated into `SPAE.PA` in the game data folder.
 
 Protobuf definitions are in `FreeserfNet.Android/Ubisoft/Protobuf/*.proto`
 (from UplayDB/Protobufs) and are generated at build time by `protoc` via the
@@ -236,6 +239,8 @@ Notes:
 - This uses the **unofficial** Ubisoft Connect API (same endpoints the Ubisoft
   Connect client uses). Ownership is verified server-side; users without the
   History Edition get a clear error.
+- The login happens on **Ubisoft's official page** in a WebView — the app never
+  sees the password. Two-factor authentication is handled by Ubisoft's page.
 - Only the manifest and the `SPAE.PA` slices are downloaded — not the whole game.
 - The `INTERNET` permission was already present in the manifest.
 

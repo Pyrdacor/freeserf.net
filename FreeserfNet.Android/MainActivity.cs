@@ -27,6 +27,7 @@ using Android.Provider;
 using Android.Runtime;
 using Android.Text;
 using Android.Views;
+using Android.Webkit;
 using Android.Widget;
 using Freeserf;
 using Freeserf.Android.Ubisoft;
@@ -93,6 +94,9 @@ namespace Freeserf.Android
         // The data import options dialog; dismissed when the user picks an
         // option so it does not linger on top of the running game.
         Dialog dataImportDialog;
+
+        // Full-screen dialog hosting the Ubisoft Connect web login.
+        Dialog loginDialog;
 
         // The activity instance, so static handlers (e.g. GameView.Closed)
         // can close the app via Finish().
@@ -533,133 +537,88 @@ namespace Freeserf.Android
             StartActivityForResult(intent, RequestImportData);
         }
 
-        // Shows the Ubisoft Connect login dialog (email + password).
+        // Shows the Ubisoft Connect web login in a full-screen WebView. The
+        // user logs in on Ubisoft's official page; the session is then read
+        // from the page's localStorage and used for the download. No password
+        // is ever typed into the app itself.
         void ShowUbisoftLoginDialog()
         {
+            var webView = new WebView(this);
+            webView.Settings.JavaScriptEnabled = true;
+            webView.Settings.DomStorageEnabled = true;
+            webView.Focusable = true;
+            webView.FocusableInTouchMode = true;
+
             var layout = new LinearLayout(this)
             {
                 Orientation = global::Android.Widget.Orientation.Vertical
             };
-            layout.SetPadding(DpToPx(20), DpToPx(8), DpToPx(20), 0);
 
-            var emailInput = new EditText(this)
+            // Top bar with title and cancel button.
+            var topBar = new LinearLayout(this)
             {
-                Hint = "Ubisoft E-Mail",
-                InputType = InputTypes.ClassText | InputTypes.TextVariationEmailAddress
+                Orientation = global::Android.Widget.Orientation.Horizontal
             };
-            layout.AddView(emailInput);
+            topBar.SetGravity(GravityFlags.CenterVertical);
+            topBar.SetBackgroundColor(global::Android.Graphics.Color.Argb(255, 30, 30, 30));
+            topBar.SetPadding(DpToPx(12), DpToPx(8), DpToPx(12), DpToPx(8));
 
-            var passwordInput = new EditText(this)
+            var title = new TextView(this)
             {
-                Hint = "Passwort",
-                InputType = InputTypes.ClassText | InputTypes.TextVariationPassword
+                Text = "Ubisoft Connect Login",
+                TextSize = 16
             };
-            layout.AddView(passwordInput);
+            title.SetTextColor(global::Android.Graphics.Color.White);
+            var titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1.0f);
+            topBar.AddView(title, titleParams);
 
-            new AlertDialog.Builder(this)
-                .SetTitle("Ubisoft Connect")
-                .SetMessage("Melden Sie sich mit Ihrem Ubisoft-Konto an. Sie müssen die Siedler 1 History Edition besitzen.")
-                .SetView(layout)
-                .SetPositiveButton("Anmelden", (sender, args) =>
-                {
-                    string email = emailInput.Text?.Trim() ?? "";
-                    string password = passwordInput.Text ?? "";
-                    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
-                    {
-                        ShowUbisoftErrorDialog("Bitte E-Mail und Passwort eingeben.");
-                        return;
-                    }
-                    StartUbisoftLogin(email, password);
-                })
-                .SetNegativeButton("Abbrechen", (sender, args) => ShowDataImportDialog())
-                .SetCancelable(false)
-                .Show();
+            var cancelButton = new global::Android.Widget.Button(this) { Text = "Abbrechen" };
+            topBar.AddView(cancelButton);
+            cancelButton.Click += (sender, args) =>
+            {
+                webView.StopLoading();
+                webView.Destroy();
+                loginDialog?.Dismiss();
+                loginDialog = null;
+                ShowDataImportDialog();
+            };
+
+            layout.AddView(topBar, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent));
+
+            layout.AddView(webView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+
+            var dialog = new Dialog(this);
+            dialog.SetContentView(layout);
+            dialog.Window?.SetLayout(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+            dialog.Window?.SetSoftInputMode(SoftInput.AdjustResize);
+            dialog.SetCancelable(false);
+
+            loginDialog = dialog;
+            dialog.Show();
+
+            webView.SetWebViewClient(new UbisoftWebViewClient(this, dialog, webView));
+            webView.LoadUrl(UbisoftLogin.LoginUrl);
+            webView.RequestFocus();
         }
 
-        // Runs the first login step (email + password) on a background thread.
-        void StartUbisoftLogin(string email, string password)
+        // Called when the WebView login captured a session (ticket + session
+        // id) from the Ubisoft page. Renews the session under the app id and
+        // starts the download.
+        internal void OnUbisoftWebLoginSuccess(string ticket, string sessionId, Dialog dialog, WebView webView)
         {
+            dialog.Dismiss();
+            webView.StopLoading();
+            webView.Destroy();
+
             ShowProgressDialog("Melde bei Ubisoft Connect an…");
 
             Task.Run(() =>
             {
                 try
                 {
-                    var loginResult = UbisoftLogin.LoginAsync(email, password).GetAwaiter().GetResult();
-                    RunOnUiThread(() =>
-                    {
-                        if (loginResult.RequiresTwoFactorAuthentication)
-                        {
-                            HideProgressDialog();
-                            ShowTwoFactorDialog(loginResult.Response.TwoFactorAuthenticationTicket);
-                        }
-                        else if (!loginResult.Success)
-                        {
-                            HideProgressDialog();
-                            ShowUbisoftErrorDialog(loginResult.ErrorMessage);
-                        }
-                        else
-                        {
-                            StartUbisoftDownload(loginResult.Response);
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    RunOnUiThread(() =>
-                    {
-                        HideProgressDialog();
-                        ShowUbisoftErrorDialog(ex.Message);
-                    });
-                }
-            });
-        }
-
-        // Shows the two-factor authentication code dialog.
-        void ShowTwoFactorDialog(string twoFactorTicket)
-        {
-            var layout = new LinearLayout(this)
-            {
-                Orientation = global::Android.Widget.Orientation.Vertical
-            };
-            layout.SetPadding(DpToPx(20), DpToPx(8), DpToPx(20), 0);
-
-            var codeInput = new EditText(this)
-            {
-                Hint = "2FA-Code",
-                InputType = InputTypes.ClassNumber
-            };
-            layout.AddView(codeInput);
-
-            new AlertDialog.Builder(this)
-                .SetTitle("Zwei-Faktor-Authentifizierung")
-                .SetMessage("Bitte geben Sie den Code aus Ihrer Authentifizierungs-App oder E-Mail ein.")
-                .SetView(layout)
-                .SetPositiveButton("Bestätigen", (sender, args) =>
-                {
-                    string code = codeInput.Text?.Trim() ?? "";
-                    if (string.IsNullOrEmpty(code))
-                    {
-                        ShowUbisoftErrorDialog("Bitte den 2FA-Code eingeben.");
-                        return;
-                    }
-                    StartTwoFactorLogin(twoFactorTicket, code);
-                })
-                .SetNegativeButton("Abbrechen", (sender, args) => ShowDataImportDialog())
-                .SetCancelable(false)
-                .Show();
-        }
-
-        // Completes the login with the two-factor authentication code.
-        void StartTwoFactorLogin(string twoFactorTicket, string code)
-        {
-            ShowProgressDialog("Melde bei Ubisoft Connect an…");
-
-            Task.Run(() =>
-            {
-                try
-                {
-                    var loginResult = UbisoftLogin.LoginWithTwoFactorCodeAsync(twoFactorTicket, code).GetAwaiter().GetResult();
+                    var loginResult = UbisoftLogin.RenewSessionAsync(ticket, sessionId).GetAwaiter().GetResult();
                     RunOnUiThread(() =>
                     {
                         if (!loginResult.Success)
@@ -1626,6 +1585,136 @@ namespace Freeserf.Android
         public override void Write(byte[] buffer, int offset, int count)
         {
             writer.Write(Encoding.UTF8.GetString(buffer, offset, count));
+        }
+    }
+
+    // WebView client for the Ubisoft Connect web login. After the user logs
+    // in on Ubisoft's official page, the session (ticket + session id) is
+    // stored in the page's localStorage; this client polls for it and hands
+    // it back to the activity.
+    class UbisoftWebViewClient : WebViewClient
+    {
+        readonly MainActivity activity;
+        readonly Dialog dialog;
+        readonly WebView webView;
+        readonly Handler checkHandler = new Handler(Looper.MainLooper);
+        bool checking = false;
+
+        public UbisoftWebViewClient(MainActivity activity, Dialog dialog, WebView webView)
+        {
+            this.activity = activity;
+            this.dialog = dialog;
+            this.webView = webView;
+        }
+
+        public override void OnPageFinished(WebView view, string url)
+        {
+            base.OnPageFinished(view, url);
+            CheckForLogin();
+        }
+
+        void CheckForLogin()
+        {
+            if (checking)
+                return;
+            checking = true;
+
+            webView.EvaluateJavascript(CheckLoginJs, new ValueCallback(result =>
+            {
+                checking = false;
+                Console.Error.WriteLine($"Ubisoft: web login check result: {result}");
+
+                if (!string.IsNullOrEmpty(result) && result != "null")
+                {
+                    try
+                    {
+                        // The result may be a JSON object or a quoted JSON
+                        // string, depending on the WebView version.
+                        string json = result;
+                        if (json.StartsWith("\"") && json.EndsWith("\""))
+                            json = System.Text.Json.JsonSerializer.Deserialize<string>(json);
+
+                        // The JS returns lowercase property names; deserialize
+                        // case-insensitively.
+                        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var session = System.Text.Json.JsonSerializer.Deserialize<UbisoftWebSession>(json, options);
+                        if (session != null && !string.IsNullOrEmpty(session.Ticket) && !string.IsNullOrEmpty(session.SessionId))
+                        {
+                            Console.Error.WriteLine("Ubisoft: web login session captured.");
+                            checkHandler.RemoveCallbacksAndMessages(null);
+                            activity.OnUbisoftWebLoginSuccess(session.Ticket, session.SessionId, dialog, webView);
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Ubisoft: web login parse error: {ex.Message}");
+                    }
+                }
+
+                checkHandler.PostDelayed(CheckForLogin, 500);
+            }));
+        }
+
+        // Reads the Ubisoft Connect session from the page's localStorage. The
+        // session is stored under "PRODloginData" after a successful login;
+        // other keys are scanned as a fallback.
+        const string CheckLoginJs = @"
+            (function() {
+                function findSession() {
+                    var loginData = window.localStorage.getItem('PRODloginData');
+                    if (loginData) {
+                        try {
+                            var s = JSON.parse(loginData);
+                            if (s.ticket && s.sessionId) return s;
+                        } catch (e) {}
+                    }
+                    for (var i = 0; i < window.localStorage.length; i++) {
+                        var key = window.localStorage.key(i);
+                        try {
+                            var val = JSON.parse(window.localStorage.getItem(key));
+                            if (val && val.ticket && val.sessionId) return val;
+                        } catch (e) {}
+                    }
+                    return null;
+                }
+                var s = findSession();
+                if (s) {
+                    return {ticket: s.ticket, sessionId: s.sessionId, userId: s.userId, nameOnPlatform: s.nameOnPlatform};
+                }
+                var keys = [];
+                for (var i = 0; i < window.localStorage.length; i++) {
+                    keys.push(window.localStorage.key(i));
+                }
+                console.log('[Freeserf] ubisoft localStorage keys: ' + keys.join(', '));
+                return null;
+            })();
+        ";
+    }
+
+    // Session data captured from the Ubisoft Connect web login.
+    class UbisoftWebSession
+    {
+        public string Ticket { get; set; }
+        public string SessionId { get; set; }
+        public string UserId { get; set; }
+        public string NameOnPlatform { get; set; }
+    }
+
+    // Adapts an Action<string> to Android's IValueCallback (used by
+    // WebView.EvaluateJavascript).
+    class ValueCallback : Java.Lang.Object, IValueCallback
+    {
+        readonly Action<string> action;
+
+        public ValueCallback(Action<string> action)
+        {
+            this.action = action;
+        }
+
+        public void OnReceiveValue(Java.Lang.Object value)
+        {
+            action?.Invoke(value?.ToString());
         }
     }
 }

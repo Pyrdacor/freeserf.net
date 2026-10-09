@@ -28,6 +28,16 @@ namespace Freeserf.Android.Ubisoft
         public const string UserAgent = "Massgate";
         public const string SessionUrl = "https://public-ubiservices.ubi.com/v3/profiles/sessions";
 
+        // Web login (used by the Ubisoft Connect web app and third-party
+        // integrations). After a successful login the session (ticket +
+        // sessionId) is stored in the browser's localStorage under
+        // "PRODloginData" on the connect.ubisoft.com domain.
+        public const string GenomeId = "954e66a0-be1b-4aa0-9690-fb75201e4e9e";
+        public const string LoginUrl =
+            "https://connect.ubisoft.com/login?appId=" + AppId +
+            "&genomeId=" + GenomeId +
+            "&lang=en-US&nextUrl=https:%2F%2Fconnect.ubisoft.com%2F";
+
         static readonly HttpClient httpClient = CreateHttpClient();
 
         static HttpClient CreateHttpClient()
@@ -90,6 +100,80 @@ namespace Freeserf.Android.Ubisoft
             }
 
             return await PostSessionAsync($"rm_v1 t={rememberMeTicket}", null, null, cancellationToken).ConfigureAwait(false);
+        }
+
+        // Renews a session captured from the web login (browser localStorage)
+        // under this app id. The browser ticket may be scoped to a different
+        // app id; renewing it makes it usable for the download API.
+        public static async Task<UbisoftLoginResult> RenewSessionAsync(string ticket, string sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(ticket))
+            {
+                return new UbisoftLoginResult
+                {
+                    Success = false,
+                    ErrorMessage = "Kein gültiger Login vorhanden."
+                };
+            }
+
+            try
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Put, SessionUrl))
+                {
+                    request.Headers.TryAddWithoutValidation("Authorization", $"Ubi_v1 t={ticket}");
+                    if (!string.IsNullOrEmpty(sessionId))
+                        request.Headers.TryAddWithoutValidation("Ubi-SessionId", sessionId);
+
+                    request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+
+                    using (var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false))
+                    {
+                        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        UbisoftLoginResponse loginResponse = null;
+                        try
+                        {
+                            loginResponse = JsonSerializer.Deserialize<UbisoftLoginResponse>(body);
+                        }
+                        catch
+                        {
+                            // Non-JSON error body; handled below.
+                        }
+
+                        if (response.IsSuccessStatusCode && loginResponse != null && !string.IsNullOrEmpty(loginResponse.Ticket))
+                        {
+                            return new UbisoftLoginResult
+                            {
+                                Success = true,
+                                Response = loginResponse
+                            };
+                        }
+
+                        string message = loginResponse?.Message;
+                        if (string.IsNullOrEmpty(message))
+                            message = $"Login fehlgeschlagen (HTTP {(int)response.StatusCode}).";
+
+                        return new UbisoftLoginResult
+                        {
+                            Success = false,
+                            ErrorMessage = message
+                        };
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                return new UbisoftLoginResult
+                {
+                    Success = false,
+                    ErrorMessage = "Netzwerkfehler: " + ex.Message
+                };
+            }
         }
 
         static async Task<UbisoftLoginResult> PostSessionAsync(string authorization, string twoFactorCode,
