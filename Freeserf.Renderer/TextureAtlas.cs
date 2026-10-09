@@ -43,7 +43,14 @@ namespace Freeserf.Renderer
 
         public Position GetOffset(uint spriteIndex)
         {
-            return new Position(textureOffsets[spriteIndex]);
+            if (textureOffsets.TryGetValue(spriteIndex, out var offset))
+                return new Position(offset);
+
+            // Missing sprite (e.g. not present in the game data). Return the
+            // atlas origin instead of throwing so the UI never crashes on a
+            // missing sprite; the placeholder added by AddGuiElements covers
+            // the common case, this is a safety net for any other lookup.
+            return new Position(0, 0);
         }
     }
 

@@ -449,7 +449,11 @@ namespace Freeserf
         /// The threat level of the building. Higher values mean that
         /// the building is closer to the enemy.
         /// </summary>
-        public uint ThreatLevel => state.ThreatLevel;
+        public uint ThreatLevel
+        {
+            get => state.ThreatLevel;
+            internal set => state.ThreatLevel = (byte)value;
+        }
 
         /// <summary>
         /// Building is currently playing back a sound effect.
@@ -1392,6 +1396,12 @@ namespace Freeserf
                 state.SerfRequested = (n & 128) != 0;
             }
 
+            // Older saves did not keep it: the fire ends at once.
+            if (reader.HasValue("burning_counter"))
+            {
+                BurningCounter = reader.Value("burning_counter").ReadInt();
+            }
+
             // This is new in freeserf.net
             try
             {
@@ -1465,6 +1475,7 @@ namespace Freeserf
             writer.Value("serf_request_failed").Write(state.SerfRequestFailed);
             writer.Value("serf_requested").Write(state.SerfRequested);
             writer.Value("burning").Write(state.Burning);
+            writer.Value("burning_counter").Write(BurningCounter);
             writer.Value("active").Write(state.Active);
             writer.Value("holder").Write(state.Holder);
 

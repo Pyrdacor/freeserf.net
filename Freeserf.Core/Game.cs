@@ -1418,6 +1418,29 @@ namespace Freeserf
             UpdateBorders();
         }
 
+        void InitLandOwnershipPreservingThreatLevels()
+        {
+            // The owners of the land are not saved: computed again from the military
+            // buildings. That would also update the threat levels of the military
+            // buildings, which the game updates only when the land near them
+            // changes: they stay as saved.
+            var threatLevels = new Dictionary<uint, byte>();
+            foreach (var building in Buildings.ToList())
+            {
+                threatLevels[building.Index] = (byte)building.ThreatLevel;
+            }
+
+            InitLandOwnership();
+
+            foreach (var building in Buildings.ToList())
+            {
+                if (threatLevels.TryGetValue(building.Index, out byte level))
+                {
+                    building.ThreatLevel = level;
+                }
+            }
+        }
+
         static readonly int[] militaryInfluence = new int[]
         {
             0, 1, 2, 4, 7, 12, 18, 29, -1, -1,      // hut 
@@ -2882,22 +2905,29 @@ namespace Freeserf
                 if (Map.HasSerf(position))
                 {
                     var serf = GetSerfAtPosition(position);
+                    bool walking = serf.SerfState == Serf.State.Walking || serf.SerfState == Serf.State.Transporting;
 
                     if (!Map.HasFlag(position))
                     {
-                        serf.SetLostState();
+                        // Only serfs moving along the removed road become lost.
+                        if (walking)
+                        {
+                            serf.SetLostState();
+                        }
                     }
-                    else
+                    else if (walking || (inDirection != Direction.None && serf.SerfState == Serf.State.Delivering))
                     {
                         // Handle serf close to flag, where
                         // it should only be lost if walking
                         // in the wrong direction.
+                        // Direction of the removed road at this flag.
+                        var roadDirection = (inDirection == Direction.None) ? direction : inDirection.Reverse();
                         int walkingDirection = serf.WalkingDirection;
 
                         if (walkingDirection < 0)
                             walkingDirection += 6;
 
-                        if (direction != Direction.None && walkingDirection == (int)direction.Reverse())
+                        if (walkingDirection == (int)roadDirection)
                         {
                             serf.SetLostState();
                         }
@@ -3334,7 +3364,7 @@ namespace Freeserf
 
             Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
-            InitLandOwnership();
+            InitLandOwnershipPreservingThreatLevels();
             PostLoadRoads();
 
             state.GoldTotal = Map.GetGoldDeposit();
@@ -3382,6 +3412,16 @@ namespace Freeserf
 
             state.Random = new Random(gameReader.Value("random").ReadString());
             state.FlagSearchCounter = (ushort)gameReader.Value("flag_search_counter").ReadUInt();
+
+            // Older saves did not keep these: the counters start again.
+            if (gameReader.HasValue("knight_morale_counter"))
+            {
+                state.KnightMoraleCounter = gameReader.Value("knight_morale_counter").ReadInt();
+            }
+            if (gameReader.HasValue("inventory_schedule_counter"))
+            {
+                state.InventoryScheduleCounter = gameReader.Value("inventory_schedule_counter").ReadInt();
+            }
 
             for (int i = 0; i < 4; ++i)
             {
@@ -3509,7 +3549,7 @@ namespace Freeserf
             Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
             InitKnights();
-            InitLandOwnership();
+            InitLandOwnershipPreservingThreatLevels();
             PostLoadRoads();
 
             Map.AddChangeHandler(this);
@@ -3542,6 +3582,8 @@ namespace Freeserf
             writer.Value("game_stats_counter").Write(state.GameStatsCounter);
             writer.Value("history_counter").Write(state.HistoryCounter);
             writer.Value("random").Write(state.Random.ToString());
+            writer.Value("knight_morale_counter").Write(state.KnightMoraleCounter);
+            writer.Value("inventory_schedule_counter").Write(state.InventoryScheduleCounter);
 
             writer.Value("next_index").Write(0); // next_index (we keep this to be compatible to freeserf save games)
             writer.Value("flag_search_counter").Write(state.FlagSearchCounter);

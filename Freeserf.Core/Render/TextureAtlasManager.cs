@@ -74,6 +74,16 @@ namespace Freeserf.Render
             return atlas[layer];
         }
 
+        // Clears all created atlases and builders. Must be called when the
+        // render context is (re)created, e.g. on Android activity recreation,
+        // because GPU textures are invalid after an EGL context loss.
+        public void Reset()
+        {
+            atlas.Clear();
+            atlasBuilders.Clear();
+            guiResourceOffsets.Clear();
+        }
+
         public void AddAll(DataSource data)
         {
             uint i;
@@ -585,6 +595,8 @@ namespace Freeserf.Render
 
                 if (sprite != null)
                     AddSprite(Layer.Gui, index, sprite);
+                else
+                    AddSprite(Layer.Gui, index, new Sprite(1, 1)); // placeholder for missing sprite
 
                 ++index;
             }

@@ -394,6 +394,11 @@ namespace Freeserf.Renderer
             }*/
         }
 
+        public int GetDrawCount()
+        {
+            return positionBuffer.Size / 4;
+        }
+
         public void Render()
         {
             if (disposed)

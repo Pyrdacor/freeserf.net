@@ -960,7 +960,9 @@ namespace Freeserf.Render
             }
 
             const uint SpecialObjectOffset = 10000u;
-            var random = new Random();
+            // Use the persistent generator of the game: a new Random is seeded
+            // from time() and gives the same values for a whole second.
+            var random = building.Game.GetRandom();
             var textureAtlasBuildings = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
             var textureAtlasObjects = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 

@@ -4574,12 +4574,10 @@ namespace Freeserf
                     Resource.Type resource = stateData.Walking.Resource;
                     MapPos destination = stateData.Walking.Destination;
 
-                    if (flag.PickUpResource(resourceIndex, ref resource, ref destination))
-                    {
-                        flag.DropResource(stateData.Walking.Resource, stateData.Walking.Destination);
-                        stateData.Walking.Resource = resource;
-                        stateData.Walking.Destination = destination;
-                    }
+                    flag.SwitchResource(resourceIndex, ref resource, ref destination);
+
+                    stateData.Walking.Resource = resource;
+                    stateData.Walking.Destination = destination;
                 }
 
                 // Find next resource to be picked up 
@@ -4926,11 +4924,12 @@ namespace Freeserf
             var direction = (Direction)(stateData.Walking.Direction + 6);
             var map = Game.Map;
 
-            // Only check for loops once in a while. 
+            // Only check for loops once in a while: after 10 waits at a flag,
+            // 50 elsewhere.
             ++stateData.Walking.WaitCounter;
 
-            if ((!map.HasFlag(Position) && stateData.Walking.WaitCounter >= 10) ||
-                stateData.Walking.WaitCounter >= 50)
+            if ((map.HasFlag(Position) && stateData.Walking.WaitCounter >= 10) ||
+                (!map.HasFlag(Position) && stateData.Walking.WaitCounter >= 50))
             {
                 stateData.Walking.WaitCounter = 0;
                 var position = Position;

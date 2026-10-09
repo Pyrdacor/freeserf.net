@@ -68,6 +68,7 @@ namespace Freeserf.UI
         bool redraw = true;
         protected internal Render.IRenderLayer Layer { get; private set; } = null;
         static GuiObject FocusedObject = null;
+        internal static bool IsTextInputFocused => FocusedObject?.IsTextInput == true;
         protected bool focused = false;
         protected bool displayed = false;
         GuiObject parent = null;
@@ -196,6 +197,9 @@ namespace Freeserf.UI
             // empty
         }
 
+        // Extra clickable border (in GUI units) used in touch mode
+        protected virtual int HitSlop => 0;
+
         protected virtual bool HandleClickLeft(int x, int y, bool delayed)
         {
             return false;
@@ -303,20 +307,29 @@ namespace Freeserf.UI
             SetRedraw();
         }
 
+        // True for GUI objects that need text input (e.g. TextInput). Platform
+        // hosts use this to show/hide the on-screen keyboard on focus changes.
+        public virtual bool IsTextInput => false;
+
         public void SetFocused()
         {
             if (FocusedObject != this)
             {
                 if (FocusedObject != null)
                 {
+                    bool wasTextInput = FocusedObject.IsTextInput;
                     FocusedObject.focused = false;
                     FocusedObject.HandleFocusLoose();
                     FocusedObject.SetRedraw();
+                    if (wasTextInput)
+                        Gui.NotifyTextInputFocusChanged(false);
                 }
 
                 focused = true;
                 FocusedObject = this;
                 SetRedraw();
+                if (IsTextInput)
+                    Gui.NotifyTextInputFocusChanged(true);
             }
         }
 
@@ -324,9 +337,12 @@ namespace Freeserf.UI
         {
             if (FocusedObject != null)
             {
+                bool wasTextInput = FocusedObject.IsTextInput;
                 FocusedObject.focused = false;
                 FocusedObject.HandleFocusLoose();
                 FocusedObject.SetRedraw();
+                if (wasTextInput)
+                    Gui.NotifyTextInputFocusChanged(false);
             }
 
             FocusedObject = null;
@@ -372,7 +388,9 @@ namespace Freeserf.UI
                 int objectX = e.X - TotalX;
                 int objectY = e.Y - TotalY;
 
-                if (objectX < 0 || objectY < 0 || objectX > Width || objectY > Height)
+                int slop = GuiScaling.TouchMode ? HitSlop : 0;
+
+                if (objectX < -slop || objectY < -slop || objectX > Width + slop || objectY > Height + slop)
                 {
                     return false;
                 }
@@ -423,9 +441,12 @@ namespace Freeserf.UI
             {
                 if (FocusedObject != null)
                 {
+                    bool wasTextInput = FocusedObject.IsTextInput;
                     FocusedObject.focused = false;
                     FocusedObject.HandleFocusLoose();
                     FocusedObject.SetRedraw();
+                    if (wasTextInput)
+                        Gui.NotifyTextInputFocusChanged(false);
                     FocusedObject = null;
                 }
             }
@@ -436,6 +457,17 @@ namespace Freeserf.UI
 
     public class Gui : Network.INetworkDataHandler
     {
+        // Fired when a text input gains (true) or loses (false) focus. Platform
+        // hosts (e.g. Android) use this to show/hide the on-screen keyboard.
+        public static event Action<bool> TextInputFocusChanged;
+
+        internal static void NotifyTextInputFocusChanged(bool focused)
+        {
+            TextInputFocusChanged?.Invoke(focused);
+        }
+
+        public static bool IsTextInputFocused => GuiObject.IsTextInputFocused;
+
         readonly Render.IRenderView renderView = null;
         Viewer viewer = null;
 
@@ -498,6 +530,32 @@ namespace Freeserf.UI
             }
         }
 
+        // Closes any active multiplayer connection (e.g. when the app is
+        // backgrounded) so no network threads keep running.
+        public void DisconnectNetwork()
+        {
+            if (viewer?.MainInterface == null)
+                return;
+
+            try
+            {
+                viewer.MainInterface.Client?.Disconnect();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Error disconnecting client: " + ex.Message);
+            }
+
+            try
+            {
+                viewer.MainInterface.Server?.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Error closing server: " + ex.Message);
+            }
+        }
+
         void RenderView_ZoomChanged(object sender, EventArgs e)
         {
             viewer.MainInterface.HandleZoomChange();
@@ -527,13 +585,7 @@ namespace Freeserf.UI
             viewer.DrawCursor(x, y);
         }
 
-        Position PositionToGui(Position position)
-        {
-            float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)renderView.VirtualScreen.Size.Height;
-
-            return new Position((int)Math.Floor(position.X * factorX), (int)Math.Floor(position.Y * factorY));
-        }
+        Position PositionToGui(Position position) => GuiScaling.For(renderView.VirtualScreen.Size).ToGui(position);
 
         public static Position PositionToGame(Position position, Render.IRenderView renderView)
         {
@@ -547,13 +599,7 @@ namespace Freeserf.UI
             return new Position(x, y);
         }
 
-        Size DeltaToGui(Size delta)
-        {
-            float factorX = 640.0f / (float)renderView.VirtualScreen.Size.Width;
-            float factorY = 480.0f / (float)renderView.VirtualScreen.Size.Height;
-
-            return new Size(Misc.Round(delta.Width * factorX), Misc.Round(delta.Height * factorY));
-        }
+        Size DeltaToGui(Size delta) => GuiScaling.For(renderView.VirtualScreen.Size).DeltaToGui(delta);
 
         public static Size DeltaToGame(Size delta, Render.IRenderView renderView)
         {

@@ -1,0 +1,107 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationId>net.freeserf.android</ApplicationId>
+    <ApplicationTitle>Freeserf</ApplicationTitle>
+    <RootNamespace>Freeserf.Android</RootNamespace>
+    <AssemblyName>FreeserfNet.Android</AssemblyName>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <DefineConstants>ANDROID</DefineConstants>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
+    <!-- Reproducible build settings (see Android.md). Trimming/AOT are disabled
+         by default because MSBuild on this machine cannot spawn the out-of-proc
+         task host (MSB4018). Pass -p:PublishTrimmed=true (e.g. in CI) to enable
+         trimming; the link-disabling properties below then stay unset so the
+         Android SDK defaults (AndroidLinkMode=SdkOnly) apply and the trimmed
+         assemblies are produced correctly. -->
+    <PublishTrimmed Condition="'$(PublishTrimmed)' == ''">false</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <AndroidLinkMode Condition="'$(PublishTrimmed)' != 'true'">None</AndroidLinkMode>
+    <AndroidLinkTool Condition="'$(PublishTrimmed)' != 'true'">none</AndroidLinkTool>
+    <AndroidEnableProguard>false</AndroidEnableProguard>
+    <AndroidEnableR8>false</AndroidEnableR8>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The app uses the DLR (dynamic) in Freeserf.Core (Buffer.cs, Savegame.cs),
+         so keep Microsoft.CSharp.dll (RuntimeBinder) when trimming. -->
+    <TrimmerRootAssembly Include="Microsoft.CSharp" RootMode="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.23.0" />
+    <PackageReference Include="Silk.NET.Input.Sdl" Version="2.23.0" />
+    <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+    <!-- Ubisoft Connect download (SPAE.PA import): protobuf runtime + code
+         generation (Grpc.Tools bundles protoc) and pure-managed zstd for
+         decompressing downloaded slices on Android. -->
+    <PackageReference Include="Google.Protobuf" Version="3.28.3" />
+    <PackageReference Include="Grpc.Tools" Version="2.67.0" PrivateAssets="All" />
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ubisoft Connect protobuf definitions (from UplayDB/Protobufs). The
+         C# classes are generated at build time by protoc (via Grpc.Tools). -->
+    <Protobuf Include="Ubisoft\Protobuf\*.proto" GrpcServices="None" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
+    <ProjectReference Include="..\Freeserf.Renderer\Freeserf.Renderer.csproj" />
+    <ProjectReference Include="..\Freeserf.Audio\Freeserf.Audio.csproj" />
+    <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- GameView is part of the desktop host project but only depends on the
+         game projects and Silk.NET.OpenGL, so we compile it directly here. -->
+    <Compile Include="..\FreeserfNet\GameView.cs" Link="GameView.cs" />
+  </ItemGroup>
+
+  <!-- BASS audio (Un4seen Developments). Native libraries under lib/<abi>/
+       are auto-included in the APK for each ABI. Keep bass and bassmidi
+       together for every ABI to support sound effects and MIDI music. -->
+
+  <!-- Game data (copyrighted, kept outside the repo) is NOT bundled by
+       default. On first start the user picks their own data file via the
+       system file picker (see MainActivity.ShowDataImportDialog). To bundle
+       a data file anyway, pass -p:FreeserfGameDataPath="path\to\SPAE.PA". -->
+
+  <ItemGroup Condition="'$(FreeserfGameDataPath)' != '' and Exists('$(FreeserfGameDataPath)')">
+    <!-- Bundled game data (copyrighted, kept outside the repo).
+         Extracted to app storage on first run. -->
+    <AndroidAsset Include="$(FreeserfGameDataPath)" Link="SPAE.PA" />
+  </ItemGroup>
+
+  <!-- Force a fresh Android intermediate output on every build (see Android.md,
+       Crash 2). Incremental builds can leave the Mono type-registration table
+       (libxamarin-app.so) stale relative to the generated Java stubs, causing
+       "UnsatisfiedLinkError: No implementation found for ... n_onStart()" at
+       launch. Two distinct .NET Android incremental-build bugs are involved:
+       (1) the linked libxamarin-app.so is not relinked when the native-assembly
+       objects change, and (2) regenerating the marshal methods table without a
+       build-properties change produces an incomplete table. Deleting the
+       _CleanIntermediateIfNeeded stamp makes the SDK's own
+       _CleanMonoAndroidIntermediateDir target run on every build, which cleans
+       the Android intermediate (android\, stamp\, app_shared_libraries\, flags)
+       while keeping the C# compile output and resolved assemblies. This forces
+       a consistent regeneration exactly like a clean build. Disable with
+       -p:ForceFreshTypeRegistration=false if ever needed. -->
+  <PropertyGroup>
+    <ForceFreshTypeRegistration Condition="'$(ForceFreshTypeRegistration)' == ''">true</ForceFreshTypeRegistration>
+  </PropertyGroup>
+
+  <Target Name="ForceFreshTypeRegistration"
+          BeforeTargets="_CleanIntermediateIfNeeded"
+          Condition="'$(ForceFreshTypeRegistration)' == 'true'">
+    <Delete Files="$(IntermediateOutputPath)stamp\_CleanIntermediateIfNeeded.stamp" />
+  </Target>
+
+</Project>

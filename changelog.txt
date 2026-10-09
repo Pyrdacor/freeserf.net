@@ -1,3 +1,27 @@
+Version 2.2.5:
+==============
+
+Ported bug fixes from the C++ freeserf releases 0.4 and 0.5:
+
+- Fixed a transporter duplicating a resource when switching at a flag
+- Fixed serfs being lost when a road is removed (only serfs moving along the removed road are lost)
+- Fixed a deadlock of serfs waiting for each other (loop check at flags)
+- Fixed no knights being made while a Knight0 is in the stock
+- Fixed transporter bits being cleared at a crowded flag
+- Fixed the military score of the statistics (overflow and wrong formula)
+- Fixed pigs oinking too often (persistent random generator)
+- Fixed the DOS smelter sound (clip 62 offset and padding)
+- Save games now keep more state so a loaded game goes on as the saved one:
+  - building counts of all 24 types (gold smelters were lost)
+  - the burning counter of buildings
+  - the knight morale, the castle inventory, the send delays, the gold,
+    the timers, the messages and the statistics history of the players
+  - the knight morale and inventory schedule counters of the game
+  - the threat levels of the military buildings (not computed again)
+  - the serfs leaving a stock
+  Older save games load as before.
+
+
 Version 2.2.4:
 ==============
 

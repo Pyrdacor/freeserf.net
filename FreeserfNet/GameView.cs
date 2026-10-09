@@ -1,4 +1,4 @@
-﻿/*
+/*
  * GameView.cs - Implementation of a game render view
  *
  * Copyright (C) 2018-2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -134,6 +134,15 @@ namespace Freeserf
                     var texture = (layer == Layer.Minimap) ? minimapTextureFactory.GetMinimapTexture() :
                         textureAtlas.GetOrCreate(layer).Texture as Texture;
 
+                    try
+                    {
+                        System.Console.WriteLine($"GameView: layer {layer} texture {texture?.Width}x{texture?.Height} glError={Freeserf.Renderer.State.Gl.GetError()}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine("GameView: glError query failed: " + ex.Message);
+                    }
+
                     var renderLayer = Create(layer, texture,
                         layer == Layer.Gui, // only the gui supports colored rects
                         null, // no color key for now
@@ -141,47 +150,48 @@ namespace Freeserf
 
                     if (layer == Layer.Gui || layer == Layer.GuiBuildings || layer == Layer.Minimap)
                     {
-                        // the gui needs scaling
+                        // the gui needs uniform scaling + centering
+                        var guiScaling = GuiScaling.For(VirtualScreen.Size);
+                        float scale = guiScaling.Scale;
+                        int offsetX = guiScaling.OffsetX;
+                        int offsetY = guiScaling.OffsetY;
+
                         renderLayer.PositionTransformation = (Position position) =>
                         {
-                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
-
-                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                            return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
                         {
-                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
-
                             // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY);
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * scale);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * scale);
 
                             return new Size(width, height);
                         };
                     }
                     else if (layer == Layer.GuiFont) // UI Font needs different scaling
                     {
+                        // The UI expects 8x8 characters but we may use different sizes.
+                        // So we adjust the scale factors accordingly.
+                        var guiScaling = GuiScaling.For(VirtualScreen.Size);
+                        float scale = guiScaling.Scale;
+                        int offsetX = guiScaling.OffsetX;
+                        int offsetY = guiScaling.OffsetY;
+
+                        float charScaleX = (8.0f / Global.UIFontCharacterWidth) * scale;
+                        float charScaleY = (8.0f / Global.UIFontCharacterHeight) * scale;
+
                         renderLayer.PositionTransformation = (Position position) =>
                         {
-                            float factorX = (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (float)VirtualScreen.Size.Height / 480.0f;
-
-                            return new Position(Misc.Round(position.X * factorX), Misc.Round(position.Y * factorY));
+                            return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
                         };
 
                         renderLayer.SizeTransformation = (Size size) =>
                         {
-                            // The UI expects 8x8 characters but we may use different sizes.
-                            // So we adjust the scale factors accordingly.
-                            float factorX = (8.0f / Global.UIFontCharacterWidth) * (float)VirtualScreen.Size.Width / 640.0f;
-                            float factorY = (8.0f / Global.UIFontCharacterHeight) * (float)VirtualScreen.Size.Height / 480.0f;
-
                             // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * factorX);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * factorY);
+                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * charScaleX);
+                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * charScaleY);
 
                             return new Size(width, height);
                         };
@@ -195,6 +205,15 @@ namespace Freeserf
                 {
                     throw new ExceptionFreeserf(ErrorSystemType.Render, $"Unable to create layer '{layer.ToString()}': {ex.Message}");
                 }
+            }
+
+            try
+            {
+                System.Console.WriteLine($"GameView: glError after layer creation = {Freeserf.Renderer.State.Gl.GetError()}");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("GameView: glError query failed: " + ex.Message);
             }
 
             gui = new UI.Gui(this, this);
@@ -622,6 +641,12 @@ namespace Freeserf
 
                     layers.Clear();
 
+                    // Free the audio (BASS) so playback stops when the game
+                    // view is closed. On Android the process stays alive after
+                    // the activity is finished, so without this the music
+                    // keeps playing in the background.
+                    audioFactory?.Dispose();
+
                     disposed = true;
                 }
             }
@@ -631,6 +656,11 @@ namespace Freeserf
         {
             gui.NetworkDataReceiver = NetworkDataReceiver;
             gui.UpdateNetworkEvents();
+        }
+
+        public void DisconnectNetwork()
+        {
+            gui.DisconnectNetwork();
         }
     }
 }

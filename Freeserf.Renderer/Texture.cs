@@ -96,11 +96,55 @@ namespace Freeserf.Renderer
             }
         }
 
+        static byte[] ConvertBGRAtoRGBA(byte[] pixelData)
+        {
+            var buffer = new byte[pixelData.Length];
+
+            for (int i = 0; i < pixelData.Length; i += 4)
+            {
+                buffer[i + 0] = pixelData[i + 2];
+                buffer[i + 1] = pixelData[i + 1];
+                buffer[i + 2] = pixelData[i + 0];
+                buffer[i + 3] = pixelData[i + 3];
+            }
+
+            return buffer;
+        }
+
+        static byte[] ConvertBGRtoRGB(byte[] pixelData)
+        {
+            var buffer = new byte[pixelData.Length];
+
+            for (int i = 0; i < pixelData.Length; i += 3)
+            {
+                buffer[i + 0] = pixelData[i + 2];
+                buffer[i + 1] = pixelData[i + 1];
+                buffer[i + 2] = pixelData[i + 0];
+            }
+
+            return buffer;
+        }
+
         protected void Create(PixelFormat format, byte[] pixelData, int numMipMapLevels)
         {
             if (format >= PixelFormat.RGB5A1)
             {
                 pixelData = ConvertPixelData(pixelData, ref format);
+            }
+
+            // OpenGL ES does not support GL_BGRA/GL_BGR as texture formats
+            // (only via the GL_EXT_texture_format_BGRA8888 extension which is
+            // not available on all devices). Convert the data to RGBA/RGB so
+            // the textures work on both desktop OpenGL and OpenGL ES.
+            if (format == PixelFormat.BGRA8)
+            {
+                pixelData = ConvertBGRAtoRGBA(pixelData);
+                format = PixelFormat.RGBA8;
+            }
+            else if (format == PixelFormat.BGR8)
+            {
+                pixelData = ConvertBGRtoRGB(pixelData);
+                format = PixelFormat.RGB8;
             }
 
             Bind();

@@ -548,7 +548,11 @@ namespace Freeserf
                 return false;
             }
 
-            if (state.Serfs[type] != 0)
+            // Don't make another specialist while one is waiting in the stock.
+            // Knights are the exception: new knights must be made even when some
+            // are in the stock (the slot only refers to one idle serf of the type).
+            if (state.Serfs[type] != 0 &&
+                (type < Serf.Type.Knight0 || type > Serf.Type.Knight4))
             {
                 return false;
             }
@@ -691,6 +695,12 @@ namespace Freeserf
 
             state.GenericCount = reader.Value("generic_count").ReadUInt();
 
+            // Older saves did not keep it.
+            if (reader.HasValue("serfs_out"))
+            {
+                serfsOut = reader.Value("serfs_out").ReadUInt();
+            }
+
             for (int i = 0; i < 26; ++i)
             {
                 state.Resources[(Resource.Type)i] = reader.Value("resources")[i].ReadUInt();
@@ -714,6 +724,7 @@ namespace Freeserf
             }
 
             writer.Value("generic_count").Write(state.GenericCount);
+            writer.Value("serfs_out").Write(serfsOut);
 
             for (int i = 0; i < 26; ++i)
             {

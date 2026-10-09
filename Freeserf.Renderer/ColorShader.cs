@@ -49,7 +49,7 @@ namespace Freeserf.Renderer
 
         protected static string GetFragmentShaderHeader()
         {
-            string header = $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor}\n";
+            string header = $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor:00}{(State.IsOpenGLES ? " es" : "")}\n";
 
             header += "\n";
             header += "#ifdef GL_ES\n";
@@ -66,7 +66,7 @@ namespace Freeserf.Renderer
 
         protected static string GetVertexShaderHeader()
         {
-            return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor}\n\n";
+            return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor:00}{(State.IsOpenGLES ? " es" : "")}\n\n";
         }
 
         protected static string GetInName(bool fragment)
@@ -115,7 +115,7 @@ namespace Freeserf.Renderer
             $"void main()",
             $"{{",
             $"    vec2 pos = vec2(float({DefaultPositionName}.x) + 0.49f, float({DefaultPositionName}.y) + 0.49f);",
-            $"    pixelColor = vec4({DefaultColorName}.r / 255.0f, {DefaultColorName}.g / 255.0f, {DefaultColorName}.b / 255.0f, {DefaultColorName}.a / 255.0f);",
+            $"    pixelColor = vec4(float({DefaultColorName}.r) / 255.0f, float({DefaultColorName}.g) / 255.0f, float({DefaultColorName}.b) / 255.0f, float({DefaultColorName}.a) / 255.0f);",
             $"    ",
             $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultLayerName}) * 0.00001f, 1.0f);",
             $"}}"

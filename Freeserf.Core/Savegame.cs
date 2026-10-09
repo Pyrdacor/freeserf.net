@@ -205,6 +205,11 @@ namespace Freeserf
         }
 
         public SaveReaderTextValue this[int index] => parts[index];
+
+        /// <summary>
+        /// The number of parts of a list.
+        /// </summary>
+        public int Count => parts.Count;
     }
 
     internal class SaveWriterTextValue
@@ -398,7 +403,14 @@ namespace Freeserf
 
                         if (player.HasCastle)
                         {
-                            player.CastlePosition = game.GetPlayerBuildings(player, Building.Type.Castle).First().Position;
+                            var castle = game.GetPlayerBuildings(player, Building.Type.Castle).First();
+                            player.CastlePosition = castle.Position;
+
+                            // Older saves did not keep the castle inventory.
+                            if (player.CastleInventoryIndex == 0 && castle.Inventory != null)
+                            {
+                                player.CastleInventoryIndex = castle.Inventory.Index;
+                            }
                         }
                     }
 
