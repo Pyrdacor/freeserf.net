@@ -541,6 +541,10 @@ namespace Freeserf.Android
         // user logs in on Ubisoft's official page; the session is then read
         // from the page's localStorage and used for the download. No password
         // is ever typed into the app itself.
+        //
+        // The WebView fills the top of the screen; the title bar with the
+        // cancel button sits at the bottom, so the on-screen keyboard covers
+        // only the bar and not the login form.
         void ShowUbisoftLoginDialog()
         {
             var webView = new WebView(this);
@@ -554,14 +558,18 @@ namespace Freeserf.Android
                 Orientation = global::Android.Widget.Orientation.Vertical
             };
 
-            // Top bar with title and cancel button.
-            var topBar = new LinearLayout(this)
+            // WebView fills the available space above the bottom bar.
+            layout.AddView(webView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent, 1.0f));
+
+            // Bottom bar with title and cancel button.
+            var bottomBar = new LinearLayout(this)
             {
                 Orientation = global::Android.Widget.Orientation.Horizontal
             };
-            topBar.SetGravity(GravityFlags.CenterVertical);
-            topBar.SetBackgroundColor(global::Android.Graphics.Color.Argb(255, 30, 30, 30));
-            topBar.SetPadding(DpToPx(12), DpToPx(8), DpToPx(12), DpToPx(8));
+            bottomBar.SetGravity(GravityFlags.CenterVertical);
+            bottomBar.SetBackgroundColor(global::Android.Graphics.Color.Argb(255, 18, 18, 18));
+            bottomBar.SetPadding(DpToPx(16), DpToPx(10), DpToPx(8), DpToPx(10));
 
             var title = new TextView(this)
             {
@@ -570,10 +578,10 @@ namespace Freeserf.Android
             };
             title.SetTextColor(global::Android.Graphics.Color.White);
             var titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1.0f);
-            topBar.AddView(title, titleParams);
+            bottomBar.AddView(title, titleParams);
 
             var cancelButton = new global::Android.Widget.Button(this) { Text = "Abbrechen" };
-            topBar.AddView(cancelButton);
+            bottomBar.AddView(cancelButton);
             cancelButton.Click += (sender, args) =>
             {
                 webView.StopLoading();
@@ -583,11 +591,8 @@ namespace Freeserf.Android
                 ShowDataImportDialog();
             };
 
-            layout.AddView(topBar, new LinearLayout.LayoutParams(
+            layout.AddView(bottomBar, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent));
-
-            layout.AddView(webView, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
             var dialog = new Dialog(this);
             dialog.SetContentView(layout);
