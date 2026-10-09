@@ -540,11 +540,8 @@ namespace Freeserf.Android
         // Shows the Ubisoft Connect web login in a full-screen WebView. The
         // user logs in on Ubisoft's official page; the session is then read
         // from the page's localStorage and used for the download. No password
-        // is ever typed into the app itself.
-        //
-        // The WebView fills the top of the screen; the title bar with the
-        // cancel button sits at the bottom, so the on-screen keyboard covers
-        // only the bar and not the login form.
+        // is ever typed into the app itself. The WebView fills the whole
+        // screen; the back button closes the login.
         void ShowUbisoftLoginDialog()
         {
             var webView = new WebView(this);
@@ -553,52 +550,29 @@ namespace Freeserf.Android
             webView.Focusable = true;
             webView.FocusableInTouchMode = true;
 
-            var layout = new LinearLayout(this)
-            {
-                Orientation = global::Android.Widget.Orientation.Vertical
-            };
+            var layout = new FrameLayout(this);
+            layout.AddView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
-            // WebView fills the available space above the bottom bar.
-            layout.AddView(webView, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent, 1.0f));
+            var dialog = new Dialog(this);
+            dialog.SetContentView(layout);
+            dialog.Window?.SetLayout(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+            // AdjustNothing: the window does not resize or pan when the
+            // keyboard appears, so the WebView (with the login form) stays
+            // fully visible.
+            dialog.Window?.SetSoftInputMode(SoftInput.AdjustNothing);
+            dialog.SetCancelable(false);
 
-            // Bottom bar with title and cancel button.
-            var bottomBar = new LinearLayout(this)
-            {
-                Orientation = global::Android.Widget.Orientation.Horizontal
-            };
-            bottomBar.SetGravity(GravityFlags.CenterVertical);
-            bottomBar.SetBackgroundColor(global::Android.Graphics.Color.Argb(255, 18, 18, 18));
-            bottomBar.SetPadding(DpToPx(16), DpToPx(10), DpToPx(8), DpToPx(10));
-
-            var title = new TextView(this)
-            {
-                Text = "Ubisoft Connect Login",
-                TextSize = 16
-            };
-            title.SetTextColor(global::Android.Graphics.Color.White);
-            var titleParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1.0f);
-            bottomBar.AddView(title, titleParams);
-
-            var cancelButton = new global::Android.Widget.Button(this) { Text = "Abbrechen" };
-            bottomBar.AddView(cancelButton);
-            cancelButton.Click += (sender, args) =>
+            // Back button closes the login and returns to the data import
+            // options.
+            dialog.SetOnKeyListener(new DialogBackKeyListener(() =>
             {
                 webView.StopLoading();
                 webView.Destroy();
                 loginDialog?.Dismiss();
                 loginDialog = null;
                 ShowDataImportDialog();
-            };
-
-            layout.AddView(bottomBar, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent));
-
-            var dialog = new Dialog(this);
-            dialog.SetContentView(layout);
-            dialog.Window?.SetLayout(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-            dialog.Window?.SetSoftInputMode(SoftInput.AdjustResize);
-            dialog.SetCancelable(false);
+            }));
 
             loginDialog = dialog;
             dialog.Show();
@@ -1720,6 +1694,27 @@ namespace Freeserf.Android
         public void OnReceiveValue(Java.Lang.Object value)
         {
             action?.Invoke(value?.ToString());
+        }
+    }
+
+    // Handles the back button on the full-screen login dialog.
+    class DialogBackKeyListener : Java.Lang.Object, IDialogInterfaceOnKeyListener
+    {
+        readonly Action onBack;
+
+        public DialogBackKeyListener(Action onBack)
+        {
+            this.onBack = onBack;
+        }
+
+        public bool OnKey(IDialogInterface dialog, Keycode keyCode, KeyEvent e)
+        {
+            if (keyCode == Keycode.Back && e.Action == KeyEventActions.Down)
+            {
+                onBack?.Invoke();
+                return true;
+            }
+            return false;
         }
     }
 }
