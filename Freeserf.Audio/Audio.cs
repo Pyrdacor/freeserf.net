@@ -128,7 +128,7 @@ namespace Freeserf.Audio
         }
     }
 
-    public class AudioFactory : IAudioFactory
+    public class AudioFactory : IAudioFactory, IDisposable
     {
         private AudioImpl audio = null;
         private readonly DataSource dataSource = null;
@@ -144,6 +144,12 @@ namespace Freeserf.Audio
                 audio = new AudioImpl(dataSource);
 
             return audio;
+        }
+
+        public void Dispose()
+        {
+            audio?.Dispose();
+            audio = null;
         }
     }
 }

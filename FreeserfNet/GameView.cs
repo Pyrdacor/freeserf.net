@@ -641,6 +641,12 @@ namespace Freeserf
 
                     layers.Clear();
 
+                    // Free the audio (BASS) so playback stops when the game
+                    // view is closed. On Android the process stays alive after
+                    // the activity is finished, so without this the music
+                    // keeps playing in the background.
+                    audioFactory?.Dispose();
+
                     disposed = true;
                 }
             }
