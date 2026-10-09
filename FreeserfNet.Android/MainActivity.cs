@@ -25,9 +25,11 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Provider;
 using Android.Runtime;
+using Android.Text;
 using Android.Views;
 using Android.Widget;
 using Freeserf;
+using Freeserf.Android.Ubisoft;
 using Freeserf.Renderer;
 using Silk.NET.Input;
 using Silk.NET.Input.Sdl;
@@ -40,6 +42,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Numerics;
 using System.Text;
+using System.Threading.Tasks;
 
 #if DEBUG
 [assembly: Application(Debuggable = true)]
@@ -77,9 +80,19 @@ namespace Freeserf.Android
 
         // Game data import (first start without bundled data). The copyrighted
         // SPAE.PA file is not shipped with the APK, so on first start the user
-        // is asked to pick their own data file via the system file picker.
+        // is asked to pick their own data file via the system file picker or
+        // to download it from Ubisoft Connect.
         const int RequestImportData = 1001;
         static bool dataImported = false;
+
+        // Progress dialog shown while logging in to Ubisoft Connect or
+        // downloading the SPAE.PA data file.
+        Dialog progressDialog;
+        TextView progressStatus;
+
+        // The data import options dialog; dismissed when the user picks an
+        // option so it does not linger on top of the running game.
+        Dialog dataImportDialog;
 
         // The activity instance, so static handlers (e.g. GameView.Closed)
         // can close the app via Finish().
@@ -459,9 +472,58 @@ namespace Freeserf.Android
             }
         }
 
+        // Shows the data import options: either pick a file via the system
+        // file picker or download the SPAE.PA from Ubisoft Connect (requires
+        // ownership of the Siedler 1 History Edition). Runs on the UI thread.
+        void ShowDataImportDialog()
+        {
+            var layout = new LinearLayout(this)
+            {
+                Orientation = global::Android.Widget.Orientation.Vertical
+            };
+            layout.SetPadding(DpToPx(20), DpToPx(8), DpToPx(20), DpToPx(8));
+
+            var message = new TextView(this)
+            {
+                Text = "Bitte wählen Sie, wie Sie die Spieldatei (SPAE.PA) bereitstellen möchten.",
+                TextSize = 14
+            };
+            layout.AddView(message);
+
+            var pickButton = new global::Android.Widget.Button(this) { Text = "Datei auswählen" };
+            var pickParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            pickParams.TopMargin = DpToPx(16);
+            layout.AddView(pickButton, pickParams);
+            pickButton.Click += (sender, args) =>
+            {
+                dataImportDialog?.Dismiss();
+                dataImportDialog = null;
+                ShowFilePicker();
+            };
+
+            var ubisoftButton = new global::Android.Widget.Button(this) { Text = "Von Ubisoft Connect herunterladen" };
+            var ubisoftParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            ubisoftParams.TopMargin = DpToPx(8);
+            layout.AddView(ubisoftButton, ubisoftParams);
+            ubisoftButton.Click += (sender, args) =>
+            {
+                dataImportDialog?.Dismiss();
+                dataImportDialog = null;
+                ShowUbisoftLoginDialog();
+            };
+
+            dataImportDialog = new AlertDialog.Builder(this)
+                .SetTitle("Spieldaten bereitstellen")
+                .SetView(layout)
+                .SetCancelable(false)
+                .Show();
+        }
+
         // Shows the system file picker so the user can import their own game
         // data file (e.g. SPAE.PA). Runs on the UI thread.
-        void ShowDataImportDialog()
+        void ShowFilePicker()
         {
             Toast.MakeText(this, "Bitte wählen Sie die Spieldatei (z.B. SPAE.PA) aus.", ToastLength.Long).Show();
 
@@ -469,6 +531,254 @@ namespace Freeserf.Android
             intent.AddCategory(Intent.CategoryOpenable);
             intent.SetType("*/*");
             StartActivityForResult(intent, RequestImportData);
+        }
+
+        // Shows the Ubisoft Connect login dialog (email + password).
+        void ShowUbisoftLoginDialog()
+        {
+            var layout = new LinearLayout(this)
+            {
+                Orientation = global::Android.Widget.Orientation.Vertical
+            };
+            layout.SetPadding(DpToPx(20), DpToPx(8), DpToPx(20), 0);
+
+            var emailInput = new EditText(this)
+            {
+                Hint = "Ubisoft E-Mail",
+                InputType = InputTypes.ClassText | InputTypes.TextVariationEmailAddress
+            };
+            layout.AddView(emailInput);
+
+            var passwordInput = new EditText(this)
+            {
+                Hint = "Passwort",
+                InputType = InputTypes.ClassText | InputTypes.TextVariationPassword
+            };
+            layout.AddView(passwordInput);
+
+            new AlertDialog.Builder(this)
+                .SetTitle("Ubisoft Connect")
+                .SetMessage("Melden Sie sich mit Ihrem Ubisoft-Konto an. Sie müssen die Siedler 1 History Edition besitzen.")
+                .SetView(layout)
+                .SetPositiveButton("Anmelden", (sender, args) =>
+                {
+                    string email = emailInput.Text?.Trim() ?? "";
+                    string password = passwordInput.Text ?? "";
+                    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+                    {
+                        ShowUbisoftErrorDialog("Bitte E-Mail und Passwort eingeben.");
+                        return;
+                    }
+                    StartUbisoftLogin(email, password);
+                })
+                .SetNegativeButton("Abbrechen", (sender, args) => ShowDataImportDialog())
+                .SetCancelable(false)
+                .Show();
+        }
+
+        // Runs the first login step (email + password) on a background thread.
+        void StartUbisoftLogin(string email, string password)
+        {
+            ShowProgressDialog("Melde bei Ubisoft Connect an…");
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var loginResult = UbisoftLogin.LoginAsync(email, password).GetAwaiter().GetResult();
+                    RunOnUiThread(() =>
+                    {
+                        if (loginResult.RequiresTwoFactorAuthentication)
+                        {
+                            HideProgressDialog();
+                            ShowTwoFactorDialog(loginResult.Response.TwoFactorAuthenticationTicket);
+                        }
+                        else if (!loginResult.Success)
+                        {
+                            HideProgressDialog();
+                            ShowUbisoftErrorDialog(loginResult.ErrorMessage);
+                        }
+                        else
+                        {
+                            StartUbisoftDownload(loginResult.Response);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    RunOnUiThread(() =>
+                    {
+                        HideProgressDialog();
+                        ShowUbisoftErrorDialog(ex.Message);
+                    });
+                }
+            });
+        }
+
+        // Shows the two-factor authentication code dialog.
+        void ShowTwoFactorDialog(string twoFactorTicket)
+        {
+            var layout = new LinearLayout(this)
+            {
+                Orientation = global::Android.Widget.Orientation.Vertical
+            };
+            layout.SetPadding(DpToPx(20), DpToPx(8), DpToPx(20), 0);
+
+            var codeInput = new EditText(this)
+            {
+                Hint = "2FA-Code",
+                InputType = InputTypes.ClassNumber
+            };
+            layout.AddView(codeInput);
+
+            new AlertDialog.Builder(this)
+                .SetTitle("Zwei-Faktor-Authentifizierung")
+                .SetMessage("Bitte geben Sie den Code aus Ihrer Authentifizierungs-App oder E-Mail ein.")
+                .SetView(layout)
+                .SetPositiveButton("Bestätigen", (sender, args) =>
+                {
+                    string code = codeInput.Text?.Trim() ?? "";
+                    if (string.IsNullOrEmpty(code))
+                    {
+                        ShowUbisoftErrorDialog("Bitte den 2FA-Code eingeben.");
+                        return;
+                    }
+                    StartTwoFactorLogin(twoFactorTicket, code);
+                })
+                .SetNegativeButton("Abbrechen", (sender, args) => ShowDataImportDialog())
+                .SetCancelable(false)
+                .Show();
+        }
+
+        // Completes the login with the two-factor authentication code.
+        void StartTwoFactorLogin(string twoFactorTicket, string code)
+        {
+            ShowProgressDialog("Melde bei Ubisoft Connect an…");
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var loginResult = UbisoftLogin.LoginWithTwoFactorCodeAsync(twoFactorTicket, code).GetAwaiter().GetResult();
+                    RunOnUiThread(() =>
+                    {
+                        if (!loginResult.Success)
+                        {
+                            HideProgressDialog();
+                            ShowUbisoftErrorDialog(loginResult.ErrorMessage);
+                        }
+                        else
+                        {
+                            StartUbisoftDownload(loginResult.Response);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    RunOnUiThread(() =>
+                    {
+                        HideProgressDialog();
+                        ShowUbisoftErrorDialog(ex.Message);
+                    });
+                }
+            });
+        }
+
+        // Downloads the SPAE.PA from Ubisoft Connect on a background thread.
+        void StartUbisoftDownload(UbisoftLoginResponse login)
+        {
+            ShowProgressDialog("Starte Download…");
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var downloader = new SpaeDownloader(login, FileSystem.Paths.GameDataFolder);
+                    string path = downloader.DownloadAsync((status, percent) =>
+                    {
+                        RunOnUiThread(() => UpdateProgressDialog(status, percent));
+                    }).GetAwaiter().GetResult();
+
+                    RunOnUiThread(() =>
+                    {
+                        HideProgressDialog();
+                        dataImported = true;
+                        // Loading the downloaded data and initializing the game
+                        // can take a moment; show the overlay again until the
+                        // first frame (main menu) is rendered.
+                        ShowLoadingOverlay();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    RunOnUiThread(() =>
+                    {
+                        HideProgressDialog();
+                        ShowUbisoftErrorDialog(ex.Message);
+                    });
+                }
+            });
+        }
+
+        // Shows a non-cancellable progress dialog with a status text.
+        void ShowProgressDialog(string status)
+        {
+            if (progressDialog != null)
+                return;
+
+            var layout = new LinearLayout(this)
+            {
+                Orientation = global::Android.Widget.Orientation.Vertical
+            };
+            layout.SetPadding(DpToPx(20), DpToPx(16), DpToPx(20), DpToPx(16));
+
+            var progressBar = new ProgressBar(this) { Indeterminate = true };
+            layout.AddView(progressBar);
+
+            progressStatus = new TextView(this)
+            {
+                Text = status,
+                TextSize = 14,
+                Gravity = GravityFlags.Center
+            };
+            var statusParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+            statusParams.TopMargin = DpToPx(12);
+            layout.AddView(progressStatus, statusParams);
+
+            progressDialog = new AlertDialog.Builder(this)
+                .SetTitle("Ubisoft Connect")
+                .SetView(layout)
+                .SetCancelable(false)
+                .Create();
+            progressDialog.Show();
+        }
+
+        void UpdateProgressDialog(string status, int percent)
+        {
+            if (progressStatus != null)
+                progressStatus.Text = status;
+        }
+
+        void HideProgressDialog()
+        {
+            if (progressDialog != null)
+            {
+                progressDialog.Dismiss();
+                progressDialog = null;
+                progressStatus = null;
+            }
+        }
+
+        // Shows an error message and returns to the data import options.
+        void ShowUbisoftErrorDialog(string message)
+        {
+            new AlertDialog.Builder(this)
+                .SetTitle("Ubisoft Connect")
+                .SetMessage(message)
+                .SetPositiveButton("OK", (sender, args) => ShowDataImportDialog())
+                .SetCancelable(false)
+                .Show();
         }
 
         protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)

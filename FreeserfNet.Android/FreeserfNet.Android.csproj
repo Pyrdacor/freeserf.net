@@ -38,6 +38,18 @@
     <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.23.0" />
     <PackageReference Include="Silk.NET.Input.Sdl" Version="2.23.0" />
     <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+    <!-- Ubisoft Connect download (SPAE.PA import): protobuf runtime + code
+         generation (Grpc.Tools bundles protoc) and pure-managed zstd for
+         decompressing downloaded slices on Android. -->
+    <PackageReference Include="Google.Protobuf" Version="3.28.3" />
+    <PackageReference Include="Grpc.Tools" Version="2.67.0" PrivateAssets="All" />
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ubisoft Connect protobuf definitions (from UplayDB/Protobufs). The
+         C# classes are generated at build time by protoc (via Grpc.Tools). -->
+    <Protobuf Include="Ubisoft\Protobuf\*.proto" GrpcServices="None" />
   </ItemGroup>
 
   <ItemGroup>

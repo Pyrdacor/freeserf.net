@@ -12,9 +12,17 @@ on this codebase so they don't have to rediscover these issues.
   `Silk.NET.OpenGL`). The activity extends `SilkActivity` from
   `Silk.NET.Windowing.Sdl.Android`, which itself extends SDL's `SDLActivity`.
 - The game data file `SPAE.PA` is **copyrighted and kept outside the repo** and
-  is **NOT bundled by default**. On first start the user picks their own data
-  file via the system file picker (`MainActivity.ShowDataImportDialog`), which
-  copies it to app storage. To bundle a data file anyway (e.g. for a private
+  is **NOT bundled by default**. On first start the user can either pick their
+  own data file via the system file picker (`MainActivity.ShowFilePicker`),
+  which copies it to app storage, or download it directly from **Ubisoft
+  Connect** (`MainActivity.ShowUbisoftLoginDialog` + `Ubisoft/SpaeDownloader.cs`):
+  the user logs in with their Ubisoft account, the app verifies ownership of
+  "The Settlers - History Edition" (product id 11662) and downloads only the
+  `SPAE.PA` file (manifest + slices, not the whole game). The download uses the
+  unofficial Ubisoft Connect API (REST login at `public-ubiservices.ubi.com`,
+  protobuf/TLS demux socket at `dmx.upc.ubisoft.com`); the protobuf definitions
+  live in `FreeserfNet.Android/Ubisoft/Protobuf/` and are generated at build
+  time via `Grpc.Tools`. To bundle a data file anyway (e.g. for a private
   test build), pass `-p:FreeserfGameDataPath="path\to\SPAE.PA"`; it is then
   extracted to app storage on first run (`ExtractBundledData()` in
   `MainActivity.cs`).
@@ -185,6 +193,51 @@ Implementation notes:
   half-initialized game).
 - Android 12+ additionally shows the system splash screen (app icon) before the
   activity; the overlay takes over from there.
+
+## Ubisoft Connect SPAE.PA download (implemented)
+
+Users who own **The Settlers 1 History Edition** on Ubisoft Connect can download
+the copyrighted `SPAE.PA` data file directly in the app instead of picking it
+via the file picker. The data import dialog (`MainActivity.ShowDataImportDialog`)
+now offers both options.
+
+Flow (all in `FreeserfNet.Android/Ubisoft/`):
+
+1. **Login** (`UbisoftLogin.cs`): `POST https://public-ubiservices.ubi.com/v3/profiles/sessions`
+   with `Authorization: Basic base64(email:password)`, `Ubi-AppId` and
+   `Ubi-RequestedPlatformType: uplay`. Two-factor authentication is supported
+   (second POST with `ubi_2fa_v1 t=...` + `Ubi-2FACode`). The password is never
+   stored.
+2. **Demux socket** (`DemuxClient.cs`): TLS 1.2 to `dmx.upc.ubisoft.com:443`,
+   protobuf framing (4-byte big-endian length prefix; some pushes arrive raw
+   with first byte `0x12`). Authenticates with the login ticket and opens
+   service connections.
+3. **Ownership** (`OwnershipService.cs`): `ownership_service` returns the owned
+   games; the app checks for product id **11662** ("The Settlers - History
+   Edition") and requests an ownership token.
+4. **Download URLs** (`DownloadService.cs`): `download_service` returns CDN URLs
+   for the manifest and for individual slices.
+5. **Manifest** (`ManifestParser.cs`): the manifest file is downloaded, the
+   356-byte header skipped, zlib-decompressed and parsed as protobuf
+   `Mg.Protocol.Download.Manifest`. Only the `SPAE.PA` file entry is used.
+6. **Slices** (`SpaeDownloader.cs`): the slices of `SPAE.PA` are downloaded
+   (path `slices/{sha1}` or `slices_v3/{dir}/{sha1}` for manifest version 3),
+   decompressed (zstd via `ZstdSharp.Port`, deflate via `ZLibStream`; lzham is
+   not supported on Android) and concatenated into `SPAE.PA` in the game data
+   folder.
+
+Protobuf definitions are in `FreeserfNet.Android/Ubisoft/Protobuf/*.proto`
+(from UplayDB/Protobufs) and are generated at build time by `protoc` via the
+`Grpc.Tools` package. NuGet packages added: `Google.Protobuf`, `Grpc.Tools`,
+`ZstdSharp.Port`.
+
+Notes:
+
+- This uses the **unofficial** Ubisoft Connect API (same endpoints the Ubisoft
+  Connect client uses). Ownership is verified server-side; users without the
+  History Edition get a clear error.
+- Only the manifest and the `SPAE.PA` slices are downloaded — not the whole game.
+- The `INTERNET` permission was already present in the manifest.
 
 ## Crash 1: `System.TypeInitializationException` at startup (FIXED)
 

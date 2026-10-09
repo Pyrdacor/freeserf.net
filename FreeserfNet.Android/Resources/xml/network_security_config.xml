@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allows cleartext (HTTP) traffic to the Ubisoft Connect CDN. The CDN that
+  serves the game manifests and slices (e.g. uplaypc-s-ubisoft.cdn.ubi.com)
+  only supports plain HTTP, which Android blocks by default since API 28.
+  All other traffic (including the Ubisoft login API) stays HTTPS-only.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">cdn.ubi.com</domain>
+        <domain includeSubdomains="true">ubisoft.com</domain>
+    </domain-config>
+</network-security-config>
