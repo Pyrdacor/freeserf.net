@@ -95,8 +95,10 @@ namespace Freeserf.Android
         // option so it does not linger on top of the running game.
         Dialog dataImportDialog;
 
-        // Full-screen dialog hosting the Ubisoft Connect web login.
-        Dialog loginDialog;
+        // Full-screen Ubisoft Connect web login (added via AddContentView so
+        // it covers the whole screen without dialog window insets).
+        View loginWebViewLayout;
+        WebView loginWebView;
 
         // The activity instance, so static handlers (e.g. GameView.Closed)
         // can close the app via Finish().
@@ -540,8 +542,9 @@ namespace Freeserf.Android
         // Shows the Ubisoft Connect web login in a full-screen WebView. The
         // user logs in on Ubisoft's official page; the session is then read
         // from the page's localStorage and used for the download. No password
-        // is ever typed into the app itself. The WebView fills the whole
-        // screen; the back button closes the login.
+        // is ever typed into the app itself. The WebView is added via
+        // AddContentView so it covers the whole screen (no dialog window
+        // insets); the back button closes the login.
         void ShowUbisoftLoginDialog()
         {
             var webView = new WebView(this);
@@ -551,45 +554,61 @@ namespace Freeserf.Android
             webView.FocusableInTouchMode = true;
 
             var layout = new FrameLayout(this);
+            layout.SetBackgroundColor(global::Android.Graphics.Color.Black);
             layout.AddView(webView, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
-            var dialog = new Dialog(this);
-            dialog.SetContentView(layout);
-            dialog.Window?.SetLayout(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-            // AdjustNothing: the window does not resize or pan when the
-            // keyboard appears, so the WebView (with the login form) stays
-            // fully visible.
-            dialog.Window?.SetSoftInputMode(SoftInput.AdjustNothing);
-            dialog.SetCancelable(false);
+            AddContentView(layout, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
 
-            // Back button closes the login and returns to the data import
-            // options.
-            dialog.SetOnKeyListener(new DialogBackKeyListener(() =>
-            {
-                webView.StopLoading();
-                webView.Destroy();
-                loginDialog?.Dismiss();
-                loginDialog = null;
-                ShowDataImportDialog();
-            }));
+            loginWebViewLayout = layout;
+            loginWebView = webView;
 
-            loginDialog = dialog;
-            dialog.Show();
-
-            webView.SetWebViewClient(new UbisoftWebViewClient(this, dialog, webView));
+            webView.SetWebViewClient(new UbisoftWebViewClient(this, layout, webView));
             webView.LoadUrl(UbisoftLogin.LoginUrl);
             webView.RequestFocus();
+        }
+
+        // Removes the login WebView from the view hierarchy.
+        void RemoveUbisoftLoginView()
+        {
+            if (loginWebView != null)
+            {
+                loginWebView.StopLoading();
+                loginWebView.Destroy();
+                loginWebView = null;
+            }
+            if (loginWebViewLayout != null)
+            {
+                (loginWebViewLayout.Parent as ViewGroup)?.RemoveView(loginWebViewLayout);
+                loginWebViewLayout = null;
+            }
+        }
+
+        // Closes the login and returns to the data import options.
+        void CloseUbisoftLogin()
+        {
+            RemoveUbisoftLoginView();
+            ShowDataImportDialog();
+        }
+
+        // Intercepts the back button while the login WebView is shown.
+        public override bool OnKeyDown(Keycode keyCode, KeyEvent e)
+        {
+            if (keyCode == Keycode.Back && loginWebViewLayout != null)
+            {
+                CloseUbisoftLogin();
+                return true;
+            }
+            return base.OnKeyDown(keyCode, e);
         }
 
         // Called when the WebView login captured a session (ticket + session
         // id) from the Ubisoft page. Renews the session under the app id and
         // starts the download.
-        internal void OnUbisoftWebLoginSuccess(string ticket, string sessionId, Dialog dialog, WebView webView)
+        internal void OnUbisoftWebLoginSuccess(string ticket, string sessionId, View layout, WebView webView)
         {
-            dialog.Dismiss();
-            webView.StopLoading();
-            webView.Destroy();
+            RemoveUbisoftLoginView();
 
             ShowProgressDialog("Melde bei Ubisoft Connect an…");
 
@@ -1574,15 +1593,15 @@ namespace Freeserf.Android
     class UbisoftWebViewClient : WebViewClient
     {
         readonly MainActivity activity;
-        readonly Dialog dialog;
+        readonly View layout;
         readonly WebView webView;
         readonly Handler checkHandler = new Handler(Looper.MainLooper);
         bool checking = false;
 
-        public UbisoftWebViewClient(MainActivity activity, Dialog dialog, WebView webView)
+        public UbisoftWebViewClient(MainActivity activity, View layout, WebView webView)
         {
             this.activity = activity;
-            this.dialog = dialog;
+            this.layout = layout;
             this.webView = webView;
         }
 
@@ -1621,7 +1640,7 @@ namespace Freeserf.Android
                         {
                             Console.Error.WriteLine("Ubisoft: web login session captured.");
                             checkHandler.RemoveCallbacksAndMessages(null);
-                            activity.OnUbisoftWebLoginSuccess(session.Ticket, session.SessionId, dialog, webView);
+                            activity.OnUbisoftWebLoginSuccess(session.Ticket, session.SessionId, layout, webView);
                             return;
                         }
                     }
@@ -1694,27 +1713,6 @@ namespace Freeserf.Android
         public void OnReceiveValue(Java.Lang.Object value)
         {
             action?.Invoke(value?.ToString());
-        }
-    }
-
-    // Handles the back button on the full-screen login dialog.
-    class DialogBackKeyListener : Java.Lang.Object, IDialogInterfaceOnKeyListener
-    {
-        readonly Action onBack;
-
-        public DialogBackKeyListener(Action onBack)
-        {
-            this.onBack = onBack;
-        }
-
-        public bool OnKey(IDialogInterface dialog, Keycode keyCode, KeyEvent e)
-        {
-            if (keyCode == Keycode.Back && e.Action == KeyEventActions.Down)
-            {
-                onBack?.Invoke();
-                return true;
-            }
-            return false;
         }
     }
 }
