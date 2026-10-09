@@ -937,7 +937,36 @@ namespace Freeserf.Android
                 gameView = null;
                 view?.Close();
                 instance?.RunOnUiThread(() => instance.Finish());
+                ResetState();
             }
+        }
+
+        // The app was explicitly closed (Exit button). Finish() destroys the
+        // activity, but the Android process stays alive, so resuming the app
+        // from the recents list recreates the activity. Reset all static state
+        // so that recreation performs a full re-initialization; otherwise the
+        // screen stays black (gameView is null while initialized is still
+        // true). The view itself is not reset here: OnRun's finally disposes
+        // the old view after the render loop exits.
+        static void ResetState()
+        {
+            initialized = false;
+            renderTraced = false;
+            firstFrameRendered = false;
+            gameView = null;
+            dataImported = false;
+            activityState = ActivityState.Active;
+            loadingOverlayVisible = false;
+            loadingOverlay = null;
+
+            pinchActive = false;
+            touchActive = false;
+            touchPanning = false;
+            touchPanAllowed = false;
+            longPressFired = false;
+            CancelLongPress();
+            CancelDelayedClick();
+            pendingTouchEvents.Clear();
         }
 
         static void Window_Closing()
