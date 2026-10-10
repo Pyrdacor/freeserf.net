@@ -432,6 +432,17 @@ namespace Freeserf
         public bool StateChangedByAI { get; set; } = false;
 
         /// <summary>
+        /// Marks a human player as gone in multiplayer games. The other participants are notified.
+        /// </summary>
+        public void PlayerLeftGame(uint playerIndex)
+        {
+            var player = GetPlayer(playerIndex);
+
+            if (player != null)
+                player.HasLeftGame = true;
+        }
+
+        /// <summary>
         /// All AI code must be run with this method so that game state changes by the AI are detected.
         /// </summary>
         internal void RunAI(Action aiAction)

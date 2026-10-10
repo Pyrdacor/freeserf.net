@@ -221,6 +221,9 @@ namespace Freeserf
 
         public void Close()
         {
+            // Tell the other multiplayer participants that we are gone.
+            gui.DisconnectNetwork();
+
             GameManager.Instance.GetCurrentGame()?.Close();
 
             Dispose();

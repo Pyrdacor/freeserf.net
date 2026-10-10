@@ -129,6 +129,10 @@ namespace Freeserf.UI
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
                 "You wanted me\nto call you\nto this stock") },
+            { Notification.Type.PlayerLeft, new NotificationView(Notification.Type.PlayerLeft,
+                Decoration.Opponent,
+                0,
+                "This player\nhas left\nthe game") },
             { Notification.Type.None, new NotificationView(Notification.Type.None, 0, 0, null) }
         };
 
@@ -372,10 +376,8 @@ namespace Freeserf.UI
 
         static uint GetPlayerFaceSprite(PlayerFace face)
         {
-            if (face != 0u)
-                return 0x10b + (uint)face;
-
-            return 0x119u; // sprite_face_none 
+            // This also handles the additional multiplayer faces.
+            return face.GetGraphicIndex();
         }
     }
 }

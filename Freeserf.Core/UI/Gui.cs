@@ -521,11 +521,9 @@ namespace Freeserf.UI
                     if (client == null)
                         throw new ExceptionFreeserf(ErrorSystemType.Network, "Client viewer without client interface.");
 
-                    if (client.Connected)
-                    {
-                        client.NetworkDataReceiver = NetworkDataReceiver;
-                        client.UpdateNetworkEvents();
-                    }
+                    // Note: This is also needed if the connection was lost (to handle it).
+                    client.NetworkDataReceiver = NetworkDataReceiver;
+                    client.UpdateNetworkEvents();
                 }
             }
         }
@@ -548,6 +546,8 @@ namespace Freeserf.UI
 
             try
             {
+                // Tell the clients that the game is over for them.
+                viewer.MainInterface.Server?.BroadcastDisconnect();
                 viewer.MainInterface.Server?.Close();
             }
             catch (Exception ex)

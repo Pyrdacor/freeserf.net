@@ -574,7 +574,9 @@ namespace Freeserf.UI
             NotificationBox.Show(notification);
             Layout();
 
-            if (Misc.BitTest(0x8f3fe, (int)notification.NotificationType))
+            // Notification types with a map position (bit 20: player left, shows the castle)
+            // Note: A player who left a multiplayer game may not have a castle (invalid position).
+            if (Misc.BitTest(0x18f3fe, (int)notification.NotificationType) && notification.Position != Global.INVALID_MAPPOS)
             {
                 // Move screen to new position 
                 Viewport.MoveToMapPosition(notification.Position, true);
@@ -1053,7 +1055,8 @@ namespace Freeserf.UI
         static readonly int[] MsgCategory =
         [
             -1, 5, 5, 5, 4, 0, 4, 3, 4, 5,
-            5, 5, 4, 4, 4, 4, 0, 0, 0, 0
+            5, 5, 4, 4, 4, 4, 0, 0, 0, 0,
+            5 // player left (multiplayer)
         ];
 
         // Called periodically when the game progresses. 
@@ -1065,6 +1068,8 @@ namespace Freeserf.UI
             {
                 return;
             }
+
+            CheckForPlayersWhoLeft();
 
             lock (gameLock)
             {
@@ -1515,6 +1520,23 @@ namespace Freeserf.UI
 
         bool IsRemote => this is RemoteInterface;
         bool IsMultiplayer => IsRemote || this is ServerInterface;
+        readonly HashSet<uint> playersKnownToHaveLeft = new HashSet<uint>();
+
+        // Shows a notification when another player has left the multiplayer game.
+        void CheckForPlayersWhoLeft()
+        {
+            if (!IsMultiplayer || Game == null || Player == null)
+                return;
+
+            foreach (var player in Game.Players)
+            {
+                if (player.HasLeftGame && playersKnownToHaveLeft.Add(player.Index) && player != Player)
+                {
+                    Log.Info.Write(ErrorSystemType.Game, $"Player {player.Index} has left the game.");
+                    Player.AddNotification(Notification.Type.PlayerLeft, player.HasCastle ? player.CastlePosition : Global.INVALID_MAPPOS, player.Index);
+                }
+            }
+        }
 
         /// <summary>
         /// Pauses or resumes the game. In multiplayer games only the server can do this.

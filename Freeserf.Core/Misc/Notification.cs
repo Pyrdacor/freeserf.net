@@ -46,7 +46,8 @@ namespace Freeserf
             CallToMenu = 16,
             ThirtyMinutesSinceSave = 17,
             OneHourSinceSave = 18,
-            CallToStock = 19
+            CallToStock = 19,
+            PlayerLeft = 20 // new in freeserf.net (multiplayer)
         }
 
         [Data]

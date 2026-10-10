@@ -233,6 +233,11 @@ namespace Freeserf
         /// Whether this player is a computer controlled opponent.
         /// </summary>
         public bool IsAI => state.IsAI;
+        public bool HasLeftGame
+        {
+            get => state.HasLeftGame;
+            internal set => state.HasLeftGame = value;
+        }
 
         public uint GetSerfCount(Serf.Type type)
         {

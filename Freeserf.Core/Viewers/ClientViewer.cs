@@ -49,14 +49,16 @@ namespace Freeserf
             }
         }
 
+        // The server closed the game or the connection was lost.
+        // Note: This is raised on the main thread (see LocalClient.UpdateNetworkEvents).
         private void Client_Disconnected(object sender, System.EventArgs e)
         {
-            if (client == null || !client.Connected)
-                return; // already disconnected
+            client.Disconnected -= Client_Disconnected;
 
-            // TODO: this may be raised on a different thread and cause all kind of problems (should be invoked during main update cycle somehow)
+            Log.Info.Write(ErrorSystemType.Network, "The connection to the server was closed. Leaving the game.");
+
             GameManager.Instance.CloseGame();
-            ActiveViewer.MainInterface.OpenGameInit();
+            ActiveViewer.MainInterface.OpenGameInit(UI.GameInitBox.GameType.MultiplayerClient);
         }
 
         public override void OnNewGame(Game game)

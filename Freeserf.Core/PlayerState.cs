@@ -155,6 +155,7 @@ namespace Freeserf
         private int knightsToSpawn = 0;
         private int sendGenericDelay = 0;
         private int sendKnightDelay = 0;
+        private bool hasLeftGame = false;
         private dword militaryMaxGold = 0;
 
         public PlayerState()
@@ -454,6 +455,23 @@ namespace Freeserf
         }
         [Data]
         public byte CastleKnightsRequested { get; set; }
+
+        /// <summary>
+        /// The human player has left the multiplayer game.
+        /// </summary>
+        [Data]
+        public bool HasLeftGame
+        {
+            get => hasLeftGame;
+            set
+            {
+                if (hasLeftGame != value)
+                {
+                    hasLeftGame = value;
+                    MarkPropertyAsDirty(nameof(HasLeftGame));
+                }
+            }
+        }
 
         /// <summary>
         /// Game tick of the last player update

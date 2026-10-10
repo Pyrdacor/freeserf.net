@@ -864,6 +864,14 @@ namespace Freeserf.Data
 
             var sprite = GetSprite(resource, index, Sprite.Color.Transparent);
 
+            // The additional multiplayer faces (icons 600 to 605) are created at runtime from the faces
+            // "You" and "Friend" (see TextureAtlasManager). So they have the same size and offsets.
+            if (sprite == null && resource == Data.Resource.Icon && index >= 600u && index < 606u)
+            {
+                var baseFace = index < 603u ? PlayerFace.You : PlayerFace.Friend;
+                return GetSpriteInfo(resource, baseFace.GetGraphicIndex());
+            }
+
             SpriteInfo spriteInfo = null;
 
             if (sprite != null)

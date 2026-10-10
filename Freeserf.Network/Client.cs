@@ -50,6 +50,7 @@ namespace Freeserf.Network
         DateTime? outOfSyncTime = null;
         bool gameStateUpdateRequested = false;
         bool playerIndexKnown = false;
+        volatile bool connectionLost = false;
         Game game = null;
 
         public LocalClient()
@@ -174,8 +175,10 @@ namespace Freeserf.Network
 
                 // A previous connection may have cancelled the old token.
                 disconnectToken = new CancellationTokenSource();
+                connectionLost = false;
                 server = new RemoteServer(name, ip, client);
                 server.DataReceived += Server_DataReceived;
+                server.ConnectionLost += ConnectionObserver_ConnectionLost;
                 lastServerHeartbeat = DateTime.UtcNow;
 
                 connectionObserver = new ConnectionObserver(() => lastServerHeartbeat, 200, disconnectToken.Token);
@@ -193,9 +196,11 @@ namespace Freeserf.Network
             }
         }
 
+        // This is called by the connection observer thread or while sending.
+        // The disconnect is handled on the main thread (UpdateNetworkEvents).
         void ConnectionObserver_ConnectionLost()
         {
-            HandleDisconnect();
+            connectionLost = true;
         }
 
         void ConnectionObserver_DataRefreshNeeded()
@@ -229,6 +234,19 @@ namespace Freeserf.Network
             }
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
+
+            if (connectionLost)
+            {
+                connectionLost = false;
+
+                if (server != null)
+                {
+                    Log.Verbose.Write(ErrorSystemType.Network, "Lost connection to the server.");
+                    HandleDisconnect();
+                }
+
+                return;
+            }
 
             if (outOfSyncTime != null && (DateTime.UtcNow - outOfSyncTime.Value).TotalSeconds >= OutOfSyncGraceSeconds)
             {

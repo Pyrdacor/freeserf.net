@@ -577,6 +577,9 @@ namespace Freeserf.UI
                 {
                     var player = ServerGameInfo.GetPlayer(i);
 
+                    if (player == null) // free slot
+                        continue;
+
                     player.Supplies = player1.Supplies;
                     player.Reproduction = player1.Reproduction;
 
@@ -697,6 +700,20 @@ namespace Freeserf.UI
         }
 
         internal int JoinedClientCount => playerClientMapping.Count;
+
+        // Same as a click on the supplies (0) or reproduction (2) bar of the player box.
+        internal void ClickPlayerValue(uint playerIndex, int valueIndex, uint value)
+        {
+            HandlePlayerClick(playerIndex, 8 + 32 + 8 + 3 + valueIndex * 6 + 1, 67 - (int)value);
+        }
+
+        internal uint ClientPlayerIndex => Client?.PlayerIndex ?? 0u;
+
+        internal void SetValueCheckBoxes(bool serverValues, bool sameValues)
+        {
+            checkBoxServerValues.Checked = serverValues;
+            checkBoxSameValues.Checked = sameValues;
+        }
 
         // Same as a click on the activation button of the player box (removes or kicks the player).
         internal void ClickPlayerActivationButton(uint playerIndex)
@@ -1191,6 +1208,7 @@ namespace Freeserf.UI
                     Server.ClientJoined += Server_ClientJoined;
                     Server.ClientLeft += Server_ClientLeft;
                     Server.ClientChangedFace += Server_ClientChangedFace;
+                    Server.ClientChangedValues += Server_ClientChangedValues;
                     break;
                 case Action.StartGame:
                     {
@@ -1319,6 +1337,7 @@ namespace Freeserf.UI
                                 Server.ClientJoined -= Server_ClientJoined;
                                 Server.ClientLeft -= Server_ClientLeft;
                                 Server.ClientChangedFace -= Server_ClientChangedFace;
+                                Server.ClientChangedValues -= Server_ClientChangedValues;
 
                                 GameManager.Instance.CloseGame();
                                 interf = interf.Viewer.ChangeTo(Viewer.Type.Server).MainInterface;
@@ -1553,6 +1572,36 @@ namespace Freeserf.UI
             }
         }
 
+        // A client changed its own values in the lobby. This is only allowed if the server does not set them.
+        // A joined client sends its changed values to the server (it sends the lobby data to all clients then).
+        void SendOwnValues(PlayerInfo player)
+        {
+            Client?.SendUserAction(UserActionData.CreateChangeValuesUserAction(Network.Global.SpontaneousMessage, player.Supplies, player.Reproduction));
+        }
+
+        private void Server_ClientChangedValues(ILocalServer server, IRemoteClient client, uint supplies, uint reproduction)
+        {
+            if (client == null || !playerClientMapping.Values.Contains(client) || checkBoxServerValues.Checked || checkBoxSameValues.Checked)
+            {
+                server.BroadcastLobbyData(); // the client gets the valid values back
+                return;
+            }
+
+            lock (ServerGameInfo)
+            {
+                var player = client.PlayerIndex < ServerGameInfo.PlayerCount ? ServerGameInfo.GetPlayer(client.PlayerIndex) : null;
+
+                if (player != null)
+                {
+                    player.Supplies = Math.Min(40u, supplies);
+                    player.Reproduction = Math.Min(40u, reproduction);
+                    SetRedraw();
+                }
+            }
+
+            ServerUpdate();
+        }
+
         private void Server_ClientChangedFace(ILocalServer server, IRemoteClient client, PlayerFace face)
         {
             if (client == null || !playerClientMapping.Values.Contains(client) || client.PlayerIndex > ServerGameInfo.PlayerCount)
@@ -1672,16 +1721,20 @@ namespace Freeserf.UI
 
                 // every face < PlayerFace.You is treated as AI
 
-                // Each human player needs another face (color).
-                var face = MultiplayerFaceOrder.Skip(4).Concat(MultiplayerFaceOrder.Take(4)).FirstOrDefault(face =>
-                    !ServerGameInfo.Players.Any(p => p != null && CompareFace(p.Face, face)));
+                if (freeSlot != null)
+                    playerIndex = (uint)freeSlot.index;
+
+                // Each human player needs another face (color). The face with the color
+                // of the player slot is preferred, otherwise the first free one is used.
+                bool faceIsFree(PlayerFace face) => !ServerGameInfo.Players.Any(p => p != null && CompareFace(p.Face, face));
+                var slotFace = SlotColorFriendFaces[playerIndex];
+                var face = faceIsFree(slotFace) ? slotFace : MultiplayerFaceOrder.Skip(4).Concat(MultiplayerFaceOrder.Take(4)).FirstOrDefault(faceIsFree);
 
                 if (face == PlayerFace.None)
                     face = PlayerFace.Friend;
 
                 if (freeSlot != null)
                 {
-                    playerIndex = (uint)freeSlot.index;
                     var playerInfo = new PlayerInfo(face, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
                     ServerGameInfo.ReplacePlayer(freeSlot.index, playerInfo);
                 }
@@ -1835,6 +1888,12 @@ namespace Freeserf.UI
 
             return playerInfo;
         }
+
+        // Faces of other human players with the colors of the player slots (blue, red, magenta, yellow)
+        static readonly PlayerFace[] SlotColorFriendFaces =
+        {
+            PlayerFace.FriendBlue, PlayerFace.Friend, PlayerFace.FriendMagenta, PlayerFace.FriendYellow
+        };
 
         static readonly PlayerFace[] MultiplayerFaceOrder =
         {
@@ -2074,9 +2133,9 @@ namespace Freeserf.UI
                         {
                             if (checkBoxSameValues.Checked)
                             {
-                                for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
+                                foreach (var otherPlayer in ServerGameInfo.Players.Where(p => p != null))
                                 {
-                                    ServerGameInfo.GetPlayer(i).Supplies = value;
+                                    otherPlayer.Supplies = value;
                                 }
                             }
                             else
@@ -2086,6 +2145,8 @@ namespace Freeserf.UI
 
                             if (gameType == GameType.MultiplayerServer)
                                 ServerUpdate();
+                            else if (gameType == GameType.MultiplayerJoined)
+                                SendOwnValues(player);
                         }
                     }
                     else if (cx >= 6 && cx < 12)
@@ -2134,9 +2195,9 @@ namespace Freeserf.UI
                         {
                             if (checkBoxSameValues.Checked)
                             {
-                                for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
+                                foreach (var otherPlayer in ServerGameInfo.Players.Where(p => p != null))
                                 {
-                                    ServerGameInfo.GetPlayer(i).Reproduction = value;
+                                    otherPlayer.Reproduction = value;
                                 }
                             }
                             else
@@ -2146,6 +2207,8 @@ namespace Freeserf.UI
 
                             if (gameType == GameType.MultiplayerServer)
                                 ServerUpdate();
+                            else if (gameType == GameType.MultiplayerJoined)
+                                SendOwnValues(player);
                         }
                     }
                 }

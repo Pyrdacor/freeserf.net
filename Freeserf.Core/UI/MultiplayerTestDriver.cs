@@ -91,6 +91,7 @@ namespace Freeserf.UI
         static bool leaveLobby = false;
         static DateTime leaveTime = DateTime.MaxValue;
         static readonly bool dumpStates = Environment.GetEnvironmentVariable("FREESERF_MPTEST_DUMP") == "1";
+        static readonly bool openMessages = Environment.GetEnvironmentVariable("FREESERF_MPTEST_OPENMESSAGES") == "1";
 
         public static bool Active => role != Role.None;
 
@@ -157,9 +158,24 @@ namespace Freeserf.UI
             }
         }
 
+        static string lastLobbyValues = null;
+
         static void UpdateMenu(Interface interf)
         {
             var initBox = interf.GameInitBox;
+
+            // Log the player values in the lobby whenever they change.
+            if (initBox != null && initBox.Displayed && initBox.ServerGameInfo != null && step >= Step.Lobby)
+            {
+                string values = string.Join(" ", initBox.ServerGameInfo.Players.Select((p, i) =>
+                    p == null ? $"{i}:-" : $"{i}:{p.Face}/s{p.Supplies}/i{p.Intelligence}/r{p.Reproduction}"));
+
+                if (values != lastLobbyValues)
+                {
+                    lastLobbyValues = values;
+                    Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Lobby values: " + values);
+                }
+            }
 
             switch (step)
             {
@@ -175,6 +191,14 @@ namespace Freeserf.UI
 
                         for (int i = 0; i < aiPlayers; ++i)
                             initBox.AddAIPlayer();
+
+                        // Identical values before clients join (FREESERF_MPTEST_SAMEVALUES=1).
+                        if (Environment.GetEnvironmentVariable("FREESERF_MPTEST_SAMEVALUES") == "1")
+                        {
+                            initBox.ServerGameInfo.GetPlayer(0).Supplies = 37;
+                            initBox.ServerGameInfo.GetPlayer(0).Reproduction = 11;
+                            initBox.SetValueCheckBoxes(false, true);
+                        }
 
                         Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Server created. Waiting for {expectedClients} client(s).");
                     }
@@ -220,6 +244,20 @@ namespace Freeserf.UI
                             step = Step.WaitForGame;
                         }
                     }
+                    else if (Environment.GetEnvironmentVariable("FREESERF_MPTEST_CLIENTVALUES") == "1" && initBox != null)
+                    {
+                        // Change the own values in the lobby (supplies 30, reproduction 5).
+                        if (leaveTime == DateTime.MaxValue)
+                            leaveTime = DateTime.Now.AddSeconds(3);
+                        else if (DateTime.Now >= leaveTime)
+                        {
+                            uint playerIndex = initBox.ClientPlayerIndex;
+                            Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Changing own values of player {playerIndex}.");
+                            initBox.ClickPlayerValue(playerIndex, 0, 30);
+                            initBox.ClickPlayerValue(playerIndex, 2, 5);
+                            step = Step.WaitForGame;
+                        }
+                    }
                     else if (leaveLobby)
                     {
                         if (leaveTime == DateTime.MaxValue)
@@ -249,6 +287,13 @@ namespace Freeserf.UI
             if (interf.Viewer.ViewerType != Viewer.Type.Server && interf.Viewer.ViewerType != Viewer.Type.Client)
                 return;
 
+            // Opens notifications like a click on the message icon (FREESERF_MPTEST_OPENMESSAGES=1).
+            if (openMessages && interf.Player.HasAnyNotification)
+            {
+                Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Opening notification.");
+                interf.OpenMessage();
+            }
+
             if (game.GameTime < nextActionGameTime)
                 return;
 
@@ -259,7 +304,8 @@ namespace Freeserf.UI
             {
                 case Step.WaitForGame:
                     Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Game started as player {player.Index} ({interf.Viewer.ViewerType}).");
-                    step = Step.BuildCastle;
+                    // Nothing is built with FREESERF_MPTEST_NOBUILD=1.
+                    step = Environment.GetEnvironmentVariable("FREESERF_MPTEST_NOBUILD") == "1" ? Step.Done : Step.BuildCastle;
                     nextActionGameTime = game.GameTime + 2;
                     break;
                 case Step.BuildCastle:
@@ -340,6 +386,10 @@ namespace Freeserf.UI
 
                         Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Road with {directions.Length} segments built: {result == 1}.");
                         step = Step.Done;
+
+                        // For checking the player faces popup (FREESERF_MPTEST_SHOWFACES=1)
+                        if (Environment.GetEnvironmentVariable("FREESERF_MPTEST_SHOWFACES") == "1")
+                            interf.OpenPopup(PopupBox.Type.PlayerFaces);
                         break;
                     }
             }

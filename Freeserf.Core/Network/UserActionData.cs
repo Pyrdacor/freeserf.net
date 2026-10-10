@@ -281,7 +281,13 @@ namespace Freeserf.Network
         /// - Bit 0-1: 00 = Serfs in, 01 = Serfs stop, 11 = Serfs out, 10 = Invalid
         /// - Bit 2-3: 00 = Resources in, 01 = Resources stop, 11 = Resources out, 10 = Invalid
         /// </summary>
-        SetInventoryMode
+        SetInventoryMode,
+        /// <summary>
+        /// Change the own player values (if the server does not set them). In lobby only.
+        /// Byte 0: Supplies (0 - 40)
+        /// Byte 1: Reproduction (0 - 40)
+        /// </summary>
+        ChangeValues
     }
 
     public class UserActionData : INetworkData
@@ -381,6 +387,11 @@ namespace Freeserf.Network
         internal static UserActionData CreateChangeFaceUserAction(byte number, PlayerFace face)
         {
             return new UserActionData(number, 0u, UserAction.ChangeFace, new byte[1] { (byte)face });
+        }
+
+        internal static UserActionData CreateChangeValuesUserAction(byte number, uint supplies, uint reproduction)
+        {
+            return new UserActionData(number, 0u, UserAction.ChangeValues, new byte[2] { (byte)supplies, (byte)reproduction });
         }
 
         internal static UserActionData CreateChangeSettingUserAction(byte number, Game game, UserActionGameSetting setting, params byte[] values)

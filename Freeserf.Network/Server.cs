@@ -184,6 +184,7 @@ namespace Freeserf.Network
         bool acceptClients = true;
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
+        readonly List<RemoteClient> lostClients = new List<RemoteClient>();
         DiscoveryResponder discoveryResponder = null;
         TcpListener listener = null;
         LobbyServerInfo lobbyServerInfo = null;
@@ -262,6 +263,7 @@ namespace Freeserf.Network
         public event ClientLeftHandler ClientLeft;
         public event GameReadyHandler GameReady;
         public event ClientChangedFaceHandler ClientChangedFace;
+        public event ClientChangedValuesHandler ClientChangedValues;
 
         void Run(CancellationToken cancellationToken)
         {
@@ -376,9 +378,15 @@ namespace Freeserf.Network
             }
         }
 
+        // This is called by the connection observer thread. The clients
+        // are disconnected later on the main thread (UpdateNetworkEvents).
         void ClientConnectionLost(RemoteClient client)
         {
-            DisconnectClient(client, false);
+            lock (lostClients)
+            {
+                if (!lostClients.Contains(client))
+                    lostClients.Add(client);
+            }
         }
 
         void SubscribeConnectionEvents(RemoteClient remoteClient)
@@ -444,6 +452,23 @@ namespace Freeserf.Network
             }
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
+
+            List<RemoteClient> clientsToDisconnect;
+
+            lock (lostClients)
+            {
+                clientsToDisconnect = lostClients.ToList();
+                lostClients.Clear();
+            }
+
+            foreach (var lostClient in clientsToDisconnect)
+            {
+                if (clients.ContainsKey(lostClient))
+                {
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Lost connection to client {lostClient.Ip} (player {lostClient.PlayerIndex}).");
+                    DisconnectClient(lostClient, false);
+                }
+            }
 
             // Send the game state if something has changed by a user action.
             // Otherwise the clients compare their states with the state hash
@@ -647,14 +672,20 @@ namespace Freeserf.Network
                             HandleLobbyRequest(client, request.MessageIndex, request.Request, responseHandler);
                         else if (networkData is UserActionData userAction)
                         {
-                            if (userAction.UserAction != UserAction.ChangeFace)
+                            if (userAction.UserAction == UserAction.ChangeFace && userAction.Parameters?.Length >= 1)
+                            {
+                                ClientChangedFace?.Invoke(this, client, (PlayerFace)userAction.Parameters[0]);
+                            }
+                            else if (userAction.UserAction == UserAction.ChangeValues && userAction.Parameters?.Length >= 2)
+                            {
+                                ClientChangedValues?.Invoke(this, client, userAction.Parameters[0], userAction.Parameters[1]);
+                            }
+                            else
                             {
                                 Log.Error.Write(ErrorSystemType.Network, $"Received user action {userAction.UserAction} in lobby.");
                                 responseHandler?.Invoke(ResponseType.BadState);
                                 return;
                             }
-
-                            ClientChangedFace?.Invoke(this, client, (PlayerFace)userAction.Parameters[0]);
                         }
 
                         break;
@@ -893,6 +924,8 @@ namespace Freeserf.Network
                 case ServerState.Game:
                     // TODO: let AI continue the players settlement or keep it at this state?
                     // Maybe even allow a reconnect?
+                    GameManager.Instance.GetCurrentGame()?.PlayerLeftGame(client.PlayerIndex);
+                    GameDirty = true; // tell the other clients
                     break;
                 default:
                     break;
@@ -1195,9 +1228,23 @@ namespace Freeserf.Network
 
         public void Send(byte[] rawData)
         {
-            if (localClient != null && localClient.Connected)
-                Host.WriteData(localClient.GetStream(), rawData);
+            try
+            {
+                if (localClient != null && localClient.Connected)
+                    Host.WriteData(localClient.GetStream(), rawData);
+            }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is SocketException ||
+                ex is ObjectDisposedException || ex is InvalidOperationException)
+            {
+                Log.Verbose.Write(ErrorSystemType.Network, "Unable to send data to the server: " + ex.Message);
+                ConnectionLost?.Invoke();
+            }
         }
+
+        /// <summary>
+        /// Raised when data could not be sent.
+        /// </summary>
+        public event Action ConnectionLost;
     }
 
     public class ServerFactory : IServerFactory

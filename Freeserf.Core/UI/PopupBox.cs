@@ -1156,10 +1156,8 @@ namespace Freeserf.UI
         // Get the sprite number for a face
         static uint GetPlayerFaceSprite(PlayerFace face)
         {
-            if (face != 0)
-                return 0x10bu + (uint)face;
-
-            return 0x119u; // sprite_face_none 
+            // This also handles the additional multiplayer faces.
+            return face.GetGraphicIndex();
         }
 
         void DrawMapBox()
