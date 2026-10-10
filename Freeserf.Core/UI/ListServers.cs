@@ -19,6 +19,9 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Freeserf.UI
 {
     internal class ServerInfo
@@ -27,16 +30,36 @@ namespace Freeserf.UI
         public string HostName = "";
         public int CurrentPlayers = 0;
         public int MaxPlayers = Game.MAX_PLAYER_COUNT;
+        /// <summary>
+        /// The server has answered (otherwise it is a saved address without running server).
+        /// </summary>
+        public bool Online = false;
+        /// <summary>
+        /// The game was already started, so no player can join.
+        /// </summary>
+        public bool InGame = false;
+        /// <summary>
+        /// The manually entered address if the entry belongs to one (otherwise null).
+        /// </summary>
+        public string SavedAddress = null;
+
+        public bool CanJoin => Online && !InGame && CurrentPlayers < MaxPlayers;
 
         public override string ToString()
         {
-            return $"{Name} | {HostName} | {CurrentPlayers}/{MaxPlayers}";
+            if (!Online)
+                return $"{SavedAddress} | not found";
+
+            string text = $"{Name} | {HostName} | {CurrentPlayers}/{MaxPlayers}";
+
+            return InGame ? text + " | running" : text;
         }
     }
 
     internal class ListServers : ListBox<ServerInfo>
     {
         readonly Interface interf = null;
+        string lastContent = null;
 
         public ListServers(Interface interf)
             : base(interf, Render.TextRenderType.NewUI)
@@ -46,17 +69,34 @@ namespace Freeserf.UI
             this.interf = interf;
         }
 
-        public void AddServer(string serverName, string hostName, int currentPlayers, int maxPlayers = Game.MAX_PLAYER_COUNT)
+        /// <summary>
+        /// Replaces the listed servers. The selected server stays selected.
+        /// </summary>
+        public void SetServers(IEnumerable<ServerInfo> servers)
         {
-            items.Add(new ServerInfo()
-            {
-                Name = serverName,
-                HostName = hostName,
-                CurrentPlayers = currentPlayers,
-                MaxPlayers = maxPlayers
-            });
+            var serverList = servers.ToList();
+            string content = string.Join("\n", serverList);
 
-            Update(interf);
+            if (content == lastContent)
+                return;
+
+            lastContent = content;
+
+            var selected = GetSelected();
+            SetItems(interf, serverList);
+
+            if (selected != null)
+            {
+                int index = serverList.FindIndex(server => (server.Online && selected.Online && server.HostName == selected.HostName) ||
+                    (server.SavedAddress != null && server.SavedAddress == selected.SavedAddress));
+
+                if (index >= 0)
+                    Select(index);
+            }
+            else if (serverList.Count != 0)
+            {
+                Select(0);
+            }
         }
     }
 }

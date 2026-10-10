@@ -85,7 +85,18 @@ namespace Freeserf
             }
             catch (Exception ex)
             {
-                Log.Error.Write(ErrorSystemType.Application, "Exception: " + ex.Message);
+                Log.Error.Write(ErrorSystemType.Application, "Exception: " + ex);
+
+                // The log may only be written to a console window which is closed now.
+                try
+                {
+                    string crashFile = Path.Combine(Path.GetDirectoryName(FileSystem.Paths.UserConfigPath), "crash.log");
+                    File.AppendAllText(crashFile, $"{DateTime.Now} {ex}{Environment.NewLine}{Environment.NewLine}");
+                }
+                catch
+                {
+                    // ignore
+                }
             }
         }
     }

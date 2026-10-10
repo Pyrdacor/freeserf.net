@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MultiplayerTestDriver.cs - Automates multiplayer games for local testing
  *
  * Copyright (C) 2026  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -36,6 +36,9 @@ namespace Freeserf.UI
     /// without manual input. It is activated by the command line option -m:
     ///
     /// -m host:CLIENTS[:AI]  Create a server, wait for CLIENTS clients, add AI players and start.
+    /// -m host:CLIENTS:AI:wait  The same but the game is not started (for manual tests of the lobby).
+    /// -m host:CLIENTS:AI:kick  Kicks the first client from the lobby when all have joined, then
+    ///                          presses the copy values button of the host every few seconds (and waits).
     /// -m join:ADDRESS       Join the server at ADDRESS.
     ///
     /// Every player builds a castle, a lumberjack and a road to it through the
@@ -80,6 +83,10 @@ namespace Freeserf.UI
         static uint nextActionGameTime = 0;
         static MapPos lumberjackPosition = Global.INVALID_MAPPOS;
         static bool linkErrorLogged = false;
+        static bool waitInLobby = false;
+        static bool kickClient = false;
+        static DateTime kickTime = DateTime.MaxValue;
+        static DateTime copyTime = DateTime.MaxValue;
         static readonly bool dumpStates = Environment.GetEnvironmentVariable("FREESERF_MPTEST_DUMP") == "1";
 
         public static bool Active => role != Role.None;
@@ -94,6 +101,8 @@ namespace Freeserf.UI
                     role = Role.Host;
                     expectedClients = parts.Length > 1 && int.TryParse(parts[1], out int clients) ? clients : 1;
                     aiPlayers = parts.Length > 2 && int.TryParse(parts[2], out int ai) ? ai : 0;
+                    waitInLobby = parts.Length > 3 && (parts[3].ToLower() == "wait" || parts[3].ToLower() == "kick");
+                    kickClient = parts.Length > 3 && parts[3].ToLower() == "kick";
                     break;
                 case "join":
                     role = Role.Join;
@@ -178,7 +187,29 @@ namespace Freeserf.UI
                     if (role == Role.Host)
                     {
                         // The joined clients must have been added to the lobby (not only connected).
-                        if (interf.Server != null && initBox.JoinedClientCount >= expectedClients)
+                        if (kickClient && interf.Server != null && initBox.JoinedClientCount >= expectedClients)
+                        {
+                            if (kickTime == DateTime.MaxValue)
+                                kickTime = DateTime.Now.AddSeconds(3);
+                            else if (DateTime.Now >= kickTime)
+                            {
+                                uint firstClient = Enumerable.Range(1, (int)initBox.ServerGameInfo.PlayerCount - 1)
+                                    .Select(i => (uint)i).First(i => initBox.ServerGameInfo.Players[(int)i]?.Face.IsHuman() == true);
+                                Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Kicking player {firstClient}.");
+                                initBox.ClickPlayerActivationButton(firstClient);
+                                kickClient = false;
+                                copyTime = DateTime.Now.AddSeconds(3);
+                            }
+                        }
+
+                        if (DateTime.Now >= copyTime)
+                        {
+                            Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Copying values of player 0.");
+                            initBox.ClickPlayerCopyButton(0);
+                            copyTime = DateTime.Now.AddSeconds(3);
+                        }
+
+                        if (!waitInLobby && interf.Server != null && initBox.JoinedClientCount >= expectedClients)
                         {
                             Log.Info.Write(ErrorSystemType.Application, LogPrefix + "All clients joined. Starting game.");
                             initBox.HandleAction(GameInitBox.Action.StartGame);

@@ -71,5 +71,6 @@ namespace Freeserf.Network
     public interface IClientFactory
     {
         ILocalClient CreateLocal();
+        IServerFinder CreateServerFinder();
     }
 }

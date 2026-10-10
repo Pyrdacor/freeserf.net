@@ -141,13 +141,21 @@ namespace Freeserf.UI
 
             foreach (Button button in gameSpeedButtons)
             {
-                AddChild(button, 294 + 8 - button.Width, gameSpeedButtonY, true);
+                button.Enabled = IsGameSpeedButtonAvailable(index);
+                AddChild(button, 294 + 8 - button.Width, gameSpeedButtonY, button.Enabled);
                 gameSpeedButtons[index].SetRelativeTextureAtlasOffset(offsets[index++], 0);
 
                 gameSpeedButtonY += 7;
             }
 
-            gameSpeedButtons[0].Clicked += (sender, e) => SetGameSpeed(0);
+            gameSpeedButtons[0].Clicked += (sender, e) =>
+            {
+                // In multiplayer games the server can only pause and resume the game.
+                if (interf is ServerInterface)
+                    interf.TogglePause();
+                else
+                    SetGameSpeed(0);
+            };
             gameSpeedButtons[1].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED);
             gameSpeedButtons[2].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED * 7);
             gameSpeedButtons[3].Clicked += (sender, e) => SetGameSpeed(GameState.DEFAULT_GAME_SPEED * 14);
@@ -212,6 +220,19 @@ namespace Freeserf.UI
             interf.Player.AddPositionTimer(minutes * 60 * Global.TICKS_PER_SEC, interf.MapCursorPosition);
 
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+        }
+
+        // In multiplayer games the game speed can't be changed, as the clients would
+        // get out of sync. Only the server can pause the game (with the first button).
+        bool IsGameSpeedButtonAvailable(int index)
+        {
+            if (interf is RemoteInterface)
+                return false;
+
+            if (interf is ServerInterface)
+                return index == 0;
+
+            return true;
         }
 
         private void SetGameSpeed(uint speed)
@@ -289,8 +310,8 @@ namespace Freeserf.UI
                     messageIcon.Displayed = true;
                     returnIcon.Displayed = true;
 
-                    foreach (var speedButton in gameSpeedButtons)
-                        speedButton.Displayed = true;
+                    for (int i = 0; i < gameSpeedButtons.Length; ++i)
+                        gameSpeedButtons[i].Displayed = IsGameSpeedButtonAvailable(i);
 
                     foreach (var notificationButton in notificationButtons)
                         notificationButton.Displayed = true;

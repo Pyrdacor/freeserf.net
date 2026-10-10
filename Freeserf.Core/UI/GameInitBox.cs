@@ -148,6 +148,7 @@ namespace Freeserf.UI
 
         // Keep the 15-character address field clear of the Options button at x=300.
         const int ServerAddressInputX = 128;
+        const int ServerNameInputX = 72;
 
         Interface interf = null;
         GameType gameType = GameType.Custom;
@@ -171,6 +172,8 @@ namespace Freeserf.UI
         TextField textFieldVersion = null;
         Button buttonExit = null;
         TextField textCreateServer = null;
+        TextField textServerNameLabel = null;
+        readonly Network.IServerFinder serverFinder = null;
         Button buttonCreateServer = null;
         // multiplayer options
         CheckBox checkBoxServerValues = null; // the server sets the values of each player (otherwise each human client can set them for himself)
@@ -438,8 +441,7 @@ namespace Freeserf.UI
             serverList.ItemDoubleClicked += ServerList_ItemDoubleClicked;
             AddChild(serverList, 20, 55, false);
 
-            // TODO
-            serverList.AddServer("Test Server", "localhost", 0, Game.MAX_PLAYER_COUNT);
+            serverFinder = Network.Network.DefaultClientFactory?.CreateServerFinder();
 
             this.gameType = gameType;
             UpdateGameType();
@@ -477,6 +479,8 @@ namespace Freeserf.UI
             textFieldName = new TextField(interf, 1, 9);
             textFieldValue = new TextField(interf, 1, 9);
             textCreateServer = new TextField(interf, 1, 9);
+            textServerNameLabel = new TextField(interf, 1, 9);
+            AddChild(textServerNameLabel, 0, 0, false);
             AddChild(textFieldHeader, 0, 0, false);
             AddChild(textFieldName, 0, 0, false);
             AddChild(textFieldValue, 0, 0, false);
@@ -512,14 +516,17 @@ namespace Freeserf.UI
             serverAddressInput.SetFilter(ServerAddressFilter);
             serverAddressInput.SetSize(15 * 9 + 8, 8);
             serverAddressInput.MaxLength = 15;
-            serverAddressInput.Text = "localhost";
+            serverAddressInput.Text = "";
+            serverAddressInput.Submitted += ServerAddressInput_Submitted;
             AddChild(serverAddressInput, ServerAddressInputX, 18 + 16, false);
 
             serverNameInput = new TextInput(interf, 9, Render.TextRenderType.Legacy);
-            serverNameInput.SetSize(13 * 9 + 8, 8);
-            serverNameInput.MaxLength = 13;
-            serverNameInput.Text = "Freeserf";
-            AddChild(serverNameInput, 140, 26, false);
+            serverNameInput.SetFilter((key, _) => UserConfig.Multiplayer.IsValidServerNameCharacter(key));
+            serverNameInput.SetSize(UserConfig.MaxServerNameLength * 9 + 8, 8);
+            serverNameInput.MaxLength = UserConfig.MaxServerNameLength;
+            serverNameInput.Text = UserConfig.Multiplayer.ServerName;
+            serverNameInput.TextChanged += ServerNameInput_TextChanged;
+            AddChild(serverNameInput, ServerNameInputX, 139 + 16, false);
 
             textFieldServerIp = new TextField(interf, 1, 9);
             AddChild(textFieldServerIp, 0, 0, false);
@@ -585,6 +592,103 @@ namespace Freeserf.UI
             HandleAction(Action.CreateServer);
         }
 
+        void ServerNameInput_TextChanged(TextInput textInput)
+        {
+            string name = textInput.Text;
+
+            if (!UserConfig.Multiplayer.IsValidServerName(name))
+                return;
+
+            UserConfig.Multiplayer.ServerName = name;
+
+            // The name of a running server can be changed as well.
+            if (gameType == GameType.MultiplayerServer && Server != null)
+                Server.Name = name;
+        }
+
+        void ServerAddressInput_Submitted(TextInput textInput)
+        {
+            if (AddServerAddress(textInput.Text))
+            {
+                textInput.Text = "";
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
+            }
+        }
+
+        /// <summary>
+        /// Adds a manually entered server address. It is checked for running servers from now on (also after a restart).
+        /// </summary>
+        bool AddServerAddress(string address)
+        {
+            address = address?.Trim();
+
+            if (string.IsNullOrEmpty(address))
+                return false;
+
+            if (!UserConfig.Multiplayer.ServerAddresses.Contains(address))
+                UserConfig.Multiplayer.ServerAddresses.Add(address);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Searches for servers while the multiplayer screen is shown and updates the server list.
+        /// This is called regularly.
+        /// </summary>
+        internal void UpdateServerSearch()
+        {
+            if (serverFinder == null)
+                return;
+
+            if (!Displayed || gameType != GameType.MultiplayerClient)
+            {
+                serverFinder.Stop();
+                return;
+            }
+
+            serverFinder.SetAddresses(UserConfig.Multiplayer.ServerAddresses);
+            serverFinder.Start();
+
+            var servers = serverFinder.Servers.Select(server => new ServerInfo
+            {
+                Name = server.Name,
+                HostName = server.Ip.ToString(),
+                CurrentPlayers = server.CurrentPlayers,
+                MaxPlayers = server.MaxPlayers,
+                Online = true,
+                InGame = server.InGame,
+                SavedAddress = server.SearchedAddress
+            }).ToList();
+
+            // Entered addresses without running server
+            foreach (var address in UserConfig.Multiplayer.ServerAddresses)
+            {
+                if (!servers.Any(server => server.SavedAddress == address))
+                    servers.Add(new ServerInfo { HostName = address, SavedAddress = address });
+            }
+
+            serverList.SetServers(servers);
+        }
+
+        protected override bool HandleKeyPressed(char key, int modifier)
+        {
+            // Remove the selected entered server address.
+            if (key == Event.SystemKeys.Delete && gameType == GameType.MultiplayerClient)
+            {
+                var selectedServer = GetSelectedServer();
+
+                if (selectedServer?.SavedAddress != null)
+                {
+                    UserConfig.Multiplayer.ServerAddresses.Remove(selectedServer.SavedAddress);
+                    UpdateServerSearch();
+                }
+
+                return true;
+            }
+
+            return base.HandleKeyPressed(key, modifier);
+        }
+
         // The following members are used by the MultiplayerTestDriver.
         internal void SelectGameType(GameType type)
         {
@@ -593,6 +697,18 @@ namespace Freeserf.UI
         }
 
         internal int JoinedClientCount => playerClientMapping.Count;
+
+        // Same as a click on the activation button of the player box (removes or kicks the player).
+        internal void ClickPlayerActivationButton(uint playerIndex)
+        {
+            HandlePlayerClick(playerIndex, 8 + 32 + 8 + 4, 12);
+        }
+
+        // Same as a click on the copy values button of the player box.
+        internal void ClickPlayerCopyButton(uint playerIndex)
+        {
+            HandlePlayerClick(playerIndex, 8 + 32 + 4, 12);
+        }
 
         internal string ServerAddress
         {
@@ -705,6 +821,7 @@ namespace Freeserf.UI
 
             serverAddressInput.Displayed = false;
             serverNameInput.Displayed = false;
+            serverFinder?.Stop();
         }
 
         ServerInfo GetSelectedServer()
@@ -810,8 +927,12 @@ namespace Freeserf.UI
                         serverAddressInput.MoveTo(ServerAddressInputX, 18 + 16);
                         HideBoxString(textFieldValue);
                         HideBoxString(textFieldServerIp);
-                        serverNameInput.Displayed = false;
-                        DrawBoxString(24, 139, textCreateServer, "Create server");
+                        // Name of the own server and button to create it.
+                        DrawBoxString(1, 139, textServerNameLabel, "Name:");
+                        serverNameInput.Displayed = Displayed;
+                        serverNameInput.MoveTo(ServerNameInputX, 139 + 16);
+                        buttonCreateServer.MoveTo(ServerNameInputX + UserConfig.MaxServerNameLength * 9 + 14, 151);
+                        DrawBoxString(27, 139, textCreateServer, "Host game");
 
                         buttonUp.Displayed = false;
                         buttonDown.Displayed = false;
@@ -922,6 +1043,9 @@ namespace Freeserf.UI
             }
 
             // Game info 
+            if (gameType != GameType.MultiplayerClient)
+                HideBoxString(textServerNameLabel);
+
             if (gameType != GameType.Load && gameType != GameType.MultiplayerClient)
             {
                 int bx = 0;
@@ -1033,6 +1157,20 @@ namespace Freeserf.UI
             switch (action)
             {
                 case Action.CreateServer:
+                    {
+                        string name = serverNameInput.Text.Trim();
+
+                        // Other players see this name. So it must be valid.
+                        if (!UserConfig.Multiplayer.IsValidServerName(name))
+                        {
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
+                            serverNameInput.SetFocused();
+                            return;
+                        }
+
+                        UserConfig.Multiplayer.ServerName = name;
+                    }
+
                     gameType = GameType.MultiplayerServer;
                     ServerGameInfo = GameInfo.CreateServerGameInfo();
                     ServerGameInfo.AddPlayer(PlayerFace.You, PlayerInfo.PlayerColors[0], 40u, 40u, 40u);
@@ -1041,8 +1179,7 @@ namespace Freeserf.UI
                     fileList.Displayed = false;
                     serverList.Displayed = false;
                     SetRedraw();
-                    string serverName = string.IsNullOrWhiteSpace(serverNameInput.Text) ? "Freeserf Server" : serverNameInput.Text.Trim();
-                    Server = Network.Network.DefaultServerFactory.CreateLocal(serverName, ServerGameInfo);
+                    Server = Network.Network.DefaultServerFactory.CreateLocal(UserConfig.Multiplayer.ServerName, ServerGameInfo);
                     Server.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
                     Server.Init(checkBoxServerValues.Checked, checkBoxSameValues.Checked, ServerGameInfo.MapSize, randomInput.Text, ServerGameInfo.Players);
                     Server.ClientJoined += Server_ClientJoined;
@@ -1113,34 +1250,44 @@ namespace Freeserf.UI
 
                                         lock (Client)
                                         {
+                                            // An entered address is used first (it is saved as well).
+                                            // Otherwise the selected server is joined.
                                             string hostname = serverAddressInput.Text.Trim();
+                                            string serverName = hostname;
+                                            var selectedServer = GetSelectedServer();
 
-                                            if (string.IsNullOrEmpty(hostname))
-                                                hostname = GetServerHostname();
+                                            if (AddServerAddress(hostname))
+                                            {
+                                                serverAddressInput.Text = "";
+                                            }
+                                            else if (selectedServer != null && selectedServer.CanJoin)
+                                            {
+                                                hostname = selectedServer.HostName;
+                                                serverName = selectedServer.Name;
+                                            }
+                                            else
+                                            {
+                                                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
+                                                return;
+                                            }
 
-                                            if (string.IsNullOrEmpty(hostname))
-                                                hostname = "localhost";
-
-                                            System.Net.IPAddress serverIp;
-
-                                            if (!System.Net.IPAddress.TryParse(hostname, out serverIp))
+                                            if (!System.Net.IPAddress.TryParse(hostname, out var serverIp))
                                             {
                                                 // Try to resolve a hostname (e.g. a PC name on the LAN).
                                                 try
                                                 {
                                                     serverIp = System.Net.Dns.GetHostAddresses(hostname)
-                                                        .FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                                                        ?? System.Net.IPAddress.Loopback;
+                                                        .FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
                                                 }
                                                 catch
                                                 {
-                                                    serverIp = System.Net.IPAddress.Loopback;
+                                                    serverIp = null;
                                                 }
                                             }
 
-                                            if (!Client.JoinServer(GetServerName(), serverIp))
+                                            if (serverIp == null || !Client.JoinServer(serverName, serverIp))
                                             {
-                                                // TODO error
+                                                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                                                 return;
                                             }
 
@@ -1404,7 +1551,7 @@ namespace Freeserf.UI
                 {
                     for (int i = 0; i < ServerGameInfo.PlayerCount; ++i)
                     {
-                        if (i != client.PlayerIndex && CompareFace(ServerGameInfo.Players[i].Face, face))
+                        if (i != client.PlayerIndex && ServerGameInfo.Players[i] != null && CompareFace(ServerGameInfo.Players[i].Face, face))
                         {
                             failed = true;
                             break;
@@ -1510,15 +1657,22 @@ namespace Freeserf.UI
 
                 // every face < PlayerFace.You is treated as AI
 
+                // Each human player needs another face (color).
+                var face = MultiplayerFaceOrder.Skip(4).Concat(MultiplayerFaceOrder.Take(4)).FirstOrDefault(face =>
+                    !ServerGameInfo.Players.Any(p => p != null && CompareFace(p.Face, face)));
+
+                if (face == PlayerFace.None)
+                    face = PlayerFace.Friend;
+
                 if (freeSlot != null)
                 {
                     playerIndex = (uint)freeSlot.index;
-                    var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
+                    var playerInfo = new PlayerInfo(face, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
                     ServerGameInfo.ReplacePlayer(freeSlot.index, playerInfo);
                 }
                 else
                 {
-                    var playerInfo = new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
+                    var playerInfo = new PlayerInfo(face, PlayerInfo.PlayerColors[playerIndex], 40u, supplies, reproduction);
                     ServerGameInfo.AddPlayer(playerInfo);
                 }
 
@@ -1565,6 +1719,9 @@ namespace Freeserf.UI
                 // must be kept, otherwise the player indices would differ from the server.
                 foreach (var player in players)
                 {
+                    if (player == null) // free slot (e.g. a player was kicked)
+                        continue;
+
                     while (ServerGameInfo.PlayerCount < player.PlayerIndex)
                         ServerGameInfo.AddPlayer(null);
 
@@ -1765,6 +1922,11 @@ namespace Freeserf.UI
 
             var player = ServerGameInfo.GetPlayer(playerIndex);
 
+            if (player == null) // free slot in multiplayer
+            {
+                return true;
+            }
+
             if (cx < 8 + 32 && cy < 72) // click on face
             {
                 bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
@@ -1790,7 +1952,8 @@ namespace Freeserf.UI
                     {
                         PlayerFace next;
                         
-                        if (gameType == GameType.MultiplayerServer || gameType == GameType.MultiplayerJoined)
+                        // AI players keep AI faces. Otherwise the server would expect a client for them.
+                        if ((gameType == GameType.MultiplayerServer && player.Face.IsHuman()) || gameType == GameType.MultiplayerJoined)
                         {
                             int index = (MultiplayerFaceOrder.ToList().IndexOf(player.Face) + 1) % 8;
                             next = MultiplayerFaceOrder[index];
@@ -1810,7 +1973,7 @@ namespace Freeserf.UI
 
                         for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                         {
-                            if (playerIndex != i &&
+                            if (playerIndex != i && ServerGameInfo.GetPlayer(i) != null &&
                                 CompareFace(ServerGameInfo.GetPlayer(i).Face, next))
                             {
                                 inUse = true;
@@ -1837,6 +2000,15 @@ namespace Freeserf.UI
                         if (i != playerIndex)
                         {
                             var otherPlayer = ServerGameInfo.GetPlayer(i);
+
+                            if (otherPlayer == null) // free slot in multiplayer
+                                continue;
+
+                            // Clients set their own values unless the server sets them.
+                            if (gameType == GameType.MultiplayerServer && i != 0 && !playerIsAI[i] &&
+                                !checkBoxServerValues.Checked && !checkBoxSameValues.Checked)
+                                continue;
+
                             otherPlayer.Supplies = player.Supplies;
                             otherPlayer.Intelligence = player.Intelligence;
                             otherPlayer.Reproduction = player.Reproduction;

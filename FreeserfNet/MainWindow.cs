@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MainWindow.cs - Main game window
  *
  * Copyright (C) 2019-2025  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -398,6 +398,17 @@ namespace Freeserf
         static void ReportException(string source, Exception exception)
         {
             Log.Error.Write(ErrorSystemType.Application, $"{source}: {exception.Message}{Environment.NewLine}{exception.StackTrace}");
+
+            // The log may only be written to a console window which is closed now.
+            try
+            {
+                string crashFile = Path.Combine(Path.GetDirectoryName(FileSystem.Paths.UserConfigPath), "crash.log");
+                File.AppendAllText(crashFile, $"{DateTime.Now} {source}: {exception}{Environment.NewLine}{Environment.NewLine}");
+            }
+            catch
+            {
+                // ignore
+            }
 
             mainWindow?.SetFullscreen(false, false);
 

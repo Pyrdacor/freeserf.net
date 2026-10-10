@@ -184,6 +184,7 @@ namespace Freeserf.Network
         bool acceptClients = true;
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
+        DiscoveryResponder discoveryResponder = null;
         TcpListener listener = null;
         LobbyServerInfo lobbyServerInfo = null;
         readonly List<LobbyPlayerInfo> lobbyPlayerInfo = new List<LobbyPlayerInfo>();
@@ -211,6 +212,7 @@ namespace Freeserf.Network
         public string Name
         {
             get;
+            set;
         } = "";
 
         public IPAddress Ip
@@ -828,6 +830,8 @@ namespace Freeserf.Network
         {
             State = ServerState.Offline;
             Game.CheckpointReached -= Game_CheckpointReached;
+            discoveryResponder?.Dispose();
+            discoveryResponder = null;
 
             if (listener != null)
             {
@@ -923,6 +927,10 @@ namespace Freeserf.Network
 
             State = ServerState.Lobby;
             listenerTask = Task.Run(() => Run(cancelTokenSource.Token), cancelTokenSource.Token);
+
+            // Answer server searches of other players.
+            discoveryResponder = new DiscoveryResponder(() => Discovery.CreateAnswer(Name,
+                State != ServerState.Lobby, (int)GameInfo.MultiplayerPlayerCount, Game.MAX_PLAYER_COUNT));
         }
 
         public void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players)
@@ -950,8 +958,8 @@ namespace Freeserf.Network
                         {
                             if (playerIndex == 0u) // host
                                 identification = Ip.ToString();
-                            else
-                                identification = playerClients[playerIndex].Ip.ToString();
+                            else if (playerClients.TryGetValue(playerIndex, out var playerClient))
+                                identification = playerClient.Ip.ToString();
                         }
 
                         lobbyPlayerInfo.Add(new LobbyPlayerInfo(

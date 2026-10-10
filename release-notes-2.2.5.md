@@ -1,4 +1,4 @@
-## Version 2.2.5
+﻿## Version 2.2.5
 
 ### New: Android port
 - Freeserf.net now runs on Android and has its own APK build workflow.
@@ -12,6 +12,9 @@
 ### Multiplayer
 - Multiplayer games (LAN) now work: the games of all players stay in sync, also with AI players.
 - Several players can join from the same computer or network.
+- Servers in the local network are found automatically. Other addresses can be entered and are saved (press Delete to remove one).
+- The server name can be chosen (3 to 12 letters or digits). It is saved and others see it in their server list.
+- The game speed can't be changed in multiplayer games. Only the host can pause the game.
 - Fixed games that didn't start when the host started right after a player joined.
 - Fixed crashes and wrong buildings, serfs and resources after a game update from the host.
 - Multiplayer is still experimental: there is no surrender or end of game yet, and leaving players aren't handled well.

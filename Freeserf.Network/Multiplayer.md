@@ -83,6 +83,22 @@ data that affects it must be part of the serialized state:
   would depend on the history of insertions and removals.
 
 
+##### Finding servers
+
+Servers answer UDP queries on the game port (5067). While the multiplayer screen is
+shown, the game sends a query every 2 seconds as broadcast into the local networks, to
+the own machine and to all manually entered addresses (saved in the user config). Servers
+which did not answer for 7 seconds are removed from the list.
+
+- Query: `'F' 'S' 'N' 'Q' version`
+- Answer: `'F' 'S' 'N' 'A' version inGame currentPlayers maxPlayers nameLength name`
+
+The server name has 3 to 12 letters or digits. It is saved in the user config and can
+be changed in the lobby while the server is running.
+
+In multiplayer games the game speed can't be changed. Only the server can pause and resume the game.
+
+
 ##### Local test environment
 
 `test-multiplayer.ps1` in the repository root starts a server and up to three

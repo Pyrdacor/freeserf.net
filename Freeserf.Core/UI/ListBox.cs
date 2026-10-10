@@ -108,6 +108,25 @@ namespace Freeserf.UI
             SetRedraw();
         }
 
+        /// <summary>
+        /// Replaces all items. The selection is kept at the same index if possible.
+        /// </summary>
+        protected void SetItems(Interface interf, IEnumerable<T> newItems)
+        {
+            items.Clear();
+            items.AddRange(newItems);
+
+            if (selectedItem >= items.Count)
+                selectedItem = items.Count - 1;
+
+            if (firstVisibleItem > Math.Max(0, items.Count - 1))
+                firstVisibleItem = Math.Max(0, items.Count - 1);
+
+            Update(interf);
+        }
+
+        public int SelectedIndex => selectedItem;
+
         public void SetSelectionHandler(Action<T> selectionHandler)
         {
             this.selectionHandler = selectionHandler;
@@ -163,6 +182,13 @@ namespace Freeserf.UI
 
             for (int i = 0; i < textEntries.Count; ++i)
             {
+                if (i >= items.Count)
+                {
+                    // the list got smaller
+                    textEntries[i].Displayed = false;
+                    continue;
+                }
+
                 if (i < firstVisibleItem)
                 {
                     textEntries[i].Displayed = false;
@@ -181,7 +207,8 @@ namespace Freeserf.UI
                 //textEntries[i].Color = (i == selectedItem) ? Color.Black : colorText;
             }
 
-            selectionBackground.Visible = textEntries.Count != 0 && Displayed && selectedItem != -1 && textEntries[selectedItem].Displayed;
+            selectionBackground.Visible = textEntries.Count != 0 && Displayed && selectedItem != -1 &&
+                selectedItem < items.Count && textEntries[selectedItem].Displayed;
         }
 
         string TrimText(string text)

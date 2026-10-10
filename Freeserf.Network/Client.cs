@@ -756,5 +756,10 @@ namespace Freeserf.Network
         {
             return new LocalClient();
         }
+
+        public IServerFinder CreateServerFinder()
+        {
+            return new ServerFinder();
+        }
     }
 }

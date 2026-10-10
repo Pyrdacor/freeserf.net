@@ -20,7 +20,10 @@
  */
 
 using Freeserf.Data;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Freeserf
 {
@@ -52,6 +55,10 @@ namespace Freeserf
         public const long MinLogSize = 1024;
         public const string DefaultLogFile = "freeserf.log";
         const bool DefaultLogToConsole = false;
+        // Multiplayer
+        public const string DefaultServerName = "Freeserf";
+        public const int MinServerNameLength = 3;
+        public const int MaxServerNameLength = 12;
 
         public static class Game
         {
@@ -85,6 +92,42 @@ namespace Freeserf
             public static long MaxLogSize { get; set; } = DefaultMaxLogSize;
             public static string LogFileName { get; set; } = DefaultLogFile;
             public static bool LogToConsole { get; set; } = DefaultLogToConsole;
+        }
+
+        public static class Multiplayer
+        {
+            static string serverName = DefaultServerName;
+
+            /// <summary>
+            /// Name of the own server which other players see.
+            /// </summary>
+            public static string ServerName
+            {
+                get => serverName;
+                set => serverName = IsValidServerName(value) ? value : DefaultServerName;
+            }
+
+            /// <summary>
+            /// Server addresses (IPs or host names) which were entered manually.
+            /// They are checked for running servers in addition to the local network.
+            /// </summary>
+            public static List<string> ServerAddresses { get; } = new List<string>();
+
+            /// <summary>
+            /// Server names must have 3 to 12 characters and only contain letters and digits.
+            /// </summary>
+            public static bool IsValidServerName(string name)
+            {
+                return name != null &&
+                    name.Length >= MinServerNameLength &&
+                    name.Length <= MaxServerNameLength &&
+                    name.All(IsValidServerNameCharacter);
+            }
+
+            public static bool IsValidServerNameCharacter(char c)
+            {
+                return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+            }
         }
 
         public static bool Load(string filename)
@@ -159,6 +202,13 @@ namespace Freeserf
                 if (Logging.MaxLogSize < MinLogSize)
                     Logging.MaxLogSize = MinLogSize;
 
+                // Multiplayer
+                const string multiplayer = "multiplayer";
+                Multiplayer.ServerName = configFile.Value(multiplayer, "server_name", DefaultServerName);
+                Multiplayer.ServerAddresses.Clear();
+                Multiplayer.ServerAddresses.AddRange(configFile.Value(multiplayer, "server_addresses", "")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct());
+
                 return true;
             }
             catch
@@ -202,6 +252,11 @@ namespace Freeserf
                 configFile.SetValue(logging, "log_file", Logging.LogFileName);
                 configFile.SetValue(logging, "log_to_console", Logging.LogToConsole);
 
+                // Multiplayer
+                const string multiplayer = "multiplayer";
+                configFile.SetValue(multiplayer, "server_name", Multiplayer.ServerName);
+                configFile.SetValue(multiplayer, "server_addresses", string.Join(",", Multiplayer.ServerAddresses));
+
                 return configFile.Save(filename);
             }
             catch
@@ -232,6 +287,9 @@ namespace Freeserf
             Logging.MaxLogSize = DefaultMaxLogSize;
             Logging.LogFileName = DefaultLogFile;
             Logging.LogToConsole = DefaultLogToConsole;
+
+            Multiplayer.ServerName = DefaultServerName;
+            Multiplayer.ServerAddresses.Clear();
         }
     }
 }

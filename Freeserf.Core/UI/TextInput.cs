@@ -30,6 +30,15 @@ namespace Freeserf.UI
     {
         public delegate bool Filter(char key, TextInput textInput);
 
+        /// <summary>
+        /// Raised when the text was changed by the user.
+        /// </summary>
+        public event Action<TextInput> TextChanged;
+        /// <summary>
+        /// Raised when the user pressed the return key.
+        /// </summary>
+        public event Action<TextInput> Submitted;
+
         string text = "";
         int maxLength = 0;
         Filter filter = null;
@@ -222,12 +231,14 @@ namespace Freeserf.UI
             {
                 text = text.Substring(0, text.Length - 1);
                 SetRedraw();
+                TextChanged?.Invoke(this);
                 return true;
             }
 
             if (key == Event.SystemKeys.Return)
             {
                 LooseFocus();
+                Submitted?.Invoke(this);
                 return true;
             }
 
@@ -254,6 +265,7 @@ namespace Freeserf.UI
             text += key;
 
             SetRedraw();
+            TextChanged?.Invoke(this);
 
             return true;
         }

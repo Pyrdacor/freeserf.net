@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Interface.cs - Top-level GUI interface
  *
  * Copyright (C) 2013       Jon Lund Steffensen <jonlst@gmail.com>
@@ -1059,6 +1059,8 @@ namespace Freeserf.UI
         // Called periodically when the game progresses. 
         public virtual void Update()
         {
+            GameInitBox?.UpdateServerSearch();
+
             if (Game == null)
             {
                 return;
@@ -1512,6 +1514,37 @@ namespace Freeserf.UI
         }
 
         bool IsRemote => this is RemoteInterface;
+        bool IsMultiplayer => IsRemote || this is ServerInterface;
+
+        /// <summary>
+        /// Pauses or resumes the game. In multiplayer games only the server can do this.
+        /// </summary>
+        internal void TogglePause()
+        {
+            if (IsRemote || Game == null)
+                return;
+
+            if (this is ServerInterface && Server != null)
+            {
+                if (Game.IsPaused)
+                {
+                    Game.Resume();
+                    Server.ResumeGame();
+                }
+                else
+                {
+                    Game.Pause();
+                    Server.PauseGame();
+                }
+
+                // The clients may have progressed a bit further in the meantime.
+                Server.GameDirty = true;
+            }
+            else
+            {
+                Game.TogglePause();
+            }
+        }
 
         protected override bool HandleSystemKeyPressed(Event.SystemKey key, int modifier)
         {
@@ -1568,32 +1601,31 @@ namespace Freeserf.UI
                 // Game speed
                 case '+':
                     {
-                        if (!IsRemote)
+                        if (!IsMultiplayer)
                             Game.IncreaseSpeed();
                         break;
                     }
                 case '-':
                     {
-                        if (!IsRemote)
+                        if (!IsMultiplayer)
                             Game.DecreaseSpeed();
                         break;
                     }
                 case '0':
                     {
-                        if (!IsRemote)
+                        if (!IsMultiplayer)
                             Game.ResetSpeed();
                         break;
                     }
                 case '9':
                     {
-                        if (!IsRemote)
+                        if (!IsMultiplayer)
                             Game.MaximizeSpeed();
                         break;
                     }
                 case 'p':
                     {
-                        if (!IsRemote)
-                            Game.TogglePause();
+                        TogglePause();
                         break;
                     }
 

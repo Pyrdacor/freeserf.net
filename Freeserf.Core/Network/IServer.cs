@@ -61,6 +61,11 @@ namespace Freeserf.Network
 
     public interface ILocalServer : IServer, INetworkDataHandler
     {
+        /// <summary>
+        /// The name which other players see when they search for servers.
+        /// </summary>
+        new string Name { get; set; }
+
         void Init(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
         void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players);
 
