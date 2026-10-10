@@ -1,6 +1,6 @@
 ﻿## Version 2.2.5
 
-### New: Android port
+### New: Android port (thanks to dos-ise)
 - Freeserf.net now runs on Android and has its own APK build workflow.
 - **Touch controls:** pinch-to-zoom, one-finger panning, long-press for the special click, a larger GUI scale and bigger tap areas.
 - **Game data:** the APK doesn't include SPAE.PA. You can download it in the app by signing in to Ubisoft Connect, which opens Ubisoft's own login page.

@@ -11,22 +11,32 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 ## Download the game
 
-| Windows | Linux | macOS Bundle | macOS Binary |
+| Windows | Linux | macOS | Android |
 | ---- | ---- | ---- | ---- |
-| [v2.2.4](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.4/Freeserf.net-Windows.zip "Windows v2.2.4") | [v2.2.4](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.4/Freeserf.net-Linux.tar.gz "Linux v2.2.4") | [v2.2.4](https://github.com/Pyrdacor/freeserf.net/actions/runs/25501990274/artifacts/6857835406 "macOS v2.2.4 Bundle") | [v2.2.4](https://github.com/Pyrdacor/freeserf.net/actions/runs/25501990274/artifacts/6857808030 "macOS v2.2.4 Binary") |
+| [v2.2.5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.5/Freeserf.net-Windows.zip "Windows v2.2.5") | [v2.2.5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.5/Freeserf.net-Linux.tar.gz "Linux v2.2.5") | [v2.2.5](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.5/Freeserf.dmg "macOS v2.2.5") | [v2.2.5](https://github.com/Pyrdacor/freeserf.net/releases/download/android-2.2.5/net.freeserf.android-Signed.apk "Android v2.2.5 APK") |
 
-Latest version 2.2.4 was released on 7th of May 2026.
+Latest version 2.2.5 was released on 11th of October 2026. See the [changelog](https://github.com/Pyrdacor/freeserf.net/blob/master/changelog.txt) for what's new and all [releases](https://github.com/Pyrdacor/freeserf.net/releases) for older versions.
 
-Builds for other platforms will follow later. Only recent Ubuntu versions are tested for Linux version.
+Only recent Ubuntu versions are tested for the Linux version. The macOS version is a universal app (Apple Silicon and Intel).
 
-Note: For now you need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut. You can also use the Amiga files (either the disk files "*.adf" or the extracted files like "sounds" and "music" will work).
+You need the DOS data file 'SPAx.PA' to run the game, where x stands for the language shortcut (e.g. SPAE.PA for English). You can also use the Amiga files (either the disk files "*.adf" or the extracted files like "sounds" and "music" will work).
 Amiga music and sounds work well but the map tiles are not displayed properly.
 
 You can combine DOS and Amiga data (e.g. music from Amiga and graphics from DOS). See [configuration](https://github.com/Pyrdacor/freeserf.net/blob/master/Configuration.md) for more information about the Freeserf.net configuration.
 
-For Ubuntu make sure you have installed libgdiplus via command `sudo apt-get install libgdiplus`.
+Audio is provided by [BASS](https://www.un4seen.com/ "BASS"). The libraries are contained in the releases but they are for 64-bit systems only. If you have a 32-bit system you have to download them on your own or from [here](https://github.com/Pyrdacor/freeserf.net/tree/master/FreeserfNet/bass "Bass libraries").
 
-Audio is provided by [BASS](http://www.un4seen.com/ "BASS"). The assemblies are contained in the releases but they are for 64-bit systems only. If you have a 32-bit system you have to download them on your own or from [here](https://github.com/Pyrdacor/freeserf.net/tree/master/FreeserfNet/bass "Bass assemblies").
+### Android
+
+Install the [APK](https://github.com/Pyrdacor/freeserf.net/releases/download/android-2.2.5/net.freeserf.android-Signed.apk "Android v2.2.5 APK") on your device (you may have to allow the installation from unknown sources). Android 5.0 or newer with OpenGL ES 3.0 is needed.
+
+The game data is not included. On the first start you can either download it from Ubisoft Connect if you own the game there (e.g. The Settlers - History Edition) or select your own data file. The game is controlled by touch: pinch to zoom, pan with one finger and long-press for the special click.
+
+### Multiplayer
+
+Multiplayer games in the local network are possible (still experimental). One player creates a server (Multiplayer -> Create server), the others join it. Servers in the local network are found automatically, other servers can be added by their IP address or host name. The game uses port 5067 (TCP and UDP). Players with different platforms (e.g. Windows and Android) can play together.
+
+In multiplayer games the game speed can't be changed and only the host can pause the game.
 
 
 ## Support development
@@ -46,11 +56,11 @@ You may also be interested in my other projects:
 
 ## Current State
 
-Currently I am working on multiplayer support.
+All the code from freeserf was ported or re-implemented. AI logic was added in addition. Bug fixes of the C++ freeserf releases 0.4 and 0.5 were ported as well.
 
-All the code from freeserf was ported or re-implemented. AI logic was added in addition.
+The game runs on Windows, Linux, macOS and Android. Multiplayer games in the local network work but are still experimental (e.g. there is no surrender or end of game yet).
 
-The renderer is using [Silk.net](https://github.com/Ultz/Silk.NET) and netcore 3.1.
+The renderer is using [Silk.NET](https://github.com/dotnet/Silk.NET) and .NET 9. Wide screens are supported.
 
 Things that are missing are some minor parts of AI logic and tutorial games.
 
@@ -94,9 +104,11 @@ I am not sure how far this project will go as my time is very limited. I can not
 
 ## Implementation details
 
-The core is implemented as a .NET Standard 2.1 DLL. The renderer is also a .NET Standard 2.1 DLL and uses Silk.NET for rendering. The sound engine is using BASS and is capable of playing MIDI, MOD and SFX/WAV on Windows and Linux.
+The core, the renderer, the network and the audio parts are .NET 9 libraries. The renderer uses Silk.NET (OpenGL / OpenGL ES) for rendering. The sound engine is using BASS (via ManagedBass) and is capable of playing MIDI, MOD and SFX/WAV.
 
-The main program is based on netcore 3.1 and should run at least on Windows and Ubuntu.
+The desktop program is based on .NET 9 and runs on Windows, Linux and macOS. The Android app (FreeserfNet.Android) is based on .NET 10 and uses the same libraries. See [Android.md](https://github.com/Pyrdacor/freeserf.net/blob/master/Android.md) for details about the Android build.
+
+For local multiplayer tests you can start several instances with `start-multiplayer.ps1`. `test-multiplayer.ps1` runs automated multiplayer tests.
 
 
 ## Contribution
@@ -125,11 +137,11 @@ TAB|Open notification
 Ctrl+TAB|Return to last map position after notification
 Shift+M|Toggle music
 Shift+S|Toggle sound effects
-0|Reset game speed to normal
-9|Maximize game speed
-P|Pause or resume game
-+|Increase game speed
--|Decrease game speed
+0|Reset game speed to normal (not in multiplayer)
+9|Maximize game speed (not in multiplayer)
+P|Pause or resume game (only the host in multiplayer)
++|Increase game speed (not in multiplayer)
+-|Decrease game speed (not in multiplayer)
 &gt;|Zoom in
 &lt;|Zoom out
 F11|Toggle fullscreen mode

@@ -8,7 +8,7 @@ Version 2.2.5:
   - player values are synced in the lobby
   - players are notified when another player leaves the game
 - Widescreen support: wide aspect ratios and an evenly scaled, centred GUI
-- Android port (separate APK)
+- Android port (separate APK). Thanks to dos-ise!
 - The window title shows the app name and version
 - Opening a notification closes an open popup and the other way round
 - Save dialog: the name field is focused right away and separated from the list,
