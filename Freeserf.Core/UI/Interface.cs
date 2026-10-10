@@ -413,6 +413,9 @@ namespace Freeserf.UI
         {
             try
             {
+                // An open notification would overlap the popup.
+                CloseMessage();
+
                 if (PopupBox == null)
                     PopupBox = new PopupBox(this);
 
@@ -559,6 +562,9 @@ namespace Freeserf.UI
             }
 
             var notification = Player.PopNotification();
+
+            // An open popup would overlap the notification.
+            ClosePopup();
 
             if (notification.NotificationType == Notification.Type.CallToMenu)
             {
