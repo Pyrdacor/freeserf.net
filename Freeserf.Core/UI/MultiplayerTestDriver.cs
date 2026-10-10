@@ -40,6 +40,7 @@ namespace Freeserf.UI
     /// -m host:CLIENTS:AI:kick  Kicks the first client from the lobby when all have joined, then
     ///                          presses the copy values button of the host every few seconds (and waits).
     /// -m join:ADDRESS       Join the server at ADDRESS.
+    /// -m join:ADDRESS:leave Join the server and change the game type in the lobby (leaves the server).
     ///
     /// Every player builds a castle, a lumberjack and a road to it through the
     /// regular interface methods (so the same code as for mouse input is used).
@@ -87,6 +88,8 @@ namespace Freeserf.UI
         static bool kickClient = false;
         static DateTime kickTime = DateTime.MaxValue;
         static DateTime copyTime = DateTime.MaxValue;
+        static bool leaveLobby = false;
+        static DateTime leaveTime = DateTime.MaxValue;
         static readonly bool dumpStates = Environment.GetEnvironmentVariable("FREESERF_MPTEST_DUMP") == "1";
 
         public static bool Active => role != Role.None;
@@ -108,6 +111,7 @@ namespace Freeserf.UI
                     role = Role.Join;
                     if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
                         serverAddress = parts[1];
+                    leaveLobby = parts.Length > 2 && parts[2].ToLower() == "leave";
                     break;
                 default:
                     return false;
@@ -214,6 +218,17 @@ namespace Freeserf.UI
                             Log.Info.Write(ErrorSystemType.Application, LogPrefix + "All clients joined. Starting game.");
                             initBox.HandleAction(GameInitBox.Action.StartGame);
                             step = Step.WaitForGame;
+                        }
+                    }
+                    else if (leaveLobby)
+                    {
+                        if (leaveTime == DateTime.MaxValue)
+                            leaveTime = DateTime.Now.AddSeconds(3);
+                        else if (DateTime.Now >= leaveTime)
+                        {
+                            Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Changing the game type in the lobby.");
+                            initBox.HandleAction(GameInitBox.Action.ToggleGameType);
+                            step = Step.Done;
                         }
                     }
                     else

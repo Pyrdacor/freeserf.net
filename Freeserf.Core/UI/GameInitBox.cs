@@ -952,16 +952,12 @@ namespace Freeserf.UI
                             randomInput.Displayed = false;
                             buttonMapSize.MoveTo(256, 12);
 
-                            DrawBoxString(10, 10, textFieldName, "Name:");
+                            DrawBoxString(10, 18, textFieldName, "Name:");
                             serverNameInput.Displayed = Displayed;
-                            serverNameInput.MoveTo(140, 26);
+                            serverNameInput.MoveTo(148, 18 + 16);
                             HideBoxString(textFieldValue);
 
-                            // Show the host IP so clients know what to enter to join.
-                            if (Server != null && Server.Ip != null)
-                                DrawBoxString(10, 18, textFieldServerIp, "IP: " + Server.Ip);
-                            else
-                                HideBoxString(textFieldServerIp);
+                            // The host IP is shown in the bottom row instead of the version (see below).
                         }
                         else
                         {
@@ -1079,7 +1075,17 @@ namespace Freeserf.UI
             }
 
             // Display program name and version 
-            DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
+            // The host screen shows its IP there so clients know what to enter to join.
+            if (gameType == GameType.MultiplayerServer && Server?.Ip != null)
+            {
+                HideBoxString(textFieldVersion);
+                DrawBoxString(2, 162, textFieldServerIp, "IP: " + Server.Ip);
+            }
+            else
+            {
+                HideBoxString(textFieldServerIp);
+                DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
+            }
         }
 
         internal void UpdateGameType(bool resetRandomGames = true)
@@ -1371,8 +1377,17 @@ namespace Freeserf.UI
                 case Action.ToggleGameType:
                     if (Server != null)
                     {
+                        // Tell the clients that the server is gone.
+                        Server.BroadcastDisconnect();
                         Server.Close();
                         Server = null;
+                    }
+
+                    // Leave the server when another game type is chosen.
+                    if (Client != null && Client.Connected &&
+                        (gameType == GameType.MultiplayerJoined || gameType == GameType.MultiplayerLoading))
+                    {
+                        Client.Disconnect();
                     }
 
                     if (gameType == GameType.MultiplayerServer ||

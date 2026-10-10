@@ -31,9 +31,12 @@ namespace Freeserf
 {
     public static partial class Global
     {
-        public static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version;
-        public static readonly string VERSION = $"{Assembly.GetExecutingAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}";
-        public static readonly string EXTENDED_VERSION = $"{Assembly.GetExecutingAssembly().GetName().Name} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
+        public const string APP_NAME = "FreeserfNet";
+        // The version is set by the app (e.g. FreeserfNet/AssemblyInfo.cs). The entry assembly
+        // may be missing in some environments (e.g. tests), then the core version is used.
+        public static readonly Version Version = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).GetName().Version;
+        public static readonly string VERSION = $"{APP_NAME} v{Version.Major}.{Version.Minor}.{Version.Build}";
+        public static readonly string EXTENDED_VERSION = $"{APP_NAME} v{Version.Major}.{Version.Minor}.{Version.Build}.{Version.Revision}";
 
         // The length between game updates in milliseconds. 
         public const int TICK_LENGTH = 20;

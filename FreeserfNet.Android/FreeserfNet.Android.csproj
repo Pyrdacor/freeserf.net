@@ -7,6 +7,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationId>net.freeserf.android</ApplicationId>
     <ApplicationTitle>Freeserf</ApplicationTitle>
+    <!-- The Android app has its own version numbers (see the release notes in build-android-apk.yml). -->
+    <ApplicationDisplayVersion>1.0.3</ApplicationDisplayVersion>
+    <ApplicationVersion>3</ApplicationVersion>
+    <Version>1.0.3</Version>
     <RootNamespace>Freeserf.Android</RootNamespace>
     <AssemblyName>FreeserfNet.Android</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>

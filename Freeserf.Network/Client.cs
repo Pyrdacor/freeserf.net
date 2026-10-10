@@ -36,7 +36,7 @@ namespace Freeserf.Network
         DateTime lastServerHeartbeat = DateTime.MinValue;
         DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat!
         ConnectionObserver connectionObserver = null;
-        readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
+        CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
         readonly List<Action<Heartbeat>> registeredHeartbeatHandlers = new List<Action<Heartbeat>>();
         // State hashes of the checkpoints (key: tick) of the own game and of the server's game.
@@ -172,6 +172,8 @@ namespace Freeserf.Network
                 else
                     client.Connect(ip, Global.NetworkPort);
 
+                // A previous connection may have cancelled the old token.
+                disconnectToken = new CancellationTokenSource();
                 server = new RemoteServer(name, ip, client);
                 server.DataReceived += Server_DataReceived;
                 lastServerHeartbeat = DateTime.UtcNow;
