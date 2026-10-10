@@ -1,13 +1,97 @@
-name: macOS
+name: CI
+
+# Windows and Linux are built and tested for each push to master and each pull request.
+# For a version tag (vX.Y.Z) the macOS app is built as well and a draft release with
+# the packages of all platforms is created. The release notes are taken from the file
+# release-notes-X.Y.Z.md if it exists.
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
+    branches: [ master ]
     tags:
       - 'v*.*.*'
 
+permissions:
+  contents: write
+
 jobs:
+  Windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Freeserf.net
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build
+        run: |
+          dotnet restore FreeserfNet.Desktop.slnf
+          dotnet msbuild -p:Configuration=WindowsRelease -p:DefineConstants=WINDOWS FreeserfNet.Desktop.slnf
+
+      - name: Test
+        run: dotnet test FreeserfNet.Desktop.slnf -c WindowsRelease --no-build --verbosity normal
+
+      - name: Publish
+        run: dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=WINDOWS -p:PublishSingleFile=true -r win-x64 -o publish
+
+      - name: Create Archive
+        shell: pwsh
+        run: |
+          Copy-Item changelog.txt, FreeserfNet/bass/win-x64/*.dll publish/
+          Compress-Archive -Path publish/* -DestinationPath Freeserf.net-Windows.zip
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: Freeserf.net-Windows
+          path: Freeserf.net-Windows.zip
+          if-no-files-found: error
+
+  Linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Freeserf.net
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build
+        run: |
+          dotnet restore FreeserfNet.Desktop.slnf
+          dotnet msbuild -p:Configuration=LinuxRelease -p:DefineConstants=LINUX FreeserfNet.Desktop.slnf
+
+      - name: Test
+        run: dotnet test FreeserfNet.Desktop.slnf -c LinuxRelease --no-build --verbosity normal
+
+      - name: Publish
+        run: dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=LINUX -p:PublishSingleFile=true -r linux-x64 -o publish
+
+      - name: Create Archive
+        run: |
+          cp changelog.txt FreeserfNet/bass/linux-x64/*.so publish/
+          rm -f publish/*.pdb
+          tar -C publish -czf Freeserf.net-Linux.tar.gz .
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: Freeserf.net-Linux
+          path: Freeserf.net-Linux.tar.gz
+          if-no-files-found: error
+
   Binaries:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+
     strategy:
       fail-fast: false
 
@@ -117,3 +201,33 @@ jobs:
           name: Freeserf-macOS-App
           path: Freeserf.dmg
           if-no-files-found: error
+
+  Release:
+    if: startsWith(github.ref, 'refs/tags/')
+
+    runs-on: ubuntu-latest
+    needs: [ Windows, Linux, Bundle ]
+
+    steps:
+      - name: Checkout Freeserf.net
+        uses: actions/checkout@v6
+
+      - name: Download Packages
+        uses: actions/download-artifact@v7
+        with:
+          path: packages
+          merge-multiple: true
+
+      - name: Create Draft Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES="release-notes-${TAG#v}.md"
+          if [ -f "$NOTES" ]; then
+            sed '1s/^\xEF\xBB\xBF//' "$NOTES" > release-notes.md
+          else
+            echo "Release $TAG" > release-notes.md
+          fi
+          gh release create "$TAG" --draft --title "$TAG" --notes-file release-notes.md \
+            packages/Freeserf.net-Windows.zip packages/Freeserf.net-Linux.tar.gz packages/Freeserf.dmg
