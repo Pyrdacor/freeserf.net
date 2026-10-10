@@ -373,7 +373,16 @@ namespace Freeserf.UI
 
         void SaveCurrentGame()
         {
-            string fileName = Path.GetFileName(fileField.Text);
+            string fileName = Path.GetFileName(fileField.Text.Trim());
+
+            if (string.IsNullOrWhiteSpace(Path.GetFileNameWithoutExtension(fileName)))
+            {
+                // A name is needed (otherwise the file would be named ".save").
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
+                fileField.SetFocused();
+                return;
+            }
+
             var extension = Path.GetExtension(fileName).ToLower();
 
             if (extension != ".save")
@@ -495,17 +504,18 @@ namespace Freeserf.UI
             MiniMap.SetSize(128, 128);
             AddChild(MiniMap, 8, 8, false);
 
-            fileList.SetSize(124, 102);
+            // Leave a gap above the file name input so both can be distinguished.
+            fileList.SetSize(124, 97);
             fileList.SetSelectionHandler((GameStore.SaveInfo item) =>
             {
                 fileField.Text = TrimFileName(Path.GetFileNameWithoutExtension(item.Path), fileField.Width - 3);
             });
             AddChild(fileList, 10, 22, false);
 
-            fileField.Padding = new Position(3, 1);
-            fileField.SetSize(124, 11);
+            fileField.Padding = new Position(3, 2);
+            fileField.SetSize(124, 13);
             fileField.SetFilter(FileInputFilter);
-            AddChild(fileField, 10, 125, false);
+            AddChild(fileField, 10, 123, false);
 
             flipButton = new Button(interf, 16, 16, Data.Resource.Icon, 61u, 1);
             flipButton.Clicked += FlipButton_Clicked;
@@ -784,7 +794,15 @@ namespace Freeserf.UI
             fileField.Displayed = box == Type.LoadSave;
 
             if (box == Type.LoadSave)
+            {
                 fileList.Update();
+                // The user can type the save game name directly.
+                fileField.SetFocused();
+            }
+            else if (fileField.Focused)
+            {
+                LooseFocus();
+            }
 
             SetBackground(BackgroundFromType());
 

@@ -445,10 +445,10 @@ namespace Freeserf.UI
 
             PopupBox.Hide();
 
-            if (GameInitBox != null)
-                GameInitBox.DeleteChild(PopupBox);
-            else
-                DeleteChild(PopupBox);
+            // Note: The popup is only a child of the game init box if it was opened there.
+            // Otherwise the parent would be reset while the popup is still a child of the
+            // interface and redraws (e.g. of the save name input) would not be propagated.
+            PopupBox.Parent?.DeleteChild(PopupBox);
 
             if (Game != null)
             {

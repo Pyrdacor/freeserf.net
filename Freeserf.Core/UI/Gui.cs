@@ -310,6 +310,7 @@ namespace Freeserf.UI
         // True for GUI objects that need text input (e.g. TextInput). Platform
         // hosts use this to show/hide the on-screen keyboard on focus changes.
         public virtual bool IsTextInput => false;
+        public bool Focused => focused;
 
         public void SetFocused()
         {
@@ -378,6 +379,10 @@ namespace Freeserf.UI
 
             int eventX = e.X;
             int eventY = e.Y;
+            // An object which gets the focus while handling the event (e.g. a text input
+            // of a popup opened by a button) must keep it. The delayed click which follows
+            // each click must not change the focus as well (the click already did it).
+            var focusedObjectBefore = FocusedObject;
 
             if (e.Type == Event.Type.Click ||
                 e.Type == Event.Type.DelayedClick ||
@@ -437,7 +442,7 @@ namespace Freeserf.UI
                     break;
             }
 
-            if (result && FocusedObject != this)
+            if (result && FocusedObject != this && FocusedObject == focusedObjectBefore && e.Type != Event.Type.DelayedClick)
             {
                 if (FocusedObject != null)
                 {
