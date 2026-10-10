@@ -9,9 +9,9 @@ for:
       - image: Ubuntu2204
 
   build_script:
-  - dotnet msbuild -p:Configuration=LinuxRelease -p:DefineConstants=LINUX FreeserfNet.sln
+  - dotnet msbuild -p:Configuration=LinuxRelease -p:DefineConstants=LINUX FreeserfNet.Desktop.slnf
   test_script:
-  - dotnet test FreeserfNet.sln -c LinuxRelease --no-build --verbosity normal
+  - dotnet test FreeserfNet.Desktop.slnf -c LinuxRelease --no-build --verbosity normal
   after_test:
   - dotnet publish -c LinuxRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=LINUX -p:PublishSingleFile=true -r linux-x64
   - 7z a Freeserf.net-Linux.tar "./FreeserfNet/bin/Any CPU/LinuxRelease/linux-x64/publish/FreeserfNet" "./changelog.txt" "./FreeserfNet/bass/linux-x64/*.so"
@@ -22,9 +22,9 @@ for:
       - image: Visual Studio 2022
 
   build_script:
-  - dotnet msbuild -p:Configuration=WindowsRelease -p:DefineConstants=WINDOWS FreeserfNet.sln
+  - dotnet msbuild -p:Configuration=WindowsRelease -p:DefineConstants=WINDOWS FreeserfNet.Desktop.slnf
   test_script:
-  - dotnet test FreeserfNet.sln -c WindowsRelease --no-build --verbosity normal
+  - dotnet test FreeserfNet.Desktop.slnf -c WindowsRelease --no-build --verbosity normal
   after_test:
   - dotnet publish -c WindowsRelease FreeserfNet/FreeserfNet.csproj -p:DefineConstants=WINDOWS -p:PublishSingleFile=true -r win-x64
   - 7z a Freeserf.net-Windows.zip "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bin\Any CPU\WindowsRelease\win-x64\publish\FreeserfNet.exe" "%APPVEYOR_BUILD_FOLDER%\changelog.txt" "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bass\win-x64\*.dll" "%APPVEYOR_BUILD_FOLDER%\FreeserfNet\bin\Any CPU\WindowsRelease\win-x64\publish\glfw3.dll"
@@ -32,11 +32,11 @@ for:
 platform: Any CPU
 
 before_build:
-  - dotnet restore FreeserfNet.sln --verbosity normal
+  - dotnet restore FreeserfNet.Desktop.slnf --verbosity normal
 
 build:
   parallel: true
-  project: FreeserfNet.sln
+  project: FreeserfNet.Desktop.slnf
 
 artifacts:
   - path: Freeserf.net-Windows.zip

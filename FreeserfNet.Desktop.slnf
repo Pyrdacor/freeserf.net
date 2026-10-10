@@ -1,0 +1,14 @@
+{
+  "solution": {
+    "path": "FreeserfNet.sln",
+    "projects": [
+      "Freeserf.Audio\\Freeserf.Audio.csproj",
+      "Freeserf.Core\\Freeserf.Core.csproj",
+      "Freeserf.Network\\Freeserf.Network.csproj",
+      "Freeserf.Renderer\\Freeserf.Renderer.csproj",
+      "Freeserf.Test\\Freeserf.Test.csproj",
+      "FreeserfNet\\FreeserfNet.csproj",
+      "Silk.NET.Window\\Silk.NET.Window.csproj"
+    ]
+  }
+}
