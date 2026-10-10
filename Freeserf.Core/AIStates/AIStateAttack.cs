@@ -77,7 +77,7 @@ namespace Freeserf.AIStates
             {
                 case AI.SecondaryAttackPlayerCriteria.Random:
                 default:
-                    return players[game.RandomInt() % players.Count];
+                    return players[game.AIRandomInt() % players.Count];
                 case AI.SecondaryAttackPlayerCriteria.Weakest:
                         return players.OrderBy(p => game.GetPlayer((uint)p).TotalMilitaryScore).First();
                 case AI.SecondaryAttackPlayerCriteria.Worst:
@@ -225,7 +225,7 @@ namespace Freeserf.AIStates
             else if (bestBuildingScore <= 0 && intelligence >= 30)
                 return false; // winning chance too small
 
-            uint targetPosition = bestTargets[game.RandomInt() % bestTargets.Count];
+            uint targetPosition = bestTargets[game.AIRandomInt() % bestTargets.Count];
 
             return Attack(ai, player, targetPosition);
         }

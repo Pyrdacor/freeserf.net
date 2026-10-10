@@ -1,4 +1,4 @@
-/*
+﻿/*
  * DirtyArray.cs - Array implementation which tracks the dirty state
  *
  * Copyright (C) 2019  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -101,6 +101,7 @@ namespace Freeserf.Serialize
                 if ((array[index] == null && value != null) || array[index].CompareTo(value) != 0)
                 {
                     array[index] = value;
+                    ++State.ChangeCount;
 
                     bool wasDirty = Dirty;
 

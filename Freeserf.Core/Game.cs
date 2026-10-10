@@ -127,20 +127,22 @@ namespace Freeserf
         int gameType; // TODO: this is never used beside in savegames
         int playerScoreLeader; // TODO: this is never used beside in savegames
 
-        int birdSoundCounter;
 
         [Data]
         internal Map Map { get; private set; }
         internal uint MapGoldMoraleFactor => state.MapGoldMoraleFactor;
         internal uint GoldTotal => state.GoldTotal;
         internal word Tick => state.Tick;
-        internal dword ConstTick => state.ConstTick;
+        public dword ConstTick => state.ConstTick;
         public GameTime GameTime => state.GameTime; // in seconds
         public GameTime NextGameTime => GameTime + (GameTime)(state.GameTimeTicksOfSecond + state.GameSpeed) / Global.TICKS_PER_SEC;
 
         internal Game(Map map)
         {
-            AI.ClearMemory();
+            // Only a new game resets the AI memory. A map is given for
+            // copies of an existing game (e.g. multiplayer sync states).
+            if (map == null)
+                AI.ClearMemory();
 
             Players = new Players(this);
             Flags = new Flags(this);
@@ -150,7 +152,6 @@ namespace Freeserf
 
             tickDifference = 0;
             gameType = 0;
-            birdSoundCounter = 0;
 
             if (map != null)
                 Map = new Map(map.Geometry, null, map);
@@ -409,12 +410,45 @@ namespace Freeserf
                 if (player.IsAI)
                 {
                     if (player.AI != null)
-                        player.AI.Update(this);
+                        RunAI(() => player.AI.Update(this));
                 }
             }
 
             UpdateVisuals();
+
+            if (state.ConstTick % CheckpointInterval == 0)
+                CheckpointReached?.Invoke(this);
         }
+
+        /// <summary>
+        /// Interval in ticks in which multiplayer participants compare their game states.
+        /// </summary>
+        public const uint CheckpointInterval = 100;
+
+        /// <summary>
+        /// Is set when an AI player has changed the game state. In multiplayer games only
+        /// the server runs the AI and it has to send the new game state then.
+        /// </summary>
+        public bool StateChangedByAI { get; set; } = false;
+
+        /// <summary>
+        /// All AI code must be run with this method so that game state changes by the AI are detected.
+        /// </summary>
+        internal void RunAI(Action aiAction)
+        {
+            long changeCount = Serialize.State.ChangeCount;
+
+            aiAction();
+
+            if (Serialize.State.ChangeCount != changeCount)
+                StateChangedByAI = true;
+        }
+
+        /// <summary>
+        /// Raised after the game update of each checkpoint tick (see <see cref="CheckpointInterval"/>).
+        /// Multiplayer servers and clients use it to verify that their games are in sync.
+        /// </summary>
+        public static event Action<Game> CheckpointReached;
 
         public void UpdateVisuals()
         {
@@ -430,12 +464,12 @@ namespace Freeserf
             UpdateGameStats();
 
             // Play bird sounds 
-            birdSoundCounter -= tickDifference;
+            state.BirdSoundCounter -= tickDifference;
 
-            if (birdSoundCounter < 0)
+            if (state.BirdSoundCounter < 0)
             {
                 PlaySound(Audio.Audio.TypeSfx.BirdChirp0 + 4 * (RandomInt() & 0x3));
-                birdSoundCounter += 0xfff + RandomInt() & 0x3ff;
+                state.BirdSoundCounter += 0xfff + RandomInt() & 0x3ff;
             }
         }
 
@@ -1769,6 +1803,20 @@ namespace Freeserf
             return state.Random.Next();
         }
 
+        // The AI uses its own random generator. In multiplayer games AI players
+        // only run on the server, so the game's random state must not depend on them.
+        readonly Random aiRandom = new Random();
+
+        internal ushort AIRandomInt()
+        {
+            return aiRandom.Next();
+        }
+
+        internal Random GetAIRandom()
+        {
+            return aiRandom;
+        }
+
         internal Random GetRandom()
         {
             return state.Random;
@@ -1874,6 +1922,7 @@ namespace Freeserf
 
         internal int NextSearchId()
         {
+
             ++state.FlagSearchCounter;
 
             // If we're back at zero the counter has overflown,
@@ -3838,19 +3887,34 @@ namespace Freeserf
 
             if (newBuilding == null && oldBuilding != null && oldBuilding.IsMilitary())
             {
-                UpdateLandOwnership(position);
+                UpdateLandOwnershipPreservingThreatLevels(position);
             }
             else if (newBuilding != null && newBuilding.IsMilitary())
             {
                 if (oldBuilding == newBuilding)
                 {
                     if (oldBuilding.Player != newBuilding.Player)
-                        UpdateLandOwnership(position);
+                        UpdateLandOwnershipPreservingThreatLevels(position);
                 }
                 else
                 {
-                    UpdateLandOwnership(position);
+                    UpdateLandOwnershipPreservingThreatLevels(position);
                 }
+            }
+        }
+
+        // This is only used after a multiplayer sync. The threat levels were synced
+        // and the game updates them only when the land near them changes.
+        void UpdateLandOwnershipPreservingThreatLevels(MapPos position)
+        {
+            var threatLevels = Buildings.ToDictionary(building => building.Index, building => building.ThreatLevel);
+
+            UpdateLandOwnership(position);
+
+            foreach (var building in Buildings.ToList())
+            {
+                if (threatLevels.TryGetValue(building.Index, out var level))
+                    building.ThreatLevel = level;
             }
         }
 

@@ -43,9 +43,51 @@ namespace Freeserf
     {
         internal class ResourceSlot : State, IComparable
         {
-            public Resource.Type Type { get; set; } = Resource.Type.None;
-            public Direction Direction { get; set; }
-            public word DestinationObjectIndex { get; set; }
+            Resource.Type type = Resource.Type.None;
+            Direction direction = Direction.Right;
+            word destinationObjectIndex = 0;
+
+            [Data]
+            public Resource.Type Type
+            {
+                get => type;
+                set
+                {
+                    if (type != value)
+                    {
+                        type = value;
+                        MarkPropertyAsDirty(nameof(Type));
+                    }
+                }
+            }
+
+            [Data]
+            public Direction Direction
+            {
+                get => direction;
+                set
+                {
+                    if (direction != value)
+                    {
+                        direction = value;
+                        MarkPropertyAsDirty(nameof(Direction));
+                    }
+                }
+            }
+
+            [Data]
+            public word DestinationObjectIndex
+            {
+                get => destinationObjectIndex;
+                set
+                {
+                    if (destinationObjectIndex != value)
+                    {
+                        destinationObjectIndex = value;
+                        MarkPropertyAsDirty(nameof(DestinationObjectIndex));
+                    }
+                }
+            }
 
             public override int CompareTo(object other)
             {

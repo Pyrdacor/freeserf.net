@@ -601,7 +601,7 @@ namespace Freeserf.AIStates
                                 return NeedBuilding(ai, game, player, type);
                             }
                             else if (game.GetResourceAmountInInventories(player, Resource.Type.Coal) >= 10 && game.GetResourceAmountInInventories(player, Resource.Type.Steel) >= 10 &&
-                                ai.GameTime > (10 - Misc.Max(ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus - 1, ai.Aggressivity - 1) - game.RandomInt() % 3) * Global.TICKS_PER_MIN)
+                                ai.GameTime > (10 - Misc.Max(ai.MilitaryFocus, ai.ExpandFocus, ai.DefendFocus - 1, ai.Aggressivity - 1) - game.AIRandomInt() % 3) * Global.TICKS_PER_MIN)
                             {
                                 return NeedBuilding(ai, game, player, type);
                             }

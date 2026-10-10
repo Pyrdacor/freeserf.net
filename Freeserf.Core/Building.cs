@@ -304,11 +304,10 @@ namespace Freeserf
             }
         }
 
-        public int BurningCounter { get; set; } = 0;
-
-        public void DecreaseBurningCounter(int delta)
+        public int BurningCounter
         {
-            BurningCounter -= delta;
+            get => state.BurningCounter;
+            set => state.BurningCounter = value;
         }
 
         public bool IsMilitary(bool includeCastle = true)
@@ -424,7 +423,7 @@ namespace Freeserf
                 if (player.IsAI)
                 {
                     if (player.AI != null)
-                        player.AI.HandleEmptyMine(Index);
+                        Game.RunAI(() => player.AI.HandleEmptyMine(Index));
                 }
 
                 player.AddNotification(Notification.Type.MineEmpty, Position, (uint)(BuildingType - Type.StoneMine));

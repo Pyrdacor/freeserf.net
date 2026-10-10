@@ -183,7 +183,6 @@ namespace Freeserf.Network
         readonly object gameReadyLock = new object();
         bool acceptClients = true;
         readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-        CancellationTokenSource inSyncCancelTokenSource = new CancellationTokenSource();
         Task listenerTask = null;
         TcpListener listener = null;
         LobbyServerInfo lobbyServerInfo = null;
@@ -194,7 +193,6 @@ namespace Freeserf.Network
         readonly Dictionary<string, uint> disconnectedClients = new Dictionary<string, uint>();
         readonly Dictionary<RemoteClient, Action> connectionLossHandlers = new Dictionary<RemoteClient, Action>();
         DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat but only the broadcasted ones so no client is missed out.
-        uint lastUserActionOrInSyncGameTime = 0;
 
         public LocalServer(string name, GameInfo gameInfo)
         {
@@ -263,58 +261,15 @@ namespace Freeserf.Network
         public event GameReadyHandler GameReady;
         public event ClientChangedFaceHandler ClientChangedFace;
 
-        public void Run(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed,
-            IEnumerable<PlayerInfo> players, CancellationToken cancellationToken)
+        void Run(CancellationToken cancellationToken)
         {
             Error = "";
 
-            /*var addresses = Dns.GetHostAddresses(HostName);
-
-            if (addresses.Length == 0)
-            {
-                Error = "Invalid hostname.";
-                return;
-            }
-
-            listener = new TcpListener(addresses[0], Global.NetworkPort);*/
             listener = new TcpListener(Ip, Global.NetworkPort);
 
             listener.Start();
 
             cancellationToken.Register(listener.Stop);
-
-            State = ServerState.Lobby;
-            lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSize, mapSeed);
-            lobbyPlayerInfo.Clear();
-            uint playerIndex = 0u;
-
-            foreach (var player in players)
-            {
-                if (player != null)
-                {
-                    string identification = null;
-
-                    if (player.Face >= PlayerFace.You) // human
-                    {
-                        if (playerIndex == 0u) // host
-                            identification = Ip.ToString();
-                        else
-                            identification = playerClients[playerIndex].Ip.ToString();
-                    }
-
-                    lobbyPlayerInfo.Add(new LobbyPlayerInfo
-                    (
-                        identification,
-                        playerIndex,
-                        (int)player.Face,
-                        (int)player.Supplies,
-                        (int)player.Intelligence,
-                        (int)player.Reproduction
-                    ));
-                }
-
-                ++playerIndex;
-            }
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -450,6 +405,21 @@ namespace Freeserf.Network
         public void EnterGame()
         {
             State = ServerState.Game;
+
+            // The clients have created their games from the lobby data but some
+            // parts (e.g. the random state) are not equal. So start with a full sync.
+            GameDirty = true;
+
+            Game.CheckpointReached -= Game_CheckpointReached;
+            Game.CheckpointReached += Game_CheckpointReached;
+        }
+
+        void Game_CheckpointReached(Game game)
+        {
+            if (State != ServerState.Game || game != GameManager.Instance.GetCurrentGame())
+                return;
+
+            BroadcastInSync(game.ConstTick, GameStateSerializer.ComputeHash(game));
         }
 
         public void ShowOutro()
@@ -473,46 +443,21 @@ namespace Freeserf.Network
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
 
-            // Send an in-sync message if necessary or update the game state
+            // Send the game state if something has changed by a user action.
+            // Otherwise the clients compare their states with the state hash
+            // which is sent at each checkpoint (see Game_CheckpointReached).
             if (State == ServerState.Game)
             {
                 var currentGame = GameManager.Instance.GetCurrentGame();
 
                 if (currentGame != null)
                 {
-                    if (GameDirty)
-                    {
-                        inSyncCancelTokenSource.Cancel(); // Cancel pending in-sync broadcasts.
-                        BroadcastGameStateUpdate(currentGame, true); // TODO: Change to false
-                        lastUserActionOrInSyncGameTime = currentGame.GameTime;
-                    }
-                    else if (lastUserActionOrInSyncGameTime - currentGame.GameTime >= SavedGameState.SyncDelay &&
-                        SavedGameState.TimeToSync(currentGame))
-                    {
-                        lastUserActionOrInSyncGameTime = currentGame.GameTime;
-
-                        Log.Verbose.Write(ErrorSystemType.Network, $"Sending in-sync message to all clients at game time: {Misc.SecondsToTime(currentGame.GameTime)}.");
-
-                        // Broadcast the in-sync 1 second later so the clients had the chance to create their game states.
-                        inSyncCancelTokenSource.Dispose();
-                        inSyncCancelTokenSource = new CancellationTokenSource();
-                        var gameTime = currentGame.GameTime;
-                        Task.Delay(1000, CancellationTokenSource.CreateLinkedTokenSource(cancelTokenSource.Token, inSyncCancelTokenSource.Token).Token).ContinueWith(t =>
-                        {
-                            try
-                            {
-                                if (currentGame != null)
-                                    BroadcastInSync(gameTime);
-                            }
-                            catch
-                            {
-                                // ignore
-                            }
-                        });
-                    }
+                    if (GameDirty || currentGame.StateChangedByAI)
+                        BroadcastGameStateUpdate(currentGame, true);
 
                     GameDirty = false;
-                    currentGame.ResetDirtyFlag(); // TODO: if we use the dirty flag for local saving as well, we should auto-save now so unsaved changes tracking will work                    
+                    currentGame.StateChangedByAI = false;
+                    currentGame.ResetDirtyFlag(); // TODO: if we use the dirty flag for local saving as well, we should auto-save now so unsaved changes tracking will work
                 }
             }
         }
@@ -565,6 +510,11 @@ namespace Freeserf.Network
                     }
                 }
             });
+
+            // The heartbeat tells the client its player index. Clients must not
+            // derive it from the lobby data as several clients may share an IP
+            // (same machine or same router).
+            client.SendHeartbeat(Global.SpontaneousMessage);
 
             // This should add the player to the game in lobby.
             // Moreover it should trigger a server update and
@@ -635,30 +585,29 @@ namespace Freeserf.Network
 
                                 // client sends the start game request when he is ready
                                 if (request.Request == Request.StartGame ||
-                                    request.Request == Request.Disconnect)
+                                    request.Request == Request.Disconnect ||
+                                    request.Request == Request.Heartbeat ||
+                                    request.Request == Request.LobbyData)
                                 {
-                                    NetworkDataReceiver.Receive(client, request, null);                                    
+                                    NetworkDataReceiver.Receive(client, request, null);
                                     break;
                                 }
                                 else
-                                    throw new ExceptionFreeserf("Unexpected request during loading."); // TODO maybe just ignore?
+                                {
+                                    client.SendResponse(networkData.MessageIndex, ResponseType.BadState);
+                                    throw new ExceptionFreeserf("Unexpected request during loading.");
+                                }
                             }
                         case ServerState.Game:
                             {
                                 if (networkData.Type == NetworkDataType.Request || networkData.Type == NetworkDataType.UserActionData)
                                 {
-                                    if (networkData.Type == NetworkDataType.UserActionData)
+                                    if (networkData.Type == NetworkDataType.UserActionData &&
+                                        GameManager.Instance.GetCurrentGame() == null)
                                     {
-                                        var currentGame = GameManager.Instance.GetCurrentGame();
-
-                                        if (currentGame == null)
-                                        {
-                                            Log.Error.Write(ErrorSystemType.Network, "User action received after game was closed.");
-                                            Close();
-                                            return;
-                                        }
-
-                                        lastUserActionOrInSyncGameTime = currentGame.GameTime;
+                                        Log.Error.Write(ErrorSystemType.Network, "User action received after game was closed.");
+                                        Close();
+                                        return;
                                     }
 
                                     NetworkDataReceiver.Receive(client, networkData, (ResponseType responseType) => SendResponse(client, networkData.MessageIndex, responseType));
@@ -710,21 +659,32 @@ namespace Freeserf.Network
                     }
                 case ServerState.Loading:
                     {
-                        // TODO: assert that it is a startgame request (checked before in HandleData)
+                        // Only these requests are passed in HandleData.
                         var request = networkData as RequestData;
 
-                        if (request.Request == Request.StartGame)
+                        switch (request.Request)
                         {
-                            // client sends this when he is ready
-                            ClientReady(client);
+                            case Request.StartGame:
+                                // client sends this when he is ready
+                                ClientReady(client);
+                                break;
+                            case Request.Disconnect:
+                                ClientLeft?.Invoke(this, client);
+                                responseHandler?.Invoke(ResponseType.Ok);
+                                DisconnectClient(client, false);
+                                break;
+                            case Request.Heartbeat:
+                                client.SendHeartbeat(request.MessageIndex);
+                                break;
+                            case Request.LobbyData:
+                                lock (lobbyServerInfo)
+                                lock (lobbyPlayerInfo)
+                                {
+                                    client.SendLobbyDataUpdate(request.MessageIndex, lobbyServerInfo, lobbyPlayerInfo);
+                                }
+                                break;
                         }
-                        else if (request.Request == Request.Disconnect)
-                        {
-                            ClientLeft?.Invoke(this, client);
-                            responseHandler?.Invoke(ResponseType.Ok);
-                            DisconnectClient(client, false);
-                        }
-                    
+
                         break;
                     }
                 case ServerState.Game:
@@ -749,11 +709,12 @@ namespace Freeserf.Network
 
                             var response = userAction.ApplyToGame(game, client.PlayerIndex);
 
+                            Log.Verbose.Write(ErrorSystemType.Network, $"User action {userAction.UserAction} of player {client.PlayerIndex} applied with result {response}.");
+
+                            // The client applied the action at another game time than the server.
+                            // So even the client itself needs the resulting game state.
                             if (response == ResponseType.Ok)
-                            {
-                                if (clients.Count > 1)
-                                    GameDirty = true;
-                            }
+                                GameDirty = true;
 
                             responseHandler?.Invoke(response);
                         }
@@ -866,6 +827,7 @@ namespace Freeserf.Network
         public void Close()
         {
             State = ServerState.Offline;
+            Game.CheckpointReached -= Game_CheckpointReached;
 
             if (listener != null)
             {
@@ -883,6 +845,9 @@ namespace Freeserf.Network
 
         public void StartGame(Game game)
         {
+            // Clients create their game from the lobby data so they
+            // must have the final state before the game is started.
+            BroadcastLobbyData();
             BroadcastStartGameRequest();
             LoadGame();
         }
@@ -897,7 +862,7 @@ namespace Freeserf.Network
         {
             Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{client.Ip.ToString()}' disconnected.");
 
-            disconnectedClients.Add(client.Ip.ToString(), client.PlayerIndex);
+            disconnectedClients[client.Ip.ToString()] = client.PlayerIndex; // the IP may be used by several clients
 
             if (sendNotificationToClient)
                 client.SendDisconnect();
@@ -932,10 +897,32 @@ namespace Freeserf.Network
 
         public void Init(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players)
         {
-            State = ServerState.Offline;
-            listenerTask = Task.Run(() => Run(
-                useServerValues, useSameValues, mapSize, mapSeed, players, cancelTokenSource.Token), cancelTokenSource.Token
-            );
+            // The lobby data must exist before the server is used (e.g. updated by the lobby)
+            // so it is not created by the listener task.
+            lobbyServerInfo = new LobbyServerInfo(useServerValues, useSameValues, mapSize, mapSeed);
+            lobbyPlayerInfo.Clear();
+            uint playerIndex = 0u;
+
+            foreach (var player in players)
+            {
+                if (player != null)
+                {
+                    lobbyPlayerInfo.Add(new LobbyPlayerInfo
+                    (
+                        player.Face >= PlayerFace.You ? Ip.ToString() : null, // only the host can be human here
+                        playerIndex,
+                        (int)player.Face,
+                        (int)player.Supplies,
+                        (int)player.Intelligence,
+                        (int)player.Reproduction
+                    ));
+                }
+
+                ++playerIndex;
+            }
+
+            State = ServerState.Lobby;
+            listenerTask = Task.Run(() => Run(cancelTokenSource.Token), cancelTokenSource.Token);
         }
 
         public void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players)
@@ -1086,11 +1073,11 @@ namespace Freeserf.Network
             Broadcast((client) => client.SendDisconnect());
         }
 
-        private void BroadcastInSync(uint gameTime)
+        private void BroadcastInSync(uint tick, byte[] stateHash)
         {
-            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast in-sync message to {clients.Count} clients with game time {Misc.SecondsToTime(gameTime)}.");
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast in-sync message to {clients.Count} clients for tick {tick}.");
 
-            Broadcast((client) => client.SendInSyncMessage(gameTime));
+            Broadcast((client) => client.SendInSyncMessage(tick, stateHash));
         }
 
         private void BroadcastGameStateUpdate(Game game, bool fullState)

@@ -89,9 +89,6 @@ namespace Freeserf
         [Data]
         private readonly InventoryState state = new InventoryState();       
 
-        // Count of serfs waiting to move out
-        uint serfsOut = 0;
-
         public Inventory(Game game, uint index)
             : base(game, index)
         {
@@ -144,12 +141,12 @@ namespace Freeserf
 
         public uint GetSerfQueueLength()
         {
-            return serfsOut;
+            return state.SerfsOut;
         }
 
         public void SerfAway()
         {
-            --serfsOut;
+            --state.SerfsOut;
         }
 
         public bool CallOutSerf(Serf serf)
@@ -168,7 +165,7 @@ namespace Freeserf
                 --state.GenericCount;
             }
 
-            ++serfsOut;
+            ++state.SerfsOut;
 
             return true;
         }
@@ -221,6 +218,11 @@ namespace Freeserf
         }
 
         public uint FreeSerfCount => state.GenericCount;
+
+        internal uint GetSerfIndex(Serf.Type type)
+        {
+            return type == Serf.Type.None ? 0u : (uint)state.Serfs[type];
+        }
 
         public bool HasSerf(Serf.Type type)
         {
@@ -459,7 +461,7 @@ namespace Freeserf
                 }
             }
 
-            ++serfsOut;
+            ++state.SerfsOut;
 
             return serf;
         }
@@ -698,7 +700,7 @@ namespace Freeserf
             // Older saves did not keep it.
             if (reader.HasValue("serfs_out"))
             {
-                serfsOut = reader.Value("serfs_out").ReadUInt();
+                state.SerfsOut = reader.Value("serfs_out").ReadUInt();
             }
 
             for (int i = 0; i < 26; ++i)
@@ -724,7 +726,7 @@ namespace Freeserf
             }
 
             writer.Value("generic_count").Write(state.GenericCount);
-            writer.Value("serfs_out").Write(serfsOut);
+            writer.Value("serfs_out").Write(state.SerfsOut);
 
             for (int i = 0; i < 26; ++i)
             {

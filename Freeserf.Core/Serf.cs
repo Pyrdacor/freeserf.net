@@ -161,6 +161,27 @@ namespace Freeserf
         {
             public List<string> ChangedVirtualDataMembers { get; } = new List<string>();
             private StateDataBase data = null;
+            private string deserializedDataType = null;
+
+            /// <summary>
+            /// Name of the state data class. It is serialized before the data so the
+            /// receiver creates exactly the same data object. After a state change the
+            /// data may still belong to the previous state for a while, so it can't be
+            /// derived from the serf state.
+            /// </summary>
+            [Data]
+            public string DataType
+            {
+                get => data?.GetType().Name ?? "";
+                set
+                {
+                    deserializedDataType = value ?? "";
+
+                    if (DataType != deserializedDataType)
+                        Data = CreateByTypeName(deserializedDataType);
+                }
+            }
+
             [Data]
             public StateDataBase Data
             {
@@ -174,11 +195,28 @@ namespace Freeserf
                     if (!ChangedVirtualDataMembers.Contains(nameof(Data)))
                         ChangedVirtualDataMembers.Add(nameof(Data));
                     MarkPropertyAsDirty(nameof(Data));
+                    MarkPropertyAsDirty(nameof(DataType));
                 }
             }
 
+            StateDataBase CreateByTypeName(string typeName)
+            {
+                if (string.IsNullOrEmpty(typeName))
+                    return null;
+
+                var type = typeof(StateData).GetNestedType(typeName);
+
+                if (type == null || !typeof(StateDataBase).IsAssignableFrom(type))
+                    throw new ExceptionFreeserf(ErrorSystemType.Serf, $"Invalid serf state data type {typeName}.");
+
+                return (StateDataBase)Activator.CreateInstance(type, this);
+            }
+
+            // Called before the state data is deserialized.
             public void Update()
             {
+                deserializedDataType = null;
+
                 var temp = StateDataBase.Create(this) as StateDataBase;
 
                 if (Data == null || temp == null || temp.GetType() != Data.GetType())
@@ -235,6 +273,10 @@ namespace Freeserf
                 {
                     if (!(parent is StateData parentStateData))
                         throw new ExceptionFreeserf($"Parent of {nameof(StateDataBase)} is no {nameof(StateData)}.");
+
+                    // If the data type was transferred, it is used instead of the serf state.
+                    if (parentStateData.deserializedDataType != null)
+                        return parentStateData.CreateByTypeName(parentStateData.deserializedDataType);
 
                     return parentStateData.serf.SerfState switch
                     {
@@ -4899,7 +4941,7 @@ namespace Freeserf
 
                 if (otherFlag == null)
                 {
-                    throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, "Path has no other end flag in selected dir.");
+                    throw new ExceptionFreeserf(Game, ErrorSystemType.Serf, $"Path has no other end flag in selected dir. Serf {Index} ({SerfType}), flag {flag.Index} at {flag.Position}, direction {direction}, has path {flag.HasPath(direction)}.");
                 }
 
                 var otherDirection = flag.GetOtherEndDirection(direction);

@@ -721,7 +721,7 @@ namespace Freeserf
             int removeSignsCounter = 0;
             ushort lastTick = 0;
             int counter = 0;
-            public MapPos InitialPosition = 0;
+            MapPos initialPosition = 0;
 
             [Data]
             public int RemoveSignsCounter
@@ -761,6 +761,20 @@ namespace Freeserf
                     {
                         counter = value;
                         MarkPropertyAsDirty(nameof(Counter));
+                    }
+                }
+            }
+
+            [Data]
+            public MapPos InitialPosition
+            {
+                get => initialPosition;
+                set
+                {
+                    if (initialPosition != value)
+                    {
+                        initialPosition = value;
+                        MarkPropertyAsDirty(nameof(InitialPosition));
                     }
                 }
             }
@@ -1045,9 +1059,10 @@ namespace Freeserf
             gameTiles.ResetDirtyFlag();
         }
 
-        [Data]
+        // The changes are only needed for partial state updates (they tell the client what has changed).
+        [Data(OnlyInPartialState = true)]
         readonly DirtyMap<MapPos, ObjectChange> changedObjects = new DirtyMap<MapPos, ObjectChange>();
-        [Data]
+        [Data(OnlyInPartialState = true)]
         readonly DirtyMap<MapPos, PathChange> changedPaths = new DirtyMap<MapPos, PathChange>();
 
         /// <summary>

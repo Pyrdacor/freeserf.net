@@ -59,8 +59,16 @@ namespace Freeserf.Serialize
             trackedProperties.Add(name, propertyState);
         }
 
+        /// <summary>
+        /// Is increased by every change of any state. This is used to
+        /// detect whether some code (e.g. the AI) has changed the game state.
+        /// </summary>
+        internal static long ChangeCount = 0;
+
         protected virtual void MarkPropertyAsDirty(string name)
         {
+            ++ChangeCount;
+
             lock (dirtyLock)
             {
                 if (!dirtyProperties.Contains(name))

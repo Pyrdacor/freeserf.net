@@ -24,29 +24,46 @@ using System.Collections.Generic;
 
 namespace Freeserf.Network
 {
+    /// <summary>
+    /// Sent by the server at each game checkpoint (see <see cref="Game.CheckpointInterval"/>).
+    /// It contains the hash of the server's game state at the given tick. A client with
+    /// a different game state at that tick requests a full game state update.
+    /// </summary>
     public class InSyncData : INetworkData
     {
+        public const int HashSize = 20;
+
         public NetworkDataType Type => NetworkDataType.InSync;
 
         public byte MessageIndex => Global.SpontaneousMessage; // always async
 
-        public UInt32 GameTime
+        public UInt32 Tick
         {
             get;
             private set;
         } = 0u;
+
+        public byte[] StateHash
+        {
+            get;
+            private set;
+        } = new byte[HashSize];
 
         public InSyncData()
         {
             // use when parsing the data
         }
 
-        public InSyncData(uint gameTime)
+        public InSyncData(uint tick, byte[] stateHash)
         {
-            GameTime = gameTime;
+            if (stateHash == null || stateHash.Length != HashSize)
+                throw new ArgumentException($"State hash must have {HashSize} bytes.", nameof(stateHash));
+
+            Tick = tick;
+            StateHash = stateHash;
         }
 
-        public int Size => 6;
+        public int Size => 6 + HashSize;
 
         public string LogName => "In-sync message";
 
@@ -58,7 +75,9 @@ namespace Freeserf.Network
             if (rawData.Length - offset < Size)
                 throw new ExceptionFreeserf($"In-sync length must be {Size}.");
 
-            GameTime = BitConverter.ToUInt32(rawData, offset + 2);
+            Tick = BitConverter.ToUInt32(rawData, offset + 2);
+            StateHash = new byte[HashSize];
+            Buffer.BlockCopy(rawData, offset + 6, StateHash, 0, HashSize);
 
             offset += Size;
 
@@ -70,7 +89,8 @@ namespace Freeserf.Network
             List<byte> rawData = new List<byte>(Size);
 
             rawData.AddRange(BitConverter.GetBytes((UInt16)Type));
-            rawData.AddRange(BitConverter.GetBytes(GameTime));
+            rawData.AddRange(BitConverter.GetBytes(Tick));
+            rawData.AddRange(StateHash);
 
             destination.Send(rawData.ToArray());
         }

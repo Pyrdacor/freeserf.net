@@ -585,6 +585,43 @@ namespace Freeserf.UI
             HandleAction(Action.CreateServer);
         }
 
+        // The following members are used by the MultiplayerTestDriver.
+        internal void SelectGameType(GameType type)
+        {
+            gameType = type;
+            UpdateGameType();
+        }
+
+        internal int JoinedClientCount => playerClientMapping.Count;
+
+        internal string ServerAddress
+        {
+            get => serverAddressInput.Text;
+            set => serverAddressInput.Text = value;
+        }
+
+        internal void AddAIPlayer()
+        {
+            if (gameType != GameType.MultiplayerServer)
+                return;
+
+            uint playerIndex = ServerGameInfo.FirstFreeMultiplayerPlayerIndex;
+
+            if (playerIndex >= Game.MAX_PLAYER_COUNT)
+                return;
+
+            var playerInfo = GetRandomPlayerInfo(playerIndex);
+
+            if (playerIndex < ServerGameInfo.PlayerCount)
+                ServerGameInfo.ReplacePlayer((int)playerIndex, playerInfo);
+            else
+                ServerGameInfo.AddPlayer(playerInfo);
+
+            playerIsAI[playerIndex] = true;
+            SetRedraw();
+            ServerUpdate();
+        }
+
         // Allows digits, letters, dots, dashes and colons so both IP addresses
         // (IPv4/IPv6) and hostnames can be entered.
         static bool ServerAddressFilter(char key, TextInput textInput)
@@ -1397,6 +1434,13 @@ namespace Freeserf.UI
 
                 GameManager.Instance.CloseGame();
                 Client.Game = GameManager.Instance.PrepareMultiplayerGame(ServerGameInfo, interf.RenderView, interf.AudioInterface);
+
+                // The server runs the AI players. Clients get the results with the game state updates.
+                if (Client.Game != null)
+                {
+                    foreach (var player in Client.Game.Players)
+                        player.AI = null;
+                }
                 interf = interf.Viewer.ChangeTo(Viewer.Type.Client).MainInterface;
                 gameType = GameType.MultiplayerLoading;
                 SetRedraw();
@@ -1517,10 +1561,15 @@ namespace Freeserf.UI
                 ServerGameInfo.MapSize = serverInfo.MapSize;
                 ServerGameInfo.RemoveAllPlayers();
 
-                for (int i = 0; i < players.Count; ++i)
+                // The lobby data only contains the existing players. Free slots in between
+                // must be kept, otherwise the player indices would differ from the server.
+                foreach (var player in players)
                 {
-                    ServerGameInfo.AddPlayer((PlayerFace)players[i].Face, PlayerInfo.PlayerColors[i],
-                        (uint)players[i].Intelligence, (uint)players[i].Supplies, (uint)players[i].Reproduction);
+                    while (ServerGameInfo.PlayerCount < player.PlayerIndex)
+                        ServerGameInfo.AddPlayer(null);
+
+                    ServerGameInfo.AddPlayer((PlayerFace)player.Face, PlayerInfo.PlayerColors[player.PlayerIndex],
+                        (uint)player.Intelligence, (uint)player.Supplies, (uint)player.Reproduction);
                 }
 
                 randomInput.SetRandom(ServerGameInfo.RandomBase);

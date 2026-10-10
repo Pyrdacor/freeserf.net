@@ -218,7 +218,7 @@ namespace Freeserf.AIStates
 
         uint FindRandomSpot(Game game, Player player, bool checkCanBuild)
         {
-            var spot = game.Map.GetRandomCoordinate(game.GetRandom());
+            var spot = game.Map.GetRandomCoordinate(game.GetAIRandom());
 
             if (checkCanBuild)
             {
@@ -242,7 +242,7 @@ namespace Freeserf.AIStates
                         return spot;
                     }
 
-                    spot = game.Map.GetRandomCoordinate(game.GetRandom());
+                    spot = game.Map.GetRandomCoordinate(game.GetAIRandom());
                 }
             }
 
@@ -383,7 +383,7 @@ namespace Freeserf.AIStates
 
                         int defendChance = 2 + (2 - (ai.ExpandFocus - ai.DefendFocus)) * 8; // 2, 10, 18, 26 or 34 %
 
-                        if (game.RandomInt() % 100 < defendChance)
+                        if (game.AIRandomInt() % 100 < defendChance)
                         {
                             var spot = Global.INVALID_MAPPOS;
 
@@ -509,7 +509,7 @@ namespace Freeserf.AIStates
 
             while (spots.Count > 0)
             {
-                var spot = (MapPos)spots[game.RandomInt() % spots.Count];
+                var spot = (MapPos)spots[game.AIRandomInt() % spots.Count];
 
                 if (game.CanBuildBuilding(spot, type, player))
                     return spot;
@@ -526,7 +526,7 @@ namespace Freeserf.AIStates
 
             while (buildings.Count > 0)
             {
-                var randomBuilding = buildings[game.RandomInt() % buildings.Count];
+                var randomBuilding = buildings[game.AIRandomInt() % buildings.Count];
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 6, buildingType, maxInArea))
                     return FindSpotNear(game, player, randomBuilding.Position, 4);
@@ -588,7 +588,7 @@ namespace Freeserf.AIStates
 
             while (buildings.Count > 0)
             {
-                var randomBuilding = buildings[game.RandomInt() % buildings.Count];
+                var randomBuilding = buildings[game.AIRandomInt() % buildings.Count];
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Fisher, maxInArea))
                 {
@@ -604,7 +604,7 @@ namespace Freeserf.AIStates
                                   map.TypeUp(map.MoveUp(position)) >= Map.Terrain.Grass0));
                         };
 
-                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findShore, game.GetRandom(), 1);
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findShore, game.GetAIRandom(), 1);
 
                         return FindSpotNear(game, player, spot, 4);
                     }
@@ -630,7 +630,7 @@ namespace Freeserf.AIStates
 
             while (buildings.Count > 0)
             {
-                var randomBuilding = buildings[game.RandomInt() % buildings.Count];
+                var randomBuilding = buildings[game.AIRandomInt() % buildings.Count];
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Lumberjack, maxInArea))
                 {
@@ -641,7 +641,7 @@ namespace Freeserf.AIStates
                             return FindTree(map, position).Success;
                         };
 
-                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findTree, game.GetRandom(), 1);
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findTree, game.GetAIRandom(), 1);
 
                         int maxDistance = 3;
 
@@ -671,7 +671,7 @@ namespace Freeserf.AIStates
 
             while (buildings.Count > 0)
             {
-                var randomBuilding = buildings[game.RandomInt() % buildings.Count];
+                var randomBuilding = buildings[game.AIRandomInt() % buildings.Count];
 
                 if (CheckMaxInAreaOk(game.Map, randomBuilding.Position, 7, Building.Type.Stonecutter, maxInArea))
                 {
@@ -682,7 +682,7 @@ namespace Freeserf.AIStates
                             return FindStone(map, position).Success;
                         };
 
-                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findStone, game.GetRandom(), 1);
+                        var spot = game.Map.FindSpotNear(randomBuilding.Position, 8, findStone, game.GetAIRandom(), 1);
 
                         return FindSpotNear(game, player, spot, 3);
                     }
@@ -736,13 +736,13 @@ namespace Freeserf.AIStates
 
             if (bestBaseBuilding == null)
             {
-                bestBaseBuilding = possibleBaseBuildings[game.RandomInt() % possibleBaseBuildings.Count];
+                bestBaseBuilding = possibleBaseBuildings[game.AIRandomInt() % possibleBaseBuildings.Count];
             }
 
-            var spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMilitary, game.GetRandom(), 5);
+            var spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMilitary, game.GetAIRandom(), 5);
 
             if (spot == Global.INVALID_MAPPOS)
-                spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMuchMilitary, game.GetRandom(), 4);
+                spot = game.Map.FindSpotNear(bestBaseBuilding.Position, 9, IsEmptySpotWithoutMuchMilitary, game.GetAIRandom(), 4);
 
             return spot;
         }
@@ -811,7 +811,7 @@ namespace Freeserf.AIStates
             if (bestBuildingPosition == Global.INVALID_MAPPOS)
                 return bestBuildingPosition;
 
-            return game.Map.FindSpotNear(bestBuildingPosition, 6, CanBuildLarge, game.GetRandom(), 1);
+            return game.Map.FindSpotNear(bestBuildingPosition, 6, CanBuildLarge, game.GetAIRandom(), 1);
         }
 
 

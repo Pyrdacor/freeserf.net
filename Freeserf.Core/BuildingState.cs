@@ -57,6 +57,7 @@ namespace Freeserf
         private word progress = 0;
         private word firstKnight = 0;
         private word inventoryOrTickOrLevel = 0;
+        private int burningCounter = 0;
 
         public BuildingState()
         {
@@ -241,6 +242,23 @@ namespace Freeserf
         {
             get => InventoryOrTickOrLevel;
             set => InventoryOrTickOrLevel = value;
+        }
+
+        /// <summary>
+        /// Remaining burning time
+        /// </summary>
+        [Data]
+        public int BurningCounter
+        {
+            get => burningCounter;
+            set
+            {
+                if (burningCounter != value)
+                {
+                    burningCounter = value;
+                    MarkPropertyAsDirty(nameof(BurningCounter));
+                }
+            }
         }
 
         /// <summary>

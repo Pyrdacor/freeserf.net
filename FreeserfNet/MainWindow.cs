@@ -380,6 +380,10 @@ namespace Freeserf
                 view.Close();
             }
 
+            // Test instances must not overwrite the user config (window positions etc.).
+            if (initInfo?.MultiplayerTest == true)
+                return;
+
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(FileSystem.Paths.UserConfigPath));
@@ -393,7 +397,7 @@ namespace Freeserf
 
         static void ReportException(string source, Exception exception)
         {
-            Log.Error.Write(ErrorSystemType.Application, $"{source}: {exception.Message}");
+            Log.Error.Write(ErrorSystemType.Application, $"{source}: {exception.Message}{Environment.NewLine}{exception.StackTrace}");
 
             mainWindow?.SetFullscreen(false, false);
 

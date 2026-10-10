@@ -656,7 +656,9 @@ namespace Freeserf.UI
 
         public void Draw()
         {
+            MultiplayerTestDriver.PreUpdate(this);
             viewer.Update();
+            MultiplayerTestDriver.Update(this);
             viewer.Draw();
         }
     }

@@ -272,3 +272,6 @@ sounds
 
 # macOS resource files
 .DS_Store
+
+# Multiplayer test logs
+logs/

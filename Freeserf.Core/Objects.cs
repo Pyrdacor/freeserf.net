@@ -20,6 +20,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -102,6 +103,10 @@ namespace Freeserf
         internal Game Game { get; }
         uint firstFreeIndex = 0;
         readonly Dictionary<uint, T> objects = new Dictionary<uint, T>();
+        // The objects are always enumerated in index order (like the arrays of the original game).
+        // The order of the dictionary depends on the history of insertions and removals. So it
+        // would differ between a multiplayer server and its clients after a game state update.
+        uint[] sortedIndices = null;
         internal SortedSet<uint> FreeIndices { get; } = new SortedSet<uint>();
 
         public Collection(Game game)
@@ -116,6 +121,25 @@ namespace Freeserf
 
             foreach (var freeIndex in freeIndices)
                 FreeIndices.Add(freeIndex);
+
+            // All indices below the first free index are used or in the free index list.
+            // This must be restored as well, otherwise new objects would get other
+            // indices than in the game of the multiplayer server.
+            uint maxIndex = 0;
+            bool hasIndices = false;
+
+            lock (objectsLock)
+            {
+                foreach (var index in objects.Keys.Concat(FreeIndices))
+                {
+                    if (!hasIndices || index > maxIndex)
+                        maxIndex = index;
+
+                    hasIndices = true;
+                }
+            }
+
+            firstFreeIndex = hasIndices ? maxIndex + 1 : 0;
         }
 
         public T Allocate()
@@ -143,6 +167,7 @@ namespace Freeserf
             lock (objectsLock)
             {
                 objects.Add(obj.Index, obj);
+                sortedIndices = null;
             }
 
             return obj;
@@ -158,6 +183,7 @@ namespace Freeserf
                 lock (objectsLock)
                 {
                     objects.Add(index, ObjectFactory<T>.Create(Game, index));
+                    sortedIndices = null;
                 }
 
                 if (FreeIndices.Contains(index))
@@ -201,6 +227,7 @@ namespace Freeserf
                 lock (objectsLock)
                 {
                     objects.Remove(index);
+                    sortedIndices = null;
                 }
             }
         }
@@ -213,16 +240,44 @@ namespace Freeserf
         /// </summary>
         public void Clear()
         {
-            FreeIndices.Clear();
-            objects.Clear();
+            lock (objectsLock)
+            {
+                FreeIndices.Clear();
+                objects.Clear();
+                sortedIndices = null;
+                firstFreeIndex = 0;
+            }
+        }
+
+        uint[] GetSortedIndices()
+        {
+            lock (objectsLock)
+            {
+                if (sortedIndices == null)
+                {
+                    sortedIndices = objects.Keys.ToArray();
+                    Array.Sort(sortedIndices);
+                }
+
+                return sortedIndices;
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            lock (objectsLock)
+            // Note: Objects may be removed or added while enumerating.
+            // Removed objects are skipped and added objects are not enumerated.
+            foreach (var index in GetSortedIndices())
             {
-                foreach (var entry in objects)
-                    yield return entry.Value;
+                T obj;
+
+                lock (objectsLock)
+                {
+                    if (!objects.TryGetValue(index, out obj))
+                        continue;
+                }
+
+                yield return obj;
             }
         }
 
@@ -235,11 +290,21 @@ namespace Freeserf
         {
             lock (objectsLock)
             {
-                return new List<T>(objects.Values);
+                return GetSortedIndices().Select(index => objects[index]).ToList();
             }
         }
 
-        public T First => (objects.Count == 0) ? null : objects.First().Value;
+        public T First
+        {
+            get
+            {
+                lock (objectsLock)
+                {
+                    var indices = GetSortedIndices();
+                    return indices.Length == 0 ? null : objects[indices[0]];
+                }
+            }
+        }
 
         public int Size => objects.Count;
 

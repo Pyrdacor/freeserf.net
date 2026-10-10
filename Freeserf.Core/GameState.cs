@@ -27,6 +27,7 @@ namespace Freeserf
         private dword mapGoldMoraleFactor = 0;        
         private int knightMoraleCounter = 0;
         private int inventoryScheduleCounter = 0;
+        private int birdSoundCounter = 0;
         private int resourceHistoryIndex = 0;
 
         public GameState()
@@ -245,6 +246,23 @@ namespace Freeserf
             }
         }
 
+        /// <summary>
+        /// The bird sounds use the game random so the counter must be synced.
+        /// </summary>
+        [Data]
+        public int BirdSoundCounter
+        {
+            get => birdSoundCounter;
+            set
+            {
+                if (birdSoundCounter != value)
+                {
+                    birdSoundCounter = value;
+                    MarkPropertyAsDirty(nameof(BirdSoundCounter));
+                }
+            }
+        }
+
         [Data]
         public int ResourceHistoryIndex
         {
@@ -263,59 +281,6 @@ namespace Freeserf
         public DirtyArray<int> PlayerHistoryIndex { get; } = new DirtyArray<int>(4);
         [Data]
         public DirtyArray<int> PlayerHistoryCounter { get; } = new DirtyArray<int>(3);
-    }
-
-    public class SavedGameState
-    {
-        // Sync is only done if the game time is a multiple of this in seconds.
-        // But based on the default game speed which is 2.
-        private const int SyncDelaySeconds = 10;
-        private const int SyncDelayFactor = GameState.DEFAULT_GAME_SPEED;
-        /// <summary>
-        /// Minimum delay between two necessary syncs in seconds.
-        /// </summary>
-        public const int SyncDelay = SyncDelaySeconds * SyncDelayFactor;
-
-        public static bool TimeToSync(Game game)
-        {
-            var nextGameTime = game.NextGameTime;
-            return game.GameTime != nextGameTime && nextGameTime % SyncDelay == 0;
-        }
-
-        readonly Game game;
-
-        internal SavedGameState(Game game)
-        {
-            this.game = game;
-        }
-
-        public static SavedGameState FromGame(Game game)
-        {
-            var gameCopy = new Game(game.Map);
-            GameStateSerializer.DeserializeInto(gameCopy, GameStateSerializer.SerializeFrom(game, true), true, false);
-            gameCopy.InitKnights();
-            return new SavedGameState(gameCopy);
-        }
-
-        public static SavedGameState UpdateGameAndLastState(Game game, SavedGameState lastState, byte[] updateData, bool full)
-        {
-            if (!full)
-            {
-                // Update last state with update.
-                GameStateSerializer.DeserializeInto(lastState.game, updateData, true, full);
-                // Serialize the updated state.
-                var newState = GameStateSerializer.SerializeFrom(lastState.game, true);
-                // Replace the current game state with the updated state.
-                GameStateSerializer.DeserializeInto(game, newState, false, false);
-            }
-            else
-            {
-                GameStateSerializer.DeserializeInto(game, updateData, false, true);
-            }
-
-            // Return the new state of the game.
-            return FromGame(game);
-        }
     }
 
     /// <summary>
@@ -418,6 +383,14 @@ namespace Freeserf
             return stream.ToArray();
         }
 
+        /// <summary>
+        /// Hash of the full game state. Equal game states have equal hashes.
+        /// </summary>
+        public static byte[] ComputeHash(Game game)
+        {
+            return System.Security.Cryptography.SHA1.HashData(SerializeFrom(game, true));
+        }
+
         public static void DeserializeInto(Game game, Stream stream, bool leaveOpen, bool dataOnly, bool fullSync)
         {
             if (!dataOnly && !fullSync)
@@ -444,6 +417,7 @@ namespace Freeserf
             if (!dataOnly)
             {
                 game.Map?.UpdateObjectsAfterDeserialization(fullSync);
+                game.InitKnights();
                 game.ResetDirtyFlag();
             }
 

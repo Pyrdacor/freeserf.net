@@ -111,7 +111,7 @@ namespace Freeserf.AIStates
                 // look for memorized large spot
                 if (largeSpots.Count > 0)
                 {
-                    int index = game.GetRandom().Next() % largeSpots.Count;
+                    int index = game.GetAIRandom().Next() % largeSpots.Count;
                     spot = largeSpots[index];
 
                     if (CanBuildAtSpot(game, player, spot, 1 + (int)ai.GameTime / (60 * Global.TICKS_PER_MIN)) && game.BuildBuilding(spot, mineType, player))
@@ -124,7 +124,7 @@ namespace Freeserf.AIStates
                 }
                 else if (considerSmallSpots && smallSpots.Count > 0)
                 {
-                    int index = game.GetRandom().Next() % smallSpots.Count;
+                    int index = game.GetAIRandom().Next() % smallSpots.Count;
                     spot = smallSpots[index];
 
                     if (CanBuildAtSpot(game, player, spot, 1 + (int)ai.GameTime / (60 * Global.TICKS_PER_MIN)) && game.BuildBuilding(spot, mineType, player))
@@ -210,10 +210,10 @@ namespace Freeserf.AIStates
 
         void FindNearbyMountain(Game game, Player player, ref MapPos position)
         {
-            position = game.Map.FindSpotNear(position, 9, FindMountainWithFlag, game.GetRandom(), 1);
+            position = game.Map.FindSpotNear(position, 9, FindMountainWithFlag, game.GetAIRandom(), 1);
 
             if (position == Global.INVALID_MAPPOS || game.Map.GetOwner(position) != player.Index)
-                position = game.Map.FindSpotNear(position, 9, FindMountain, game.GetRandom(), 1);
+                position = game.Map.FindSpotNear(position, 9, FindMountain, game.GetAIRandom(), 1);
         }
 
         Map.FindData FindFlag(Map map, MapPos position)
@@ -244,7 +244,7 @@ namespace Freeserf.AIStates
             // search for mountains near military buildings
             foreach (var building in militaryBuildings)
             {
-                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetRandom(), 1) != Global.INVALID_MAPPOS)
+                if (game.Map.FindSpotNear(building.Position, 3, FindMountain, game.GetAIRandom(), 1) != Global.INVALID_MAPPOS)
                 {
                     possibleSpots.Add(game.Map.MoveDownRight(building.Position));
                     continue;
@@ -282,8 +282,8 @@ namespace Freeserf.AIStates
                 if (possibleSpots.Count == 0)
                     break;
 
-                uint spot = (spotsWithFlag.Count > 0) ? spotsWithFlag[game.GetRandom().Next() % spotsWithFlag.Count] :
-                    possibleSpots[game.GetRandom().Next() % possibleSpots.Count];
+                uint spot = (spotsWithFlag.Count > 0) ? spotsWithFlag[game.GetAIRandom().Next() % spotsWithFlag.Count] :
+                    possibleSpots[game.GetAIRandom().Next() % possibleSpots.Count];
                 var flag = game.GetFlagAtPosition(spot);
 
                 if (flag == null)

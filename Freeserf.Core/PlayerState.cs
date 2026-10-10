@@ -151,6 +151,10 @@ namespace Freeserf
         private dword totalLandArea = 0;
         private dword totalBuildingScore = 0;
         private dword totalMilitaryScore = 0;
+        private word lastTick = 0;
+        private int knightsToSpawn = 0;
+        private int sendGenericDelay = 0;
+        private int sendKnightDelay = 0;
         private dword militaryMaxGold = 0;
 
         public PlayerState()
@@ -450,6 +454,74 @@ namespace Freeserf
         }
         [Data]
         public byte CastleKnightsRequested { get; set; }
+
+        /// <summary>
+        /// Game tick of the last player update
+        /// </summary>
+        [Data]
+        public word LastTick
+        {
+            get => lastTick;
+            set
+            {
+                if (lastTick != value)
+                {
+                    lastTick = value;
+                    MarkPropertyAsDirty(nameof(LastTick));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Number of knights to create
+        /// </summary>
+        [Data]
+        public int KnightsToSpawn
+        {
+            get => knightsToSpawn;
+            set
+            {
+                if (knightsToSpawn != value)
+                {
+                    knightsToSpawn = value;
+                    MarkPropertyAsDirty(nameof(KnightsToSpawn));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delay for sending generic serfs
+        /// </summary>
+        [Data]
+        public int SendGenericDelay
+        {
+            get => sendGenericDelay;
+            set
+            {
+                if (sendGenericDelay != value)
+                {
+                    sendGenericDelay = value;
+                    MarkPropertyAsDirty(nameof(SendGenericDelay));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delay for sending knights
+        /// </summary>
+        [Data]
+        public int SendKnightDelay
+        {
+            get => sendKnightDelay;
+            set
+            {
+                if (sendKnightDelay != value)
+                {
+                    sendKnightDelay = value;
+                    MarkPropertyAsDirty(nameof(SendKnightDelay));
+                }
+            }
+        }
 
         public bool HasCastle
         {

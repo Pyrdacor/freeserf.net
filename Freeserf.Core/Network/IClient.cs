@@ -65,7 +65,7 @@ namespace Freeserf.Network
 
         void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players);
         void SendGameStateUpdate(byte messageIndex, Game game, bool fullState);
-        void SendInSyncMessage(UInt32 gameTime);
+        void SendInSyncMessage(UInt32 tick, byte[] stateHash);
     }
 
     public interface IClientFactory

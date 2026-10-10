@@ -14,6 +14,7 @@ namespace Freeserf
         private word flag = 0;
         private word building = 0;
         private dword genericCount = 0;
+        private dword serfsOut = 0;
         private byte resourceDir = 0;
 
         public InventoryState()
@@ -99,6 +100,23 @@ namespace Freeserf
                 {
                     genericCount = value;
                     MarkPropertyAsDirty(nameof(GenericCount));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Count of serfs waiting to move out
+        /// </summary>
+        [Data]
+        public dword SerfsOut
+        {
+            get => serfsOut;
+            set
+            {
+                if (serfsOut != value)
+                {
+                    serfsOut = value;
+                    MarkPropertyAsDirty(nameof(SerfsOut));
                 }
             }
         }

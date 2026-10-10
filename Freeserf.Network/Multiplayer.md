@@ -48,52 +48,50 @@ The state serializer has an option for serializing full states.
 
 ##### Syncing
 
-When the client gets serialized state data he has to create the correct current state.
+The server is authoritative. All participants simulate the game with the same
+deterministic game logic. The server sends its full game state when the games
+may differ, and the clients verify their state at regular checkpoints.
 
-To do so he has to deserialize the game state and patch the last synced game state with it.
+- Game start: The clients create their games from the lobby data. Some parts
+  (e.g. the random state) differ from the server's game, so the server sends its
+  full game state as soon as the game has started.
+- User actions: A client performs its action locally (so the user sees the result
+  at once) and sends it to the server. The server applies it and sends its full
+  game state to all clients afterwards, because the client applied the action at
+  another game time. Actions of the host lead to a full game state update as well.
+- AI players: Only the server runs the AI. The AI uses its own random generator so
+  that the game's random state does not depend on it. All AI code runs through
+  `Game.RunAI`, which detects game state changes (see `State.ChangeCount`). If the
+  AI has changed the game state, the server sends its full game state.
+- Checkpoints: Every `Game.CheckpointInterval` ticks (`ConstTick`) the server sends
+  an in-sync message with a hash of its game state. Each client compares it with the
+  hash of its own state at the same tick (the server may be ahead or behind). If the
+  hashes differ and no game state update arrives within a second, the client
+  requests one. So a divergence is fixed within a few seconds whatever its reason.
 
-This all has to be very quick (in one cycle). To avoid large lags the sync data should be small.
+Only full game states are sent at the moment (about 200 KB for a small map). The
+serializer still supports partial states (only dirty values), which could reduce
+the amount of data later.
 
-A full sync can be necessary and it may lag but following syncs should then be small and fast so the lag is short.
+For the checkpoints to work, the game simulation has to be deterministic and all
+data that affects it must be part of the serialized state:
 
-Syncing is done whenever the host or a client performs a user action of one of the following types:
-
-- Change a setting which affects the game (so settings that are not only affecting the client like changing the audio volume)
-- Start an attack
-- Send a geologist
-- Cycle knights
-- Train knights
-- Place or demolish a building, flag or road
-- Surrender (note that leaving the game does not require a sync but surrendering should provide a notification for all participants)
-
-If no user actions take place for a while the data to sync may be huge. To avoid this the server sends an InSync message to the clients
-from time to time and resets all dirty flags. The InSync message tells the clients the last time everything was in sync so they can
-update their last sync to that time. To make this work clients will update their last syncs from time to time.
-
-Server and clients will do this in-sync tasks at specific times so they can sync better. These specific times are a multiple of
-10 seconds in game time. So every 10 seconds of game time the last synced state is updated. But the client will also store the
-verified last synced state from the server as a backup until the InSync message or a new sync is received. Note that the 10 seconds
-don't start anew after a sync cause the game time must be a multiple of 10 seconds. After a sync at least 10 seconds are waited
-and the next time the game time is a multiple of 10 seconds, the in-sync tasks are performed.
+- Rendering and sound must not change the game state or use the game's random generator.
+- Change tracking data for partial states is marked with `[Data(OnlyInPartialState = true)]`
+  so it is not part of full states (and their hashes).
+- Game object collections are enumerated in index order. The order of a dictionary
+  would depend on the history of insertions and removals.
 
 
-- Case 1: No user action for 10 seconds
-  - Clients update their last sync
-  - Server sends InSync message to all clients
-  - Clients receive InSync and update their last verified sync to last sync
-  - No state update is necessary at all
+##### Local test environment
 
-- Case 2: User action on host inside 10 seconds
-  - Server sets next InSync message emission to 'now + at least 10 seconds' && 'gametime % 10 sec = 0'
-  - Server sends game state update to all clients
-  - Clients receive game state update and update their last verified sync to it
-  - Clients also update their real game state accordingly
-  - Clients set next last sync update time to 'now + at least 10 seconds' && 'gametime % 10 sec = 0'
-
-- Case 3: User action on client inside 10 seconds
-  - Client sends user action request to server
-  - Server calculates the new game state (performs client user action in game)
-  - Like Case 2
+`test-multiplayer.ps1` in the repository root starts a server and up to three
+clients on one machine (`-Clients`, `-AI`, `-Seconds`). The instances are driven by
+`MultiplayerTestDriver` (command line option `-m host:CLIENTS[:AI]` or `-m join:ADDRESS`):
+they create or join the server and each player builds a castle, a lumberjack and a road
+through the regular interface code. At each checkpoint the state hash is logged, and the
+script compares the hashes of all instances afterwards. With `-Dump` the members of all
+game objects are written at each checkpoint so a divergence can be located.
 
 
 #### Data that can be send

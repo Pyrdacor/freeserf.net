@@ -45,15 +45,11 @@ namespace Freeserf
         private readonly PlayerState state = new PlayerState();
         
         // Those are only saved locally
-        ushort lastTick = 0;
         readonly Notifications notifications = new Notifications();
         readonly PositionTimers timers = new PositionTimers();
         readonly Dictionary<MapPos, GameTime> lastUnderAttackNotificationTimes = new Dictionary<MapPos, GameTime>();
         uint selectedBuildingIndex = 0;
-        int knightsToSpawn = 0;
 
-        int sendGenericDelay = 0;
-        int sendKnightDelay = 0;
         // TODO: move to state as multiplayer games won't have the info otherwise
         readonly uint[,] playerStatHistory = new uint[16, 112];
         readonly uint[,] resourceCountHistory = new uint[26, 120];
@@ -1030,11 +1026,11 @@ namespace Freeserf
 
         public bool TickSendGenericDelay()
         {
-            --sendGenericDelay;
+            --state.SendGenericDelay;
 
-            if (sendGenericDelay < 0)
+            if (state.SendGenericDelay < 0)
             {
-                sendGenericDelay = 5;
+                state.SendGenericDelay = 5;
                 return true;
             }
 
@@ -1043,11 +1039,11 @@ namespace Freeserf
 
         public bool TickSendKnightDelay()
         {
-            --sendKnightDelay;
+            --state.SendKnightDelay;
 
-            if (sendKnightDelay < 0)
+            if (state.SendKnightDelay < 0)
             {
-                sendKnightDelay = 5;
+                state.SendKnightDelay = 5;
                 return true;
             }
 
@@ -1093,7 +1089,7 @@ namespace Freeserf
         public void NotifyCraftedTool(Resource.Type tool)
         {
             if (AI != null)
-                AI.NotifyCraftedTool(tool);
+                Game.RunAI(() => AI.NotifyCraftedTool(tool));
         }
 
         public void IncreaseResourceCount(Resource.Type type)
@@ -1123,7 +1119,7 @@ namespace Freeserf
                 state.CastleInventoryIndex = building.Inventory.Index;
                 selectedBuildingIndex = building.Index;
                 CreateInitialCastleSerfs(building);
-                lastTick = Game.Tick;
+                state.LastTick = Game.Tick;
             }
             else
             {
@@ -1307,8 +1303,8 @@ namespace Freeserf
         {
             try
             {
-                ushort delta = (ushort)(Game.Tick - lastTick);
-                lastTick = Game.Tick;
+                ushort delta = (ushort)(Game.Tick - state.LastTick);
+                state.LastTick = Game.Tick;
 
                 if (state.TotalLandArea > 0xffff0000)
                     state.TotalLandArea = 0;
@@ -1344,13 +1340,13 @@ namespace Freeserf
 
                         if (state.SerfToKnightCounter < settings.SerfToKnightRate)
                         {
-                            ++knightsToSpawn;
+                            ++state.KnightsToSpawn;
 
-                            if (knightsToSpawn > 2)
-                                knightsToSpawn = 2;
+                            if (state.KnightsToSpawn > 2)
+                                state.KnightsToSpawn = 2;
                         }
 
-                        if (knightsToSpawn == 0)
+                        if (state.KnightsToSpawn == 0)
                         {
                             // Create unassigned serf
                             SpawnSerf(null, null, false);
@@ -1366,7 +1362,7 @@ namespace Freeserf
                                 if (inventory.Value.GetCountOf(Resource.Type.Sword) != 0 &&
                                     inventory.Value.GetCountOf(Resource.Type.Shield) != 0)
                                 {
-                                    --knightsToSpawn;
+                                    --state.KnightsToSpawn;
                                     inventory.Value.PromoteSerfToKnight(serf.Value);
                                 }
                             }
@@ -1937,7 +1933,7 @@ namespace Freeserf
 
             reader.ReadWord();  // 390 // castleflag
             state.CastleInventoryIndex = reader.ReadWord(); // 392
-            knightsToSpawn = reader.ReadWord(); // 396
+            state.KnightsToSpawn = reader.ReadWord(); // 396
             reader.ReadWord();  // 398
             reader.ReadWord();  // 400, player->field_110 = v16;
             reader.ReadWord();  // 402 ???
@@ -1946,7 +1942,7 @@ namespace Freeserf
             state.TotalBuildingScore = reader.ReadDWord(); // 406
             state.TotalMilitaryScore = reader.ReadDWord(); // 410
 
-            lastTick = reader.ReadWord(); // 414
+            state.LastTick = reader.ReadWord(); // 414
 
             state.ReproductionCounter = reader.ReadWord(); // 416
             state.ReproductionReset = reader.ReadWord(); // 418
@@ -2045,10 +2041,10 @@ namespace Freeserf
             }
 
             state.InitialSupplies = (byte)reader.Value("initial_supplies").ReadUInt();
-            knightsToSpawn = reader.Value("knights_to_spawn").ReadInt();
+            state.KnightsToSpawn = reader.Value("knights_to_spawn").ReadInt();
             state.TotalBuildingScore = reader.Value("total_building_score").ReadUInt();
             state.TotalMilitaryScore = reader.Value("total_military_score").ReadUInt();
-            lastTick = (word)reader.Value("last_tick").ReadUInt();
+            state.LastTick = (word)reader.Value("last_tick").ReadUInt();
             state.ReproductionCounter = (word)reader.Value("reproduction_counter").ReadInt();
             state.ReproductionReset = (word)reader.Value("reproduction_reset").ReadUInt();
             settings.SerfToKnightRate = (word)reader.Value("serf_to_knight_rate").ReadInt();
@@ -2087,8 +2083,8 @@ namespace Freeserf
             }
             if (reader.HasValue("send_generic_delay"))
             {
-                sendGenericDelay = reader.Value("send_generic_delay").ReadInt();
-                sendKnightDelay = reader.Value("send_knight_delay").ReadInt();
+                state.SendGenericDelay = reader.Value("send_generic_delay").ReadInt();
+                state.SendKnightDelay = reader.Value("send_knight_delay").ReadInt();
                 state.KnightMorale = reader.Value("knight_morale").ReadUInt();
                 state.GoldDeposited = reader.Value("gold_deposited").ReadUInt();
                 state.MilitaryMaxGold = reader.Value("military_max_gold").ReadUInt();
@@ -2205,12 +2201,12 @@ namespace Freeserf
             }
 
             writer.Value("initial_supplies").Write(state.InitialSupplies);
-            writer.Value("knights_to_spawn").Write(knightsToSpawn);
+            writer.Value("knights_to_spawn").Write(state.KnightsToSpawn);
 
             writer.Value("total_building_score").Write(state.TotalBuildingScore);
             writer.Value("total_military_score").Write(state.TotalMilitaryScore);
 
-            writer.Value("last_tick").Write(lastTick);
+            writer.Value("last_tick").Write(state.LastTick);
 
             writer.Value("reproduction_counter").Write(state.ReproductionCounter);
             writer.Value("reproduction_reset").Write(state.ReproductionReset);
@@ -2248,8 +2244,8 @@ namespace Freeserf
             writer.Value("castle_knights_requested").Write(state.CastleKnightsRequested);
 
             writer.Value("castle_inventory").Write(state.CastleInventoryIndex);
-            writer.Value("send_generic_delay").Write(sendGenericDelay);
-            writer.Value("send_knight_delay").Write(sendKnightDelay);
+            writer.Value("send_generic_delay").Write(state.SendGenericDelay);
+            writer.Value("send_knight_delay").Write(state.SendKnightDelay);
             writer.Value("knight_morale").Write(state.KnightMorale);
             writer.Value("gold_deposited").Write(state.GoldDeposited);
             writer.Value("military_max_gold").Write(state.MilitaryMaxGold);

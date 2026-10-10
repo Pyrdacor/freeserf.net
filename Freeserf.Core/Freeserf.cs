@@ -56,6 +56,7 @@ namespace Freeserf
             public bool? Fullscreen = null;
             public bool ConsoleWindow = false;
             public bool LogLevelSet = false;
+            public bool MultiplayerTest = false;
         }
 
         public static InitInfo Init(string[] args)
@@ -113,6 +114,29 @@ namespace Freeserf
 
                 return true;
             });
+
+            commandLine.AddOption('p', "Set window position (e.g. 0,0).").AddParameter("POS", (AutoParseableString s) =>
+            {
+                s.Retrieve(out initInfo.WindowX);
+                s.Skip(1); // ','
+                s.Retrieve(out initInfo.WindowY);
+
+                return true;
+            });
+
+            commandLine.AddOption('m', "Run an automated multiplayer test.\nhost:CLIENTS[:AI] creates a server, join:ADDRESS joins one.").AddParameter("MODE", (AutoParseableString s) =>
+            {
+                s.Retrieve(out string mode);
+
+                if (!UI.MultiplayerTestDriver.Configure(mode))
+                {
+                    Console.WriteLine($"Invalid multiplayer test mode {mode}.");
+                    return false;
+                }
+
+                initInfo.MultiplayerTest = true;
+                return true;
+            }, "host:CLIENTS[:AI] | join:ADDRESS");
 
             commandLine.AddOption('c', "Log to console window.", () =>
             {

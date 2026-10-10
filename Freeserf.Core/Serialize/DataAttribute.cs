@@ -41,6 +41,16 @@ namespace Freeserf.Serialize
             get;
             private set;
         }
+
+        /// <summary>
+        /// If set, the member is only serialized in partial (dirty) states.
+        /// This is used for change tracking data which is no game state.
+        /// </summary>
+        public bool OnlyInPartialState
+        {
+            get;
+            set;
+        } = false;
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]

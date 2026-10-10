@@ -69,12 +69,8 @@ namespace Freeserf.Network
                         }
                     }
 
-                    Console.WriteLine("Sleep start " + checkDelay);
                     Thread.Sleep(checkDelay);
-                    Console.WriteLine("Sleep end");
                 }
-
-                Console.WriteLine("FOOOOOOOOOOOOOOOOOOOOOOO");
             });
         }
 

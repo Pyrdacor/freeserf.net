@@ -39,9 +39,18 @@ namespace Freeserf.Network
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
         readonly List<Action<ResponseData>> registeredResponseHandlers = new List<Action<ResponseData>>();
         readonly List<Action<Heartbeat>> registeredHeartbeatHandlers = new List<Action<Heartbeat>>();
-        readonly Dictionary<uint, SavedGameState> lastSavedGameStates = new Dictionary<uint, SavedGameState>();
-        SavedGameState lastVerifiedSavedGameState = null;
-        uint lastSavedGameStateGameTime = 0u;
+        // State hashes of the checkpoints (key: tick) of the own game and of the server's game.
+        readonly Dictionary<uint, byte[]> ownStateHashes = new Dictionary<uint, byte[]>();
+        readonly Dictionary<uint, byte[]> serverStateHashes = new Dictionary<uint, byte[]>();
+        const int MaxStoredStateHashes = 16;
+        // A game state update sent by the server (e.g. after a user action or an AI action
+        // shortly before a checkpoint) may arrive after the checkpoint was compared. So an
+        // update is only requested if none arrived within this delay after a mismatch.
+        const double OutOfSyncGraceSeconds = 1.0;
+        DateTime? outOfSyncTime = null;
+        bool gameStateUpdateRequested = false;
+        bool playerIndexKnown = false;
+        Game game = null;
 
         public LocalClient()
         {
@@ -67,8 +76,20 @@ namespace Freeserf.Network
 
         public Game Game
         {
-            get;
-            set;
+            get => game;
+            set
+            {
+                if (game == value)
+                    return;
+
+                game = value;
+                ClearStateHashes();
+
+                Freeserf.Game.CheckpointReached -= Game_CheckpointReached;
+
+                if (game != null)
+                    Freeserf.Game.CheckpointReached += Game_CheckpointReached;
+            }
         }
 
         public IRemoteServer Server => server;
@@ -115,6 +136,8 @@ namespace Freeserf.Network
 
         private void HandleDisconnect()
         {
+            Freeserf.Game.CheckpointReached -= Game_CheckpointReached;
+
             lock (registeredResponseHandlers)
             {
                 registeredResponseHandlers.Clear();
@@ -205,24 +228,61 @@ namespace Freeserf.Network
 
             NetworkDataReceiver?.ProcessReceivedData(handleReceivedData);
 
-            if (Game != null && client != null && client.Connected)
+            if (outOfSyncTime != null && (DateTime.UtcNow - outOfSyncTime.Value).TotalSeconds >= OutOfSyncGraceSeconds)
             {
-                lock (Game)
+                outOfSyncTime = null;
+
+                if (!gameStateUpdateRequested && Connected)
                 {
-                    var gameTime = Game.GameTime;
-
-                    // Save game state from time to time to avoid huge syncs.
-                    if (gameTime - lastSavedGameStateGameTime >= SavedGameState.SyncDelay && SavedGameState.TimeToSync(Game))
-                    {
-                        Log.Verbose.Write(ErrorSystemType.Network, $"Saving game state with game time {Misc.SecondsToTime(gameTime)}.");
-
-                        lastSavedGameStates.Add(gameTime, SavedGameState.FromGame(Game));
-                        lastSavedGameStateGameTime = gameTime;
-
-                        Log.Verbose.Write(ErrorSystemType.Network, $"Finished saving game state with game time {Misc.SecondsToTime(gameTime)}.");
-                    }
+                    Log.Verbose.Write(ErrorSystemType.Network, "Game state is still out of sync. Requesting game state update.");
+                    gameStateUpdateRequested = true;
+                    RequestGameStateUpdate();
                 }
             }
+        }
+
+        void ClearStateHashes()
+        {
+            ownStateHashes.Clear();
+            serverStateHashes.Clear();
+            outOfSyncTime = null;
+        }
+
+        static void StoreStateHash(Dictionary<uint, byte[]> hashes, uint tick, byte[] hash)
+        {
+            hashes[tick] = hash;
+
+            // Only keep the latest checkpoints.
+            while (hashes.Count > MaxStoredStateHashes)
+                hashes.Remove(hashes.Keys.Min());
+        }
+
+        void Game_CheckpointReached(Game game)
+        {
+            if (game != Game || serverState != ServerState.Game)
+                return;
+
+            var hash = GameStateSerializer.ComputeHash(game);
+
+            StoreStateHash(ownStateHashes, game.ConstTick, hash);
+            CompareStateHashes(game.ConstTick);
+        }
+
+        void CompareStateHashes(uint tick)
+        {
+            if (!ownStateHashes.TryGetValue(tick, out var ownHash) ||
+                !serverStateHashes.TryGetValue(tick, out var serverHash))
+                return; // compared when both are available
+
+            if (ownHash.AsSpan().SequenceEqual(serverHash))
+            {
+                Log.Verbose.Write(ErrorSystemType.Network, $"Game state is in sync at tick {tick}.");
+                return;
+            }
+
+            Log.Verbose.Write(ErrorSystemType.Network, $"Game state is out of sync at tick {tick}.");
+
+            outOfSyncTime ??= DateTime.UtcNow;
         }
 
         void ProcessData(IRemoteServer server, INetworkData networkData, ResponseHandler responseHandler)
@@ -236,8 +296,9 @@ namespace Freeserf.Network
                     {
                         var heartbeat = networkData as Heartbeat;
                         // Last heartbeat time was set before.
-                        if (PlayerIndex == 0u)
-                            PlayerIndex = heartbeat.PlayerId;
+                        // The server always sends our player index.
+                        PlayerIndex = heartbeat.PlayerId;
+                        playerIndexKnown = true;
                         foreach (var registeredHeartbeatHandler in registeredHeartbeatHandlers.ToArray())
                             registeredHeartbeatHandler?.Invoke(heartbeat);
                         responseHandler?.Invoke(ResponseType.Ok);
@@ -261,46 +322,21 @@ namespace Freeserf.Network
                     }
                 case NetworkDataType.InSync:
                     {
-                        if (serverState != ServerState.Game &&
-                            serverState != ServerState.Loading)
+                        if (serverState != ServerState.Game)
+                            break; // the game state is sent after loading anyway
+
+                        if (Game == null)
                         {
-                            responseHandler?.Invoke(ResponseType.BadState);
+                            serverState = ServerState.Offline;
+                            return;
                         }
-                        else
-                        {
-                            if (Game == null)
-                            {
-                                serverState = ServerState.Offline;
-                                responseHandler?.Invoke(ResponseType.BadState);
-                                return;
-                            }
 
-                            try
-                            {
-                                var insyncData = networkData as InSyncData;
+                        var inSyncData = networkData as InSyncData;
 
-                                Log.Verbose.Write(ErrorSystemType.Network, $"Processing in-sync message with game time {Misc.SecondsToTime(insyncData.GameTime)}.");
-
-                                if (!lastSavedGameStates.ContainsKey(insyncData.GameTime)) // We don't have the saved state anymore -> need full update
-                                {
-                                    Log.Verbose.Write(ErrorSystemType.Network, $"Last saved game state with game time {Misc.SecondsToTime(insyncData.GameTime)} not available. Requesting re-sync.");
-                                    RequestGameStateUpdate();
-                                    return;
-                                }
-
-                                Log.Verbose.Write(ErrorSystemType.Network, $"Updating last synced saved state to game time {Misc.SecondsToTime(insyncData.GameTime)} and discarding outdated saved game states.");
-                                lastVerifiedSavedGameState = lastSavedGameStates[insyncData.GameTime];
-                                // Remove all outdated (timestamp before in-sync game time) saved states.
-                                foreach (var outdatedSavedGameState in lastSavedGameStates.Where(s => s.Key <= insyncData.GameTime).ToList())
-                                    lastSavedGameStates.Remove(outdatedSavedGameState.Key);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
-                                Disconnect();
-                                throw ex; // TODO: Close game instead of crash?
-                            }
-                        }
+                        // The server may be ahead or behind. The hashes are compared
+                        // as soon as both states of the checkpoint tick are known.
+                        StoreStateHash(serverStateHashes, inSyncData.Tick, inSyncData.StateHash);
+                        CompareStateHashes(inSyncData.Tick);
                         break;
                     }
                 case NetworkDataType.SyncData:
@@ -319,21 +355,32 @@ namespace Freeserf.Network
                                 return;
                             }
 
+                            var syncData = networkData as SyncData;
+
+                            if (!syncData.Full)
+                            {
+                                // The server only sends full states at the moment.
+                                Log.Error.Write(ErrorSystemType.Network, "Partial game state updates are not supported. Requesting full update.");
+                                RequestGameStateUpdate();
+                                break;
+                            }
+
                             try
                             {
-                                var syncData = networkData as SyncData;
-
 #if DEBUG
                                 var stopWatch = System.Diagnostics.Stopwatch.StartNew();
                                 Log.Verbose.Write(ErrorSystemType.Network, "Processing sync ... ");
 #endif
                                 lock (Game)
                                 {
-                                    lastSavedGameStates.Clear();
-                                    if (lastVerifiedSavedGameState == null)
-                                        lastVerifiedSavedGameState = SavedGameState.FromGame(Game);
-                                    lastVerifiedSavedGameState = SavedGameState.UpdateGameAndLastState(Game, lastVerifiedSavedGameState, syncData.SerializedData, syncData.Full);
+                                    GameStateSerializer.DeserializeInto(Game, syncData.SerializedData, false, true);
                                 }
+
+                                // The own checkpoint hashes are no longer valid. The server's hashes of
+                                // later checkpoints are kept to verify the new state when they are reached.
+                                ownStateHashes.Clear();
+                                outOfSyncTime = null;
+                                gameStateUpdateRequested = false;
 
 #if DEBUG
                                 Log.Verbose.Write(ErrorSystemType.Network, $"Processing sync done in {stopWatch.ElapsedMilliseconds / 1000.0} seconds");
@@ -343,7 +390,7 @@ namespace Freeserf.Network
                             {
                                 Log.Error.Write(ErrorSystemType.Network, "Failed to update game state: " + ex.Message);
                                 Disconnect();
-                                throw ex; // TODO: Close game instead of crash?
+                                throw; // TODO: Close game instead of crash?
                             }
                         }
                         break;
@@ -380,11 +427,8 @@ namespace Freeserf.Network
                     {
                         case NetworkDataType.Heartbeat:
                             // Last heartbeat time was set above.
-                            if (parsedData.MessageIndex != Global.SpontaneousMessage)
-                            {
-                                // If it has a message index, it is an answer to a heartbeat request.
-                                NetworkDataReceiver.Receive(server, parsedData, null);
-                            }
+                            // Heartbeats contain our player index so they are always processed.
+                            NetworkDataReceiver.Receive(server, parsedData, null);
                             break;
                         case NetworkDataType.Request:
                         case NetworkDataType.LobbyData:
@@ -430,7 +474,7 @@ namespace Freeserf.Network
                         return;
                     }
                     serverState = ServerState.Loading;
-                    if (PlayerIndex == 0u)
+                    if (!playerIndexKnown)
                     {
                         // We have to wait for first heartbeat to set the player index.
                         SendHeartbeatRequest(response =>
@@ -485,12 +529,17 @@ namespace Freeserf.Network
 
         private void UpdateLobbyData(LobbyData data)
         {
-            for (int i = 0; i < data.Players.Count; ++i)
+            // The player index is normally known from the server's heartbeat.
+            // The IP is only a fallback as several clients may share it.
+            if (!playerIndexKnown)
             {
-                if (data.Players[i] != null && data.Players[i].PlayerIndex != 0u && data.Players[i].Identification == Ip.ToString())
+                foreach (var player in data.Players)
                 {
-                    PlayerIndex = (uint)i;
-                    break;
+                    if (player != null && player.PlayerIndex != 0u && player.Identification == Ip.ToString())
+                    {
+                        PlayerIndex = player.PlayerIndex;
+                        break;
+                    }
                 }
             }
 
@@ -695,9 +744,9 @@ namespace Freeserf.Network
             new SyncData(messageIndex, game.GameTime, data, fullState).Send(this);
         }
 
-        public void SendInSyncMessage(UInt32 gameTime)
+        public void SendInSyncMessage(UInt32 tick, byte[] stateHash)
         {
-            new InSyncData(gameTime).Send(this);
+            new InSyncData(tick, stateHash).Send(this);
         }
     }
 

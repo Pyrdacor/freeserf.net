@@ -61,7 +61,7 @@ namespace Freeserf.AIStates
 
             for (int i = 0; i < scansPerUpdate; ++i)
             {
-                var position = game.Map.GetRandomCoordinate(game.GetRandom());
+                var position = game.Map.GetRandomCoordinate(game.GetAIRandom());
                 int foundPosition = CheckCastleSpot(ai, game, player, position, (int)playerInfo.Intelligence);
 
                 if (foundPosition != -1 && game.CanBuildCastle((uint)foundPosition, player))

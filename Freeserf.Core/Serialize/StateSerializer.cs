@@ -1,4 +1,4 @@
-/*
+﻿/*
  * StateSerializer.cs - Serializer for state objects
  *
  * Copyright (C) 2019-2020  Robert Schneckenhaus <robert.schneckenhaus@web.de>
@@ -150,6 +150,7 @@ namespace Freeserf.Serialize
         private static readonly Dictionary<Type, CustomTypeCreator> customTypeCreators = new Dictionary<Type, CustomTypeCreator>();
         private static readonly Dictionary<Type, PropertyMap> propertyMapCache = new Dictionary<Type, PropertyMap>();
         private static readonly Dictionary<Type, List<KeyValuePair<string, bool>>> typeSerializablePropertyCache = new Dictionary<Type, List<KeyValuePair<string, bool>>>();
+        private static readonly Dictionary<Type, List<KeyValuePair<string, bool>>> typeFullStatePropertyCache = new Dictionary<Type, List<KeyValuePair<string, bool>>>();
         /// <summary>
         /// Major data version.
         /// This is part of the data version a communication partner uses.
@@ -236,6 +237,29 @@ namespace Freeserf.Serialize
         }
 
         /// <summary>
+        /// Like <see cref="GetSerializableProperties(Type)"/> but without
+        /// the members which are only part of partial states.
+        /// </summary>
+        private static IEnumerable<KeyValuePair<string, bool>> GetFullStateProperties(Type stateType)
+        {
+            if (typeFullStatePropertyCache.ContainsKey(stateType))
+                return typeFullStatePropertyCache[stateType];
+
+            bool onlyInPartialState(KeyValuePair<string, bool> property)
+            {
+                MemberInfo member = property.Value
+                    ? stateType.GetProperty(property.Key, propertyFlags)
+                    : stateType.GetField(property.Key, propertyFlags);
+
+                return (member.GetCustomAttribute(typeof(DataAttribute)) as DataAttribute).OnlyInPartialState;
+            }
+
+            var result = GetSerializableProperties(stateType).Where(property => !onlyInPartialState(property)).ToList();
+            typeFullStatePropertyCache[stateType] = result;
+            return result;
+        }
+
+        /// <summary>
         /// Public fields and properties are understand as "Properties" here.
         /// 
         /// The results are key-value-pairs where the key is the property or field name
@@ -247,12 +271,13 @@ namespace Freeserf.Serialize
             if (onlyDirtyProperties && state.DirtyProperties.Count == 0)
                 return new KeyValuePair<string, bool>[0];
 
-            var allProperties = GetSerializableProperties(state.GetType());
-
             if (onlyDirtyProperties)
+            {
+                var allProperties = GetSerializableProperties(state.GetType());
                 return allProperties.Where(property => state.DirtyProperties.Contains(property.Key));
+            }
 
-            return allProperties;
+            return GetFullStateProperties(state.GetType());
         }
 
         public static void Serialize(Stream stream, IState state, bool full, bool leaveOpen = false)
@@ -300,7 +325,10 @@ namespace Freeserf.Serialize
                 if (state is IVirtualDataProvider vdp)
                 {
                     // If the property has changed we store 'true' otherwise 'false'.
-                    writer.Write(vdp.ChangedVirtualDataMembers.Contains(property.Key));
+                    // A full state is always deserialized completely so no reset is needed.
+                    // This also keeps full states free of dirty tracking info so they
+                    // are equal for equal game states (which is needed for state hashes).
+                    writer.Write(!full && vdp.ChangedVirtualDataMembers.Contains(property.Key));
                 }
 
                 if (property.Value) // real property
@@ -415,6 +443,8 @@ namespace Freeserf.Serialize
 
                     if (value != null)
                         value = DeserializePropertyValue(reader, property.PropertyType, value);
+                    else
+                        SkipNullState(reader, property.Name);
                 }
                 else
                 {
@@ -428,6 +458,17 @@ namespace Freeserf.Serialize
             {
                 property.SetValue(targetObject, DeserializePropertyValue(reader, property.PropertyType, property.GetValue(targetObject)));
             }
+        }
+
+        /// <summary>
+        /// A null state is serialized as an end marker (see <see cref="SerializePropertyNullValue"/>).
+        /// If there is no object to deserialize into, this marker must be consumed anyway.
+        /// Otherwise all following data would be read at the wrong position.
+        /// </summary>
+        private static void SkipNullState(BinaryReader reader, string propertyName)
+        {
+            if (reader.ReadByte() != 0)
+                throw new ExceptionFreeserf($"State data for property {propertyName} was given but no state object could be created.");
         }
 
         private static object DeserializePropertyValue(BinaryReader reader, Type type, object propertyValue)

@@ -30,6 +30,11 @@ namespace Freeserf.Render
 
     internal class RenderBuilding : RenderObject
     {
+        static readonly Random RenderRandom = new Random();
+        // Sound effects are only played for visible buildings. So this must not be
+        // part of the game state (which must be equal for all multiplayer participants).
+        bool playingSfx = false;
+
         internal static readonly uint[] MapBuildingFrameSprite = new uint[]
         {
             0, 0xba, 0xba, 0xba, 0xba,
@@ -644,7 +649,7 @@ namespace Freeserf.Render
             }
 
             if (!sprite.Visible)
-                building.StopPlayingSfx();
+                playingSfx = false;
         }
 
         /// <summary>
@@ -795,25 +800,20 @@ namespace Freeserf.Render
             // Play sound effect
             if (sprite.Visible &&
                 ((building.BurningCounter >> 3) & 3) == 3 &&
-                !building.IsPlayingSfx)
+                !playingSfx)
             {
-                building.StartPlayingSfx();
+                playingSfx = true;
                 PlaySound(Audio.Audio.TypeSfx.Burning);
             }
             // Stop playing sound effect if not on screen
-            else if (!sprite.Visible && building.IsPlayingSfx)
+            else if (!sprite.Visible && playingSfx)
             {
-                building.StopPlayingSfx();
+                playingSfx = false;
                 StopSound();
             }
 
-            ushort delta = (ushort)(tick - building.Tick);
-            building.Tick = (uint)tick;
-
-            if (building.BurningCounter >= delta)
+            // Note: The burning counter is decreased by the game (see Building.Update).
             {
-                building.DecreaseBurningCounter(delta);
-
                 int type = 0;
 
                 if (building.IsDone ||
@@ -851,10 +851,6 @@ namespace Freeserf.Render
                 {
                     burningSprites[burningSpriteIndex++].Visible = false;
                 }
-            }
-            else
-            {
-                building.BurningCounter = 0;
             }
         }
 
@@ -960,9 +956,11 @@ namespace Freeserf.Render
             }
 
             const uint SpecialObjectOffset = 10000u;
-            // Use the persistent generator of the game: a new Random is seeded
-            // from time() and gives the same values for a whole second.
-            var random = building.Game.GetRandom();
+            // Use a persistent generator: a new Random is seeded from time() and
+            // gives the same values for a whole second. It must not be the game's
+            // generator as rendering depends on the visible area. This would change
+            // the game state differently for each multiplayer participant.
+            var random = RenderRandom;
             var textureAtlasBuildings = TextureAtlasManager.Instance.GetOrCreate(Layer.Buildings);
             var textureAtlasObjects = TextureAtlasManager.Instance.GetOrCreate(Layer.Objects);
 
@@ -1021,14 +1019,14 @@ namespace Freeserf.Render
                     {
                         int i = (tick >> 3) & 7;
 
-                        if (i == 0 || (i == 7 && !building.IsPlayingSfx))
+                        if (i == 0 || (i == 7 && !playingSfx))
                         {
-                            building.StartPlayingSfx();
+                            playingSfx = true;
                             PlaySound(Audio.Audio.TypeSfx.GoldBoils);
                         }
                         else if (i != 7)
                         {
-                            building.StopPlayingSfx();
+                            playingSfx = false;
                         }
 
                         uint spriteIndex = 127u + (uint)i;
@@ -1060,11 +1058,11 @@ namespace Freeserf.Render
                         {
                             if (((tick >> 4) & 3) != 0)
                             {
-                                building.StopPlayingSfx();
+                                playingSfx = false;
                             }
-                            else if (!building.IsPlayingSfx)
+                            else if (!playingSfx)
                             {
-                                building.StartPlayingSfx();
+                                playingSfx = true;
                                 PlaySound(Audio.Audio.TypeSfx.MillGrinding);
                             }
 
@@ -1138,7 +1136,7 @@ namespace Freeserf.Render
                         additionalSprites[0].Visible = false;
                     }
                     // draw the rope
-                    if (building.IsPlayingSfx)
+                    if (building.IsPlayingSfx) // set by the mining serf (elevator is used)
                     {
                         uint spriteIndex = 152u;
 
@@ -1170,14 +1168,14 @@ namespace Freeserf.Render
                     {
                         int i = (tick >> 3) & 7;
 
-                        if (i == 0 || (i == 7 && !building.IsPlayingSfx))
+                        if (i == 0 || (i == 7 && !playingSfx))
                         {
-                            building.StartPlayingSfx();
+                            playingSfx = true;
                             PlaySound(Audio.Audio.TypeSfx.GoldBoils);
                         }
                         else if (i != 7)
                         {
-                            building.StopPlayingSfx();
+                            playingSfx = false;
                         }
 
                         uint spriteIndex = 127u + (uint)i;
