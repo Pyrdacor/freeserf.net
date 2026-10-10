@@ -1,6 +1,19 @@
 Version 2.2.5:
 ==============
 
+- Multiplayer games (LAN) now work and stay in sync (experimental):
+  - servers in the local network are found automatically, other addresses can be entered and are saved
+  - the server name can be chosen
+  - the game speed can't be changed, only the host can pause the game
+  - player values are synced in the lobby
+  - players are notified when another player leaves the game
+- Widescreen support: wide aspect ratios and an evenly scaled, centred GUI
+- Android port (separate APK)
+- The window title shows the app name and version
+- Opening a notification closes an open popup and the other way round
+- Save dialog: the name field is focused right away and separated from the list,
+  saving without a name is no longer possible
+
 Ported bug fixes from the C++ freeserf releases 0.4 and 0.5:
 
 - Fixed a transporter duplicating a resource when switching at a flag

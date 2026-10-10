@@ -16,8 +16,11 @@
 - The server name can be chosen (3 to 12 letters or digits). It is saved and others see it in their server list.
 - The game speed can't be changed in multiplayer games. Only the host can pause the game.
 - Fixed games that didn't start when the host started right after a player joined.
+- In the lobby, the values (supplies, reproduction) of the players are synced. The host can set them for all players.
+- When a player leaves the game, the others get a notification.
 - Fixed crashes and wrong buildings, serfs and resources after a game update from the host.
-- Multiplayer is still experimental: there is no surrender or end of game yet, and leaving players aren't handled well.
+- Fixed crashes when a player is kicked from the lobby.
+- Multiplayer is still experimental: there is no surrender or end of game yet.
 
 ### Widescreen support
 - The game screen now uses wide aspect ratios, and the GUI scales evenly and stays centred.
@@ -36,5 +39,8 @@
 - Save games now store much more state, so a loaded game continues exactly like the saved one. This covers counts for all building types (gold smelters used to be lost), burning buildings, knight morale, castle inventory, player timers, messages, statistics history, military threat levels, and serfs leaving a stock.
 - Older save games still load.
 
-### Other fixes
+### Other changes
+- The window title shows the app name and version.
+- Opening a notification closes an open popup (and the other way round), so they no longer overlap.
+- In the save dialog, the name field is focused right away and is separated from the list. Saving without a name is no longer possible.
 - Text in the Save/Load dialog was drawn outside the list box. It is now drawn inside it.
