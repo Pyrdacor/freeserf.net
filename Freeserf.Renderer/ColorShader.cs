@@ -49,7 +49,7 @@ namespace Freeserf.Renderer
 
         protected static string GetFragmentShaderHeader()
         {
-            string header = $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor:00}{(State.IsOpenGLES ? " es" : "")}\n";
+            string header = State.GetShaderVersionDirective() + "\n";
 
             header += "\n";
             header += "#ifdef GL_ES\n";
@@ -66,7 +66,7 @@ namespace Freeserf.Renderer
 
         protected static string GetVertexShaderHeader()
         {
-            return $"#version {State.GLSLVersionMajor}{State.GLSLVersionMinor:00}{(State.IsOpenGLES ? " es" : "")}\n\n";
+            return State.GetShaderVersionDirective() + "\n\n";
         }
 
         protected static string GetInName(bool fragment)

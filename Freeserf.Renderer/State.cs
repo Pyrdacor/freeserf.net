@@ -34,6 +34,12 @@ namespace Freeserf.Renderer
         public static int GLSLVersionMajor { get; private set; } = 0;
         public static int GLSLVersionMinor { get; private set; } = 0;
         public static bool IsOpenGLES { get; private set; } = false;
+
+        // The shaders need integer vertex attributes, flat interpolation and texture().
+        // These are available since OpenGL 3.0 (GLSL 1.30) and OpenGL ES 3.0 (GLSL ES 3.00).
+        const int MinOpenGLVersionMajor = 3;
+        const int MinGLSLVersion = 130;
+        const int MinGLSLESVersion = 300;
         public static GL Gl { get; private set; } = null;
 
         public static void Init(IGLContextSource contextSource)
@@ -71,7 +77,31 @@ namespace Freeserf.Renderer
                     GLSLVersionMinor = int.Parse(match.Groups[2].Value);
                 }
             }
+
+            CheckRequirements(openGLVersion);
         }
+
+        static void CheckRequirements(string openGLVersion)
+        {
+            int glslVersion = GLSLVersionMajor * 100 + GLSLVersionMinor;
+            int minGLSLVersion = IsOpenGLES ? MinGLSLESVersion : MinGLSLVersion;
+
+            if (OpenGLVersionMajor < MinOpenGLVersionMajor || glslVersion < minGLSLVersion)
+            {
+                string required = IsOpenGLES ? "OpenGL ES 3.0 (GLSL ES 3.00)" : "OpenGL 3.0 (GLSL 1.30)";
+                string available = GLSLVersionMajor == 0
+                    ? $"'{openGLVersion}' without shaders"
+                    : $"'{openGLVersion}' with GLSL {GLSLVersionMajor}.{GLSLVersionMinor:00}";
+
+                throw new NotSupportedException($"{required} or newer is required, but the graphics driver only provides {available}. Please update the graphics driver.");
+            }
+        }
+
+        /// <summary>
+        /// The #version directive for the shaders.
+        /// </summary>
+        public static string GetShaderVersionDirective() =>
+            $"#version {GLSLVersionMajor}{GLSLVersionMinor:00}{(IsOpenGLES ? " es" : "")}";
 
         public static bool ShadersAvailable => OpenGLVersionMajor >= 2 && GLSLVersionMajor > 0;
 
