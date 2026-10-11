@@ -55,7 +55,7 @@ namespace Freeserf.Renderer
             OpenGLVersionMajor = int.Parse(match.Groups[1].Value);
             OpenGLVersionMinor = int.Parse(match.Groups[2].Value);
 
-            IsOpenGLES = openGLVersion.Contains("ES", StringComparison.OrdinalIgnoreCase);
+            IsOpenGLES = openGLVersion.StartsWith("OpenGL ES", StringComparison.OrdinalIgnoreCase);
 
             if (OpenGLVersionMajor >= 2) // glsl is supported since OpenGL 2.0
             {
