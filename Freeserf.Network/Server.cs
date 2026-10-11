@@ -193,6 +193,15 @@ namespace Freeserf.Network
         readonly Dictionary<uint, IRemoteClient> playerClients = new Dictionary<uint, IRemoteClient>();
         readonly Dictionary<IRemoteClient, MultiplayerStatus> clientStatus = new Dictionary<IRemoteClient, MultiplayerStatus>();
         readonly Dictionary<string, uint> disconnectedClients = new Dictionary<string, uint>();
+        // Rejoining: each player of a client has a token. Clients which connect during the game
+        // are pending until they sent their token (see JoinData).
+        readonly ulong sessionId = JoinData.CreateRandomId();
+        readonly Dictionary<uint, ulong> playerTokens = new Dictionary<uint, ulong>();
+        readonly HashSet<uint> humanPlayers = new HashSet<uint>();
+        readonly Dictionary<RemoteClient, (TcpClient TcpClient, DateTime ConnectTime)> pendingClients = new();
+        readonly List<(RemoteClient Client, JoinData Data)> pendingJoins = new List<(RemoteClient, JoinData)>();
+        static readonly TimeSpan PendingClientTimeout = TimeSpan.FromSeconds(5);
+        static readonly TimeSpan ActiveClientTime = TimeSpan.FromSeconds(2);
         readonly Dictionary<RemoteClient, Action> connectionLossHandlers = new Dictionary<RemoteClient, Action>();
         DateTime lastOwnHearbeat = DateTime.MinValue; // Every sent message counts as a heartbeat but only the broadcasted ones so no client is missed out.
 
@@ -284,52 +293,25 @@ namespace Freeserf.Network
                     var ip = ((IPEndPoint)client?.Client?.RemoteEndPoint)?.Address?.ToString();
                     // TODO: password protected games
 
-                    // if someone connects during game or outside lobby, we will ignore it and disconnect the client
-                    if (State != ServerState.Lobby)
+                    // Clients which connect during the game may get their player back (rejoin).
+                    // They are pending until they sent their token (see CompleteRejoin).
+                    if (State == ServerState.Game)
                     {
-                        // But not if it is a previously connected client.
-                        if (ip != null)
-                        {
-                            uint reconnectedPlayerIndex = uint.MaxValue;
+                        Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' connected during the game.");
 
-                            if (disconnectedClients.ContainsKey(ip))
-                            {
-                                reconnectedPlayerIndex = disconnectedClients[ip];
-                                disconnectedClients.Remove(ip);
-                            }
-                            // Maybe we didn't notice the disconnect yet?
-                            else
-                            {
-                                var knownClient = clients.Select(c => c.Key).FirstOrDefault(c => c.Ip.ToString() == ip);
+                        var pendingClient = new RemoteClient(uint.MaxValue, this, client);
 
-                                if (knownClient != null)
-                                {
-                                    reconnectedPlayerIndex = knownClient.PlayerIndex;
-                                    DisconnectClient(knownClient, false);
-                                }
-                            }
+                        lock (pendingClients)
+                            pendingClients.Add(pendingClient, (client, DateTime.UtcNow));
 
-                            if (reconnectedPlayerIndex < GameInfo.PlayerCount)
-                            {
-                                Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' reconnected.");
-
-                                var reconnectedClient = new RemoteClient(reconnectedPlayerIndex, this, client);
-
-                                playerClients.Add(reconnectedClient.PlayerIndex, reconnectedClient);
-                                clients.Add(reconnectedClient, client);
-                                clientStatus.Add(reconnectedClient, MultiplayerStatus.Unknown);
-
-                                SubscribeConnectionEvents(reconnectedClient);
-
-                                HandleClient(reconnectedClient, client, cancellationToken).ContinueWith((task) => client.Close());
-                                continue;
-                            }
-                        }
-
+                        ReceiveData(pendingClient, client, cancellationToken).ContinueWith((task) => client.Close());
+                        continue;
+                    }
+                    // Nobody can join while the game is loading or after it.
+                    else if (State != ServerState.Lobby)
+                    {
                         RejectClient(client);
                         continue;
-                        // AcceptClients = false; // this will also cancel the listener (no more clients are able to connect)
-                        // return;
                     }
                     // Note: We can not just stop the listener if there are 4 players in the lobby
                     // because players may disconnect or may be removed by the server. If the listener
@@ -417,6 +399,10 @@ namespace Freeserf.Network
         {
             State = ServerState.Game;
 
+            // Only these players can be taken over by rejoining clients.
+            humanPlayers.Clear();
+            humanPlayers.UnionWith(playerClients.Keys);
+
             // The clients have created their games from the lobby data but some
             // parts (e.g. the random state) are not equal. So start with a full sync.
             GameDirty = true;
@@ -471,6 +457,8 @@ namespace Freeserf.Network
                 }
             }
 
+            UpdatePendingClients();
+
             // Send the game state if something has changed by a user action.
             // Otherwise the clients compare their states with the state hash
             // which is sent at each checkpoint (see Game_CheckpointReached).
@@ -492,20 +480,39 @@ namespace Freeserf.Network
 
         Task HandleClient(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
         {
-            if (State != ServerState.Lobby && State != ServerState.Loading && State != ServerState.Game)
+            if (State != ServerState.Lobby)
             {
-                throw new ExceptionFreeserf("Expected server to be in lobby or game.");
+                throw new ExceptionFreeserf("Expected server to be in lobby.");
             }
 
-            var clientReceiveTask = Task.Run(() =>
-            {
-                if (State != ServerState.Lobby)
-                {
-                    // This is a reconnect during loading or game.
-                    client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
-                    new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client);
-                }
+            var clientReceiveTask = ReceiveData(client, tcpClient, cancellationToken);
 
+            // The heartbeat tells the client its player index. Clients must not
+            // derive it from the lobby data as several clients may share an IP
+            // (same machine or same router).
+            client.SendHeartbeat(Global.SpontaneousMessage);
+
+            // The token identifies the player when the client rejoins a running game.
+            var token = JoinData.CreateRandomId();
+
+            lock (playerTokens)
+                playerTokens[client.PlayerIndex] = token;
+
+            new JoinData(sessionId, token).Send(client);
+
+            // This should add the player to the game in lobby.
+            // Moreover it should trigger a server update and
+            // therefore broadcasts the lobby data to all clients
+            // (including this one).
+            ClientJoined?.Invoke(this, client);
+
+            return clientReceiveTask;
+        }
+
+        Task ReceiveData(RemoteClient client, TcpClient tcpClient, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
+            {
                 var server = client.Server as LocalServer;
                 byte[] buffer = new byte[1024];
                 using var stream = tcpClient.GetStream();
@@ -538,19 +545,158 @@ namespace Freeserf.Network
                     }
                 }
             });
+        }
 
-            // The heartbeat tells the client its player index. Clients must not
-            // derive it from the lobby data as several clients may share an IP
-            // (same machine or same router).
-            client.SendHeartbeat(Global.SpontaneousMessage);
+        // Main thread: completes the rejoins of the clients which sent their token
+        // and disconnects pending clients which did not identify in time.
+        void UpdatePendingClients()
+        {
+            List<(RemoteClient Client, JoinData Data)> joins;
 
-            // This should add the player to the game in lobby.
-            // Moreover it should trigger a server update and
-            // therefore broadcasts the lobby data to all clients
-            // (including this one).
-            ClientJoined?.Invoke(this, client);
+            lock (pendingClients)
+            {
+                joins = pendingJoins.ToList();
+                pendingJoins.Clear();
+            }
 
-            return clientReceiveTask;
+            foreach (var join in joins)
+                CompleteRejoin(join.Client, join.Data);
+
+            lock (pendingClients)
+            {
+                foreach (var pendingClient in pendingClients.Where(c => DateTime.UtcNow - c.Value.ConnectTime > PendingClientTimeout).ToList())
+                {
+                    Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{pendingClient.Key.Ip}' did not identify. Disconnecting it.");
+                    pendingClients.Remove(pendingClient.Key);
+                    RejectPendingClient(pendingClient.Key, pendingClient.Value.TcpClient);
+                }
+            }
+        }
+
+        static void RejectPendingClient(RemoteClient client, TcpClient tcpClient)
+        {
+            client.CancelConnectionObserving();
+
+            try
+            {
+                client.SendDisconnect();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            tcpClient?.Close();
+        }
+
+        // Returns the player which a rejoining client gets or null if there is none.
+        // A player is free if no client uses it or if its client sent nothing for a while
+        // (e.g. the app crashed and the lost connection was not detected yet).
+        uint? FindRejoinPlayer(RemoteClient client, JoinData joinData)
+        {
+            var now = DateTime.UtcNow;
+
+            bool IsFree(uint player) => humanPlayers.Contains(player) &&
+                (!playerClients.TryGetValue(player, out var playerClient) ||
+                 (playerClient is RemoteClient remoteClient && now - remoteClient.LastHeartbeat > ActiveClientTime));
+
+            uint Take(uint player)
+            {
+                if (playerClients.TryGetValue(player, out var oldClient))
+                    DisconnectClient(oldClient, false);
+
+                return player;
+            }
+
+            // 1. The player of the token.
+            if (joinData.SessionId == sessionId && joinData.Token != 0)
+            {
+                uint? tokenPlayer = null;
+
+                lock (playerTokens)
+                {
+                    foreach (var playerToken in playerTokens)
+                    {
+                        if (playerToken.Value == joinData.Token)
+                            tokenPlayer = playerToken.Key;
+                    }
+                }
+
+                // If its client is still active, another client uses the same token
+                // (e.g. two instances with the same config). Then another player is searched.
+                if (tokenPlayer != null && IsFree(tokenPlayer.Value))
+                    return Take(tokenPlayer.Value);
+            }
+
+            var freePlayers = humanPlayers.Where(IsFree).OrderBy(player => player).ToList();
+            string ip = client.Ip.ToString();
+
+            // 2. A free player which was used by the same IP before.
+            foreach (var player in freePlayers)
+            {
+                bool sameIp = playerClients.TryGetValue(player, out var oldClient)
+                    ? oldClient.Ip.ToString() == ip
+                    : disconnectedClients.TryGetValue(ip, out uint ipPlayer) && ipPlayer == player;
+
+                if (sameIp)
+                    return Take(player);
+            }
+
+            // 3. Any free player of a client which has left the game.
+            return freePlayers.Count == 0 ? null : Take(freePlayers[0]);
+        }
+
+        void CompleteRejoin(RemoteClient client, JoinData joinData)
+        {
+            TcpClient tcpClient;
+
+            lock (pendingClients)
+            {
+                if (!pendingClients.TryGetValue(client, out var pendingClient))
+                    return;
+
+                pendingClients.Remove(client);
+                tcpClient = pendingClient.TcpClient;
+            }
+
+            var game = GameManager.Instance.GetCurrentGame();
+            uint? player = State == ServerState.Game && game != null ? FindRejoinPlayer(client, joinData) : null;
+
+            if (player == null)
+            {
+                Log.Info.Write(ErrorSystemType.Network, $"Client with IP '{client.Ip}' can't rejoin the game (no free player).");
+                RejectPendingClient(client, tcpClient);
+                return;
+            }
+
+            client.PlayerIndex = player.Value;
+            Log.Info.Write(ErrorSystemType.Network, $"Client with IP '{client.Ip}' rejoined the game as player {player.Value}.");
+
+            playerClients[player.Value] = client;
+            clients[client] = tcpClient;
+            clientStatus[client] = MultiplayerStatus.Unknown;
+            SubscribeConnectionEvents(client);
+
+            // A new token is used for the next rejoin.
+            var token = JoinData.CreateRandomId();
+
+            lock (playerTokens)
+                playerTokens[player.Value] = token;
+
+            client.SendHeartbeat(Global.SpontaneousMessage); // tells the player index
+            new JoinData(sessionId, token).Send(client);
+
+            // The client creates the game from the lobby data. Then it sends the start game
+            // request back and gets the full game state (see HandleGameRequest).
+            lock (lobbyServerInfo)
+            lock (lobbyPlayerInfo)
+            {
+                client.SendLobbyDataUpdate(Global.SpontaneousMessage, lobbyServerInfo, lobbyPlayerInfo);
+            }
+            new RequestData(Global.SpontaneousMessage, Request.StartGame).Send(client);
+
+            game.PlayerRejoinedGame(player.Value);
+            GameDirty = true; // tell the other clients
         }
 
         void HandleData(RemoteClient client, byte[] data)
@@ -578,15 +724,36 @@ namespace Freeserf.Network
                     {
                         // Heartbeats are possible in all states but
                         // we have set the last heartbeat time above already.
-                        return;
+                        continue;
                     }
 
                     if (networkData.Type == NetworkDataType.Response)
                     {
                         // Responses are possible in all states
                         // but we won't handle it here.
-                        return;
+                        continue;
                     }
+
+                    bool pending;
+
+                    lock (pendingClients)
+                        pending = pendingClients.ContainsKey(client);
+
+                    if (networkData is JoinData joinData)
+                    {
+                        // Clients send their token after connecting. It is only needed
+                        // by clients which rejoin a running game (handled on the main thread).
+                        if (pending)
+                        {
+                            lock (pendingClients)
+                                pendingJoins.Add((client, joinData));
+                        }
+
+                        continue;
+                    }
+
+                    if (pending)
+                        continue; // nothing else is accepted before the client is identified
 
                     switch (State)
                     {

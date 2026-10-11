@@ -35,7 +35,7 @@ namespace Freeserf.UI
         /// </summary>
         public bool Online = false;
         /// <summary>
-        /// The game was already started, so no player can join.
+        /// The game was already started. Only players who have left it can join (rejoin).
         /// </summary>
         public bool InGame = false;
         /// <summary>
@@ -43,7 +43,8 @@ namespace Freeserf.UI
         /// </summary>
         public string SavedAddress = null;
 
-        public bool CanJoin => Online && !InGame && CurrentPlayers < MaxPlayers;
+        // The server decides if a running game can be rejoined.
+        public bool CanJoin => Online && (InGame || CurrentPlayers < MaxPlayers);
 
         public override string ToString()
         {

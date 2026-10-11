@@ -47,7 +47,8 @@ namespace Freeserf
             ThirtyMinutesSinceSave = 17,
             OneHourSinceSave = 18,
             CallToStock = 19,
-            PlayerLeft = 20 // new in freeserf.net (multiplayer)
+            PlayerLeft = 20, // new in freeserf.net (multiplayer)
+            PlayerRejoined = 21 // new in freeserf.net (multiplayer)
         }
 
         [Data]

@@ -1071,7 +1071,8 @@ namespace Freeserf.UI
         [
             -1, 5, 5, 5, 4, 0, 4, 3, 4, 5,
             5, 5, 4, 4, 4, 4, 0, 0, 0, 0,
-            5 // player left (multiplayer)
+            5, // player left (multiplayer)
+            5 // player rejoined (multiplayer)
         ];
 
         // Returns how many game updates are due since the last call.
@@ -1567,7 +1568,7 @@ namespace Freeserf.UI
         internal bool IsMultiplayer => IsRemote || this is ServerInterface;
         readonly HashSet<uint> playersKnownToHaveLeft = new HashSet<uint>();
 
-        // Shows a notification when another player has left the multiplayer game.
+        // Shows a notification when another player has left or rejoined the multiplayer game.
         void CheckForPlayersWhoLeft()
         {
             if (!IsMultiplayer || Game == null || Player == null)
@@ -1575,10 +1576,18 @@ namespace Freeserf.UI
 
             foreach (var player in Game.Players)
             {
-                if (player.HasLeftGame && playersKnownToHaveLeft.Add(player.Index) && player != Player)
+                if (player == Player)
+                    continue;
+
+                if (player.HasLeftGame && playersKnownToHaveLeft.Add(player.Index))
                 {
                     Log.Info.Write(ErrorSystemType.Game, $"Player {player.Index} has left the game.");
                     Player.AddNotification(Notification.Type.PlayerLeft, player.HasCastle ? player.CastlePosition : Global.INVALID_MAPPOS, player.Index);
+                }
+                else if (!player.HasLeftGame && playersKnownToHaveLeft.Remove(player.Index))
+                {
+                    Log.Info.Write(ErrorSystemType.Game, $"Player {player.Index} has rejoined the game.");
+                    Player.AddNotification(Notification.Type.PlayerRejoined, player.HasCastle ? player.CastlePosition : Global.INVALID_MAPPOS, player.Index);
                 }
             }
         }

@@ -189,6 +189,9 @@ namespace Freeserf.Network
 
                 connectionObserver.Run();
 
+                // If the game is already running, the server uses the token to give us our player back.
+                new JoinData(UserConfig.Multiplayer.RejoinSession, UserConfig.Multiplayer.RejoinToken).Send(server);
+
                 return true;
             }
             catch
@@ -420,6 +423,15 @@ namespace Freeserf.Network
                     if (serverState == ServerState.Game)
                         VoteReceived?.Invoke(networkData as VoteData);
                     break;
+                case NetworkDataType.Join:
+                    {
+                        // The server tells us the token of our player. It is remembered
+                        // (also in the user config) so we can rejoin the game later.
+                        var joinData = networkData as JoinData;
+                        UserConfig.Multiplayer.RejoinSession = joinData.SessionId;
+                        UserConfig.Multiplayer.RejoinToken = joinData.Token;
+                        break;
+                    }
                 default:
                     // Should have been handled by Server_DataReceived already.
                     break;
@@ -463,6 +475,7 @@ namespace Freeserf.Network
                         case NetworkDataType.Response:
                         case NetworkDataType.InSync:
                         case NetworkDataType.Vote:
+                        case NetworkDataType.Join:
                             NetworkDataReceiver.Receive(server, parsedData, null);
                             break;
                         case NetworkDataType.UserActionData:
@@ -723,6 +736,7 @@ namespace Freeserf.Network
         public uint PlayerIndex
         {
             get;
+            internal set; // set when a client rejoins a running game
         }
 
         public ILocalServer Server

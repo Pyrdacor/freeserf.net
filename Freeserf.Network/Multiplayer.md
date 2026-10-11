@@ -96,6 +96,28 @@ which did not answer for 7 seconds are removed from the list.
 The server name has 3 to 12 letters or digits. It is saved in the user config and can
 be changed in the lobby while the server is running.
 
+##### Rejoining a running game
+
+Players who have left a running game (e.g. lost connection or crash) can join it again and get
+their player back. Running games are shown in the server list and can be joined.
+
+- When a client joins the lobby, the server sends it a session id and a token for its player
+  (`JoinData`). The client keeps them in the user config (`rejoin_session`, `rejoin_token`) so it
+  works after a restart of the app as well.
+- After connecting, a client always sends its session id and token. A client which connects
+  during the game is pending until it did so (at most 5 seconds).
+- The server gives the client a player of a client who has left the game:
+  1. the player of the token,
+  2. otherwise a player which was used by the same IP before,
+  3. otherwise the first free one.
+  A player is also free if its client sent nothing for 2 seconds (the lost connection may not be
+  detected yet). If there is no free player, the client is disconnected.
+- Then the server sends the heartbeat (player index), a new token, the lobby data and the start
+  game request. The client creates the game and gets the full game state as at the game start.
+- All participants show a notification when a player has left or rejoined the game.
+
+The test driver can test it with `-m join:ADDRESS:rejoin` (leaves the game after 10 seconds and rejoins it).
+
 ##### Votes
 
 Some things need the agreement of the players, e.g. pausing the game or changing the

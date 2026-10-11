@@ -442,6 +442,14 @@ namespace Freeserf
                 player.HasLeftGame = true;
         }
 
+        public void PlayerRejoinedGame(uint playerIndex)
+        {
+            var player = GetPlayer(playerIndex);
+
+            if (player != null)
+                player.HasLeftGame = false;
+        }
+
         /// <summary>
         /// All AI code must be run with this method so that game state changes by the AI are detected.
         /// </summary>

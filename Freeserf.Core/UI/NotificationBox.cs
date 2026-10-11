@@ -133,6 +133,10 @@ namespace Freeserf.UI
                 Decoration.Opponent,
                 0,
                 "This player\nhas left\nthe game") },
+            { Notification.Type.PlayerRejoined, new NotificationView(Notification.Type.PlayerRejoined,
+                Decoration.Opponent,
+                0,
+                "This player\nhas rejoined\nthe game") },
             { Notification.Type.None, new NotificationView(Notification.Type.None, 0, 0, null) }
         };
 

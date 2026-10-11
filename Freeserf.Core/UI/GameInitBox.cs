@@ -1267,10 +1267,16 @@ namespace Freeserf.UI
                                         {
                                             Client = Network.Network.DefaultClientFactory.CreateLocal();
                                             Client.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
-                                            Client.Disconnected += Client_Disconnected;
-                                            Client.LobbyDataUpdated += Client_LobbyDataUpdated;
-                                            Client.GameStarted += Client_GameStarted;
-                                        }                                        
+                                        }
+
+                                        // The handlers are removed when the game starts. So they are added again
+                                        // if the client joins another time (e.g. to rejoin a running game).
+                                        Client.Disconnected -= Client_Disconnected;
+                                        Client.LobbyDataUpdated -= Client_LobbyDataUpdated;
+                                        Client.GameStarted -= Client_GameStarted;
+                                        Client.Disconnected += Client_Disconnected;
+                                        Client.LobbyDataUpdated += Client_LobbyDataUpdated;
+                                        Client.GameStarted += Client_GameStarted;
 
                                         lock (Client)
                                         {
@@ -1656,6 +1662,10 @@ namespace Freeserf.UI
                 gameType = GameType.MultiplayerLoading;
                 SetRedraw();
 
+                Client.GamePaused -= Client_GamePaused;
+                Client.GameResumed -= Client_GameResumed;
+                Client.InputAllowed -= Client_InputAllowed;
+                Client.InputDisallowed -= Client_InputDisallowed;
                 Client.GamePaused += Client_GamePaused;
                 Client.GameResumed += Client_GameResumed;
                 Client.InputAllowed += Client_InputAllowed;

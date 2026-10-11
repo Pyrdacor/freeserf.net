@@ -36,6 +36,8 @@ The game data is not included. On the first start you can either download it fro
 
 Multiplayer games in the local network are possible (still experimental). One player creates a server (Multiplayer -> Create server), the others join it. Servers in the local network are found automatically, other servers can be added by their IP address or host name. The game uses port 5067 (TCP and UDP). Players with different platforms (e.g. Windows and Android) can play together.
 
+Players who have left a running multiplayer game (e.g. after a lost connection) can join it again and get their settlement back. Running games are shown in the server list.
+
 In multiplayer games pausing the game or changing the game speed needs the agreement of the other players. Each player can request it and the others vote on it (more players have to agree than decline).
 
 

@@ -114,6 +114,13 @@ namespace Freeserf
             public static List<string> ServerAddresses { get; } = new List<string>();
 
             /// <summary>
+            /// Session of the last joined multiplayer game and the token of the own player in it.
+            /// They are used to get the own player back when rejoining a running game (e.g. after a crash).
+            /// </summary>
+            public static ulong RejoinSession { get; set; } = 0;
+            public static ulong RejoinToken { get; set; } = 0;
+
+            /// <summary>
             /// Server names must have 3 to 12 characters and only contain letters and digits.
             /// </summary>
             public static bool IsValidServerName(string name)
@@ -208,6 +215,8 @@ namespace Freeserf
                 Multiplayer.ServerAddresses.Clear();
                 Multiplayer.ServerAddresses.AddRange(configFile.Value(multiplayer, "server_addresses", "")
                     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct());
+                Multiplayer.RejoinSession = ulong.TryParse(configFile.Value(multiplayer, "rejoin_session", "0"), out ulong session) ? session : 0;
+                Multiplayer.RejoinToken = ulong.TryParse(configFile.Value(multiplayer, "rejoin_token", "0"), out ulong token) ? token : 0;
 
                 return true;
             }
@@ -256,6 +265,8 @@ namespace Freeserf
                 const string multiplayer = "multiplayer";
                 configFile.SetValue(multiplayer, "server_name", Multiplayer.ServerName);
                 configFile.SetValue(multiplayer, "server_addresses", string.Join(",", Multiplayer.ServerAddresses));
+                configFile.SetValue(multiplayer, "rejoin_session", Multiplayer.RejoinSession.ToString());
+                configFile.SetValue(multiplayer, "rejoin_token", Multiplayer.RejoinToken.ToString());
 
                 return configFile.Save(filename);
             }
@@ -290,6 +301,8 @@ namespace Freeserf
 
             Multiplayer.ServerName = DefaultServerName;
             Multiplayer.ServerAddresses.Clear();
+            Multiplayer.RejoinSession = 0;
+            Multiplayer.RejoinToken = 0;
         }
     }
 }

@@ -41,6 +41,7 @@ namespace Freeserf.UI
     ///                          presses the copy values button of the host every few seconds (and waits).
     /// -m join:ADDRESS       Join the server at ADDRESS.
     /// -m join:ADDRESS:leave Join the server and change the game type in the lobby (leaves the server).
+    /// -m join:ADDRESS:rejoin Join the server, leave the running game after 10 seconds and rejoin it.
     ///
     /// Every player builds a castle, a lumberjack and a road to it through the
     /// regular interface methods (so the same code as for mouse input is used).
@@ -89,6 +90,9 @@ namespace Freeserf.UI
         static DateTime kickTime = DateTime.MaxValue;
         static DateTime copyTime = DateTime.MaxValue;
         static bool leaveLobby = false;
+        static bool rejoinTest = false;
+        static DateTime rejoinLeaveTime = DateTime.MaxValue;
+        static DateTime rejoinTime = DateTime.MaxValue;
         static DateTime leaveTime = DateTime.MaxValue;
         static readonly bool dumpStates = Environment.GetEnvironmentVariable("FREESERF_MPTEST_DUMP") == "1";
         static readonly bool openMessages = Environment.GetEnvironmentVariable("FREESERF_MPTEST_OPENMESSAGES") == "1";
@@ -122,6 +126,7 @@ namespace Freeserf.UI
                     if (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
                         serverAddress = parts[1];
                     leaveLobby = parts.Length > 2 && parts[2].ToLower() == "leave";
+                    rejoinTest = parts.Length > 2 && parts[2].ToLower() == "rejoin";
                     break;
                 default:
                     return false;
@@ -184,6 +189,14 @@ namespace Freeserf.UI
                     lastLobbyValues = values;
                     Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Lobby values: " + values);
                 }
+            }
+
+            // Rejoin test: join again some seconds after leaving the game.
+            if (rejoinTime != DateTime.MaxValue && DateTime.Now >= rejoinTime && initBox != null && initBox.Displayed)
+            {
+                rejoinTime = DateTime.MaxValue;
+                Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Rejoining the game.");
+                step = Step.OpenMenu;
             }
 
             switch (step)
@@ -366,6 +379,24 @@ namespace Freeserf.UI
             }
 
             UpdateVotes(interf);
+
+            // Rejoin test: leave the game once (like a lost connection) and join it again later.
+            if (rejoinTest && interf.Client != null)
+            {
+                if (rejoinLeaveTime == DateTime.MaxValue)
+                {
+                    rejoinLeaveTime = DateTime.Now.AddSeconds(10);
+                }
+                else if (DateTime.Now >= rejoinLeaveTime)
+                {
+                    rejoinTest = false;
+                    rejoinTime = DateTime.Now.AddSeconds(3);
+                    Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Leaving the game to rejoin it.");
+                    step = Step.Done;
+                    interf.Client.Disconnect();
+                    return;
+                }
+            }
 
             if (game.GameTime < nextActionGameTime)
                 return;
