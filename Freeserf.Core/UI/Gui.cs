@@ -580,6 +580,21 @@ namespace Freeserf.UI
                 this.viewer.Init();
         }
 
+        // Removes the current viewer from the game manager. Must be called when
+        // the render view is closed (e.g. on Android, where the process stays
+        // alive after the activity is finished): otherwise the stale viewer
+        // keeps receiving game events and accesses the disposed render view's
+        // layers, which throws (e.g. "The given key 'Landscape' was not present
+        // in the dictionary") when the next game starts.
+        public void DestroyViewer()
+        {
+            if (viewer != null)
+            {
+                viewer.Destroy(true);
+                viewer = null;
+            }
+        }
+
         public Viewer ActiveViewer => viewer;
 
         public bool Ingame => viewer.Ingame;

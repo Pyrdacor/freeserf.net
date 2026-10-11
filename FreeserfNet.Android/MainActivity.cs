@@ -163,11 +163,18 @@ namespace Freeserf.Android
         {
             base.OnCreate(savedInstanceState);
 
+            // If the game was already initialized, the activity is being
+            // recreated (e.g. the app was closed from the recents list). The
+            // EGL context is lost, so all static state must be reset and the
+            // game re-initialized from scratch; otherwise the old game view
+            // renders to a destroyed surface and the screen stays black.
+            if (initialized)
+                ResetState();
+
             // Show a loading indicator while the game initializes. On activity
             // recreation (e.g. configuration change) the game is already
             // running, so the overlay is only shown on the very first start.
-            if (!initialized)
-                ShowLoadingOverlay();
+            ShowLoadingOverlay();
         }
 
         // Shows the loading overlay (spinner + app name) on top of the SDL
@@ -248,6 +255,13 @@ namespace Freeserf.Android
 
         protected override void OnRun()
         {
+            // The view is stored in a static field so the event handlers can
+            // access it. Keep a local reference too: when the activity is
+            // recreated (e.g. after the app was closed and reopened), a new
+            // OnRun may start while the old one is still finishing, and the
+            // old OnRun's finally must dispose its own view, not the new one.
+            IView localView = null;
+
             try
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: start");
@@ -256,22 +270,28 @@ namespace Freeserf.Android
                 SdlWindowing.Use();
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: platforms registered");
 
+                // The game speed is per frame and the game logic is updated
+                // inside the render loop. On Android the swap does not block on
+                // vsync, so the loop would run at a very high frame rate and
+                // the game would be much too fast. Cap update and render at
+                // 50 FPS (the game's design rate, see Global.TICK_LENGTH).
                 var options = new WindowOptions(
                     true,
                     new Vector2D<int>(0, 0),
                     new Vector2D<int>(1280, 960),
-                    60.0,
-                    60.0,
+                    50.0,
+                    50.0,
                     new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Compatability, ContextFlags.Default, new APIVersion(3, 0)),
                     Global.VERSION,
                     WindowState.Normal,
                     WindowBorder.Fixed,
-                    true,
+                    false,
                     false,
                     new VideoMode(60),
                     24);
 
-                view = Silk.NET.Windowing.Window.GetView(new ViewOptions(options));
+                localView = Silk.NET.Windowing.Window.GetView(new ViewOptions(options));
+                view = localView;
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: view created");
                 view.Load += Window_Load;
                 view.Render += Window_Render;
@@ -304,7 +324,7 @@ namespace Freeserf.Android
                     }
                 });
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: Run returned");
-                view.Reset();
+                localView.Reset();
             }
             catch (Exception ex)
             {
@@ -314,7 +334,7 @@ namespace Freeserf.Android
             {
                 try
                 {
-                    view?.Dispose();
+                    localView?.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -325,6 +345,14 @@ namespace Freeserf.Android
 
         static void Window_Load()
         {
+            // If a game view is already initialized (e.g. a second OnRun
+            // started while the first one is still rendering after the app was
+            // closed and reopened), do not re-initialize: the Reset() below
+            // would clear the atlases of the running game view and leave a
+            // black screen.
+            if (initialized)
+                return;
+
             try
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: start");
@@ -368,6 +396,10 @@ namespace Freeserf.Android
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: EXCEPTION: " + ex);
                 Log.Error.Write(ErrorSystemType.Application, "Load: " + ex.Message);
+                // Do not leave the user on an endless loading screen: hide the
+                // overlay and show the error so the app can be restarted.
+                HideLoadingOverlay();
+                instance?.RunOnUiThread(() => instance.ShowFatalErrorDialog("Initialisierung fehlgeschlagen: " + ex.Message));
             }
         }
 
@@ -497,6 +529,9 @@ namespace Freeserf.Android
             layout.AddView(message);
 
             var pickButton = new global::Android.Widget.Button(this) { Text = "Datei auswählen" };
+            // Do not show the system focus ring around the buttons (touch UI).
+            pickButton.Focusable = false;
+            pickButton.FocusableInTouchMode = false;
             var pickParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             pickParams.TopMargin = DpToPx(16);
@@ -509,6 +544,9 @@ namespace Freeserf.Android
             };
 
             var ubisoftButton = new global::Android.Widget.Button(this) { Text = "Von Ubisoft Connect herunterladen" };
+            // Do not show the system focus ring around the buttons (touch UI).
+            ubisoftButton.Focusable = false;
+            ubisoftButton.FocusableInTouchMode = false;
             var ubisoftParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             ubisoftParams.TopMargin = DpToPx(8);
@@ -738,6 +776,18 @@ namespace Freeserf.Android
                 .Show();
         }
 
+        // Shows a fatal error when the game could not be initialized. The user
+        // closes the app and can try again.
+        void ShowFatalErrorDialog(string message)
+        {
+            new AlertDialog.Builder(this)
+                .SetTitle("Freeserf")
+                .SetMessage(message)
+                .SetPositiveButton("OK", (sender, args) => Finish())
+                .SetCancelable(false)
+                .Show();
+        }
+
         protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
         {
             base.OnActivityResult(requestCode, resultCode, data);
@@ -936,7 +986,21 @@ namespace Freeserf.Android
             {
                 gameView = null;
                 view?.Close();
-                instance?.RunOnUiThread(() => instance.Finish());
+                instance?.RunOnUiThread(() =>
+                {
+                    // FinishAndRemoveTask also removes the task from the recents
+                    // list. A plain Finish() leaves the process alive with a
+                    // finishing activity, so the next start (same process) would
+                    // immediately go to the background again.
+                    instance.FinishAndRemoveTask();
+
+                    // The process stays alive after Finish(), and a recreated
+                    // activity in the same process hits the activity-recreation
+                    // race (black screen / immediate background). Kill the
+                    // process so the next start is a clean one. The user config
+                    // was already saved in Window_Closing.
+                    global::Android.OS.Process.KillProcess(global::Android.OS.Process.MyPid());
+                });
                 ResetState();
             }
         }

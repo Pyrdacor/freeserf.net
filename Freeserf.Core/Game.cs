@@ -499,6 +499,9 @@ namespace Freeserf
 
         void PlaySound(Audio.Audio.TypeSfx type)
         {
+            if (IsPaused)
+                return;
+
             audioInterface?.AudioFactory?.GetAudio()?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 

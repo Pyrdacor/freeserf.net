@@ -896,6 +896,11 @@ namespace Freeserf.Render
 
         void PlaySound(Audio.Audio.TypeSfx type)
         {
+            // While the game is paused the tick counter is frozen, so some
+            // sound triggers would restart the same sound every frame.
+            if (building.Game?.IsPaused == true)
+                return;
+
             audio?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 
