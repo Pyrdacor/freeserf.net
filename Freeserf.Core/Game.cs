@@ -4019,6 +4019,34 @@ namespace Freeserf
                 throw new ExceptionFreeserf(ErrorSystemType.Application, "Unable to add render serf.");
         }
 
+        // Adds the render objects of all serfs which are visible on the map
+        // (e.g. after a full game state sync which cleared all visuals).
+        internal void AddAllSerfsForDrawing()
+        {
+            foreach (var serf in Serfs.ToList())
+            {
+                if (serf.Index == 0)
+                    continue;
+
+                switch (serf.SerfState)
+                {
+                    case Serf.State.BuildingCastle:
+                    case Serf.State.IdleInStock:
+                    case Serf.State.DefendingCastle:
+                    case Serf.State.DefendingFortress:
+                    case Serf.State.DefendingHut:
+                    case Serf.State.DefendingTower:
+                    case Serf.State.Invalid:
+                    case Serf.State.Null:
+                    case Serf.State.WaitForResourceOut:
+                        break;
+                    default:
+                        AddSerfForDrawing(serf, serf.Position);
+                        break;
+                }
+            }
+        }
+
         internal void RemoveSerfFromDrawing(Serf serf)
         {
             if (renderSerfs.TryRemove(serf, out var renderSerf) && renderSerf != null)

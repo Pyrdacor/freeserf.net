@@ -417,6 +417,10 @@ namespace Freeserf
             if (!dataOnly)
             {
                 game.Map?.UpdateObjectsAfterDeserialization(fullSync);
+
+                // All visuals were cleared above. The map objects are restored by the map, the serfs here.
+                if (fullSync)
+                    game.AddAllSerfsForDrawing();
                 game.InitKnights();
                 game.ResetDirtyFlag();
             }

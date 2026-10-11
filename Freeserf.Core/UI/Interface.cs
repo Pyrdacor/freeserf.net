@@ -90,6 +90,12 @@ namespace Freeserf.UI
         BuildPossibility buildPossibility = BuildPossibility.None;
 
         uint lastConstTick;
+        // The game is updated with a fixed rate (independent of the frame rate of the platform).
+        // Otherwise multiplayer participants with different frame rates run with different speeds.
+        const double GameUpdatesPerSecond = 50.0;
+        const int MaxGameUpdatesPerFrame = 10;
+        readonly System.Diagnostics.Stopwatch gameUpdateClock = new();
+        double pendingGameUpdates = 0.0;
 
         Road buildingRoad;
         MapPos lastPathwayScrollPosition = Global.INVALID_MAPPOS;
@@ -1065,6 +1071,32 @@ namespace Freeserf.UI
             5 // player left (multiplayer)
         ];
 
+        // Returns how many game updates are due since the last call.
+        int TakeGameUpdates()
+        {
+            if (!gameUpdateClock.IsRunning)
+            {
+                gameUpdateClock.Start();
+                return 1;
+            }
+
+            pendingGameUpdates += gameUpdateClock.Elapsed.TotalSeconds * GameUpdatesPerSecond;
+            gameUpdateClock.Restart();
+
+            int updates = (int)pendingGameUpdates;
+            pendingGameUpdates -= updates;
+
+            // After a long break (e.g. the window was moved or the app was in the
+            // background) the game does not try to catch up all at once.
+            if (updates > MaxGameUpdatesPerFrame)
+            {
+                updates = MaxGameUpdatesPerFrame;
+                pendingGameUpdates = 0.0;
+            }
+
+            return updates;
+        }
+
         // Called periodically when the game progresses. 
         public virtual void Update()
         {
@@ -1083,7 +1115,10 @@ namespace Freeserf.UI
                 /*if (this is RemoteInterface)
                     Game.UpdateVisuals();
                 else*/
-                Game.Update();
+                int gameUpdates = TakeGameUpdates();
+
+                for (int i = 0; i < gameUpdates; ++i)
+                    Game.Update();
 
                 UpdateBuildingRoadSegments();
 

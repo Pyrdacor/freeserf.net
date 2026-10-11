@@ -34,6 +34,7 @@ namespace Silk.NET.Window
         Vector2D<int> normalPosition;
         Vector2D<int> normalSize;
         bool fullscreen = false;
+        readonly WindowBorder normalBorder;
 
         private static WindowOptions CreateOptions(string title, Vector2D<int> position, Vector2D<int> size)
         {
@@ -65,6 +66,7 @@ namespace Silk.NET.Window
         public Window(WindowOptions options)
         {
             window = Windowing.Window.Create(options);
+            normalBorder = options.WindowBorder;
             InitEvents();
 
             normalPosition = Position;
@@ -80,6 +82,69 @@ namespace Silk.NET.Window
                 if (WindowState != WindowState.Minimized)
                     WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
             };
+
+            // The user may resize the window (if resizable). The size of a maximized
+            // window is not remembered as the normal size.
+            window.Resize += (size) =>
+            {
+                if (!fullscreen && WindowState == WindowState.Normal && size.X > 0 && size.Y > 0)
+                {
+                    normalSize = size;
+                    WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
+                }
+            };
+        }
+
+        /// <summary>
+        /// Limits the size of the window and keeps the given aspect ratio when the user resizes it.
+        /// </summary>
+        public unsafe void SetSizeLimits(Vector2D<int> minimumSize, Vector2D<int> maximumSize, int aspectNumerator, int aspectDenominator)
+        {
+            if (window.Native?.Glfw is not nint handle || handle == 0)
+                return;
+
+            var glfw = GLFW.Glfw.GetApi();
+            var windowHandle = (GLFW.WindowHandle*)handle;
+
+            var size = window.Size;
+
+            glfw.SetWindowSizeLimits(windowHandle, minimumSize.X, minimumSize.Y, maximumSize.X, maximumSize.Y);
+            glfw.SetWindowAspectRatio(windowHandle, aspectNumerator, aspectDenominator);
+
+            // Applying the aspect ratio may change the size by a pixel because of rounding.
+            if (window.Size != size)
+                window.Size = size;
+        }
+
+        /// <summary>
+        /// Centers the window on its monitor if the window (including the title bar
+        /// and the border) is not completely visible on the monitor.
+        /// </summary>
+        public void CenterOnMonitorIfNotVisible()
+        {
+            var bounds = Monitor?.Bounds;
+
+            if (bounds == null || fullscreen)
+                return;
+
+            var border = BorderSize;
+            var frameOrigin = normalPosition - border.Origin;
+            var frameSize = normalSize + border.Origin + border.Size;
+            var monitorOrigin = bounds.Value.Origin;
+            var monitorSize = bounds.Value.Size;
+
+            if (frameOrigin.X >= monitorOrigin.X && frameOrigin.Y >= monitorOrigin.Y &&
+                frameOrigin.X + frameSize.X <= monitorOrigin.X + monitorSize.X &&
+                frameOrigin.Y + frameSize.Y <= monitorOrigin.Y + monitorSize.Y)
+                return;
+
+            normalPosition = new Vector2D<int>(
+                monitorOrigin.X + Math.Max(0, (monitorSize.X - frameSize.X) / 2) + border.Origin.X,
+                monitorOrigin.Y + Math.Max(0, (monitorSize.Y - frameSize.Y) / 2) + border.Origin.Y);
+
+            window.Position = normalPosition;
+
+            WindowAreaChanged?.Invoke(Monitor, normalPosition, normalSize, fullscreen);
         }
 
         public Vector2D<int> Position
@@ -137,7 +202,7 @@ namespace Silk.NET.Window
                 else
                 {
                     window.WindowState = WindowState.Normal;
-                    window.WindowBorder = WindowBorder.Fixed;
+                    window.WindowBorder = normalBorder;
                     fullscreen = false;
 
                     EnsureWindowOnMonitor();
@@ -145,7 +210,10 @@ namespace Silk.NET.Window
             }
         }
 
-        void EnsureWindowOnMonitor()
+        /// <summary>
+        /// Moves the window so that it is completely visible (including the title bar).
+        /// </summary>
+        public void EnsureWindowOnMonitor()
         {
             var bounds = Monitor?.Bounds;
             Vector2D<int> upperLeft = bounds?.Origin ?? new(0, 0);

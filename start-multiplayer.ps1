@@ -55,10 +55,29 @@ if (-not $NoBuild) {
     }
 }
 
+# The position given to the game is the one of the client area. So the size of
+# the title bar and the window border is needed. The game uses physical pixels.
+Add-Type @"
+using System.Runtime.InteropServices;
+public static class WindowFrame {
+    [DllImport("user32.dll")] static extern bool SetProcessDPIAware();
+    [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+    public static int[] Get() {
+        SetProcessDPIAware();
+        int border = GetSystemMetrics(32) + GetSystemMetrics(92); // SM_CXFRAME + SM_CXPADDEDBORDER
+        int top = GetSystemMetrics(4) + GetSystemMetrics(33) + GetSystemMetrics(92); // SM_CYCAPTION + SM_CYFRAME + SM_CXPADDEDBORDER
+        return new[] { border, top };
+    }
+}
+"@
+$frame = [WindowFrame]::Get()
+$border = $frame[0]
+$titleHeight = $frame[1]
+
 for ($i = 0; $i -lt $Count; ++$i) {
-    # Two windows per row, the title bar needs some extra space.
-    $x = ($i % 2) * ($Width + 20)
-    $y = [math]::Floor($i / 2) * ($height + 40)
+    # Two windows per row, each with its title bar and border visible.
+    $x = $border + ($i % 2) * ($Width + 2 * $border)
+    $y = $titleHeight + [math]::Floor($i / 2) * ($height + $titleHeight + $border)
     $arguments = @("-r", "${Width}x$height", "-p", "$x,$y")
 
     if ($Console) {

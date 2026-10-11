@@ -54,6 +54,7 @@ namespace Freeserf
         int lastDragX = int.MinValue;
         int lastDragY = int.MinValue;
         static Global.InitInfo initInfo = null;
+        static (int MonitorIndex, int X, int Y, int Width, int Height)? configuredWindowArea = null;
         static Data.DataSource dataSource = null;
         bool scrolled = false;
         Vector2D<int> clickPosition = Vector2D<int>.Zero;
@@ -112,7 +113,7 @@ namespace Freeserf
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
 
-                UserConfig.Load(FileSystem.Paths.UserConfigPath);
+                bool configLoaded = UserConfig.Load(FileSystem.Paths.UserConfigPath);
 
 #if !DEBUG
                 if (initInfo.ConsoleWindow || UserConfig.Logging.LogToConsole)
@@ -155,6 +156,13 @@ namespace Freeserf
                 if (UserConfig.Video.ResolutionHeight > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
                     UserConfig.Video.ResolutionHeight = Global.MAX_VIRTUAL_SCREEN_HEIGHT;
 
+                // A window area given by the command line is only used for this start.
+                if (initInfo.ScreenSizeGiven || initInfo.WindowPositionGiven)
+                {
+                    configuredWindowArea = (UserConfig.Video.MonitorIndex, UserConfig.Video.WindowX, UserConfig.Video.WindowY,
+                        UserConfig.Video.ResolutionWidth, UserConfig.Video.ResolutionHeight);
+                }
+
                 if (initInfo.MonitorIndex == -1)
                     initInfo.MonitorIndex = UserConfig.Video.MonitorIndex;
                 if (initInfo.WindowX == -1)
@@ -172,6 +180,27 @@ namespace Freeserf
                     initInfo.ScreenWidth = 640;
                 if (initInfo.ScreenHeight < 480)
                     initInfo.ScreenHeight = 480;
+
+                // On the first start (or if the saved window does not fit the monitor anymore)
+                // the window size is based on the monitor size.
+                var monitorBounds = GetMonitorBounds(initInfo.MonitorIndex);
+
+                if (monitorBounds != null && !initInfo.ScreenSizeGiven &&
+                    (!configLoaded || initInfo.ScreenWidth > monitorBounds.Value.Size.X || initInfo.ScreenHeight > monitorBounds.Value.Size.Y))
+                {
+                    var bounds = monitorBounds.Value;
+                    var size = GetDefaultWindowSize(bounds.Size);
+
+                    initInfo.ScreenWidth = size.X;
+                    initInfo.ScreenHeight = size.Y;
+
+                    if (!initInfo.WindowPositionGiven)
+                    {
+                        // center it (the title bar is checked when the window was created)
+                        initInfo.WindowX = bounds.Origin.X + (bounds.Size.X - size.X) / 2;
+                        initInfo.WindowY = bounds.Origin.Y + (bounds.Size.Y - size.Y) / 2;
+                    }
+                }
 
                 /*float ratio = (float)initInfo.ScreenWidth / (float)initInfo.ScreenHeight;
                 bool reducedWidth = false;
@@ -223,7 +252,7 @@ namespace Freeserf
                     GraphicsAPI.Default,
                     Global.VERSION,
                     WindowState.Normal,
-                    WindowBorder.Fixed,
+                    WindowBorder.Resizable,
                     true,
                     false,
                     new VideoMode(),
@@ -254,6 +283,59 @@ namespace Freeserf
             image.CopyPixelDataTo(data);
 
             return new RawImage(image.Width, image.Height, data);
+        }
+
+        void SetWindowSizeLimits()
+        {
+            int width = initInfo.ScreenWidth;
+            int height = initInfo.ScreenHeight;
+            float ratio = (float)width / height;
+
+            Vector2D<int> SizeWithRatio(int maxWidth, int maxHeight, bool atLeast)
+            {
+                // Largest (or smallest) size with the aspect ratio that fits into (or covers) the given size.
+                bool byHeight = atLeast ? maxWidth / ratio <= maxHeight : maxWidth / ratio > maxHeight;
+                return byHeight
+                    ? new Vector2D<int>((int)Math.Round(maxHeight * ratio), maxHeight)
+                    : new Vector2D<int>(maxWidth, (int)Math.Round(maxWidth / ratio));
+            }
+
+            int divisor = (int)System.Numerics.BigInteger.GreatestCommonDivisor(width, height);
+
+            SetSizeLimits(SizeWithRatio(640, 480, true),
+                SizeWithRatio(Global.MAX_VIRTUAL_SCREEN_WIDTH, Global.MAX_VIRTUAL_SCREEN_HEIGHT, false),
+                width / divisor, height / divisor);
+        }
+
+        // 2/3 of the smaller monitor side is used. The game has an aspect ratio of 4:3.
+        static Vector2D<int> GetDefaultWindowSize(Vector2D<int> monitorSize)
+        {
+            int height;
+
+            if (monitorSize.X * 3 >= monitorSize.Y * 4)
+                height = monitorSize.Y * 2 / 3;
+            else
+                height = monitorSize.X * 2 / 3 * 3 / 4;
+
+            height = Math.Clamp(height, 480, Global.MAX_VIRTUAL_SCREEN_HEIGHT);
+            int width = Math.Clamp(height * 4 / 3, 640, Global.MAX_VIRTUAL_SCREEN_WIDTH);
+
+            return new Vector2D<int>(width, height);
+        }
+
+        static Rectangle<int>? GetMonitorBounds(int index)
+        {
+            try
+            {
+                var platform = Silk.NET.Windowing.Window.GetWindowPlatform(false);
+                var monitor = platform.GetMonitors().FirstOrDefault(m => m.Index == index) ?? platform.GetMainMonitor();
+
+                return monitor?.Bounds;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private IMonitor GetMonitorByIndex(int index)
@@ -325,6 +407,16 @@ namespace Freeserf
                 StateChanged += MainWindow_StateChanged;
                 WindowAreaChanged += MainWindow_WindowAreaChanged;
 
+                // The game is rendered with the initial size (virtual screen). When the user resizes
+                // the window, it is scaled. The aspect ratio is kept so there are no black bars.
+                // The new size is saved and used as the rendering size on the next start.
+                SetWindowSizeLimits();
+
+                // The position is the one of the client area. If the window or its title bar
+                // is not visible on the monitor, the window is centered on it.
+                if (initInfo.Fullscreen != true && !initInfo.WindowPositionGiven)
+                    CenterOnMonitorIfNotVisible();
+
                 MakeCurrent();
 
                 var icon = LoadEmbeddedRawImage("icon.png");
@@ -383,6 +475,16 @@ namespace Freeserf
             // Test instances must not overwrite the user config (window positions etc.).
             if (initInfo?.MultiplayerTest == true)
                 return;
+
+            if (configuredWindowArea != null)
+            {
+                var area = configuredWindowArea.Value;
+                UserConfig.Video.MonitorIndex = area.MonitorIndex;
+                UserConfig.Video.WindowX = area.X;
+                UserConfig.Video.WindowY = area.Y;
+                UserConfig.Video.ResolutionWidth = area.Width;
+                UserConfig.Video.ResolutionHeight = area.Height;
+            }
 
             try
             {

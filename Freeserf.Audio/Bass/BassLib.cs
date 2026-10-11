@@ -51,7 +51,17 @@ namespace Freeserf.Audio.Bass
 
                 streamProviders.Clear();
 
+                // The sound font uses managed file callbacks. If it is not freed here, BASSMIDI
+                // calls them when it is unloaded at process exit (after the .NET runtime is gone).
+                if (soundFont != 0)
+                {
+                    ManagedBass.Midi.BassMidi.FontFree(soundFont);
+                    soundFont = 0;
+                    soundFontProcs = null;
+                }
+
                 MBass.Free();
+                Initialized = false;
             }
         }
 

@@ -60,6 +60,9 @@ namespace Freeserf
             public bool ConsoleWindow = false;
             public bool LogLevelSet = false;
             public bool MultiplayerTest = false;
+            // True if given by the command line (then they are used as they are).
+            public bool ScreenSizeGiven = false;
+            public bool WindowPositionGiven = false;
         }
 
         public static InitInfo Init(string[] args)
@@ -114,6 +117,7 @@ namespace Freeserf
                 s.Retrieve(out initInfo.ScreenWidth);
                 s.Skip(1); // 'x'
                 s.Retrieve(out initInfo.ScreenHeight);
+                initInfo.ScreenSizeGiven = true;
 
                 return true;
             });
@@ -123,6 +127,7 @@ namespace Freeserf
                 s.Retrieve(out initInfo.WindowX);
                 s.Skip(1); // ','
                 s.Retrieve(out initInfo.WindowY);
+                initInfo.WindowPositionGiven = true;
 
                 return true;
             });
