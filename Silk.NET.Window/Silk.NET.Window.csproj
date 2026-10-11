@@ -4,6 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>Silk.NET.Window</RootNamespace>
     <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
+    <!-- Needed for all platforms (the macOS build uses another platform than AnyCPU). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
