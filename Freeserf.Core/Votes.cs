@@ -42,7 +42,11 @@ namespace Freeserf
         /// <summary>
         /// Change the game speed. The parameter is the new speed.
         /// </summary>
-        GameSpeed
+        GameSpeed,
+        /// <summary>
+        /// Save the game (on the server).
+        /// </summary>
+        Save
     }
 
     public enum VoteResult : byte
@@ -147,6 +151,7 @@ namespace Freeserf
                 VoteType.Pause => $"{name} wants\nto pause the\ngame.",
                 VoteType.Resume => $"{name} wants\nto resume the\ngame.",
                 VoteType.GameSpeed => $"{name} wants\nto set the game\nspeed to {parameter}.",
+                VoteType.Save => $"{name} wants\nto save the\ngame.",
                 _ => $"{name} wants\nsomething."
             };
         }
@@ -161,6 +166,7 @@ namespace Freeserf
                 VoteType.Pause => "You want to\npause the game.",
                 VoteType.Resume => "You want to\nresume the game.",
                 VoteType.GameSpeed => $"You want to set\nthe game speed\nto {parameter}.",
+                VoteType.Save => "You want to\nsave the game.",
                 _ => "You want\nsomething."
             };
         }

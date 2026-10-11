@@ -442,6 +442,11 @@ namespace Freeserf
                 player.HasLeftGame = true;
         }
 
+        /// <summary>
+        /// Multiplayer servers provide the multiplayer data which is saved with the game.
+        /// </summary>
+        public Func<MultiplayerSaveInfo> MultiplayerSaveInfoProvider { get; set; } = null;
+
         public void PlayerRejoinedGame(uint playerIndex)
         {
             var player = GetPlayer(playerIndex);
@@ -3447,6 +3452,14 @@ namespace Freeserf
             state.Random = new Random(gameReader.Value("random").ReadString());
             state.FlagSearchCounter = (ushort)gameReader.Value("flag_search_counter").ReadUInt();
 
+            // Older saves did not keep the game time: it starts again.
+            if (gameReader.HasValue("game_time"))
+            {
+                state.GameTime = gameReader.Value("game_time").ReadUInt();
+                state.GameTimeTicksOfSecond = (ushort)gameReader.Value("game_time_ticks").ReadUInt();
+                state.ConstTick = gameReader.Value("const_tick").ReadUInt();
+            }
+
             // Older saves did not keep these: the counters start again.
             if (gameReader.HasValue("knight_morale_counter"))
             {
@@ -3595,7 +3608,11 @@ namespace Freeserf
                     OnObjectPlaced(tile);
             }
 
-            // load AI
+            ReadAIFrom(reader);
+        }
+
+        internal void ReadAIFrom(SaveReaderText reader)
+        {
             bool firstAI = true;
 
             foreach (var subreader in reader.GetSections("player_ai"))
@@ -3621,6 +3638,9 @@ namespace Freeserf
 
             writer.Value("next_index").Write(0); // next_index (we keep this to be compatible to freeserf save games)
             writer.Value("flag_search_counter").Write(state.FlagSearchCounter);
+            writer.Value("game_time").Write(state.GameTime);
+            writer.Value("game_time_ticks").Write(state.GameTimeTicksOfSecond);
+            writer.Value("const_tick").Write(state.ConstTick);
 
             for (int i = 0; i < 4; ++i)
             {
@@ -3689,6 +3709,9 @@ namespace Freeserf
             }
 
             Map.WriteTo(writer);
+
+            // multiplayer data (only for multiplayer games on the server)
+            MultiplayerSaveInfoProvider?.Invoke()?.WriteTo(writer);
 
             // store AI
             bool firstAI = true;

@@ -80,6 +80,19 @@ namespace Freeserf.Network
         void BroadcastDisconnect();
         void BroadcastLobbyData();
         /// <summary>
+        /// Multiplayer data for saving the game (session, players of the clients and their tokens).
+        /// </summary>
+        MultiplayerSaveInfo GetSaveInfo();
+        /// <summary>
+        /// Uses the multiplayer data of a loaded game. Clients which join the lobby
+        /// get their old players (like when rejoining a running game).
+        /// </summary>
+        void InitFromSave(MultiplayerSaveInfo saveInfo);
+        /// <summary>
+        /// True if the lobby belongs to a loaded game.
+        /// </summary>
+        bool LoadedGame { get; }
+        /// <summary>
         /// Sends a vote message to all clients.
         /// </summary>
         void BroadcastVote(VoteData vote);

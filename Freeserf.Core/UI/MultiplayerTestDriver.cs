@@ -134,6 +134,10 @@ namespace Freeserf.UI
 
             Game.CheckpointReached += Game_CheckpointReached;
 
+            // Shorter interval of automatic saves (FREESERF_MPTEST_AUTOSAVE=SECONDS).
+            if (int.TryParse(Environment.GetEnvironmentVariable("FREESERF_MPTEST_AUTOSAVE"), out int autosaveSeconds) && autosaveSeconds > 0)
+                MultiplayerSaves.AutosaveInterval = TimeSpan.FromSeconds(autosaveSeconds);
+
             return role == Role.Join || (expectedClients >= 1 && expectedClients + aiPlayers < Game.MAX_PLAYER_COUNT);
         }
 
@@ -207,7 +211,15 @@ namespace Freeserf.UI
 
                     initBox.SelectGameType(GameInitBox.GameType.MultiplayerClient);
 
-                    if (role == Role.Host)
+                    // The host continues a multiplayer save game (FREESERF_MPTEST_LOAD=PATH).
+                    string loadPath = Environment.GetEnvironmentVariable("FREESERF_MPTEST_LOAD");
+
+                    if (role == Role.Host && !string.IsNullOrEmpty(loadPath))
+                    {
+                        initBox.OpenLoadedMultiplayerGameForTest(loadPath);
+                        Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Loaded game '{loadPath}': {initBox.IsLoadedMultiplayerGame}. Waiting for {expectedClients} client(s).");
+                    }
+                    else if (role == Role.Host)
                     {
                         initBox.HandleAction(GameInitBox.Action.CreateServer);
 
@@ -336,6 +348,9 @@ namespace Freeserf.UI
                             break;
                         case "speed":
                             interf.RequestGameSpeed(uint.Parse(parts[2]));
+                            break;
+                        case "save":
+                            interf.RequestVote(VoteType.Save, 0);
                             break;
                     }
                 }

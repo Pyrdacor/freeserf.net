@@ -186,6 +186,10 @@ namespace Freeserf.UI
 
         // used only for multiplayer games
         readonly bool[] playerIsAI = new bool[Game.MAX_PLAYER_COUNT] { false, false, false, false };
+        // A loaded multiplayer game (null otherwise). Its players and values can't be changed in the lobby.
+        Game loadedGame = null;
+        MultiplayerSaveInfo loadedSaveInfo = null;
+        string loadedGamePath = null;
         readonly Dictionary<uint, IRemoteClient> playerClientMapping = new Dictionary<uint, IRemoteClient>(); // key: playerIndex, value: client
         public string ServerGameName { get; private set; } = "Freeserf Server";
         public GameInfo ServerGameInfo { get; private set; } = null;
@@ -1175,8 +1179,89 @@ namespace Freeserf.UI
             }
         }
 
+        // Opens the server lobby for a multiplayer save game. The clients get their old players.
+        bool OpenLoadedMultiplayerGame(string path, MultiplayerSaveInfo saveInfo)
+        {
+            if (!GameStore.Instance.Load(path, () => new Game(interf.RenderView, interf.AudioInterface), out var game))
+            {
+                Log.Error.Write(ErrorSystemType.Savegame, $"Failed to load multiplayer game '{path}'.");
+                return false;
+            }
+
+            Log.Info.Write(ErrorSystemType.Savegame, $"Loaded multiplayer game '{path}'.");
+
+            // Note: The loaded game itself is not started. Its state is applied to a new game at the start.
+            loadedGame = game;
+            loadedSaveInfo = saveInfo;
+            loadedGamePath = path;
+            gameType = GameType.MultiplayerServer;
+
+            ServerGameInfo = GameInfo.CreateServerGameInfo();
+            ServerGameInfo.MapSize = game.Map.Size;
+
+            for (uint i = 0; i < game.PlayerCount; ++i)
+            {
+                var player = game.GetPlayer(i);
+                var face = i == 0 ? PlayerFace.You : player.Face; // the host is player 0
+
+                // The clients get the real values with the game state. These are only shown.
+                ServerGameInfo.AddPlayer(face, PlayerInfo.PlayerColors[i], 40u, player.InitialSupplies, 20u);
+                playerIsAI[i] = player.IsAI;
+            }
+
+            randomInput.Displayed = true;
+            randomInput.Enabled = false;
+            randomInput.SetRandom(ServerGameInfo.RandomBase);
+            fileList.Displayed = false;
+            serverList.Displayed = false;
+            checkBoxServerValues.Enabled = false;
+            checkBoxSameValues.Enabled = false;
+            SetRedraw();
+
+            Server = Network.Network.DefaultServerFactory.CreateLocal(UserConfig.Multiplayer.ServerName, ServerGameInfo);
+            Server.NetworkDataReceiver = interf.NetworkDataHandler.NetworkDataReceiver;
+            Server.InitFromSave(saveInfo); // before the server accepts clients
+            Server.Init(true, false, ServerGameInfo.MapSize, randomInput.Text, ServerGameInfo.Players);
+            Server.ClientJoined += Server_ClientJoined;
+            Server.ClientLeft += Server_ClientLeft;
+            Server.ClientChangedFace += Server_ClientChangedFace;
+            Server.ClientChangedValues += Server_ClientChangedValues;
+
+            return true;
+        }
+
+        void CloseLoadedMultiplayerGame()
+        {
+            if (loadedGame == null)
+                return;
+
+            loadedGame.Close();
+            loadedGame = null;
+            loadedSaveInfo = null;
+            randomInput.Enabled = true;
+            checkBoxServerValues.Enabled = true;
+            checkBoxSameValues.Enabled = true;
+        }
+
+        /// <summary>
+        /// True if the lobby belongs to a loaded multiplayer game (used by the test driver).
+        /// </summary>
+        internal bool IsLoadedMultiplayerGame => loadedGame != null;
+
+        internal void OpenLoadedMultiplayerGameForTest(string path) =>
+            OpenLoadedMultiplayerGame(path, MultiplayerSaveInfo.Read(path));
+
         public void HandleAction(Action action)
         {
+            // The settings of a loaded multiplayer game can't be changed.
+            if (loadedGame != null && gameType == GameType.MultiplayerServer &&
+                (action == Action.Increment || action == Action.Decrement ||
+                 action == Action.IncrementLarge || action == Action.DecrementLarge ||
+                 action == Action.GenRandom || action == Action.ApplyRandom))
+            {
+                return;
+            }
+
             switch (action)
             {
                 case Action.CreateServer:
@@ -1214,6 +1299,17 @@ namespace Freeserf.UI
                     {
                         if (gameType == GameType.Load)
                         {
+                            // A multiplayer save game is continued as multiplayer game.
+                            var multiplayerSaveInfo = MultiplayerSaveInfo.Read(fileList.GetSelected()?.Path);
+
+                            if (multiplayerSaveInfo != null)
+                            {
+                                if (!OpenLoadedMultiplayerGame(fileList.GetSelected().Path, multiplayerSaveInfo))
+                                    PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
+
+                                return;
+                            }
+
                             interf.CloseGameInit();
 
                             string path = fileList.GetSelected()?.Path;
@@ -1358,7 +1454,13 @@ namespace Freeserf.UI
 
                                 gameType = GameType.MultiplayerLoading;
 
+                                // A loaded game is created like on the clients (see MultiplayerSaves.ApplyLoadedGame).
                                 var game = GameManager.Instance.PrepareMultiplayerGame(ServerGameInfo, interf.RenderView, interf.AudioInterface);
+                                var loaded = loadedGame;
+                                var saveInfo = loadedSaveInfo;
+                                var loadedPath = loadedGamePath;
+                                loadedGame = null;
+                                loadedSaveInfo = null;
 
                                 if (game == null)
                                 {
@@ -1376,6 +1478,26 @@ namespace Freeserf.UI
                                     if (ready)
                                     {
                                         GameManager.Instance.StartMultiplayerGame(game);
+
+                                        if (loaded != null)
+                                        {
+                                            MultiplayerSaves.ApplyLoadedGame(game, loaded, loadedPath);
+                                            loaded.Close();
+                                        }
+
+                                        // Players of a loaded game whose clients did not join have left the game.
+                                        // They can rejoin it later.
+                                        if (saveInfo != null)
+                                        {
+                                            foreach (var player in saveInfo.HumanPlayers.Where(player => player != 0))
+                                            {
+                                                if (playerClientMapping.ContainsKey(player))
+                                                    game.PlayerRejoinedGame(player);
+                                                else
+                                                    game.PlayerLeftGame(player);
+                                            }
+                                        }
+
                                         Server.ResumeGame();
                                         Server.AllowUserInput(true);
                                         interf.CloseGameInit();
@@ -1400,6 +1522,8 @@ namespace Freeserf.UI
                         break;
                     }
                 case Action.ToggleGameType:
+                    CloseLoadedMultiplayerGame();
+
                     if (Server != null)
                     {
                         // Tell the clients that the server is gone.
@@ -1587,6 +1711,12 @@ namespace Freeserf.UI
 
         private void Server_ClientChangedValues(ILocalServer server, IRemoteClient client, uint supplies, uint reproduction)
         {
+            if (loadedGame != null)
+            {
+                server.BroadcastLobbyData(); // the values of a loaded game can't be changed
+                return;
+            }
+
             if (client == null || !playerClientMapping.Values.Contains(client) || checkBoxServerValues.Checked || checkBoxSameValues.Checked)
             {
                 server.BroadcastLobbyData(); // the client gets the valid values back
@@ -1610,6 +1740,12 @@ namespace Freeserf.UI
 
         private void Server_ClientChangedFace(ILocalServer server, IRemoteClient client, PlayerFace face)
         {
+            if (loadedGame != null)
+            {
+                server.BroadcastLobbyData(); // the faces of a loaded game can't be changed
+                return;
+            }
+
             if (client == null || !playerClientMapping.Values.Contains(client) || client.PlayerIndex > ServerGameInfo.PlayerCount)
                 return;
 
@@ -1699,6 +1835,19 @@ namespace Freeserf.UI
 
         private void Server_ClientLeft(Network.ILocalServer server, IRemoteClient client)
         {
+            // The players of a loaded game stay (the client may join again).
+            if (loadedGame != null)
+            {
+                lock (ServerGameInfo)
+                {
+                    playerClientMapping.Remove(client.PlayerIndex);
+                    SetRedraw();
+                }
+
+                ServerUpdate();
+                return;
+            }
+
             if (Server != null && Server.State == ServerState.Lobby)
             {
                 lock (ServerGameInfo)
@@ -1714,6 +1863,19 @@ namespace Freeserf.UI
 
         private void Server_ClientJoined(ILocalServer server, IRemoteClient client)
         {
+            // In a loaded game the server has chosen the player of the client already.
+            if (loadedGame != null)
+            {
+                lock (ServerGameInfo)
+                {
+                    playerClientMapping[client.PlayerIndex] = client;
+                    SetRedraw();
+                }
+
+                ServerUpdate();
+                return;
+            }
+
             lock (ServerGameInfo)
             {
                 if (ServerGameInfo.PlayerCount >= Game.MAX_PLAYER_COUNT && !ServerGameInfo.Players.Any(p => p == null))
@@ -1938,6 +2100,10 @@ namespace Freeserf.UI
 
         bool HandlePlayerClick(uint playerIndex, int cx, int cy)
         {
+            // The players of a loaded multiplayer game can't be changed.
+            if (loadedGame != null && gameType == GameType.MultiplayerServer)
+                return true;
+
             if (cx < 8 || cx > 8 + 64 || cy < 8 || cy > 76)
             {
                 return false;

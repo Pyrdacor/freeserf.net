@@ -232,6 +232,9 @@ namespace Freeserf.UI
                             server.ResumeGame();
                         break;
                     }
+                case VoteType.Save:
+                    (interf as ServerInterface)?.SaveMultiplayerGame(false);
+                    return; // the game state was not changed
             }
 
             server.GameDirty = true;

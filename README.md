@@ -38,6 +38,8 @@ Multiplayer games in the local network are possible (still experimental). One pl
 
 Players who have left a running multiplayer game (e.g. after a lost connection) can join it again and get their settlement back. Running games are shown in the server list.
 
+Multiplayer games are saved by the host automatically every 10 minutes and when a player leaves. Every player can request to save the game (F5, the other players vote on it). To continue a multiplayer game the host selects its save game in the load screen. The players join again and get their settlements back.
+
 In multiplayer games pausing the game or changing the game speed needs the agreement of the other players. Each player can request it and the others vote on it (more players have to agree than decline).
 
 

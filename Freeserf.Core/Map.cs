@@ -1137,6 +1137,10 @@ namespace Freeserf
 
                 changedPaths.Clear();
             }
+
+            // The terrain (e.g. heights) may have changed as well. The render map
+            // only updates it when scrolling, so the visible part is updated here.
+            RenderMap?.Refresh();
         }
 
         public MapGeometry Geometry { get; }

@@ -195,7 +195,7 @@ namespace Freeserf.Network
         readonly Dictionary<string, uint> disconnectedClients = new Dictionary<string, uint>();
         // Rejoining: each player of a client has a token. Clients which connect during the game
         // are pending until they sent their token (see JoinData).
-        readonly ulong sessionId = JoinData.CreateRandomId();
+        ulong sessionId = JoinData.CreateRandomId();
         readonly Dictionary<uint, ulong> playerTokens = new Dictionary<uint, ulong>();
         readonly HashSet<uint> humanPlayers = new HashSet<uint>();
         readonly Dictionary<RemoteClient, (TcpClient TcpClient, DateTime ConnectTime)> pendingClients = new();
@@ -294,8 +294,9 @@ namespace Freeserf.Network
                     // TODO: password protected games
 
                     // Clients which connect during the game may get their player back (rejoin).
+                    // This is also true for the lobby of a loaded game.
                     // They are pending until they sent their token (see CompleteRejoin).
-                    if (State == ServerState.Game)
+                    if (State == ServerState.Game || (State == ServerState.Lobby && LoadedGame))
                     {
                         Log.Verbose.Write(ErrorSystemType.Network, $"Client with IP '{ip}' connected during the game.");
 
@@ -395,13 +396,58 @@ namespace Freeserf.Network
             State = ServerState.Loading;
         }
 
+        public bool LoadedGame { get; private set; } = false;
+
+        public MultiplayerSaveInfo GetSaveInfo()
+        {
+            var info = new MultiplayerSaveInfo
+            {
+                SessionId = sessionId,
+                ServerName = Name
+            };
+
+            info.HumanPlayers.UnionWith(State == ServerState.Game || LoadedGame ? humanPlayers : playerClients.Keys);
+
+            lock (playerTokens)
+            {
+                foreach (var playerToken in playerTokens)
+                {
+                    if (info.HumanPlayers.Contains(playerToken.Key))
+                        info.PlayerTokens[playerToken.Key] = playerToken.Value;
+                }
+            }
+
+            return info;
+        }
+
+        public void InitFromSave(MultiplayerSaveInfo saveInfo)
+        {
+            LoadedGame = true;
+            sessionId = saveInfo.SessionId != 0 ? saveInfo.SessionId : sessionId;
+
+            humanPlayers.Clear();
+            humanPlayers.UnionWith(saveInfo.HumanPlayers.Where(player => player != 0)); // 0 is the host
+
+            lock (playerTokens)
+            {
+                playerTokens.Clear();
+
+                foreach (var playerToken in saveInfo.PlayerTokens)
+                    playerTokens[playerToken.Key] = playerToken.Value;
+            }
+        }
+
         public void EnterGame()
         {
             State = ServerState.Game;
 
             // Only these players can be taken over by rejoining clients.
-            humanPlayers.Clear();
-            humanPlayers.UnionWith(playerClients.Keys);
+            // For loaded games these are all players of clients in the save game.
+            if (!LoadedGame)
+            {
+                humanPlayers.Clear();
+                humanPlayers.UnionWith(playerClients.Keys);
+            }
 
             // The clients have created their games from the lobby data but some
             // parts (e.g. the random state) are not equal. So start with a full sync.
@@ -660,7 +706,8 @@ namespace Freeserf.Network
             }
 
             var game = GameManager.Instance.GetCurrentGame();
-            uint? player = State == ServerState.Game && game != null ? FindRejoinPlayer(client, joinData) : null;
+            bool lobby = State == ServerState.Lobby && LoadedGame;
+            uint? player = (State == ServerState.Game && game != null) || lobby ? FindRejoinPlayer(client, joinData) : null;
 
             if (player == null)
             {
@@ -670,7 +717,7 @@ namespace Freeserf.Network
             }
 
             client.PlayerIndex = player.Value;
-            Log.Info.Write(ErrorSystemType.Network, $"Client with IP '{client.Ip}' rejoined the game as player {player.Value}.");
+            Log.Info.Write(ErrorSystemType.Network, $"Client with IP '{client.Ip}' rejoined the {(lobby ? "lobby of the loaded game" : "game")} as player {player.Value}.");
 
             playerClients[player.Value] = client;
             clients[client] = tcpClient;
@@ -685,6 +732,13 @@ namespace Freeserf.Network
 
             client.SendHeartbeat(Global.SpontaneousMessage); // tells the player index
             new JoinData(sessionId, token).Send(client);
+
+            if (lobby)
+            {
+                // The lobby adds the client to its player (and sends the lobby data).
+                ClientJoined?.Invoke(this, client);
+                return;
+            }
 
             // The client creates the game from the lobby data. Then it sends the start game
             // request back and gets the full game state (see HandleGameRequest).

@@ -118,6 +118,31 @@ their player back. Running games are shown in the server list and can be joined.
 
 The test driver can test it with `-m join:ADDRESS:rejoin` (leaves the game after 10 seconds and rejoins it).
 
+##### Saving and loading
+
+Only the server saves multiplayer games. All its save games contain the section `multiplayer`
+with the session id, the server name, the players of the clients and their tokens
+(`MultiplayerSaveInfo` in `MultiplayerSave.cs`). Single player games ignore it.
+
+- The server saves the game automatically every 10 minutes and when a player has left the game
+  (`MultiplayerSaves.AutosaveInterval`, the last 3 automatic saves are kept per server name:
+  `mp-NAME-auto-TIME.save`).
+- Each player can request a vote to save the game (F5). If it is accepted, the server saves it
+  (`mp-NAME-TIME.save`).
+- A multiplayer save game is continued by selecting it in the load screen. This opens the server
+  lobby of the loaded game. Its players and values can't be changed. Clients which join get their
+  old players like when rejoining a running game (token, IP or the first free player).
+- The game can be started before all players have joined. Missing players have left the game
+  and can rejoin it later.
+- At the start the server creates its game in the same way as the clients (from the lobby data)
+  and applies the full game state of the loaded game to it. Only the AI players are read from the
+  save game. Otherwise data which is not part of the game state (e.g. references between game
+  objects) would be created in another way than on the clients and the games would get out of sync.
+- The game time is part of the save games now, so it goes on after loading.
+
+The test driver can load a game with `FREESERF_MPTEST_LOAD=PATH` (host) and use a shorter interval
+of automatic saves with `FREESERF_MPTEST_AUTOSAVE=SECONDS`.
+
 ##### Votes
 
 Some things need the agreement of the players, e.g. pausing the game or changing the

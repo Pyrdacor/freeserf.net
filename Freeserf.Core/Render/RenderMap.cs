@@ -513,6 +513,11 @@ namespace Freeserf.Render
             return CoordinateSpace.ViewSpaceToTileSpace((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2);
         }
 
+        /// <summary>
+        /// Updates the visible terrain (e.g. after the map data was replaced).
+        /// </summary>
+        public void Refresh() => UpdatePosition();
+
         void UpdatePosition()
         {
             ScrollX &= map.ColumnMask;

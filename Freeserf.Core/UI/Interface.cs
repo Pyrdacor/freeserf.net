@@ -1114,6 +1114,14 @@ namespace Freeserf.UI
 
             CheckForPlayersWhoLeft();
 
+            // In multiplayer games the player may already have a castle when the game
+            // starts (loaded game or rejoin). Then the view starts at the castle.
+            if (!viewMovedToCastle && IsMultiplayer && Ingame && Player != null && Player.HasCastle)
+            {
+                viewMovedToCastle = true;
+                GotoCastle();
+            }
+
             lock (gameLock)
             {
                 // TODO: rethink this as the client should predict and simulate the game too
@@ -1583,6 +1591,7 @@ namespace Freeserf.UI
         bool IsRemote => this is RemoteInterface;
         internal bool IsMultiplayer => IsRemote || this is ServerInterface;
         readonly HashSet<uint> playersKnownToHaveLeft = new HashSet<uint>();
+        bool viewMovedToCastle = false;
 
         // Shows a notification when another player has left or rejoined the multiplayer game.
         void CheckForPlayersWhoLeft()
@@ -1598,6 +1607,10 @@ namespace Freeserf.UI
                 if (player.HasLeftGame && playersKnownToHaveLeft.Add(player.Index))
                 {
                     Log.Info.Write(ErrorSystemType.Game, $"Player {player.Index} has left the game.");
+
+                    // The game is saved, so it can be continued later with this player.
+                    (this as ServerInterface)?.RequestAutosave();
+
                     Player.AddNotification(Notification.Type.PlayerLeft, player.HasCastle ? player.CastlePosition : Global.INVALID_MAPPOS, player.Index);
                 }
                 else if (!player.HasLeftGame && playersKnownToHaveLeft.Remove(player.Index))
@@ -1649,7 +1662,7 @@ namespace Freeserf.UI
                 RequestVote(VoteType.GameSpeed, (int)speed);
         }
 
-        void RequestVote(VoteType type, int parameter)
+        internal void RequestVote(VoteType type, int parameter)
         {
             if (Votes == null)
                 return;
@@ -1691,8 +1704,13 @@ namespace Freeserf.UI
             }
             else if (key == Event.SystemKey.F5)
             {
+                // In multiplayer games all players vote on saving (the server saves the game).
+                if (IsMultiplayer)
+                {
+                    RequestVote(VoteType.Save, 0);
+                }
                 // quick save
-                if (!IsRemote)
+                else
                 {
                     Log.Info.Write(ErrorSystemType.Savegame, "Quick saving game");
 
@@ -1855,9 +1873,54 @@ namespace Freeserf.UI
             Votes = VoteController.CreateForServer(this, Server);
         }
 
+        DateTime lastAutosaveTime = DateTime.MaxValue;
+        bool autosaveRequested = false;
+
+        /// <summary>
+        /// Saves the game with the multiplayer data (so it can be loaded as a multiplayer game again).
+        /// </summary>
+        internal bool SaveMultiplayerGame(bool autosave)
+        {
+            if (Game == null || Server == null)
+                return false;
+
+            Game.MultiplayerSaveInfoProvider ??= Server.GetSaveInfo;
+            bool success = MultiplayerSaves.Save(Game, Server.Name, autosave, out string path);
+
+            if (success)
+                Log.Info.Write(ErrorSystemType.Savegame, $"Multiplayer game saved to '{path}'.");
+            else
+                Log.Error.Write(ErrorSystemType.Savegame, "Failed to save the multiplayer game.");
+
+            if (autosave)
+            {
+                lastAutosaveTime = DateTime.UtcNow;
+                autosaveRequested = false;
+            }
+
+            return success;
+        }
+
+        /// <summary>
+        /// The game is saved automatically as soon as possible.
+        /// </summary>
+        internal void RequestAutosave() => autosaveRequested = true;
+
         public override void Update()
         {
             base.Update();
+
+            if (Game != null && Server != null && Ingame)
+            {
+                // All saves of the server contain the multiplayer data.
+                Game.MultiplayerSaveInfoProvider ??= Server.GetSaveInfo;
+
+                if (lastAutosaveTime == DateTime.MaxValue)
+                    lastAutosaveTime = DateTime.UtcNow;
+
+                if (autosaveRequested || DateTime.UtcNow - lastAutosaveTime >= MultiplayerSaves.AutosaveInterval)
+                    SaveMultiplayerGame(true);
+            }
 
             if (Game != null)
             {
