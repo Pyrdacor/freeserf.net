@@ -183,6 +183,10 @@ jobs:
           iconutil -c icns Freeserf.iconset
           cp -R Freeserf.icns Freeserf.app/Contents/Resources/
           cp freeserf/FreeserfNet/Info.plist Freeserf.app/Contents/Info.plist
+          # The version is defined in Directory.Build.props.
+          VERSION=$(sed -n 's:.*<FreeserfVersionMajor>\(.*\)</FreeserfVersionMajor>.*:\1:p' freeserf/Directory.Build.props).$(sed -n 's:.*<FreeserfVersionMinor>\(.*\)</FreeserfVersionMinor>.*:\1:p' freeserf/Directory.Build.props).$(sed -n 's:.*<FreeserfVersionPatch>\(.*\)</FreeserfVersionPatch>.*:\1:p' freeserf/Directory.Build.props)
+          plutil -replace CFBundleShortVersionString -string "$VERSION" Freeserf.app/Contents/Info.plist
+          plutil -replace CFBundleVersion -string "$VERSION" Freeserf.app/Contents/Info.plist
           echo "-n APPLFRSF" > "Freeserf.app/Contents/PkgInfo"
           install_name_tool -add_rpath @executable_path/../Frameworks Freeserf.app/Contents/MacOS/FreeserfNet
           dylibbundler --fix-file Freeserf.app/Contents/MacOS/FreeserfNet -p @executable_path/../Frameworks/

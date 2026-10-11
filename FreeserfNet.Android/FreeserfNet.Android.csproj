@@ -7,11 +7,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationId>net.freeserf.android</ApplicationId>
     <ApplicationTitle>Freeserf</ApplicationTitle>
-    <!-- Same version as the desktop app (keep in sync with FreeserfNet/AssemblyInfo.cs).
+    <!-- Same version as the desktop app (see Directory.Build.props).
          The version code must increase with each release: major * 10000 + minor * 100 + patch. -->
-    <ApplicationDisplayVersion>2.2.5</ApplicationDisplayVersion>
-    <ApplicationVersion>20205</ApplicationVersion>
-    <Version>2.2.5</Version>
+    <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
+    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(FreeserfVersionMajor), 10000)), $([MSBuild]::Multiply($(FreeserfVersionMinor), 100)))), $(FreeserfVersionPatch)))</ApplicationVersion>
     <RootNamespace>Freeserf.Android</RootNamespace>
     <AssemblyName>FreeserfNet.Android</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>

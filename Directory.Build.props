@@ -1,0 +1,18 @@
+<Project>
+
+  <!--
+    Version of Freeserf.net. It is used by all projects: the desktop app, the Android app
+    (display version and version code) and the libraries. The macOS workflow writes it to the
+    Info.plist of the app bundle.
+  -->
+  <PropertyGroup>
+    <FreeserfVersionMajor>2</FreeserfVersionMajor>
+    <FreeserfVersionMinor>2</FreeserfVersionMinor>
+    <FreeserfVersionPatch>5</FreeserfVersionPatch>
+
+    <Version>$(FreeserfVersionMajor).$(FreeserfVersionMinor).$(FreeserfVersionPatch)</Version>
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <FileVersion>$(Version).0</FileVersion>
+  </PropertyGroup>
+
+</Project>

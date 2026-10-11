@@ -64,12 +64,10 @@ namespace Freeserf.Audio.Bass
 
                 MBass.Free();
 
-                // Reset all state so a later EnsureBass() performs a clean
+                // Reset the state so a later EnsureBass() performs a clean
                 // re-initialization (e.g. after the app was closed and the
-                // activity is recreated on Android).
+                // activity is recreated on Android). The sound font was reset above.
                 Initialized = false;
-                soundFont = 0;
-                soundFontProcs = null;
             }
         }
 

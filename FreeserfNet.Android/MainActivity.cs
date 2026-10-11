@@ -270,11 +270,10 @@ namespace Freeserf.Android
                 SdlWindowing.Use();
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: platforms registered");
 
-                // The game speed is per frame and the game logic is updated
-                // inside the render loop. On Android the swap does not block on
-                // vsync, so the loop would run at a very high frame rate and
-                // the game would be much too fast. Cap update and render at
-                // 50 FPS (the game's design rate, see Global.TICK_LENGTH).
+                // On Android the swap does not block on vsync, so the loop would
+                // run at a very high frame rate and drain the battery. Cap update
+                // and render at 50 FPS. The game speed does not depend on it, the
+                // game is updated 50 times per second in any case (see Interface.Update).
                 var options = new WindowOptions(
                     true,
                     new Vector2D<int>(0, 0),

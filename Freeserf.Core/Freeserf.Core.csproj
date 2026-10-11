@@ -5,10 +5,6 @@
     <RootNamespace>Freeserf</RootNamespace>
     <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Same version as the app (keep in sync with FreeserfNet/AssemblyInfo.cs).
-         Global.VERSION reads the entry assembly version, which is missing on
-         Android, so it falls back to this assembly's version. -->
-    <Version>2.2.5</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
