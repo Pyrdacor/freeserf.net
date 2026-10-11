@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to publish (e.g. android-2.2.5). Leave empty to only build and upload the artifact.'
+        description: 'Release tag to publish (e.g. android-2.2.6). Leave empty to only build and upload the artifact.'
         required: false
         default: ''
 
@@ -56,21 +56,17 @@ jobs:
 
           Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
 
-          ### What's new in 2.2.5
+          ### What's new in 2.2.6
 
-          - **Game data download**: log in to Ubisoft Connect in the app (on Ubisoft's own login page) and download the game data from your own account.
-          - **Multiplayer** (experimental): games in the local network are found automatically and other servers can be added by IP or host name.
+          - **Fixed game speed**: the game no longer runs much too fast, and multiplayer games with desktop players stay in sync.
+          - **Fixed sound**: music and sound work after restarting the app, and there is no fast sound loop while the game is paused.
+          - **Fixed loading screen**: no endless loading screen or crash after closing and reopening the app.
+          - **Multiplayer** (experimental):
+            - pausing and changing the game speed is decided by a vote of all players,
+            - players who have left a running game can rejoin it and get their settlement back,
+            - the host saves the game automatically, every player can request to save it, and saved games can be continued.
+          - **Roads** can end on an existing road again by placing a flag there.
           - Same version number as the desktop version of freeserf.net.
-          - **Game logic fixes** ported from the C++ freeserf releases 0.4/0.5:
-            - Transporter no longer duplicate resources when switching at a flag.
-            - Serfs are no longer lost when a road is removed.
-            - Fixed a deadlock of serfs waiting for each other.
-            - Knights can be trained even while a Knight0 is in the stock.
-            - Fixed the military score and the pig farm sounds.
-            - Fixed the DOS smelter sound.
-          - **Save games** keep more state, so a loaded game goes on as the saved one
-            (building counts, burning counters, knight morale, timers, messages,
-            statistics history and more).
 
           ### Install
 

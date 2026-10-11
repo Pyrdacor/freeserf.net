@@ -1,3 +1,25 @@
+Version 2.2.6:
+==============
+
+- Multiplayer:
+  - every player can request to pause, resume or change the game speed, the other players vote on it
+  - players who have left a running game can rejoin it and get their settlement back
+  - the host saves the game automatically (every 10 minutes and when a player leaves),
+    every player can request a vote to save it (F5)
+  - multiplayer save games are continued from the load screen, the players get their old players back
+  - fixed different game speeds on devices with different frame rates (e.g. Android)
+  - fixed invisible serfs after a game update from the host
+  - the view starts at the own castle after loading or rejoining
+- A road can end on an existing road again by placing a flag there. Thanks to iGEL!
+- The window can be resized (the aspect ratio is kept, the size is saved)
+- The first window size depends on the monitor, windows outside of the monitor are centred
+- Fixed an error when closing the game (MIDI sound font)
+- Fixed the OpenGL ES detection on Mesa drivers. Thanks to kadrim!
+- OpenGL 3.0 / OpenGL ES 3.0 is required, older drivers get a clear error message
+- Android fixes (game speed, sound after restart, sound loop while paused, loading screen). Thanks to dos-ise!
+- Save games keep the game time
+
+
 Version 2.2.5:
 ==============
 
