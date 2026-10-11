@@ -255,6 +255,13 @@ namespace Freeserf.Android
 
         protected override void OnRun()
         {
+            // The view is stored in a static field so the event handlers can
+            // access it. Keep a local reference too: when the activity is
+            // recreated (e.g. after the app was closed and reopened), a new
+            // OnRun may start while the old one is still finishing, and the
+            // old OnRun's finally must dispose its own view, not the new one.
+            IView localView = null;
+
             try
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: start");
@@ -283,7 +290,8 @@ namespace Freeserf.Android
                     new VideoMode(60),
                     24);
 
-                view = Silk.NET.Windowing.Window.GetView(new ViewOptions(options));
+                localView = Silk.NET.Windowing.Window.GetView(new ViewOptions(options));
+                view = localView;
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: view created");
                 view.Load += Window_Load;
                 view.Render += Window_Render;
@@ -316,7 +324,7 @@ namespace Freeserf.Android
                     }
                 });
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: Run returned");
-                view.Reset();
+                localView.Reset();
             }
             catch (Exception ex)
             {
@@ -326,7 +334,7 @@ namespace Freeserf.Android
             {
                 try
                 {
-                    view?.Dispose();
+                    localView?.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -337,6 +345,14 @@ namespace Freeserf.Android
 
         static void Window_Load()
         {
+            // If a game view is already initialized (e.g. a second OnRun
+            // started while the first one is still rendering after the app was
+            // closed and reopened), do not re-initialize: the Reset() below
+            // would clear the atlases of the running game view and leave a
+            // black screen.
+            if (initialized)
+                return;
+
             try
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: start");
@@ -970,7 +986,21 @@ namespace Freeserf.Android
             {
                 gameView = null;
                 view?.Close();
-                instance?.RunOnUiThread(() => instance.Finish());
+                instance?.RunOnUiThread(() =>
+                {
+                    // FinishAndRemoveTask also removes the task from the recents
+                    // list. A plain Finish() leaves the process alive with a
+                    // finishing activity, so the next start (same process) would
+                    // immediately go to the background again.
+                    instance.FinishAndRemoveTask();
+
+                    // The process stays alive after Finish(), and a recreated
+                    // activity in the same process hits the activity-recreation
+                    // race (black screen / immediate background). Kill the
+                    // process so the next start is a clean one. The user config
+                    // was already saved in Window_Closing.
+                    global::Android.OS.Process.KillProcess(global::Android.OS.Process.MyPid());
+                });
                 ResetState();
             }
         }

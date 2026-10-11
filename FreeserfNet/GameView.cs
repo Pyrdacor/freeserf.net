@@ -639,6 +639,10 @@ namespace Freeserf
             {
                 if (disposing)
                 {
+                    // Remove the viewer from the game manager so it no longer
+                    // receives game events for this (now disposed) render view.
+                    gui.DestroyViewer();
+
                     foreach (var layer in layers.Values)
                         layer?.Dispose();
 
