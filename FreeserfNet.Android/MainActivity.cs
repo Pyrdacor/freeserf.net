@@ -163,11 +163,18 @@ namespace Freeserf.Android
         {
             base.OnCreate(savedInstanceState);
 
+            // If the game was already initialized, the activity is being
+            // recreated (e.g. the app was closed from the recents list). The
+            // EGL context is lost, so all static state must be reset and the
+            // game re-initialized from scratch; otherwise the old game view
+            // renders to a destroyed surface and the screen stays black.
+            if (initialized)
+                ResetState();
+
             // Show a loading indicator while the game initializes. On activity
             // recreation (e.g. configuration change) the game is already
             // running, so the overlay is only shown on the very first start.
-            if (!initialized)
-                ShowLoadingOverlay();
+            ShowLoadingOverlay();
         }
 
         // Shows the loading overlay (spinner + app name) on top of the SDL
@@ -256,17 +263,22 @@ namespace Freeserf.Android
                 SdlWindowing.Use();
                 global::Android.Util.Log.Debug("Freeserf_Trace", "OnRun: platforms registered");
 
+                // The game speed is per frame and the game logic is updated
+                // inside the render loop. On Android the swap does not block on
+                // vsync, so the loop would run at a very high frame rate and
+                // the game would be much too fast. Cap update and render at
+                // 50 FPS (the game's design rate, see Global.TICK_LENGTH).
                 var options = new WindowOptions(
                     true,
                     new Vector2D<int>(0, 0),
                     new Vector2D<int>(1280, 960),
-                    60.0,
-                    60.0,
+                    50.0,
+                    50.0,
                     new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Compatability, ContextFlags.Default, new APIVersion(3, 0)),
                     Global.VERSION,
                     WindowState.Normal,
                     WindowBorder.Fixed,
-                    true,
+                    false,
                     false,
                     new VideoMode(60),
                     24);
@@ -368,6 +380,10 @@ namespace Freeserf.Android
             {
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: EXCEPTION: " + ex);
                 Log.Error.Write(ErrorSystemType.Application, "Load: " + ex.Message);
+                // Do not leave the user on an endless loading screen: hide the
+                // overlay and show the error so the app can be restarted.
+                HideLoadingOverlay();
+                instance?.RunOnUiThread(() => instance.ShowFatalErrorDialog("Initialisierung fehlgeschlagen: " + ex.Message));
             }
         }
 
@@ -497,6 +513,9 @@ namespace Freeserf.Android
             layout.AddView(message);
 
             var pickButton = new global::Android.Widget.Button(this) { Text = "Datei auswählen" };
+            // Do not show the system focus ring around the buttons (touch UI).
+            pickButton.Focusable = false;
+            pickButton.FocusableInTouchMode = false;
             var pickParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             pickParams.TopMargin = DpToPx(16);
@@ -509,6 +528,9 @@ namespace Freeserf.Android
             };
 
             var ubisoftButton = new global::Android.Widget.Button(this) { Text = "Von Ubisoft Connect herunterladen" };
+            // Do not show the system focus ring around the buttons (touch UI).
+            ubisoftButton.Focusable = false;
+            ubisoftButton.FocusableInTouchMode = false;
             var ubisoftParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             ubisoftParams.TopMargin = DpToPx(8);
@@ -734,6 +756,18 @@ namespace Freeserf.Android
                 .SetTitle("Ubisoft Connect")
                 .SetMessage(message)
                 .SetPositiveButton("OK", (sender, args) => ShowDataImportDialog())
+                .SetCancelable(false)
+                .Show();
+        }
+
+        // Shows a fatal error when the game could not be initialized. The user
+        // closes the app and can try again.
+        void ShowFatalErrorDialog(string message)
+        {
+            new AlertDialog.Builder(this)
+                .SetTitle("Freeserf")
+                .SetMessage(message)
+                .SetPositiveButton("OK", (sender, args) => Finish())
                 .SetCancelable(false)
                 .Show();
         }

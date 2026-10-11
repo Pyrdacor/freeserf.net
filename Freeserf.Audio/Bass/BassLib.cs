@@ -26,6 +26,8 @@ namespace Freeserf.Audio.Bass
                 Initialized = MBass.Init(-1, 44100, 0u, 0, IntPtr.Zero);
                 if (!Initialized)
                     Log.Error.Write(ErrorSystemType.Audio, "BASS init failed: " + MBass.LastError);
+                else
+                    MBass.Start(); // ensure the output device is actually started
             }
         }
 
@@ -61,7 +63,13 @@ namespace Freeserf.Audio.Bass
                 }
 
                 MBass.Free();
+
+                // Reset all state so a later EnsureBass() performs a clean
+                // re-initialization (e.g. after the app was closed and the
+                // activity is recreated on Android).
                 Initialized = false;
+                soundFont = 0;
+                soundFontProcs = null;
             }
         }
 
