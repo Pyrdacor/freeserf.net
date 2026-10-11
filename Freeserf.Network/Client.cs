@@ -112,6 +112,7 @@ namespace Freeserf.Network
         public event EventHandler GameResumed;
         public event EventHandler InputAllowed;
         public event EventHandler InputDisallowed;
+        public event Action<VoteData> VoteReceived;
 
         public void Disconnect()
         {
@@ -415,6 +416,10 @@ namespace Freeserf.Network
                         }
                         break;
                     }
+                case NetworkDataType.Vote:
+                    if (serverState == ServerState.Game)
+                        VoteReceived?.Invoke(networkData as VoteData);
+                    break;
                 default:
                     // Should have been handled by Server_DataReceived already.
                     break;
@@ -457,6 +462,7 @@ namespace Freeserf.Network
                             break;
                         case NetworkDataType.Response:
                         case NetworkDataType.InSync:
+                        case NetworkDataType.Vote:
                             NetworkDataReceiver.Receive(server, parsedData, null);
                             break;
                         case NetworkDataType.UserActionData:
@@ -630,6 +636,13 @@ namespace Freeserf.Network
             var request = new RequestData(Global.GetNextMessageIndex(), Request.Heartbeat);
             RegisterHeartbeatResponse(request.MessageIndex, responseAction);
             request.Send(server);
+        }
+
+        public void SendVote(VoteData vote)
+        {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Send {vote.LogName} to server.");
+            lastOwnHearbeat = DateTime.UtcNow;
+            vote.Send(server);
         }
 
         public void SendUserAction(UserActionData userAction)

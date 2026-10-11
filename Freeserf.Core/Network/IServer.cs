@@ -59,6 +59,7 @@ namespace Freeserf.Network
     public delegate bool GameReadyHandler(bool ready);
     public delegate void ClientChangedFaceHandler(ILocalServer server, IRemoteClient client, PlayerFace face);
     public delegate void ClientChangedValuesHandler(ILocalServer server, IRemoteClient client, uint supplies, uint reproduction);
+    public delegate void ClientVoteHandler(ILocalServer server, IRemoteClient client, VoteData vote);
 
     public interface ILocalServer : IServer, INetworkDataHandler
     {
@@ -78,12 +79,24 @@ namespace Freeserf.Network
         void BroadcastHeartbeat();
         void BroadcastDisconnect();
         void BroadcastLobbyData();
+        /// <summary>
+        /// Sends a vote message to all clients.
+        /// </summary>
+        void BroadcastVote(VoteData vote);
+        /// <summary>
+        /// Sends a vote message to one client.
+        /// </summary>
+        void SendVote(IRemoteClient client, VoteData vote);
 
         event ClientJoinedHandler ClientJoined;
         event ClientLeftHandler ClientLeft;
         event GameReadyHandler GameReady;
         event ClientChangedFaceHandler ClientChangedFace;
         event ClientChangedValuesHandler ClientChangedValues;
+        /// <summary>
+        /// A client sent a vote request or answer (raised on the main thread).
+        /// </summary>
+        event ClientVoteHandler ClientVote;
 
         /// <summary>
         /// List of all connected clients.

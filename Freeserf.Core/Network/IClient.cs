@@ -49,11 +49,16 @@ namespace Freeserf.Network
         event EventHandler GameResumed;
         event EventHandler InputAllowed;
         event EventHandler InputDisallowed;
+        /// <summary>
+        /// The server sent a vote message (raised on the main thread).
+        /// </summary>
+        event Action<VoteData> VoteReceived;
 
         byte RequestLobbyStateUpdate();
         byte RequestGameStateUpdate();
         void SendUserAction(UserActionData userAction);
         void SendUserAction(UserActionData userAction, Action<ResponseType> responseAction);
+        void SendVote(VoteData vote);
 
         bool JoinServer(string name, IPAddress ip);
         void Disconnect();

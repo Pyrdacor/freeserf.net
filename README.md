@@ -36,7 +36,7 @@ The game data is not included. On the first start you can either download it fro
 
 Multiplayer games in the local network are possible (still experimental). One player creates a server (Multiplayer -> Create server), the others join it. Servers in the local network are found automatically, other servers can be added by their IP address or host name. The game uses port 5067 (TCP and UDP). Players with different platforms (e.g. Windows and Android) can play together.
 
-In multiplayer games the game speed can't be changed and only the host can pause the game.
+In multiplayer games pausing the game or changing the game speed needs the agreement of the other players. Each player can request it and the others vote on it (more players have to agree than decline).
 
 
 ## Support development
@@ -137,11 +137,11 @@ TAB|Open notification
 Ctrl+TAB|Return to last map position after notification
 Shift+M|Toggle music
 Shift+S|Toggle sound effects
-0|Reset game speed to normal (not in multiplayer)
-9|Maximize game speed (not in multiplayer)
-P|Pause or resume game (only the host in multiplayer)
-+|Increase game speed (not in multiplayer)
--|Decrease game speed (not in multiplayer)
+0|Reset game speed to normal (vote in multiplayer)
+9|Maximize game speed (vote in multiplayer)
+P|Pause or resume game (vote in multiplayer)
++|Increase game speed (vote in multiplayer)
+-|Decrease game speed (vote in multiplayer)
 &gt;|Zoom in
 &lt;|Zoom out
 F11|Toggle fullscreen mode

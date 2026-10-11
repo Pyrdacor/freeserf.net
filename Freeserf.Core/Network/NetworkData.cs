@@ -39,7 +39,8 @@ namespace Freeserf.Network
         InSync,
         LobbyData,
         SyncData,
-        UserActionData // setting, building, demolishing, etc
+        UserActionData, // setting, building, demolishing, etc
+        Vote // multiplayer votes (e.g. game speed)
     }
 
     public interface INetworkData
@@ -90,6 +91,9 @@ namespace Freeserf.Network
                         break;
                     case NetworkDataType.UserActionData:
                         yield return new UserActionData().Parse(rawData, ref offset);
+                        break;
+                    case NetworkDataType.Vote:
+                        yield return new VoteData().Parse(rawData, ref offset);
                         break;
                     // TODO ...
                     default:

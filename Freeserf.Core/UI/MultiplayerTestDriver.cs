@@ -92,6 +92,15 @@ namespace Freeserf.UI
         static DateTime leaveTime = DateTime.MaxValue;
         static readonly bool dumpStates = Environment.GetEnvironmentVariable("FREESERF_MPTEST_DUMP") == "1";
         static readonly bool openMessages = Environment.GetEnvironmentVariable("FREESERF_MPTEST_OPENMESSAGES") == "1";
+        // Vote requests: "SECONDS:pause|resume|speed[:SPEED],..." (real time after the game start).
+        static readonly string[] voteScript = (Environment.GetEnvironmentVariable("FREESERF_MPTEST_VOTES") ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries);
+        // Answer of votes: "yes", "no" or "none" (default: no answer).
+        static readonly string voteAnswer = Environment.GetEnvironmentVariable("FREESERF_MPTEST_VOTEANSWER") ?? "none";
+        static DateTime gameStartTime = DateTime.MinValue;
+        static int nextVoteScriptIndex = 0;
+        static VoteController observedVotes = null;
+        static uint lastLoggedGameSpeed = uint.MaxValue;
 
         public static bool Active => role != Role.None;
 
@@ -277,6 +286,68 @@ namespace Freeserf.UI
             }
         }
 
+        // Requests and answers votes (see FREESERF_MPTEST_VOTES and FREESERF_MPTEST_VOTEANSWER).
+        static void UpdateVotes(Interface interf)
+        {
+            var votes = interf.Votes;
+
+            if (votes == null)
+                return;
+
+            var now = DateTime.UtcNow;
+
+            if (gameStartTime == DateTime.MinValue)
+                gameStartTime = now;
+
+            if (observedVotes != votes)
+            {
+                observedVotes = votes;
+                votes.VoteFinished += entry => Log.Info.Write(ErrorSystemType.Application, LogPrefix +
+                    $"Vote {entry.VoteId} ({entry.Type} {entry.Parameter} by player {entry.Requester}): {entry.Result}.");
+            }
+
+            if (nextVoteScriptIndex < voteScript.Length)
+            {
+                var parts = voteScript[nextVoteScriptIndex].Split(':');
+
+                if (now - gameStartTime >= TimeSpan.FromSeconds(double.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture)))
+                {
+                    ++nextVoteScriptIndex;
+                    Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Requesting vote '{voteScript[nextVoteScriptIndex - 1]}'.");
+
+                    switch (parts[1])
+                    {
+                        case "pause":
+                        case "resume":
+                            interf.TogglePause();
+                            break;
+                        case "speed":
+                            interf.RequestGameSpeed(uint.Parse(parts[2]));
+                            break;
+                    }
+                }
+            }
+
+            if (voteAnswer == "yes" || voteAnswer == "no")
+            {
+                foreach (var entry in votes.Entries.Where(entry => entry.CanAnswer).ToList())
+                {
+                    // answer after a second
+                    if (now >= entry.Deadline - VoteSettings.AnswerTimeout + TimeSpan.FromSeconds(1))
+                    {
+                        Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Answering vote {entry.VoteId} with {voteAnswer}.");
+                        votes.Answer(entry, voteAnswer == "yes");
+                    }
+                }
+            }
+
+            if (interf.Game.GameSpeed != lastLoggedGameSpeed)
+            {
+                lastLoggedGameSpeed = interf.Game.GameSpeed;
+                Log.Info.Write(ErrorSystemType.Application, LogPrefix + $"Game speed: {lastLoggedGameSpeed}.");
+            }
+        }
+
         static void UpdateGame(Interface interf)
         {
             var game = interf.Game;
@@ -293,6 +364,8 @@ namespace Freeserf.UI
                 Log.Info.Write(ErrorSystemType.Application, LogPrefix + "Opening notification.");
                 interf.OpenMessage();
             }
+
+            UpdateVotes(interf);
 
             if (game.GameTime < nextActionGameTime)
                 return;

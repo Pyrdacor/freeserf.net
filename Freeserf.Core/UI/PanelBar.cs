@@ -150,8 +150,8 @@ namespace Freeserf.UI
 
             gameSpeedButtons[0].Clicked += (sender, e) =>
             {
-                // In multiplayer games the server can only pause and resume the game.
-                if (interf is ServerInterface)
+                // In multiplayer games this pauses or resumes the game (after a vote).
+                if (interf.IsMultiplayer)
                     interf.TogglePause();
                 else
                     SetGameSpeed(0);
@@ -222,24 +222,14 @@ namespace Freeserf.UI
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
         }
 
-        // In multiplayer games the game speed can't be changed, as the clients would
-        // get out of sync. Only the server can pause the game (with the first button).
-        bool IsGameSpeedButtonAvailable(int index)
-        {
-            if (interf is RemoteInterface)
-                return false;
-
-            if (interf is ServerInterface)
-                return index == 0;
-
-            return true;
-        }
+        // In multiplayer games the buttons request a vote of all players.
+        static bool IsGameSpeedButtonAvailable(int index) => true;
 
         private void SetGameSpeed(uint speed)
         {
             if (interf.Player.Game.GameSpeed != speed)
             {
-                interf.Player.Game.SetSpeed(speed);
+                interf.RequestGameSpeed(speed);
             }
         }
 

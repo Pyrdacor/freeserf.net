@@ -96,7 +96,26 @@ which did not answer for 7 seconds are removed from the list.
 The server name has 3 to 12 letters or digits. It is saved in the user config and can
 be changed in the lobby while the server is running.
 
-In multiplayer games the game speed can't be changed. Only the server can pause and resume the game.
+##### Votes
+
+Some things need the agreement of the players, e.g. pausing the game or changing the
+game speed (also for the server). A player requests a vote, all other players are asked
+and can agree or decline. The vote is accepted if more players agree than decline (the
+requester agrees). Players who don't answer in time decline.
+
+- Each vote has a unique id so the answers can be assigned to it. Several votes can run at the same time.
+- A player can request one vote every 10 seconds. After a rejected vote the same player can't
+  request the same vote for 30 seconds. Players have 5 seconds to answer.
+  The times are defined in `VoteSettings` (`Votes.cs`).
+- The server decides about all votes (`VoteManager`). Accepted votes are applied by the server and
+  the clients get the changes with the next game state update.
+- Messages (`VoteData`): Request (C2S), Start (S2C, with the vote id), Answer (C2S, with the vote id),
+  Result (S2C, accepted, rejected or refused if the request was not allowed).
+- New types of votes (e.g. surrender or saving) can be added to `VoteType`. They need a text
+  (`Vote.GetQuestion`, `Vote.GetOwnRequest`) and must be applied in `VoteController.Apply`.
+
+The test driver can request and answer votes, see `FREESERF_MPTEST_VOTES` and `FREESERF_MPTEST_VOTEANSWER`
+in `MultiplayerTestDriver`.
 
 
 ##### Local test environment

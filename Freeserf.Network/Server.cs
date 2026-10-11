@@ -264,6 +264,7 @@ namespace Freeserf.Network
         public event GameReadyHandler GameReady;
         public event ClientChangedFaceHandler ClientChangedFace;
         public event ClientChangedValuesHandler ClientChangedValues;
+        public event ClientVoteHandler ClientVote;
 
         void Run(CancellationToken cancellationToken)
         {
@@ -627,7 +628,8 @@ namespace Freeserf.Network
                             }
                         case ServerState.Game:
                             {
-                                if (networkData.Type == NetworkDataType.Request || networkData.Type == NetworkDataType.UserActionData)
+                                if (networkData.Type == NetworkDataType.Request || networkData.Type == NetworkDataType.UserActionData ||
+                                    networkData.Type == NetworkDataType.Vote)
                                 {
                                     if (networkData.Type == NetworkDataType.UserActionData &&
                                         GameManager.Instance.GetCurrentGame() == null)
@@ -730,6 +732,11 @@ namespace Freeserf.Network
                             var request = networkData as RequestData;
 
                             HandleGameRequest(game, client, request.MessageIndex, request.Request, responseHandler);
+                        }
+                        else if (networkData is VoteData vote)
+                        {
+                            // The player index of the message is not trusted. The client's one is used.
+                            ClientVote?.Invoke(this, client, vote);
                         }
                         else if (networkData.Type == NetworkDataType.UserActionData)
                         {
@@ -1077,6 +1084,19 @@ namespace Freeserf.Network
             Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast request 'Disallow user input' to {clients.Count} clients.");
 
             Broadcast((client) => new RequestData(Global.SpontaneousMessage, Request.DisallowUserInput).Send(client));
+        }
+
+        public void BroadcastVote(VoteData vote)
+        {
+            Log.Verbose.Write(ErrorSystemType.Network, $"Broadcast {vote.LogName} to {clients.Count} clients.");
+
+            Broadcast((client) => vote.Send(client));
+        }
+
+        public void SendVote(IRemoteClient client, VoteData vote)
+        {
+            if (clients.TryGetValue(client as RemoteClient, out var status) && status.Connected)
+                vote.Send(client);
         }
 
         private void BroadcastPauseRequest()

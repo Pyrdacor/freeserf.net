@@ -529,6 +529,9 @@ namespace Freeserf.UI
         {
             cursorSprite?.Delete();
 
+            Votes?.Dispose();
+            Votes = null;
+
             ClosePopup();
             PopupBox = null;
 
@@ -1101,6 +1104,7 @@ namespace Freeserf.UI
         public virtual void Update()
         {
             GameInitBox?.UpdateServerSearch();
+            Votes?.Update();
 
             if (Game == null)
             {
@@ -1560,7 +1564,7 @@ namespace Freeserf.UI
         }
 
         bool IsRemote => this is RemoteInterface;
-        bool IsMultiplayer => IsRemote || this is ServerInterface;
+        internal bool IsMultiplayer => IsRemote || this is ServerInterface;
         readonly HashSet<uint> playersKnownToHaveLeft = new HashSet<uint>();
 
         // Shows a notification when another player has left the multiplayer game.
@@ -1580,33 +1584,64 @@ namespace Freeserf.UI
         }
 
         /// <summary>
-        /// Pauses or resumes the game. In multiplayer games only the server can do this.
+        /// Votes of multiplayer games (null otherwise).
+        /// </summary>
+        internal VoteController Votes { get; private protected set; } = null;
+
+        /// <summary>
+        /// Pauses or resumes the game. In multiplayer games the other players
+        /// are asked (this is also true for the server).
         /// </summary>
         internal void TogglePause()
         {
-            if (IsRemote || Game == null)
+            if (Game == null)
                 return;
 
-            if (this is ServerInterface && Server != null)
-            {
-                if (Game.IsPaused)
-                {
-                    Game.Resume();
-                    Server.ResumeGame();
-                }
-                else
-                {
-                    Game.Pause();
-                    Server.PauseGame();
-                }
-
-                // The clients may have progressed a bit further in the meantime.
-                Server.GameDirty = true;
-            }
+            if (IsMultiplayer)
+                RequestVote(Game.IsPaused ? VoteType.Resume : VoteType.Pause, 0);
             else
-            {
                 Game.TogglePause();
+        }
+
+        /// <summary>
+        /// Sets the game speed (0 = pause). In multiplayer games the other players
+        /// are asked (this is also true for the server).
+        /// </summary>
+        internal void RequestGameSpeed(uint speed)
+        {
+            if (Game == null)
+                return;
+
+            if (!IsMultiplayer)
+            {
+                Game.SetSpeed(speed);
+                return;
             }
+
+            if (speed == 0)
+                RequestVote(VoteType.Pause, 0);
+            else if (speed != Game.GameSpeed)
+                RequestVote(VoteType.GameSpeed, (int)speed);
+        }
+
+        void RequestVote(VoteType type, int parameter)
+        {
+            if (Votes == null)
+                return;
+
+            // Requests which would not change anything are ignored.
+            bool changesSomething = type switch
+            {
+                VoteType.Pause => !Game.IsPaused,
+                VoteType.Resume => Game.IsPaused,
+                VoteType.GameSpeed => Game.GameSpeed != parameter,
+                _ => true
+            };
+
+            if (changesSomething)
+                Votes.Request(type, parameter);
+            else
+                PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
         }
 
         protected override bool HandleSystemKeyPressed(Event.SystemKey key, int modifier)
@@ -1664,25 +1699,33 @@ namespace Freeserf.UI
                 // Game speed
                 case '+':
                     {
-                        if (!IsMultiplayer)
+                        if (IsMultiplayer)
+                            RequestGameSpeed(Math.Min(Game.GameSpeed + 1, Global.MAX_GAME_SPEED));
+                        else
                             Game.IncreaseSpeed();
                         break;
                     }
                 case '-':
                     {
-                        if (!IsMultiplayer)
+                        if (IsMultiplayer)
+                            RequestGameSpeed(Game.GameSpeed == 0 ? 0 : Game.GameSpeed - 1);
+                        else
                             Game.DecreaseSpeed();
                         break;
                     }
                 case '0':
                     {
-                        if (!IsMultiplayer)
+                        if (IsMultiplayer)
+                            RequestGameSpeed(GameState.DEFAULT_GAME_SPEED);
+                        else
                             Game.ResetSpeed();
                         break;
                     }
                 case '9':
                     {
-                        if (!IsMultiplayer)
+                        if (IsMultiplayer)
+                            RequestGameSpeed(Global.MAX_GAME_SPEED);
+                        else
                             Game.MaximizeSpeed();
                         break;
                     }
@@ -1784,6 +1827,7 @@ namespace Freeserf.UI
             : base(renderView, audioInterface, previousInterface.Server, viewer, previousInterface.GameInitBox)
         {
             Server = previousInterface.Server;
+            Votes = VoteController.CreateForServer(this, Server);
         }
 
         public override void Update()
@@ -1816,6 +1860,8 @@ namespace Freeserf.UI
 
             if (Game != null && Client.PlayerIndex < Game.PlayerCount)
                 SetPlayer(Client.PlayerIndex); // Ensure correct player if join mid-game
+
+            Votes = VoteController.CreateForClient(this, Client);
         }
     }
 }
