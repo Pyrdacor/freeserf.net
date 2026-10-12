@@ -16,6 +16,7 @@ namespace Freeserf
         private dword genericCount = 0;
         private dword serfsOut = 0;
         private byte resourceDir = 0;
+        private byte exitState = 0;
 
         public InventoryState()
         {
@@ -117,6 +118,23 @@ namespace Freeserf
                 {
                     serfsOut = value;
                     MarkPropertyAsDirty(nameof(SerfsOut));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Order of serfs leaving and approaching the inventory flag (see Inventory.ExitState)
+        /// </summary>
+        [Data]
+        public byte ExitState
+        {
+            get => exitState;
+            set
+            {
+                if (exitState != value)
+                {
+                    exitState = value;
+                    MarkPropertyAsDirty(nameof(ExitState));
                 }
             }
         }

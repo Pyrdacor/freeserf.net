@@ -4493,11 +4493,34 @@ namespace Freeserf
             return 4 + heightDifference + 9 * directionIndex;
         }
 
+        Inventory GetInventoryOfFlag(Flag flag)
+        {
+            if (flag == null || !flag.HasInventory() || !flag.HasBuilding)
+                return null;
+
+            var building = flag.Building;
+
+            if (building == null || building.IsBurning || !building.HasInventory())
+                return null;
+
+            return building.Inventory;
+        }
+
         // Preconditon: serf is in WALKING or TRANSPORTING state 
         void ChangeDirection(Direction direction, bool altEnd)
         {
             var map = Game.Map;
             var newPosition = map.Move(Position, direction);
+            var newPositionInventory = map.HasFlag(newPosition) ? GetInventoryOfFlag(Game.GetFlagAtPosition(newPosition)) : null;
+
+            if (!map.HasSerf(newPosition) && newPositionInventory != null && newPositionInventory.SerfExitRequested)
+            {
+                // A serf wants to leave the inventory. Wait until it is out.
+                Animation = 81 + (int)direction;
+                Counter = CounterFromAnimation[Animation];
+                stateData.Walking.Direction = (int)direction - 6;
+                return;
+            }
 
             if (!map.HasSerf(newPosition))
             {
@@ -4561,6 +4584,7 @@ namespace Freeserf
 
             Position = newPosition;
             map.SetSerfIndex(Position, (int)Index);
+            newPositionInventory?.SerfApproachedFlag();
             Counter += CounterFromAnimation[Animation];
 
             if (altEnd && Counter < 0)
@@ -6343,19 +6367,25 @@ namespace Freeserf
             Counter = 0;
 
             var map = Game.Map;
+            var inventory = Game.GetInventory(stateData.ReadyToLeaveInventory.InventoryIndex);
 
             if (map.HasSerf(Position) || map.HasSerf(map.MoveDownRight(Position)))
             {
+                // The flag is in use. Serfs which approach the flag will wait until we are out.
+                if (!map.HasSerf(Position))
+                    inventory.RequestSerfExit();
+
                 Animation = 82;
                 Counter = 0;
                 return;
             }
 
             // Check if there is a serf that waits to approach the flag.
-            // If so, we wait inside.
+            // If so, we wait inside. If we requested to leave, the serfs
+            // wait for us instead and we will switch places with them.
             var inventoryFlag = Game.GetFlagForBuildingAtPosition(Position);
 
-            if (inventoryFlag != null)
+            if (inventoryFlag != null && !inventory.SerfExitRequested)
             {
                 var cycle = new DirectionCycleCW(Direction.Up, 5);
 
@@ -6392,6 +6422,9 @@ namespace Freeserf
 
                     if (map.HasSerf(building.Position))
                     {
+                        // Don't block the flag while we can't leave.
+                        inventory.CancelSerfExit();
+
                         Animation = 82;
                         Counter = 0;
 
@@ -6400,9 +6433,8 @@ namespace Freeserf
                 }
             }
 
-            var inventory = Game.GetInventory(stateData.ReadyToLeaveInventory.InventoryIndex);
-
             inventory.SerfAway();
+            inventory.SerfExited();
 
             var nextState = State.Walking;
             var mode = stateData.ReadyToLeaveInventory.Mode;

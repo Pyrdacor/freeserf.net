@@ -149,6 +149,52 @@ namespace Freeserf
             --state.SerfsOut;
         }
 
+        /// <summary>
+        /// Serfs which want to leave the inventory need the inventory flag. With much traffic
+        /// on the flag they would wait for a long time. So serfs leaving and serfs approaching
+        /// the flag take turns.
+        /// </summary>
+        public enum ExitState : byte
+        {
+            /// <summary>
+            /// Serfs may approach the flag.
+            /// </summary>
+            None,
+            /// <summary>
+            /// A serf wants to leave. Serfs must not approach the free flag.
+            /// </summary>
+            Requested,
+            /// <summary>
+            /// A serf has just left. The next approaching serf goes first.
+            /// </summary>
+            ApproachingFirst
+        }
+
+        public bool SerfExitRequested => (ExitState)state.ExitState == ExitState.Requested && state.SerfsOut != 0;
+
+        public void RequestSerfExit()
+        {
+            if ((ExitState)state.ExitState == ExitState.None)
+                state.ExitState = (byte)ExitState.Requested;
+        }
+
+        public void CancelSerfExit()
+        {
+            if ((ExitState)state.ExitState == ExitState.Requested)
+                state.ExitState = (byte)ExitState.None;
+        }
+
+        public void SerfExited()
+        {
+            state.ExitState = (byte)ExitState.ApproachingFirst;
+        }
+
+        public void SerfApproachedFlag()
+        {
+            if ((ExitState)state.ExitState == ExitState.ApproachingFirst)
+                state.ExitState = (byte)ExitState.None;
+        }
+
         public bool CallOutSerf(Serf serf)
         {
             var serfType = serf.SerfType;
@@ -703,6 +749,11 @@ namespace Freeserf
                 state.SerfsOut = reader.Value("serfs_out").ReadUInt();
             }
 
+            if (reader.HasValue("exit_state"))
+            {
+                state.ExitState = (byte)reader.Value("exit_state").ReadUInt();
+            }
+
             for (int i = 0; i < 26; ++i)
             {
                 state.Resources[(Resource.Type)i] = reader.Value("resources")[i].ReadUInt();
@@ -727,6 +778,7 @@ namespace Freeserf
 
             writer.Value("generic_count").Write(state.GenericCount);
             writer.Value("serfs_out").Write(state.SerfsOut);
+            writer.Value("exit_state").Write((uint)state.ExitState);
 
             for (int i = 0; i < 26; ++i)
             {
