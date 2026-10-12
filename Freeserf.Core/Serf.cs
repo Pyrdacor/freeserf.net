@@ -9069,7 +9069,7 @@ namespace Freeserf
                             {
                                 // Enter building 
                                 EnterBuilding(-1, false);
-                                building.KnightOccupy();
+                                building.KnightOccupy(false);
                                 return;
                             }
                         }
@@ -9087,7 +9087,7 @@ namespace Freeserf
                         {
                             // Enter building 
                             EnterBuilding(-1, false);
-                            building.KnightOccupy();
+                            building.KnightOccupy(true);
                         }
                         return;
                     }

@@ -666,8 +666,18 @@ namespace Freeserf
         // Building has inventory and the inventory pointer is valid.
         public bool HasInventory()
         {
-            return BuildingType == Type.Castle //workaorund for save games where castle inventory marker is corrupt because of bug
-                   || state.Stock[0].Requested == 0xff;
+            // Only castles and finished stocks have an inventory. Stocks are marked by the
+            // value 0xff. Other buildings use the same counter for requested resources or
+            // knights, so it must not be the only check (issue #156).
+            return BuildingType == Type.Castle // workaround for save games where the castle inventory marker is corrupt because of a bug
+                   || (BuildingType == Type.Stock && state.Stock[0].Requested == 0xff);
+        }
+
+        // The requested counters must not get below 0. Otherwise they would wrap to 0xff.
+        void DecreaseRequested(int stockNumber)
+        {
+            if (state.Stock[stockNumber].Requested > 0)
+                --state.Stock[stockNumber].Requested;
         }
 
         public Inventory Inventory
@@ -1060,7 +1070,7 @@ namespace Freeserf
 
         public void DecreaseRequestedForStock(int stockNumber)
         {
-            --state.Stock[stockNumber].Requested;
+            DecreaseRequested(stockNumber);
         }
 
         public uint PigsCount()
@@ -1091,19 +1101,19 @@ namespace Freeserf
         public void RequestedKnightArrived()
         {
             ++state.Stock[0].Available;
-            --state.Stock[0].Requested;
+            DecreaseRequested(0);
         }
 
         public void RequestedKnightAttackingOnWalk()
         {
-            --state.Stock[0].Requested;
+            DecreaseRequested(0);
         }
 
         public void RequestedKnightDefeatOnWalk()
         {
             if (!HasInventory())
             {
-                --state.Stock[0].Requested;
+                DecreaseRequested(0);
             }
         }
 
@@ -1142,9 +1152,15 @@ namespace Freeserf
             return false;
         }
 
-        public void KnightOccupy()
+        /// <summary>
+        /// A knight enters the building after a fight. The counters are only reset
+        /// when the building was captured, as they belonged to the previous owner.
+        /// Otherwise knights which are on their way into the building would not be
+        /// counted anymore (issue #156).
+        /// </summary>
+        public void KnightOccupy(bool captured)
         {
-            if (!HasKnight())
+            if (captured)
             {
                 state.Stock[0].Available = 0;
                 state.Stock[0].Requested = 1;

@@ -115,6 +115,25 @@ The desktop program is based on .NET 9 and runs on Windows, Linux and macOS. The
 For local multiplayer tests you can start several instances with `start-multiplayer.ps1`. `test-multiplayer.ps1` runs automated multiplayer tests.
 
 
+## Building from source
+
+You need the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) and the native [GLFW 3](https://www.glfw.org/) library, which is used for the window, the OpenGL context and the input.
+
+- **Windows and macOS:** GLFW is part of the NuGet packages and is copied to the output folder, nothing else is needed.
+- **Linux:** GLFW must be installed with the package manager of the distribution, otherwise the game can't create its window. It is needed for building and running the game (also for the Linux release):
+  - Ubuntu / Debian: `sudo apt install libglfw3`
+  - Fedora: `sudo dnf install glfw`
+  - Arch Linux: `sudo pacman -S glfw`
+
+Then build the desktop app with the configuration of your platform (`WindowsDebug`/`WindowsRelease`, `LinuxDebug`/`LinuxRelease` or `MacDebug`/`MacRelease`), e.g.:
+
+```
+dotnet build FreeserfNet/FreeserfNet.csproj -c LinuxRelease
+```
+
+To start the game, put the data files (see above) into its working directory.
+
+
 ## Contribution
 
 If you need help or want to help developing, just [contact me](mailto:trobt@web.de). You can also contact me via [Issue Tracker](https://github.com/Pyrdacor/freeserf.net/issues) by adding a new issue and tag it as question.
