@@ -1,3 +1,19 @@
+Version 2.2.7:
+==============
+
+- Serfs leaving a castle or stock and serfs approaching its flag take turns
+  (castles with much traffic didn't send out builders, knights and resources anymore)
+- Fixed a crash in larger games (CallTransporter), the AI linked flags in a background thread
+- Fixed the game getting stuck after conquering a castle (#180)
+- Fixed a crash because a building was treated as a stock (#156)
+- Multiplayer: loaded games with four players can be joined again. Thanks to kadrim!
+- Multiplayer: AI roads are synced right away
+- Android: save games are stored in an accessible folder (Android/data/net.freeserf.android/files/saves),
+  older save games are still found
+- Android: the save games are shown in the Android files app
+- The readme explains how to build from source (GLFW)
+
+
 Version 2.2.6:
 ==============
 

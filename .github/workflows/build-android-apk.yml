@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to publish (e.g. android-2.2.6). Leave empty to only build and upload the artifact.'
+        description: 'Release tag to publish (e.g. android-2.2.7). Leave empty to only build and upload the artifact.'
         required: false
         default: ''
 
@@ -56,16 +56,13 @@ jobs:
 
           Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
 
-          ### What's new in 2.2.6
+          ### What's new in 2.2.7
 
-          - **Fixed game speed**: the game no longer runs much too fast, and multiplayer games with desktop players stay in sync.
-          - **Fixed sound**: music and sound work after restarting the app, and there is no fast sound loop while the game is paused.
-          - **Fixed loading screen**: no endless loading screen or crash after closing and reopening the app.
-          - **Multiplayer** (experimental):
-            - pausing and changing the game speed is decided by a vote of all players,
-            - players who have left a running game can rejoin it and get their settlement back,
-            - the host saves the game automatically, every player can request to save it, and saved games can be continued.
-          - **Roads** can end on an existing road again by placing a flag there.
+          - **Save games** are stored in an accessible folder (`Android/data/net.freeserf.android/files/saves`, e.g. via USB). Save games of older versions are still found.
+          - **Files app**: the save games are shown in the Android files app ("Freeserf" in the side bar) and can be copied, renamed and deleted there.
+          - **Castles with much traffic** send out builders, knights and resources again (serfs leaving and approaching the castle flag take turns).
+          - **Fixed crashes** in larger games and after conquering a castle.
+          - **Multiplayer**: loaded games with four players can be joined again.
           - Same version number as the desktop version of freeserf.net.
 
           ### Install
