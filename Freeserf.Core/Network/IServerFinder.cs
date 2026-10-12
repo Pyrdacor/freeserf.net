@@ -35,9 +35,14 @@ namespace Freeserf.Network
         public int CurrentPlayers { get; init; } = 0;
         public int MaxPlayers { get; init; } = Game.MAX_PLAYER_COUNT;
         /// <summary>
-        /// The game already started. So no players can join.
+        /// The game already started.
         /// </summary>
         public bool InGame { get; init; } = false;
+        /// <summary>
+        /// Clients can attempt to reclaim a saved or disconnected human player.
+        /// The server decides whether a player is available.
+        /// </summary>
+        public bool AllowsRejoin { get; init; } = false;
     }
 
     /// <summary>

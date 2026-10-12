@@ -35,7 +35,7 @@ namespace Freeserf.Network
     /// UDP messages to find servers. They use the same port number as the game (TCP).
     ///
     /// Query:  'F' 'S' 'N' 'Q' version
-    /// Answer: 'F' 'S' 'N' 'A' version inGame currentPlayers maxPlayers nameLength name (ASCII)
+    /// Answer: 'F' 'S' 'N' 'A' version inGame currentPlayers maxPlayers nameLength name (ASCII) [allowsRejoin]
     /// </summary>
     internal static class Discovery
     {
@@ -53,14 +53,14 @@ namespace Freeserf.Network
             return data.Length >= 5 && data.Take(4).SequenceEqual(QueryHeader) && data[4] == ProtocolVersion;
         }
 
-        public static byte[] CreateAnswer(string name, bool inGame, int currentPlayers, int maxPlayers)
+        public static byte[] CreateAnswer(string name, bool inGame, int currentPlayers, int maxPlayers, bool allowsRejoin)
         {
             var nameBytes = Encoding.ASCII.GetBytes(name ?? "");
 
             if (nameBytes.Length > 255)
                 nameBytes = nameBytes.Take(255).ToArray();
 
-            return [.. AnswerHeader, ProtocolVersion, (byte)(inGame ? 1 : 0), (byte)currentPlayers, (byte)maxPlayers, (byte)nameBytes.Length, .. nameBytes];
+            return [.. AnswerHeader, ProtocolVersion, (byte)(inGame ? 1 : 0), (byte)currentPlayers, (byte)maxPlayers, (byte)nameBytes.Length, .. nameBytes, (byte)(allowsRejoin ? 1 : 0)];
         }
 
         public static FoundServer ParseAnswer(byte[] data, IPAddress ip, string searchedAddress)
@@ -78,6 +78,7 @@ namespace Freeserf.Network
                 Ip = ip,
                 SearchedAddress = searchedAddress,
                 InGame = data[5] != 0,
+                AllowsRejoin = data.Length > 9 + nameLength ? data[9 + nameLength] != 0 : data[5] != 0,
                 CurrentPlayers = data[6],
                 MaxPlayers = data[7],
                 Name = Encoding.ASCII.GetString(data, 9, nameLength)

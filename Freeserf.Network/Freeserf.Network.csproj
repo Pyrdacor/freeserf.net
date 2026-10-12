@@ -57,6 +57,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
+    <InternalsVisibleTo Include="Freeserf.Test" />
   </ItemGroup>
 
 </Project>
