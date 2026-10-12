@@ -38,13 +38,14 @@ namespace Freeserf.UI
         /// The game was already started. Only players who have left it can join (rejoin).
         /// </summary>
         public bool InGame = false;
+        public bool AllowsRejoin = false;
         /// <summary>
         /// The manually entered address if the entry belongs to one (otherwise null).
         /// </summary>
         public string SavedAddress = null;
 
-        // The server decides if a running game can be rejoined.
-        public bool CanJoin => Online && (InGame || CurrentPlayers < MaxPlayers);
+        // The server decides if a saved or running game can be rejoined.
+        public bool CanJoin => Online && (InGame || AllowsRejoin || CurrentPlayers < MaxPlayers);
 
         public override string ToString()
         {
@@ -53,7 +54,7 @@ namespace Freeserf.UI
 
             string text = $"{Name} | {HostName} | {CurrentPlayers}/{MaxPlayers}";
 
-            return InGame ? text + " | running" : text;
+            return InGame ? text + " | running" : AllowsRejoin ? text + " | saved" : text;
         }
     }
 

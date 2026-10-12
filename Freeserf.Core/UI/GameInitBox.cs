@@ -664,6 +664,7 @@ namespace Freeserf.UI
                 MaxPlayers = server.MaxPlayers,
                 Online = true,
                 InGame = server.InGame,
+                AllowsRejoin = server.AllowsRejoin,
                 SavedAddress = server.SearchedAddress
             }).ToList();
 

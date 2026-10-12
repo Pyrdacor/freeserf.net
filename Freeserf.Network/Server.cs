@@ -1191,7 +1191,7 @@ namespace Freeserf.Network
 
             // Answer server searches of other players.
             discoveryResponder = new DiscoveryResponder(() => Discovery.CreateAnswer(Name,
-                State != ServerState.Lobby, (int)GameInfo.MultiplayerPlayerCount, Game.MAX_PLAYER_COUNT));
+                State != ServerState.Lobby, (int)GameInfo.MultiplayerPlayerCount, Game.MAX_PLAYER_COUNT, State == ServerState.Game || (State == ServerState.Lobby && LoadedGame)));
         }
 
         public void Update(bool useServerValues, bool useSameValues, uint mapSize, string mapSeed, IEnumerable<PlayerInfo> players)
