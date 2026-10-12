@@ -91,7 +91,19 @@ the own machine and to all manually entered addresses (saved in the user config)
 which did not answer for 7 seconds are removed from the list.
 
 - Query: `'F' 'S' 'N' 'Q' version`
-- Answer: `'F' 'S' 'N' 'A' version inGame currentPlayers maxPlayers nameLength name`
+- Answer: `'F' 'S' 'N' 'A' version inGame currentPlayers maxPlayers nameLength name [allowsRejoin]`
+
+`allowsRejoin` is an optional byte (0 or 1) after the ASCII name. It is set for loaded
+lobbies and running games. It allows clients to attempt a rejoin even if all four
+game slots are occupied; the server still decides whether a saved or disconnected
+human player is available. Player counts continue to include AI and disconnected
+players. Loaded lobbies are shown as `saved`, separately from `running` games.
+
+This extends discovery version 0 without changing the existing fields. Older clients
+ignore the trailing byte; newer clients reading an answer without it infer rejoin
+support from `inGame`. Older clients still cannot join a full loaded lobby through
+the server list, so they must be updated for that fix (or enter the host address
+manually).
 
 The server name has 3 to 12 letters or digits. It is saved in the user config and can
 be changed in the lobby while the server is running.
