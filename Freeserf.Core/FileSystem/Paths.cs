@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -28,8 +29,31 @@ namespace Freeserf.FileSystem
     public static class Paths
     {
         public static readonly string UserConfigPath = "";
-        public static readonly string SaveGameFolder = "";
+        public static string SaveGameFolder { get; private set; } = "";
         public static readonly string GameDataFolder = "";
+
+        /// <summary>
+        /// Folders where older versions stored save games. They are only
+        /// searched for save games but new save games are not stored there.
+        /// </summary>
+        public static IReadOnlyList<string> LegacySaveGameFolders => legacySaveGameFolders;
+        static readonly List<string> legacySaveGameFolders = new List<string>();
+
+        /// <summary>
+        /// Changes the folder for save games. The previous folder is still searched
+        /// for save games so that existing ones are not lost. This must be called
+        /// before the game store is used.
+        /// </summary>
+        public static void ChangeSaveGameFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || folder == SaveGameFolder)
+                return;
+
+            if (!legacySaveGameFolders.Contains(SaveGameFolder))
+                legacySaveGameFolders.Add(SaveGameFolder);
+
+            SaveGameFolder = folder;
+        }
 
 
         //https://docs.microsoft.com/en-us/dotnet/api/system.platformid?view=netframework-4.8
@@ -58,7 +82,10 @@ namespace Freeserf.FileSystem
             {
                 // On Android the app has its own private storage directory.
                 // It is not writable outside of it, so we use the app's
-                // personal files directory for saves and config.
+                // personal files directory for saves and config. As this
+                // directory is not accessible without root, the Android app
+                // changes the save game folder to the app's external files
+                // directory (see ChangeSaveGameFolder).
                 string personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
                 SaveGameFolder = Path.Combine(personalFolder, "freeserf");
                 UserConfigPath = Path.Combine(SaveGameFolder, "user.cfg");

@@ -364,6 +364,14 @@ namespace Freeserf.Android
                 Freeserf.Render.TextureAtlasManager.Instance.Reset();
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: TextureAtlasManager.Reset done");
 
+                // The app's private storage is not accessible without root. So save
+                // games are stored in the app's external files directory which is
+                // accessible e.g. via USB. Old save games are still found.
+                var externalFilesDir = global::Android.App.Application.Context.GetExternalFilesDir(null);
+
+                if (externalFilesDir != null)
+                    FileSystem.Paths.ChangeSaveGameFolder(Path.Combine(externalFilesDir.AbsolutePath, "saves"));
+
                 initInfo = Global.Init(Array.Empty<string>());
                 global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: Global.Init done");
 

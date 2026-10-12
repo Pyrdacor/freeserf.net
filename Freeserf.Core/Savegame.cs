@@ -511,17 +511,43 @@ namespace Freeserf
 
         protected void FindRegular()
         {
-            foreach (var file in Directory.GetFiles(FolderPath, "*.save", SearchOption.TopDirectoryOnly))
+            var names = new HashSet<string>();
+
+            FindRegular(FolderPath, names);
+
+            // Save games of older versions which used another folder.
+            foreach (var legacyFolder in FileSystem.Paths.LegacySaveGameFolders)
             {
+                try
+                {
+                    if (Directory.Exists(legacyFolder))
+                        FindRegular(legacyFolder, names);
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+        }
+
+        void FindRegular(string folder, HashSet<string> names)
+        {
+            foreach (var file in Directory.GetFiles(folder, "*.save", SearchOption.TopDirectoryOnly))
+            {
+                var name = Path.GetFileNameWithoutExtension(file);
+
+                // A save game with the same name in the current folder is newer.
+                if (!names.Add(name))
+                    continue;
+
                 var info = new SaveInfo()
                 {
-                    Name = Path.GetFileNameWithoutExtension(file),
+                    Name = name,
                     Path = file,
                     SaveType = SaveInfo.Type.Regular
                 };
 
                 savedGames.Add(info);
-
             }
         }
     }
