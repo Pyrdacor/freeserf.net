@@ -3214,9 +3214,12 @@ namespace Freeserf
             {
                 BuildingRemovePlayerRefs(building);
 
-                // Remove path to building. 
-                Map.DeletePath(position, Direction.DownRight);
-                Map.DeletePath(Map.MoveDownRight(position), Direction.UpLeft);
+                // Remove path to building (it may have been removed with the flag already, see DemolishFlag). 
+                if (Map.HasPath(position, Direction.DownRight))
+                {
+                    Map.DeletePath(position, Direction.DownRight);
+                    Map.DeletePath(Map.MoveDownRight(position), Direction.UpLeft);
+                }
 
                 // Disconnect flag. 
                 var flag = Flags[building.FlagIndex];

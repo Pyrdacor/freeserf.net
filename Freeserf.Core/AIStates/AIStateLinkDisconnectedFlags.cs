@@ -22,7 +22,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace Freeserf.AIStates
 {
@@ -32,9 +31,6 @@ namespace Freeserf.AIStates
     {
         readonly Dictionary<Flag, int> connectTriesPerFlag = new Dictionary<Flag, int>();
         readonly Dictionary<Flag, int> linkingFailed = new Dictionary<Flag, int>();
-        int linkingCount = 0;
-        readonly object linkingLock = new object();
-        readonly object linkingFailedLock = new object();
 
         public AIStateLinkDisconnectedFlags()
             : base(AI.State.LinkDisconnectedFlags)
@@ -84,7 +80,8 @@ namespace Freeserf.AIStates
                 }
             }
 
-            linkingCount = reader.Value($"{name}.linking_count").ReadInt();
+            // Linking is no longer done in a background thread so there are no pending links.
+            reader.Value($"{name}.linking_count").ReadInt();
         }
 
         public override void WriteTo(string name, SaveWriterText writer)
@@ -113,17 +110,11 @@ namespace Freeserf.AIStates
                 ++index;
             }
 
-            writer.Value($"{name}.linking_count").Write(linkingCount);
+            writer.Value($"{name}.linking_count").Write(0);
         }
 
         public override void Update(AI ai, Game game, Player player, PlayerInfo playerInfo, int tick)
         {
-            lock (linkingLock)
-            {
-                if (linkingCount > 0)
-                    return;
-            }
-
             var flags = game.GetPlayerFlags(player);
 
             // check if memorized flags still exist
@@ -143,21 +134,18 @@ namespace Freeserf.AIStates
                 }
             }
 
-            lock (linkingFailedLock)
-            {
-                keys = linkingFailed.Keys.ToList();
+            keys = linkingFailed.Keys.ToList();
 
-                foreach (var key in keys)
+            foreach (var key in keys)
+            {
+                try
                 {
-                    try
-                    {
-                        if (game.GetFlag(key.Index) == null)
-                            linkingFailed.Remove(key);
-                    }
-                    catch (KeyNotFoundException)
-                    {
+                    if (game.GetFlag(key.Index) == null)
                         linkingFailed.Remove(key);
-                    }
+                }
+                catch (KeyNotFoundException)
+                {
+                    linkingFailed.Remove(key);
                 }
             }
 
@@ -167,22 +155,19 @@ namespace Freeserf.AIStates
                 {
                     // If it failed to link a flag we will only re-check it
                     // after 2 minutes.
-                    lock (linkingFailedLock)
+                    if (linkingFailed.ContainsKey(flag))
                     {
-                        if (linkingFailed.ContainsKey(flag))
-                        {
-                            int time = linkingFailed[flag];
+                        int time = linkingFailed[flag];
 
-                            if (tick < time)
-                                time = int.MaxValue - time + tick;
-                            else
-                                time = tick - time;
+                        if (tick < time)
+                            time = int.MaxValue - time + tick;
+                        else
+                            time = tick - time;
 
-                            if (time >= 2 * Global.TICKS_PER_MIN)
-                                linkingFailed.Remove(flag);
-                            else
-                                continue;
-                        }
+                        if (time >= 2 * Global.TICKS_PER_MIN)
+                            linkingFailed.Remove(flag);
+                        else
+                            continue;
                     }
 
                     if (!connectTriesPerFlag.ContainsKey(flag))
@@ -260,14 +245,6 @@ namespace Freeserf.AIStates
             }
             finally
             {
-                lock (linkingLock)
-                {
-                    if (linkingCount < 0)
-                    {
-                        linkingCount = 0;
-                    }
-                }
-
                 Kill(ai);
             }
         }
@@ -281,97 +258,34 @@ namespace Freeserf.AIStates
             };
         }
 
+        // Note: Linking builds flags and roads. This must not be done in a background thread
+        // as it would change the game state while the game is updated (e.g. a flag would
+        // already have a path but no other end flag yet).
         void LinkFlag(AI ai, Game game, Flag flag, List<object> nearbyFlags, int maxLength, bool allowWater, int tick)
         {
-            var state = this;
-
-            Action action = () =>
+            foreach (var nearbyFlag in nearbyFlags)
             {
-                foreach (var nearbyFlag in nearbyFlags)
+                if (Pathfinder.FindShortestRoad(game.Map, flag, game.GetFlagAtPosition((uint)nearbyFlag), out uint cost) == null ||
+                    cost >= 1500u)
                 {
-                    if (Pathfinder.FindShortestRoad(game.Map, flag, game.GetFlagAtPosition((uint)nearbyFlag), out uint cost) == null ||
-                        cost >= 1500u)
+                    if (!ai.LinkFlag(flag, maxLength, allowWater))
                     {
-                        ++linkingCount;
-
-                        try
-                        {
-                            if (!ai.LinkFlag(flag, maxLength, allowWater))
-                            {
-                                lock (state.linkingFailedLock)
-                                {
-                                    state.linkingFailed[flag] = tick;
-                                }
-
-                                continue;
-                            }
-
-                            lock (state.linkingFailedLock)
-                            {
-                                state.linkingFailed.Remove(flag);
-                            }
-
-                            break;
-                        }
-                        finally
-                        {
-                            lock (linkingLock)
-                            {
-                                --linkingCount;
-                            }
-                        }
+                        linkingFailed[flag] = tick;
+                        continue;
                     }
-                }
-            };
 
-            new Thread(new ParameterizedThreadStart(Link)).Start(action);
+                    linkingFailed.Remove(flag);
+                    break;
+                }
+            }
         }
 
         void LinkFlag(AI ai, Flag flag, int maxLength, bool allowWater, int tick)
         {
-            var state = this;
-
-            Action action = () =>
-            {
-                try
-                {
-                    if (!ai.LinkFlag(flag, maxLength, allowWater))
-                    {
-                        lock (state.linkingFailedLock)
-                        {
-                            state.linkingFailed[flag] = tick;
-                        }
-                    }
-                    else
-                    {
-                        lock (state.linkingFailedLock)
-                        {
-                            state.linkingFailed.Remove(flag);
-                        }
-                    }
-                }
-                finally
-                {
-                    lock (linkingLock)
-                    {
-                        --linkingCount;
-                    }
-                }
-            };
-
-            ++linkingCount;
-
-            new Thread(new ParameterizedThreadStart(Link)).Start(action);
-        }
-
-        void Link(Action action)
-        {
-            action?.Invoke();
-        }
-
-        void Link(object param)
-        {
-            Link(param as Action);
+            if (!ai.LinkFlag(flag, maxLength, allowWater))
+                linkingFailed[flag] = tick;
+            else
+                linkingFailed.Remove(flag);
         }
     }
 }

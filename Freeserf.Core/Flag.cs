@@ -1941,8 +1941,13 @@ namespace Freeserf
             var sourceFlag = OtherEndPoints[(int)direction].Flag;
             var sourceDirection = GetOtherEndDirection(direction);
 
+            // The other end is set right after the path. This was not the case when the
+            // AI built roads in a background thread while the game was updated.
+            if (sourceFlag == null)
+                return false;
+
             state.SearchDirection = Direction.Right;
-            sourceFlag.state.SearchDirection = Direction.DownRight; // TODO: sometimes sourceFlag is null here -> exception
+            sourceFlag.state.SearchDirection = Direction.DownRight;
 
             var search = new FlagSearch(Game);
             search.AddSource(this);
