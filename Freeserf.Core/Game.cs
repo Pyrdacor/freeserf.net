@@ -3171,9 +3171,20 @@ namespace Freeserf
 
             var flag = Flags[Map.GetObjectIndex(position)];
 
-            if (flag.HasBuilding && !flag.Building.IsBurning)
+            if (flag.HasBuilding)
             {
-                throw new ExceptionFreeserf(this, ErrorSystemType.Game, "Failed to demolish flag with building.");
+                if (!flag.Building.IsBurning)
+                {
+                    throw new ExceptionFreeserf(this, ErrorSystemType.Game, "Failed to demolish flag with building.");
+                }
+
+                // The building is burning but still connected to the flag. This happens if a burning
+                // building (e.g. a conquered castle) causes the loss of the land of its own flag.
+                // The path to the building is removed now (normally DemolishBuilding does it after
+                // burning it up). Otherwise the path would be merged with the roads of the flag.
+                Map.DeletePath(position, Direction.UpLeft);
+                Map.DeletePath(Map.MoveUpLeft(position), Direction.DownRight);
+                flag.UnlinkBuilding();
             }
 
             FlagRemovePlayerRefs(flag);

@@ -1339,6 +1339,12 @@ namespace Freeserf
                 }
             }
 
+            // Only two paths can be merged into one.
+            if (path1Direction == path2Direction)
+            {
+                return;
+            }
+
             var path1Data = new SerfPathInfo();
             var path2Data = new SerfPathInfo();
 

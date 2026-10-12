@@ -1197,7 +1197,8 @@ namespace Freeserf
                     --state.CastleScore;
                 }
             }
-            else
+            // Note: Castles under construction are not counted as incomplete buildings (see BuildingFounded).
+            else if (buildingType != Building.Type.Castle)
             {
                 --state.IncompleteBuildingCount[buildingType];
             }
