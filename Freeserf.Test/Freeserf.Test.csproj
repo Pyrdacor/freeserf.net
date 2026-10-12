@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Freeserf.Core\Freeserf.Core.csproj" />
+    <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WindowsDebug|AnyCPU'">
