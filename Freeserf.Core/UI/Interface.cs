@@ -1135,6 +1135,29 @@ namespace Freeserf.UI
 
                 UpdateBuildingRoadSegments();
 
+                /* Show the end of the game, unless a file, quit or options
+                   box is open (Amiga clear_serf_request_failure @0xa3aa). */
+                if (Game.IsGameEndPending)
+                {
+                    int box = 0;
+
+                    if (PopupBox != null && PopupBox.Displayed)
+                        box = (int)PopupBox.Box;
+
+                    if (!((box >= (int)PopupBox.Type.LoadArchive && box <= (int)PopupBox.Type.DiskMsg) ||
+                          box == (int)PopupBox.Type.QuitConfirm ||
+                          box == (int)PopupBox.Type.NoSaveQuitConfirm ||
+                          box == (int)PopupBox.Type.Options))
+                    {
+                        Game.ClearGameEndPending();
+
+                        if (!Game.IsPaused)
+                            Game.Pause();
+
+                        OpenPopup(PopupBox.Type.GameEnd);
+                    }
+                }
+
                 int tickDifference = (int)Game.ConstTick - (int)lastConstTick;
                 lastConstTick = Game.ConstTick;
 
