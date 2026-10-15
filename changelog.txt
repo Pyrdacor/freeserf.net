@@ -1,3 +1,14 @@
+Version 2.2.8:
+==============
+
+- A special click (right button held, two-finger tap on Android) works as in the
+  original: on a build button it shows the possible building sites, on the map
+  button it shows the castle, and only a special click demolishes. In the map box
+  a special click on the buildings button opens the building filter (Bld1-4) with
+  the original's building pictures; the minimap then shows only the chosen
+  building type. Ported from freeserf PR #562.
+
+
 Version 2.2.7:
 ==============
 

@@ -205,6 +205,12 @@ namespace Freeserf.UI
             return false;
         }
 
+        /* The original's special click (right button held). */
+        protected virtual bool HandleClickRight(int x, int y)
+        {
+            return false;
+        }
+
         protected virtual bool HandleDoubleClick(int x, int y, Event.Button button)
         {
             return false;
@@ -429,8 +435,10 @@ namespace Freeserf.UI
                     result = HandleDrag(e.X, e.Y, e.Dx, e.Dy, e.Button);
                     break;
                 case Event.Type.DoubleClick:
-                case Event.Type.SpecialClick:
                     result = HandleDoubleClick(e.X, e.Y, e.Button);
+                    break;
+                case Event.Type.SpecialClick:
+                    result = HandleClickRight(e.X, e.Y);
                     break;
                 case Event.Type.KeyPressed:
                     result = HandleKeyPressed((char)e.Dx, e.Dy);

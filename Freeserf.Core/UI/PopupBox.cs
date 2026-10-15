@@ -89,6 +89,10 @@ namespace Freeserf.UI
             ResourceDirections,
             KnightSettings,
             InventoryPriorities,
+            Bld1,
+            Bld2,
+            Bld3,
+            Bld4,
             Message,
             BuildingStock,
             PlayerFaces,
@@ -368,6 +372,56 @@ namespace Freeserf.UI
         int currentResourceForStatistics = 0;
         int currentPlayerStatisticsMode = 0;
         int iconLayer = 0;
+        /* The current click is a special click (right button held). */
+        bool specialClick = false;
+
+        static readonly int[] Bld1ClickMap = new int[]
+        {
+            (int)Action.MinimapBld1, 0, 0, 64, 51,
+            (int)Action.MinimapBld2, 64, 0, 48, 51,
+            (int)Action.MinimapBld3, 16, 64, 32, 32,
+            (int)Action.MinimapBld4, 48, 60, 64, 71,
+            (int)Action.MinimapBldFlag, 25, 110, 16, 34,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        static readonly int[] Bld2ClickMap = new int[]
+        {
+            (int)Action.MinimapBld5, 0, 0, 64, 56,
+            (int)Action.MinimapBld6, 64, 0, 32, 51,
+            (int)Action.MinimapBld7, 0, 64, 64, 32,
+            (int)Action.MinimapBld8, 64, 64, 32, 32,
+            (int)Action.MinimapBld9, 96, 60, 32, 36,
+            (int)Action.MinimapBld10, 32, 104, 32, 36,
+            (int)Action.MinimapBld11, 64, 104, 32, 36,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        static readonly int[] Bld3ClickMap = new int[]
+        {
+            (int)Action.MinimapBld12, 0, 0, 64, 48,
+            (int)Action.MinimapBld13, 64, 0, 64, 48,
+            (int)Action.MinimapBld14, 0, 56, 32, 34,
+            (int)Action.MinimapBld15, 32, 86, 32, 54,
+            (int)Action.MinimapBld16, 64, 56, 64, 34,
+            (int)Action.MinimapBld17, 64, 100, 48, 40,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        static readonly int[] Bld4ClickMap = new int[]
+        {
+            (int)Action.MinimapBld18, 0, 0, 32, 64,
+            (int)Action.MinimapBld19, 32, 0, 32, 64,
+            (int)Action.MinimapBld20, 61, 0, 35, 64,
+            (int)Action.MinimapBld21, 96, 0, 32, 64,
+            (int)Action.MinimapBld22, 16, 95, 48, 41,
+            (int)Action.MinimapBld23, 64, 95, 48, 41,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
 
         static UI.BackgroundPattern[] backgrounds = null;
 
@@ -696,6 +750,13 @@ namespace Freeserf.UI
         {
             var action = (Action)buttonTag;
 
+            if (action == Action.MinimapBuildings)
+            {
+                // A special click opens the building filter (as the original).
+                SetBox(Type.Bld1);
+                return;
+            }
+
             if (action != Action.CycleKnights &&
                 action != Action.ResourceModeIn &&
                 action != Action.ResourceModeStop &&
@@ -887,6 +948,12 @@ namespace Freeserf.UI
                     break;
                 case Type.Demolish:
                     pattern = BackgroundPattern.SquaresGreen;
+                    break;
+                case Type.Bld1:
+                case Type.Bld2:
+                case Type.Bld3:
+                case Type.Bld4:
+                    pattern = BackgroundPattern.StaresGreen;
                     break;
                 case Type.CastleResources:
                 case Type.MineOutput:
@@ -1149,6 +1216,44 @@ namespace Freeserf.UI
             buttons.Add(newButton, true);
         }
 
+        // A button that reacts to a normal click and to a special click
+        // (right button held) with different actions.
+        void SetButtonWithSpecialClick(int x, int y, uint spriteIndex, object tag, Data.Resource resourceType = Data.Resource.Icon)
+        {
+            var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
+            byte displayLayer = (byte)(Math.Min(255, iconLayer++));
+
+            // check if there is a free button
+            foreach (var button in buttons.Keys.ToList())
+            {
+                if (buttons[button] == false)
+                {
+                    button.Tag = tag;
+                    button.SetSpriteIndex(resourceType, spriteIndex);
+                    button.Resize(info.Width, info.Height);
+                    button.MoveTo(x, y);
+                    button.Displayed = Displayed;
+                    button.SetDisplayLayerOffset(displayLayer);
+                    button.Clicked -= PopupBox_ButtonClicked;
+                    button.DoubleClicked -= PopupBox_ButtonDoubleClicked;
+                    button.Clicked += PopupBox_ButtonClicked;
+                    button.DoubleClicked += PopupBox_ButtonDoubleClicked;
+                    buttons[button] = true;
+                    return;
+                }
+            }
+
+            var newButton = new Button(interf, info.Width, info.Height, resourceType, spriteIndex, displayLayer);
+
+            newButton.Tag = tag;
+            newButton.Displayed = Displayed;
+            newButton.Clicked += PopupBox_ButtonClicked;
+            newButton.DoubleClicked += PopupBox_ButtonDoubleClicked;
+            AddChild(newButton, x, y, true);
+
+            buttons.Add(newButton, true);
+        }
+
         private void PopupBox_ButtonDoubleClicked(object sender, Button.ClickEventArgs args)
         {
             HandleButtonDoubleClick((sender as Button).Tag, args.X, args.Y);
@@ -1184,7 +1289,10 @@ namespace Freeserf.UI
 
             SetButton(8, 137, (uint)MiniMap.GetOwnershipMode(), Action.MinimapMode);
             SetButton(40, 137, MiniMap.DrawRoads ? 3u : 4u, Action.MinimapRoads);
-            SetButton(72, 137, MiniMap.DrawBuildings ? 5u : 6u, Action.MinimapBuildings);
+            if (MiniMap.GetAdvanced() >= 0)
+                SetButtonWithSpecialClick(72, 137, MiniMap.GetAdvanced() == 0 ? 306u : 305u, Action.MinimapBuildings);
+            else
+                SetButtonWithSpecialClick(72, 137, MiniMap.DrawBuildings ? 5u : 6u, Action.MinimapBuildings);
             SetButton(104, 137, MiniMap.DrawGrid ? 7u : 8u, Action.MinimapGrid);
             SetButton(120, 137, MiniMap.GetScale() == 1 ? 91u : 92u, Action.MinimapScale);
 
@@ -3341,6 +3449,59 @@ namespace Freeserf.UI
             SetText(8, 95, "      sure");
         }
 
+        void DrawBld1Box()
+        {
+            SetBuildingIcon(8, 14, Building.Type.Stock);
+            SetBuildingIcon(24, 86, Building.Type.Hut);
+            SetBuildingIcon(72, 16, Building.Type.Tower);
+            SetBuildingIcon(56, 78, Building.Type.Fortress);
+
+            SetFlagIcon(40, 121);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
+        void DrawBld2Box()
+        {
+            SetBuildingIcon(8, 13, Building.Type.ToolMaker);
+            SetBuildingIcon(72, 15, Building.Type.Sawmill);
+            SetBuildingIcon(8, 77, Building.Type.WeaponSmith);
+            SetBuildingIcon(72, 74, Building.Type.Stonecutter);
+            SetBuildingIcon(104, 66, Building.Type.Boatbuilder);
+            SetBuildingIcon(40, 114, Building.Type.Forester);
+            SetBuildingIcon(72, 116, Building.Type.Lumberjack);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
+        void DrawBld3Box()
+        {
+            SetBuildingIcon(8, 11, Building.Type.PigFarm);
+            SetBuildingIcon(72, 12, Building.Type.Farm);
+            SetBuildingIcon(8, 70, Building.Type.Fisher);
+            SetBuildingIcon(72, 69, Building.Type.Mill);
+            SetBuildingIcon(40, 84, Building.Type.Butcher);
+            SetBuildingIcon(72, 109, Building.Type.Baker);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
+        void DrawBld4Box()
+        {
+            SetBuildingIcon(8, 13, Building.Type.StoneMine);
+            SetBuildingIcon(40, 13, Building.Type.CoalMine);
+            SetBuildingIcon(72, 13, Building.Type.IronMine);
+            SetBuildingIcon(104, 13, Building.Type.GoldMine);
+            SetBuildingIcon(24, 99, Building.Type.SteelSmelter);
+            SetBuildingIcon(72, 99, Building.Type.GoldSmelter);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
         void DrawSaveBox()
         {
             SetText(32, 11, "Save  Game");
@@ -4065,13 +4226,67 @@ namespace Freeserf.UI
                     MiniMap.SetDrawRoads(!MiniMap.DrawRoads);
                     break;
                 case Action.MinimapBuildings:
-                    MiniMap.SetDrawBuildings(!MiniMap.DrawBuildings);
+                    /* A special click opens the building filter (as the original). */
+                    if (specialClick)
+                    {
+                        SetBox(Type.Bld1);
+                        break;
+                    }
+                    if (MiniMap.GetAdvanced() >= 0)
+                    {
+                        MiniMap.SetAdvanced(-1);
+                        MiniMap.SetDrawBuildings(true);
+                    }
+                    else
+                    {
+                        MiniMap.SetDrawBuildings(!MiniMap.DrawBuildings);
+                    }
+                    SetBox(Type.Map);
                     break;
                 case Action.MinimapGrid:
                     MiniMap.SetDrawGrid(!MiniMap.DrawGrid);
                     break;
                 case Action.MinimapScale:
                     MiniMap.SetScale(MiniMap.GetScale() == 1 ? 2 : 1);
+                    break;
+                case Action.MinimapBld1:
+                case Action.MinimapBld2:
+                case Action.MinimapBld3:
+                case Action.MinimapBld4:
+                case Action.MinimapBld5:
+                case Action.MinimapBld6:
+                case Action.MinimapBld7:
+                case Action.MinimapBld8:
+                case Action.MinimapBld9:
+                case Action.MinimapBld10:
+                case Action.MinimapBld11:
+                case Action.MinimapBld12:
+                case Action.MinimapBld13:
+                case Action.MinimapBld14:
+                case Action.MinimapBld15:
+                case Action.MinimapBld16:
+                case Action.MinimapBld17:
+                case Action.MinimapBld18:
+                case Action.MinimapBld19:
+                case Action.MinimapBld20:
+                case Action.MinimapBld21:
+                case Action.MinimapBld22:
+                case Action.MinimapBld23:
+                    MiniMap.SetAdvanced(action - Action.MinimapBld1 + 1);
+                    MiniMap.SetDrawBuildings(true);
+                    SetBox(Type.Map);
+                    break;
+                case Action.MinimapBldFlag:
+                    MiniMap.SetAdvanced(0);
+                    SetBox(Type.Map);
+                    break;
+                case Action.MinimapBldNext:
+                    SetBox(Box + 1);
+                    if (Box > Type.Bld4)
+                        SetBox(Type.Bld1);
+                    break;
+                case Action.MinimapBldExit:
+                    SetBox(Type.Map);
                     break;
                 case Action.SendGeologist:
                     if (spectator)
@@ -4536,6 +4751,18 @@ namespace Freeserf.UI
                 case Type.KnightSettings:
                     DrawKnightSettingsBox();
                     break;
+                case Type.Bld1:
+                    DrawBld1Box();
+                    break;
+                case Type.Bld2:
+                    DrawBld2Box();
+                    break;
+                case Type.Bld3:
+                    DrawBld3Box();
+                    break;
+                case Type.Bld4:
+                    DrawBld4Box();
+                    break;
                 case Type.BuildingStock:
                     DrawBuildingStockBox();
                     break;
@@ -4564,10 +4791,72 @@ namespace Freeserf.UI
             return true;
         }
 
+        /* A special click (right button) is handled like a click with the
+           special click flag set, where the original has a special action. */
+        protected override bool HandleClickRight(int x, int y)
+        {
+            switch (Box)
+            {
+                case Type.Map:
+                case Type.ResourceDirections:
+                    specialClick = true;
+                    HandleClickLeft(x, y, false);
+                    specialClick = false;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /* Handle a click on one of the building filter boxes (Bld1-4). */
+        void HandleBldClick(int x, int y)
+        {
+            int contentX = x - TotalX - 8;
+            int contentY = y - TotalY - 9;
+
+            switch (Box)
+            {
+                case Type.Bld1:
+                    HandleClickMap(contentX, contentY, Bld1ClickMap);
+                    break;
+                case Type.Bld2:
+                    HandleClickMap(contentX, contentY, Bld2ClickMap);
+                    break;
+                case Type.Bld3:
+                    HandleClickMap(contentX, contentY, Bld3ClickMap);
+                    break;
+                case Type.Bld4:
+                    HandleClickMap(contentX, contentY, Bld4ClickMap);
+                    break;
+            }
+        }
+
+        bool HandleClickMap(int x, int y, int[] clickMap)
+        {
+            for (int i = 0; i < clickMap.Length; i += 5)
+            {
+                if (x >= clickMap[i + 1] && x < clickMap[i + 1] + clickMap[i + 3] &&
+                    y >= clickMap[i + 2] && y < clickMap[i + 2] + clickMap[i + 4])
+                {
+                    HandleAction((Action)clickMap[i], x, y);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
             if (delayed)
                 return true;
+
+            if (Box == Type.Bld1 || Box == Type.Bld2 || Box == Type.Bld3 || Box == Type.Bld4)
+            {
+                HandleBldClick(x, y);
+
+                return true;
+            }
 
             if (Box == Type.PlayerFaces)
             {
