@@ -3493,6 +3493,9 @@ namespace Freeserf.UI
         {
             if (gameEndStage != 1)
             {
+                for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
+                    playerFaceBackgrounds[i].Visible = false;
+
                 int picture = GetGameEndPicture();
 
                 if (picture >= 0)
@@ -3507,42 +3510,52 @@ namespace Freeserf.UI
             int winner = Math.Max(0, game.WinningPlayer);
 
             if (winner < game.PlayerCount)
-                SetIcon(6, 60, GetPlayerFaceSprite(game.GetPlayer((uint)winner).Face));
+            {
+                var player = game.GetPlayer((uint)winner);
+
+                playerFaceBackgrounds[winner].X = TotalX + 48;
+                playerFaceBackgrounds[winner].Y = TotalY + 65;
+                playerFaceBackgrounds[winner].Resize(48, 72);
+                playerFaceBackgrounds[winner].Layer = Layer;
+                playerFaceBackgrounds[winner].Visible = true;
+
+                SetIcon(56, 69, GetPlayerFaceSprite(player.Face));
+            }
 
             switch (game.GameTypeValue)
             {
                 case (int)Game.GameType.Mission:
                     if (winner == 0)
                     {
-                        SetText(0, 4, "CONGRATULATIONS.");
-                        SetText(0, 16, "  YOUR ENEMIES");
-                        SetText(0, 26, "  RESIGN. YOU");
-                        SetText(0, 36, " HAVE WON THIS");
-                        SetText(0, 46, "    MISSION.");
+                        SetText(8, 13, "CONGRATULATIONS.");
+                        SetText(8, 25, "  YOUR ENEMIES");
+                        SetText(8, 35, "  RESIGN. YOU");
+                        SetText(8, 45, " HAVE WON THIS");
+                        SetText(8, 55, "    MISSION.");
                     }
                     else
                     {
-                        SetText(0, 6, "SORRY, ONLY ONE");
-                        SetText(0, 16, "OF YOUR ENEMIES");
-                        SetText(0, 26, "HAS GAINED THE");
-                        SetText(0, 36, " SUPERIORITY IN");
-                        SetText(0, 46, "  THIS MISSION");
+                        SetText(8, 15, "SORRY, ONLY ONE");
+                        SetText(8, 25, "OF YOUR ENEMIES");
+                        SetText(8, 35, "HAS GAINED THE");
+                        SetText(8, 45, " SUPERIORITY IN");
+                        SetText(8, 55, "  THIS MISSION");
                     }
                     break;
                 case (int)Game.GameType.Tutorial:
-                    SetText(0, 4, "   WELL DONE.");
-                    SetText(0, 16, " YOU COMPLETED");
-                    SetText(0, 26, " THIS TUTORIAL");
-                    SetText(0, 36, "     GAME.");
+                    SetText(8, 13, "   WELL DONE.");
+                    SetText(8, 25, " YOU COMPLETED");
+                    SetText(8, 35, " THIS TUTORIAL");
+                    SetText(8, 45, "     GAME.");
                     break;
                 default:
                     string[] color = {
                         "    THE BLUE", "    THE RED", "  THE VIOLET", "   THE YELLOW"
                     };
-                    SetText(0, 6, color[winner & 3]);
-                    SetText(0, 16, " SETTLERS HAVE");
-                    SetText(0, 26, "   GAINED THE");
-                    SetText(0, 36, "  SUPERIORITY");
+                    SetText(8, 15, color[winner & 3]);
+                    SetText(8, 25, " SETTLERS HAVE");
+                    SetText(8, 35, "   GAINED THE");
+                    SetText(8, 45, "  SUPERIORITY");
                     break;
             }
         }
