@@ -89,6 +89,10 @@ namespace Freeserf.UI
             ResourceDirections,
             KnightSettings,
             InventoryPriorities,
+            Bld1,
+            Bld2,
+            Bld3,
+            Bld4,
             Message,
             BuildingStock,
             PlayerFaces,
@@ -368,6 +372,59 @@ namespace Freeserf.UI
         int currentResourceForStatistics = 0;
         int currentPlayerStatisticsMode = 0;
         int iconLayer = 0;
+        /* The current click is a special click (right button held). */
+        bool specialClick = false;
+
+        static readonly int[] Bld1ClickMap = new int[]
+        {
+            (int)Action.MinimapBld1, 0, 0, 64, 51,
+            (int)Action.MinimapBld2, 64, 0, 48, 51,
+            (int)Action.MinimapBld3, 16, 64, 32, 32,
+            (int)Action.MinimapBld4, 48, 60, 64, 71,
+            (int)Action.MinimapBldFlag, 25, 110, 16, 34,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        static readonly int[] Bld2ClickMap = new int[]
+        {
+            (int)Action.MinimapBld5, 0, 0, 64, 56,
+            (int)Action.MinimapBld6, 64, 0, 32, 51,
+            (int)Action.MinimapBld7, 0, 64, 64, 32,
+            (int)Action.MinimapBld8, 64, 64, 32, 32,
+            (int)Action.MinimapBld9, 96, 60, 32, 36,
+            (int)Action.MinimapBld10, 32, 104, 32, 36,
+            (int)Action.MinimapBld11, 64, 104, 32, 36,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        static readonly int[] Bld3ClickMap = new int[]
+        {
+            (int)Action.MinimapBld12, 0, 0, 64, 48,
+            (int)Action.MinimapBld13, 64, 0, 64, 48,
+            (int)Action.MinimapBld14, 0, 56, 32, 34,
+            (int)Action.MinimapBld15, 32, 86, 32, 54,
+            (int)Action.MinimapBld16, 64, 56, 64, 34,
+            (int)Action.MinimapBld17, 64, 100, 48, 40,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        static readonly int[] Bld4ClickMap = new int[]
+        {
+            (int)Action.MinimapBld18, 0, 0, 32, 64,
+            (int)Action.MinimapBld19, 32, 0, 32, 64,
+            (int)Action.MinimapBld20, 61, 0, 35, 64,
+            (int)Action.MinimapBld21, 96, 0, 32, 64,
+            (int)Action.MinimapBld22, 16, 95, 48, 41,
+            (int)Action.MinimapBld23, 64, 95, 48, 41,
+            (int)Action.MinimapBldNext, 0, 128, 16, 16,
+            (int)Action.MinimapBldExit, 112, 128, 16, 16
+        };
+
+        /* Game end: 0 result picture, 1 result text, 2 mission picture. */
+        int gameEndStage = 0;
 
         static UI.BackgroundPattern[] backgrounds = null;
 
@@ -696,6 +753,13 @@ namespace Freeserf.UI
         {
             var action = (Action)buttonTag;
 
+            if (action == Action.MinimapBuildings)
+            {
+                // A special click opens the building filter (as the original).
+                SetBox(Type.Bld1);
+                return;
+            }
+
             if (action != Action.CycleKnights &&
                 action != Action.ResourceModeIn &&
                 action != Action.ResourceModeStop &&
@@ -716,6 +780,12 @@ namespace Freeserf.UI
 
         public void Show(Type box)
         {
+            if (box == Type.GameEnd)
+            {
+                /* No result picture in a demo game. */
+                gameEndStage = interf.Game.GameTypeValue == (int)Game.GameType.Demo ? 1 : 0;
+            }
+
             SetBox(box);
             Displayed = true;
         }
@@ -848,6 +918,7 @@ namespace Freeserf.UI
                 case Type.SettlerStats:
                 case Type.IdleAndPotentialSettlerStats:
                 case Type.PlayerFaces:
+                case Type.GameEnd:
                     // TODO: maybe some of those have different background pattern
                     pattern = BackgroundPattern.StripedGreen;
                     break;
@@ -877,7 +948,6 @@ namespace Freeserf.UI
                 case Type.SettSelectFile: // UNUSED 
                 case Type.LoadArchive:
                 case Type.Type25:
-                case Type.GameEnd:
                 case Type.JsCalib:
                 case Type.JsCalibUpLeft:
                 case Type.JsCalibDownRight:
@@ -887,6 +957,12 @@ namespace Freeserf.UI
                     break;
                 case Type.Demolish:
                     pattern = BackgroundPattern.SquaresGreen;
+                    break;
+                case Type.Bld1:
+                case Type.Bld2:
+                case Type.Bld3:
+                case Type.Bld4:
+                    pattern = BackgroundPattern.StaresGreen;
                     break;
                 case Type.CastleResources:
                 case Type.MineOutput:
@@ -1149,6 +1225,44 @@ namespace Freeserf.UI
             buttons.Add(newButton, true);
         }
 
+        // A button that reacts to a normal click and to a special click
+        // (right button held) with different actions.
+        void SetButtonWithSpecialClick(int x, int y, uint spriteIndex, object tag, Data.Resource resourceType = Data.Resource.Icon)
+        {
+            var info = interf.RenderView.DataSource.GetSpriteInfo(resourceType, spriteIndex);
+            byte displayLayer = (byte)(Math.Min(255, iconLayer++));
+
+            // check if there is a free button
+            foreach (var button in buttons.Keys.ToList())
+            {
+                if (buttons[button] == false)
+                {
+                    button.Tag = tag;
+                    button.SetSpriteIndex(resourceType, spriteIndex);
+                    button.Resize(info.Width, info.Height);
+                    button.MoveTo(x, y);
+                    button.Displayed = Displayed;
+                    button.SetDisplayLayerOffset(displayLayer);
+                    button.Clicked -= PopupBox_ButtonClicked;
+                    button.DoubleClicked -= PopupBox_ButtonDoubleClicked;
+                    button.Clicked += PopupBox_ButtonClicked;
+                    button.DoubleClicked += PopupBox_ButtonDoubleClicked;
+                    buttons[button] = true;
+                    return;
+                }
+            }
+
+            var newButton = new Button(interf, info.Width, info.Height, resourceType, spriteIndex, displayLayer);
+
+            newButton.Tag = tag;
+            newButton.Displayed = Displayed;
+            newButton.Clicked += PopupBox_ButtonClicked;
+            newButton.DoubleClicked += PopupBox_ButtonDoubleClicked;
+            AddChild(newButton, x, y, true);
+
+            buttons.Add(newButton, true);
+        }
+
         private void PopupBox_ButtonDoubleClicked(object sender, Button.ClickEventArgs args)
         {
             HandleButtonDoubleClick((sender as Button).Tag, args.X, args.Y);
@@ -1184,7 +1298,10 @@ namespace Freeserf.UI
 
             SetButton(8, 137, (uint)MiniMap.GetOwnershipMode(), Action.MinimapMode);
             SetButton(40, 137, MiniMap.DrawRoads ? 3u : 4u, Action.MinimapRoads);
-            SetButton(72, 137, MiniMap.DrawBuildings ? 5u : 6u, Action.MinimapBuildings);
+            if (MiniMap.GetAdvanced() >= 0)
+                SetButtonWithSpecialClick(72, 137, MiniMap.GetAdvanced() == 0 ? 306u : 305u, Action.MinimapBuildings);
+            else
+                SetButtonWithSpecialClick(72, 137, MiniMap.DrawBuildings ? 5u : 6u, Action.MinimapBuildings);
             SetButton(104, 137, MiniMap.DrawGrid ? 7u : 8u, Action.MinimapGrid);
             SetButton(120, 137, MiniMap.GetScale() == 1 ? 91u : 92u, Action.MinimapScale);
 
@@ -3330,6 +3447,119 @@ namespace Freeserf.UI
             }
         }
 
+        /* Picture of the current game end stage, or -1: first the result (the
+           human player won, player 2 won a two player game, lost), then after a
+           won mission the mission's picture from the table @0x1d943, by the
+           mission number (Amiga @0x1d6e8). */
+        int GetGameEndPicture()
+        {
+            var game = interf.Game;
+            int winner = Math.Max(0, game.WinningPlayer);
+
+            if (gameEndStage == 0)
+            {
+                if (winner == 0)
+                    return 0;
+
+                if (game.GameTypeValue == (int)Game.GameType.TwoPlayers && winner == 1)
+                    return 1;
+
+                return 2;
+            }
+            else if (gameEndStage == 2)
+            {
+                int[] missionPicture = {
+                    -1, 3, -1, -1, 4, -1, -1, 5, -1, -1, 6, -1, -1, 7, -1, -1,
+                    8, -1, -1, 9, -1, -1, 10, -1, -1, 11, -1, -1, 12, -1, 13
+                };
+                int mission = game.MissionLevel + 1;
+
+                if (game.GameTypeValue != (int)Game.GameType.Mission || winner != 0 ||
+                    mission < 1 || mission > 30)
+                {
+                    return -1;
+                }
+
+                return missionPicture[mission];
+            }
+
+            return -1;
+        }
+
+        /* End of the game: the result picture, then the winner and the result
+           with the texts of the original, then the mission's picture (Amiga popup
+           box 54 @0x1d6e8). */
+        void DrawGameEndBox()
+        {
+            if (gameEndStage != 1)
+            {
+                for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
+                    playerFaceBackgrounds[i].Visible = false;
+
+                int picture = GetGameEndPicture();
+
+                if (picture >= 0)
+                {
+                    SetIcon(8, 9, (uint)picture, Data.Resource.ArtBox);
+                }
+
+                return;
+            }
+
+            var game = interf.Game;
+            int winner = Math.Max(0, game.WinningPlayer);
+
+            if (winner < game.PlayerCount)
+            {
+                var player = game.GetPlayer((uint)winner);
+
+                playerFaceBackgrounds[winner].X = TotalX + 48;
+                playerFaceBackgrounds[winner].Y = TotalY + 65;
+                playerFaceBackgrounds[winner].Resize(48, 72);
+                playerFaceBackgrounds[winner].Layer = Layer;
+                playerFaceBackgrounds[winner].Visible = true;
+
+                SetIcon(56, 69, GetPlayerFaceSprite(player.Face));
+            }
+
+            switch (game.GameTypeValue)
+            {
+                case (int)Game.GameType.Mission:
+                    if (winner == 0)
+                    {
+                        SetText(8, 13, "CONGRATULATIONS.");
+                        SetText(8, 25, "  YOUR ENEMIES");
+                        SetText(8, 35, "  RESIGN. YOU");
+                        SetText(8, 45, " HAVE WON THIS");
+                        SetText(8, 55, "    MISSION.");
+                    }
+                    else
+                    {
+                        SetText(8, 15, "SORRY, ONLY ONE");
+                        SetText(8, 25, "OF YOUR ENEMIES");
+                        SetText(8, 35, "HAS GAINED THE");
+                        SetText(8, 45, " SUPERIORITY IN");
+                        SetText(8, 55, "  THIS MISSION");
+                    }
+                    break;
+                case (int)Game.GameType.Tutorial:
+                    SetText(8, 13, "   WELL DONE.");
+                    SetText(8, 25, " YOU COMPLETED");
+                    SetText(8, 35, " THIS TUTORIAL");
+                    SetText(8, 45, "     GAME.");
+                    break;
+                default:
+                    string[] color = {
+                        "    THE BLUE", "    THE RED", "  THE VIOLET", "   THE YELLOW"
+                    };
+                    SetText(8, 15, color[winner & 3]);
+                    SetText(8, 25, " SETTLERS HAVE");
+                    SetText(8, 35, "   GAINED THE");
+                    SetText(8, 45, "  SUPERIORITY");
+                    break;
+            }
+        }
+
         void DrawDemolishBox()
         {
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
@@ -3339,6 +3569,59 @@ namespace Freeserf.UI
             SetText(8, 39, "   Click here");
             SetText(8, 77, "   if you are");
             SetText(8, 95, "      sure");
+        }
+
+        void DrawBld1Box()
+        {
+            SetBuildingIcon(8, 14, Building.Type.Stock);
+            SetBuildingIcon(24, 86, Building.Type.Hut);
+            SetBuildingIcon(72, 16, Building.Type.Tower);
+            SetBuildingIcon(56, 78, Building.Type.Fortress);
+
+            SetFlagIcon(40, 121);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
+        void DrawBld2Box()
+        {
+            SetBuildingIcon(8, 13, Building.Type.ToolMaker);
+            SetBuildingIcon(72, 15, Building.Type.Sawmill);
+            SetBuildingIcon(8, 77, Building.Type.WeaponSmith);
+            SetBuildingIcon(72, 74, Building.Type.Stonecutter);
+            SetBuildingIcon(104, 66, Building.Type.Boatbuilder);
+            SetBuildingIcon(40, 114, Building.Type.Forester);
+            SetBuildingIcon(72, 116, Building.Type.Lumberjack);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
+        void DrawBld3Box()
+        {
+            SetBuildingIcon(8, 11, Building.Type.PigFarm);
+            SetBuildingIcon(72, 12, Building.Type.Farm);
+            SetBuildingIcon(8, 70, Building.Type.Fisher);
+            SetBuildingIcon(72, 69, Building.Type.Mill);
+            SetBuildingIcon(40, 84, Building.Type.Butcher);
+            SetBuildingIcon(72, 109, Building.Type.Baker);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
+        }
+
+        void DrawBld4Box()
+        {
+            SetBuildingIcon(8, 13, Building.Type.StoneMine);
+            SetBuildingIcon(40, 13, Building.Type.CoalMine);
+            SetBuildingIcon(72, 13, Building.Type.IronMine);
+            SetBuildingIcon(104, 13, Building.Type.GoldMine);
+            SetBuildingIcon(24, 99, Building.Type.SteelSmelter);
+            SetBuildingIcon(72, 99, Building.Type.GoldSmelter);
+
+            SetIcon(8, 137, 61u); // flipbox
+            SetIcon(120, 137, 60u); // exit
         }
 
         void DrawSaveBox()
@@ -4065,13 +4348,67 @@ namespace Freeserf.UI
                     MiniMap.SetDrawRoads(!MiniMap.DrawRoads);
                     break;
                 case Action.MinimapBuildings:
-                    MiniMap.SetDrawBuildings(!MiniMap.DrawBuildings);
+                    /* A special click opens the building filter (as the original). */
+                    if (specialClick)
+                    {
+                        SetBox(Type.Bld1);
+                        break;
+                    }
+                    if (MiniMap.GetAdvanced() >= 0)
+                    {
+                        MiniMap.SetAdvanced(-1);
+                        MiniMap.SetDrawBuildings(true);
+                    }
+                    else
+                    {
+                        MiniMap.SetDrawBuildings(!MiniMap.DrawBuildings);
+                    }
+                    SetBox(Type.Map);
                     break;
                 case Action.MinimapGrid:
                     MiniMap.SetDrawGrid(!MiniMap.DrawGrid);
                     break;
                 case Action.MinimapScale:
                     MiniMap.SetScale(MiniMap.GetScale() == 1 ? 2 : 1);
+                    break;
+                case Action.MinimapBld1:
+                case Action.MinimapBld2:
+                case Action.MinimapBld3:
+                case Action.MinimapBld4:
+                case Action.MinimapBld5:
+                case Action.MinimapBld6:
+                case Action.MinimapBld7:
+                case Action.MinimapBld8:
+                case Action.MinimapBld9:
+                case Action.MinimapBld10:
+                case Action.MinimapBld11:
+                case Action.MinimapBld12:
+                case Action.MinimapBld13:
+                case Action.MinimapBld14:
+                case Action.MinimapBld15:
+                case Action.MinimapBld16:
+                case Action.MinimapBld17:
+                case Action.MinimapBld18:
+                case Action.MinimapBld19:
+                case Action.MinimapBld20:
+                case Action.MinimapBld21:
+                case Action.MinimapBld22:
+                case Action.MinimapBld23:
+                    MiniMap.SetAdvanced(action - Action.MinimapBld1 + 1);
+                    MiniMap.SetDrawBuildings(true);
+                    SetBox(Type.Map);
+                    break;
+                case Action.MinimapBldFlag:
+                    MiniMap.SetAdvanced(0);
+                    SetBox(Type.Map);
+                    break;
+                case Action.MinimapBldNext:
+                    SetBox(Box + 1);
+                    if (Box > Type.Bld4)
+                        SetBox(Type.Bld1);
+                    break;
+                case Action.MinimapBldExit:
+                    SetBox(Type.Map);
                     break;
                 case Action.SendGeologist:
                     if (spectator)
@@ -4536,11 +4873,26 @@ namespace Freeserf.UI
                 case Type.KnightSettings:
                     DrawKnightSettingsBox();
                     break;
+                case Type.Bld1:
+                    DrawBld1Box();
+                    break;
+                case Type.Bld2:
+                    DrawBld2Box();
+                    break;
+                case Type.Bld3:
+                    DrawBld3Box();
+                    break;
+                case Type.Bld4:
+                    DrawBld4Box();
+                    break;
                 case Type.BuildingStock:
                     DrawBuildingStockBox();
                     break;
                 case Type.PlayerFaces:
                     DrawPlayerFacesBox();
+                    break;
+                case Type.GameEnd:
+                    DrawGameEndBox();
                     break;
                 case Type.Demolish:
                     DrawDemolishBox();
@@ -4564,10 +4916,105 @@ namespace Freeserf.UI
             return true;
         }
 
+        /* A special click (right button) is handled like a click with the
+           special click flag set, where the original has a special action. */
+        protected override bool HandleClickRight(int x, int y)
+        {
+            switch (Box)
+            {
+                case Type.Map:
+                case Type.ResourceDirections:
+                    specialClick = true;
+                    HandleClickLeft(x, y, false);
+                    specialClick = false;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /* Handle a click on one of the building filter boxes (Bld1-4). */
+        void HandleBldClick(int x, int y)
+        {
+            int contentX = x - TotalX - 8;
+            int contentY = y - TotalY - 9;
+
+            switch (Box)
+            {
+                case Type.Bld1:
+                    HandleClickMap(contentX, contentY, Bld1ClickMap);
+                    break;
+                case Type.Bld2:
+                    HandleClickMap(contentX, contentY, Bld2ClickMap);
+                    break;
+                case Type.Bld3:
+                    HandleClickMap(contentX, contentY, Bld3ClickMap);
+                    break;
+                case Type.Bld4:
+                    HandleClickMap(contentX, contentY, Bld4ClickMap);
+                    break;
+            }
+        }
+
+        bool HandleClickMap(int x, int y, int[] clickMap)
+        {
+            for (int i = 0; i < clickMap.Length; i += 5)
+            {
+                if (x >= clickMap[i + 1] && x < clickMap[i + 1] + clickMap[i + 3] &&
+                    y >= clickMap[i + 2] && y < clickMap[i + 2] + clickMap[i + 4])
+                {
+                    HandleAction((Action)clickMap[i], x, y);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /* Every click advances to the next picture (Amiga wait_for_mouse_click).
+           At the end the game resumes and asks whether to quit (@0x1d982). */
+        void HandleGameEndClick(int x, int y)
+        {
+            gameEndStage += 1;
+
+            if (gameEndStage == 2 && GetGameEndPicture() < 0)
+            {
+                gameEndStage += 1;
+            }
+
+            if (gameEndStage <= 2)
+            {
+                SetRedraw();
+                return;
+            }
+
+            var game = interf.Game;
+            interf.ClosePopup();
+
+            if (game.IsPaused)
+                game.Resume();
+
+            interf.OpenPopup(Type.QuitConfirm);
+        }
+
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
             if (delayed)
                 return true;
+
+            if (Box == Type.Bld1 || Box == Type.Bld2 || Box == Type.Bld3 || Box == Type.Bld4)
+            {
+                HandleBldClick(x, y);
+
+                return true;
+            }
+
+            if (Box == Type.GameEnd)
+            {
+                HandleGameEndClick(x, y);
+
+                return true;
+            }
 
             if (Box == Type.PlayerFaces)
             {

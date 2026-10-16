@@ -66,6 +66,13 @@ namespace Freeserf.UI
 
             return true;
         }
+
+        protected override bool HandleClickRight(int x, int y)
+        {
+            DoubleClicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
+
+            return true;
+        }
     }
 
     internal class BuildingButton : BuildingIcon
@@ -108,6 +115,13 @@ namespace Freeserf.UI
         }
 
         protected override bool HandleDoubleClick(int x, int y, Event.Button button)
+        {
+            DoubleClicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
+
+            return true;
+        }
+
+        protected override bool HandleClickRight(int x, int y)
         {
             DoubleClicked?.Invoke(this, new ClickEventArgs(x - TotalX, y - TotalY));
 
