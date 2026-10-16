@@ -340,8 +340,6 @@ Notes:
   — Silk.NET/SDL hidapi receiver issue; harmless.
 - `Assembly 'de/System.Private.CoreLib.resources' not found` — missing satellite
   resource assemblies; harmless.
-- XA0141 16 KB page-size warnings for `libmain.so`/`libSDL2.so` — informational for
-  Android 16; harmless on the Pixel 8a.
 
 ## Reference: Ambermoon.net (Pyrdacor/Ambermoon.net)
 
@@ -823,14 +821,18 @@ the main menu on all platforms and is unchanged.
   filesystem scan and show a clear in-app or Android error explaining how to
   rebuild with `FreeserfGameDataPath`.
 
-### Compatibility risk detected during the build
+### Compatibility risk detected during the build (FIXED)
 
-- The Android SDK emits `XA0141` for `libmain.so` and `libSDL2.so` from
+- The Android SDK used to emit `XA0141` for `libmain.so` and `libSDL2.so` from
   `Silk.NET.Windowing.Sdl` 2.23.0: they are not built for Android 16's required
-  16-KB page size. The x86_64 emulator used above runs the APK, so this was not
-  reproduced as a runtime failure; it remains a deployment risk for devices
-  that enforce 16-KB pages. Update or rebuild the upstream SDL dependency
-  before treating Android 16 / 16-KB-page hardware as supported.
+  16-KB page size and would fail to load on devices that enforce 16-KB pages.
+- **Fixed:** the app now ships 16 KB-aligned replacements for the 64-bit ABIs
+  (`arm64-v8a`, `x86_64`) from `FreeserfNet.Android\libs\` (see
+  `libs\README.md`). A `ReplaceSilkNativeLibraries` target in
+  `FreeserfNet.Android.csproj` swaps them in after the Silk.NET AAR's native
+  libraries are resolved. The 32-bit `armeabi-v7a` libs are unchanged (16-KB
+  pages only apply to 64-bit devices). The Release APK builds with no XA0141
+  warnings and all packaged 64-bit libs are 16 KB-aligned.
 
 ## Android device test: 2026-10-04 (physical Pixel 8a)
 

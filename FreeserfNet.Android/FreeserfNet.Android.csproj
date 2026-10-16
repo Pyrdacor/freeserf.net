@@ -73,6 +73,42 @@
        are auto-included in the APK for each ABI. Keep bass and bassmidi
        together for every ABI to support sound effects and MIDI music. -->
 
+  <!-- 16 KB page-size aligned Silk.NET native libraries (see libs/README.md).
+       Silk.NET.Windowing.Sdl 2.23.0 ships libSDL2.so/libmain.so in its AAR
+       with only 4 KB ELF alignment (p_align=0x1000), which triggers XA0141
+       and fails to load on Android 15+/16 devices with 16 KB pages. The AAR's
+       native libraries are added to the AndroidNativeLibrary item group
+       during the _GetLibraryImports target, so a top-level Remove would not
+       work; the swap must happen in a target that runs after it. Only the
+       64-bit ABIs are replaced (16 KB pages apply to 64-bit devices only);
+       the 32-bit armeabi-v7a libs from the AAR are kept as-is. The default
+       **\*.so glob would auto-include the files under libs\ without Abi
+       metadata, so they are excluded from the glob and added explicitly. -->
+  <ItemGroup>
+    <AndroidNativeLibrary Remove="libs\**\*.so" />
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libSDL2.so">
+      <Abi>arm64-v8a</Abi>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libmain.so">
+      <Abi>arm64-v8a</Abi>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libSDL2.so">
+      <Abi>x86_64</Abi>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libmain.so">
+      <Abi>x86_64</Abi>
+    </AndroidNativeLibrary>
+  </ItemGroup>
+
+  <Target Name="ReplaceSilkNativeLibraries" AfterTargets="_GetLibraryImports">
+    <ItemGroup>
+      <AndroidNativeLibrary Remove="**\jni\arm64-v8a\libSDL2.so" />
+      <AndroidNativeLibrary Remove="**\jni\arm64-v8a\libmain.so" />
+      <AndroidNativeLibrary Remove="**\jni\x86_64\libSDL2.so" />
+      <AndroidNativeLibrary Remove="**\jni\x86_64\libmain.so" />
+    </ItemGroup>
+  </Target>
+
   <!-- Game data (copyrighted, kept outside the repo) is NOT bundled by
        default. On first start the user picks their own data file via the
        system file picker (see MainActivity.ShowDataImportDialog). To bundle

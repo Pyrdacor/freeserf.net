@@ -30,6 +30,10 @@ Version 2.2.8:
 - Parts of a burning mine no longer stay on the screen (#127)
 - Serfs waiting inside a building are no longer drawn in front of it
 - Linux: the audio libraries are found on more distributions (#87)
+- Android: the app now supports Android 15+/16 devices with 16 KB memory pages.
+  The Silk.NET SDL native libraries (which were only 4 KB-aligned) are replaced
+  with 16 KB-aligned builds for arm64-v8a and x86_64, removing the XA0141
+  build warning and the load failure on 16 KB-page devices.
 
 
 Version 2.2.7:
