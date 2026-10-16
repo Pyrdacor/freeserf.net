@@ -182,8 +182,11 @@ namespace Freeserf.UI
             panelButtons[3].Clicked += PanelBarButton_Clicked;
             panelButtons[4].Clicked += PanelBarButton_Clicked;
 
-            panelButtons[0].DoubleClicked += TogglePossibleBuilds;
-            panelButtons[2].DoubleClicked += GotoCastle;
+            // Only the build, demolish and map buttons have a special click
+            // (right button held); the stats and sett buttons do not.
+            panelButtons[0].DoubleClicked += PanelBarButton_DoubleClicked;
+            panelButtons[1].DoubleClicked += PanelBarButton_DoubleClicked;
+            panelButtons[2].DoubleClicked += PanelBarButton_DoubleClicked;
 
             panelButtonIds[0] = ButtonId.BuildInactive;
             panelButtonIds[1] = ButtonId.DestroyInactive;
@@ -233,22 +236,6 @@ namespace Freeserf.UI
             }
         }
 
-        private void GotoCastle(object sender, Button.ClickEventArgs args)
-        {
-            interf.GotoCastle();
-            interf.ClosePopup();
-        }
-
-        private void TogglePossibleBuilds(object sender, Button.ClickEventArgs args)
-        {
-            if (interf.AccessRights == Viewer.Access.Player)
-                interf.TogglePossibleBuilds();
-            else
-                interf.ResetPossibleBuilds();
-
-            interf.ClosePopup();
-        }
-
         private void ReturnIcon_Clicked(object sender, Button.ClickEventArgs args)
         {
             interf.ReturnFromMessage();
@@ -266,6 +253,18 @@ namespace Freeserf.UI
                 if (sender == panelButtons[i])
                 {
                     ButtonClick(i);
+                    break;
+                }
+            }
+        }
+
+        private void PanelBarButton_DoubleClicked(object sender, Button.ClickEventArgs args)
+        {
+            for (int i = 0; i < 5; ++i)
+            {
+                if (sender == panelButtons[i])
+                {
+                    ButtonClick(i, true);
                     break;
                 }
             }
@@ -573,7 +572,7 @@ namespace Freeserf.UI
 
         public void Demolish()
         {
-            ButtonClick(1);
+            ButtonClick(1, true);
         }
 
         public void ToggleMiniMap()
@@ -607,10 +606,57 @@ namespace Freeserf.UI
             }
         }
 
-        // Handle a click on the panel buttons. 
-        void ButtonClick(int button)
+        // Handle a click on the panel buttons. A special click (right button)
+        // works as in the original: on a build button it switches the builder's
+        // help (the possible building sites), on the map button it shows the
+        // castle, and only a special click demolishes.
+        void ButtonClick(int button, bool special = false)
         {
             var popup = interf.PopupBox;
+
+            if (special)
+            {
+                switch (panelButtonIds[button])
+                {
+                    case ButtonId.BuildInactive:
+                    case ButtonId.BuildFlag:
+                    case ButtonId.BuildMine:
+                    case ButtonId.BuildMineStarred:
+                    case ButtonId.BuildSmall:
+                    case ButtonId.BuildSmallStarred:
+                    case ButtonId.BuildLarge:
+                    case ButtonId.BuildLargeStarred:
+                    case ButtonId.BuildCastle:
+                    case ButtonId.BuildRoad:
+                    case ButtonId.BuildRoadStarred:
+                        /* Not while a popup is open or a road is being built. */
+                        if ((popup == null || !popup.Displayed) && !interf.IsBuildingRoad)
+                        {
+                            if (interf.AccessRights == Viewer.Access.Player)
+                                interf.Viewport.ShowPossibleBuilds = true;
+                            else
+                                interf.Viewport.ShowPossibleBuilds = false;
+
+                            PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
+                        }
+                        return;
+                    case ButtonId.Map:
+                    case ButtonId.MapStarred:
+                        interf.GotoCastle();
+                        return;
+                    case ButtonId.Destroy:
+                    case ButtonId.DestroyRoad:
+                        break;
+                    default:
+                        return;
+                }
+            }
+            else if (panelButtonIds[button] == ButtonId.Destroy ||
+                     panelButtonIds[button] == ButtonId.DestroyRoad)
+            {
+                /* A normal click on a demolish button does nothing. */
+                return;
+            }
 
             if (button == 0 && panelButtonIds[button] != ButtonId.BuildInactive)
             {
@@ -804,7 +850,13 @@ namespace Freeserf.UI
                 return false;
             }
 
-            ButtonClick(key - '1');
+            /* The keys are not in the original; on the demolish buttons they
+               act as a special click so that they can still demolish. */
+            int button = key - '1';
+            bool special = panelButtonIds[button] == ButtonId.Destroy ||
+                           panelButtonIds[button] == ButtonId.DestroyRoad;
+
+            ButtonClick(button, special);
 
             return true;
         }

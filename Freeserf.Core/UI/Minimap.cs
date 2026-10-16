@@ -371,6 +371,10 @@ namespace Freeserf.UI
             Last = Solid
         }
 
+        // The advanced building filter (as the original): -1 = all buildings,
+        // 0 = flags, > 0 = only the building type at this index.
+        int advanced = -1;
+
         private OwnershipMode ownershipMode = OwnershipMode.None;
 
         public MinimapGame(Interface interf, Game game)
@@ -391,6 +395,32 @@ namespace Freeserf.UI
             }
 
             return true;
+        }
+
+        protected override bool HandleClickRight(int x, int y)
+        {
+            // close the minimap
+            interf.ClosePopup();
+
+            // jump to map position
+            HandleClickLeft(x, y, false);
+
+            return true;
+        }
+
+        public void SetAdvanced(int advanced)
+        {
+            if (this.advanced == advanced)
+                return;
+
+            this.advanced = advanced;
+
+            UpdateMinimap(true);
+        }
+
+        public int GetAdvanced()
+        {
+            return advanced;
         }
 
         public void SetOwnershipMode(OwnershipMode mode)
@@ -454,15 +484,27 @@ namespace Freeserf.UI
             {
                 if (map.GetObject(position) > Map.Object.Flag && map.GetObject(position) <= Map.Object.Castle)
                 {
-                    if (ownershipMode == OwnershipMode.None)
-                    {
-                        var playerColor = interf.GetPlayerColor(map.GetOwner(position));
+                    bool drawBuilding = advanced <= 0;
 
-                        return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
-                    }
-                    else
+                    if (advanced > 0)
                     {
-                        return Color.White;
+                        var building = interf.Game.GetBuildingAtPosition(position);
+
+                        drawBuilding = building != null && building.BuildingType == BuildingRemap[advanced];
+                    }
+
+                    if (drawBuilding)
+                    {
+                        if (ownershipMode == OwnershipMode.None)
+                        {
+                            var playerColor = interf.GetPlayerColor(map.GetOwner(position));
+
+                            return new Color(playerColor.Red, playerColor.Green, playerColor.Blue);
+                        }
+                        else
+                        {
+                            return Color.White;
+                        }
                     }
                 }
             }
@@ -493,5 +535,34 @@ namespace Freeserf.UI
 
             return base.GetTileColor(position, index);
         }
+
+        // The advanced building filter maps the filter index to the building type.
+        static readonly Building.Type[] BuildingRemap = new Building.Type[]
+        {
+            Building.Type.Castle,       // 0 (flags)
+            Building.Type.Stock,        // 1
+            Building.Type.Tower,        // 2
+            Building.Type.Hut,          // 3
+            Building.Type.Fortress,     // 4
+            Building.Type.ToolMaker,    // 5
+            Building.Type.Sawmill,      // 6
+            Building.Type.WeaponSmith,  // 7
+            Building.Type.Stonecutter,  // 8
+            Building.Type.Boatbuilder,  // 9
+            Building.Type.Forester,     // 10
+            Building.Type.Lumberjack,   // 11
+            Building.Type.PigFarm,      // 12
+            Building.Type.Farm,         // 13
+            Building.Type.Fisher,       // 14
+            Building.Type.Mill,         // 15
+            Building.Type.Butcher,      // 16
+            Building.Type.Baker,        // 17
+            Building.Type.StoneMine,    // 18
+            Building.Type.CoalMine,     // 19
+            Building.Type.IronMine,     // 20
+            Building.Type.GoldMine,     // 21
+            Building.Type.SteelSmelter, // 22
+            Building.Type.GoldSmelter   // 23
+        };
     }
 }
