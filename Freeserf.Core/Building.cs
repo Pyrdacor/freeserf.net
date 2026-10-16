@@ -257,6 +257,19 @@ namespace Freeserf
             return state.FirstKnight != 0;
         }
 
+        /* Set up as occupied, then put knights in without the first
+           knight's arrival (tutorial 6's enemy). */
+        public void SetOccupied()
+        {
+            state.Active = true;
+        }
+
+        public void PlaceKnight(uint serf)
+        {
+            state.FirstKnight = (word)serf;
+            state.Stock[0].Available = (byte)(state.Stock[0].Available + 1);
+        }
+
         public uint FirstKnight
         {
             get => state.FirstKnight;

@@ -153,6 +153,7 @@ namespace Freeserf.UI
         Interface interf = null;
         GameType gameType = GameType.Custom;
         int gameMission = 0;
+        int gameTutorial = 0;
 
         readonly RandomInput randomInput = null;
         readonly ListSavedFiles fileList = null;
@@ -1027,6 +1028,26 @@ namespace Freeserf.UI
                         playerBoxes[i].ShowCopyValueButton = false;
                     }
                     break;
+                case GameType.Tutorial:
+                    DrawBoxString(10, 2, textFieldHeader, "Start tutorial");
+                    DrawBoxString(10, 18, textFieldName, "Tutorial:");
+                    DrawBoxString(20, 18, textFieldValue, (gameTutorial + 1).ToString());
+                    HideBoxString(textCreateServer);
+                    HideBoxString(textFieldServerIp);
+                    serverAddressInput.Displayed = false;
+                    serverNameInput.Displayed = false;
+
+                    buttonUp.Displayed = true;
+                    buttonDown.Displayed = true;
+                    buttonMapSize.Displayed = false;
+                    buttonCreateServer.Displayed = false;
+
+                    for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
+                    {
+                        playerBoxes[i].ShowActivationButton = false;
+                        playerBoxes[i].ShowCopyValueButton = false;
+                    }
+                    break;
                 case GameType.Load:
                     {
                         DrawBoxString(10, 2, textFieldHeader, "Load game");
@@ -1160,9 +1181,12 @@ namespace Freeserf.UI
                     }
                 case GameType.Tutorial:
                     {
-                        // TODO
-                        HandleAction(Action.ToggleGameType);
-                        return;
+                        ServerGameInfo = GameInfo.GetTutorial((uint)gameTutorial);
+                        randomInput.Displayed = false;
+                        fileList.Displayed = false;
+                        serverList.Displayed = false;
+                        SetRedraw();
+                        break;
                     }
                 case GameType.AIvsAI:
                     {
@@ -1517,6 +1541,13 @@ namespace Freeserf.UI
                                 {
                                     return;
                                 }
+
+                                /* The orders of a tutorial are shown when
+                                   it starts. */
+                                if (gameType == GameType.Tutorial)
+                                {
+                                    interf.OpenPopup(PopupBox.Type.TutorialOrders);
+                                }
                             }
                         }
 
@@ -1567,6 +1598,11 @@ namespace Freeserf.UI
                             ServerGameInfo = GameInfo.GetMission((uint)gameMission);
                             SetRedraw();
                             break;
+                        case GameType.Tutorial:
+                            gameTutorial = Math.Min(gameTutorial + 1, (int)GameInfo.GetTutorialCount() - 1);
+                            ServerGameInfo = GameInfo.GetTutorial((uint)gameTutorial);
+                            SetRedraw();
+                            break;
                         case GameType.Custom:
                         case GameType.AIvsAI:
                         case GameType.MultiplayerServer:
@@ -1585,6 +1621,11 @@ namespace Freeserf.UI
                         case GameType.Mission:
                             gameMission = Math.Max(0, gameMission - 1);
                             ServerGameInfo = GameInfo.GetMission((uint)gameMission);
+                            SetRedraw();
+                            break;
+                        case GameType.Tutorial:
+                            gameTutorial = Math.Max(0, gameTutorial - 1);
+                            ServerGameInfo = GameInfo.GetTutorial((uint)gameTutorial);
                             SetRedraw();
                             break;
                         case GameType.Custom:
