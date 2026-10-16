@@ -153,6 +153,7 @@ namespace Freeserf
             state.ReproductionReset = (word)((60 - reproduction) * 50);
             state.Intelligence = (byte)intelligence;
             state.ReproductionCounter = state.ReproductionReset;
+            state.IsInGame = true;
 
             if (!Face.IsHuman())
                 state.IsAI = true;
@@ -180,6 +181,20 @@ namespace Freeserf
             state.Face = face;
             state.Color = color;
             state.IsAI = !face.IsHuman();
+        }
+
+        /* Tutorial 6's enemy: without a face, with a castle but not in the
+           game, its military buildings fully occupied (Amiga
+           game_init_start_castles @0x4a78). */
+        public void InitPassive(Color color)
+        {
+            state.Face = PlayerFace.None;
+            state.Color = color;
+            state.Flags = PlayerStateFlags.HasCastle;
+            state.IsInGame = false;
+
+            for (int i = 0; i < 4; ++i)
+                settings.KnightOccupation[i] = 0x44;
         }
 
         public Color Color => state.Color;
@@ -233,6 +248,11 @@ namespace Freeserf
         /// Whether this player is a computer controlled opponent.
         /// </summary>
         public bool IsAI => state.IsAI;
+        /// <summary>
+        /// Whether the player takes part in the game. Tutorial 6's enemy
+        /// does not (Amiga player flag bit 6).
+        /// </summary>
+        public bool IsInGame => state.IsInGame;
         public bool HasLeftGame
         {
             get => state.HasLeftGame;
@@ -518,6 +538,11 @@ namespace Freeserf
 
             for (int i = 0; i < 4; ++i)
                 settings.KnightOccupation[0] = values[i];
+        }
+
+        public void SetKnightOccupation(int threatLevel, byte value)
+        {
+            settings.KnightOccupation[threatLevel] = value;
         }
 
         public void IncreaseCastleKnightsRequested()
@@ -1319,6 +1344,11 @@ namespace Freeserf
                 if (state.TotalBuildingScore > 0xffff0000)
                     state.TotalBuildingScore = 0;
 
+                /* Only the players in the game take turns; tutorial 6's
+                   enemy does not (Amiga player flag bit 6). */
+                if (!IsInGame)
+                    return;
+
                 if (CyclingKnights)
                 {
                     state.KnightCycleCounter -= delta;
@@ -1908,6 +1938,7 @@ namespace Freeserf
             HasNotifications = (flags & 0x08) != 0;
             state.CyclingKnightsReducedLevel = (flags & 0x10) != 0;
             state.CyclingKnightsSecondPhase = (flags & 0x20) != 0;
+            state.IsInGame = (flags & 0x40) != 0;
             state.IsAI = (flags & 0x80) != 0;
             state.CanSpawn = (buildFlags & 0x04) != 0;
 
@@ -2004,6 +2035,7 @@ namespace Freeserf
             HasNotifications = (flags & 0x08) != 0;
             state.CyclingKnightsReducedLevel = (flags & 0x10) != 0;
             state.CyclingKnightsSecondPhase = (flags & 0x20) != 0;
+            state.IsInGame = (flags & 0x40) != 0;
             state.IsAI = (flags & 0x80) != 0;
             state.CanSpawn = (buildFlags & 0x04) != 0;
 
@@ -2011,6 +2043,11 @@ namespace Freeserf
             Color.Green = (byte)reader.Value("color")[1].ReadUInt();
             Color.Blue = (byte)reader.Value("color")[2].ReadUInt();
             state.Face = (PlayerFace)reader.Value("face").ReadUInt();
+
+            /* Saves from before the in-game bit: every player with a face
+               takes part in the game. */
+            if (state.Face != PlayerFace.None)
+                state.IsInGame = true;
 
             for (int i = 0; i < 9; ++i)
             {
@@ -2163,6 +2200,8 @@ namespace Freeserf
                 flags |= 0x10;
             if (state.CyclingKnightsSecondPhase)
                 flags |= 0x20;
+            if (state.IsInGame)
+                flags |= 0x40;
             if (state.IsAI)
                 flags |= 0x80;
             if (state.CanSpawn)

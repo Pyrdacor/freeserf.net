@@ -389,6 +389,42 @@ namespace Freeserf
             )
         };
 
+        /* Tutorials 1-6 (Amiga mission_table entries 0..5): one human
+           player, castle placed by the player. */
+        static readonly Mission[] tutorials = new Mission[]
+        {
+            new Mission(
+                "Tutorial 1",
+                new Random("3762665523225478"),
+                new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
+            ),
+            new Mission(
+                "Tutorial 2",
+                new Random("1616118277634871"),
+                new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
+            ),
+            new Mission(
+                "Tutorial 3",
+                new Random("2418554743842118"),
+                new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
+            ),
+            new Mission(
+                "Tutorial 4",
+                new Random("4454333314864658"),
+                new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
+            ),
+            new Mission(
+                "Tutorial 5",
+                new Random("4264118313621432"),
+                new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
+            ),
+            new Mission(
+                "Tutorial 6",
+                new Random("2487251185361288"),
+                new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
+            )
+        };
+
         public uint MapSize { get; set; }
 
         public string Seed => RandomBase.ToString();
@@ -592,6 +628,27 @@ namespace Freeserf
             return (uint)missions.Length;
         }
 
+        /* Tutorials 1-6 (Amiga mission_table entries 0..5): one human
+           player, castle placed by the player. */
+        internal static GameInfo GetTutorial(uint tutorial)
+        {
+            if (tutorial >= GetTutorialCount())
+            {
+                return null;
+            }
+
+            var gameInfo = new GameInfo(tutorials[(int)tutorial]);
+            gameInfo.gameType = (int)Game.GameType.Tutorial;
+            gameInfo.level = tutorial + 1;
+
+            return gameInfo;
+        }
+
+        internal static uint GetTutorialCount()
+        {
+            return (uint)tutorials.Length;
+        }
+
         internal int GameType => gameType;
         internal uint Level => level;
         internal string Name => name;
@@ -658,6 +715,11 @@ namespace Freeserf
                 var castlePos = playerInfo.CastlePosition;
                 var position = game.Map.Position((MapPos)castlePos.Column, (MapPos)castlePos.Row);
                 game.BuildCastle(position, player);
+            }
+
+            if (gameType == (int)Game.GameType.Tutorial && level == 6)
+            {
+                game.InitTutorialEnemy(PlayerInfo.PlayerColors[1]);
             }
 
             return game;

@@ -288,6 +288,11 @@ namespace Freeserf
             return state.Resources;
         }
 
+        public void SetCountOf(Resource.Type resource, uint count)
+        {
+            state.Resources[resource] = count;
+        }
+
         public void PopResource(Resource.Type resource)
         {
             --state.Resources[resource];

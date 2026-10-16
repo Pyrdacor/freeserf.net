@@ -2820,6 +2820,35 @@ namespace Freeserf
             }
         }
 
+        /* A knight of the building's owner, defending it from the start
+           (Amiga tutorial_build_military_building @0x4b58). */
+        public void InitDefendingKnight(Building building)
+        {
+            Player = building.Player;
+            SerfType = Type.Knight0;
+            Position = building.Position;
+            state.Tick = Game.Tick;
+            Counter = 6000;
+
+            switch (building.BuildingType)
+            {
+                case Building.Type.Hut:
+                    SetState(State.DefendingHut);
+                    break;
+                case Building.Type.Tower:
+                    SetState(State.DefendingTower);
+                    break;
+                case Building.Type.Fortress:
+                    SetState(State.DefendingFortress);
+                    break;
+                default:
+                    Debug.NotReached();
+                    break;
+            }
+
+            stateData.Defending.NextKnight = building.FirstKnight;
+        }
+
         public void InitGeneric(Inventory inventory)
         {
             SerfType = Type.Generic;

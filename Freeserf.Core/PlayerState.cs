@@ -156,6 +156,7 @@ namespace Freeserf
         private int sendGenericDelay = 0;
         private int sendKnightDelay = 0;
         private bool hasLeftGame = false;
+        private bool isInGame = false;
         private dword militaryMaxGold = 0;
 
         public PlayerState()
@@ -469,6 +470,24 @@ namespace Freeserf
                 {
                     hasLeftGame = value;
                     MarkPropertyAsDirty(nameof(HasLeftGame));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether the player takes part in the game. Tutorial 6's enemy
+        /// does not (Amiga player flag bit 6).
+        /// </summary>
+        [Data]
+        public bool IsInGame
+        {
+            get => isInGame;
+            set
+            {
+                if (isInGame != value)
+                {
+                    isInGame = value;
+                    MarkPropertyAsDirty(nameof(IsInGame));
                 }
             }
         }

@@ -321,6 +321,80 @@ namespace Freeserf
             return player;
         }
 
+        /* Tutorial 6: a passive enemy, player 1, with a finished hut,
+           fortress, tower and hut manned by level 0 knights (Amiga
+           game_init_start_castles @0x49ca). The original's enemy is not an
+           added player, so the gold morale factor stays the one of a
+           single player. */
+        internal void InitTutorialEnemy(Color color)
+        {
+            var human = GetPlayer(0);
+
+            for (int i = 0; i < 4; ++i)
+            {
+                human.SetKnightOccupation(i, 0x40);
+            }
+
+            uint goldMoraleFactor = state.MapGoldMoraleFactor;
+            var enemy = InsertPlayer(1, 0, 0, 0);
+            state.MapGoldMoraleFactor = goldMoraleFactor;
+            enemy.InitPassive(color);
+
+            (uint col, uint row, Building.Type type)[] sites =
+            {
+                (20, 26, Building.Type.Hut),
+                (21, 33, Building.Type.Fortress),
+                (25, 34, Building.Type.Tower),
+                (30, 38, Building.Type.Hut)
+            };
+
+            foreach (var site in sites)
+            {
+                BuildOccupiedMilitary(Map.Position(site.col, site.row), site.type, enemy);
+            }
+        }
+
+        /* A finished military building with its knights (Amiga
+           tutorial_build_military_building @0x4b58). */
+        void BuildOccupiedMilitary(MapPos position, Building.Type type, Player player)
+        {
+            var building = PlaceBuilding(position, type, player);
+
+            if (building == null)
+            {
+                return;
+            }
+
+            while (!building.BuildProgress()) { }
+            building.SetOccupied();
+
+            int knights = 12;
+
+            if (type == Building.Type.Hut)
+            {
+                knights = 3;
+            }
+            else if (type == Building.Type.Tower)
+            {
+                knights = 6;
+            }
+
+            for (int i = 0; i < knights; ++i)
+            {
+                var knight = CreateSerf();
+
+                if (knight == null)
+                {
+                    break;
+                }
+
+                knight.InitDefendingKnight(building);
+                building.PlaceKnight(knight.Index);
+            }
+
+            UpdateLandOwnership(position);
+        }
+
         internal bool Init(uint mapSize, Random random)
         {
             Map = new Map(new MapGeometry(mapSize), renderView);
@@ -540,6 +614,7 @@ namespace Freeserf
 
         public int GameTypeValue => gameType;
         public int MissionLevel => missionLevel;
+        public int TutorialLevel => tutorialLevel;
 
         public void SetGameType(int type, int level)
         {
@@ -1199,6 +1274,12 @@ namespace Freeserf
                 return false;
             }
 
+            return PlaceFlag(position, player);
+        }
+
+        // Build a flag without checking the site. 
+        internal bool PlaceFlag(MapPos position, Player player)
+        {
             var flag = Flags.Allocate();
 
             if (flag == null)
@@ -1229,11 +1310,18 @@ namespace Freeserf
                 // TODO Check that more stocks are allowed to be built 
             }
 
+            return PlaceBuilding(position, type, player) != null;
+        }
+
+        // Build a building and its flag without checking the site, as the
+        // original's game_build_building, which relies on the map cursor type. 
+        internal Building PlaceBuilding(MapPos position, Building.Type type, Player player)
+        {
             var building = Buildings.Allocate();
 
             if (building == null)
             {
-                return false;
+                return null;
             }
 
             var flagPosition = Map.MoveDownRight(position);
@@ -1243,10 +1331,10 @@ namespace Freeserf
 
             if (flag == null)
             {
-                if (!BuildFlag(flagPosition, player))
+                if (!PlaceFlag(flagPosition, player))
                 {
                     Buildings.Erase(building.Index);
-                    return false;
+                    return null;
                 }
 
                 flag = GetFlagAtPosition(flagPosition);
@@ -1294,7 +1382,7 @@ namespace Freeserf
             if (splitPath)
                 BuildFlagSplitPath(flagPosition);
 
-            return true;
+            return building;
         }
 
         // Build castle at position. 
@@ -1335,6 +1423,36 @@ namespace Freeserf
             inventory.Flag = flag.Index;
             inventory.Player = player.Index;
             inventory.ApplySuppliesPreset(player.InitialSupplies);
+
+            /* Supplies of the tutorials (Amiga game_build_castle @0x15574). */
+            if (gameType == (int)GameType.Tutorial)
+            {
+                switch (tutorialLevel)
+                {
+                    case 2:
+                        inventory.SetCountOf(Resource.Type.Lumber, 0);
+                        break;
+                    case 3:
+                        inventory.SetCountOf(Resource.Type.Pig, 0);
+                        inventory.SetCountOf(Resource.Type.Wheat, 0);
+                        inventory.SetCountOf(Resource.Type.Flour, 0);
+                        break;
+                    case 4:
+                        inventory.SetCountOf(Resource.Type.IronOre, 0);
+                        inventory.SetCountOf(Resource.Type.Coal, 0);
+                        inventory.SetCountOf(Resource.Type.GoldOre, 0);
+                        break;
+                    case 5:
+                        inventory.SetCountOf(Resource.Type.Steel, 200);
+                        inventory.SetCountOf(Resource.Type.Coal, 200);
+                        break;
+                    case 6:
+                        inventory.SetCountOf(Resource.Type.GoldBar, 30);
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             AddGoldTotal((int)inventory.GetCountOf(Resource.Type.GoldBar));
             AddGoldTotal((int)inventory.GetCountOf(Resource.Type.GoldOre));
@@ -2815,6 +2933,83 @@ namespace Freeserf
             }
         }
 
+        /* Sum of a resource's production history (Amiga history_sum_120). */
+        static uint HistorySum(Player player, Resource.Type resource)
+        {
+            var history = player.GetResourceCountHistory(resource);
+            uint sum = 0;
+
+            for (int i = 0; i < 120; ++i)
+            {
+                sum += history[i];
+            }
+
+            return sum;
+        }
+
+        /* The human player completes a tutorial with its goal (Amiga
+           update_game_stats @0x86ac). */
+        void UpdateTutorial()
+        {
+            var player = GetPlayer(0);
+
+            if (winningPlayer >= 0 || player == null)
+            {
+                return;
+            }
+
+            bool completed = false;
+
+            switch (tutorialLevel)
+            {
+                case 1:  // Military buildings
+                    completed =
+                        player.GetCompletedBuildingCount(Building.Type.Hut) != 0 &&
+                        player.GetCompletedBuildingCount(Building.Type.Tower) != 0 &&
+                        player.GetCompletedBuildingCount(Building.Type.Fortress) != 0;
+                    break;
+                case 2:  // Stone and planks
+                    completed = HistorySum(player, Resource.Type.Stone) >= 5 &&
+                                HistorySum(player, Resource.Type.Plank) >= 5;
+                    break;
+                case 3:  // Food
+                    completed = HistorySum(player, Resource.Type.Fish) >= 5 &&
+                                HistorySum(player, Resource.Type.Meat) >= 5 &&
+                                HistorySum(player, Resource.Type.Bread) >= 5;
+                    break;
+                case 4:  // Steel and gold
+                    completed = HistorySum(player, Resource.Type.Steel) >= 5 &&
+                                HistorySum(player, Resource.Type.GoldBar) >= 5;
+                    break;
+                case 5:  // Weapons and tools
+                    {
+                        uint weapons = HistorySum(player, Resource.Type.Sword) +
+                                       HistorySum(player, Resource.Type.Shield);
+                        uint tools = 0;
+
+                        for (int r = (int)Resource.Type.Shovel; r <= (int)Resource.Type.Pincer; ++r)
+                        {
+                            tools += HistorySum(player, (Resource.Type)r);
+                        }
+
+                        completed = weapons >= 10 && tools >= 10;
+                        break;
+                    }
+                default:  // Conquer the enemy's land
+                    {
+                        var enemy = GetPlayer(1);
+                        completed = (enemy == null) || (enemy.LandArea == 0);
+                        break;
+                    }
+            }
+
+            if (completed)
+            {
+                winningPlayer = 0;
+                gameEndPending = true;
+            }
+        }
+
         // Update statistics of the game. 
         void UpdateGameStats()
         {
@@ -2908,7 +3103,14 @@ namespace Freeserf
 
                 RecordPlayerHistory(updateLevel, 0, state.PlayerHistoryIndex, values);
 
-                UpdateWinner();
+                if (gameType == (int)GameType.Tutorial)
+                {
+                    UpdateTutorial();
+                }
+                else
+                {
+                    UpdateWinner();
+                }
             }
 
             if ((int)state.HistoryCounter > tickDifference)

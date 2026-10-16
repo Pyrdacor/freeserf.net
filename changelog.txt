@@ -11,6 +11,10 @@ Version 2.2.8:
   pictures and texts: the result picture, the result text with the winner's face,
   and after a won mission the mission's picture. A click closes the box and asks
   whether to quit. Ported from freeserf PR #573 and #574.
+- The tutorial mode with the original's six tutorials: the game type can be
+  selected in the game init box, each tutorial has its own map, goals and castle
+  supplies, and the tutorial orders box shows the current goal. Tutorial 6 adds
+  a passive enemy. Ported from freeserf PR #575, #576 and #577.
 - Save games keep the game type, the mission/tutorial level and the winning player
 
 
