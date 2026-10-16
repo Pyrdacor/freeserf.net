@@ -40,6 +40,12 @@ namespace Freeserf.UI
         int scale = MinScale;
         protected static readonly Color GridColor = new Color(0x01, 0x01, 0x01);
 
+        /// <summary>
+        /// The minimap is also used to display the statistic charts.
+        /// Then it must not draw the map or react to clicks (#128).
+        /// </summary>
+        public bool ShowsMap { get; set; } = true;
+
         public Minimap(Interface interf, Map map = null)
             : base(interf)
         {
@@ -112,7 +118,7 @@ namespace Freeserf.UI
         // Initialize minimap data. 
         public void UpdateMinimap(bool force = false)
         {
-            if (!Displayed || map == null)
+            if (!Displayed || map == null || !ShowsMap)
                 return;
 
             var offset = map.RenderMap.GetCenteredPosition();
@@ -268,6 +274,9 @@ namespace Freeserf.UI
 
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (!ShowsMap)
+                return false;
+
             if (delayed)
                 return true;
 
@@ -385,6 +394,9 @@ namespace Freeserf.UI
 
         protected override bool HandleDoubleClick(int x, int y, Event.Button button)
         {
+            if (!ShowsMap)
+                return false;
+
             if (button == Event.Button.Left)
             {
                 // close the minimap
@@ -399,6 +411,9 @@ namespace Freeserf.UI
 
         protected override bool HandleClickRight(int x, int y)
         {
+            if (!ShowsMap)
+                return false;
+
             // close the minimap
             interf.ClosePopup();
 

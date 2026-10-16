@@ -2020,10 +2020,16 @@ namespace Freeserf
                 player.DecreaseCastleKnights();
 
                 var serfIndex = state.FirstKnight;
-                var serf = Game.GetSerf(serfIndex);
-                state.FirstKnight = (word)serf.NextKnight;
 
-                serf.StayIdleInStock(state.Inventory);
+                // The knight count could be wrong in save games of older versions (#130).
+                // Then there might be no knight left to send away.
+                if (serfIndex != 0)
+                {
+                    var serf = Game.GetSerf(serfIndex);
+                    state.FirstKnight = (word)serf.NextKnight;
+
+                    serf.StayIdleInStock(state.Inventory);
+                }
             }
 
             if (state.Holder &&

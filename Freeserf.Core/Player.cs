@@ -1917,9 +1917,14 @@ namespace Freeserf
                 settings.FlagPriorities[j] = reader.ReadByte(); // 44
             }
 
+            // Serfs are counted when they are loaded. Only generic serfs
+            // are not counted this way, so only their count is used (#139).
             for (int j = 0; j < 27; ++j)
             {
-                state.SerfCounts[j] = reader.ReadWord(); // 70
+                word serfCount = reader.ReadWord(); // 70
+
+                if (j == (int)Serf.Type.Generic)
+                    state.SerfCounts[j] = serfCount;
             }
 
             for (int j = 0; j < 4; ++j)
@@ -2058,10 +2063,12 @@ namespace Freeserf
             {
                 state.ResourceCounts[i] = reader.Value("resource_count")[i].ReadUInt();
                 settings.FlagPriorities[i] = (byte)reader.Value("flag_prio")[i].ReadInt();
-                state.SerfCounts[i] = reader.Value("serf_count")[i].ReadUInt();
                 settings.InventoryPriorities[i] = (byte)reader.Value("inventory_prio")[i].ReadInt();
             }
-            state.SerfCounts[26] = reader.Value("serf_count")[26].ReadUInt();
+
+            // Serfs are counted when they are loaded. Only generic serfs
+            // are not counted this way, so only their count is used (#139).
+            state.SerfCounts[Serf.Type.Generic] = reader.Value("serf_count")[(int)Serf.Type.Generic].ReadUInt();
 
             for (int i = 0; i < 4; ++i)
             {

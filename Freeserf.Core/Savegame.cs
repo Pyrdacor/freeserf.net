@@ -401,9 +401,11 @@ namespace Freeserf
                     {
                         var player = game.GetPlayer((uint)i);
 
-                        if (player.HasCastle)
+                        // A player whose castle was destroyed still has the castle flag.
+                        var castle = player.HasCastle ? game.GetPlayerBuildings(player, Building.Type.Castle).FirstOrDefault() : null;
+
+                        if (castle != null)
                         {
-                            var castle = game.GetPlayerBuildings(player, Building.Type.Castle).First();
                             player.CastlePosition = castle.Position;
 
                             // Older saves did not keep the castle inventory.

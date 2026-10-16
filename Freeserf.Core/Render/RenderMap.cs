@@ -507,6 +507,24 @@ namespace Freeserf.Render
             return map.Position(realColumn, realRow);
         }
 
+        /// <summary>
+        /// Checks if a map position is inside the visible part of the map.
+        /// The zoom scales the view around its center.
+        /// </summary>
+        public bool IsVisible(MapPos position)
+        {
+            var viewPosition = CoordinateSpace.TileSpaceToViewSpace(position);
+            float width = numColumns * TILE_WIDTH;
+            float height = numRows * TILE_HEIGHT;
+            float zoom = System.Math.Max(1.0f, ZoomFactor);
+            // Objects are a bit larger than a tile, so add a small margin.
+            float halfVisibleWidth = width / (2.0f * zoom) + TILE_WIDTH;
+            float halfVisibleHeight = height / (2.0f * zoom) + TILE_HEIGHT;
+
+            return System.Math.Abs(viewPosition.X - width / 2.0f) <= halfVisibleWidth &&
+                   System.Math.Abs(viewPosition.Y - height / 2.0f) <= halfVisibleHeight;
+        }
+
         public MapPos GetCenteredPosition()
         {
             //return GetMapPosFromScreenPosition(new Position((int)numColumns * TILE_WIDTH / 2, (int)numRows * TILE_HEIGHT / 2));

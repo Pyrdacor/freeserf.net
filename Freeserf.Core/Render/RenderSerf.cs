@@ -489,7 +489,14 @@ namespace Freeserf.Render
             }
             else*/
             {
-                if (map.HasSerf(position) && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf
+                // Serfs which wait inside a building to leave it are only visible
+                // when they stand in the door. Otherwise another serf is there (#97).
+                // Right after entering this state the counter of the previous state
+                // might still be negative. It is reset with the next update.
+                bool insideBuilding = (serf.SerfState == Serf.State.ReadyToLeave || serf.SerfState == Serf.State.ReadyToLeaveInventory) &&
+                    (map.GetSerfIndex(position) != serf.Index || serf.Counter < 0);
+
+                if (map.HasSerf(position) && !insideBuilding && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf
                 {
                     if (serf.SerfState == Serf.State.Mining &&
                         (serf.MiningSubstate == 0 ||
@@ -509,6 +516,10 @@ namespace Freeserf.Render
                     if (serf.Animation < 0 || serf.Animation > 199 || serf.Counter < 0)
                     {
                         Log.Error.Write(ErrorSystemType.UI, $"bad animation for serf #{serf.Index} ({Serf.GetStateName(serf.SerfState)}): {serf.Animation},{serf.Counter}");
+                        // Don't leave the serf visible at its old position.
+                        sprite.Visible = false;
+                        headSprite.Visible = false;
+                        shadowSprite.Visible = false;
                         return;
                     }
 
@@ -846,7 +857,8 @@ namespace Freeserf.Render
             if (serf.Game?.IsPaused == true)
                 return;
 
-            if (sprite?.Visible == true) // Only play sound if on screen
+            // Only play sound if on screen (#129).
+            if (sprite?.Visible == true && serf.Game?.Map?.RenderMap?.IsVisible(serf.Position) == true)
                 audio?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 

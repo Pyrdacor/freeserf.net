@@ -901,6 +901,10 @@ namespace Freeserf.Render
             if (building.Game?.IsPaused == true)
                 return;
 
+            // Only play sound if on screen (#129).
+            if (building.Game?.Map?.RenderMap?.IsVisible(building.Position) != true)
+                return;
+
             audio?.GetSoundPlayer()?.PlayTrack((int)type);
         }
 

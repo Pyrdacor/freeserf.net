@@ -860,6 +860,9 @@ namespace Freeserf.UI
 
             Box = box;
 
+            MiniMap.ShowsMap = box == Type.Map;
+            // The charts start one pixel lower than the map so that they end at the x axis (#152).
+            MiniMap.MoveTo(8, box == Type.Map ? 8 : 9);
             MiniMap.Displayed = box == Type.Map || box == Type.ResourceStatistics || box == Type.PlayerStatistics;
             fileList.Displayed = box == Type.LoadSave;
             fileField.Displayed = box == Type.LoadSave;
@@ -1807,7 +1810,8 @@ namespace Freeserf.UI
 
             for (int i = 0; i < 112; ++i)
             {
-                SetResourceChartValue(chartData, i, Math.Min((historicalData[i] * multiplier) >> 16, 64));
+                // the newest value is on the right like in the original game (#138)
+                SetResourceChartValue(chartData, 111 - i, Math.Min((historicalData[i] * multiplier) >> 16, 64));
             }
 
             // we use the minimap for displaying the chart as we can set pixel colors inside the minimap sprite freely
