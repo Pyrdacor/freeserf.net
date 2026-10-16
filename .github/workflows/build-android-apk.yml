@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to publish (e.g. android-2.2.7). Leave empty to only build and upload the artifact.'
+        description: 'Release tag to publish (e.g. android-2.2.8). Leave empty to only build and upload the artifact.'
         required: false
         default: ''
 
@@ -56,13 +56,13 @@ jobs:
 
           Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
 
-          ### What's new in 2.2.7
+          ### What's new in 2.2.8
 
-          - **Save games** are stored in an accessible folder (`Android/data/net.freeserf.android/files/saves`, e.g. via USB). Save games of older versions are still found.
-          - **Files app**: the save games are shown in the Android files app ("Freeserf" in the side bar) and can be copied, renamed and deleted there.
-          - **Castles with much traffic** send out builders, knights and resources again (serfs leaving and approaching the castle flag take turns).
-          - **Fixed crashes** in larger games and after conquering a castle.
-          - **Multiplayer**: loaded games with four players can be joined again.
+          - **Tutorials**: the original's six tutorials can be played. Thanks to dos-ise!
+          - **End of the game** with the original's winner pictures and texts. Thanks to dos-ise!
+          - **Special click** (long press) works as in the original: show building sites, building filter in the map. Thanks to dos-ise!
+          - **Fishing**: lakes can be overfished now, small ponds give only a few fish.
+          - **Fixes**: loading games with a destroyed castle, serf counts after loading, statistics charts, sounds outside of the screen and more.
           - Same version number as the desktop version of freeserf.net.
 
           ### Install

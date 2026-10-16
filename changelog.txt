@@ -1,7 +1,7 @@
 Version 2.2.8:
 ==============
 
-- A special click (right button held, two-finger tap on Android) works as in the
+- A special click (left + right button, long press on Android) works as in the
   original: on a build button it shows the possible building sites, on the map
   button it shows the castle, and only a special click demolishes. In the map box
   a special click on the buildings button opens the building filter (Bld1-4) with
@@ -16,6 +16,20 @@ Version 2.2.8:
   supplies, and the tutorial orders box shows the current goal. Tutorial 6 adds
   a passive enemy. Ported from freeserf PR #575, #576 and #577.
 - Save games keep the game type, the mission/tutorial level and the winning player
+- Thanks to dos-ise for the special click, the end of the game and the tutorials!
+- Fish only spawn in shallow water next to the shore, so lakes can be overfished:
+  2-3 fishers can share a lake of the size of a screen, a 4th one overfishes it (#47)
+- Mines also mine the ground below buildings and flags (#158)
+- Fixed loading games in which a castle was destroyed (#142)
+- Fixed doubled serf counts after loading (#139)
+- Fixed a crash with a wrong castle knight count (#130)
+- The possible building sites are updated while they are shown (#131)
+- Fixed the direction (#138) and position (#152) of the resource chart
+- The scroll wheel no longer turns a chart into the minimap (#128)
+- Sounds of serfs and buildings outside of the screen are no longer played (#129)
+- Parts of a burning mine no longer stay on the screen (#127)
+- Serfs waiting inside a building are no longer drawn in front of it
+- Linux: the audio libraries are found on more distributions (#87)
 
 
 Version 2.2.7:
