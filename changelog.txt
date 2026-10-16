@@ -7,6 +7,11 @@ Version 2.2.8:
   a special click on the buildings button opens the building filter (Bld1-4) with
   the original's building pictures; the minimap then shows only the chosen
   building type. Ported from freeserf PR #562.
+- The game decides a winner and shows the end of the game with the original's
+  pictures and texts: the result picture, the result text with the winner's face,
+  and after a won mission the mission's picture. A click closes the box and asks
+  whether to quit. Ported from freeserf PR #573 and #574.
+- Save games keep the game type, the mission/tutorial level and the winning player
 
 
 Version 2.2.7:

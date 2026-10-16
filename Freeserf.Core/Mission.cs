@@ -415,6 +415,8 @@ namespace Freeserf
         readonly List<PlayerInfo> players = new(4);
         readonly string name = "";
         readonly bool intro = false;
+        int gameType; // Game.GameType
+        uint level = 0;
 
         GameInfo(Mission missionPreset)
         {
@@ -422,6 +424,7 @@ namespace Freeserf
             name = missionPreset.Name;
             RandomBase = missionPreset.Random;
             intro = missionPreset.Name == "INTRO";
+            gameType = (int)Game.GameType.Mission;
 
             for (int i = 0; i < missionPreset.Players.Length; ++i)
             {
@@ -448,6 +451,7 @@ namespace Freeserf
         {
             MapSize = 3;
             name = randomBase.ToString();
+            gameType = (int)Game.GameType.OnePlayer;
             SetRandomBase(randomBase, aiPlayersOnly);
         }
 
@@ -577,13 +581,20 @@ namespace Freeserf
                 return null;
             }
 
-            return new GameInfo(missions[(int)mission]);
+            var gameInfo = new GameInfo(missions[(int)mission]);
+            gameInfo.level = mission;
+
+            return gameInfo;
         }
 
         internal static uint GetMissionCount()
         {
             return (uint)missions.Length;
         }
+
+        internal int GameType => gameType;
+        internal uint Level => level;
+        internal string Name => name;
 
         internal Character GetCharacter(uint character)
         {
@@ -608,6 +619,8 @@ namespace Freeserf
             {
                 return null;
             }
+
+            game.SetGameType(gameType, (int)level);
 
             uint playerIndex = 0u;
 

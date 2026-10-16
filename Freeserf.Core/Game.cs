@@ -60,6 +60,17 @@ namespace Freeserf
     public class Game : MapHandler, IState
     {
         public const int MAX_PLAYER_COUNT = 4;
+
+        /* Game types of the original (Amiga game+0x352). */
+        public enum GameType
+        {
+            Mission = 0,
+            Tutorial = 1,
+            OnePlayer = 2,
+            TwoPlayers = 3,
+            Demo = 4
+        }
+
         internal Players Players { get; }
         internal Flags Flags { get; }
         internal Inventories Inventories { get; }
@@ -124,8 +135,12 @@ namespace Freeserf
         ushort gameSpeedSave;
 
         int tickDifference;
-        int gameType; // TODO: this is never used beside in savegames
-        int playerScoreLeader; // TODO: this is never used beside in savegames
+        int gameType; // Game.GameType
+        int playerScoreLeader;
+        int winningPlayer = -1;
+        bool gameEndPending = false;
+        int tutorialLevel = 0;
+        int missionLevel = 0;
 
 
         [Data]
@@ -151,7 +166,7 @@ namespace Freeserf
             Serfs = new Serfs(this);
 
             tickDifference = 0;
-            gameType = 0;
+            gameType = (int)GameType.OnePlayer;
 
             if (map != null)
                 Map = new Map(map.Geometry, null, map);
@@ -522,6 +537,24 @@ namespace Freeserf
 
         public uint GameSpeed => state.GameSpeed;
         public bool IsPaused => state.GameSpeed == 0;
+
+        public int GameTypeValue => gameType;
+        public int MissionLevel => missionLevel;
+
+        public void SetGameType(int type, int level)
+        {
+            gameType = type;
+            tutorialLevel = (type == (int)GameType.Tutorial) ? level : 0;
+            missionLevel = (type == (int)GameType.Mission) ? level : 0;
+        }
+
+        /* The winner once the game is decided, -1 before. */
+        public int WinningPlayer => winningPlayer;
+        public bool IsGameEndPending => gameEndPending;
+        public void ClearGameEndPending()
+        {
+            gameEndPending = false;
+        }
 
         public void Pause()
         {
@@ -2694,26 +2727,92 @@ namespace Freeserf
         }
 
         /* Calculate whether one player has enough advantage to be
-           considered a clear winner regarding one aspect.
+           considered a clear winner regarding one aspect: more than 74
+           percent, counted as (100 * value - 1) / total with the total
+           scaled down to at most 0xfffe (Amiga record_player_history
+           @0x895e).
            Return -1 if there is no clear winner. */
         int CalculateClearWinner(Values values)
         {
-            uint total = 0;
+            var scaled = new Values(values);
+            ulong total = 0;
 
-            foreach (var value in values)
+            foreach (var value in scaled)
             {
                 total += value.Value;
             }
 
-            total = Math.Max(1u, total);
-
-            foreach (var value in values)
+            while (total > 0xfffe)
             {
-                if (100ul * value.Value / total >= 75)
+                total >>= 1;
+
+                foreach (var key in scaled.Keys.ToList())
+                {
+                    scaled[key] >>= 1;
+                }
+            }
+
+            total = Math.Max(1ul, total);
+
+            foreach (var value in scaled)
+            {
+                ulong val = 100ul * value.Value;
+
+                if (val != 0)
+                    val -= 1;
+
+                if (val / total > 74)
                     return (int)value.Key;
             }
 
             return -1;
+        }
+
+        /* A player leading both in land and in military wins once the players
+           have 50 building points in total. In a mission, the human player can
+           still win after a computer player has (Amiga update_game_stats
+           @0x87fc). */
+        void UpdateWinner()
+        {
+            uint buildingTotal = 0;
+
+            foreach (var player in Players.ToList())
+            {
+                buildingTotal += player.BuildingScore;
+            }
+
+            if (buildingTotal < 50)
+            {
+                return;
+            }
+
+            int leader = -1;
+
+            foreach (var player in Players.ToList())
+            {
+                int index = (int)player.Index;
+                int mask = Misc.Bit(index) | Misc.Bit(index + 4);
+
+                if ((playerScoreLeader & mask) == mask)
+                {
+                    leader = index;
+                    break;
+                }
+            }
+
+            if (winningPlayer < 0)
+            {
+                if (leader >= 0)
+                {
+                    winningPlayer = leader;
+                    gameEndPending = true;
+                }
+            }
+            else if (winningPlayer > 0 && gameType == (int)GameType.Mission && leader == 0)
+            {
+                winningPlayer = 0;
+                gameEndPending = true;
+            }
         }
 
         // Update statistics of the game. 
@@ -2775,10 +2874,10 @@ namespace Freeserf
 
                 RecordPlayerHistory(updateLevel, 1, state.PlayerHistoryIndex, values);
 
-                int clearWinner = CalculateClearWinner(values);
+                int landLeader = CalculateClearWinner(values);
 
-                if (clearWinner != -1)
-                    playerScoreLeader |= Misc.Bit(clearWinner);
+                if (landLeader >= 0)
+                    playerScoreLeader |= Misc.Bit(landLeader);
 
                 // Store building stats in history. 
                 foreach (var player in playerList)
@@ -2796,10 +2895,10 @@ namespace Freeserf
 
                 RecordPlayerHistory(updateLevel, 3, state.PlayerHistoryIndex, values);
 
-                clearWinner = CalculateClearWinner(values);
+                int militaryLeader = CalculateClearWinner(values);
 
-                if (clearWinner != -1)
-                    playerScoreLeader |= Misc.Bit(clearWinner) << 4;
+                if (militaryLeader >= 0)
+                    playerScoreLeader |= Misc.Bit(militaryLeader + 4);
 
                 // Store condensed score of all aspects in history. 
                 foreach (var player in playerList)
@@ -2809,7 +2908,7 @@ namespace Freeserf
 
                 RecordPlayerHistory(updateLevel, 0, state.PlayerHistoryIndex, values);
 
-                // TODO Determine winner based on game.player_score_leader 
+                UpdateWinner();
             }
 
             if ((int)state.HistoryCounter > tickDifference)
@@ -3359,13 +3458,12 @@ namespace Freeserf
 
             state.ResourceHistoryIndex = reader.ReadWord(); // 118
 
-            //  if (0//gameType == TUTORIAL) {
-            //    tutorial_level = *reinterpret_cast<uint16_t*>(&data[122]);
-            //  } else if (0//gameType == MISSION) {
-            //    mission_level = *reinterpret_cast<uint16_t*>(&data[124]);
-            //  }
+            reader.Skip(2);
+            int tutorialLevel = reader.ReadWord(); // 122
+            int missionLevel = reader.ReadWord(); // 124
+            SetGameType(gameType, gameType == (int)GameType.Tutorial ? tutorialLevel : missionLevel);
 
-            reader.Skip(54);
+            reader.Skip(50);
 
             int maxInventoryIndex = reader.ReadWord(); // 174
 
@@ -3462,6 +3560,19 @@ namespace Freeserf
             }
 
             gameType = gameReader.Value("game_type").ReadInt();
+
+            if (gameReader.HasValue("mission_level"))
+            {
+                tutorialLevel = gameReader.Value("tutorial_level").ReadInt();
+                missionLevel = gameReader.Value("mission_level").ReadInt();
+                winningPlayer = gameReader.Value("winning_player").ReadInt();
+            }
+            else
+            {
+                /* Older saves have no game type of their own. */
+                SetGameType((int)GameType.OnePlayer, 0);
+            }
+
             state.Tick = (ushort)gameReader.Value("tick").ReadUInt();
             state.GameStatsCounter = gameReader.Value("game_stats_counter").ReadUInt();
             state.HistoryCounter = gameReader.Value("history_counter").ReadUInt();
@@ -3646,6 +3757,9 @@ namespace Freeserf
         {
             writer.Value("map.size").Write(Map.Size);
             writer.Value("game_type").Write(gameType);
+            writer.Value("tutorial_level").Write(tutorialLevel);
+            writer.Value("mission_level").Write(missionLevel);
+            writer.Value("winning_player").Write(winningPlayer);
             writer.Value("tick").Write(Tick);
             writer.Value("game_stats_counter").Write(state.GameStatsCounter);
             writer.Value("history_counter").Write(state.HistoryCounter);

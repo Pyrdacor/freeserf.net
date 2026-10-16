@@ -423,6 +423,9 @@ namespace Freeserf.UI
             (int)Action.MinimapBldExit, 112, 128, 16, 16
         };
 
+        /* Game end: 0 result picture, 1 result text, 2 mission picture. */
+        int gameEndStage = 0;
+
         static UI.BackgroundPattern[] backgrounds = null;
 
         void SaveCurrentGame()
@@ -777,6 +780,12 @@ namespace Freeserf.UI
 
         public void Show(Type box)
         {
+            if (box == Type.GameEnd)
+            {
+                /* No result picture in a demo game. */
+                gameEndStage = interf.Game.GameTypeValue == (int)Game.GameType.Demo ? 1 : 0;
+            }
+
             SetBox(box);
             Displayed = true;
         }
@@ -909,6 +918,7 @@ namespace Freeserf.UI
                 case Type.SettlerStats:
                 case Type.IdleAndPotentialSettlerStats:
                 case Type.PlayerFaces:
+                case Type.GameEnd:
                     // TODO: maybe some of those have different background pattern
                     pattern = BackgroundPattern.StripedGreen;
                     break;
@@ -938,7 +948,6 @@ namespace Freeserf.UI
                 case Type.SettSelectFile: // UNUSED 
                 case Type.LoadArchive:
                 case Type.Type25:
-                case Type.GameEnd:
                 case Type.JsCalib:
                 case Type.JsCalibUpLeft:
                 case Type.JsCalibDownRight:
@@ -3438,6 +3447,119 @@ namespace Freeserf.UI
             }
         }
 
+        /* Picture of the current game end stage, or -1: first the result (the
+           human player won, player 2 won a two player game, lost), then after a
+           won mission the mission's picture from the table @0x1d943, by the
+           mission number (Amiga @0x1d6e8). */
+        int GetGameEndPicture()
+        {
+            var game = interf.Game;
+            int winner = Math.Max(0, game.WinningPlayer);
+
+            if (gameEndStage == 0)
+            {
+                if (winner == 0)
+                    return 0;
+
+                if (game.GameTypeValue == (int)Game.GameType.TwoPlayers && winner == 1)
+                    return 1;
+
+                return 2;
+            }
+            else if (gameEndStage == 2)
+            {
+                int[] missionPicture = {
+                    -1, 3, -1, -1, 4, -1, -1, 5, -1, -1, 6, -1, -1, 7, -1, -1,
+                    8, -1, -1, 9, -1, -1, 10, -1, -1, 11, -1, -1, 12, -1, 13
+                };
+                int mission = game.MissionLevel + 1;
+
+                if (game.GameTypeValue != (int)Game.GameType.Mission || winner != 0 ||
+                    mission < 1 || mission > 30)
+                {
+                    return -1;
+                }
+
+                return missionPicture[mission];
+            }
+
+            return -1;
+        }
+
+        /* End of the game: the result picture, then the winner and the result
+           with the texts of the original, then the mission's picture (Amiga popup
+           box 54 @0x1d6e8). */
+        void DrawGameEndBox()
+        {
+            if (gameEndStage != 1)
+            {
+                for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
+                    playerFaceBackgrounds[i].Visible = false;
+
+                int picture = GetGameEndPicture();
+
+                if (picture >= 0)
+                {
+                    SetIcon(8, 9, (uint)picture, Data.Resource.ArtBox);
+                }
+
+                return;
+            }
+
+            var game = interf.Game;
+            int winner = Math.Max(0, game.WinningPlayer);
+
+            if (winner < game.PlayerCount)
+            {
+                var player = game.GetPlayer((uint)winner);
+
+                playerFaceBackgrounds[winner].X = TotalX + 48;
+                playerFaceBackgrounds[winner].Y = TotalY + 65;
+                playerFaceBackgrounds[winner].Resize(48, 72);
+                playerFaceBackgrounds[winner].Layer = Layer;
+                playerFaceBackgrounds[winner].Visible = true;
+
+                SetIcon(56, 69, GetPlayerFaceSprite(player.Face));
+            }
+
+            switch (game.GameTypeValue)
+            {
+                case (int)Game.GameType.Mission:
+                    if (winner == 0)
+                    {
+                        SetText(8, 13, "CONGRATULATIONS.");
+                        SetText(8, 25, "  YOUR ENEMIES");
+                        SetText(8, 35, "  RESIGN. YOU");
+                        SetText(8, 45, " HAVE WON THIS");
+                        SetText(8, 55, "    MISSION.");
+                    }
+                    else
+                    {
+                        SetText(8, 15, "SORRY, ONLY ONE");
+                        SetText(8, 25, "OF YOUR ENEMIES");
+                        SetText(8, 35, "HAS GAINED THE");
+                        SetText(8, 45, " SUPERIORITY IN");
+                        SetText(8, 55, "  THIS MISSION");
+                    }
+                    break;
+                case (int)Game.GameType.Tutorial:
+                    SetText(8, 13, "   WELL DONE.");
+                    SetText(8, 25, " YOU COMPLETED");
+                    SetText(8, 35, " THIS TUTORIAL");
+                    SetText(8, 45, "     GAME.");
+                    break;
+                default:
+                    string[] color = {
+                        "    THE BLUE", "    THE RED", "  THE VIOLET", "   THE YELLOW"
+                    };
+                    SetText(8, 15, color[winner & 3]);
+                    SetText(8, 25, " SETTLERS HAVE");
+                    SetText(8, 35, "   GAINED THE");
+                    SetText(8, 45, "  SUPERIORITY");
+                    break;
+            }
+        }
+
         void DrawDemolishBox()
         {
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
@@ -4769,6 +4891,9 @@ namespace Freeserf.UI
                 case Type.PlayerFaces:
                     DrawPlayerFacesBox();
                     break;
+                case Type.GameEnd:
+                    DrawGameEndBox();
+                    break;
                 case Type.Demolish:
                     DrawDemolishBox();
                     break;
@@ -4846,6 +4971,32 @@ namespace Freeserf.UI
             return false;
         }
 
+        /* Every click advances to the next picture (Amiga wait_for_mouse_click).
+           At the end the game resumes and asks whether to quit (@0x1d982). */
+        void HandleGameEndClick(int x, int y)
+        {
+            gameEndStage += 1;
+
+            if (gameEndStage == 2 && GetGameEndPicture() < 0)
+            {
+                gameEndStage += 1;
+            }
+
+            if (gameEndStage <= 2)
+            {
+                SetRedraw();
+                return;
+            }
+
+            var game = interf.Game;
+            interf.ClosePopup();
+
+            if (game.IsPaused)
+                game.Resume();
+
+            interf.OpenPopup(Type.QuitConfirm);
+        }
+
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
             if (delayed)
@@ -4854,6 +5005,13 @@ namespace Freeserf.UI
             if (Box == Type.Bld1 || Box == Type.Bld2 || Box == Type.Bld3 || Box == Type.Bld4)
             {
                 HandleBldClick(x, y);
+
+                return true;
+            }
+
+            if (Box == Type.GameEnd)
+            {
+                HandleGameEndClick(x, y);
 
                 return true;
             }
