@@ -641,6 +641,11 @@ namespace Freeserf.Render
 
             if (building.IsBurning)
             {
+                // Special objects like the mine elevator are no longer updated.
+                // They would stay at their old screen position (#127).
+                foreach (var additionalSprite in additionalSprites)
+                    additionalSprite.Visible = false;
+
                 DrawBurningSprite(renderPosition, tick);
             }
             else

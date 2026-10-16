@@ -2981,38 +2981,74 @@ namespace Freeserf
             }
         }
 
-        // Update hidden parts of the map data. 
+        // Maximum amount of fish which can spawn at a water position.
+        const int MaxFishPerPosition = 10;
+        // Spawn chance (in 1/256) per adjacent land position, so at most 6 * 15 / 256 = 35%.
+        const int FishSpawnChancePerLand = 15;
+
+        // Update hidden parts of the map data.
         void UpdateHidden(MapPos position, Random random)
         {
-            // Update fish resources in water 
-            if (IsInWater(position) && landscapeTiles[(int)position].ResourceAmount > 0)
+            // Update fish resources in water
+            if (!IsInWater(position))
+                return;
+
+            // Note: In the original game every water position with fish got a new fish
+            // nearly every update. So lakes could never be overfished. Now fish only spawn
+            // in shallow water next to the shore. The more land around a position, the more
+            // likely a fish spawns there. So small ponds give few fish and a lake of the size
+            // of a screen is overfished by 4 fishers but not by 2 or 3 (#47).
+            int randomValue = random.Next();
+            var tile = landscapeTiles[(int)position];
+
+            if (tile.ResourceAmount < MaxFishPerPosition)
             {
-                int randomValue = random.Next();
+                int landCount = 0;
 
-                if (landscapeTiles[(int)position].ResourceAmount < 10 && (randomValue & 0x3f00) != 0)
+                foreach (var direction in DirectionCycleCW.CreateDefault())
                 {
-                    // Spawn more fish. 
-                    ++landscapeTiles[(int)position].ResourceAmount;
+                    if (!IsInWater(Move(position, direction)))
+                        ++landCount;
                 }
 
-                // Move in a random direction of: right, down right, left, up left 
-                var adjacentPosition = position;
-
-                switch ((randomValue >> 2) & 3)
+                if ((randomValue & 0xff) < landCount * FishSpawnChancePerLand)
                 {
-                    case 0: adjacentPosition = MoveRight(adjacentPosition); break;
-                    case 1: adjacentPosition = MoveDownRight(adjacentPosition); break;
-                    case 2: adjacentPosition = MoveLeft(adjacentPosition); break;
-                    case 3: adjacentPosition = MoveUpLeft(adjacentPosition); break;
-                    default: Debug.NotReached(); break;
+                    // Spawn more fish.
+                    ++tile.ResourceAmount;
                 }
+            }
 
-                if (IsInWater(adjacentPosition))
+            if (tile.ResourceAmount == 0)
+                return;
+
+            // Fish move to the adjacent water position (right, down right, left, up left)
+            // with the fewest fish. So they spread in the whole lake.
+            var targetPosition = Global.INVALID_MAPPOS;
+            int targetAmount = int.MaxValue;
+            int firstDirection = (randomValue >> 8) & 3;
+
+            for (int i = 0; i < 4; ++i)
+            {
+                var adjacentPosition = ((firstDirection + i) & 3) switch
                 {
-                    // Migrate a fish to adjacent water space. 
-                    --landscapeTiles[(int)position].ResourceAmount;
-                    ++landscapeTiles[(int)adjacentPosition].ResourceAmount;
+                    0 => MoveRight(position),
+                    1 => MoveDownRight(position),
+                    2 => MoveLeft(position),
+                    _ => MoveUpLeft(position)
+                };
+
+                if (IsInWater(adjacentPosition) && landscapeTiles[(int)adjacentPosition].ResourceAmount < targetAmount)
+                {
+                    targetPosition = adjacentPosition;
+                    targetAmount = landscapeTiles[(int)adjacentPosition].ResourceAmount;
                 }
+            }
+
+            if (targetPosition != Global.INVALID_MAPPOS && targetAmount + 2 <= tile.ResourceAmount)
+            {
+                // Migrate a fish to adjacent water space.
+                --tile.ResourceAmount;
+                ++landscapeTiles[(int)targetPosition].ResourceAmount;
             }
         }
 

@@ -7931,11 +7931,12 @@ namespace Freeserf
                             ++stateData.Mining.Substate;
 
                             // Look for resource in ground.
+                            // Note: Unlike the original game the ground below flags and buildings is mined
+                            // as well (like in forkserf). Otherwise the mine would never mine its own position
+                            // and geologists would find resources there after the mine was burned (#158).
                             var destination = map.PositionAddSpirally(Position, (uint)(Game.RandomInt() >> 2) & 0x1f);
 
-                            if ((map.GetObject(destination) == Map.Object.None ||
-                                 map.GetObject(destination) > Map.Object.Castle) &&
-                                map.GetResourceType(destination) == stateData.Mining.Deposit &&
+                            if (map.GetResourceType(destination) == stateData.Mining.Deposit &&
                                 map.GetResourceAmount(destination) > 0)
                             {
                                 // Decrement resource count in ground. 
@@ -8159,7 +8160,10 @@ namespace Freeserf
 
                 uint resourceAmount = map.GetResourceFish(map.Move(Position, direction));
 
-                if (resourceAmount > 0 && (Game.RandomInt() & 0x3f) + 4 < resourceAmount)
+                // Note: In the original game there had to be at least 5 fish to catch one.
+                // As fish spawn slower now (see Map.UpdateHidden), the chance only depends
+                // on the amount of fish so that lakes can be overfished (#47).
+                if (resourceAmount > 0 && (Game.RandomInt() & 0x3f) < resourceAmount)
                 {
                     // Caught a fish.
                     map.RemoveFish(map.Move(Position, direction), 1);

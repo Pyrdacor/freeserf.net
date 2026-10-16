@@ -45,6 +45,9 @@ namespace Freeserf.UI
         bool clickedNewMapPosition = false;
         bool recheckMapCursorSprites = true;
         bool recheckPossibleBuilds = true;
+        int updatesSincePossibleBuildsCheck = 0;
+        // Check the possible builds every few updates as the map changes (e.g. new flags and buildings).
+        const int PossibleBuildsCheckInterval = 10;
         bool showPossibleBuilds = false;
 
         public bool ShowPossibleBuilds
@@ -142,6 +145,14 @@ namespace Freeserf.UI
             // update map zoom factor
             if (map?.RenderMap != null && interf?.RenderView != null)
                 map.RenderMap.ZoomFactor = 1.0f + interf.RenderView.Zoom * 0.5f;
+
+            // The possible builds change with the map, e.g. when the player
+            // builds something while they are shown (#131).
+            if (ShowPossibleBuilds && ++updatesSincePossibleBuildsCheck >= PossibleBuildsCheckInterval)
+            {
+                updatesSincePossibleBuildsCheck = 0;
+                recheckPossibleBuilds = true;
+            }
 
             // view redraw the viewport permanently
             SetRedraw();
