@@ -27,41 +27,46 @@ namespace Freeserf.Test.Android
         }
 
         [TestMethod]
-        [DataRow("en-US")]
-        [DataRow("de-DE")]
-        [DataRow("fr-FR")]
-        public void FormattedMessages_PreserveExistingGermanAndEnglish(string culture)
+        [DataRow("en-US", false)]
+        [DataRow("de-DE", true)]
+        [DataRow("de-AT", true)]
+        [DataRow("de-CH", true)]
+        [DataRow("fr-FR", false)]
+        public void FormattedMessages_UseGermanTranslationsOrEnglishFallback(string culture, bool german)
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
 
-            Assert.AreEqual("Initialisierung fehlgeschlagen: detail", AndroidText.InitializationFailed("detail"));
+            Assert.AreEqual(german ? "Initialisierung fehlgeschlagen: detail" : "Initialization failed: detail", AndroidText.InitializationFailed("detail"));
             Assert.AreEqual("A file named island.save already exists.", AndroidText.FileAlreadyExists("island.save"));
-            Assert.AreEqual("Login fehlgeschlagen (HTTP 401).", AndroidText.LoginFailed(401));
-            Assert.AreEqual("Netzwerkfehler: detail", AndroidText.NetworkError("detail"));
-            Assert.AreEqual("Konnte Verbindung zu 'download_service' nicht öffnen.",
+            Assert.AreEqual(german ? "Login fehlgeschlagen (HTTP 401)." : "Login failed (HTTP 401).", AndroidText.LoginFailed(401));
+            Assert.AreEqual(german ? "Netzwerkfehler: detail" : "Network error: detail", AndroidText.NetworkError("detail"));
+            Assert.AreEqual(german ? "Konnte Verbindung zu 'download_service' nicht öffnen." : "Could not open a connection to 'download_service'.",
                 AndroidText.ServiceConnectionFailed("download_service"));
-            Assert.AreEqual("Die Datei SPAE.PA wurde im Spielmanifest nicht gefunden.",
+            Assert.AreEqual(german ? "Die Datei SPAE.PA wurde im Spielmanifest nicht gefunden." : "File SPAE.PA was not found in the game manifest.",
                 AndroidText.ManifestFileNotFound("SPAE.PA"));
-            Assert.AreEqual("Lade SPAE.PA herunter (2/17)…", AndroidText.DownloadingFile("SPAE.PA", 2, 17));
-            Assert.AreEqual("SPAE.PA erfolgreich heruntergeladen.", AndroidText.DownloadSucceeded("SPAE.PA"));
-            Assert.AreEqual("Download fehlgeschlagen: detail", AndroidText.DownloadFailed("detail"));
-            Assert.AreEqual("Unbekannte Kompressionsmethode: xyz", AndroidText.UnknownCompression("xyz"));
+            Assert.AreEqual(german ? "Lade SPAE.PA herunter (2/17)…" : "Downloading SPAE.PA (2/17)…", AndroidText.DownloadingFile("SPAE.PA", 2, 17));
+            Assert.AreEqual(german ? "SPAE.PA erfolgreich heruntergeladen." : "SPAE.PA downloaded successfully.", AndroidText.DownloadSucceeded("SPAE.PA"));
+            Assert.AreEqual(german ? "Download fehlgeschlagen: detail" : "Download failed: detail", AndroidText.DownloadFailed("detail"));
+            Assert.AreEqual(german ? "Unbekannte Kompressionsmethode: xyz" : "Unknown compression method: xyz", AndroidText.UnknownCompression("xyz"));
         }
 
         [TestMethod]
-        public void Labels_PreserveExistingGermanAndEnglish()
+        [DataRow("en-US", false)]
+        [DataRow("de-DE", true)]
+        [DataRow("fr-FR", false)]
+        public void Labels_UseGermanTranslationsOrEnglishFallback(string culture, bool german)
         {
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
 
             Assert.AreEqual("Freeserf", Strings.Android_AppName);
-            Assert.AreEqual("Lädt…", Strings.Android_Loading);
-            Assert.AreEqual("Spieldaten bereitstellen", Strings.Android_ImportTitle);
-            Assert.AreEqual("Datei auswählen", Strings.Android_SelectFile);
-            Assert.AreEqual("Von Ubisoft Connect herunterladen", Strings.Android_DownloadFromUbisoft);
+            Assert.AreEqual(german ? "Lädt…" : "Loading…", Strings.Android_Loading);
+            Assert.AreEqual(german ? "Spieldaten bereitstellen" : "Provide game data", Strings.Android_ImportTitle);
+            Assert.AreEqual(german ? "Datei auswählen" : "Select file", Strings.Android_SelectFile);
+            Assert.AreEqual(german ? "Von Ubisoft Connect herunterladen" : "Download from Ubisoft Connect", Strings.Android_DownloadFromUbisoft);
             Assert.AreEqual("Old saves", Strings.Android_OldSaves);
             Assert.AreEqual("OK", Strings.Android_OK);
-            Assert.AreEqual("unbekannter Fehler", Strings.Android_UnknownError);
+            Assert.AreEqual(german ? "unbekannter Fehler" : "unknown error", Strings.Android_UnknownError);
         }
 
         [TestMethod]
@@ -70,9 +75,9 @@ namespace Freeserf.Test.Android
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
             const string detail = "{0}\n<error> 'quoted'";
 
-            Assert.AreEqual("Initialisierung fehlgeschlagen: " + detail, AndroidText.InitializationFailed(detail));
-            Assert.AreEqual("Netzwerkfehler: " + detail, AndroidText.NetworkError(detail));
-            Assert.AreEqual("Download fehlgeschlagen: " + detail, AndroidText.DownloadFailed(detail));
+            Assert.AreEqual("Initialization failed: " + detail, AndroidText.InitializationFailed(detail));
+            Assert.AreEqual("Network error: " + detail, AndroidText.NetworkError(detail));
+            Assert.AreEqual("Download failed: " + detail, AndroidText.DownloadFailed(detail));
         }
 
         [TestMethod]
@@ -83,8 +88,8 @@ namespace Freeserf.Test.Android
             CultureInfo.CurrentCulture = culture;
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 
-            Assert.AreEqual("Login fehlgeschlagen (HTTP ~1).", AndroidText.LoginFailed(-1));
-            Assert.AreEqual("Lade SPAE.PA herunter (~1/2)…", AndroidText.DownloadingFile("SPAE.PA", -1, 2));
+            Assert.AreEqual("Login failed (HTTP ~1).", AndroidText.LoginFailed(-1));
+            Assert.AreEqual("Downloading SPAE.PA (~1/2)…", AndroidText.DownloadingFile("SPAE.PA", -1, 2));
         }
     }
 }

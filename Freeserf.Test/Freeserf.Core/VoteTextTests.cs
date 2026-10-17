@@ -137,6 +137,7 @@ namespace Freeserf.Test.Freeserf.Core
             var properties = typeof(Strings).GetProperties(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
                 .Where(property => property.PropertyType == typeof(string)).ToArray();
             var sourceResources = Strings.ResourceManager.GetResourceSet(CultureInfo.GetCultureInfo("en"), true, true);
+            var germanResources = Strings.ResourceManager.GetResourceSet(CultureInfo.GetCultureInfo("de"), true, false);
 
             Assert.IsNotNull(sourceResources);
             Assert.IsNotEmpty(properties);
@@ -147,7 +148,10 @@ namespace Freeserf.Test.Freeserf.Core
             {
                 string source = sourceResources.GetString(property.Name);
                 Assert.IsFalse(string.IsNullOrEmpty(source), $"Missing source resource: {property.Name}");
-                Assert.AreEqual(source, property.GetValue(null), $"Fallback failed: {property.Name}");
+                string expected = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de"
+                    ? germanResources?.GetString(property.Name) ?? source
+                    : source;
+                Assert.AreEqual(expected, property.GetValue(null), $"Resource resolution failed: {property.Name}");
             }
 
             Assert.AreEqual("Player 2 wants to set the game speed to 12.",

@@ -12,4 +12,52 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
   </resheader>
+  <data name="Android_Loading" xml:space="preserve"><value>Lädt…</value></data>
+  <data name="Android_InitializationFailed" xml:space="preserve"><value>Initialisierung fehlgeschlagen: {0}</value><comment>{0}: error detail.</comment></data>
+  <data name="Android_ImportMessage" xml:space="preserve"><value>Bitte wählen Sie, wie Sie die Spieldatei (SPAE.PA) bereitstellen möchten.</value></data>
+  <data name="Android_SelectFile" xml:space="preserve"><value>Datei auswählen</value></data>
+  <data name="Android_DownloadFromUbisoft" xml:space="preserve"><value>Von Ubisoft Connect herunterladen</value></data>
+  <data name="Android_ImportTitle" xml:space="preserve"><value>Spieldaten bereitstellen</value></data>
+  <data name="Android_SelectDataFilePrompt" xml:space="preserve"><value>Bitte wählen Sie die Spieldatei (z.B. SPAE.PA) aus.</value></data>
+  <data name="Android_LoggingIn" xml:space="preserve"><value>Melde bei Ubisoft Connect an…</value></data>
+  <data name="Android_StartingDownload" xml:space="preserve"><value>Starte Download…</value></data>
+  <data name="Android_EnterCredentials" xml:space="preserve"><value>Bitte E-Mail und Passwort eingeben.</value></data>
+  <data name="Android_EnterTwoFactorCode" xml:space="preserve"><value>Bitte den 2FA-Code eingeben.</value></data>
+  <data name="Android_NoSavedLogin" xml:space="preserve"><value>Kein gespeicherter Login vorhanden.</value></data>
+  <data name="Android_NoValidLogin" xml:space="preserve"><value>Kein gültiger Login vorhanden.</value></data>
+  <data name="Android_LoginFailed" xml:space="preserve"><value>Login fehlgeschlagen (HTTP {0}).</value><comment>{0}: HTTP status code.</comment></data>
+  <data name="Android_NetworkError" xml:space="preserve"><value>Netzwerkfehler: {0}</value><comment>{0}: error detail.</comment></data>
+  <data name="Android_ServiceConnectionFailed" xml:space="preserve"><value>Konnte Verbindung zu '{0}' nicht öffnen.</value><comment>{0}: service name.</comment></data>
+  <data name="Android_NoServiceResponse" xml:space="preserve"><value>Keine Antwort vom Ubisoft-Dienst erhalten.</value></data>
+  <data name="Android_InvalidServiceResponse" xml:space="preserve"><value>Ungültige Antwort vom Ubisoft-Dienst.</value></data>
+  <data name="Android_InvalidServiceResponseLength" xml:space="preserve"><value>Ungültige Antwortlänge vom Ubisoft-Dienst.</value></data>
+  <data name="Android_ConnectionClosed" xml:space="preserve"><value>Die Ubisoft-Verbindung wurde geschlossen.</value></data>
+  <data name="Android_InvalidServerMessageLength" xml:space="preserve"><value>Ungültige Nachrichtenlänge vom Ubisoft-Server.</value></data>
+  <data name="Android_InvalidServerProtobuf" xml:space="preserve"><value>Ungültiges Protobuf-Format vom Ubisoft-Server.</value></data>
+  <data name="Android_InvalidServerPushLength" xml:space="preserve"><value>Ungültige Push-Länge vom Ubisoft-Server.</value></data>
+  <data name="Android_ConnectionClosedUnexpectedly" xml:space="preserve"><value>Die Ubisoft-Verbindung wurde unerwartet geschlossen.</value></data>
+  <data name="Android_DownloadNotInitialized" xml:space="preserve"><value>Der Download-Dienst ist nicht initialisiert.</value></data>
+  <data name="Android_NoDownloadUrls" xml:space="preserve"><value>Keine Download-URLs erhalten.</value></data>
+  <data name="Android_DownloadUrlsDenied" xml:space="preserve"><value>Download-URLs wurden verweigert (nicht besessen?).</value></data>
+  <data name="Android_ManifestTooShort" xml:space="preserve"><value>Das Manifest ist zu kurz.</value></data>
+  <data name="Android_OwnershipInitializationFailed" xml:space="preserve"><value>Konnte die Ubisoft-Besitzprüfung nicht initialisieren.</value></data>
+  <data name="Android_NoOwnershipToken" xml:space="preserve"><value>Kein Ownership-Token erhalten. Besitzen Sie die History Edition?</value></data>
+  <data name="Android_Connecting" xml:space="preserve"><value>Verbinde mit Ubisoft…</value></data>
+  <data name="Android_AuthenticationFailed" xml:space="preserve"><value>Die Ubisoft-Authentifizierung ist fehlgeschlagen.</value></data>
+  <data name="Android_CheckingOwnership" xml:space="preserve"><value>Prüfe Besitz der History Edition…</value></data>
+  <data name="Android_GameNotOwned" xml:space="preserve"><value>Sie besitzen die Siedler 1 History Edition nicht auf diesem Ubisoft-Konto.</value></data>
+  <data name="Android_NoManifest" xml:space="preserve"><value>Für die History Edition ist kein Manifest verfügbar.</value></data>
+  <data name="Android_InitializingDownload" xml:space="preserve"><value>Initialisiere Download…</value></data>
+  <data name="Android_DownloadInitializationFailed" xml:space="preserve"><value>Der Download-Dienst konnte nicht initialisiert werden.</value></data>
+  <data name="Android_DownloadingManifest" xml:space="preserve"><value>Lade Spielmanifest…</value></data>
+  <data name="Android_ManifestFileNotFound" xml:space="preserve"><value>Die Datei {0} wurde im Spielmanifest nicht gefunden.</value><comment>{0}: data file name.</comment></data>
+  <data name="Android_RequestingDownloadUrls" xml:space="preserve"><value>Fordere Download-URLs an…</value></data>
+  <data name="Android_DownloadUrlCountMismatch" xml:space="preserve"><value>Die Anzahl der Download-URLs passt nicht zu den Slices.</value></data>
+  <data name="Android_DownloadingFile" xml:space="preserve"><value>Lade {0} herunter ({1}/{2})…</value><comment>{0}: file name; {1}: current slice; {2}: slice count.</comment></data>
+  <data name="Android_DownloadSucceeded" xml:space="preserve"><value>{0} erfolgreich heruntergeladen.</value><comment>{0}: file name.</comment></data>
+  <data name="Android_NoManifestUrl" xml:space="preserve"><value>Keine Manifest-URL erhalten.</value></data>
+  <data name="Android_DownloadFailed" xml:space="preserve"><value>Download fehlgeschlagen: {0}</value><comment>{0}: error detail.</comment></data>
+  <data name="Android_UnknownError" xml:space="preserve"><value>unbekannter Fehler</value></data>
+  <data name="Android_LzhamUnsupported" xml:space="preserve"><value>Die lzham-Kompression wird auf Android nicht unterstützt.</value></data>
+  <data name="Android_UnknownCompression" xml:space="preserve"><value>Unbekannte Kompressionsmethode: {0}</value><comment>{0}: compression method.</comment></data>
 </root>
