@@ -140,13 +140,13 @@ namespace Freeserf
         public static string GetPlayerName(uint player) => Localization.VoteText.PlayerName(player);
 
         /// <summary>
-        /// Text for the players who are asked (lines separated by '\n').
+        /// Message for the players who are asked; the UI wraps it to fit.
         /// </summary>
         public static string GetQuestion(uint requester, VoteType type, int parameter)
             => Localization.VoteText.Question(requester, type, parameter);
 
         /// <summary>
-        /// Text for the requester (lines separated by '\n').
+        /// Message for the requester; the UI wraps it to fit.
         /// </summary>
         public static string GetOwnRequest(VoteType type, int parameter)
             => Localization.VoteText.OwnRequest(type, parameter);

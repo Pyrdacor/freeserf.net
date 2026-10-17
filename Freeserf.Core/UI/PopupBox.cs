@@ -1111,6 +1111,8 @@ namespace Freeserf.UI
             string text, params (int X, int Y)[] positions)
         {
             var lines = text.Split('\n');
+            if (lines.Length != positions.Length)
+                MessageText.ReportLayoutError("fixed popup text", $"has {lines.Length} lines for {positions.Length} fixed positions");
 
             for (int i = 0; i < positions.Length; ++i)
                 yield return (positions[i].X, positions[i].Y, lines[i]);
@@ -1119,6 +1121,20 @@ namespace Freeserf.UI
         void SetTextLines(string text, params (int X, int Y)[] positions)
         {
             foreach (var line in GetTextLayout(text, positions))
+                SetText(line.X, line.Y, line.Text);
+        }
+
+        internal static IEnumerable<(int X, int Y, string Text)> GetParagraphLayout(
+            string text, int x, int y, int maxLines, string context)
+        {
+            var lines = MessageText.Wrap(text, MessageText.Columns, maxLines, context);
+            for (int i = 0; i < lines.Length; ++i)
+                yield return (x, y + i * MessageText.LineHeight, lines[i]);
+        }
+
+        void SetParagraph(string text, int x, int y, int maxLines, string context)
+        {
+            foreach (var line in GetParagraphLayout(text, x, y, maxLines, context))
                 SetText(line.X, line.Y, line.Text);
         }
 
@@ -2797,14 +2813,13 @@ namespace Freeserf.UI
 
         void DrawQuitConfirmBox()
         {
-            SetTextLines(Strings.Popup_QuitQuestion, (8, 19), (8, 29), (8, 39));
+            SetParagraph(Strings.Popup_QuitQuestion, 8, 19, 3, "quit question");
             clickableTextField = SetText(8, 54, Strings.Popup_QuitChoices);
         }
 
         void DrawNoSaveQuitConfirmBox()
         {
-            SetTextLines(Strings.Popup_UnsavedQuitQuestion,
-                (8, 79), (8, 89), (8, 99), (8, 109), (8, 119));
+            SetParagraph(Strings.Popup_UnsavedQuitQuestion, 8, 79, 5, "unsaved quit question");
             clickableTextField = SetText(8, 134, Strings.Popup_UnsavedQuitChoices);
         }
 
@@ -3592,27 +3607,7 @@ namespace Freeserf.UI
             SetText(8, 15, FormatTutorialTitle(level));
             SetText(8, 35, Strings.Popup_TutorialOrders);
 
-            /* Word wrap to the 16 characters of a line. */
-            var words = orders[level - 1].Split(' ');
-            string line = "";
-            int y = 55;
-
-            foreach (var word in words)
-            {
-                if (!string.IsNullOrEmpty(line) && line.Length + 1 + word.Length > 16)
-                {
-                    SetText(8, y, line);
-                    y += 10;
-                    line = "";
-                }
-
-                line += (line.Length == 0 ? "" : " ") + word;
-            }
-
-            if (!string.IsNullOrEmpty(line))
-            {
-                SetText(8, y, line);
-            }
+            SetParagraph(orders[level - 1], 8, 55, 9, "tutorial orders");
         }
 
         void DrawDemolishBox()

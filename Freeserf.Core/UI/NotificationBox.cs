@@ -237,6 +237,7 @@ namespace Freeserf.UI
                 return;
             }
 
+            WrapMessage(GetView(message.NotificationType).Text);
             notification = message;
             Displayed = true;
             checkBox.Displayed = true;
@@ -363,9 +364,12 @@ namespace Freeserf.UI
             // TODO: textField.ColorBg = Color.Black;
         }
 
+        internal static string[] WrapMessage(string text) =>
+            MessageText.Wrap(text, MessageText.Columns, 5, "notification");
+
         void DrawMessage(int x, int y, string message)
         {
-            var lines = message.Split('\n');
+            var lines = WrapMessage(message);
 
             for (int i = 0; i < 5; ++i)
             {
@@ -377,7 +381,7 @@ namespace Freeserf.UI
                 else
                 {
                     DrawString(x, y, textFieldMessage[i], lines[i]);
-                    y += 10;
+                    y += MessageText.LineHeight;
                 }
             }
         }

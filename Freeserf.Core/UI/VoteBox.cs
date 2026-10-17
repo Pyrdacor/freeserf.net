@@ -81,7 +81,7 @@ namespace Freeserf.UI
             for (int i = 0; i < textLines.Length; ++i)
             {
                 textLines[i] = new TextField(interf, 3);
-                AddChild(textLines[i], 8, 92 + i * 10);
+                AddChild(textLines[i], 8, 92 + i * MessageText.LineHeight);
             }
 
             statusText = new TextField(interf, 3);
@@ -114,7 +114,11 @@ namespace Freeserf.UI
 
         public void Show(VoteEntry entry)
         {
+            string[] lines = WrapMessage(entry.OwnRequest
+                ? Vote.GetOwnRequest(entry.Type, entry.Parameter)
+                : Vote.GetQuestion(entry.Requester, entry.Type, entry.Parameter));
             Entry = entry;
+            Displayed = true;
 
             var player = interf.Game?.GetPlayer(entry.Requester);
 
@@ -127,8 +131,7 @@ namespace Freeserf.UI
 
             playerFace.Displayed = true;
             statusText.Displayed = true;
-            SetText(entry.OwnRequest ? Vote.GetOwnRequest(entry.Type, entry.Parameter) : Vote.GetQuestion(entry.Requester, entry.Type, entry.Parameter));
-            Displayed = true;
+            SetText(lines);
             UpdateStatus(DateTime.UtcNow);
             SetRedraw();
         }
@@ -168,10 +171,11 @@ namespace Freeserf.UI
             Answered?.Invoke(Entry, yes);
         }
 
-        void SetText(string text)
-        {
-            var lines = text.Split('\n');
+        internal static string[] WrapMessage(string text) =>
+            MessageText.Wrap(text, MessageText.Columns, 3, "vote question");
 
+        void SetText(string[] lines)
+        {
             for (int i = 0; i < textLines.Length; ++i)
             {
                 textLines[i].Text = i < lines.Length ? lines[i] : "";

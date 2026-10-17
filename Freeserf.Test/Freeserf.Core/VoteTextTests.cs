@@ -47,7 +47,7 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow((VoteType)255, "Player 3 wants\nsomething.")]
         public void Question_PreservesEveryMessage(VoteType type, string expected)
         {
-            Assert.AreEqual(expected, Vote.GetQuestion(2, type, 7));
+            Assert.AreEqual(expected.Replace('\n', ' '), Vote.GetQuestion(2, type, 7));
         }
 
         [TestMethod]
@@ -58,7 +58,7 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow((VoteType)255, "You want\nsomething.")]
         public void OwnRequest_PreservesEveryMessage(VoteType type, string expected)
         {
-            Assert.AreEqual(expected, Vote.GetOwnRequest(type, 7));
+            Assert.AreEqual(expected.Replace('\n', ' '), Vote.GetOwnRequest(type, 7));
         }
 
         [TestMethod]
@@ -68,9 +68,9 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow(-1)]
         public void SpeedMessages_PreserveParameterFormatting(int speed)
         {
-            Assert.AreEqual($"Player 1 wants\nto set the game\nspeed to {speed}.",
+            Assert.AreEqual($"Player 1 wants to set the game speed to {speed}.",
                 Vote.GetQuestion(0, VoteType.GameSpeed, speed));
-            Assert.AreEqual($"You want to set\nthe game speed\nto {speed}.",
+            Assert.AreEqual($"You want to set the game speed to {speed}.",
                 Vote.GetOwnRequest(VoteType.GameSpeed, speed));
         }
 
@@ -150,7 +150,7 @@ namespace Freeserf.Test.Freeserf.Core
                 Assert.AreEqual(source, property.GetValue(null), $"Fallback failed: {property.Name}");
             }
 
-            Assert.AreEqual("Player 2 wants\nto set the game\nspeed to 12.",
+            Assert.AreEqual("Player 2 wants to set the game speed to 12.",
                 Vote.GetQuestion(1, VoteType.GameSpeed, 12));
         }
     }

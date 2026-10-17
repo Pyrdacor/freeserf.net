@@ -65,8 +65,17 @@ namespace Freeserf.Test.Freeserf.Core
             Assert.AreEqual(type, view.Type);
             Assert.AreEqual((Decoration)decoration, view.Decoration);
             Assert.AreEqual(icon, view.Icon);
-            Assert.AreEqual(expected, view.Text);
-            Assert.IsLessThanOrEqualTo(5, view.Text.Split('\n').Length);
+            Assert.AreEqual(expected.Replace('\n', ' '), view.Text);
+            var lines = NotificationBox.WrapMessage(view.Text);
+            Assert.IsLessThanOrEqualTo(5, lines.Length);
+            Assert.IsTrue(lines.All(line => line.Length <= MessageText.Columns));
+        }
+
+        [TestMethod]
+        public void Notification_WrapsWholeParagraphNaturally()
+        {
+            CollectionAssert.AreEqual(new[] { "A new stock has", "been built" },
+                NotificationBox.WrapMessage(NotificationBox.GetView(Notification.Type.NewStock).Text));
         }
 
         [TestMethod]

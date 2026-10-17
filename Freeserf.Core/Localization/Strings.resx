@@ -17,55 +17,40 @@
     <comment>{0}: one-based player number.</comment>
   </data>
   <data name="Vote_Question_Pause" xml:space="preserve">
-    <value>{0} wants
-to pause the
-game.</value>
+    <value>{0} wants to pause the game.</value>
     <comment>{0}: player label.</comment>
   </data>
   <data name="Vote_Question_Resume" xml:space="preserve">
-    <value>{0} wants
-to resume the
-game.</value>
+    <value>{0} wants to resume the game.</value>
     <comment>{0}: player label.</comment>
   </data>
   <data name="Vote_Question_GameSpeed" xml:space="preserve">
-    <value>{0} wants
-to set the game
-speed to {1}.</value>
+    <value>{0} wants to set the game speed to {1}.</value>
     <comment>{0}: player label; {1}: requested game speed.</comment>
   </data>
   <data name="Vote_Question_Save" xml:space="preserve">
-    <value>{0} wants
-to save the
-game.</value>
+    <value>{0} wants to save the game.</value>
     <comment>{0}: player label.</comment>
   </data>
   <data name="Vote_Question_Unknown" xml:space="preserve">
-    <value>{0} wants
-something.</value>
+    <value>{0} wants something.</value>
     <comment>{0}: player label.</comment>
   </data>
   <data name="Vote_OwnRequest_Pause" xml:space="preserve">
-    <value>You want to
-pause the game.</value>
+    <value>You want to pause the game.</value>
   </data>
   <data name="Vote_OwnRequest_Resume" xml:space="preserve">
-    <value>You want to
-resume the game.</value>
+    <value>You want to resume the game.</value>
   </data>
   <data name="Vote_OwnRequest_GameSpeed" xml:space="preserve">
-    <value>You want to set
-the game speed
-to {0}.</value>
+    <value>You want to set the game speed to {0}.</value>
     <comment>{0}: requested game speed.</comment>
   </data>
   <data name="Vote_OwnRequest_Save" xml:space="preserve">
-    <value>You want to
-save the game.</value>
+    <value>You want to save the game.</value>
   </data>
   <data name="Vote_OwnRequest_Unknown" xml:space="preserve">
-    <value>You want
-something.</value>
+    <value>You want something.</value>
   </data>
   <data name="Vote_Answer_Yes" xml:space="preserve">
     <value>Yes</value>
@@ -90,100 +75,66 @@ something.</value>
     <comment>{0}: whole seconds remaining.</comment>
   </data>
   <data name="Notification_UnderAttack" xml:space="preserve">
-    <value>Your settlement
-is under attack</value>
+    <value>Your settlement is under attack</value>
   </data>
   <data name="Notification_LoseFight" xml:space="preserve">
-    <value>Your knights
-just lost the
-fight</value>
+    <value>Your knights just lost the fight</value>
   </data>
   <data name="Notification_WinFight" xml:space="preserve">
-    <value>You gained
-a victory here</value>
+    <value>You gained a victory here</value>
   </data>
   <data name="Notification_MineEmpty" xml:space="preserve">
-    <value>This mine hauls
-no more raw
-materials</value>
+    <value>This mine hauls no more raw materials</value>
   </data>
   <data name="Notification_CallToLocation" xml:space="preserve">
-    <value>You wanted me
-to call you to
-this location</value>
+    <value>You wanted me to call you to this location</value>
   </data>
   <data name="Notification_KnightOccupied" xml:space="preserve">
-    <value>A knight has
-occupied this
-new building</value>
+    <value>A knight has occupied this new building</value>
   </data>
   <data name="Notification_NewStock" xml:space="preserve">
-    <value>A new stock
-has been built</value>
+    <value>A new stock has been built</value>
     <comment>Stock means a warehouse building.</comment>
   </data>
   <data name="Notification_LostLand" xml:space="preserve">
-    <value>Because of this
-enemy building
-you lost some
-land</value>
+    <value>Because of this enemy building you lost some land</value>
   </data>
   <data name="Notification_EmergencyActive" xml:space="preserve">
-    <value>Emergency
-program
-activated</value>
+    <value>Emergency program activated</value>
   </data>
   <data name="Notification_EmergencyNeutral" xml:space="preserve">
-    <value>Emergency
-program
-neutralized</value>
+    <value>Emergency program neutralized</value>
   </data>
   <data name="Notification_FoundGold" xml:space="preserve">
-    <value>A geologist
-has found gold</value>
+    <value>A geologist has found gold</value>
   </data>
   <data name="Notification_FoundIron" xml:space="preserve">
-    <value>A geologist
-has found iron</value>
+    <value>A geologist has found iron</value>
   </data>
   <data name="Notification_FoundCoal" xml:space="preserve">
-    <value>A geologist
-has found coal</value>
+    <value>A geologist has found coal</value>
   </data>
   <data name="Notification_FoundStone" xml:space="preserve">
-    <value>A geologist
-has found stone</value>
+    <value>A geologist has found stone</value>
   </data>
   <data name="Notification_CallToMenu" xml:space="preserve">
-    <value>You wanted me
-to call you
-to this menu</value>
+    <value>You wanted me to call you to this menu</value>
   </data>
   <data name="Notification_ThirtyMinutesSinceSave" xml:space="preserve">
-    <value>30 min. passed
-since the last
-saving</value>
+    <value>30 min. passed since the last saving</value>
   </data>
   <data name="Notification_OneHourSinceSave" xml:space="preserve">
-    <value>One hour passed
-since the last
-saving</value>
+    <value>One hour passed since the last saving</value>
   </data>
   <data name="Notification_CallToStock" xml:space="preserve">
-    <value>You wanted me
-to call you
-to this stock</value>
+    <value>You wanted me to call you to this stock</value>
     <comment>Stock means a warehouse building.</comment>
   </data>
   <data name="Notification_PlayerLeft" xml:space="preserve">
-    <value>This player
-has left
-the game</value>
+    <value>This player has left the game</value>
   </data>
   <data name="Notification_PlayerRejoined" xml:space="preserve">
-    <value>This player
-has rejoined
-the game</value>
+    <value>This player has rejoined the game</value>
   </data>
   <data name="Setup_DefaultServerName" xml:space="preserve"><value>Freeserf Server</value></data>
   <data name="Setup_ServerValues" xml:space="preserve"><value>Server Values</value></data>
@@ -392,20 +343,14 @@ Cannot be used with -o option.</value>
     <value>ERROR</value>
   </data>
   <data name="Popup_QuitQuestion" xml:space="preserve">
-    <value>   Do you want
-     to quit
-   this game?</value>
+    <value>Do you want to quit this game?</value>
   </data>
   <data name="Popup_QuitChoices" xml:space="preserve">
     <value>  Yes        No</value>
     <comment>Fixed zero-based click columns: Yes at characters 2–4; No at 13–14. Preserve spacing and widths.</comment>
   </data>
   <data name="Popup_UnsavedQuitQuestion" xml:space="preserve">
-    <value>The game has not
-   been saved
-   recently.
-    Are you
-     sure?</value>
+    <value>The game has not been saved recently. Are you sure?</value>
   </data>
   <data name="Popup_UnsavedQuitChoices" xml:space="preserve">
     <value>  Save  Yes  No</value>
