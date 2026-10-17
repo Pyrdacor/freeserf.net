@@ -276,12 +276,12 @@ namespace Freeserf.Test.Freeserf.Core
         [TestMethod]
         public void SetupLabels_FitBesideNumericValuesAndWithinTheSetupBox()
         {
-            // Label x=96, value x=176; text fields use a nine-pixel advance.
+            int labelX = GameInitBox.GetTextX(GameInitBox.HeaderTextColumn);
+            int valueX = GameInitBox.GetTextX(GameInitBox.ValueTextColumn);
             foreach (string text in new[] { Strings.Setup_MapSizeLabel, Strings.Setup_MissionLabel, Strings.Setup_TutorialLabel })
-                Assert.IsLessThanOrEqualTo(176, 96 + 8 + (text.Length - 1) * 9);
-            Assert.IsLessThanOrEqualTo(344, 232 + 8 + (Strings.Setup_HostGame.Length - 1) * 9);
-            Assert.IsLessThanOrEqualTo(180, 24 + 18 + Strings.Setup_ServerValues.Length * 8);
-            Assert.IsLessThanOrEqualTo(344, 180 + 18 + Strings.Setup_IdenticalValues.Length * 8);
+                Assert.IsLessThanOrEqualTo(valueX, labelX + 8 + (text.Length - 1) * GameInitBox.TextCharacterAdvance);
+            Assert.IsLessThanOrEqualTo(GameInitBox.SameValuesCheckBoxX,
+                GameInitBox.ServerValuesCheckBoxX + 18 + Strings.Setup_ServerValues.Length * 8);
         }
 
         [TestMethod]

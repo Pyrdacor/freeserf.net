@@ -152,6 +152,19 @@ namespace Freeserf.UI
         const int ServerAddressInputX = 128;
         const int ServerNameInputX = 72;
 
+        internal const int DialogWidth = 352;
+        internal const int HeaderTextColumn = 10;
+        internal const int ValueTextColumn = 20;
+        internal const int ServerNameTextColumn = 1;
+        internal const int HostGameTextColumn = 25;
+        internal const int FooterTextColumn = 2;
+        internal const int TextCharacterAdvance = 9;
+        internal const int ServerValuesCheckBoxX = 24;
+        internal const int SameValuesCheckBoxX = 180;
+        internal static int TextContentLeft => Border.GameInitLeftBorderWidth;
+        internal static int TextContentRight => DialogWidth - Border.GameInitRightBorderWidth;
+        internal static int GetTextX(int column) => 8 * column + TextContentLeft;
+
         Interface interf = null;
         GameType gameType = GameType.Custom;
         int gameMission = 0;
@@ -431,7 +444,7 @@ namespace Freeserf.UI
 
             randomInput = new RandomInput(interf);
 
-            SetSize(16 + 320 + 16, 200);
+            SetSize(DialogWidth, 200);
 
             ServerGameInfo = new GameInfo(new Random(), false);
 
@@ -482,11 +495,11 @@ namespace Freeserf.UI
             buttonOptions.Clicked += ButtonOptions_Clicked;
             AddChild(buttonOptions, 8 * 36 + 12, 16);
 
-            textFieldHeader = new TextField(interf, 1, 9);
-            textFieldName = new TextField(interf, 1, 9);
-            textFieldValue = new TextField(interf, 1, 9);
-            textCreateServer = new TextField(interf, 1, 9);
-            textServerNameLabel = new TextField(interf, 1, 9);
+            textFieldHeader = new TextField(interf, 1, TextCharacterAdvance);
+            textFieldName = new TextField(interf, 1, TextCharacterAdvance);
+            textFieldValue = new TextField(interf, 1, TextCharacterAdvance);
+            textCreateServer = new TextField(interf, 1, TextCharacterAdvance);
+            textServerNameLabel = new TextField(interf, 1, TextCharacterAdvance);
             AddChild(textServerNameLabel, 0, 0, false);
             AddChild(textFieldHeader, 0, 0, false);
             AddChild(textFieldName, 0, 0, false);
@@ -532,7 +545,7 @@ namespace Freeserf.UI
             serverNameInput.TextChanged += ServerNameInput_TextChanged;
             AddChild(serverNameInput, ServerNameInputX, 139 + 16, false);
 
-            textFieldServerIp = new TextField(interf, 1, 9);
+            textFieldServerIp = new TextField(interf, 1, TextCharacterAdvance);
             AddChild(textFieldServerIp, 0, 0, false);
 
             buttonExit = new Button(interf, 16, 16, type, 60u, buttonLayer);
@@ -546,12 +559,12 @@ namespace Freeserf.UI
             checkBoxServerValues = new CheckBox(interf);
             checkBoxServerValues.Text = Strings.Setup_ServerValues;
             checkBoxServerValues.CheckedChanged += CheckBoxServerValues_CheckedChanged;
-            AddChild(checkBoxServerValues, 24, 155, false);
+            AddChild(checkBoxServerValues, ServerValuesCheckBoxX, 155, false);
 
             checkBoxSameValues = new CheckBox(interf);
             checkBoxSameValues.Text = Strings.Setup_IdenticalValues;
             checkBoxSameValues.CheckedChanged += CheckBoxSameValues_CheckedChanged;
-            AddChild(checkBoxSameValues, 180, 155, false);
+            AddChild(checkBoxSameValues, SameValuesCheckBoxX, 155, false);
         }
 
         private void CheckBoxServerValues_CheckedChanged(object sender, System.EventArgs e)
@@ -827,7 +840,7 @@ namespace Freeserf.UI
         void DrawBoxString(int x, int y, TextField textField, string str)
         {
             textField.Text = str;
-            textField.MoveTo(8 * x + 16, y + 16);
+            textField.MoveTo(GetTextX(x), y + 16);
             textField.Displayed = Displayed;
 
             // TODO: textField.ColorText = Color.Green;
@@ -942,21 +955,21 @@ namespace Freeserf.UI
                             break;
                     }
 
-                    DrawBoxString(10, 2, textFieldHeader, header);
+                    DrawBoxString(HeaderTextColumn, 2, textFieldHeader, header);
 
                     if (gameType == GameType.MultiplayerClient)
                     {
-                        DrawBoxString(10, 18, textFieldName, Strings.Setup_AddressLabel);
+                        DrawBoxString(HeaderTextColumn, 18, textFieldName, Strings.Setup_AddressLabel);
                         serverAddressInput.Displayed = Displayed;
                         serverAddressInput.MoveTo(ServerAddressInputX, 18 + 16);
                         HideBoxString(textFieldValue);
                         HideBoxString(textFieldServerIp);
                         // Name of the own server and button to create it.
-                        DrawBoxString(1, 139, textServerNameLabel, Strings.Setup_NameLabel);
+                        DrawBoxString(ServerNameTextColumn, 139, textServerNameLabel, Strings.Setup_NameLabel);
                         serverNameInput.Displayed = Displayed;
                         serverNameInput.MoveTo(ServerNameInputX, 139 + 16);
                         buttonCreateServer.MoveTo(ServerNameInputX + UserConfig.MaxServerNameLength * 9 + 14, 151);
-                        DrawBoxString(27, 139, textCreateServer, Strings.Setup_HostGame);
+                        DrawBoxString(HostGameTextColumn, 139, textCreateServer, Strings.Setup_HostGame);
 
                         buttonUp.Displayed = false;
                         buttonDown.Displayed = false;
@@ -967,13 +980,13 @@ namespace Freeserf.UI
                     {
                         serverAddressInput.Displayed = false;
                         buttonMapSize.MoveTo(212, 16);
-                        DrawBoxString(10, 18, textFieldName, Strings.Setup_MapSizeLabel);
-                        DrawBoxString(20, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
+                        DrawBoxString(HeaderTextColumn, 18, textFieldName, Strings.Setup_MapSizeLabel);
+                        DrawBoxString(ValueTextColumn, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
 
                         if (gameType == GameType.MultiplayerServer)
                         {
                             randomInput.Displayed = Displayed;
-                            DrawBoxString(1, 123, textServerNameLabel, Strings.Setup_NameLabel);
+                            DrawBoxString(ServerNameTextColumn, 123, textServerNameLabel, Strings.Setup_NameLabel);
                             serverNameInput.Displayed = Displayed;
                             serverNameInput.MoveTo(ServerNameInputX, 123 + 16);
                         }
@@ -1000,9 +1013,9 @@ namespace Freeserf.UI
                     }
                     break;
                 case GameType.Mission:
-                    DrawBoxString(10, 2, textFieldHeader, Strings.Setup_StartMission);
-                    DrawBoxString(10, 18, textFieldName, Strings.Setup_MissionLabel);
-                    DrawBoxString(20, 18, textFieldValue, (gameMission + 1).ToString());
+                    DrawBoxString(HeaderTextColumn, 2, textFieldHeader, Strings.Setup_StartMission);
+                    DrawBoxString(HeaderTextColumn, 18, textFieldName, Strings.Setup_MissionLabel);
+                    DrawBoxString(ValueTextColumn, 18, textFieldValue, (gameMission + 1).ToString());
                     HideBoxString(textCreateServer);
                     HideBoxString(textFieldServerIp);
                     serverAddressInput.Displayed = false;
@@ -1020,9 +1033,9 @@ namespace Freeserf.UI
                     }
                     break;
                 case GameType.Tutorial:
-                    DrawBoxString(10, 2, textFieldHeader, Strings.Setup_StartTutorial);
-                    DrawBoxString(10, 18, textFieldName, Strings.Setup_TutorialLabel);
-                    DrawBoxString(20, 18, textFieldValue, (gameTutorial + 1).ToString());
+                    DrawBoxString(HeaderTextColumn, 2, textFieldHeader, Strings.Setup_StartTutorial);
+                    DrawBoxString(HeaderTextColumn, 18, textFieldName, Strings.Setup_TutorialLabel);
+                    DrawBoxString(ValueTextColumn, 18, textFieldValue, (gameTutorial + 1).ToString());
                     HideBoxString(textCreateServer);
                     HideBoxString(textFieldServerIp);
                     serverAddressInput.Displayed = false;
@@ -1041,7 +1054,7 @@ namespace Freeserf.UI
                     break;
                 case GameType.Load:
                     {
-                        DrawBoxString(10, 2, textFieldHeader, Strings.Setup_LoadGame);
+                        DrawBoxString(HeaderTextColumn, 2, textFieldHeader, Strings.Setup_LoadGame);
                         /*DrawBoxString(10, 18, textFieldName, "File:");
 
                         string path = fileList.GetSelected()?.Path;
@@ -1113,12 +1126,12 @@ namespace Freeserf.UI
             if (gameType == GameType.MultiplayerServer && Server?.Ip != null)
             {
                 HideBoxString(textFieldVersion);
-                DrawBoxString(2, 162, textFieldServerIp, string.Format(CultureInfo.CurrentCulture, Strings.Setup_ServerAddress, Server.Ip));
+                DrawBoxString(FooterTextColumn, 162, textFieldServerIp, string.Format(CultureInfo.CurrentCulture, Strings.Setup_ServerAddress, Server.Ip));
             }
             else
             {
                 HideBoxString(textFieldServerIp);
-                DrawBoxString(2, 162, textFieldVersion, Global.VERSION);
+                DrawBoxString(FooterTextColumn, 162, textFieldVersion, Global.VERSION);
             }
         }
 

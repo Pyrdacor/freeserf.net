@@ -379,6 +379,9 @@ namespace Freeserf.UI
             }
         };
 
+        internal static int GameInitLeftBorderWidth => definitions[0, 1].SpriteWidth;
+        internal static int GameInitRightBorderWidth => definitions[0, 2].SpriteWidth;
+
         public Position GetBackgroundOffset()
         {
             return new Position((borders[2].Width - borders[1].Width) / 2, (borders[0].Height - borders[3].Height) / 2);

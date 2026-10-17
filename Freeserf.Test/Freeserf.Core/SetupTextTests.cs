@@ -55,6 +55,60 @@ namespace Freeserf.Test.Freeserf.Core
         }
 
         [TestMethod]
+        [DataRow("en")]
+        [DataRow("de")]
+        public void LocalizedLabels_StayBetweenMainMenuWoodenBars(string language)
+        {
+            var culture = CultureInfo.GetCultureInfo(language);
+            (string Key, int Column)[] labels =
+            [
+                (nameof(Strings.Setup_NewGame), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_Demo), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_Multiplayer), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_HostGame), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_MultiplayerJoin), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_StartingGame), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_StartMission), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_StartTutorial), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_LoadGame), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_AddressLabel), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_MapSizeLabel), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_MissionLabel), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_TutorialLabel), GameInitBox.HeaderTextColumn),
+                (nameof(Strings.Setup_NameLabel), GameInitBox.ServerNameTextColumn),
+                (nameof(Strings.Setup_HostGame), GameInitBox.HostGameTextColumn),
+                (nameof(Strings.Setup_ServerAddress), GameInitBox.FooterTextColumn)
+            ];
+
+            Assert.AreEqual(16, GameInitBox.TextContentLeft);
+            Assert.AreEqual(336, GameInitBox.TextContentRight);
+            foreach (var (key, column) in labels)
+            {
+                string template = Strings.ResourceManager.GetString(key, culture);
+                Assert.IsNotNull(template, key);
+                string text = string.Format(culture, template, "255.255.255.255");
+                int left = GameInitBox.GetTextX(column);
+                int right = left + 8 + (text.Length - 1) * GameInitBox.TextCharacterAdvance;
+                Assert.IsGreaterThanOrEqualTo(GameInitBox.TextContentLeft, left, $"{language}: {key}");
+                Assert.IsLessThanOrEqualTo(GameInitBox.TextContentRight, right, $"{language}: {key}");
+            }
+
+            (string Key, int X)[] checkBoxes =
+            [
+                (nameof(Strings.Setup_ServerValues), GameInitBox.ServerValuesCheckBoxX),
+                (nameof(Strings.Setup_IdenticalValues), GameInitBox.SameValuesCheckBoxX)
+            ];
+            foreach (var (key, x) in checkBoxes)
+            {
+                string text = Strings.ResourceManager.GetString(key, culture);
+                Assert.IsNotNull(text, key);
+                int textLeft = x + 18;
+                Assert.IsGreaterThanOrEqualTo(GameInitBox.TextContentLeft, textLeft, $"{language}: {key}");
+                Assert.IsLessThanOrEqualTo(GameInitBox.TextContentRight, textLeft + text.Length * 8, $"{language}: {key}");
+            }
+        }
+
+        [TestMethod]
         public void SetupLabels_PreserveWording()
         {
             string[] expected =
