@@ -21,6 +21,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Freeserf.Localization;
 
 namespace Freeserf.UI
 {
@@ -50,11 +51,9 @@ namespace Freeserf.UI
         public override string ToString()
         {
             if (!Online)
-                return $"{SavedAddress} | not found";
+                return ServerText.NotFound(SavedAddress);
 
-            string text = $"{Name} | {HostName} | {CurrentPlayers}/{MaxPlayers}";
-
-            return InGame ? text + " | running" : AllowsRejoin ? text + " | saved" : text;
+            return ServerText.Online(Name, HostName, CurrentPlayers, MaxPlayers, InGame, AllowsRejoin);
         }
     }
 

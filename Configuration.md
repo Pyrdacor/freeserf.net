@@ -15,6 +15,7 @@ The file is located inside the users application data path in the sub-directory 
 ### Usage
 
 The user config is overwritten every time the game is closed. The settings are the same as in the option menu.
+Changing the language in the options also saves the config immediately.
 You may change the user config manually with a text editor. But the changes will only be used on next game start.
 So manual changes should be done while the game is not running.
 
@@ -28,6 +29,7 @@ Boolean values are expressed as 0 and 1. Integers are expressed in decimal forma
   graphic_data_usage = PreferDos
   sound_data_usage = PreferDos
   music_data_usage = PreferAmiga
+  language = system
 [audio]
   music = 1
   sound = 1
@@ -58,6 +60,35 @@ FastMapClick = Bit 7 -> 128 // Fast map click (double right click opens/closes t
 HideCursorWhileScrolling = Bit 8 -> 256 // Hide cursor while scrolling the map
 ResetCursorAfterScrolling = Bit 9 -> 512 // After map scrolling ends, place the cursor at the center of the screen
 ```
+
+### Language
+
+The first options page (available from game setup and during play on both
+desktop and Android) has a language row. Its arrow cycles through **System**,
+**English**, and **German**. Changes apply immediately without restarting.
+
+The `[game]` setting `language` accepts:
+
+- `system` (default): use the system UI locale captured at application startup.
+- `en`: use English regardless of the system locale.
+- `de`: use German where translations exist.
+
+Missing settings use `system`. Unsupported values are logged and also use
+`system`. Untranslated entries fall back to English independently for each
+message. The German catalog covers all current entries; original mission names
+and product names remain unchanged. German wording and layout still need
+in-game review, particularly the unchanged choice click areas.
+Number formatting continues to use the system formatting culture.
+
+The saved preference is loaded before desktop command-line text and Android
+loading/import UI are created. Selecting System restores the startup locale;
+changes to the device's locale while the application is running are not
+automatically monitored.
+
+This affects application text only. Rare text in the original game graphics
+still uses the language-specific `SPAx.PA` supplied by the user.
+
+### Other settings
 
 The data usage values can be one of the following: PreferDos, PreferAmiga, ForceDos, ForceAmiga.
 If both data formats are found (DOS and Amiga) the preferred data is used for the Prefer\* versions.

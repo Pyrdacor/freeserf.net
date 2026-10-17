@@ -137,39 +137,19 @@ namespace Freeserf
         /// </summary>
         public bool IsSameRequest(VoteType type, int parameter) => Type == type && Parameter == parameter;
 
-        public static string GetPlayerName(uint player) => $"Player {player + 1}";
+        public static string GetPlayerName(uint player) => Localization.VoteText.PlayerName(player);
 
         /// <summary>
-        /// Text for the players who are asked (lines separated by '\n').
+        /// Message for the players who are asked; the UI wraps it to fit.
         /// </summary>
         public static string GetQuestion(uint requester, VoteType type, int parameter)
-        {
-            string name = GetPlayerName(requester);
-
-            return type switch
-            {
-                VoteType.Pause => $"{name} wants\nto pause the\ngame.",
-                VoteType.Resume => $"{name} wants\nto resume the\ngame.",
-                VoteType.GameSpeed => $"{name} wants\nto set the game\nspeed to {parameter}.",
-                VoteType.Save => $"{name} wants\nto save the\ngame.",
-                _ => $"{name} wants\nsomething."
-            };
-        }
+            => Localization.VoteText.Question(requester, type, parameter);
 
         /// <summary>
-        /// Text for the requester (lines separated by '\n').
+        /// Message for the requester; the UI wraps it to fit.
         /// </summary>
         public static string GetOwnRequest(VoteType type, int parameter)
-        {
-            return type switch
-            {
-                VoteType.Pause => "You want to\npause the game.",
-                VoteType.Resume => "You want to\nresume the game.",
-                VoteType.GameSpeed => $"You want to set\nthe game speed\nto {parameter}.",
-                VoteType.Save => "You want to\nsave the game.",
-                _ => "You want\nsomething."
-            };
-        }
+            => Localization.VoteText.OwnRequest(type, parameter);
     }
 
     /// <summary>

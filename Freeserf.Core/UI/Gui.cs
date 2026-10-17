@@ -285,6 +285,16 @@ namespace Freeserf.UI
                 Parent.SetRedraw();
         }
 
+        internal virtual void RefreshLanguage()
+        {
+            lock (children)
+            {
+                foreach (var child in children)
+                    child.RefreshLanguage();
+            }
+            SetRedraw();
+        }
+
         public bool HasChild(GuiObject obj)
         {
             return children.Contains(obj);

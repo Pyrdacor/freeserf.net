@@ -20,6 +20,7 @@
  */
 
 using System;
+using Freeserf.Localization;
 
 namespace Freeserf.UI
 {
@@ -80,7 +81,7 @@ namespace Freeserf.UI
             for (int i = 0; i < textLines.Length; ++i)
             {
                 textLines[i] = new TextField(interf, 3);
-                AddChild(textLines[i], 8, 92 + i * 10);
+                AddChild(textLines[i], 8, 92 + i * MessageText.LineHeight);
             }
 
             statusText = new TextField(interf, 3);
@@ -89,7 +90,7 @@ namespace Freeserf.UI
             // Like in the quit dialog the answers are clickable texts.
             yesText = new TextField(interf, 3);
             AddChild(yesText, 24, 138);
-            yesText.Text = "Yes";
+            yesText.Text = Strings.Vote_Answer_Yes;
             yesButton = new InvisibleButton(interf);
             yesButton.SetSize(32, 14);
             yesButton.Clicked += (sender, args) => Answer(true);
@@ -97,7 +98,7 @@ namespace Freeserf.UI
 
             noText = new TextField(interf, 3);
             AddChild(noText, 104, 138);
-            noText.Text = "No";
+            noText.Text = Strings.Vote_Answer_No;
             noButton = new InvisibleButton(interf);
             noButton.SetSize(28, 14);
             noButton.Clicked += (sender, args) => Answer(false);
@@ -113,7 +114,11 @@ namespace Freeserf.UI
 
         public void Show(VoteEntry entry)
         {
+            string[] lines = WrapMessage(entry.OwnRequest
+                ? Vote.GetOwnRequest(entry.Type, entry.Parameter)
+                : Vote.GetQuestion(entry.Requester, entry.Type, entry.Parameter));
             Entry = entry;
+            Displayed = true;
 
             var player = interf.Game?.GetPlayer(entry.Requester);
 
@@ -126,8 +131,7 @@ namespace Freeserf.UI
 
             playerFace.Displayed = true;
             statusText.Displayed = true;
-            SetText(entry.OwnRequest ? Vote.GetOwnRequest(entry.Type, entry.Parameter) : Vote.GetQuestion(entry.Requester, entry.Type, entry.Parameter));
-            Displayed = true;
+            SetText(lines);
             UpdateStatus(DateTime.UtcNow);
             SetRedraw();
         }
@@ -146,26 +150,7 @@ namespace Freeserf.UI
             yesText.Displayed = canAnswer && Displayed;
             noText.Displayed = canAnswer && Displayed;
 
-            string text;
-
-            if (Entry.Result != null)
-            {
-                text = Entry.Result switch
-                {
-                    VoteResult.Accepted => "Accepted.",
-                    VoteResult.Rejected => "Rejected.",
-                    _ => "Not possible now."
-                };
-            }
-            else if (!canAnswer)
-            {
-                text = "Waiting...";
-            }
-            else
-            {
-                int seconds = Math.Max(0, (int)Math.Ceiling((Entry.Deadline - now).TotalSeconds));
-                text = $"{seconds} seconds left";
-            }
+            string text = VoteText.Status(Entry.Result, canAnswer, Entry.Deadline, now);
 
             if (statusText.Text != text)
             {
@@ -186,15 +171,30 @@ namespace Freeserf.UI
             Answered?.Invoke(Entry, yes);
         }
 
-        void SetText(string text)
-        {
-            var lines = text.Split('\n');
+        internal static string[] WrapMessage(string text) =>
+            MessageText.Wrap(text, MessageText.Columns, 3, "vote question");
 
+        void SetText(string[] lines)
+        {
             for (int i = 0; i < textLines.Length; ++i)
             {
                 textLines[i].Text = i < lines.Length ? lines[i] : "";
                 textLines[i].Displayed = i < lines.Length;
             }
+        }
+
+        internal override void RefreshLanguage()
+        {
+            yesText.Text = Strings.Vote_Answer_Yes;
+            noText.Text = Strings.Vote_Answer_No;
+            if (Entry != null && Displayed)
+            {
+                SetText(WrapMessage(Entry.OwnRequest
+                    ? Vote.GetOwnRequest(Entry.Type, Entry.Parameter)
+                    : Vote.GetQuestion(Entry.Requester, Entry.Type, Entry.Parameter)));
+                UpdateStatus(DateTime.UtcNow);
+            }
+            base.RefreshLanguage();
         }
 
         protected override void InternalDraw()

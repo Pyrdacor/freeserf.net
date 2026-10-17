@@ -3,6 +3,7 @@
   <PropertyGroup>
 	<TargetFramework>net9.0</TargetFramework>
     <RootNamespace>Freeserf</RootNamespace>
+    <NeutralLanguage>en</NeutralLanguage>
     <Configurations>Debug;Release;MacDebug;MacRelease;WindowsRelease;WindowsDebug;LinuxRelease;LinuxDebug</Configurations>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -83,6 +84,20 @@
   <ItemGroup>
     <PackageReference Include="Silk.NET.Input.Glfw" Version="2.23.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <LocalizationGeneratedFile>$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/Strings.g.cs</LocalizationGeneratedFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Localization/Strings.resx">
+      <StronglyTypedLanguage>C#</StronglyTypedLanguage>
+      <StronglyTypedNamespace>Freeserf.Localization</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+      <StronglyTypedFileName>$(LocalizationGeneratedFile)</StronglyTypedFileName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

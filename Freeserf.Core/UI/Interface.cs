@@ -31,6 +31,7 @@
  */
 
 using Freeserf.Render;
+using Freeserf.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,6 +83,7 @@ namespace Freeserf.UI
         }
 
         readonly object gameLock = new object();
+        int languageRevision = LanguageSettings.Revision;
         public GameInitBox GameInitBox { get; private set; }
 
         bool ignoreNextDelayedClick = false;
@@ -1104,6 +1106,12 @@ namespace Freeserf.UI
         // Called periodically when the game progresses. 
         public virtual void Update()
         {
+            if (languageRevision != LanguageSettings.Revision)
+            {
+                RefreshLanguage();
+                languageRevision = LanguageSettings.Revision;
+            }
+
             GameInitBox?.UpdateServerSearch();
             Votes?.Update();
 

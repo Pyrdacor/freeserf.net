@@ -23,6 +23,8 @@
 using Freeserf.Data;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using Freeserf.Localization;
 
 namespace Freeserf
 {
@@ -193,7 +195,7 @@ namespace Freeserf
 
                 if ((arg.Length != 2) || (arg[0] != '-'))
                 {
-                    Cout.WriteLine($"Unknown command line parameter: \"{arg}\"");
+                    Cout.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CommandLine_UnknownParameter, arg));
                     continue;
                 }
 
@@ -262,7 +264,7 @@ namespace Freeserf
 
         public void ShowUsage()
         {
-            Cout.Write("Usage: " + path);
+            Cout.Write(string.Format(CultureInfo.CurrentCulture, Strings.CommandLine_Usage, path));
 
             foreach (var opt in options)
             {

@@ -26,7 +26,7 @@ namespace Freeserf.Android.Ubisoft
         public static Manifest Parse(byte[] manifestBytes)
         {
             if (manifestBytes.Length <= ManifestHeaderSize)
-                throw new UbisoftException("Das Manifest ist zu kurz.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_ManifestTooShort);
 
             using (var input = new MemoryStream(manifestBytes))
             {

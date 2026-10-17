@@ -31,6 +31,7 @@ using Android.Webkit;
 using Android.Widget;
 using Freeserf;
 using Freeserf.Android.Ubisoft;
+using Freeserf.Localization;
 using Freeserf.Renderer;
 using Silk.NET.Input;
 using Silk.NET.Input.Sdl;
@@ -171,6 +172,8 @@ namespace Freeserf.Android
             if (initialized)
                 ResetState();
 
+            UserConfig.Load(FileSystem.Paths.UserConfigPath);
+
             // Show a loading indicator while the game initializes. On activity
             // recreation (e.g. configuration change) the game is already
             // running, so the overlay is only shown on the very first start.
@@ -203,7 +206,7 @@ namespace Freeserf.Android
 
                 var title = new TextView(instance)
                 {
-                    Text = "Freeserf",
+                    Text = Strings.Android_AppName,
                     TextSize = 28,
                     Gravity = GravityFlags.Center
                 };
@@ -215,7 +218,7 @@ namespace Freeserf.Android
 
                 var subtitle = new TextView(instance)
                 {
-                    Text = "Lädt…",
+                    Text = Strings.Android_Loading,
                     TextSize = 16,
                     Gravity = GravityFlags.Center
                 };
@@ -379,9 +382,6 @@ namespace Freeserf.Android
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
                 networkDataReceiver = new Network.NetworkDataReceiverFactory().CreateReceiver();
 
-                UserConfig.Load(FileSystem.Paths.UserConfigPath);
-                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: UserConfig.Load done");
-
                 // Extract bundled game data (e.g. SPAE.PA) from the APK assets
                 // to the app's private storage so the data source can find it.
                 ExtractBundledData();
@@ -406,7 +406,7 @@ namespace Freeserf.Android
                 // Do not leave the user on an endless loading screen: hide the
                 // overlay and show the error so the app can be restarted.
                 HideLoadingOverlay();
-                instance?.RunOnUiThread(() => instance.ShowFatalErrorDialog("Initialisierung fehlgeschlagen: " + ex.Message));
+                instance?.RunOnUiThread(() => instance.ShowFatalErrorDialog(AndroidText.InitializationFailed(ex.Message)));
             }
         }
 
@@ -530,12 +530,12 @@ namespace Freeserf.Android
 
             var message = new TextView(this)
             {
-                Text = "Bitte wählen Sie, wie Sie die Spieldatei (SPAE.PA) bereitstellen möchten.",
+                Text = Strings.Android_ImportMessage,
                 TextSize = 14
             };
             layout.AddView(message);
 
-            var pickButton = new global::Android.Widget.Button(this) { Text = "Datei auswählen" };
+            var pickButton = new global::Android.Widget.Button(this) { Text = Strings.Android_SelectFile };
             // Do not show the system focus ring around the buttons (touch UI).
             pickButton.Focusable = false;
             pickButton.FocusableInTouchMode = false;
@@ -550,7 +550,7 @@ namespace Freeserf.Android
                 ShowFilePicker();
             };
 
-            var ubisoftButton = new global::Android.Widget.Button(this) { Text = "Von Ubisoft Connect herunterladen" };
+            var ubisoftButton = new global::Android.Widget.Button(this) { Text = Strings.Android_DownloadFromUbisoft };
             // Do not show the system focus ring around the buttons (touch UI).
             ubisoftButton.Focusable = false;
             ubisoftButton.FocusableInTouchMode = false;
@@ -566,7 +566,7 @@ namespace Freeserf.Android
             };
 
             dataImportDialog = new AlertDialog.Builder(this)
-                .SetTitle("Spieldaten bereitstellen")
+                .SetTitle(Strings.Android_ImportTitle)
                 .SetView(layout)
                 .SetCancelable(false)
                 .Show();
@@ -576,7 +576,7 @@ namespace Freeserf.Android
         // data file (e.g. SPAE.PA). Runs on the UI thread.
         void ShowFilePicker()
         {
-            Toast.MakeText(this, "Bitte wählen Sie die Spieldatei (z.B. SPAE.PA) aus.", ToastLength.Long).Show();
+            Toast.MakeText(this, Strings.Android_SelectDataFilePrompt, ToastLength.Long).Show();
 
             var intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
@@ -655,7 +655,7 @@ namespace Freeserf.Android
         {
             RemoveUbisoftLoginView();
 
-            ShowProgressDialog("Melde bei Ubisoft Connect an…");
+            ShowProgressDialog(Strings.Android_LoggingIn);
 
             Task.Run(() =>
             {
@@ -689,7 +689,7 @@ namespace Freeserf.Android
         // Downloads the SPAE.PA from Ubisoft Connect on a background thread.
         void StartUbisoftDownload(UbisoftLoginResponse login)
         {
-            ShowProgressDialog("Starte Download…");
+            ShowProgressDialog(Strings.Android_StartingDownload);
 
             Task.Run(() =>
             {
@@ -749,7 +749,7 @@ namespace Freeserf.Android
             layout.AddView(progressStatus, statusParams);
 
             progressDialog = new AlertDialog.Builder(this)
-                .SetTitle("Ubisoft Connect")
+                .SetTitle(Strings.Android_UbisoftTitle)
                 .SetView(layout)
                 .SetCancelable(false)
                 .Create();
@@ -776,9 +776,9 @@ namespace Freeserf.Android
         void ShowUbisoftErrorDialog(string message)
         {
             new AlertDialog.Builder(this)
-                .SetTitle("Ubisoft Connect")
+                .SetTitle(Strings.Android_UbisoftTitle)
                 .SetMessage(message)
-                .SetPositiveButton("OK", (sender, args) => ShowDataImportDialog())
+                .SetPositiveButton(Strings.Android_OK, (sender, args) => ShowDataImportDialog())
                 .SetCancelable(false)
                 .Show();
         }
@@ -788,9 +788,9 @@ namespace Freeserf.Android
         void ShowFatalErrorDialog(string message)
         {
             new AlertDialog.Builder(this)
-                .SetTitle("Freeserf")
+                .SetTitle(Strings.Android_AppName)
                 .SetMessage(message)
-                .SetPositiveButton("OK", (sender, args) => Finish())
+                .SetPositiveButton(Strings.Android_OK, (sender, args) => Finish())
                 .SetCancelable(false)
                 .Show();
         }
