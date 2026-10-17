@@ -12,200 +12,135 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
   </resheader>
-  <data name="Vote_PlayerName" xml:space="preserve">
-    <value>Player {0}</value>
-    <comment>{0}: one-based player number.</comment>
-  </data>
-  <data name="Vote_Question_Pause" xml:space="preserve">
-    <value>{0} wants to pause the game.</value>
-    <comment>{0}: player label.</comment>
-  </data>
-  <data name="Vote_Question_Resume" xml:space="preserve">
-    <value>{0} wants to resume the game.</value>
-    <comment>{0}: player label.</comment>
-  </data>
-  <data name="Vote_Question_GameSpeed" xml:space="preserve">
-    <value>{0} wants to set the game speed to {1}.</value>
-    <comment>{0}: player label; {1}: requested game speed.</comment>
-  </data>
-  <data name="Vote_Question_Save" xml:space="preserve">
-    <value>{0} wants to save the game.</value>
-    <comment>{0}: player label.</comment>
-  </data>
-  <data name="Vote_Question_Unknown" xml:space="preserve">
-    <value>{0} wants something.</value>
-    <comment>{0}: player label.</comment>
-  </data>
-  <data name="Vote_OwnRequest_Pause" xml:space="preserve">
-    <value>You want to pause the game.</value>
-  </data>
-  <data name="Vote_OwnRequest_Resume" xml:space="preserve">
-    <value>You want to resume the game.</value>
-  </data>
-  <data name="Vote_OwnRequest_GameSpeed" xml:space="preserve">
-    <value>You want to set the game speed to {0}.</value>
-    <comment>{0}: requested game speed.</comment>
-  </data>
-  <data name="Vote_OwnRequest_Save" xml:space="preserve">
-    <value>You want to save the game.</value>
-  </data>
-  <data name="Vote_OwnRequest_Unknown" xml:space="preserve">
-    <value>You want something.</value>
-  </data>
-  <data name="Vote_Answer_Yes" xml:space="preserve">
-    <value>Yes</value>
-  </data>
-  <data name="Vote_Answer_No" xml:space="preserve">
-    <value>No</value>
-  </data>
-  <data name="Vote_Result_Accepted" xml:space="preserve">
-    <value>Accepted.</value>
-  </data>
-  <data name="Vote_Result_Rejected" xml:space="preserve">
-    <value>Rejected.</value>
-  </data>
-  <data name="Vote_Result_Refused" xml:space="preserve">
-    <value>Not possible now.</value>
-  </data>
-  <data name="Vote_Status_Waiting" xml:space="preserve">
-    <value>Waiting...</value>
-  </data>
-  <data name="Vote_Status_SecondsLeft" xml:space="preserve">
-    <value>{0} seconds left</value>
-    <comment>{0}: whole seconds remaining.</comment>
-  </data>
-  <data name="Notification_UnderAttack" xml:space="preserve">
-    <value>Your settlement is under attack</value>
-  </data>
-  <data name="Notification_LoseFight" xml:space="preserve">
-    <value>Your knights just lost the fight</value>
-  </data>
-  <data name="Notification_WinFight" xml:space="preserve">
-    <value>You gained a victory here</value>
-  </data>
-  <data name="Notification_MineEmpty" xml:space="preserve">
-    <value>This mine hauls no more raw materials</value>
-  </data>
-  <data name="Notification_CallToLocation" xml:space="preserve">
-    <value>You wanted me to call you to this location</value>
-  </data>
-  <data name="Notification_KnightOccupied" xml:space="preserve">
-    <value>A knight has occupied this new building</value>
-  </data>
-  <data name="Notification_NewStock" xml:space="preserve">
-    <value>A new stock has been built</value>
-    <comment>Stock means a warehouse building.</comment>
-  </data>
-  <data name="Notification_LostLand" xml:space="preserve">
-    <value>Because of this enemy building you lost some land</value>
-  </data>
-  <data name="Notification_EmergencyActive" xml:space="preserve">
-    <value>Emergency program activated</value>
-  </data>
-  <data name="Notification_EmergencyNeutral" xml:space="preserve">
-    <value>Emergency program neutralized</value>
-  </data>
-  <data name="Notification_FoundGold" xml:space="preserve">
-    <value>A geologist has found gold</value>
-  </data>
-  <data name="Notification_FoundIron" xml:space="preserve">
-    <value>A geologist has found iron</value>
-  </data>
-  <data name="Notification_FoundCoal" xml:space="preserve">
-    <value>A geologist has found coal</value>
-  </data>
-  <data name="Notification_FoundStone" xml:space="preserve">
-    <value>A geologist has found stone</value>
-  </data>
-  <data name="Notification_CallToMenu" xml:space="preserve">
-    <value>You wanted me to call you to this menu</value>
-  </data>
-  <data name="Notification_ThirtyMinutesSinceSave" xml:space="preserve">
-    <value>30 min. passed since the last saving</value>
-  </data>
-  <data name="Notification_OneHourSinceSave" xml:space="preserve">
-    <value>One hour passed since the last saving</value>
-  </data>
-  <data name="Notification_CallToStock" xml:space="preserve">
-    <value>You wanted me to call you to this stock</value>
-    <comment>Stock means a warehouse building.</comment>
-  </data>
-  <data name="Notification_PlayerLeft" xml:space="preserve">
-    <value>This player has left the game</value>
-  </data>
-  <data name="Notification_PlayerRejoined" xml:space="preserve">
-    <value>This player has rejoined the game</value>
-  </data>
-  <data name="Setup_DefaultServerName" xml:space="preserve"><value>Freeserf Server</value></data>
-  <data name="Setup_ServerValues" xml:space="preserve"><value>Server Values</value></data>
-  <data name="Setup_IdenticalValues" xml:space="preserve"><value>Identical Values</value></data>
-  <data name="Setup_NewGame" xml:space="preserve"><value>New game</value></data>
-  <data name="Setup_Demo" xml:space="preserve"><value>Demo</value></data>
-  <data name="Setup_Multiplayer" xml:space="preserve"><value>Multiplayer</value></data>
-  <data name="Setup_HostGame" xml:space="preserve"><value>Host game</value></data>
-  <data name="Setup_MultiplayerJoin" xml:space="preserve"><value>Multiplayer Join</value></data>
-  <data name="Setup_StartingGame" xml:space="preserve"><value>Starting Game</value></data>
-  <data name="Setup_AddressLabel" xml:space="preserve"><value>IP:</value></data>
-  <data name="Setup_NameLabel" xml:space="preserve"><value>Name:</value></data>
-  <data name="Setup_MapSizeLabel" xml:space="preserve"><value>Mapsize:</value></data>
-  <data name="Setup_StartMission" xml:space="preserve"><value>Start mission</value></data>
-  <data name="Setup_MissionLabel" xml:space="preserve"><value>Mission:</value></data>
-  <data name="Setup_StartTutorial" xml:space="preserve"><value>Start tutorial</value></data>
-  <data name="Setup_TutorialLabel" xml:space="preserve"><value>Tutorial:</value></data>
-  <data name="Setup_LoadGame" xml:space="preserve"><value>Load game</value></data>
-  <data name="Setup_ServerAddress" xml:space="preserve">
-    <value>IP: {0}</value>
-    <comment>{0}: server IP address.</comment>
-  </data>
-  <data name="Server_NotFound" xml:space="preserve">
-    <value>{0} | not found</value>
-    <comment>{0}: saved server address.</comment>
-  </data>
-  <data name="Server_Online" xml:space="preserve">
-    <value>{0} | {1} | {2}/{3}</value>
-    <comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment>
-  </data>
-  <data name="Server_Running" xml:space="preserve">
-    <value>{0} | {1} | {2}/{3} | running</value>
-    <comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment>
-  </data>
-  <data name="Server_Saved" xml:space="preserve">
-    <value>{0} | {1} | {2}/{3} | saved</value>
-    <comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment>
-  </data>
-  <data name="CommandLine_Debug" xml:space="preserve"><value>Set debug output level</value></data>
-  <data name="CommandLine_Fullscreen" xml:space="preserve"><value>Run in fullscreen mode.</value></data>
-  <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Use specified data directory.</value></data>
-  <data name="CommandLine_Help" xml:space="preserve"><value>Show this help text.</value></data>
-  <data name="CommandLine_Load" xml:space="preserve"><value>Load saved game.</value></data>
-  <data name="CommandLine_Resolution" xml:space="preserve"><value>Set display resolution (e.g. 800x600).</value></data>
-  <data name="CommandLine_Position" xml:space="preserve"><value>Set window position (e.g. 0,0).</value></data>
-  <data name="CommandLine_MultiplayerTest" xml:space="preserve">
-    <value>Run an automated multiplayer test.
-host:CLIENTS[:AI] creates a server, join:ADDRESS joins one.</value>
-  </data>
+  <data name="Android_AppName" xml:space="preserve"><value>Freeserf</value></data>
+  <data name="Android_AuthenticationFailed" xml:space="preserve"><value>Ubisoft authentication failed.</value></data>
+  <data name="Android_CheckingOwnership" xml:space="preserve"><value>Checking ownership of the History Edition…</value></data>
+  <data name="Android_Connecting" xml:space="preserve"><value>Connecting to Ubisoft…</value></data>
+  <data name="Android_ConnectionClosed" xml:space="preserve"><value>The Ubisoft connection was closed.</value></data>
+  <data name="Android_ConnectionClosedUnexpectedly" xml:space="preserve"><value>The Ubisoft connection was closed unexpectedly.</value></data>
+  <data name="Android_DownloadFailed" xml:space="preserve"><value>Download failed: {0}</value><comment>{0}: error detail.</comment></data>
+  <data name="Android_DownloadFromUbisoft" xml:space="preserve"><value>Download from Ubisoft Connect</value></data>
+  <data name="Android_DownloadInitializationFailed" xml:space="preserve"><value>The download service could not be initialized.</value></data>
+  <data name="Android_DownloadNotInitialized" xml:space="preserve"><value>The download service is not initialized.</value></data>
+  <data name="Android_DownloadSucceeded" xml:space="preserve"><value>{0} downloaded successfully.</value><comment>{0}: file name.</comment></data>
+  <data name="Android_DownloadUrlCountMismatch" xml:space="preserve"><value>The number of download URLs does not match the slices.</value></data>
+  <data name="Android_DownloadUrlsDenied" xml:space="preserve"><value>Download URLs were denied (game not owned?).</value></data>
+  <data name="Android_DownloadingFile" xml:space="preserve"><value>Downloading {0} ({1}/{2})…</value><comment>{0}: file name; {1}: current slice; {2}: slice count.</comment></data>
+  <data name="Android_DownloadingManifest" xml:space="preserve"><value>Downloading game manifest…</value></data>
+  <data name="Android_EnterCredentials" xml:space="preserve"><value>Please enter your email and password.</value></data>
+  <data name="Android_EnterTwoFactorCode" xml:space="preserve"><value>Please enter the 2FA code.</value></data>
+  <data name="Android_FileAlreadyExists" xml:space="preserve"><value>A file named {0} already exists.</value><comment>{0}: file name.</comment></data>
+  <data name="Android_GameNotOwned" xml:space="preserve"><value>You do not own The Settlers 1 History Edition on this Ubisoft account.</value></data>
+  <data name="Android_ImportMessage" xml:space="preserve"><value>Please choose how you would like to provide the game data file (SPAE.PA).</value></data>
+  <data name="Android_ImportTitle" xml:space="preserve"><value>Provide game data</value></data>
+  <data name="Android_InitializationFailed" xml:space="preserve"><value>Initialization failed: {0}</value><comment>{0}: error detail.</comment></data>
+  <data name="Android_InitializingDownload" xml:space="preserve"><value>Initializing download…</value></data>
+  <data name="Android_InvalidServerMessageLength" xml:space="preserve"><value>Invalid message length from the Ubisoft server.</value></data>
+  <data name="Android_InvalidServerProtobuf" xml:space="preserve"><value>Invalid Protobuf format from the Ubisoft server.</value></data>
+  <data name="Android_InvalidServerPushLength" xml:space="preserve"><value>Invalid push length from the Ubisoft server.</value></data>
+  <data name="Android_InvalidServiceResponse" xml:space="preserve"><value>Invalid response from the Ubisoft service.</value></data>
+  <data name="Android_InvalidServiceResponseLength" xml:space="preserve"><value>Invalid response length from the Ubisoft service.</value></data>
+  <data name="Android_Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="Android_LoggingIn" xml:space="preserve"><value>Logging in to Ubisoft Connect…</value></data>
+  <data name="Android_LoginFailed" xml:space="preserve"><value>Login failed (HTTP {0}).</value><comment>{0}: HTTP status code.</comment></data>
+  <data name="Android_LzhamUnsupported" xml:space="preserve"><value>lzham compression is not supported on Android.</value></data>
+  <data name="Android_ManifestFileNotFound" xml:space="preserve"><value>File {0} was not found in the game manifest.</value><comment>{0}: data file name.</comment></data>
+  <data name="Android_ManifestTooShort" xml:space="preserve"><value>The manifest is too short.</value></data>
+  <data name="Android_NetworkError" xml:space="preserve"><value>Network error: {0}</value><comment>{0}: error detail.</comment></data>
+  <data name="Android_NoDownloadUrls" xml:space="preserve"><value>No download URLs received.</value></data>
+  <data name="Android_NoManifest" xml:space="preserve"><value>No manifest is available for the History Edition.</value></data>
+  <data name="Android_NoManifestUrl" xml:space="preserve"><value>No manifest URL received.</value></data>
+  <data name="Android_NoOwnershipToken" xml:space="preserve"><value>No ownership token received. Do you own the History Edition?</value></data>
+  <data name="Android_NoSavedLogin" xml:space="preserve"><value>No saved login available.</value></data>
+  <data name="Android_NoServiceResponse" xml:space="preserve"><value>No response received from the Ubisoft service.</value></data>
+  <data name="Android_NoValidLogin" xml:space="preserve"><value>No valid login available.</value></data>
+  <data name="Android_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Android_OldSaves" xml:space="preserve"><value>Old saves</value></data>
+  <data name="Android_OldSavesReadOnly" xml:space="preserve"><value>Old saves are read-only.</value></data>
+  <data name="Android_OnlyFilesDeleted" xml:space="preserve"><value>Only files can be deleted.</value></data>
+  <data name="Android_OnlySaveFilesCreated" xml:space="preserve"><value>Only save game files can be created.</value></data>
+  <data name="Android_OnlySavesRenamed" xml:space="preserve"><value>Only save games can be renamed.</value></data>
+  <data name="Android_OwnershipInitializationFailed" xml:space="preserve"><value>Could not initialize the Ubisoft ownership check.</value></data>
+  <data name="Android_RequestingDownloadUrls" xml:space="preserve"><value>Requesting download URLs…</value></data>
+  <data name="Android_SelectDataFilePrompt" xml:space="preserve"><value>Please select the game data file (e.g. SPAE.PA).</value></data>
+  <data name="Android_SelectFile" xml:space="preserve"><value>Select file</value></data>
+  <data name="Android_ServiceConnectionFailed" xml:space="preserve"><value>Could not open a connection to '{0}'.</value><comment>{0}: service name.</comment></data>
+  <data name="Android_StartingDownload" xml:space="preserve"><value>Starting download…</value></data>
+  <data name="Android_UbisoftTitle" xml:space="preserve"><value>Ubisoft Connect</value></data>
+  <data name="Android_UnknownCompression" xml:space="preserve"><value>Unknown compression method: {0}</value><comment>{0}: compression method.</comment></data>
+  <data name="Android_UnknownError" xml:space="preserve"><value>unknown error</value></data>
+  <data name="Character_Balduin_Description" xml:space="preserve"><value>A very discrete character, who worries chiefly about the protection of his lands and his important buildings.</value></data>
+  <data name="Character_Balduin_Name" xml:space="preserve"><value>Balduin, a former monk</value></data>
+  <data name="Character_CountAldaba_Description" xml:space="preserve"><value>Protect your warehouses well, because he is aggressive and knows exactly where he must attack.</value></data>
+  <data name="Character_CountAldaba_Name" xml:space="preserve"><value>Count Aldaba</value></data>
+  <data name="Character_Enemy_Description" xml:space="preserve"><value>Last enemy.</value></data>
+  <data name="Character_Enemy_Name" xml:space="preserve"><value>Enemy</value></data>
+  <data name="Character_Friend_Description" xml:space="preserve"><value>Your partner.</value></data>
+  <data name="Character_Friend_Name" xml:space="preserve"><value>Friend</value></data>
+  <data name="Character_Frollin_Description" xml:space="preserve"><value>His unpredictable behaviour will always take you by surprise. He will "pilfer" away lands that are not occupied.</value></data>
+  <data name="Character_Frollin_Name" xml:space="preserve"><value>Frollin</value></data>
+  <data name="Character_HomenDoublehorn_Description" xml:space="preserve"><value>He is the most aggressive enemy. Watch your buildings carefully, otherwise he might take you by surprise.</value></data>
+  <data name="Character_HomenDoublehorn_Name" xml:space="preserve"><value>Homen Doublehorn</value></data>
+  <data name="Character_Kallina_Description" xml:space="preserve"><value>She is a fighter who attempts to block the enemy’s food supply by using strategic tactics.</value></data>
+  <data name="Character_Kallina_Name" xml:space="preserve"><value>Kallina</value></data>
+  <data name="Character_KingRolph_Description" xml:space="preserve"><value>He is a prudent ruler, without any particular weakness. He will try to check the supply of construction materials of his adversaries.</value></data>
+  <data name="Character_KingRolph_Name" xml:space="preserve"><value>The King Rolph VII</value></data>
+  <data name="Character_KumpyOnefinger_Description" xml:space="preserve"><value>A very hostile character, who loves gold above all else.</value></data>
+  <data name="Character_KumpyOnefinger_Name" xml:space="preserve"><value>Kumpy Onefinger</value></data>
+  <data name="Character_LadyAmalie_Description" xml:space="preserve"><value>An inoffensive lady, reserved, who goes about her work peacefully.</value></data>
+  <data name="Character_LadyAmalie_Name" xml:space="preserve"><value>Lady Amalie</value></data>
+  <data name="Character_None_Description" xml:space="preserve"><value>ERROR</value></data>
+  <data name="Character_None_Name" xml:space="preserve"><value>ERROR</value></data>
+  <data name="Character_Rasparuk_Description" xml:space="preserve"><value>His tactics consist in amassing large stocks of raw materials. But he attacks slyly.</value></data>
+  <data name="Character_Rasparuk_Name" xml:space="preserve"><value>Rasparuk the druid</value></data>
+  <data name="Character_Sollok_Description" xml:space="preserve"><value>A sly and repugnant adversary, he will try to stop the supply of raw materials of his enemies right from the beginning of the game.</value></data>
+  <data name="Character_Sollok_Name" xml:space="preserve"><value>Sollok the Joker</value></data>
+  <data name="Character_You_Description" xml:space="preserve"><value>You.</value></data>
+  <data name="Character_You_Name" xml:space="preserve"><value>You</value></data>
+  <data name="CommandLine_ArgumentDataPath" xml:space="preserve"><value>DATA-PATH</value></data>
+  <data name="CommandLine_ArgumentFile" xml:space="preserve"><value>FILE</value></data>
+  <data name="CommandLine_ArgumentLogType" xml:space="preserve"><value>LOG-TYPE</value></data>
+  <data name="CommandLine_ArgumentMode" xml:space="preserve"><value>MODE</value></data>
+  <data name="CommandLine_ArgumentNumber" xml:space="preserve"><value>NUM</value></data>
+  <data name="CommandLine_ArgumentPosition" xml:space="preserve"><value>POS</value></data>
+  <data name="CommandLine_ArgumentResolution" xml:space="preserve"><value>RES</value></data>
   <data name="CommandLine_Console" xml:space="preserve"><value>Log to console window.</value></data>
-  <data name="CommandLine_IncludeLogType" xml:space="preserve">
-    <value>Log only messages of the given type.
-Cannot be used with -x option.</value>
-  </data>
+  <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Use specified data directory.</value></data>
+  <data name="CommandLine_Debug" xml:space="preserve"><value>Set debug output level</value></data>
   <data name="CommandLine_ExcludeLogType" xml:space="preserve">
     <value>Log only messages not of the given type.
 Cannot be used with -o option.</value>
+  </data>
+  <data name="CommandLine_Fullscreen" xml:space="preserve"><value>Run in fullscreen mode.</value></data>
+  <data name="CommandLine_Help" xml:space="preserve"><value>Show this help text.</value></data>
+  <data name="CommandLine_IncludeLogType" xml:space="preserve">
+    <value>Log only messages of the given type.
+Cannot be used with -x option.</value>
   </data>
   <data name="CommandLine_InvalidDebugLevel" xml:space="preserve">
     <value>Invalid debug output level {0}. Possbile values are {1} ~ {2}.</value>
     <comment>{0}: supplied level; {1}: minimum level; {2}: maximum level.</comment>
   </data>
-  <data name="CommandLine_InvalidMultiplayerMode" xml:space="preserve">
-    <value>Invalid multiplayer test mode {0}.</value>
-    <comment>{0}: supplied mode.</comment>
-  </data>
   <data name="CommandLine_InvalidLogType" xml:space="preserve">
     <value>Invalid log type {0}. Possible values are: {1}.</value>
     <comment>{0}: supplied type; {1}: valid type tokens.</comment>
   </data>
+  <data name="CommandLine_InvalidMultiplayerMode" xml:space="preserve">
+    <value>Invalid multiplayer test mode {0}.</value>
+    <comment>{0}: supplied mode.</comment>
+  </data>
+  <data name="CommandLine_Load" xml:space="preserve"><value>Load saved game.</value></data>
+  <data name="CommandLine_MultiplayerModes" xml:space="preserve">
+    <value>host:CLIENTS[:AI] | join:ADDRESS</value>
+    <comment>Keep the accepted command tokens "host" and "join" unchanged.</comment>
+  </data>
+  <data name="CommandLine_MultiplayerTest" xml:space="preserve">
+    <value>Run an automated multiplayer test.
+host:CLIENTS[:AI] creates a server, join:ADDRESS joins one.</value>
+  </data>
+  <data name="CommandLine_Position" xml:space="preserve"><value>Set window position (e.g. 0,0).</value></data>
   <data name="CommandLine_ReportBugs" xml:space="preserve"><value>Please report bugs to &lt;robert.schneckenhaus@web.de&gt;</value></data>
+  <data name="CommandLine_Resolution" xml:space="preserve"><value>Set display resolution (e.g. 800x600).</value></data>
   <data name="CommandLine_UnknownParameter" xml:space="preserve">
     <value>Unknown command line parameter: "{0}"</value>
     <comment>{0}: supplied argument.</comment>
@@ -214,115 +149,158 @@ Cannot be used with -o option.</value>
     <value>Usage: {0}</value>
     <comment>{0}: executable path.</comment>
   </data>
-  <data name="Character_None_Name" xml:space="preserve"><value>ERROR</value></data>
-  <data name="Character_None_Description" xml:space="preserve"><value>ERROR</value></data>
-  <data name="Character_LadyAmalie_Name" xml:space="preserve"><value>Lady Amalie</value></data>
-  <data name="Character_LadyAmalie_Description" xml:space="preserve"><value>An inoffensive lady, reserved, who goes about her work peacefully.</value></data>
-  <data name="Character_KumpyOnefinger_Name" xml:space="preserve"><value>Kumpy Onefinger</value></data>
-  <data name="Character_KumpyOnefinger_Description" xml:space="preserve"><value>A very hostile character, who loves gold above all else.</value></data>
-  <data name="Character_Balduin_Name" xml:space="preserve"><value>Balduin, a former monk</value></data>
-  <data name="Character_Balduin_Description" xml:space="preserve"><value>A very discrete character, who worries chiefly about the protection of his lands and his important buildings.</value></data>
-  <data name="Character_Frollin_Name" xml:space="preserve"><value>Frollin</value></data>
-  <data name="Character_Frollin_Description" xml:space="preserve"><value>His unpredictable behaviour will always take you by surprise. He will "pilfer" away lands that are not occupied.</value></data>
-  <data name="Character_Kallina_Name" xml:space="preserve"><value>Kallina</value></data>
-  <data name="Character_Kallina_Description" xml:space="preserve"><value>She is a fighter who attempts to block the enemy’s food supply by using strategic tactics.</value></data>
-  <data name="Character_Rasparuk_Name" xml:space="preserve"><value>Rasparuk the druid</value></data>
-  <data name="Character_Rasparuk_Description" xml:space="preserve"><value>His tactics consist in amassing large stocks of raw materials. But he attacks slyly.</value></data>
-  <data name="Character_CountAldaba_Name" xml:space="preserve"><value>Count Aldaba</value></data>
-  <data name="Character_CountAldaba_Description" xml:space="preserve"><value>Protect your warehouses well, because he is aggressive and knows exactly where he must attack.</value></data>
-  <data name="Character_KingRolph_Name" xml:space="preserve"><value>The King Rolph VII</value></data>
-  <data name="Character_KingRolph_Description" xml:space="preserve"><value>He is a prudent ruler, without any particular weakness. He will try to check the supply of construction materials of his adversaries.</value></data>
-  <data name="Character_HomenDoublehorn_Name" xml:space="preserve"><value>Homen Doublehorn</value></data>
-  <data name="Character_HomenDoublehorn_Description" xml:space="preserve"><value>He is the most aggressive enemy. Watch your buildings carefully, otherwise he might take you by surprise.</value></data>
-  <data name="Character_Sollok_Name" xml:space="preserve"><value>Sollok the Joker</value></data>
-  <data name="Character_Sollok_Description" xml:space="preserve"><value>A sly and repugnant adversary, he will try to stop the supply of raw materials of his enemies right from the beginning of the game.</value></data>
-  <data name="Character_Enemy_Name" xml:space="preserve"><value>Enemy</value></data>
-  <data name="Character_Enemy_Description" xml:space="preserve"><value>Last enemy.</value></data>
-  <data name="Character_You_Name" xml:space="preserve"><value>You</value></data>
-  <data name="Character_You_Description" xml:space="preserve"><value>You.</value></data>
-  <data name="Character_Friend_Name" xml:space="preserve"><value>Friend</value></data>
-  <data name="Character_Friend_Description" xml:space="preserve"><value>Your partner.</value></data>
-  <data name="Mission_Intro" xml:space="preserve"><value>INTRO</value></data>
-  <data name="Mission_Start" xml:space="preserve"><value>START</value></data>
-  <data name="Mission_Station" xml:space="preserve"><value>STATION</value></data>
-  <data name="Mission_Unity" xml:space="preserve"><value>UNITY</value></data>
-  <data name="Mission_Wave" xml:space="preserve"><value>WAVE</value></data>
-  <data name="Mission_Export" xml:space="preserve"><value>EXPORT</value></data>
-  <data name="Mission_Option" xml:space="preserve"><value>OPTION</value></data>
-  <data name="Mission_Record" xml:space="preserve"><value>RECORD</value></data>
-  <data name="Mission_Scale" xml:space="preserve"><value>SCALE</value></data>
-  <data name="Mission_Sign" xml:space="preserve"><value>SIGN</value></data>
   <data name="Mission_Acorn" xml:space="preserve"><value>ACORN</value></data>
+  <data name="Mission_Beacon" xml:space="preserve"><value>BEACON</value></data>
+  <data name="Mission_Blade" xml:space="preserve"><value>BLADE</value></data>
+  <data name="Mission_Canyon" xml:space="preserve"><value>CANYON</value></data>
   <data name="Mission_Chopper" xml:space="preserve"><value>CHOPPER</value></data>
+  <data name="Mission_Chude" xml:space="preserve"><value>CHUDE</value></data>
+  <data name="Mission_Export" xml:space="preserve"><value>EXPORT</value></data>
+  <data name="Mission_Fountain" xml:space="preserve"><value>FOUNTAIN</value></data>
   <data name="Mission_Gate" xml:space="preserve"><value>GATE</value></data>
+  <data name="Mission_Intro" xml:space="preserve"><value>INTRO</value></data>
   <data name="Mission_Island" xml:space="preserve"><value>ISLAND</value></data>
   <data name="Mission_Legion" xml:space="preserve"><value>LEGION</value></data>
+  <data name="Mission_Omnus" xml:space="preserve"><value>OMNUS</value></data>
+  <data name="Mission_Option" xml:space="preserve"><value>OPTION</value></data>
+  <data name="Mission_Passive" xml:space="preserve"><value>PASSIVE</value></data>
+  <data name="Mission_Pasture" xml:space="preserve"><value>PASTURE</value></data>
   <data name="Mission_Piece" xml:space="preserve"><value>PIECE</value></data>
+  <data name="Mission_Pyrdacor" xml:space="preserve"><value>PYRDACOR</value></data>
+  <data name="Mission_Record" xml:space="preserve"><value>RECORD</value></data>
+  <data name="Mission_Repress" xml:space="preserve"><value>REPRESS</value></data>
   <data name="Mission_Rival" xml:space="preserve"><value>RIVAL</value></data>
   <data name="Mission_Savage" xml:space="preserve"><value>SAVAGE</value></data>
-  <data name="Mission_Xaver" xml:space="preserve"><value>XAVER</value></data>
-  <data name="Mission_Blade" xml:space="preserve"><value>BLADE</value></data>
-  <data name="Mission_Beacon" xml:space="preserve"><value>BEACON</value></data>
-  <data name="Mission_Pasture" xml:space="preserve"><value>PASTURE</value></data>
-  <data name="Mission_Omnus" xml:space="preserve"><value>OMNUS</value></data>
-  <data name="Mission_Tribute" xml:space="preserve"><value>TRIBUTE</value></data>
-  <data name="Mission_Fountain" xml:space="preserve"><value>FOUNTAIN</value></data>
-  <data name="Mission_Chude" xml:space="preserve"><value>CHUDE</value></data>
+  <data name="Mission_Scale" xml:space="preserve"><value>SCALE</value></data>
+  <data name="Mission_Sign" xml:space="preserve"><value>SIGN</value></data>
+  <data name="Mission_Start" xml:space="preserve"><value>START</value></data>
+  <data name="Mission_Station" xml:space="preserve"><value>STATION</value></data>
   <data name="Mission_Trailer" xml:space="preserve"><value>TRAILER</value></data>
-  <data name="Mission_Canyon" xml:space="preserve"><value>CANYON</value></data>
-  <data name="Mission_Repress" xml:space="preserve"><value>REPRESS</value></data>
-  <data name="Mission_Yoki" xml:space="preserve"><value>YOKI</value></data>
-  <data name="Mission_Passive" xml:space="preserve"><value>PASSIVE</value></data>
-  <data name="Mission_Pyrdacor" xml:space="preserve"><value>PYRDACOR</value></data>
+  <data name="Mission_Tribute" xml:space="preserve"><value>TRIBUTE</value></data>
   <data name="Mission_Tutorial1" xml:space="preserve"><value>Tutorial 1</value></data>
   <data name="Mission_Tutorial2" xml:space="preserve"><value>Tutorial 2</value></data>
   <data name="Mission_Tutorial3" xml:space="preserve"><value>Tutorial 3</value></data>
   <data name="Mission_Tutorial4" xml:space="preserve"><value>Tutorial 4</value></data>
   <data name="Mission_Tutorial5" xml:space="preserve"><value>Tutorial 5</value></data>
   <data name="Mission_Tutorial6" xml:space="preserve"><value>Tutorial 6</value></data>
-  <data name="CommandLine_ArgumentNumber" xml:space="preserve"><value>NUM</value></data>
-  <data name="CommandLine_ArgumentDataPath" xml:space="preserve"><value>DATA-PATH</value></data>
-  <data name="CommandLine_ArgumentFile" xml:space="preserve"><value>FILE</value></data>
-  <data name="CommandLine_ArgumentResolution" xml:space="preserve"><value>RES</value></data>
-  <data name="CommandLine_ArgumentPosition" xml:space="preserve"><value>POS</value></data>
-  <data name="CommandLine_ArgumentMode" xml:space="preserve"><value>MODE</value></data>
-  <data name="CommandLine_ArgumentLogType" xml:space="preserve"><value>LOG-TYPE</value></data>
-  <data name="CommandLine_MultiplayerModes" xml:space="preserve">
-    <value>host:CLIENTS[:AI] | join:ADDRESS</value>
-    <comment>Keep the accepted command tokens "host" and "join" unchanged.</comment>
+  <data name="Mission_Unity" xml:space="preserve"><value>UNITY</value></data>
+  <data name="Mission_Wave" xml:space="preserve"><value>WAVE</value></data>
+  <data name="Mission_Xaver" xml:space="preserve"><value>XAVER</value></data>
+  <data name="Mission_Yoki" xml:space="preserve"><value>YOKI</value></data>
+  <data name="Notification_CallToLocation" xml:space="preserve">
+    <value>You wanted me to call you to this location</value>
   </data>
-  <data name="Popup_ResourceAmountNotPresent" xml:space="preserve">
-    <value>Not Present</value>
+  <data name="Notification_CallToMenu" xml:space="preserve">
+    <value>You wanted me to call you to this menu</value>
   </data>
-  <data name="Popup_ResourceAmountMinimum" xml:space="preserve">
-    <value>Minimum</value>
+  <data name="Notification_CallToStock" xml:space="preserve">
+    <value>You wanted me to call you to this stock</value>
+    <comment>Stock means a warehouse building.</comment>
   </data>
-  <data name="Popup_ResourceAmountVeryFew" xml:space="preserve">
-    <value>Very Few</value>
+  <data name="Notification_EmergencyActive" xml:space="preserve">
+    <value>Emergency program activated</value>
   </data>
-  <data name="Popup_ResourceAmountFew" xml:space="preserve">
-    <value>Few</value>
+  <data name="Notification_EmergencyNeutral" xml:space="preserve">
+    <value>Emergency program neutralized</value>
   </data>
-  <data name="Popup_ResourceAmountBelowAverage" xml:space="preserve">
-    <value>Below Average</value>
+  <data name="Notification_FoundCoal" xml:space="preserve">
+    <value>A geologist has found coal</value>
   </data>
-  <data name="Popup_ResourceAmountAverage" xml:space="preserve">
-    <value>Average</value>
+  <data name="Notification_FoundGold" xml:space="preserve">
+    <value>A geologist has found gold</value>
   </data>
-  <data name="Popup_ResourceAmountAboveAverage" xml:space="preserve">
-    <value>Above Average</value>
+  <data name="Notification_FoundIron" xml:space="preserve">
+    <value>A geologist has found iron</value>
   </data>
-  <data name="Popup_ResourceAmountMuch" xml:space="preserve">
-    <value>Much</value>
+  <data name="Notification_FoundStone" xml:space="preserve">
+    <value>A geologist has found stone</value>
   </data>
-  <data name="Popup_ResourceAmountVeryMuch" xml:space="preserve">
-    <value>Very Much</value>
+  <data name="Notification_KnightOccupied" xml:space="preserve">
+    <value>A knight has occupied this new building</value>
   </data>
-  <data name="Popup_ResourceAmountPerfect" xml:space="preserve">
-    <value>Perfect</value>
+  <data name="Notification_LoseFight" xml:space="preserve">
+    <value>Your knights just lost the fight</value>
+  </data>
+  <data name="Notification_LostLand" xml:space="preserve">
+    <value>Because of this enemy building you lost some land</value>
+  </data>
+  <data name="Notification_MineEmpty" xml:space="preserve">
+    <value>This mine hauls no more raw materials</value>
+  </data>
+  <data name="Notification_NewStock" xml:space="preserve">
+    <value>A new stock has been built</value>
+    <comment>Stock means a warehouse building.</comment>
+  </data>
+  <data name="Notification_OneHourSinceSave" xml:space="preserve">
+    <value>One hour passed since the last saving</value>
+  </data>
+  <data name="Notification_PlayerLeft" xml:space="preserve">
+    <value>This player has left the game</value>
+  </data>
+  <data name="Notification_PlayerRejoined" xml:space="preserve">
+    <value>This player has rejoined the game</value>
+  </data>
+  <data name="Notification_ThirtyMinutesSinceSave" xml:space="preserve">
+    <value>30 min. passed since the last saving</value>
+  </data>
+  <data name="Notification_UnderAttack" xml:space="preserve">
+    <value>Your settlement is under attack</value>
+  </data>
+  <data name="Notification_WinFight" xml:space="preserve">
+    <value>You gained a victory here</value>
+  </data>
+  <data name="Popup_BlueVictory" xml:space="preserve">
+    <value>    THE BLUE
+ SETTLERS HAVE
+   GAINED THE
+  SUPERIORITY</value>
+  </data>
+  <data name="Popup_BuildingStock" xml:space="preserve">
+    <value>Stock of
+this building:</value>
+  </data>
+  <data name="Popup_Defenders" xml:space="preserve">
+    <value>Defenders:</value>
+  </data>
+  <data name="Popup_Demolish" xml:space="preserve">
+    <value>    Demolish:
+   Click here
+   if you are
+      sure</value>
+  </data>
+  <data name="Popup_FastBuilding" xml:space="preserve">
+    <value>Fast
+Building</value>
+  </data>
+  <data name="Popup_FastMapclick" xml:space="preserve">
+    <value>Fast
+Mapclick</value>
+  </data>
+  <data name="Popup_Fullscreen" xml:space="preserve">
+    <value>Fullscreen</value>
   </data>
   <data name="Popup_GroundAnalysis" xml:space="preserve">
     <value>GROUND-ANALYSIS:</value>
+  </data>
+  <data name="Popup_HideMouseWhileScrolling" xml:space="preserve">
+    <value>Hide mouse
+while scr.</value>
+  </data>
+  <data name="Popup_InvertScrolling" xml:space="preserve">
+    <value>Invert
+Scrolling</value>
+  </data>
+  <data name="Popup_KnightLevelError" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="Popup_KnightLevelFull" xml:space="preserve">
+    <value>Full</value>
+  </data>
+  <data name="Popup_KnightLevelGood" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="Popup_KnightLevelMedium" xml:space="preserve">
+    <value>Medium</value>
   </data>
   <data name="Popup_KnightLevelMinimum" xml:space="preserve">
     <value>Minimum</value>
@@ -330,119 +308,35 @@ Cannot be used with -o option.</value>
   <data name="Popup_KnightLevelWeak" xml:space="preserve">
     <value>Weak</value>
   </data>
-  <data name="Popup_KnightLevelMedium" xml:space="preserve">
-    <value>Medium</value>
+  <data name="Popup_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Popup_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Popup_LanguageGerman" xml:space="preserve"><value>German</value></data>
+  <data name="Popup_LanguageSystem" xml:space="preserve"><value>System</value></data>
+  <data name="Popup_LoadFail" xml:space="preserve">
+    <value>Game could not
+be loaded.</value>
   </data>
-  <data name="Popup_KnightLevelGood" xml:space="preserve">
-    <value>Good</value>
-  </data>
-  <data name="Popup_KnightLevelFull" xml:space="preserve">
-    <value>Full</value>
-  </data>
-  <data name="Popup_KnightLevelError" xml:space="preserve">
-    <value>ERROR</value>
-  </data>
-  <data name="Popup_QuitQuestion" xml:space="preserve">
-    <value>Do you want to quit this game?</value>
-  </data>
-  <data name="Popup_QuitChoices" xml:space="preserve">
-    <value>  Yes        No</value>
-    <comment>Fixed zero-based click columns: Yes at characters 2–4; No at 13–14. Preserve spacing and widths.</comment>
-  </data>
-  <data name="Popup_UnsavedQuitQuestion" xml:space="preserve">
-    <value>The game has not been saved recently. Are you sure?</value>
-  </data>
-  <data name="Popup_UnsavedQuitChoices" xml:space="preserve">
-    <value>  Save  Yes  No</value>
-    <comment>Fixed zero-based click columns: Save at characters 2–5; Yes at 8–10; No at 13–14. Preserve spacing and widths.</comment>
-  </data>
-  <data name="Popup_FastMapclick" xml:space="preserve">
-    <value>Fast
-Mapclick</value>
-  </data>
-  <data name="Popup_FastBuilding" xml:space="preserve">
-    <value>Fast
-Building</value>
-  </data>
-  <data name="Popup_MessagesAll" xml:space="preserve">
-    <value>All</value>
-  </data>
-  <data name="Popup_MessagesMost" xml:space="preserve">
-    <value>Most</value>
-  </data>
-  <data name="Popup_MessagesFew" xml:space="preserve">
-    <value>Few</value>
-  </data>
-  <data name="Popup_MessagesNone" xml:space="preserve">
-    <value>None</value>
+  <data name="Popup_LoadSuccess" xml:space="preserve">
+    <value>Game was loaded
+successfully.</value>
   </data>
   <data name="Popup_Messages" xml:space="preserve">
     <value>Messages</value>
   </data>
-  <data name="Popup_PathwayScrolling" xml:space="preserve">
-    <value>Pathway-
-Scrolling</value>
+  <data name="Popup_MessagesAll" xml:space="preserve">
+    <value>All</value>
   </data>
-  <data name="Popup_InvertScrolling" xml:space="preserve">
-    <value>Invert
-Scrolling</value>
+  <data name="Popup_MessagesFew" xml:space="preserve">
+    <value>Few</value>
   </data>
-  <data name="Popup_HideMouseWhileScrolling" xml:space="preserve">
-    <value>Hide mouse
-while scr.</value>
+  <data name="Popup_MessagesMost" xml:space="preserve">
+    <value>Most</value>
   </data>
-  <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve">
-    <value>Reset mouse
-after scr.</value>
-  </data>
-  <data name="Popup_Music" xml:space="preserve">
-    <value>Music</value>
-  </data>
-  <data name="Popup_SoundEffects" xml:space="preserve">
-    <value>Sound
-effects</value>
-  </data>
-  <data name="Popup_Volume" xml:space="preserve">
-    <value>Volume</value>
-  </data>
-  <data name="Popup_Fullscreen" xml:space="preserve">
-    <value>Fullscreen</value>
-  </data>
-  <data name="Popup_Language" xml:space="preserve"><value>Language</value></data>
-  <data name="Popup_LanguageSystem" xml:space="preserve"><value>System</value></data>
-  <data name="Popup_LanguageEnglish" xml:space="preserve"><value>English</value></data>
-  <data name="Popup_LanguageGerman" xml:space="preserve"><value>German</value></data>
-  <data name="Popup_Percentage" xml:space="preserve">
-    <value>{0}%</value>
-    <comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment>
+  <data name="Popup_MessagesNone" xml:space="preserve">
+    <value>None</value>
   </data>
   <data name="Popup_MiningOutput" xml:space="preserve">
     <value>Mining output:</value>
-  </data>
-  <data name="Popup_OrderedBuilding" xml:space="preserve">
-    <value>Ordered
-Building</value>
-  </data>
-  <data name="Popup_Defenders" xml:space="preserve">
-    <value>Defenders:</value>
-  </data>
-  <data name="Popup_State" xml:space="preserve">
-    <value>State:</value>
-    <comment>Military building threat level.</comment>
-  </data>
-  <data name="Popup_TransportInfo" xml:space="preserve">
-    <value>Transport Info:</value>
-  </data>
-  <data name="Popup_BuildingStock" xml:space="preserve">
-    <value>Stock of
-this building:</value>
-  </data>
-  <data name="Popup_MissionWon" xml:space="preserve">
-    <value>CONGRATULATIONS.
-  YOUR ENEMIES
-  RESIGN. YOU
- HAVE WON THIS
-    MISSION.</value>
   </data>
   <data name="Popup_MissionLost" xml:space="preserve">
     <value>SORRY, ONLY ONE
@@ -451,17 +345,34 @@ HAS GAINED THE
  SUPERIORITY IN
   THIS MISSION</value>
   </data>
-  <data name="Popup_TutorialCompleted" xml:space="preserve">
-    <value>   WELL DONE.
- YOU COMPLETED
- THIS TUTORIAL
-     GAME.</value>
+  <data name="Popup_MissionWon" xml:space="preserve">
+    <value>CONGRATULATIONS.
+  YOUR ENEMIES
+  RESIGN. YOU
+ HAVE WON THIS
+    MISSION.</value>
   </data>
-  <data name="Popup_BlueVictory" xml:space="preserve">
-    <value>    THE BLUE
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+  <data name="Popup_Music" xml:space="preserve">
+    <value>Music</value>
+  </data>
+  <data name="Popup_OrderedBuilding" xml:space="preserve">
+    <value>Ordered
+Building</value>
+  </data>
+  <data name="Popup_PathwayScrolling" xml:space="preserve">
+    <value>Pathway-
+Scrolling</value>
+  </data>
+  <data name="Popup_Percentage" xml:space="preserve">
+    <value>{0}%</value>
+    <comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment>
+  </data>
+  <data name="Popup_QuitChoices" xml:space="preserve">
+    <value>  Yes        No</value>
+    <comment>Fixed zero-based click columns: Yes at characters 2–4; No at 13–14. Preserve spacing and widths.</comment>
+  </data>
+  <data name="Popup_QuitQuestion" xml:space="preserve">
+    <value>Do you want to quit this game?</value>
   </data>
   <data name="Popup_RedVictory" xml:space="preserve">
     <value>    THE RED
@@ -469,17 +380,67 @@ HAS GAINED THE
    GAINED THE
   SUPERIORITY</value>
   </data>
-  <data name="Popup_VioletVictory" xml:space="preserve">
-    <value>  THE VIOLET
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+  <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve">
+    <value>Reset mouse
+after scr.</value>
   </data>
-  <data name="Popup_YellowVictory" xml:space="preserve">
-    <value>   THE YELLOW
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+  <data name="Popup_ResourceAmountAboveAverage" xml:space="preserve">
+    <value>Above Average</value>
+  </data>
+  <data name="Popup_ResourceAmountAverage" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="Popup_ResourceAmountBelowAverage" xml:space="preserve">
+    <value>Below Average</value>
+  </data>
+  <data name="Popup_ResourceAmountFew" xml:space="preserve">
+    <value>Few</value>
+  </data>
+  <data name="Popup_ResourceAmountMinimum" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="Popup_ResourceAmountMuch" xml:space="preserve">
+    <value>Much</value>
+  </data>
+  <data name="Popup_ResourceAmountNotPresent" xml:space="preserve">
+    <value>Not Present</value>
+  </data>
+  <data name="Popup_ResourceAmountPerfect" xml:space="preserve">
+    <value>Perfect</value>
+  </data>
+  <data name="Popup_ResourceAmountVeryFew" xml:space="preserve">
+    <value>Very Few</value>
+  </data>
+  <data name="Popup_ResourceAmountVeryMuch" xml:space="preserve">
+    <value>Very Much</value>
+  </data>
+  <data name="Popup_SaveFail" xml:space="preserve">
+    <value>Game could not
+be saved.</value>
+  </data>
+  <data name="Popup_SaveGame" xml:space="preserve">
+    <value>Save  Game</value>
+  </data>
+  <data name="Popup_SaveSuccess" xml:space="preserve">
+    <value>Game was saved
+successfully.</value>
+  </data>
+  <data name="Popup_SoundEffects" xml:space="preserve">
+    <value>Sound
+effects</value>
+  </data>
+  <data name="Popup_State" xml:space="preserve">
+    <value>State:</value>
+    <comment>Military building threat level.</comment>
+  </data>
+  <data name="Popup_TransportInfo" xml:space="preserve">
+    <value>Transport Info:</value>
+  </data>
+  <data name="Popup_TutorialCompleted" xml:space="preserve">
+    <value>   WELL DONE.
+ YOU COMPLETED
+ THIS TUTORIAL
+     GAME.</value>
   </data>
   <data name="Popup_TutorialOrder1" xml:space="preserve">
     <value>Build a guard hut and a guard tower and a fortress.</value>
@@ -499,93 +460,132 @@ HAS GAINED THE
   <data name="Popup_TutorialOrder6" xml:space="preserve">
     <value>Conquer all the land of the enemy.</value>
   </data>
+  <data name="Popup_TutorialOrders" xml:space="preserve">
+    <value>    ORDERS:</value>
+  </data>
   <data name="Popup_TutorialTitle" xml:space="preserve">
     <value>   TUTORIAL {0}</value>
     <comment>{0}: tutorial level, 1 through 6.</comment>
   </data>
-  <data name="Popup_TutorialOrders" xml:space="preserve">
-    <value>    ORDERS:</value>
+  <data name="Popup_UnsavedQuitChoices" xml:space="preserve">
+    <value>  Save  Yes  No</value>
+    <comment>Fixed zero-based click columns: Save at characters 2–5; Yes at 8–10; No at 13–14. Preserve spacing and widths.</comment>
   </data>
-  <data name="Popup_Demolish" xml:space="preserve">
-    <value>    Demolish:
-   Click here
-   if you are
-      sure</value>
+  <data name="Popup_UnsavedQuitQuestion" xml:space="preserve">
+    <value>The game has not been saved recently. Are you sure?</value>
   </data>
-  <data name="Popup_SaveGame" xml:space="preserve">
-    <value>Save  Game</value>
+  <data name="Popup_VioletVictory" xml:space="preserve">
+    <value>  THE VIOLET
+ SETTLERS HAVE
+   GAINED THE
+  SUPERIORITY</value>
   </data>
-  <data name="Popup_SaveSuccess" xml:space="preserve">
-    <value>Game was saved
-successfully.</value>
+  <data name="Popup_Volume" xml:space="preserve">
+    <value>Volume</value>
   </data>
-  <data name="Popup_SaveFail" xml:space="preserve">
-    <value>Game could not
-be saved.</value>
+  <data name="Popup_YellowVictory" xml:space="preserve">
+    <value>   THE YELLOW
+ SETTLERS HAVE
+   GAINED THE
+  SUPERIORITY</value>
   </data>
-  <data name="Popup_LoadSuccess" xml:space="preserve">
-    <value>Game was loaded
-successfully.</value>
+  <data name="Server_NotFound" xml:space="preserve">
+    <value>{0} | not found</value>
+    <comment>{0}: saved server address.</comment>
   </data>
-  <data name="Popup_LoadFail" xml:space="preserve">
-    <value>Game could not
-be loaded.</value>
+  <data name="Server_Online" xml:space="preserve">
+    <value>{0} | {1} | {2}/{3}</value>
+    <comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment>
   </data>
-  <data name="Android_AppName" xml:space="preserve"><value>Freeserf</value></data>
-  <data name="Android_Loading" xml:space="preserve"><value>Loading…</value></data>
-  <data name="Android_InitializationFailed" xml:space="preserve"><value>Initialization failed: {0}</value><comment>{0}: error detail.</comment></data>
-  <data name="Android_ImportMessage" xml:space="preserve"><value>Please choose how you would like to provide the game data file (SPAE.PA).</value></data>
-  <data name="Android_SelectFile" xml:space="preserve"><value>Select file</value></data>
-  <data name="Android_DownloadFromUbisoft" xml:space="preserve"><value>Download from Ubisoft Connect</value></data>
-  <data name="Android_ImportTitle" xml:space="preserve"><value>Provide game data</value></data>
-  <data name="Android_SelectDataFilePrompt" xml:space="preserve"><value>Please select the game data file (e.g. SPAE.PA).</value></data>
-  <data name="Android_LoggingIn" xml:space="preserve"><value>Logging in to Ubisoft Connect…</value></data>
-  <data name="Android_StartingDownload" xml:space="preserve"><value>Starting download…</value></data>
-  <data name="Android_UbisoftTitle" xml:space="preserve"><value>Ubisoft Connect</value></data>
-  <data name="Android_OK" xml:space="preserve"><value>OK</value></data>
-  <data name="Android_OldSaves" xml:space="preserve"><value>Old saves</value></data>
-  <data name="Android_OldSavesReadOnly" xml:space="preserve"><value>Old saves are read-only.</value></data>
-  <data name="Android_OnlySaveFilesCreated" xml:space="preserve"><value>Only save game files can be created.</value></data>
-  <data name="Android_OnlyFilesDeleted" xml:space="preserve"><value>Only files can be deleted.</value></data>
-  <data name="Android_OnlySavesRenamed" xml:space="preserve"><value>Only save games can be renamed.</value></data>
-  <data name="Android_FileAlreadyExists" xml:space="preserve"><value>A file named {0} already exists.</value><comment>{0}: file name.</comment></data>
-  <data name="Android_EnterCredentials" xml:space="preserve"><value>Please enter your email and password.</value></data>
-  <data name="Android_EnterTwoFactorCode" xml:space="preserve"><value>Please enter the 2FA code.</value></data>
-  <data name="Android_NoSavedLogin" xml:space="preserve"><value>No saved login available.</value></data>
-  <data name="Android_NoValidLogin" xml:space="preserve"><value>No valid login available.</value></data>
-  <data name="Android_LoginFailed" xml:space="preserve"><value>Login failed (HTTP {0}).</value><comment>{0}: HTTP status code.</comment></data>
-  <data name="Android_NetworkError" xml:space="preserve"><value>Network error: {0}</value><comment>{0}: error detail.</comment></data>
-  <data name="Android_ServiceConnectionFailed" xml:space="preserve"><value>Could not open a connection to '{0}'.</value><comment>{0}: service name.</comment></data>
-  <data name="Android_NoServiceResponse" xml:space="preserve"><value>No response received from the Ubisoft service.</value></data>
-  <data name="Android_InvalidServiceResponse" xml:space="preserve"><value>Invalid response from the Ubisoft service.</value></data>
-  <data name="Android_InvalidServiceResponseLength" xml:space="preserve"><value>Invalid response length from the Ubisoft service.</value></data>
-  <data name="Android_ConnectionClosed" xml:space="preserve"><value>The Ubisoft connection was closed.</value></data>
-  <data name="Android_InvalidServerMessageLength" xml:space="preserve"><value>Invalid message length from the Ubisoft server.</value></data>
-  <data name="Android_InvalidServerProtobuf" xml:space="preserve"><value>Invalid Protobuf format from the Ubisoft server.</value></data>
-  <data name="Android_InvalidServerPushLength" xml:space="preserve"><value>Invalid push length from the Ubisoft server.</value></data>
-  <data name="Android_ConnectionClosedUnexpectedly" xml:space="preserve"><value>The Ubisoft connection was closed unexpectedly.</value></data>
-  <data name="Android_DownloadNotInitialized" xml:space="preserve"><value>The download service is not initialized.</value></data>
-  <data name="Android_NoDownloadUrls" xml:space="preserve"><value>No download URLs received.</value></data>
-  <data name="Android_DownloadUrlsDenied" xml:space="preserve"><value>Download URLs were denied (game not owned?).</value></data>
-  <data name="Android_ManifestTooShort" xml:space="preserve"><value>The manifest is too short.</value></data>
-  <data name="Android_OwnershipInitializationFailed" xml:space="preserve"><value>Could not initialize the Ubisoft ownership check.</value></data>
-  <data name="Android_NoOwnershipToken" xml:space="preserve"><value>No ownership token received. Do you own the History Edition?</value></data>
-  <data name="Android_Connecting" xml:space="preserve"><value>Connecting to Ubisoft…</value></data>
-  <data name="Android_AuthenticationFailed" xml:space="preserve"><value>Ubisoft authentication failed.</value></data>
-  <data name="Android_CheckingOwnership" xml:space="preserve"><value>Checking ownership of the History Edition…</value></data>
-  <data name="Android_GameNotOwned" xml:space="preserve"><value>You do not own The Settlers 1 History Edition on this Ubisoft account.</value></data>
-  <data name="Android_NoManifest" xml:space="preserve"><value>No manifest is available for the History Edition.</value></data>
-  <data name="Android_InitializingDownload" xml:space="preserve"><value>Initializing download…</value></data>
-  <data name="Android_DownloadInitializationFailed" xml:space="preserve"><value>The download service could not be initialized.</value></data>
-  <data name="Android_DownloadingManifest" xml:space="preserve"><value>Downloading game manifest…</value></data>
-  <data name="Android_ManifestFileNotFound" xml:space="preserve"><value>File {0} was not found in the game manifest.</value><comment>{0}: data file name.</comment></data>
-  <data name="Android_RequestingDownloadUrls" xml:space="preserve"><value>Requesting download URLs…</value></data>
-  <data name="Android_DownloadUrlCountMismatch" xml:space="preserve"><value>The number of download URLs does not match the slices.</value></data>
-  <data name="Android_DownloadingFile" xml:space="preserve"><value>Downloading {0} ({1}/{2})…</value><comment>{0}: file name; {1}: current slice; {2}: slice count.</comment></data>
-  <data name="Android_DownloadSucceeded" xml:space="preserve"><value>{0} downloaded successfully.</value><comment>{0}: file name.</comment></data>
-  <data name="Android_NoManifestUrl" xml:space="preserve"><value>No manifest URL received.</value></data>
-  <data name="Android_DownloadFailed" xml:space="preserve"><value>Download failed: {0}</value><comment>{0}: error detail.</comment></data>
-  <data name="Android_UnknownError" xml:space="preserve"><value>unknown error</value></data>
-  <data name="Android_LzhamUnsupported" xml:space="preserve"><value>lzham compression is not supported on Android.</value></data>
-  <data name="Android_UnknownCompression" xml:space="preserve"><value>Unknown compression method: {0}</value><comment>{0}: compression method.</comment></data>
+  <data name="Server_Running" xml:space="preserve">
+    <value>{0} | {1} | {2}/{3} | running</value>
+    <comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment>
+  </data>
+  <data name="Server_Saved" xml:space="preserve">
+    <value>{0} | {1} | {2}/{3} | saved</value>
+    <comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment>
+  </data>
+  <data name="Setup_AddressLabel" xml:space="preserve"><value>IP:</value></data>
+  <data name="Setup_DefaultServerName" xml:space="preserve"><value>Freeserf Server</value></data>
+  <data name="Setup_Demo" xml:space="preserve"><value>Demo</value></data>
+  <data name="Setup_HostGame" xml:space="preserve"><value>Host game</value></data>
+  <data name="Setup_IdenticalValues" xml:space="preserve"><value>Identical Values</value></data>
+  <data name="Setup_LoadGame" xml:space="preserve"><value>Load game</value></data>
+  <data name="Setup_MapSizeLabel" xml:space="preserve"><value>Mapsize:</value></data>
+  <data name="Setup_MissionLabel" xml:space="preserve"><value>Mission:</value></data>
+  <data name="Setup_Multiplayer" xml:space="preserve"><value>Multiplayer</value></data>
+  <data name="Setup_MultiplayerJoin" xml:space="preserve"><value>Multiplayer Join</value></data>
+  <data name="Setup_NameLabel" xml:space="preserve"><value>Name:</value></data>
+  <data name="Setup_NewGame" xml:space="preserve"><value>New game</value></data>
+  <data name="Setup_ServerAddress" xml:space="preserve">
+    <value>IP: {0}</value>
+    <comment>{0}: server IP address.</comment>
+  </data>
+  <data name="Setup_ServerValues" xml:space="preserve"><value>Server Values</value></data>
+  <data name="Setup_StartMission" xml:space="preserve"><value>Start mission</value></data>
+  <data name="Setup_StartTutorial" xml:space="preserve"><value>Start tutorial</value></data>
+  <data name="Setup_StartingGame" xml:space="preserve"><value>Starting Game</value></data>
+  <data name="Setup_TutorialLabel" xml:space="preserve"><value>Tutorial:</value></data>
+  <data name="Vote_Answer_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Vote_Answer_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Vote_OwnRequest_GameSpeed" xml:space="preserve">
+    <value>You want to set the game speed to {0}.</value>
+    <comment>{0}: requested game speed.</comment>
+  </data>
+  <data name="Vote_OwnRequest_Pause" xml:space="preserve">
+    <value>You want to pause the game.</value>
+  </data>
+  <data name="Vote_OwnRequest_Resume" xml:space="preserve">
+    <value>You want to resume the game.</value>
+  </data>
+  <data name="Vote_OwnRequest_Save" xml:space="preserve">
+    <value>You want to save the game.</value>
+  </data>
+  <data name="Vote_OwnRequest_Unknown" xml:space="preserve">
+    <value>You want something.</value>
+  </data>
+  <data name="Vote_PlayerName" xml:space="preserve">
+    <value>Player {0}</value>
+    <comment>{0}: one-based player number.</comment>
+  </data>
+  <data name="Vote_Question_GameSpeed" xml:space="preserve">
+    <value>{0} wants to set the game speed to {1}.</value>
+    <comment>{0}: player label; {1}: requested game speed.</comment>
+  </data>
+  <data name="Vote_Question_Pause" xml:space="preserve">
+    <value>{0} wants to pause the game.</value>
+    <comment>{0}: player label.</comment>
+  </data>
+  <data name="Vote_Question_Resume" xml:space="preserve">
+    <value>{0} wants to resume the game.</value>
+    <comment>{0}: player label.</comment>
+  </data>
+  <data name="Vote_Question_Save" xml:space="preserve">
+    <value>{0} wants to save the game.</value>
+    <comment>{0}: player label.</comment>
+  </data>
+  <data name="Vote_Question_Unknown" xml:space="preserve">
+    <value>{0} wants something.</value>
+    <comment>{0}: player label.</comment>
+  </data>
+  <data name="Vote_Result_Accepted" xml:space="preserve">
+    <value>Accepted.</value>
+  </data>
+  <data name="Vote_Result_Refused" xml:space="preserve">
+    <value>Not possible now.</value>
+  </data>
+  <data name="Vote_Result_Rejected" xml:space="preserve">
+    <value>Rejected.</value>
+  </data>
+  <data name="Vote_Status_SecondsLeft" xml:space="preserve">
+    <value>{0} seconds left</value>
+    <comment>{0}: whole seconds remaining.</comment>
+  </data>
+  <data name="Vote_Status_Waiting" xml:space="preserve">
+    <value>Waiting...</value>
+  </data>
 </root>
