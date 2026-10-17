@@ -1,6 +1,8 @@
 Version 2.2.8:
 ==============
 
+- A special click on the build button toggles the possible building sites again
+  (it could only be switched on, not off)
 - A special click (left + right button, long press on Android) works as in the
   original: on a build button it shows the possible building sites, on the map
   button it shows the castle, and only a special click demolishes. In the map box

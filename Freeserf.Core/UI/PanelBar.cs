@@ -633,9 +633,9 @@ namespace Freeserf.UI
                         if ((popup == null || !popup.Displayed) && !interf.IsBuildingRoad)
                         {
                             if (interf.AccessRights == Viewer.Access.Player)
-                                interf.Viewport.ShowPossibleBuilds = true;
+                                interf.TogglePossibleBuilds();
                             else
-                                interf.Viewport.ShowPossibleBuilds = false;
+                                interf.ResetPossibleBuilds();
 
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Click);
                         }
