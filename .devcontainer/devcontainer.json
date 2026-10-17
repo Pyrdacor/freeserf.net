@@ -1,0 +1,20 @@
+{
+    "name": "Freeserf.net releases",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "runArgs": ["--platform=linux/amd64"],
+    "remoteUser": "ubuntu",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.csdevkit",
+                "ms-vscode.powershell"
+            ],
+            "settings": {
+                "dotnet.defaultSolution": "FreeserfNet.Desktop.slnf"
+            }
+        }
+    }
+}
