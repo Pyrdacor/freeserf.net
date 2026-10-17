@@ -129,7 +129,7 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow("en-US")]
         [DataRow("de-DE")]
         [DataRow("fr-FR")]
-        public void MissingTranslation_ResolvesCompleteSourceCatalog(string culture)
+        public void Catalog_ResolvesTranslationOrEnglishFallback(string culture)
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
@@ -154,7 +154,9 @@ namespace Freeserf.Test.Freeserf.Core
                 Assert.AreEqual(expected, property.GetValue(null), $"Resource resolution failed: {property.Name}");
             }
 
-            Assert.AreEqual("Player 2 wants to set the game speed to 12.",
+            Assert.AreEqual(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de"
+                    ? "Spieler 2 will das Tempo auf 12 setzen."
+                    : "Player 2 wants to set the game speed to 12.",
                 Vote.GetQuestion(1, VoteType.GameSpeed, 12));
         }
     }

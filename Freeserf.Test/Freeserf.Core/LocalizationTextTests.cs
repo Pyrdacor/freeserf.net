@@ -17,7 +17,7 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow("de-DE")]
         [DataRow("de-AT")]
         [DataRow("de-CH")]
-        public void GermanCatalog_UsesEnglishForMissingEntries(string cultureName)
+        public void GermanCatalog_ValidatesTemplatesAndResolvesRegionalCultures(string cultureName)
         {
             var resources = new ResourceManager(Strings.ResourceManager.BaseName, typeof(Strings).Assembly);
             try
@@ -26,7 +26,7 @@ namespace Freeserf.Test.Freeserf.Core
                 var english = resources.GetResourceSet(CultureInfo.GetCultureInfo("en"), true, true);
                 var culture = CultureInfo.GetCultureInfo(cultureName);
 
-                Assert.IsNotNull(german, "The German satellite resource must be packaged even before translations are added.");
+                Assert.IsNotNull(german, "The German satellite resource must be packaged.");
                 Assert.IsNotNull(english);
 
                 foreach (DictionaryEntry entry in german)

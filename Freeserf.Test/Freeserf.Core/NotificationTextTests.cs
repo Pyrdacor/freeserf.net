@@ -109,7 +109,7 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow("en-US")]
         [DataRow("de-DE")]
         [DataRow("fr-FR")]
-        public void ExistingViews_ResolveEnglishFallbackInCurrentUICulture(string culture)
+        public void ExistingViews_ResolveCurrentUICulture(string culture)
         {
             var views = Enum.GetValues<Notification.Type>()
                 .Where(type => type != Notification.Type.None)

@@ -38,7 +38,8 @@ namespace Freeserf.Test.Android
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
 
             Assert.AreEqual(german ? "Initialisierung fehlgeschlagen: detail" : "Initialization failed: detail", AndroidText.InitializationFailed("detail"));
-            Assert.AreEqual("A file named island.save already exists.", AndroidText.FileAlreadyExists("island.save"));
+            Assert.AreEqual(german ? "Eine Datei namens island.save existiert bereits." : "A file named island.save already exists.",
+                AndroidText.FileAlreadyExists("island.save"));
             Assert.AreEqual(german ? "Login fehlgeschlagen (HTTP 401)." : "Login failed (HTTP 401).", AndroidText.LoginFailed(401));
             Assert.AreEqual(german ? "Netzwerkfehler: detail" : "Network error: detail", AndroidText.NetworkError("detail"));
             Assert.AreEqual(german ? "Konnte Verbindung zu 'download_service' nicht öffnen." : "Could not open a connection to 'download_service'.",
@@ -64,7 +65,7 @@ namespace Freeserf.Test.Android
             Assert.AreEqual(german ? "Spieldaten bereitstellen" : "Provide game data", Strings.Android_ImportTitle);
             Assert.AreEqual(german ? "Datei auswählen" : "Select file", Strings.Android_SelectFile);
             Assert.AreEqual(german ? "Von Ubisoft Connect herunterladen" : "Download from Ubisoft Connect", Strings.Android_DownloadFromUbisoft);
-            Assert.AreEqual("Old saves", Strings.Android_OldSaves);
+            Assert.AreEqual(german ? "Alte Spielstände" : "Old saves", Strings.Android_OldSaves);
             Assert.AreEqual("OK", Strings.Android_OK);
             Assert.AreEqual(german ? "unbekannter Fehler" : "unknown error", Strings.Android_UnknownError);
         }

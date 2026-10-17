@@ -75,7 +75,9 @@ The `[game]` setting `language` accepts:
 
 Missing settings use `system`. Unsupported values are logged and also use
 `system`. Untranslated entries fall back to English independently for each
-message. German is currently partial, so much of the game still displays English.
+message. The German catalog covers all current entries; original mission names
+and product names remain unchanged. German wording and layout still need
+in-game review, particularly the unchanged choice click areas.
 Number formatting continues to use the system formatting culture.
 
 The saved preference is loaded before desktop command-line text and Android

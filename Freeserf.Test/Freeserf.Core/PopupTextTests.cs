@@ -189,7 +189,7 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow("en-US")]
         [DataRow("de-DE")]
         [DataRow("fr-FR")]
-        public void MissingTranslation_ResolvesAllPopupEnglishText(string culture)
+        public void Catalog_ResolvesPopupTranslationOrEnglishFallback(string culture)
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
@@ -206,7 +206,8 @@ namespace Freeserf.Test.Freeserf.Core
 
             Assert.AreEqual("100%", PopupBox.FormatPercentage(100));
             Assert.AreEqual("1599%", PopupBox.FormatPercentage(1599));
-            Assert.AreEqual("   TUTORIAL 6", PopupBox.FormatTutorialTitle(6));
+            Assert.AreEqual(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de"
+                ? "   TRAINING 6" : "   TUTORIAL 6", PopupBox.FormatTutorialTitle(6));
         }
 
         [TestMethod]

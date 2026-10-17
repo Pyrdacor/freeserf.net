@@ -125,7 +125,7 @@ namespace Freeserf.Test.Freeserf.Core
             UserConfig.Game.Language = "de";
             Assert.AreEqual("Lädt…", Strings.Android_Loading);
             Assert.AreEqual("Lädt…", await Task.Run(() => Strings.Android_Loading));
-            Assert.AreEqual("Your settlement is under attack", Strings.Notification_UnderAttack);
+            Assert.AreEqual("Ihre Siedlung wird angegriffen", Strings.Notification_UnderAttack);
             Assert.AreEqual("fr-FR", CultureInfo.CurrentCulture.Name);
         }
 
