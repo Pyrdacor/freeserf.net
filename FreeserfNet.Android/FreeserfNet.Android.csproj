@@ -109,6 +109,20 @@
     </ItemGroup>
   </Target>
 
+  <!-- The Ultz.Native.SDL package (a transitive dependency of Silk.NET.SDL)
+       ships Linux libSDL2-2.0.so files under runtimes/linux-*/native. The
+       Android build adds every .so from ResolvedFileToPublish to the package
+       (via _IncludeNativeSystemLibraries -> FrameworkNativeLibrary), so these
+       Linux libraries end up in the app. The app loads libSDL2.so (the
+       16 KB-aligned replacement above), so the Linux libSDL2-2.0.so files are
+       dead weight that triggers the Play Store 16 KB page-size warning.
+       Remove them before the native libraries are collected. -->
+  <Target Name="ExcludeLinuxSdlLibraries" BeforeTargets="_IncludeNativeSystemLibraries">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="$(NuGetPackageRoot)ultz.native.sdl\**\libSDL2-2.0.so" />
+    </ItemGroup>
+  </Target>
+
   <!-- Game data (copyrighted, kept outside the repo) is NOT bundled by
        default. On first start the user picks their own data file via the
        system file picker (see MainActivity.ShowDataImportDialog). To bundle
