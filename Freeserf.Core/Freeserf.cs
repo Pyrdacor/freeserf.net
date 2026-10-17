@@ -21,7 +21,9 @@
  */
 
 using Freeserf.Data;
+using Freeserf.Localization;
 using System;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -74,7 +76,7 @@ namespace Freeserf
             int maxDebugLevelValue = Enums.MaxIntValue<Log.Level>();
             string logTypes = string.Join(", ", Enum.GetNames(typeof(ErrorSystemType)));
 
-            commandLine.AddOption('d', "Set debug output level").AddParameter("NUM", (AutoParseableString s) =>
+            commandLine.AddOption('d', Strings.CommandLine_Debug).AddParameter(Strings.CommandLine_ArgumentNumber, (AutoParseableString s) =>
             {
                 s.Retrieve(out int d);
 
@@ -85,34 +87,34 @@ namespace Freeserf
                     return true;
                 }
 
-                Console.WriteLine($"Invalid debug output level {d}. Possbile values are {minDebugLevelValue} ~ {maxDebugLevelValue}.");
+                Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CommandLine_InvalidDebugLevel, d, minDebugLevelValue, maxDebugLevelValue));
 
                 return false;
             }, $"{ minDebugLevelValue} ~ { maxDebugLevelValue}");
 
-            commandLine.AddOption('f', "Run in fullscreen mode.", () => { initInfo.Fullscreen = true; });
+            commandLine.AddOption('f', Strings.CommandLine_Fullscreen, () => { initInfo.Fullscreen = true; });
 
-            commandLine.AddOption('g', "Use specified data directory.").AddParameter("DATA-PATH", (AutoParseableString s) =>
+            commandLine.AddOption('g', Strings.CommandLine_DataDirectory).AddParameter(Strings.CommandLine_ArgumentDataPath, (AutoParseableString s) =>
             {
                 s.Retrieve(out initInfo.DataDirectory);
 
                 return true;
             });
 
-            commandLine.AddOption('h', "Show this help text.", () =>
+            commandLine.AddOption('h', Strings.CommandLine_Help, () =>
             {
                 commandLine.ShowHelp();
                 Environment.Exit(0);
             });
 
-            commandLine.AddOption('l', "Load saved game.").AddParameter("FILE", (AutoParseableString s) =>
+            commandLine.AddOption('l', Strings.CommandLine_Load).AddParameter(Strings.CommandLine_ArgumentFile, (AutoParseableString s) =>
             {
                 initInfo.SaveGame = s.ReadToEnd();
 
                 return true;
             });
 
-            commandLine.AddOption('r', "Set display resolution (e.g. 800x600).").AddParameter("RES", (AutoParseableString s) =>
+            commandLine.AddOption('r', Strings.CommandLine_Resolution).AddParameter(Strings.CommandLine_ArgumentResolution, (AutoParseableString s) =>
             {
                 s.Retrieve(out initInfo.ScreenWidth);
                 s.Skip(1); // 'x'
@@ -122,7 +124,7 @@ namespace Freeserf
                 return true;
             });
 
-            commandLine.AddOption('p', "Set window position (e.g. 0,0).").AddParameter("POS", (AutoParseableString s) =>
+            commandLine.AddOption('p', Strings.CommandLine_Position).AddParameter(Strings.CommandLine_ArgumentPosition, (AutoParseableString s) =>
             {
                 s.Retrieve(out initInfo.WindowX);
                 s.Skip(1); // ','
@@ -132,26 +134,26 @@ namespace Freeserf
                 return true;
             });
 
-            commandLine.AddOption('m', "Run an automated multiplayer test.\nhost:CLIENTS[:AI] creates a server, join:ADDRESS joins one.").AddParameter("MODE", (AutoParseableString s) =>
+            commandLine.AddOption('m', Strings.CommandLine_MultiplayerTest).AddParameter(Strings.CommandLine_ArgumentMode, (AutoParseableString s) =>
             {
                 s.Retrieve(out string mode);
 
                 if (!UI.MultiplayerTestDriver.Configure(mode))
                 {
-                    Console.WriteLine($"Invalid multiplayer test mode {mode}.");
+                    Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CommandLine_InvalidMultiplayerMode, mode));
                     return false;
                 }
 
                 initInfo.MultiplayerTest = true;
                 return true;
-            }, "host:CLIENTS[:AI] | join:ADDRESS");
+            }, Strings.CommandLine_MultiplayerModes);
 
-            commandLine.AddOption('c', "Log to console window.", () =>
+            commandLine.AddOption('c', Strings.CommandLine_Console, () =>
             {
                 initInfo.ConsoleWindow = true;
             });
 
-            commandLine.AddOption('o', "Log only messages of the given type.\nCannot be used with -x option.").AddParameter("LOG-TYPE", (AutoParseableString s) =>
+            commandLine.AddOption('o', Strings.CommandLine_IncludeLogType).AddParameter(Strings.CommandLine_ArgumentLogType, (AutoParseableString s) =>
             {
                 s.Retrieve(out string type);
 
@@ -162,12 +164,12 @@ namespace Freeserf
                     return true;
                 }
 
-                Console.WriteLine($"Invalid log type {type}. Possible values are: {logTypes}.");
+                Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CommandLine_InvalidLogType, type, logTypes));
 
                 return false;
             }, $"{logTypes}");
 
-            commandLine.AddOption('x', "Log only messages not of the given type.\nCannot be used with -o option.").AddParameter("LOG-TYPE", (AutoParseableString s) =>
+            commandLine.AddOption('x', Strings.CommandLine_ExcludeLogType).AddParameter(Strings.CommandLine_ArgumentLogType, (AutoParseableString s) =>
             {
                 s.Retrieve(out string type);
 
@@ -178,13 +180,13 @@ namespace Freeserf
                     return true;
                 }
 
-                Console.WriteLine($"Invalid log type {type}. Possible values are: {logTypes}.");
+                Console.WriteLine(string.Format(CultureInfo.CurrentCulture, Strings.CommandLine_InvalidLogType, type, logTypes));
 
                 return false;
             }, $"{logTypes}");
 
             // TODO: email configurable
-            commandLine.SetComment("Please report bugs to <robert.schneckenhaus@web.de>");
+            commandLine.SetComment(Strings.CommandLine_ReportBugs);
 
             Log.Info.Write(ErrorSystemType.Application, EXTENDED_VERSION);
 

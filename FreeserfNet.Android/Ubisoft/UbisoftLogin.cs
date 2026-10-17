@@ -12,6 +12,7 @@
  */
 
 using System;
+using Freeserf.Localization;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -62,7 +63,7 @@ namespace Freeserf.Android.Ubisoft
                 return new UbisoftLoginResult
                 {
                     Success = false,
-                    ErrorMessage = "Bitte E-Mail und Passwort eingeben."
+                    ErrorMessage = Strings.Android_EnterCredentials
                 };
             }
 
@@ -79,7 +80,7 @@ namespace Freeserf.Android.Ubisoft
                 return new UbisoftLoginResult
                 {
                     Success = false,
-                    ErrorMessage = "Bitte den 2FA-Code eingeben."
+                    ErrorMessage = Strings.Android_EnterTwoFactorCode
                 };
             }
 
@@ -95,7 +96,7 @@ namespace Freeserf.Android.Ubisoft
                 return new UbisoftLoginResult
                 {
                     Success = false,
-                    ErrorMessage = "Kein gespeicherter Login vorhanden."
+                    ErrorMessage = Strings.Android_NoSavedLogin
                 };
             }
 
@@ -113,7 +114,7 @@ namespace Freeserf.Android.Ubisoft
                 return new UbisoftLoginResult
                 {
                     Success = false,
-                    ErrorMessage = "Kein gültiger Login vorhanden."
+                    ErrorMessage = Strings.Android_NoValidLogin
                 };
             }
 
@@ -152,7 +153,7 @@ namespace Freeserf.Android.Ubisoft
 
                         string message = loginResponse?.Message;
                         if (string.IsNullOrEmpty(message))
-                            message = $"Login fehlgeschlagen (HTTP {(int)response.StatusCode}).";
+                            message = AndroidText.LoginFailed((int)response.StatusCode);
 
                         return new UbisoftLoginResult
                         {
@@ -171,7 +172,7 @@ namespace Freeserf.Android.Ubisoft
                 return new UbisoftLoginResult
                 {
                     Success = false,
-                    ErrorMessage = "Netzwerkfehler: " + ex.Message
+                    ErrorMessage = AndroidText.NetworkError(ex.Message)
                 };
             }
         }
@@ -229,7 +230,7 @@ namespace Freeserf.Android.Ubisoft
 
                         string message = loginResponse?.Message;
                         if (string.IsNullOrEmpty(message))
-                            message = $"Login fehlgeschlagen (HTTP {(int)response.StatusCode}).";
+                            message = AndroidText.LoginFailed((int)response.StatusCode);
 
                         return new UbisoftLoginResult
                         {
@@ -248,7 +249,7 @@ namespace Freeserf.Android.Ubisoft
                 return new UbisoftLoginResult
                 {
                     Success = false,
-                    ErrorMessage = "Netzwerkfehler: " + ex.Message
+                    ErrorMessage = AndroidText.NetworkError(ex.Message)
                 };
             }
         }

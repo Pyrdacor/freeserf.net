@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Freeserf.Localization;
 
 namespace Freeserf
 {
@@ -30,36 +31,38 @@ namespace Freeserf
 
     internal class Character
     {
-        public Character(PlayerFace face, string name, string characterization)
+        public Character(PlayerFace face, Func<string> name, Func<string> characterization)
         {
             Face = face;
-            Name = name;
-            Characterization = characterization;
+            getName = name;
+            getCharacterization = characterization;
         }
 
         public PlayerFace Face;
-        public string Name;
-        public string Characterization;
+        readonly Func<string> getName;
+        readonly Func<string> getCharacterization;
+        public string Name => getName();
+        public string Characterization => getCharacterization();
     }
 
     public class PlayerInfo
     {
         internal static readonly Character[] Characters =
         [
-            new Character(PlayerFace.None, "ERROR", "ERROR"),
-            new Character(PlayerFace.LadyAmalie, "Lady Amalie", "An inoffensive lady, reserved, who goes about her work peacefully."),
-            new Character(PlayerFace.KumpyOnefinger, "Kumpy Onefinger", "A very hostile character, who loves gold above all else."),
-            new Character(PlayerFace.Balduin, "Balduin, a former monk", "A very discrete character, who worries chiefly about the protection of his lands and his important buildings."),
-            new Character(PlayerFace.Frollin, "Frollin", "His unpredictable behaviour will always take you by surprise. He will \"pilfer\" away lands that are not occupied."),
-            new Character(PlayerFace.Kallina, "Kallina", "She is a fighter who attempts to block the enemy’s food supply by using strategic tactics."),
-            new Character(PlayerFace.Rasparuk, "Rasparuk the druid", "His tactics consist in amassing large stocks of raw materials. But he attacks slyly."),
-            new Character(PlayerFace.CountAldaba, "Count Aldaba", "Protect your warehouses well, because he is aggressive and knows exactly where he must attack."),
-            new Character(PlayerFace.KingRolph, "The King Rolph VII", "He is a prudent ruler, without any particular weakness. He will try to check the supply of construction materials of his adversaries."),
-            new Character(PlayerFace.HomenDoublehorn, "Homen Doublehorn", "He is the most aggressive enemy. Watch your buildings carefully, otherwise he might take you by surprise."),
-            new Character(PlayerFace.Sollok, "Sollok the Joker", "A sly and repugnant adversary, he will try to stop the supply of raw materials of his enemies right from the beginning of the game."),
-            new Character(PlayerFace.Enemy, "Enemy", "Last enemy."),
-            new Character(PlayerFace.You, "You", "You."),
-            new Character(PlayerFace.Friend, "Friend", "Your partner.")
+            new Character(PlayerFace.None, () => Strings.Character_None_Name, () => Strings.Character_None_Description),
+            new Character(PlayerFace.LadyAmalie, () => Strings.Character_LadyAmalie_Name, () => Strings.Character_LadyAmalie_Description),
+            new Character(PlayerFace.KumpyOnefinger, () => Strings.Character_KumpyOnefinger_Name, () => Strings.Character_KumpyOnefinger_Description),
+            new Character(PlayerFace.Balduin, () => Strings.Character_Balduin_Name, () => Strings.Character_Balduin_Description),
+            new Character(PlayerFace.Frollin, () => Strings.Character_Frollin_Name, () => Strings.Character_Frollin_Description),
+            new Character(PlayerFace.Kallina, () => Strings.Character_Kallina_Name, () => Strings.Character_Kallina_Description),
+            new Character(PlayerFace.Rasparuk, () => Strings.Character_Rasparuk_Name, () => Strings.Character_Rasparuk_Description),
+            new Character(PlayerFace.CountAldaba, () => Strings.Character_CountAldaba_Name, () => Strings.Character_CountAldaba_Description),
+            new Character(PlayerFace.KingRolph, () => Strings.Character_KingRolph_Name, () => Strings.Character_KingRolph_Description),
+            new Character(PlayerFace.HomenDoublehorn, () => Strings.Character_HomenDoublehorn_Name, () => Strings.Character_HomenDoublehorn_Description),
+            new Character(PlayerFace.Sollok, () => Strings.Character_Sollok_Name, () => Strings.Character_Sollok_Description),
+            new Character(PlayerFace.Enemy, () => Strings.Character_Enemy_Name, () => Strings.Character_Enemy_Description),
+            new Character(PlayerFace.You, () => Strings.Character_You_Name, () => Strings.Character_You_Description),
+            new Character(PlayerFace.Friend, () => Strings.Character_Friend_Name, () => Strings.Character_Friend_Description)
         ];
 
         internal static readonly Color[] PlayerColors =
@@ -156,85 +159,86 @@ namespace Freeserf
     {
         internal struct Mission
         {
-            internal Mission(string name, Random random, params PlayerInfo.Preset[] players)
+            internal Mission(Func<string> name, Random random, params PlayerInfo.Preset[] players)
             {
                 Name = name;
                 Random = random;
                 Players = players;
             }
 
-            public string Name;
+            public Func<string> Name;
+            public bool IsIntro;
             public Random Random;
             public PlayerInfo.Preset[] Players;
         }
 
         static readonly Mission IntroMission = new Mission
         (
-            "INTRO",
+            () => Strings.Mission_Intro,
             new Random(),
             new PlayerInfo.Preset(1, 0, 10, 5, PlayerInfo.Position.None),
             new PlayerInfo.Preset(2, 0, 10, 5, PlayerInfo.Position.None),
             new PlayerInfo.Preset(3, 0, 10, 5, PlayerInfo.Position.None),
             new PlayerInfo.Preset(4, 0, 10, 5, PlayerInfo.Position.None)
-        );
+        ) { IsIntro = true };
 
         static readonly Mission[] missions = new Mission[]
         {
             new Mission(
-                "START",
+                () => Strings.Mission_Start,
                 new Random("8667715887436237"),
                 new PlayerInfo.Preset(12, 40, 35, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(1, 10, 5, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "STATION",
+                () => Strings.Mission_Station,
                 new Random("2831713285431227"),
                 new PlayerInfo.Preset(12, 40, 30, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(2, 12, 15, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 14, 15, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "UNITY",
+                () => Strings.Mission_Unity,
                 new Random("4632253338621228"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(2, 18, 10, 25, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 18, 10, 25, PlayerInfo.Position.None)
             ),
             new Mission(
-                "WAVE",
+                () => Strings.Mission_Wave,
                 new Random("8447342476811762"),
                 new PlayerInfo.Preset(12, 40, 25, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(2, 16, 20, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "EXPORT",
+                () => Strings.Mission_Export,
                 new Random("4276472414845177"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 16, 25, 20, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 16, 25, 20, PlayerInfo.Position.None)
             ),
             new Mission(
-                "OPTION",
+                () => Strings.Mission_Option,
                 new Random("2333577877517478"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 20, 12, 14, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(5, 20, 12, 14, PlayerInfo.Position.None)
             ),
             new Mission(
-                "RECORD",
+                () => Strings.Mission_Record,
                 new Random("1416541231242884"),
                 new PlayerInfo.Preset(12, 40, 30, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(3, 22, 30, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "SCALE",
+                () => Strings.Mission_Scale,
                 new Random("7845187715476348"),
                 new PlayerInfo.Preset(12, 40, 25, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 23, 25, 30, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(6, 24, 25, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "SIGN",
+                () => Strings.Mission_Sign,
                 new Random("5185768873118642"),
                 new PlayerInfo.Preset(12, 40, 25, 40, PlayerInfo.Position.None),
                 new PlayerInfo.Preset(4, 26, 13, 30, PlayerInfo.Position.None),
@@ -242,20 +246,20 @@ namespace Freeserf
                 new PlayerInfo.Preset(6, 30, 13, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "ACORN",
+                () => Strings.Mission_Acorn,
                 new Random("3183215728814883"),
                 new PlayerInfo.Preset(12, 40, 20, 16, new PlayerInfo.Position(28, 14)),
                 new PlayerInfo.Preset(4, 30, 19, 20, new PlayerInfo.Position(5, 47))
             ),
             new Mission(
-                "CHOPPER",
+                () => Strings.Mission_Chopper,
                 new Random("4376241846215474"),
                 new PlayerInfo.Preset(12, 40, 16, 20, new PlayerInfo.Position(16, 42)),
                 new PlayerInfo.Preset(5, 33, 10, 20, new PlayerInfo.Position(52, 25)),
                 new PlayerInfo.Preset(7, 34, 13, 20, new PlayerInfo.Position(23, 12))
             ),
             new Mission(
-                "GATE",
+                () => Strings.Mission_Gate,
                 new Random("6371557668231277"),
                 new PlayerInfo.Preset(12, 40, 23, 27, new PlayerInfo.Position(53, 13)),
                 new PlayerInfo.Preset(5, 27, 17, 24, new PlayerInfo.Position(27, 10)),
@@ -263,20 +267,20 @@ namespace Freeserf
                 new PlayerInfo.Preset(7, 27, 13, 24, new PlayerInfo.Position(15, 32))
             ),
             new Mission(
-                "ISLAND",
+                () => Strings.Mission_Island,
                 new Random("8473352672411117"),
                 new PlayerInfo.Preset(12, 40, 24, 20, new PlayerInfo.Position(7, 26)),
                 new PlayerInfo.Preset(5, 20, 30, 20, new PlayerInfo.Position(2, 10))
             ),
             new Mission(
-                "LEGION",
+                () => Strings.Mission_Legion,
                 new Random("1167854231884464"),
                 new PlayerInfo.Preset(12, 40, 20, 23, new PlayerInfo.Position(19,  3)),
                 new PlayerInfo.Preset(6, 28, 16, 20, new PlayerInfo.Position(55,  7)),
                 new PlayerInfo.Preset(8, 28, 16, 20, new PlayerInfo.Position(55, 46))
             ),
             new Mission(
-                "PIECE",
+                () => Strings.Mission_Piece,
                 new Random("2571462671725414"),
                 new PlayerInfo.Preset(12, 40, 20, 17, new PlayerInfo.Position(41, 5)),
                 new PlayerInfo.Preset(6, 40, 23, 20, new PlayerInfo.Position(19, 49)),
@@ -284,13 +288,13 @@ namespace Freeserf
                 new PlayerInfo.Preset(8, 40, 15, 15, new PlayerInfo.Position(43, 31))
             ),
             new Mission(
-                "RIVAL",
+                () => Strings.Mission_Rival,
                 new Random("4563653871271587"),
                 new PlayerInfo.Preset(12, 40, 26, 23, new PlayerInfo.Position(36, 63)),
                 new PlayerInfo.Preset(6, 28, 29, 40, new PlayerInfo.Position(14, 15))
             ),
             new Mission(
-                "SAVAGE",
+                () => Strings.Mission_Savage,
                 new Random("7212145428156114"),
                 new PlayerInfo.Preset(12, 40, 25, 12, new PlayerInfo.Position(63, 59)),
                 new PlayerInfo.Preset(7, 29, 17, 10, new PlayerInfo.Position(29, 24)),
@@ -298,27 +302,27 @@ namespace Freeserf
                 new PlayerInfo.Preset(9, 32, 17, 10, new PlayerInfo.Position(42, 49))
             ),
             new Mission(
-                "XAVER",
+                () => Strings.Mission_Xaver,
                 new Random("4276472414435177"),
                 new PlayerInfo.Preset(12, 40, 25, 40, new PlayerInfo.Position(15, 0)),
                 new PlayerInfo.Preset(7, 40, 30, 35, new PlayerInfo.Position(34, 48)),
                 new PlayerInfo.Preset(9, 30, 30, 35, new PlayerInfo.Position(58, 5))
             ),
             new Mission(
-                "BLADE",
+                () => Strings.Mission_Blade,
                 new Random("7142748441424786"),
                 new PlayerInfo.Preset(12, 40, 30, 20, new PlayerInfo.Position(13, 37)),
                 new PlayerInfo.Preset(7, 40, 20, 20, new PlayerInfo.Position(32, 34))
             ),
             new Mission(
-                "BEACON",
+                () => Strings.Mission_Beacon,
                 new Random("6882188351133886"),
                 new PlayerInfo.Preset(12, 40,  9, 10, new PlayerInfo.Position(14, 42)),
                 new PlayerInfo.Preset(8, 40, 16, 22, new PlayerInfo.Position(62, 1)),
                 new PlayerInfo.Preset(9, 40, 16, 23, new PlayerInfo.Position(32, 14))
             ),
             new Mission(
-                "PASTURE",
+                () => Strings.Mission_Pasture,
                 new Random("7742136435163436"),
                 new PlayerInfo.Preset(12, 40, 20, 11, new PlayerInfo.Position(38, 17)),
                 new PlayerInfo.Preset(8, 30, 22, 13, new PlayerInfo.Position(32, 51)),
@@ -326,63 +330,63 @@ namespace Freeserf
                 new PlayerInfo.Preset(10, 30, 21, 13, new PlayerInfo.Position(4, 9))
             ),
             new Mission(
-                "OMNUS",
+                () => Strings.Mission_Omnus,
                 new Random("6764387728224725"),
                 new PlayerInfo.Preset(12, 40, 20, 40, new PlayerInfo.Position(42, 20)),
                 new PlayerInfo.Preset(8, 36, 25, 40, new PlayerInfo.Position(48, 47))
             ),
             new Mission(
-                "TRIBUTE",
+                () => Strings.Mission_Tribute,
                 new Random("5848744734731253"),
                 new PlayerInfo.Preset(12, 40,  5, 11, new PlayerInfo.Position(53, 1)),
                 new PlayerInfo.Preset(9, 35, 30, 10, new PlayerInfo.Position(20, 2)),
                 new PlayerInfo.Preset(10, 37, 30, 10, new PlayerInfo.Position(16, 55))
             ),
             new Mission(
-                "FOUNTAIN",
+                () => Strings.Mission_Fountain,
                 new Random("6183541838474434"),
                 new PlayerInfo.Preset(12, 40, 20, 12, new PlayerInfo.Position(3, 34)),
                 new PlayerInfo.Preset(9, 30, 25, 10, new PlayerInfo.Position(47, 41)),
                 new PlayerInfo.Preset(10, 30, 26, 10, new PlayerInfo.Position(42, 52))
             ),
             new Mission(
-                "CHUDE",
+                () => Strings.Mission_Chude,
                 new Random("7633126817245833"),
                 new PlayerInfo.Preset(12, 40, 20, 40, new PlayerInfo.Position(23, 38)),
                 new PlayerInfo.Preset(9, 40, 25, 40, new PlayerInfo.Position(57, 52))
             ),
             new Mission(
-                "TRAILER",
+                () => Strings.Mission_Trailer,
                 new Random("5554144773646312"),
                 new PlayerInfo.Preset(12, 40, 20, 30, new PlayerInfo.Position(29, 11)),
                 new PlayerInfo.Preset(10, 38, 30, 35, new PlayerInfo.Position(15, 40))
             ),
             new Mission(
-                "CANYON",
+                () => Strings.Mission_Canyon,
                 new Random("3122431112682557"),
                 new PlayerInfo.Preset(12, 40, 18, 28, new PlayerInfo.Position(49, 53)),
                 new PlayerInfo.Preset(10, 39, 25, 40, new PlayerInfo.Position(14, 53))
             ),
             new Mission(
-                "REPRESS",
+                () => Strings.Mission_Repress,
                 new Random("2568412624848266"),
                 new PlayerInfo.Preset(12, 40, 20, 40, new PlayerInfo.Position(44, 39)),
                 new PlayerInfo.Preset(10, 39, 25, 40, new PlayerInfo.Position(44, 63))
             ),
             new Mission(
-                "YOKI",
+                () => Strings.Mission_Yoki,
                 new Random("3736685353284538"),
                 new PlayerInfo.Preset(12, 40,  5, 22, new PlayerInfo.Position(53, 8)),
                 new PlayerInfo.Preset(11, 40, 15, 20, new PlayerInfo.Position(30, 22))
             ),
             new Mission(
-                "PASSIVE",
+                () => Strings.Mission_Passive,
                 new Random("5471458635555317"),
                 new PlayerInfo.Preset(12, 40,  5, 20, new PlayerInfo.Position(25, 46)),
                 new PlayerInfo.Preset(11, 40, 20, 20, new PlayerInfo.Position(51, 42))
             ),
             new Mission(
-                "PYRDACOR",
+                () => Strings.Mission_Pyrdacor,
                 new Random("5079726461636072"),
                 new PlayerInfo.Preset(12, 40,  0, 30, new PlayerInfo.Position(54, 63)),
                 new PlayerInfo.Preset(11, 40, 18, 16, new PlayerInfo.Position(55, 25))
@@ -394,32 +398,32 @@ namespace Freeserf
         static readonly Mission[] tutorials = new Mission[]
         {
             new Mission(
-                "Tutorial 1",
+                () => Strings.Mission_Tutorial1,
                 new Random("3762665523225478"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "Tutorial 2",
+                () => Strings.Mission_Tutorial2,
                 new Random("1616118277634871"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "Tutorial 3",
+                () => Strings.Mission_Tutorial3,
                 new Random("2418554743842118"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "Tutorial 4",
+                () => Strings.Mission_Tutorial4,
                 new Random("4454333314864658"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "Tutorial 5",
+                () => Strings.Mission_Tutorial5,
                 new Random("4264118313621432"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
             ),
             new Mission(
-                "Tutorial 6",
+                () => Strings.Mission_Tutorial6,
                 new Random("2487251185361288"),
                 new PlayerInfo.Preset(12, 40, 30, 30, PlayerInfo.Position.None)
             )
@@ -450,6 +454,7 @@ namespace Freeserf
 
         readonly List<PlayerInfo> players = new(4);
         readonly string name = "";
+        readonly Func<string> missionName;
         readonly bool intro = false;
         int gameType; // Game.GameType
         uint level = 0;
@@ -457,9 +462,9 @@ namespace Freeserf
         GameInfo(Mission missionPreset)
         {
             MapSize = 3;
-            name = missionPreset.Name;
+            missionName = missionPreset.Name;
             RandomBase = missionPreset.Random;
-            intro = missionPreset.Name == "INTRO";
+            intro = missionPreset.IsIntro;
             gameType = (int)Game.GameType.Mission;
 
             for (int i = 0; i < missionPreset.Players.Length; ++i)
@@ -651,7 +656,7 @@ namespace Freeserf
 
         internal int GameType => gameType;
         internal uint Level => level;
-        internal string Name => name;
+        internal string Name => missionName != null ? missionName() : name;
 
         internal Character GetCharacter(uint character)
         {

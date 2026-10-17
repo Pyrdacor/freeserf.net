@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using Freeserf.Localization;
 
 namespace Freeserf.UI
 {
@@ -39,18 +40,19 @@ namespace Freeserf.UI
 
     struct NotificationView
     {
-        public NotificationView(Notification.Type type, Decoration decoration, uint icon, string text)
+        public NotificationView(Notification.Type type, Decoration decoration, uint icon, Func<string> text)
         {
             Type = type;
             Decoration = decoration;
             Icon = icon;
-            Text = text;
+            getText = text;
         }
 
         public Notification.Type Type;
         public Decoration Decoration;
         public uint Icon;
-        public string Text;
+        readonly Func<string> getText;
+        public string Text => getText?.Invoke();
     }
 
     internal class NotificationBox : Box
@@ -60,83 +62,83 @@ namespace Freeserf.UI
             { Notification.Type.UnderAttack, new NotificationView(Notification.Type.UnderAttack,
                 Decoration.Opponent,
                 0,
-                "Your settlement\nis under attack") },
+                () => Strings.Notification_UnderAttack) },
             { Notification.Type.LoseFight, new NotificationView(Notification.Type.LoseFight,
                 Decoration.Opponent,
                 0,
-                "Your knights\njust lost the\nfight") },
+                () => Strings.Notification_LoseFight) },
             { Notification.Type.WinFight, new NotificationView(Notification.Type.WinFight,
                 Decoration.Opponent,
                 0,
-                "You gained\na victory here") },
+                () => Strings.Notification_WinFight) },
             { Notification.Type.MineEmpty, new NotificationView(Notification.Type.MineEmpty,
                 Decoration.Mine,
                 0,
-                "This mine hauls\nno more raw\nmaterials") },
+                () => Strings.Notification_MineEmpty) },
             { Notification.Type.CallToLocation, new NotificationView(Notification.Type.CallToLocation,
                 Decoration.MapObject,
                 0x90,
-                "You wanted me\nto call you to\nthis location") },
+                () => Strings.Notification_CallToLocation) },
             { Notification.Type.KnightOccupied, new NotificationView(Notification.Type.KnightOccupied,
                 Decoration.Building,
                 0,
-                "A knight has\noccupied this\nnew building") },
+                () => Strings.Notification_KnightOccupied) },
             { Notification.Type.NewStock, new NotificationView(Notification.Type.NewStock,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
-                "A new stock\nhas been built") },
+                () => Strings.Notification_NewStock) },
             { Notification.Type.LostLand, new NotificationView(Notification.Type.LostLand,
                 Decoration.Opponent,
                 0,
-                "Because of this\nenemy building\nyou lost some\nland") },
+                () => Strings.Notification_LostLand) },
             { Notification.Type.EmergencyActive, new NotificationView(Notification.Type.EmergencyActive,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingFrameSprite[(int)Building.Type.Stock],
-                "Emergency\nprogram\nactivated") },
+                () => Strings.Notification_EmergencyActive) },
             { Notification.Type.EmergencyNeutral, new NotificationView(Notification.Type.EmergencyNeutral,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Castle],
-                "Emergency\nprogram\nneutralized") },
+                () => Strings.Notification_EmergencyNeutral) },
             { Notification.Type.FoundGold, new NotificationView(Notification.Type.FoundGold,
                 Decoration.Icon,
                 0x2f,
-                "A geologist\nhas found gold") },
+                () => Strings.Notification_FoundGold) },
             { Notification.Type.FoundIron, new NotificationView(Notification.Type.FoundIron,
                 Decoration.Icon,
                 0x2c,
-                "A geologist\nhas found iron") },
+                () => Strings.Notification_FoundIron) },
             { Notification.Type.FoundCoal, new NotificationView(Notification.Type.FoundCoal,
                 Decoration.Icon,
                 0x2e,
-                "A geologist\nhas found coal") },
+                () => Strings.Notification_FoundCoal) },
             { Notification.Type.FoundStone, new NotificationView(Notification.Type.FoundStone,
                 Decoration.Icon,
                 0x2b,
-                "A geologist\nhas found stone") },
+                () => Strings.Notification_FoundStone) },
             { Notification.Type.CallToMenu, new NotificationView(Notification.Type.CallToMenu,
                 Decoration.Menu,
                 0,
-                "You wanted me\nto call you\nto this menu") },
+                () => Strings.Notification_CallToMenu) },
             { Notification.Type.ThirtyMinutesSinceSave, new NotificationView(Notification.Type.ThirtyMinutesSinceSave,
                 Decoration.Icon,
                 0x5d,
-                "30 min. passed\nsince the last\nsaving") },
+                () => Strings.Notification_ThirtyMinutesSinceSave) },
             { Notification.Type.OneHourSinceSave, new NotificationView(Notification.Type.OneHourSinceSave,
                 Decoration.Icon,
                 0x5d,
-                "One hour passed\nsince the last\nsaving") },
+                () => Strings.Notification_OneHourSinceSave) },
             { Notification.Type.CallToStock, new NotificationView(Notification.Type.CallToStock,
                 Decoration.MapObject,
                 Render.RenderBuilding.MapBuildingSprite[(int)Building.Type.Stock],
-                "You wanted me\nto call you\nto this stock") },
+                () => Strings.Notification_CallToStock) },
             { Notification.Type.PlayerLeft, new NotificationView(Notification.Type.PlayerLeft,
                 Decoration.Opponent,
                 0,
-                "This player\nhas left\nthe game") },
+                () => Strings.Notification_PlayerLeft) },
             { Notification.Type.PlayerRejoined, new NotificationView(Notification.Type.PlayerRejoined,
                 Decoration.Opponent,
                 0,
-                "This player\nhas rejoined\nthe game") },
+                () => Strings.Notification_PlayerRejoined) },
             { Notification.Type.None, new NotificationView(Notification.Type.None, 0, 0, null) }
         };
 
@@ -240,6 +242,8 @@ namespace Freeserf.UI
             checkBox.Displayed = true;
         }
 
+        internal static NotificationView GetView(Notification.Type type) => notificationViews[type];
+
         protected override void InternalHide()
         {
             base.InternalHide();
@@ -251,7 +255,7 @@ namespace Freeserf.UI
         {
             base.InternalDraw();
 
-            DrawNotification(notificationViews[notification.NotificationType]);
+            DrawNotification(GetView(notification.NotificationType));
         }
 
         protected override bool HandleClickLeft(int x, int y, bool delayed)

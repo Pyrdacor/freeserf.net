@@ -24,6 +24,7 @@ using Android.Content;
 using Android.Database;
 using Android.OS;
 using Android.Provider;
+using Freeserf.Localization;
 using System;
 using System.IO;
 using System.Linq;
@@ -46,7 +47,6 @@ namespace Freeserf.Android
         const string RootId = "freeserf";
         const string SavesFolderId = "saves";
         const string OldSavesFolderId = "old";
-        const string OldSavesFolderName = "Old saves";
         const string MimeTypeDirectory = "vnd.android.document/directory";
         const string MimeTypeFile = "application/octet-stream";
 
@@ -106,7 +106,7 @@ namespace Freeserf.Android
             row.Add(ColumnRootId, RootId);
             row.Add(ColumnRootFlags, RootFlagSupportsCreate | RootFlagLocalOnly | RootFlagSupportsIsChild);
             row.Add(ColumnRootIcon, Resource.Mipmap.ic_launcher);
-            row.Add(ColumnRootTitle, Context.GetString(Resource.String.app_name));
+            row.Add(ColumnRootTitle, Strings.Android_AppName);
             row.Add(ColumnRootDocumentId, SavesFolderId);
 
             return cursor;
@@ -152,7 +152,7 @@ namespace Freeserf.Android
 
             // Old saves are read-only. New ones are stored in the saves folder.
             if (documentId.StartsWith(OldSavesFolderId + "/") && mode != "r")
-                throw new Java.Lang.UnsupportedOperationException("Old saves are read-only.");
+                throw new Java.Lang.UnsupportedOperationException(Strings.Android_OldSavesReadOnly);
 
             return ParcelFileDescriptor.Open(new Java.IO.File(path), fileMode);
         }
@@ -160,7 +160,7 @@ namespace Freeserf.Android
         public override string CreateDocument(string parentDocumentId, string mimeType, string displayName)
         {
             if (parentDocumentId != SavesFolderId || mimeType == MimeTypeDirectory)
-                throw new Java.Lang.UnsupportedOperationException("Only save game files can be created.");
+                throw new Java.Lang.UnsupportedOperationException(Strings.Android_OnlySaveFilesCreated);
 
             Directory.CreateDirectory(savesFolder);
 
@@ -181,7 +181,7 @@ namespace Freeserf.Android
         public override void DeleteDocument(string documentId)
         {
             if (!IsFile(documentId))
-                throw new Java.Lang.UnsupportedOperationException("Only files can be deleted.");
+                throw new Java.Lang.UnsupportedOperationException(Strings.Android_OnlyFilesDeleted);
 
             File.Delete(GetPath(documentId));
             NotifyChanged(GetParentId(documentId));
@@ -190,13 +190,13 @@ namespace Freeserf.Android
         public override string RenameDocument(string documentId, string displayName)
         {
             if (!IsFile(documentId) || !documentId.StartsWith(SavesFolderId + "/"))
-                throw new Java.Lang.UnsupportedOperationException("Only save games can be renamed.");
+                throw new Java.Lang.UnsupportedOperationException(Strings.Android_OnlySavesRenamed);
 
             string name = GetValidFileName(displayName);
             string newPath = Path.Combine(savesFolder, name);
 
             if (File.Exists(newPath))
-                throw new Java.Lang.IllegalStateException($"A file named {name} already exists.");
+                throw new Java.Lang.IllegalStateException(AndroidText.FileAlreadyExists(name));
 
             File.Move(GetPath(documentId), newPath);
             NotifyChanged(SavesFolderId);
@@ -225,7 +225,7 @@ namespace Freeserf.Android
             {
                 bool saves = documentId == SavesFolderId;
 
-                row.Add(ColumnDisplayName, saves ? Context.GetString(Resource.String.app_name) : OldSavesFolderName);
+                row.Add(ColumnDisplayName, saves ? Strings.Android_AppName : Strings.Android_OldSaves);
                 row.Add(ColumnMimeType, MimeTypeDirectory);
                 row.Add(ColumnFlags, saves ? DocumentFlagDirSupportsCreate : 0);
                 row.Add(ColumnSize, null);

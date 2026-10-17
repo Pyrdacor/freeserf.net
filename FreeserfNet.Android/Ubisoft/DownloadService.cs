@@ -67,7 +67,7 @@ namespace Freeserf.Android.Ubisoft
             CancellationToken cancellationToken = default)
         {
             if (!initialized)
-                throw new UbisoftException("Der Download-Dienst ist nicht initialisiert.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_DownloadNotInitialized);
 
             var urlRequest = new UrlReq.Types.Request();
             urlRequest.ProductId = productId;
@@ -88,11 +88,11 @@ namespace Freeserf.Android.Ubisoft
             var response = await demuxClient.SendServiceRequestAsync<Upstream, Downstream>(connectionId, request, cancellationToken).ConfigureAwait(false);
             if (response == null || response.Response == null || response.Response.UrlRsp == null
                 || response.Response.UrlRsp.UrlResponses.Count == 0)
-                throw new UbisoftException("Keine Download-URLs erhalten.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_NoDownloadUrls);
 
             var urlResponse = response.Response.UrlRsp.UrlResponses[0];
             if (urlResponse.Result != UrlRsp.Types.Result.Success || urlResponse.DownloadUrls.Count == 0)
-                throw new UbisoftException("Download-URLs wurden verweigert (nicht besessen?).");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_DownloadUrlsDenied);
 
             var result = new List<List<string>>(urlResponse.DownloadUrls.Count);
             foreach (var downloadUrls in urlResponse.DownloadUrls)

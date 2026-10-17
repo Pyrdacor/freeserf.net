@@ -22,8 +22,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using Freeserf.Localization;
 using Freeserf.Network;
 
 namespace Freeserf.UI
@@ -1104,6 +1106,27 @@ namespace Freeserf.UI
 
             return newText;
         }
+
+        internal static IEnumerable<(int X, int Y, string Text)> GetTextLayout(
+            string text, params (int X, int Y)[] positions)
+        {
+            var lines = text.Split('\n');
+
+            for (int i = 0; i < positions.Length; ++i)
+                yield return (positions[i].X, positions[i].Y, lines[i]);
+        }
+
+        void SetTextLines(string text, params (int X, int Y)[] positions)
+        {
+            foreach (var line in GetTextLayout(text, positions))
+                SetText(line.X, line.Y, line.Text);
+        }
+
+        internal static string FormatPercentage(long value) =>
+            string.Format(CultureInfo.CurrentCulture, Strings.Popup_Percentage, value);
+
+        internal static string FormatTutorialTitle(int level) =>
+            string.Format(CultureInfo.CurrentCulture, Strings.Popup_TutorialTitle, level);
 
         void ClearTexts()
         {
@@ -2458,18 +2481,18 @@ namespace Freeserf.UI
         }
 
         // Translate resource amount to text
-        static string GetResourceAmountText(uint amount)
+        internal static string GetResourceAmountText(uint amount)
         {
-            if (amount == 0) return "Not Present";
-            else if (amount < 100) return "Minimum";
-            else if (amount < 180) return "Very Few";
-            else if (amount < 240) return "Few";
-            else if (amount < 300) return "Below Average";
-            else if (amount < 400) return "Average";
-            else if (amount < 500) return "Above Average";
-            else if (amount < 600) return "Much";
-            else if (amount < 800) return "Very Much";
-            return "Perfect";
+            if (amount == 0) return Strings.Popup_ResourceAmountNotPresent;
+            else if (amount < 100) return Strings.Popup_ResourceAmountMinimum;
+            else if (amount < 180) return Strings.Popup_ResourceAmountVeryFew;
+            else if (amount < 240) return Strings.Popup_ResourceAmountFew;
+            else if (amount < 300) return Strings.Popup_ResourceAmountBelowAverage;
+            else if (amount < 400) return Strings.Popup_ResourceAmountAverage;
+            else if (amount < 500) return Strings.Popup_ResourceAmountAboveAverage;
+            else if (amount < 600) return Strings.Popup_ResourceAmountMuch;
+            else if (amount < 800) return Strings.Popup_ResourceAmountVeryMuch;
+            return Strings.Popup_ResourceAmountPerfect;
         }
 
         void DrawGroundAnalysisBox()
@@ -2487,7 +2510,7 @@ namespace Freeserf.UI
 
             interf.Game.PrepareGroundAnalysis(position, estimates);
 
-            SetText(8, 39, "GROUND-ANALYSIS:");
+            SetText(8, 39, Strings.Popup_GroundAnalysis);
 
             // gold
             SetText(32, 63, GetResourceAmountText(2u * estimates[(int)Map.Minerals.Gold]));
@@ -2633,7 +2656,10 @@ namespace Freeserf.UI
         {
             string[] levelTexts = new string[]
             {
-                "Minimum", "Weak", "Medium", "Good", "Full", "ERROR", "ERROR", "ERROR"
+                Strings.Popup_KnightLevelMinimum, Strings.Popup_KnightLevelWeak,
+                Strings.Popup_KnightLevelMedium, Strings.Popup_KnightLevelGood,
+                Strings.Popup_KnightLevelFull, Strings.Popup_KnightLevelError,
+                Strings.Popup_KnightLevelError, Strings.Popup_KnightLevelError
             };
 
             // distance illustrations
@@ -2771,50 +2797,43 @@ namespace Freeserf.UI
 
         void DrawQuitConfirmBox()
         {
-            SetText(8, 19, "   Do you want");
-            SetText(8, 29, "     to quit");
-            SetText(8, 39, "   this game?");
-            clickableTextField = SetText(8, 54, "  Yes        No");
+            SetTextLines(Strings.Popup_QuitQuestion, (8, 19), (8, 29), (8, 39));
+            clickableTextField = SetText(8, 54, Strings.Popup_QuitChoices);
         }
 
         void DrawNoSaveQuitConfirmBox()
         {
-            SetText(8, 79, "The game has not");
-            SetText(8, 89, "   been saved");
-            SetText(8, 99, "   recently.");
-            SetText(8, 109, "    Are you");
-            SetText(8, 119, "     sure?");
-            clickableTextField = SetText(8, 134, "  Save  Yes  No");
+            SetTextLines(Strings.Popup_UnsavedQuitQuestion,
+                (8, 79), (8, 89), (8, 99), (8, 109), (8, 119));
+            clickableTextField = SetText(8, 134, Strings.Popup_UnsavedQuitChoices);
         }
 
         void DrawExtendedOptionsBox(Action closeAction)
         {
-            SetText(16, 20, "Fast");
-            SetText(16, 29, "Mapclick");
-            SetText(16, 45, "Fast");
-            SetText(16, 54, "Building");
+            SetTextLines(Strings.Popup_FastMapclick, (16, 20), (16, 29));
+            SetTextLines(Strings.Popup_FastBuilding, (16, 45), (16, 54));
 
             SetButton(112, 21, interf.GetOption(Option.FastMapClick) ? 288u : 220u, Action.OptionsFastMapclick);
             SetButton(112, 47, interf.GetOption(Option.FastBuilding) ? 288u : 220u, Action.OptionsFastBuilding);
 
-            string value = "All";
+            string value = Strings.Popup_MessagesAll;
 
             if (!interf.GetOption(Option.MessagesAll))
             {
-                value = "Most";
+                value = Strings.Popup_MessagesMost;
 
                 if (!interf.GetOption(Option.MessagesMost))
                 {
-                    value = "Few";
+                    value = Strings.Popup_MessagesFew;
 
                     if (!interf.GetOption(Option.MessagesFew))
                     {
-                        value = "None";
+                        value = Strings.Popup_MessagesNone;
                     }
                 }
             }
 
-            SetText(16, 104, "Messages");
+            SetText(16, 104, Strings.Popup_Messages);
             clickableTextField = SetText(96, 104, value);
 
             SetButton(104, 137, 61u, Action.ShowScrollOptions); // flip
@@ -2823,14 +2842,10 @@ namespace Freeserf.UI
 
         void DrawScrollOptionsBox(Action closeAction)
         {
-            SetText(16, 20, "Pathway-");
-            SetText(16, 29, "Scrolling");
-            SetText(16, 45, "Invert");
-            SetText(16, 54, "Scrolling");
-            SetText(16, 70, "Hide mouse");
-            SetText(16, 79, "while scr.");
-            SetText(16, 95, "Reset mouse");
-            SetText(16, 104, "after scr.");
+            SetTextLines(Strings.Popup_PathwayScrolling, (16, 20), (16, 29));
+            SetTextLines(Strings.Popup_InvertScrolling, (16, 45), (16, 54));
+            SetTextLines(Strings.Popup_HideMouseWhileScrolling, (16, 70), (16, 79));
+            SetTextLines(Strings.Popup_ResetMouseAfterScrolling, (16, 95), (16, 104));
 
             SetButton(112, 21, interf.GetOption(Option.PathwayScrolling) ? 288u : 220u, Action.OptionsPathwayScrolling);
             SetButton(112, 47, interf.GetOption(Option.InvertScrolling) ? 288u : 220u, Action.OptionsInvertScrolling);
@@ -2843,10 +2858,9 @@ namespace Freeserf.UI
 
         void DrawOptionsBox(Action closeAction)
         {
-            SetText(16, 23, "Music");
-            SetText(16, 39, "Sound");
-            SetText(16, 48, "effects");
-            SetText(16, 63, "Volume");
+            SetText(16, 23, Strings.Popup_Music);
+            SetTextLines(Strings.Popup_SoundEffects, (16, 39), (16, 48));
+            SetText(16, 63, Strings.Popup_Volume);
 
             // Music
             var player = Audio?.GetMusicPlayer();
@@ -2871,7 +2885,7 @@ namespace Freeserf.UI
             SetNumberText(72, 63, (uint)Misc.Round(volume));
 
             // Fullscreen
-            SetText(16, 90, "Fullscreen");
+            SetText(16, 90, Strings.Popup_Fullscreen);
 
             SetButton(112, 86, interf.RenderView.Fullscreen ? 288u : 220u, Action.OptionsFullscreen);
 
@@ -2920,7 +2934,7 @@ namespace Freeserf.UI
             }
 
             // Print output precentage
-            SetText(56, 47, output.ToString() + "%");
+            SetText(56, 47, FormatPercentage(output));
 
             // draw picture of serf present
             uint serfSprite = 0xdcu; // minus box
@@ -2937,7 +2951,7 @@ namespace Freeserf.UI
             SetBuildingIcon(x, 69, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
 
             // draw texts
-            SetText(16, 13, "Mining output:");
+            SetText(16, 13, Strings.Popup_MiningOutput);
 
             SetButton(120, 137, 60u, Action.CloseBox); // exit
         }
@@ -2956,8 +2970,7 @@ namespace Freeserf.UI
 
             SetBuildingIcon(x, 49, type);
 
-            SetText(16, 13, "Ordered");
-            SetText(16, 23, "Building");
+            SetTextLines(Strings.Popup_OrderedBuilding, (16, 13), (16, 23));
 
             if (building.HasSerf)
             {
@@ -3060,7 +3073,7 @@ namespace Freeserf.UI
             }
 
             // draw heading string
-            SetText(32, 71, "Defenders:");
+            SetText(32, 71, Strings.Popup_Defenders);
 
             // draw knights
             uint nextKnight = building.FirstKnight;
@@ -3074,7 +3087,7 @@ namespace Freeserf.UI
                 nextKnight = knight.NextKnight;
             }
 
-            SetText(8, 137, "State:");
+            SetText(8, 137, Strings.Popup_State);
             SetText(54, 137, building.ThreatLevel.ToString());
 
             SetButton(120, 137, 0x3c, Action.CloseBox); // exit
@@ -3128,7 +3141,7 @@ namespace Freeserf.UI
                 }
             }
 
-            SetText(8, 13, "Transport Info:");
+            SetText(8, 13, Strings.Popup_TransportInfo);
 
             if (interf.AccessRights == Viewer.Access.Player)
                 SetButton(24, 105, 0x1cu, Action.SendGeologist); // send geologist
@@ -3224,8 +3237,7 @@ namespace Freeserf.UI
             SetBuildingIcon(x, 39, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
 
             // draw texts
-            SetText(16, 13, "Stock of");
-            SetText(16, 23, "this building:");
+            SetTextLines(Strings.Popup_BuildingStock, (16, 13), (16, 23));
 
             SetButton(120, 137, 60u, Action.CloseBox); // exit
         }
@@ -3394,7 +3406,7 @@ namespace Freeserf.UI
             SetNumberText(104, 49, numConvertibleToKnights);
 
             // knight morale and gold deposit
-            SetText(56, 72, ((100 * player.KnightMorale) / 0x1000).ToString() + "%");
+            SetText(56, 72, FormatPercentage((100 * player.KnightMorale) / 0x1000));
             SetText(56, 82, player.GoldDeposited.ToString());
             SetIcon(32, 73, 304u); // scared knight
             SetIcon(96, 73, 303u); // angry knight
@@ -3532,35 +3544,24 @@ namespace Freeserf.UI
                 case (int)Game.GameType.Mission:
                     if (winner == 0)
                     {
-                        SetText(8, 13, "CONGRATULATIONS.");
-                        SetText(8, 25, "  YOUR ENEMIES");
-                        SetText(8, 35, "  RESIGN. YOU");
-                        SetText(8, 45, " HAVE WON THIS");
-                        SetText(8, 55, "    MISSION.");
+                        SetTextLines(Strings.Popup_MissionWon,
+                            (8, 13), (8, 25), (8, 35), (8, 45), (8, 55));
                     }
                     else
                     {
-                        SetText(8, 15, "SORRY, ONLY ONE");
-                        SetText(8, 25, "OF YOUR ENEMIES");
-                        SetText(8, 35, "HAS GAINED THE");
-                        SetText(8, 45, " SUPERIORITY IN");
-                        SetText(8, 55, "  THIS MISSION");
+                        SetTextLines(Strings.Popup_MissionLost,
+                            (8, 15), (8, 25), (8, 35), (8, 45), (8, 55));
                     }
                     break;
                 case (int)Game.GameType.Tutorial:
-                    SetText(8, 13, "   WELL DONE.");
-                    SetText(8, 25, " YOU COMPLETED");
-                    SetText(8, 35, " THIS TUTORIAL");
-                    SetText(8, 45, "     GAME.");
+                    SetTextLines(Strings.Popup_TutorialCompleted, (8, 13), (8, 25), (8, 35), (8, 45));
                     break;
                 default:
-                    string[] color = {
-                        "    THE BLUE", "    THE RED", "  THE VIOLET", "   THE YELLOW"
+                    string[] victoryMessages = {
+                        Strings.Popup_BlueVictory, Strings.Popup_RedVictory,
+                        Strings.Popup_VioletVictory, Strings.Popup_YellowVictory
                     };
-                    SetText(8, 15, color[winner & 3]);
-                    SetText(8, 25, " SETTLERS HAVE");
-                    SetText(8, 35, "   GAINED THE");
-                    SetText(8, 45, "  SUPERIORITY");
+                    SetTextLines(victoryMessages[winner & 3], (8, 15), (8, 25), (8, 35), (8, 45));
                     break;
             }
         }
@@ -3572,12 +3573,12 @@ namespace Freeserf.UI
         {
             /* The font has no comma. */
             string[] orders = {
-                "Build a guard hut and a guard tower and a fortress.",
-                "Produce five planks and five stones.",
-                "Produce five fish and five meat and five bread.",
-                "Smelt five steel bars and five gold bars.",
-                "Make ten weapons and ten tools.",
-                "Conquer all the land of the enemy."
+                Strings.Popup_TutorialOrder1,
+                Strings.Popup_TutorialOrder2,
+                Strings.Popup_TutorialOrder3,
+                Strings.Popup_TutorialOrder4,
+                Strings.Popup_TutorialOrder5,
+                Strings.Popup_TutorialOrder6
             };
 
             var game = interf.Game;
@@ -3588,8 +3589,8 @@ namespace Freeserf.UI
                 return;
             }
 
-            SetText(8, 15, "   TUTORIAL " + level.ToString());
-            SetText(8, 35, "    ORDERS:");
+            SetText(8, 15, FormatTutorialTitle(level));
+            SetText(8, 35, Strings.Popup_TutorialOrders);
 
             /* Word wrap to the 16 characters of a line. */
             var words = orders[level - 1].Split(' ');
@@ -3619,10 +3620,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
             SetButton(64, 54, 288u, Action.Demolish); // checkbox
 
-            SetText(8, 19, "    Demolish:");
-            SetText(8, 39, "   Click here");
-            SetText(8, 77, "   if you are");
-            SetText(8, 95, "      sure");
+            SetTextLines(Strings.Popup_Demolish, (8, 19), (8, 39), (8, 77), (8, 95));
         }
 
         void DrawBld1Box()
@@ -3680,7 +3678,7 @@ namespace Freeserf.UI
 
         void DrawSaveBox()
         {
-            SetText(32, 11, "Save  Game");
+            SetText(32, 11, Strings.Popup_SaveGame);
 
             SetButton(8, 137, 224u, Action.Save); // save button
             SetButton(120, 137, 60u, Action.ShowSettlerMenu); // exit button
@@ -3694,24 +3692,20 @@ namespace Freeserf.UI
             switch (GameStore.Instance.LastOperationResult)
             {
                 case GameStore.LastOperationStatus.SaveSuccess:
-                    SetText(15, 33, "Game was saved");
-                    SetText(22, 74, "successfully.");
+                    SetTextLines(Strings.Popup_SaveSuccess, (15, 33), (22, 74));
                     iconIndex = 288u;
                     closeAction = Action.QuitConfirm;
                     break;
                 case GameStore.LastOperationStatus.SaveFail:
-                    SetText(15, 33, "Game could not");
-                    SetText(39, 74, "be saved.");
+                    SetTextLines(Strings.Popup_SaveFail, (15, 33), (39, 74));
                     closeAction = Action.QuitCancel;
                     break;
                 case GameStore.LastOperationStatus.LoadSuccess:
-                    SetText(11, 33, "Game was loaded");
-                    SetText(22, 74, "successfully.");
+                    SetTextLines(Strings.Popup_LoadSuccess, (11, 33), (22, 74));
                     iconIndex = 288u;
                     break;
                 case GameStore.LastOperationStatus.LoadFail:
-                    SetText(15, 33, "Game could not");
-                    SetText(34, 74, "be loaded.");
+                    SetTextLines(Strings.Popup_LoadFail, (15, 33), (34, 74));
                     break;
                 default:
                     SetRedraw();

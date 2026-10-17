@@ -115,7 +115,7 @@ namespace Freeserf.Android.Ubisoft
 
             var rsp = await SendRequestAsync(req, cancellationToken).ConfigureAwait(false);
             if (rsp == null || rsp.OpenConnectionRsp == null || !rsp.OpenConnectionRsp.Success)
-                throw new UbisoftException($"Konnte Verbindung zu '{serviceName}' nicht öffnen.");
+                throw new UbisoftException(AndroidText.ServiceConnectionFailed(serviceName));
 
             return rsp.OpenConnectionRsp.ConnectionId;
         }
@@ -141,15 +141,15 @@ namespace Freeserf.Android.Ubisoft
 
             var downstream = await SendUpstreamAsync(upstream, cancellationToken).ConfigureAwait(false);
             if (downstream == null || downstream.Push == null || downstream.Push.Data == null || !downstream.Push.Data.HasData)
-                throw new UbisoftException("Keine Antwort vom Ubisoft-Dienst erhalten.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_NoServiceResponse);
 
             byte[] data = downstream.Push.Data.Data.ToByteArray();
             if (data.Length < 4)
-                throw new UbisoftException("Ungültige Antwort vom Ubisoft-Dienst.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_InvalidServiceResponse);
 
             int length = ReadBigEndianUInt32(data, 0);
             if (length <= 0 || 4 + length > data.Length)
-                throw new UbisoftException("Ungültige Antwortlänge vom Ubisoft-Dienst.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_InvalidServiceResponseLength);
 
             var parser = new MessageParser<TResponse>(() => new TResponse());
             return parser.ParseFrom(data, 4, length);
@@ -194,7 +194,7 @@ namespace Freeserf.Android.Ubisoft
                 }
                 else if (downstream.Push != null && downstream.Push.ConnectionClosed != null)
                 {
-                    throw new UbisoftException("Die Ubisoft-Verbindung wurde geschlossen.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_ConnectionClosed);
                 }
             }
         }
@@ -224,7 +224,7 @@ namespace Freeserf.Android.Ubisoft
 
             int messageLength = ReadBigEndianUInt32(header, 0);
             if (messageLength <= 0 || messageLength > 16 * 1024 * 1024)
-                throw new UbisoftException("Ungültige Nachrichtenlänge vom Ubisoft-Server.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_InvalidServerMessageLength);
 
             byte[] message = new byte[messageLength];
             await ReadExactlyAsync(message, 0, messageLength, cancellationToken).ConfigureAwait(false);
@@ -263,11 +263,11 @@ namespace Freeserf.Android.Ubisoft
                         break;
                     shift += 7;
                     if (shift > 35)
-                        throw new UbisoftException("Ungültiges Protobuf-Format vom Ubisoft-Server.");
+                        throw new UbisoftException(Freeserf.Localization.Strings.Android_InvalidServerProtobuf);
                 }
 
                 if (length <= 0 || length > 16 * 1024 * 1024)
-                    throw new UbisoftException("Ungültige Push-Länge vom Ubisoft-Server.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_InvalidServerPushLength);
 
                 // Some payload bytes may already be part of firstBytes.
                 int alreadyHave = Math.Max(0, firstBytes.Length - offset);
@@ -311,7 +311,7 @@ namespace Freeserf.Android.Ubisoft
             {
                 int n = await sslStream.ReadAsync(buffer, offset + read, count - read, cancellationToken).ConfigureAwait(false);
                 if (n <= 0)
-                    throw new UbisoftException("Die Ubisoft-Verbindung wurde unerwartet geschlossen.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_ConnectionClosedUnexpectedly);
                 read += n;
             }
         }

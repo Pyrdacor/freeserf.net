@@ -23,6 +23,10 @@
     <ProjectReference Include="..\Freeserf.Network\Freeserf.Network.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\FreeserfNet.Android\AndroidText.cs" Link="Android\AndroidText.cs" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WindowsDebug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
     <Optimize>false</Optimize>

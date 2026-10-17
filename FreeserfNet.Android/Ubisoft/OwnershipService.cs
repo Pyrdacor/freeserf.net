@@ -55,7 +55,7 @@ namespace Freeserf.Android.Ubisoft
 
             var response = await demuxClient.SendServiceRequestAsync<Upstream, Downstream>(connectionId, request, cancellationToken).ConfigureAwait(false);
             if (response == null || response.Response == null || response.Response.InitializeRsp == null)
-                throw new UbisoftException("Konnte die Ubisoft-Besitzprüfung nicht initialisieren.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_OwnershipInitializationFailed);
 
             var ownedGames = response.Response.InitializeRsp.OwnedGames;
             if (ownedGames == null || ownedGames.OwnedGames_ == null)
@@ -83,7 +83,7 @@ namespace Freeserf.Android.Ubisoft
             var response = await demuxClient.SendServiceRequestAsync<Upstream, Downstream>(connectionId, request, cancellationToken).ConfigureAwait(false);
             if (response == null || response.Response == null || response.Response.OwnershipTokenRsp == null
                 || !response.Response.OwnershipTokenRsp.Success)
-                throw new UbisoftException("Kein Ownership-Token erhalten. Besitzen Sie die History Edition?");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_NoOwnershipToken);
 
             return (response.Response.OwnershipTokenRsp.Token, response.Response.OwnershipTokenRsp.Expiration);
         }

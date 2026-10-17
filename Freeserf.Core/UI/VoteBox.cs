@@ -20,6 +20,7 @@
  */
 
 using System;
+using Freeserf.Localization;
 
 namespace Freeserf.UI
 {
@@ -89,7 +90,7 @@ namespace Freeserf.UI
             // Like in the quit dialog the answers are clickable texts.
             yesText = new TextField(interf, 3);
             AddChild(yesText, 24, 138);
-            yesText.Text = "Yes";
+            yesText.Text = Strings.Vote_Answer_Yes;
             yesButton = new InvisibleButton(interf);
             yesButton.SetSize(32, 14);
             yesButton.Clicked += (sender, args) => Answer(true);
@@ -97,7 +98,7 @@ namespace Freeserf.UI
 
             noText = new TextField(interf, 3);
             AddChild(noText, 104, 138);
-            noText.Text = "No";
+            noText.Text = Strings.Vote_Answer_No;
             noButton = new InvisibleButton(interf);
             noButton.SetSize(28, 14);
             noButton.Clicked += (sender, args) => Answer(false);
@@ -146,26 +147,7 @@ namespace Freeserf.UI
             yesText.Displayed = canAnswer && Displayed;
             noText.Displayed = canAnswer && Displayed;
 
-            string text;
-
-            if (Entry.Result != null)
-            {
-                text = Entry.Result switch
-                {
-                    VoteResult.Accepted => "Accepted.",
-                    VoteResult.Rejected => "Rejected.",
-                    _ => "Not possible now."
-                };
-            }
-            else if (!canAnswer)
-            {
-                text = "Waiting...";
-            }
-            else
-            {
-                int seconds = Math.Max(0, (int)Math.Ceiling((Entry.Deadline - now).TotalSeconds));
-                text = $"{seconds} seconds left";
-            }
+            string text = VoteText.Status(Entry.Result, canAnswer, Entry.Deadline, now);
 
             if (statusText.Text != text)
             {

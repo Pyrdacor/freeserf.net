@@ -56,7 +56,7 @@ namespace Freeserf.Android.Ubisoft
         public async Task<string> DownloadAsync(ProgressCallback progress, CancellationToken cancellationToken = default)
         {
             // 1. Connect to the demux socket and authenticate
-            progress?.Invoke("Verbinde mit Ubisoft…", 5);
+            progress?.Invoke(Freeserf.Localization.Strings.Android_Connecting, 5);
             Console.Error.WriteLine("Ubisoft: connecting to demux socket...");
             using (var demux = new DemuxClient())
             {
@@ -64,11 +64,11 @@ namespace Freeserf.Android.Ubisoft
                 Console.Error.WriteLine("Ubisoft: demux connected, authenticating...");
                 bool authenticated = await demux.AuthenticateAsync(login.Ticket, cancellationToken).ConfigureAwait(false);
                 if (!authenticated)
-                    throw new UbisoftException("Die Ubisoft-Authentifizierung ist fehlgeschlagen.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_AuthenticationFailed);
                 Console.Error.WriteLine("Ubisoft: authenticated.");
 
                 // 2. Check ownership and get the ownership token
-                progress?.Invoke("Prüfe Besitz der History Edition…", 10);
+                progress?.Invoke(Freeserf.Localization.Strings.Android_CheckingOwnership, 10);
                 var ownership = new OwnershipService(demux);
                 await ownership.ConnectAsync(cancellationToken).ConfigureAwait(false);
                 var ownedGames = await ownership.GetOwnedGamesAsync(login.Ticket, login.SessionId, cancellationToken).ConfigureAwait(false);
@@ -85,24 +85,24 @@ namespace Freeserf.Android.Ubisoft
                 }
 
                 if (settlers == null)
-                    throw new UbisoftException("Sie besitzen die Siedler 1 History Edition nicht auf diesem Ubisoft-Konto.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_GameNotOwned);
 
                 if (string.IsNullOrEmpty(settlers.LatestManifest))
-                    throw new UbisoftException("Für die History Edition ist kein Manifest verfügbar.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_NoManifest);
 
                 var (ownershipToken, _) = await ownership.GetOwnershipTokenAsync(SettlersHistoryEditionProductId,
                     login.Ticket, login.SessionId, cancellationToken).ConfigureAwait(false);
 
                 // 3. Initialize the download service
-                progress?.Invoke("Initialisiere Download…", 15);
+                progress?.Invoke(Freeserf.Localization.Strings.Android_InitializingDownload, 15);
                 var download = new DownloadService(demux);
                 await download.ConnectAsync(cancellationToken).ConfigureAwait(false);
                 bool initialized = await download.InitializeAsync(ownershipToken, cancellationToken).ConfigureAwait(false);
                 if (!initialized)
-                    throw new UbisoftException("Der Download-Dienst konnte nicht initialisiert werden.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_DownloadInitializationFailed);
 
                 // 4. Download and parse the manifest
-                progress?.Invoke("Lade Spielmanifest…", 20);
+                progress?.Invoke(Freeserf.Localization.Strings.Android_DownloadingManifest, 20);
                 Console.Error.WriteLine($"Ubisoft: downloading manifest {settlers.LatestManifest}...");
                 byte[] manifestBytes = await DownloadManifestAsync(download, settlers.LatestManifest, cancellationToken).ConfigureAwait(false);
                 Console.Error.WriteLine($"Ubisoft: manifest downloaded ({manifestBytes.Length} bytes), parsing...");
@@ -126,15 +126,15 @@ namespace Freeserf.Android.Ubisoft
                         if (count >= 200)
                             break;
                     }
-                    throw new UbisoftException($"Die Datei {DataFileName} wurde im Spielmanifest nicht gefunden.");
+                    throw new UbisoftException(AndroidText.ManifestFileNotFound(DataFileName));
                 }
 
                 // 6. Download all slices of the SPAE.PA file
                 var slicePaths = ManifestParser.GetSlicePaths(manifest, slices);
-                progress?.Invoke("Fordere Download-URLs an…", 25);
+                progress?.Invoke(Freeserf.Localization.Strings.Android_RequestingDownloadUrls, 25);
                 var urls = await download.GetUrlsAsync(SettlersHistoryEditionProductId, slicePaths, cancellationToken).ConfigureAwait(false);
                 if (urls.Count != slices.Count)
-                    throw new UbisoftException("Die Anzahl der Download-URLs passt nicht zu den Slices.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_DownloadUrlCountMismatch);
 
                 string targetPath = Path.Combine(targetDirectory, DataFileName);
                 using (var output = System.IO.File.Create(targetPath))
@@ -144,7 +144,7 @@ namespace Freeserf.Android.Ubisoft
                         cancellationToken.ThrowIfCancellationRequested();
 
                         int percent = 25 + (int)(70.0 * i / slices.Count);
-                        progress?.Invoke($"Lade {DataFileName} herunter ({i + 1}/{slices.Count})…", percent);
+                        progress?.Invoke(AndroidText.DownloadingFile(DataFileName, i + 1, slices.Count), percent);
 
                         byte[] sliceBytes = await DownloadSliceAsync(urls[i], cancellationToken).ConfigureAwait(false);
                         byte[] decompressed = DecompressSlice(manifest, sliceBytes, slices[i].Size);
@@ -152,7 +152,7 @@ namespace Freeserf.Android.Ubisoft
                     }
                 }
 
-                progress?.Invoke($"{DataFileName} erfolgreich heruntergeladen.", 100);
+                progress?.Invoke(AndroidText.DownloadSucceeded(DataFileName), 100);
                 return targetPath;
             }
         }
@@ -162,7 +162,7 @@ namespace Freeserf.Android.Ubisoft
             var urls = await download.GetUrlsAsync(SettlersHistoryEditionProductId,
                 new List<string> { $"manifests/{manifestId}.manifest" }, cancellationToken).ConfigureAwait(false);
             if (urls.Count == 0 || urls[0].Count == 0)
-                throw new UbisoftException("Keine Manifest-URL erhalten.");
+                throw new UbisoftException(Freeserf.Localization.Strings.Android_NoManifestUrl);
 
             return await DownloadFromUrlsAsync(urls[0], cancellationToken).ConfigureAwait(false);
         }
@@ -194,7 +194,7 @@ namespace Freeserf.Android.Ubisoft
                 }
             }
 
-            throw new UbisoftException("Download fehlgeschlagen: " + (lastError?.Message ?? "unbekannter Fehler"));
+            throw new UbisoftException(AndroidText.DownloadFailed(lastError?.Message ?? Freeserf.Localization.Strings.Android_UnknownError));
         }
 
         static byte[] DecompressSlice(Manifest manifest, byte[] sliceBytes, ulong outputSize)
@@ -222,9 +222,9 @@ namespace Freeserf.Android.Ubisoft
                         return output.ToArray();
                     }
                 case "lzham":
-                    throw new UbisoftException("Die lzham-Kompression wird auf Android nicht unterstützt.");
+                    throw new UbisoftException(Freeserf.Localization.Strings.Android_LzhamUnsupported);
                 default:
-                    throw new UbisoftException($"Unbekannte Kompressionsmethode: {method}");
+                    throw new UbisoftException(AndroidText.UnknownCompression(method));
             }
         }
     }
