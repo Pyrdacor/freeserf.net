@@ -3657,8 +3657,8 @@ namespace Freeserf.UI
             SetBuildingIcon(8, 11, Building.Type.PigFarm);
             SetBuildingIcon(72, 12, Building.Type.Farm);
             SetBuildingIcon(8, 70, Building.Type.Fisher);
-            SetBuildingIcon(72, 69, Building.Type.Mill);
-            SetBuildingIcon(40, 84, Building.Type.Butcher);
+            SetBuildingIcon(72, 69, Building.Type.Butcher);
+            SetBuildingIcon(40, 84, Building.Type.Mill);
             SetBuildingIcon(72, 109, Building.Type.Baker);
 
             SetIcon(8, 137, 61u); // flipbox
