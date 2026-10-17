@@ -513,10 +513,7 @@ namespace Freeserf.UI
             textFieldVersion = new TextField(interf, 1);
             AddChild(textFieldVersion, 0, 0, false);
 
-            // Server address to join (client) and server name (host). Both are
-            // only shown in the corresponding multiplayer screens. The height
-            // matches the text row so the inputs do not overlap the player
-            // boxes below (which start at y = 40).
+            // Single-line inputs for the join address and server name.
             serverAddressInput = new TextInput(interf, 9, Render.TextRenderType.Legacy);
             serverAddressInput.SetFilter(ServerAddressFilter);
             serverAddressInput.SetSize(15 * 9 + 8, 8);
@@ -547,12 +544,12 @@ namespace Freeserf.UI
             checkBoxServerValues = new CheckBox(interf);
             checkBoxServerValues.Text = "Server Values";
             checkBoxServerValues.CheckedChanged += CheckBoxServerValues_CheckedChanged;
-            AddChild(checkBoxServerValues, 24, 141, false);
+            AddChild(checkBoxServerValues, 24, 155, false);
 
             checkBoxSameValues = new CheckBox(interf);
             checkBoxSameValues.Text = "Identical Values";
             checkBoxSameValues.CheckedChanged += CheckBoxSameValues_CheckedChanged;
-            AddChild(checkBoxSameValues, 180, 141, false);
+            AddChild(checkBoxSameValues, 180, 155, false);
         }
 
         private void CheckBoxServerValues_CheckedChanged(object sender, System.EventArgs e)
@@ -965,29 +962,19 @@ namespace Freeserf.UI
                     else
                     {
                         serverAddressInput.Displayed = false;
+                        buttonMapSize.MoveTo(212, 16);
+                        DrawBoxString(10, 18, textFieldName, "Mapsize:");
+                        DrawBoxString(20, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
 
                         if (gameType == GameType.MultiplayerServer)
                         {
-                            // The map seed is fixed when the server is created, so
-                            // the random input is not needed in the lobby. Hide it
-                            // and move the map size button into its place to make
-                            // room for the server name and host IP.
-                            randomInput.Displayed = false;
-                            buttonMapSize.MoveTo(256, 12);
-
-                            DrawBoxString(10, 18, textFieldName, "Name:");
+                            randomInput.Displayed = Displayed;
+                            DrawBoxString(1, 123, textServerNameLabel, "Name:");
                             serverNameInput.Displayed = Displayed;
-                            serverNameInput.MoveTo(148, 18 + 16);
-                            HideBoxString(textFieldValue);
-
-                            // The host IP is shown in the bottom row instead of the version (see below).
+                            serverNameInput.MoveTo(ServerNameInputX, 123 + 16);
                         }
                         else
                         {
-                            buttonMapSize.MoveTo(212, 16);
-
-                            DrawBoxString(10, 18, textFieldName, "Mapsize:");
-                            DrawBoxString(20, 18, textFieldValue, ServerGameInfo.MapSize.ToString());
                             serverNameInput.Displayed = false;
                             HideBoxString(textFieldServerIp);
                         }
@@ -1082,7 +1069,7 @@ namespace Freeserf.UI
             }
 
             // Game info 
-            if (gameType != GameType.MultiplayerClient)
+            if (gameType != GameType.MultiplayerClient && gameType != GameType.MultiplayerServer)
                 HideBoxString(textServerNameLabel);
 
             if (gameType != GameType.Load && gameType != GameType.MultiplayerClient)
