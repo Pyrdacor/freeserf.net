@@ -172,6 +172,8 @@ namespace Freeserf.Android
             if (initialized)
                 ResetState();
 
+            UserConfig.Load(FileSystem.Paths.UserConfigPath);
+
             // Show a loading indicator while the game initializes. On activity
             // recreation (e.g. configuration change) the game is already
             // running, so the overlay is only shown on the very first start.
@@ -379,9 +381,6 @@ namespace Freeserf.Android
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
                 networkDataReceiver = new Network.NetworkDataReceiverFactory().CreateReceiver();
-
-                UserConfig.Load(FileSystem.Paths.UserConfigPath);
-                global::Android.Util.Log.Debug("Freeserf_Trace", "Window_Load: UserConfig.Load done");
 
                 // Extract bundled game data (e.g. SPAE.PA) from the APK assets
                 // to the app's private storage so the data source can find it.

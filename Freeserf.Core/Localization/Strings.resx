@@ -408,6 +408,10 @@ effects</value>
   <data name="Popup_Fullscreen" xml:space="preserve">
     <value>Fullscreen</value>
   </data>
+  <data name="Popup_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Popup_LanguageSystem" xml:space="preserve"><value>System</value></data>
+  <data name="Popup_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Popup_LanguageGerman" xml:space="preserve"><value>German</value></data>
   <data name="Popup_Percentage" xml:space="preserve">
     <value>{0}%</value>
     <comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment>

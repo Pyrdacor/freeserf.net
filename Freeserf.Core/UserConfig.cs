@@ -20,6 +20,7 @@
  */
 
 using Freeserf.Data;
+using Freeserf.Localization;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -66,7 +67,11 @@ namespace Freeserf
             public static DataSourceMixed.DataUsage GraphicDataUsage { get; set; } = DefaultGraphicDataUsage;
             public static DataSourceMixed.DataUsage SoundDataUsage { get; set; } = DefaultSoundDataUsage;
             public static DataSourceMixed.DataUsage MusicDataUsage { get; set; } = DefaultMusicDataUsage;
-            // TODO: language
+            public static string Language
+            {
+                get => LanguageSettings.Preference;
+                set => LanguageSettings.Apply(value);
+            }
         }
 
         public static class Audio
@@ -173,6 +178,13 @@ namespace Freeserf
                 Game.GraphicDataUsage = configFile.Value(game, "graphic_data_usage", DefaultGraphicDataUsage);
                 Game.SoundDataUsage = configFile.Value(game, "sound_data_usage", DefaultSoundDataUsage);
                 Game.MusicDataUsage = configFile.Value(game, "music_data_usage", DefaultMusicDataUsage);
+                string language = configFile.Value(game, "language", "system");
+                if (!LanguageSettings.IsSupported(language))
+                {
+                    Log.Warn.Write(ErrorSystemType.Config, $"Unsupported language '{language}'; using the system language.");
+                    language = "system";
+                }
+                Game.Language = language;
 
 
                 // Audio
@@ -238,6 +250,7 @@ namespace Freeserf
                 configFile.SetValue(game, "graphic_data_usage", Game.GraphicDataUsage);
                 configFile.SetValue(game, "sound_data_usage", Game.SoundDataUsage);
                 configFile.SetValue(game, "music_data_usage", Game.MusicDataUsage);
+                configFile.SetValue(game, "language", Game.Language);
 
                 // Audio
                 const string audio = "audio";
@@ -276,12 +289,25 @@ namespace Freeserf
             }
         }
 
+        public static bool SaveLanguage(string language, string filename)
+        {
+            string previous = Game.Language;
+            Game.Language = language;
+            if (Save(filename))
+                return true;
+
+            Game.Language = previous;
+            Log.Error.Write(ErrorSystemType.Config, $"Failed to save language preference to '{filename}'; restored '{previous}'.");
+            return false;
+        }
+
         public static void SetDefaults()
         {
             Game.Options = DefaultOptions;
             Game.GraphicDataUsage = DefaultGraphicDataUsage;
             Game.SoundDataUsage = DefaultSoundDataUsage;
             Game.MusicDataUsage = DefaultMusicDataUsage;
+            Game.Language = "system";
 
             Audio.Music = DefaultMusic;
             Audio.Sound = DefaultSound;

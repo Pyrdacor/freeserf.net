@@ -183,6 +183,20 @@ namespace Freeserf.UI
             }
         }
 
+        internal override void RefreshLanguage()
+        {
+            yesText.Text = Strings.Vote_Answer_Yes;
+            noText.Text = Strings.Vote_Answer_No;
+            if (Entry != null && Displayed)
+            {
+                SetText(WrapMessage(Entry.OwnRequest
+                    ? Vote.GetOwnRequest(Entry.Type, Entry.Parameter)
+                    : Vote.GetQuestion(Entry.Requester, Entry.Type, Entry.Parameter)));
+                UpdateStatus(DateTime.UtcNow);
+            }
+            base.RefreshLanguage();
+        }
+
         protected override void InternalDraw()
         {
             base.InternalDraw();

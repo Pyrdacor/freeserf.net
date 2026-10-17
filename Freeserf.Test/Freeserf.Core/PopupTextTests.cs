@@ -70,6 +70,10 @@ namespace Freeserf.Test.Freeserf.Core
             ["Popup_SoundEffects", "Sound\neffects"],
             ["Popup_Volume", "Volume"],
             ["Popup_Fullscreen", "Fullscreen"],
+            ["Popup_Language", "Language"],
+            ["Popup_LanguageSystem", "System"],
+            ["Popup_LanguageEnglish", "English"],
+            ["Popup_LanguageGerman", "German"],
             ["Popup_Percentage", "{0}%"],
             ["Popup_MiningOutput", "Mining output:"],
             ["Popup_OrderedBuilding", "Ordered\nBuilding"],
@@ -190,8 +194,15 @@ namespace Freeserf.Test.Freeserf.Core
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
 
+            var german = Strings.ResourceManager.GetResourceSet(CultureInfo.GetCultureInfo("de"), true, false);
             foreach (var row in ExpectedResources)
-                Assert.AreEqual((string)row[1], Strings.ResourceManager.GetString((string)row[0]), (string)row[0]);
+            {
+                string key = (string)row[0];
+                string expected = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de"
+                    ? german?.GetString(key) ?? (string)row[1]
+                    : (string)row[1];
+                Assert.AreEqual(expected, Strings.ResourceManager.GetString(key), key);
+            }
 
             Assert.AreEqual("100%", PopupBox.FormatPercentage(100));
             Assert.AreEqual("1599%", PopupBox.FormatPercentage(1599));

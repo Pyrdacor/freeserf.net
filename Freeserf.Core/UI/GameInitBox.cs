@@ -894,6 +894,8 @@ namespace Freeserf.UI
         protected override void InternalDraw()
         {
             base.InternalDraw();
+            checkBoxServerValues.Text = Strings.Setup_ServerValues;
+            checkBoxSameValues.Text = Strings.Setup_IdenticalValues;
 
             buttonStart.Displayed =
                 gameType != GameType.MultiplayerJoined &&

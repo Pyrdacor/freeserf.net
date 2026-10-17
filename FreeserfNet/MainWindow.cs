@@ -106,14 +106,13 @@ namespace Freeserf
                 Console.WriteLine("Error initializing logging: " + ex.Message);
             }
 
-            initInfo = Global.Init(args);
-
             try
             {
+                bool configLoaded = UserConfig.Load(FileSystem.Paths.UserConfigPath);
+                initInfo = Global.Init(args);
+
                 Network.Network.DefaultClientFactory = new Network.ClientFactory();
                 Network.Network.DefaultServerFactory = new Network.ServerFactory();
-
-                bool configLoaded = UserConfig.Load(FileSystem.Paths.UserConfigPath);
 
 #if !DEBUG
                 if (initInfo.ConsoleWindow || UserConfig.Logging.LogToConsole)

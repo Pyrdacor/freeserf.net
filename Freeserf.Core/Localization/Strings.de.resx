@@ -60,4 +60,8 @@
   <data name="Android_UnknownError" xml:space="preserve"><value>unbekannter Fehler</value></data>
   <data name="Android_LzhamUnsupported" xml:space="preserve"><value>Die lzham-Kompression wird auf Android nicht unterstützt.</value></data>
   <data name="Android_UnknownCompression" xml:space="preserve"><value>Unbekannte Kompressionsmethode: {0}</value><comment>{0}: compression method.</comment></data>
+  <data name="Popup_Language" xml:space="preserve"><value>Sprache</value></data>
+  <data name="Popup_LanguageSystem" xml:space="preserve"><value>System</value></data>
+  <data name="Popup_LanguageEnglish" xml:space="preserve"><value>Englisch</value></data>
+  <data name="Popup_LanguageGerman" xml:space="preserve"><value>Deutsch</value></data>
 </root>
