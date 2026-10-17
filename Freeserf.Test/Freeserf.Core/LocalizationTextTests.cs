@@ -13,6 +13,25 @@ namespace Freeserf.Test.Freeserf.Core
     public class LocalizationTextTests
     {
         [TestMethod]
+        [DataRow("en")]
+        [DataRow("de")]
+        public void Catalog_UsesOnlyLineFeedForResourceLineBreaks(string cultureName)
+        {
+            var resources = new ResourceManager(Strings.ResourceManager.BaseName, typeof(Strings).Assembly);
+            try
+            {
+                var catalog = resources.GetResourceSet(CultureInfo.GetCultureInfo(cultureName), true, true);
+                Assert.IsNotNull(catalog);
+                foreach (DictionaryEntry entry in catalog)
+                    Assert.IsFalse(((string)entry.Value).Contains('\r'), $"Unexpected carriage return: {entry.Key}");
+            }
+            finally
+            {
+                resources.ReleaseAllResources();
+            }
+        }
+
+        [TestMethod]
         [DataRow("de")]
         [DataRow("de-DE")]
         [DataRow("de-AT")]

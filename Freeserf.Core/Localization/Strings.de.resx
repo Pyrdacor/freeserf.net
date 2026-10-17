@@ -108,14 +108,12 @@
   <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Angegebenes Datenverzeichnis verwenden.</value></data>
   <data name="CommandLine_Debug" xml:space="preserve"><value>Stufe der Diagnoseausgabe setzen</value></data>
   <data name="CommandLine_ExcludeLogType" xml:space="preserve">
-    <value>Nur Meldungen anderer Typen protokollieren.
-Nicht mit der Option -o kombinierbar.</value>
+    <value>Nur Meldungen anderer Typen protokollieren.&#xA;Nicht mit der Option -o kombinierbar.</value>
   </data>
   <data name="CommandLine_Fullscreen" xml:space="preserve"><value>Im Vollbildmodus starten.</value></data>
   <data name="CommandLine_Help" xml:space="preserve"><value>Diese Hilfe anzeigen.</value></data>
   <data name="CommandLine_IncludeLogType" xml:space="preserve">
-    <value>Nur Meldungen des angegebenen Typs protokollieren.
-Nicht mit der Option -x kombinierbar.</value>
+    <value>Nur Meldungen des angegebenen Typs protokollieren.&#xA;Nicht mit der Option -x kombinierbar.</value>
   </data>
   <data name="CommandLine_InvalidDebugLevel" xml:space="preserve"><value>Ungültige Diagnosestufe {0}. Mögliche Werte: {1} ~ {2}.</value><comment>{0}: supplied level; {1}: minimum level; {2}: maximum level.</comment></data>
   <data name="CommandLine_InvalidLogType" xml:space="preserve"><value>Ungültiger Protokolltyp {0}. Mögliche Werte: {1}.</value><comment>{0}: supplied type; {1}: valid type tokens.</comment></data>
@@ -123,8 +121,7 @@ Nicht mit der Option -x kombinierbar.</value>
   <data name="CommandLine_Load" xml:space="preserve"><value>Gespeichertes Spiel laden.</value></data>
   <data name="CommandLine_MultiplayerModes" xml:space="preserve"><value>host:CLIENTS[:AI] | join:ADDRESS</value><comment>Keep the accepted command tokens "host" and "join" unchanged.</comment></data>
   <data name="CommandLine_MultiplayerTest" xml:space="preserve">
-    <value>Automatischen Mehrspielertest starten.
-host:CLIENTS[:AI] erstellt einen Server, join:ADDRESS tritt einem bei.</value>
+    <value>Automatischen Mehrspielertest starten.&#xA;host:CLIENTS[:AI] erstellt einen Server, join:ADDRESS tritt einem bei.</value>
   </data>
   <data name="CommandLine_Position" xml:space="preserve"><value>Fensterposition setzen (z.B. 0,0).</value></data>
   <data name="CommandLine_ReportBugs" xml:space="preserve"><value>Bitte melden Sie Fehler an &lt;robert.schneckenhaus@web.de&gt;</value></data>
@@ -189,27 +186,16 @@ host:CLIENTS[:AI] erstellt einen Server, join:ADDRESS tritt einem bei.</value>
   <data name="Notification_ThirtyMinutesSinceSave" xml:space="preserve"><value>Sie haben vor 30 Minuten zuletzt gespeichert</value></data>
   <data name="Notification_UnderAttack" xml:space="preserve"><value>Ihre Siedlung wird angegriffen</value></data>
   <data name="Notification_WinFight" xml:space="preserve"><value>Sie haben einen Sieg errungen</value></data>
-  <data name="Popup_BlueVictory" xml:space="preserve"><value>   DIE BLAUEN
- SIEDLER LIEGEN
- UNEINHOLBAR IN
-    FÜHRUNG</value></data>
-  <data name="Popup_BuildingStock" xml:space="preserve"><value>Lagerbestand
-des Gebäudes:</value></data>
+  <data name="Popup_BlueVictory" xml:space="preserve"><value>   DIE BLAUEN&#xA; SIEDLER LIEGEN&#xA; UNEINHOLBAR IN&#xA;    FÜHRUNG</value></data>
+  <data name="Popup_BuildingStock" xml:space="preserve"><value>Lagerbestand&#xA;des Gebäudes:</value></data>
   <data name="Popup_Defenders" xml:space="preserve"><value>Besetzung:</value></data>
-  <data name="Popup_Demolish" xml:space="preserve"><value>    Abriss:
-Klicken Sie hier
- wenn Sie sicher
-      sind</value></data>
-  <data name="Popup_FastBuilding" xml:space="preserve"><value>Schneller
-Bauklick</value></data>
-  <data name="Popup_FastMapclick" xml:space="preserve"><value>Schneller
-Kartenklick</value></data>
+  <data name="Popup_Demolish" xml:space="preserve"><value>    Abriss:&#xA;Klicken Sie hier&#xA; wenn Sie sicher&#xA;      sind</value></data>
+  <data name="Popup_FastBuilding" xml:space="preserve"><value>Schneller&#xA;Bauklick</value></data>
+  <data name="Popup_FastMapclick" xml:space="preserve"><value>Schneller&#xA;Kartenklick</value></data>
   <data name="Popup_Fullscreen" xml:space="preserve"><value>Vollbild</value></data>
   <data name="Popup_GroundAnalysis" xml:space="preserve"><value>BODENPROBEN:</value></data>
-  <data name="Popup_HideMouseWhileScrolling" xml:space="preserve"><value>Maus beim
-Scrollen aus</value></data>
-  <data name="Popup_InvertScrolling" xml:space="preserve"><value>Scrollen
-umkehren</value></data>
+  <data name="Popup_HideMouseWhileScrolling" xml:space="preserve"><value>Maus beim&#xA;Scrollen aus</value></data>
+  <data name="Popup_InvertScrolling" xml:space="preserve"><value>Scrollen&#xA;umkehren</value></data>
   <data name="Popup_KnightLevelError" xml:space="preserve"><value>FEHLER</value></data>
   <data name="Popup_KnightLevelFull" xml:space="preserve"><value>Voll</value></data>
   <data name="Popup_KnightLevelGood" xml:space="preserve"><value>Gut</value></data>
@@ -220,40 +206,24 @@ umkehren</value></data>
   <data name="Popup_LanguageEnglish" xml:space="preserve"><value>Englisch</value></data>
   <data name="Popup_LanguageGerman" xml:space="preserve"><value>Deutsch</value></data>
   <data name="Popup_LanguageSystem" xml:space="preserve"><value>System</value></data>
-  <data name="Popup_LoadFail" xml:space="preserve"><value>Laden nicht
-möglich.</value></data>
-  <data name="Popup_LoadSuccess" xml:space="preserve"><value>Spielstand
-geladen.</value></data>
+  <data name="Popup_LoadFail" xml:space="preserve"><value>Laden nicht&#xA;möglich.</value></data>
+  <data name="Popup_LoadSuccess" xml:space="preserve"><value>Spielstand&#xA;geladen.</value></data>
   <data name="Popup_Messages" xml:space="preserve"><value>Meldungen</value></data>
   <data name="Popup_MessagesAll" xml:space="preserve"><value>Alle</value></data>
   <data name="Popup_MessagesFew" xml:space="preserve"><value>Wenig</value></data>
   <data name="Popup_MessagesMost" xml:space="preserve"><value>Viele</value></data>
   <data name="Popup_MessagesNone" xml:space="preserve"><value>Keine</value></data>
   <data name="Popup_MiningOutput" xml:space="preserve"><value>Förderquote:</value></data>
-  <data name="Popup_MissionLost" xml:space="preserve"><value>LEIDER HAT SICH
-  EINER IHRER
-GEGNER IN DIESER
-    MISSION
- DURCHGESETZT.</value></data>
-  <data name="Popup_MissionWon" xml:space="preserve"><value>  GRATULATION.
-  IHRE FEINDE
-   GEBEN AUF.
-SIE HABEN DIESE
-MISSION GEWONNEN</value></data>
+  <data name="Popup_MissionLost" xml:space="preserve"><value>LEIDER HAT SICH&#xA;  EINER IHRER&#xA;GEGNER IN DIESER&#xA;    MISSION&#xA; DURCHGESETZT.</value></data>
+  <data name="Popup_MissionWon" xml:space="preserve"><value>  GRATULATION.&#xA;  IHRE FEINDE&#xA;   GEBEN AUF.&#xA;SIE HABEN DIESE&#xA;MISSION GEWONNEN</value></data>
   <data name="Popup_Music" xml:space="preserve"><value>Musik</value></data>
-  <data name="Popup_OrderedBuilding" xml:space="preserve"><value>Auftrag der
-Baustelle:</value></data>
-  <data name="Popup_PathwayScrolling" xml:space="preserve"><value>Wegebau-
-scrolling</value></data>
+  <data name="Popup_OrderedBuilding" xml:space="preserve"><value>Auftrag der&#xA;Baustelle:</value></data>
+  <data name="Popup_PathwayScrolling" xml:space="preserve"><value>Wegebau-&#xA;scrolling</value></data>
   <data name="Popup_Percentage" xml:space="preserve"><value>{0}%</value><comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment></data>
   <data name="Popup_QuitChoices" xml:space="preserve"><value>  Ja        Nein</value></data>
   <data name="Popup_QuitQuestion" xml:space="preserve"><value>Wollen Sie dieses Spiel beenden?</value></data>
-  <data name="Popup_RedVictory" xml:space="preserve"><value>   DIE ROTEN
- SIEDLER LIEGEN
- UNEINHOLBAR IN
-    FÜHRUNG</value></data>
-  <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve"><value>Maus danach
-zentrieren</value></data>
+  <data name="Popup_RedVictory" xml:space="preserve"><value>   DIE ROTEN&#xA; SIEDLER LIEGEN&#xA; UNEINHOLBAR IN&#xA;    FÜHRUNG</value></data>
+  <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve"><value>Maus danach&#xA;zentrieren</value></data>
   <data name="Popup_ResourceAmountAboveAverage" xml:space="preserve"><value>Über mittel</value></data>
   <data name="Popup_ResourceAmountAverage" xml:space="preserve"><value>Durchschnitt</value></data>
   <data name="Popup_ResourceAmountBelowAverage" xml:space="preserve"><value>Unter mittel</value></data>
@@ -264,19 +234,13 @@ zentrieren</value></data>
   <data name="Popup_ResourceAmountPerfect" xml:space="preserve"><value>Extrem viel</value></data>
   <data name="Popup_ResourceAmountVeryFew" xml:space="preserve"><value>Sehr wenig</value></data>
   <data name="Popup_ResourceAmountVeryMuch" xml:space="preserve"><value>Sehr viel</value></data>
-  <data name="Popup_SaveFail" xml:space="preserve"><value>Speichern nicht
-möglich.</value></data>
+  <data name="Popup_SaveFail" xml:space="preserve"><value>Speichern nicht&#xA;möglich.</value></data>
   <data name="Popup_SaveGame" xml:space="preserve"><value>Speichern</value></data>
-  <data name="Popup_SaveSuccess" xml:space="preserve"><value>Spielstand
-gespeichert.</value></data>
-  <data name="Popup_SoundEffects" xml:space="preserve"><value>Klang-
-effekte</value></data>
+  <data name="Popup_SaveSuccess" xml:space="preserve"><value>Spielstand&#xA;gespeichert.</value></data>
+  <data name="Popup_SoundEffects" xml:space="preserve"><value>Klang-&#xA;effekte</value></data>
   <data name="Popup_State" xml:space="preserve"><value>Gefahr:</value><comment>Military building threat level.</comment></data>
   <data name="Popup_TransportInfo" xml:space="preserve"><value>Warentransport:</value></data>
-  <data name="Popup_TutorialCompleted" xml:space="preserve"><value>  GUT GEMACHT.
- SIE HABEN DAS
- TRAININGSSPIEL
-   GESCHAFFT.</value></data>
+  <data name="Popup_TutorialCompleted" xml:space="preserve"><value>  GUT GEMACHT.&#xA; SIE HABEN DAS&#xA; TRAININGSSPIEL&#xA;   GESCHAFFT.</value></data>
   <data name="Popup_TutorialOrder1" xml:space="preserve"><value>Bauen Sie eine Wachhütte und einen Wachturm und eine Wachburg.</value></data>
   <data name="Popup_TutorialOrder2" xml:space="preserve"><value>Erzeugen Sie fünf Bretter und fünf Bausteine.</value></data>
   <data name="Popup_TutorialOrder3" xml:space="preserve"><value>Erzeugen Sie je fünf Einheiten Fisch und Fleisch und Brot.</value></data>
@@ -287,15 +251,9 @@ effekte</value></data>
   <data name="Popup_TutorialTitle" xml:space="preserve"><value>   TRAINING {0}</value><comment>{0}: tutorial level, 1 through 6.</comment></data>
   <data name="Popup_UnsavedQuitChoices" xml:space="preserve"><value> Sich.  Ja  Nein</value></data>
   <data name="Popup_UnsavedQuitQuestion" xml:space="preserve"><value>Das Spiel wurde länger nicht gespeichert. Sind Sie sicher?</value></data>
-  <data name="Popup_VioletVictory" xml:space="preserve"><value> DIE VIOLETTEN
- SIEDLER LIEGEN
- UNEINHOLBAR IN
-    FÜHRUNG</value></data>
+  <data name="Popup_VioletVictory" xml:space="preserve"><value> DIE VIOLETTEN&#xA; SIEDLER LIEGEN&#xA; UNEINHOLBAR IN&#xA;    FÜHRUNG</value></data>
   <data name="Popup_Volume" xml:space="preserve"><value>Lautst.</value></data>
-  <data name="Popup_YellowVictory" xml:space="preserve"><value>   DIE GELBEN
- SIEDLER LIEGEN
- UNEINHOLBAR IN
-    FÜHRUNG</value></data>
+  <data name="Popup_YellowVictory" xml:space="preserve"><value>   DIE GELBEN&#xA; SIEDLER LIEGEN&#xA; UNEINHOLBAR IN&#xA;    FÜHRUNG</value></data>
   <data name="Server_NotFound" xml:space="preserve"><value>{0} | nicht gefunden</value><comment>{0}: saved server address.</comment></data>
   <data name="Server_Online" xml:space="preserve"><value>{0} | {1} | {2}/{3}</value><comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment></data>
   <data name="Server_Running" xml:space="preserve"><value>{0} | {1} | {2}/{3} | läuft</value><comment>{0}: server name; {1}: host address; {2}: current players; {3}: player limit.</comment></data>

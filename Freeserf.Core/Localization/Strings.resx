@@ -108,14 +108,12 @@
   <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Use specified data directory.</value></data>
   <data name="CommandLine_Debug" xml:space="preserve"><value>Set debug output level</value></data>
   <data name="CommandLine_ExcludeLogType" xml:space="preserve">
-    <value>Log only messages not of the given type.
-Cannot be used with -o option.</value>
+    <value>Log only messages not of the given type.&#xA;Cannot be used with -o option.</value>
   </data>
   <data name="CommandLine_Fullscreen" xml:space="preserve"><value>Run in fullscreen mode.</value></data>
   <data name="CommandLine_Help" xml:space="preserve"><value>Show this help text.</value></data>
   <data name="CommandLine_IncludeLogType" xml:space="preserve">
-    <value>Log only messages of the given type.
-Cannot be used with -x option.</value>
+    <value>Log only messages of the given type.&#xA;Cannot be used with -x option.</value>
   </data>
   <data name="CommandLine_InvalidDebugLevel" xml:space="preserve">
     <value>Invalid debug output level {0}. Possbile values are {1} ~ {2}.</value>
@@ -135,8 +133,7 @@ Cannot be used with -x option.</value>
     <comment>Keep the accepted command tokens "host" and "join" unchanged.</comment>
   </data>
   <data name="CommandLine_MultiplayerTest" xml:space="preserve">
-    <value>Run an automated multiplayer test.
-host:CLIENTS[:AI] creates a server, join:ADDRESS joins one.</value>
+    <value>Run an automated multiplayer test.&#xA;host:CLIENTS[:AI] creates a server, join:ADDRESS joins one.</value>
   </data>
   <data name="CommandLine_Position" xml:space="preserve"><value>Set window position (e.g. 0,0).</value></data>
   <data name="CommandLine_ReportBugs" xml:space="preserve"><value>Please report bugs to &lt;robert.schneckenhaus@web.de&gt;</value></data>
@@ -250,31 +247,22 @@ host:CLIENTS[:AI] creates a server, join:ADDRESS joins one.</value>
     <value>You gained a victory here</value>
   </data>
   <data name="Popup_BlueVictory" xml:space="preserve">
-    <value>    THE BLUE
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+    <value>    THE BLUE&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
   </data>
   <data name="Popup_BuildingStock" xml:space="preserve">
-    <value>Stock of
-this building:</value>
+    <value>Stock of&#xA;this building:</value>
   </data>
   <data name="Popup_Defenders" xml:space="preserve">
     <value>Defenders:</value>
   </data>
   <data name="Popup_Demolish" xml:space="preserve">
-    <value>    Demolish:
-   Click here
-   if you are
-      sure</value>
+    <value>    Demolish:&#xA;   Click here&#xA;   if you are&#xA;      sure</value>
   </data>
   <data name="Popup_FastBuilding" xml:space="preserve">
-    <value>Fast
-Building</value>
+    <value>Fast&#xA;Building</value>
   </data>
   <data name="Popup_FastMapclick" xml:space="preserve">
-    <value>Fast
-Mapclick</value>
+    <value>Fast&#xA;Mapclick</value>
   </data>
   <data name="Popup_Fullscreen" xml:space="preserve">
     <value>Fullscreen</value>
@@ -283,12 +271,10 @@ Mapclick</value>
     <value>GROUND-ANALYSIS:</value>
   </data>
   <data name="Popup_HideMouseWhileScrolling" xml:space="preserve">
-    <value>Hide mouse
-while scr.</value>
+    <value>Hide mouse&#xA;while scr.</value>
   </data>
   <data name="Popup_InvertScrolling" xml:space="preserve">
-    <value>Invert
-Scrolling</value>
+    <value>Invert&#xA;Scrolling</value>
   </data>
   <data name="Popup_KnightLevelError" xml:space="preserve">
     <value>ERROR</value>
@@ -313,12 +299,10 @@ Scrolling</value>
   <data name="Popup_LanguageGerman" xml:space="preserve"><value>German</value></data>
   <data name="Popup_LanguageSystem" xml:space="preserve"><value>System</value></data>
   <data name="Popup_LoadFail" xml:space="preserve">
-    <value>Game could not
-be loaded.</value>
+    <value>Game could not&#xA;be loaded.</value>
   </data>
   <data name="Popup_LoadSuccess" xml:space="preserve">
-    <value>Game was loaded
-successfully.</value>
+    <value>Game was loaded&#xA;successfully.</value>
   </data>
   <data name="Popup_Messages" xml:space="preserve">
     <value>Messages</value>
@@ -339,29 +323,19 @@ successfully.</value>
     <value>Mining output:</value>
   </data>
   <data name="Popup_MissionLost" xml:space="preserve">
-    <value>SORRY, ONLY ONE
-OF YOUR ENEMIES
-HAS GAINED THE
- SUPERIORITY IN
-  THIS MISSION</value>
+    <value>SORRY, ONLY ONE&#xA;OF YOUR ENEMIES&#xA;HAS GAINED THE&#xA; SUPERIORITY IN&#xA;  THIS MISSION</value>
   </data>
   <data name="Popup_MissionWon" xml:space="preserve">
-    <value>CONGRATULATIONS.
-  YOUR ENEMIES
-  RESIGN. YOU
- HAVE WON THIS
-    MISSION.</value>
+    <value>CONGRATULATIONS.&#xA;  YOUR ENEMIES&#xA;  RESIGN. YOU&#xA; HAVE WON THIS&#xA;    MISSION.</value>
   </data>
   <data name="Popup_Music" xml:space="preserve">
     <value>Music</value>
   </data>
   <data name="Popup_OrderedBuilding" xml:space="preserve">
-    <value>Ordered
-Building</value>
+    <value>Ordered&#xA;Building</value>
   </data>
   <data name="Popup_PathwayScrolling" xml:space="preserve">
-    <value>Pathway-
-Scrolling</value>
+    <value>Pathway-&#xA;Scrolling</value>
   </data>
   <data name="Popup_Percentage" xml:space="preserve">
     <value>{0}%</value>
@@ -375,14 +349,10 @@ Scrolling</value>
     <value>Do you want to quit this game?</value>
   </data>
   <data name="Popup_RedVictory" xml:space="preserve">
-    <value>    THE RED
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+    <value>    THE RED&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
   </data>
   <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve">
-    <value>Reset mouse
-after scr.</value>
+    <value>Reset mouse&#xA;after scr.</value>
   </data>
   <data name="Popup_ResourceAmountAboveAverage" xml:space="preserve">
     <value>Above Average</value>
@@ -415,19 +385,16 @@ after scr.</value>
     <value>Very Much</value>
   </data>
   <data name="Popup_SaveFail" xml:space="preserve">
-    <value>Game could not
-be saved.</value>
+    <value>Game could not&#xA;be saved.</value>
   </data>
   <data name="Popup_SaveGame" xml:space="preserve">
     <value>Save  Game</value>
   </data>
   <data name="Popup_SaveSuccess" xml:space="preserve">
-    <value>Game was saved
-successfully.</value>
+    <value>Game was saved&#xA;successfully.</value>
   </data>
   <data name="Popup_SoundEffects" xml:space="preserve">
-    <value>Sound
-effects</value>
+    <value>Sound&#xA;effects</value>
   </data>
   <data name="Popup_State" xml:space="preserve">
     <value>State:</value>
@@ -437,10 +404,7 @@ effects</value>
     <value>Transport Info:</value>
   </data>
   <data name="Popup_TutorialCompleted" xml:space="preserve">
-    <value>   WELL DONE.
- YOU COMPLETED
- THIS TUTORIAL
-     GAME.</value>
+    <value>   WELL DONE.&#xA; YOU COMPLETED&#xA; THIS TUTORIAL&#xA;     GAME.</value>
   </data>
   <data name="Popup_TutorialOrder1" xml:space="preserve">
     <value>Build a guard hut and a guard tower and a fortress.</value>
@@ -475,19 +439,13 @@ effects</value>
     <value>The game has not been saved recently. Are you sure?</value>
   </data>
   <data name="Popup_VioletVictory" xml:space="preserve">
-    <value>  THE VIOLET
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+    <value>  THE VIOLET&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
   </data>
   <data name="Popup_Volume" xml:space="preserve">
     <value>Volume</value>
   </data>
   <data name="Popup_YellowVictory" xml:space="preserve">
-    <value>   THE YELLOW
- SETTLERS HAVE
-   GAINED THE
-  SUPERIORITY</value>
+    <value>   THE YELLOW&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
   </data>
   <data name="Server_NotFound" xml:space="preserve">
     <value>{0} | not found</value>
