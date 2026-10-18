@@ -1,11 +1,36 @@
-Version 2.2.8:
+Version 2.2.9:
 ==============
 
+- The game texts can be shown in English or German, the language can be changed
+  in the options and is applied immediately. Thanks to kadrim!
+- The multiplayer host also sees the map size and the random seed. Thanks to kadrim!
+- The AI keeps fewer knights in the castle (limited by the free knights, at least 3
+  if there are more than 3, always 1), builds a weaponsmith in hard times if there
+  is steel, releases the knights of needless military buildings if it has no free
+  knights (only if no land is lost), builds military buildings at the growing
+  border and splits roads at congested flags (e.g. at the castle)
+- Fixed the emergency program blocking all construction sites forever when the
+  stones ran out although the essential buildings didn't need any. The AI could
+  not expand anymore then.
+- Fixed mines which got no food anymore although there was plenty of it
+- Fixed flags drawn in front of buildings after scrolling the map
+- Fixed roads and other sprites cut off at the top and left edge of the view
+- Amiga graphics: the map tiles and roads are displayed properly now
+- Better performance with large settlements
 - A special click on the build button toggles the possible building sites again
   (it could only be switched on, not off)
 - The building filter's third page shows the mill and the butcher at their
   original positions (they were swapped, so the mill was hidden behind the
   butcher)
+- Android: the app now supports Android 15+/16 devices with 16 KB memory pages.
+  The Silk.NET SDL native libraries (which were only 4 KB-aligned) are replaced
+  with 16 KB-aligned builds for arm64-v8a and x86_64, removing the XA0141
+  build warning and the load failure on 16 KB-page devices.
+
+
+Version 2.2.8:
+==============
+
 - A special click (left + right button, long press on Android) works as in the
   original: on a build button it shows the possible building sites, on the map
   button it shows the castle, and only a special click demolishes. In the map box
@@ -35,10 +60,6 @@ Version 2.2.8:
 - Parts of a burning mine no longer stay on the screen (#127)
 - Serfs waiting inside a building are no longer drawn in front of it
 - Linux: the audio libraries are found on more distributions (#87)
-- Android: the app now supports Android 15+/16 devices with 16 KB memory pages.
-  The Silk.NET SDL native libraries (which were only 4 KB-aligned) are replaced
-  with 16 KB-aligned builds for arm64-v8a and x86_64, removing the XA0141
-  build warning and the load failure on 16 KB-page devices.
 
 
 Version 2.2.7:
