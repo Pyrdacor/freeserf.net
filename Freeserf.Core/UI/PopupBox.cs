@@ -334,7 +334,8 @@ namespace Freeserf.UI
             IncreaseCastleKnights,
             OptionsMusic,
             OptionsFullscreen,
-            OptionsLanguage,
+            OptionsLanguagePrevious,
+            OptionsLanguageNext,
             OptionsVolumeMinus,
             OptionsVolumePlus,
             OptionsPathwayScrolling,
@@ -1119,9 +1120,48 @@ namespace Freeserf.UI
                 yield return (positions[i].X, positions[i].Y, lines[i]);
         }
 
-        void SetTextLines(string text, params (int X, int Y)[] positions)
+        internal static IEnumerable<(int X, int Y, string Text)> GetWrappedLabelLayout(
+            string text, int x, int columns, params int[] rows)
         {
-            foreach (var line in GetTextLayout(text, positions))
+            var lines = MessageText.Wrap(text, columns, rows.Length, "compact popup label");
+            for (int i = 0; i < lines.Length; ++i)
+                yield return (x, rows[i], lines[i]);
+        }
+
+        void SetWrappedLabel(string text, int x, int columns, params int[] rows)
+        {
+            foreach (var line in GetWrappedLabelLayout(text, x, columns, rows))
+                SetText(line.X, line.Y, line.Text);
+        }
+
+        internal static IEnumerable<(int X, int Y, string Text)> GetCenteredTextLayout(
+            string text, params int[] rows)
+        {
+            foreach (var line in GetTextLayout(text, rows.Select(y => (8, y)).ToArray()))
+            {
+                int width = line.Text.Length * 8;
+                if (width > 128)
+                    MessageText.ReportLayoutError("centered popup text", $"needs {width} pixels but only 128 fit");
+                yield return (8 + (128 - width) / 2, line.Y, line.Text);
+            }
+        }
+
+        void SetCenteredText(string text, params int[] rows)
+        {
+            foreach (var line in GetCenteredTextLayout(text, rows))
+                SetText(line.X, line.Y, line.Text);
+        }
+
+        internal static IEnumerable<(int X, int Y, string Text)> GetCenteredParagraphLayout(
+            string text, params int[] rows)
+        {
+            var lines = MessageText.Wrap(text, MessageText.Columns, rows.Length, "centered popup paragraph");
+            return GetCenteredTextLayout(string.Join("\n", lines), rows.Take(lines.Length).ToArray());
+        }
+
+        void SetCenteredParagraph(string text, params int[] rows)
+        {
+            foreach (var line in GetCenteredParagraphLayout(text, rows))
                 SetText(line.X, line.Y, line.Text);
         }
 
@@ -2815,19 +2855,39 @@ namespace Freeserf.UI
         void DrawQuitConfirmBox()
         {
             SetParagraph(Strings.Popup_QuitQuestion, 8, 19, 3, "quit question");
-            clickableTextField = SetText(8, 54, Strings.Popup_QuitChoices);
+            foreach (var choice in GetQuitChoices(false))
+                SetText(choice.X, choice.Y, choice.Text);
         }
 
         void DrawNoSaveQuitConfirmBox()
         {
             SetParagraph(Strings.Popup_UnsavedQuitQuestion, 8, 79, 5, "unsaved quit question");
-            clickableTextField = SetText(8, 134, Strings.Popup_UnsavedQuitChoices);
+            foreach (var choice in GetQuitChoices(true))
+                SetText(choice.X, choice.Y, choice.Text);
+        }
+
+        internal static ChoiceText[] GetQuitChoices(bool unsaved) => unsaved
+            ? ChoiceText.Layout(134, Strings.Popup_QuitSave, Strings.Popup_QuitYes, Strings.Popup_QuitNo)
+            : ChoiceText.Layout(54, Strings.Popup_QuitYes, Strings.Popup_QuitNo);
+
+        internal static Action? GetQuitChoiceAction(bool unsaved, int x, int y)
+        {
+            int index = ChoiceText.HitTest(GetQuitChoices(unsaved), x, y);
+            return (unsaved, index) switch
+            {
+                (false, 0) => Action.QuitConfirm,
+                (false, 1) => Action.QuitCancel,
+                (true, 0) => Action.SaveAndQuit,
+                (true, 1) => Action.NoSaveQuitConfirm,
+                (true, 2) => Action.QuitCancel,
+                _ => null
+            };
         }
 
         void DrawExtendedOptionsBox(Action closeAction)
         {
-            SetTextLines(Strings.Popup_FastMapclick, (16, 20), (16, 29));
-            SetTextLines(Strings.Popup_FastBuilding, (16, 45), (16, 54));
+            SetWrappedLabel(Strings.Popup_FastMapclick, 16, 12, 20, 29);
+            SetWrappedLabel(Strings.Popup_FastBuilding, 16, 12, 45, 54);
 
             SetButton(112, 21, interf.GetOption(Option.FastMapClick) ? 288u : 220u, Action.OptionsFastMapclick);
             SetButton(112, 47, interf.GetOption(Option.FastBuilding) ? 288u : 220u, Action.OptionsFastBuilding);
@@ -2858,10 +2918,10 @@ namespace Freeserf.UI
 
         void DrawScrollOptionsBox(Action closeAction)
         {
-            SetTextLines(Strings.Popup_PathwayScrolling, (16, 20), (16, 29));
-            SetTextLines(Strings.Popup_InvertScrolling, (16, 45), (16, 54));
-            SetTextLines(Strings.Popup_HideMouseWhileScrolling, (16, 70), (16, 79));
-            SetTextLines(Strings.Popup_ResetMouseAfterScrolling, (16, 95), (16, 104));
+            SetWrappedLabel(Strings.Popup_PathwayScrolling, 16, 12, 20, 29);
+            SetWrappedLabel(Strings.Popup_InvertScrolling, 16, 12, 45, 54);
+            SetWrappedLabel(Strings.Popup_HideMouseWhileScrolling, 16, 12, 70, 79);
+            SetWrappedLabel(Strings.Popup_ResetMouseAfterScrolling, 16, 12, 95, 104);
 
             SetButton(112, 21, interf.GetOption(Option.PathwayScrolling) ? 288u : 220u, Action.OptionsPathwayScrolling);
             SetButton(112, 47, interf.GetOption(Option.InvertScrolling) ? 288u : 220u, Action.OptionsInvertScrolling);
@@ -2875,7 +2935,7 @@ namespace Freeserf.UI
         void DrawOptionsBox(Action closeAction)
         {
             SetText(16, 23, Strings.Popup_Music);
-            SetTextLines(Strings.Popup_SoundEffects, (16, 39), (16, 48));
+            SetWrappedLabel(Strings.Popup_SoundEffects, 16, 12, 39, 48);
             SetText(16, 63, Strings.Popup_Volume);
 
             // Music
@@ -2907,7 +2967,8 @@ namespace Freeserf.UI
 
             SetText(16, 108, Strings.Popup_Language);
             SetText(16, 120, LanguageSettings.DisplayName);
-            SetButton(112, 115, 61u, Action.OptionsLanguage);
+            SetButton(96, 115, 220u, Action.OptionsLanguagePrevious);
+            SetButton(112, 115, 221u, Action.OptionsLanguageNext);
 
             SetButton(104, 137, 61u, Action.ShowExtendedOptions); // flip
             SetButton(120, 137, 60u, closeAction); // exit
@@ -2990,7 +3051,7 @@ namespace Freeserf.UI
 
             SetBuildingIcon(x, 49, type);
 
-            SetTextLines(Strings.Popup_OrderedBuilding, (16, 13), (16, 23));
+            SetWrappedLabel(Strings.Popup_OrderedBuilding, 16, 15, 13, 23);
 
             if (building.HasSerf)
             {
@@ -3257,7 +3318,7 @@ namespace Freeserf.UI
             SetBuildingIcon(x, 39, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
 
             // draw texts
-            SetTextLines(Strings.Popup_BuildingStock, (16, 13), (16, 23));
+            SetWrappedLabel(Strings.Popup_BuildingStock, 16, 15, 13, 23);
 
             SetButton(120, 137, 60u, Action.CloseBox); // exit
         }
@@ -3564,24 +3625,22 @@ namespace Freeserf.UI
                 case (int)Game.GameType.Mission:
                     if (winner == 0)
                     {
-                        SetTextLines(Strings.Popup_MissionWon,
-                            (8, 13), (8, 25), (8, 35), (8, 45), (8, 55));
+                        SetCenteredParagraph(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
                     }
                     else
                     {
-                        SetTextLines(Strings.Popup_MissionLost,
-                            (8, 15), (8, 25), (8, 35), (8, 45), (8, 55));
+                        SetCenteredParagraph(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
                     }
                     break;
                 case (int)Game.GameType.Tutorial:
-                    SetTextLines(Strings.Popup_TutorialCompleted, (8, 13), (8, 25), (8, 35), (8, 45));
+                    SetCenteredParagraph(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
                     break;
                 default:
                     string[] victoryMessages = {
                         Strings.Popup_BlueVictory, Strings.Popup_RedVictory,
                         Strings.Popup_VioletVictory, Strings.Popup_YellowVictory
                     };
-                    SetTextLines(victoryMessages[winner & 3], (8, 15), (8, 25), (8, 35), (8, 45));
+                    SetCenteredParagraph(victoryMessages[winner & 3], 15, 25, 35, 45);
                     break;
             }
         }
@@ -3609,8 +3668,8 @@ namespace Freeserf.UI
                 return;
             }
 
-            SetText(8, 15, FormatTutorialTitle(level));
-            SetText(8, 35, Strings.Popup_TutorialOrders);
+            SetCenteredText(FormatTutorialTitle(level), 15);
+            SetCenteredText(Strings.Popup_TutorialOrders, 35);
 
             SetParagraph(orders[level - 1], 8, 55, 9, "tutorial orders");
         }
@@ -3620,7 +3679,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
             SetButton(64, 54, 288u, Action.Demolish); // checkbox
 
-            SetTextLines(Strings.Popup_Demolish, (8, 19), (8, 39), (8, 77), (8, 95));
+            SetCenteredText(Strings.Popup_Demolish, 19, 39, 77, 95);
         }
 
         void DrawBld1Box()
@@ -3692,20 +3751,20 @@ namespace Freeserf.UI
             switch (GameStore.Instance.LastOperationResult)
             {
                 case GameStore.LastOperationStatus.SaveSuccess:
-                    SetTextLines(Strings.Popup_SaveSuccess, (15, 33), (22, 74));
+                    SetCenteredText(Strings.Popup_SaveSuccess, 33, 74);
                     iconIndex = 288u;
                     closeAction = Action.QuitConfirm;
                     break;
                 case GameStore.LastOperationStatus.SaveFail:
-                    SetTextLines(Strings.Popup_SaveFail, (15, 33), (39, 74));
+                    SetCenteredText(Strings.Popup_SaveFail, 33, 74);
                     closeAction = Action.QuitCancel;
                     break;
                 case GameStore.LastOperationStatus.LoadSuccess:
-                    SetTextLines(Strings.Popup_LoadSuccess, (11, 33), (22, 74));
+                    SetCenteredText(Strings.Popup_LoadSuccess, 33, 74);
                     iconIndex = 288u;
                     break;
                 case GameStore.LastOperationStatus.LoadFail:
-                    SetTextLines(Strings.Popup_LoadFail, (15, 33), (34, 74));
+                    SetCenteredText(Strings.Popup_LoadFail, 33, 74);
                     break;
                 default:
                     SetRedraw();
@@ -4545,8 +4604,12 @@ namespace Freeserf.UI
                 case Action.AttackingKnightsInc:
                     player.TotalKnightsAttacking = Math.Min(player.TotalKnightsAttacking + 1, Math.Min(player.MaxAttackingKnights, 100));
                     break;
-                case Action.OptionsLanguage:
-                    if (!UserConfig.SaveLanguage(LanguageSettings.Next(UserConfig.Game.Language), FileSystem.Paths.UserConfigPath))
+                case Action.OptionsLanguagePrevious:
+                case Action.OptionsLanguageNext:
+                    string language = action == Action.OptionsLanguagePrevious
+                        ? LanguageSettings.Previous(UserConfig.Game.Language)
+                        : LanguageSettings.Next(UserConfig.Game.Language);
+                    if (!UserConfig.SaveLanguage(language, FileSystem.Paths.UserConfigPath))
                         PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     SetRedraw();
                     break;
@@ -5106,52 +5169,19 @@ namespace Freeserf.UI
 
                 return true;
             }
-            else if (Box == Type.QuitConfirm && clickableTextField != null)
+            else if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)
             {
-                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
-                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
+                var action = GetQuitChoiceAction(Box == Type.NoSaveQuitConfirm, x - TotalX, y - TotalY);
+                if (action == Action.QuitConfirm && GameManager.Instance.NeedSave() &&
+                    interf.AccessRights == Viewer.Access.Player)
                 {
-                    int relativeX = x - clickableTextField.TotalX;
-
-                    if (relativeX >= 16 && relativeX < 16 + 24) // Yes
-                    {
-                        // TODO: who saves in multiplayer games? The server?
-                        // TODO: What happens if the server leaves the game?
-                        if (GameManager.Instance.NeedSave() && interf.AccessRights == Viewer.Access.Player)
-                            SetBox(Type.NoSaveQuitConfirm);
-                        else
-                            HandleAction(Action.QuitConfirm, x, y);
-                    }
-                    else if (relativeX >= 16 + 24 + 64 && relativeX < 16 + 24 + 64 + 16) // No
-                    {
-                        HandleAction(Action.QuitCancel, x, y);
-                    }
-
-                    return true;
+                    SetBox(Type.NoSaveQuitConfirm);
                 }
-            }
-            else if (Box == Type.NoSaveQuitConfirm && clickableTextField != null)
-            {
-                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
-                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
+                else if (action.HasValue)
                 {
-                    int relativeX = x - clickableTextField.TotalX;
-
-                    if (relativeX >= 16 && relativeX < 16 + 32) // Save
-                    {
-                        HandleAction(Action.SaveAndQuit, x, y);
-                    }
-                    else if (relativeX >= 16 + 32 + 16 && relativeX < 16 + 32 + 16 + 24) // Yes
-                    {
-                        HandleAction(Action.NoSaveQuitConfirm, x, y);
-                    }
-                    else if (relativeX >= 16 + 32 + 16 + 24 + 16 && relativeX < 16 + 32 + 16 + 24 + 16 + 16) // No
-                    {
-                        HandleAction(Action.QuitCancel, x, y);
-                    }
-
-                    return true;
+                    HandleAction(action.Value, x, y);
                 }
+                return true;
             }
 
             base.HandleClickLeft(x, y, delayed);

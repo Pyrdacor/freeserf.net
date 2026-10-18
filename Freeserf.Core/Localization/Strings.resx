@@ -247,22 +247,22 @@
     <value>You gained a victory here</value>
   </data>
   <data name="Popup_BlueVictory" xml:space="preserve">
-    <value>    THE BLUE&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
+    <value>THE BLUE SETTLERS HAVE GAINED THE SUPERIORITY</value>
   </data>
   <data name="Popup_BuildingStock" xml:space="preserve">
-    <value>Stock of&#xA;this building:</value>
+    <value>Stock of this building:</value>
   </data>
   <data name="Popup_Defenders" xml:space="preserve">
     <value>Defenders:</value>
   </data>
   <data name="Popup_Demolish" xml:space="preserve">
-    <value>    Demolish:&#xA;   Click here&#xA;   if you are&#xA;      sure</value>
+    <value>Demolish:&#xA;Click here&#xA;if you are&#xA;sure</value>
   </data>
   <data name="Popup_FastBuilding" xml:space="preserve">
-    <value>Fast&#xA;Building</value>
+    <value>Fast Building</value>
   </data>
   <data name="Popup_FastMapclick" xml:space="preserve">
-    <value>Fast&#xA;Mapclick</value>
+    <value>Fast Mapclick</value>
   </data>
   <data name="Popup_Fullscreen" xml:space="preserve">
     <value>Fullscreen</value>
@@ -271,10 +271,10 @@
     <value>GROUND-ANALYSIS:</value>
   </data>
   <data name="Popup_HideMouseWhileScrolling" xml:space="preserve">
-    <value>Hide mouse&#xA;while scr.</value>
+    <value>Hide mouse while scr.</value>
   </data>
   <data name="Popup_InvertScrolling" xml:space="preserve">
-    <value>Invert&#xA;Scrolling</value>
+    <value>Invert Scrolling</value>
   </data>
   <data name="Popup_KnightLevelError" xml:space="preserve">
     <value>ERROR</value>
@@ -323,36 +323,35 @@
     <value>Mining output:</value>
   </data>
   <data name="Popup_MissionLost" xml:space="preserve">
-    <value>SORRY, ONLY ONE&#xA;OF YOUR ENEMIES&#xA;HAS GAINED THE&#xA; SUPERIORITY IN&#xA;  THIS MISSION</value>
+    <value>SORRY, ONLY ONE OF YOUR ENEMIES HAS GAINED THE SUPERIORITY IN THIS MISSION</value>
   </data>
   <data name="Popup_MissionWon" xml:space="preserve">
-    <value>CONGRATULATIONS.&#xA;  YOUR ENEMIES&#xA;  RESIGN. YOU&#xA; HAVE WON THIS&#xA;    MISSION.</value>
+    <value>CONGRATULATIONS. YOUR ENEMIES RESIGN. YOU HAVE WON THIS MISSION.</value>
   </data>
   <data name="Popup_Music" xml:space="preserve">
     <value>Music</value>
   </data>
   <data name="Popup_OrderedBuilding" xml:space="preserve">
-    <value>Ordered&#xA;Building</value>
+    <value>Ordered Building</value>
   </data>
   <data name="Popup_PathwayScrolling" xml:space="preserve">
-    <value>Pathway-&#xA;Scrolling</value>
+    <value>Pathway-Scrolling</value>
   </data>
   <data name="Popup_Percentage" xml:space="preserve">
     <value>{0}%</value>
     <comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment>
   </data>
-  <data name="Popup_QuitChoices" xml:space="preserve">
-    <value>  Yes        No</value>
-    <comment>Fixed zero-based click columns: Yes at characters 2–4; No at 13–14. Preserve spacing and widths.</comment>
-  </data>
+  <data name="Popup_QuitNo" xml:space="preserve"><value>No</value></data>
   <data name="Popup_QuitQuestion" xml:space="preserve">
     <value>Do you want to quit this game?</value>
   </data>
+  <data name="Popup_QuitSave" xml:space="preserve"><value>Save</value><comment>Short label for saving and quitting in a three-choice row.</comment></data>
+  <data name="Popup_QuitYes" xml:space="preserve"><value>Yes</value></data>
   <data name="Popup_RedVictory" xml:space="preserve">
-    <value>    THE RED&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
+    <value>THE RED SETTLERS HAVE GAINED THE SUPERIORITY</value>
   </data>
   <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve">
-    <value>Reset mouse&#xA;after scr.</value>
+    <value>Reset mouse after scr.</value>
   </data>
   <data name="Popup_ResourceAmountAboveAverage" xml:space="preserve">
     <value>Above Average</value>
@@ -394,7 +393,7 @@
     <value>Game was saved&#xA;successfully.</value>
   </data>
   <data name="Popup_SoundEffects" xml:space="preserve">
-    <value>Sound&#xA;effects</value>
+    <value>Sound effects</value>
   </data>
   <data name="Popup_State" xml:space="preserve">
     <value>State:</value>
@@ -404,7 +403,7 @@
     <value>Transport Info:</value>
   </data>
   <data name="Popup_TutorialCompleted" xml:space="preserve">
-    <value>   WELL DONE.&#xA; YOU COMPLETED&#xA; THIS TUTORIAL&#xA;     GAME.</value>
+    <value>WELL DONE. YOU COMPLETED THIS TUTORIAL GAME.</value>
   </data>
   <data name="Popup_TutorialOrder1" xml:space="preserve">
     <value>Build a guard hut and a guard tower and a fortress.</value>
@@ -425,27 +424,23 @@
     <value>Conquer all the land of the enemy.</value>
   </data>
   <data name="Popup_TutorialOrders" xml:space="preserve">
-    <value>    ORDERS:</value>
+    <value>ORDERS:</value>
   </data>
   <data name="Popup_TutorialTitle" xml:space="preserve">
-    <value>   TUTORIAL {0}</value>
+    <value>TUTORIAL {0}</value>
     <comment>{0}: tutorial level, 1 through 6.</comment>
-  </data>
-  <data name="Popup_UnsavedQuitChoices" xml:space="preserve">
-    <value>  Save  Yes  No</value>
-    <comment>Fixed zero-based click columns: Save at characters 2–5; Yes at 8–10; No at 13–14. Preserve spacing and widths.</comment>
   </data>
   <data name="Popup_UnsavedQuitQuestion" xml:space="preserve">
     <value>The game has not been saved recently. Are you sure?</value>
   </data>
   <data name="Popup_VioletVictory" xml:space="preserve">
-    <value>  THE VIOLET&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
+    <value>THE VIOLET SETTLERS HAVE GAINED THE SUPERIORITY</value>
   </data>
   <data name="Popup_Volume" xml:space="preserve">
     <value>Volume</value>
   </data>
   <data name="Popup_YellowVictory" xml:space="preserve">
-    <value>   THE YELLOW&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
+    <value>THE YELLOW SETTLERS HAVE GAINED THE SUPERIORITY</value>
   </data>
   <data name="Server_NotFound" xml:space="preserve">
     <value>{0} | not found</value>

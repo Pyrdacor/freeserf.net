@@ -55,8 +55,6 @@ namespace Freeserf.UI
         readonly TextField statusText;
         readonly TextField yesText;
         readonly TextField noText;
-        readonly InvisibleButton yesButton;
-        readonly InvisibleButton noButton;
         readonly Icon playerFace;
         readonly Render.IColoredRect playerFaceBackground;
 
@@ -87,22 +85,12 @@ namespace Freeserf.UI
             statusText = new TextField(interf, 3);
             AddChild(statusText, 8, 124);
 
-            // Like in the quit dialog the answers are clickable texts.
             yesText = new TextField(interf, 3);
-            AddChild(yesText, 24, 138);
-            yesText.Text = Strings.Vote_Answer_Yes;
-            yesButton = new InvisibleButton(interf);
-            yesButton.SetSize(32, 14);
-            yesButton.Clicked += (sender, args) => Answer(true);
-            AddChild(yesButton, 20, 136);
+            AddChild(yesText, 0, 0);
 
             noText = new TextField(interf, 3);
-            AddChild(noText, 104, 138);
-            noText.Text = Strings.Vote_Answer_No;
-            noButton = new InvisibleButton(interf);
-            noButton.SetSize(28, 14);
-            noButton.Clicked += (sender, args) => Answer(false);
-            AddChild(noButton, 100, 136);
+            AddChild(noText, 0, 0);
+            UpdateAnswerLayout();
         }
 
         public VoteEntry Entry { get; private set; }
@@ -145,8 +133,6 @@ namespace Freeserf.UI
                 return;
 
             bool canAnswer = Entry.CanAnswer;
-            yesButton.Displayed = canAnswer && Displayed;
-            noButton.Displayed = canAnswer && Displayed;
             yesText.Displayed = canAnswer && Displayed;
             noText.Displayed = canAnswer && Displayed;
 
@@ -174,6 +160,30 @@ namespace Freeserf.UI
         internal static string[] WrapMessage(string text) =>
             MessageText.Wrap(text, MessageText.Columns, 3, "vote question");
 
+        internal static ChoiceText[] GetAnswerLayout() =>
+            ChoiceText.Layout(138, Strings.Vote_Answer_Yes, Strings.Vote_Answer_No);
+
+        internal static bool? GetAnswerAt(int x, int y) =>
+            ChoiceText.HitTest(GetAnswerLayout(), x, y) switch
+            {
+                0 => true,
+                1 => false,
+                _ => null
+            };
+
+        void UpdateAnswerLayout()
+        {
+            var choices = GetAnswerLayout();
+            SetAnswerLayout(yesText, choices[0]);
+            SetAnswerLayout(noText, choices[1]);
+        }
+
+        static void SetAnswerLayout(TextField text, ChoiceText choice)
+        {
+            text.Text = choice.Text;
+            text.MoveTo(choice.X, choice.Y);
+        }
+
         void SetText(string[] lines)
         {
             for (int i = 0; i < textLines.Length; ++i)
@@ -185,8 +195,7 @@ namespace Freeserf.UI
 
         internal override void RefreshLanguage()
         {
-            yesText.Text = Strings.Vote_Answer_Yes;
-            noText.Text = Strings.Vote_Answer_No;
+            UpdateAnswerLayout();
             if (Entry != null && Displayed)
             {
                 SetText(WrapMessage(Entry.OwnRequest
@@ -216,6 +225,12 @@ namespace Freeserf.UI
 
         protected override bool HandleClickLeft(int x, int y, bool delayed)
         {
+            if (!delayed && Displayed && Entry?.CanAnswer == true)
+            {
+                bool? answer = GetAnswerAt(x - TotalX, y - TotalY);
+                if (answer.HasValue)
+                    Answer(answer.Value);
+            }
             // Clicks into the box must not reach the map.
             return true;
         }

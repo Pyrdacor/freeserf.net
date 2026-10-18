@@ -64,8 +64,9 @@ ResetCursorAfterScrolling = Bit 9 -> 512 // After map scrolling ends, place the 
 ### Language
 
 The first options page (available from game setup and during play on both
-desktop and Android) has a language row. Its arrow cycles through **System**,
-**English**, and **German**. Changes apply immediately without restarting.
+desktop and Android) has a language row. Minus selects the previous language
+and plus selects the next, cycling through **System**, **English**, and
+**German** in either direction. Changes apply immediately without restarting.
 
 The `[game]` setting `language` accepts:
 
@@ -76,8 +77,9 @@ The `[game]` setting `language` accepts:
 Missing settings use `system`. Unsupported values are logged and also use
 `system`. Untranslated entries fall back to English independently for each
 message. The German catalog covers all current entries; original mission names
-and product names remain unchanged. German wording and layout still need
-in-game review, particularly the unchanged choice click areas.
+and product names remain unchanged. Quit and vote choices use individually localized labels with
+calculated placement and padded click targets. Short labels keep the three
+unsaved-quit choices on one row.
 Number formatting continues to use the system formatting culture.
 
 The saved preference is loaded before desktop command-line text and Android

@@ -52,6 +52,24 @@ namespace Freeserf.Test.Freeserf.Core
         }
 
         [TestMethod]
+        [DataRow("Pathway-Scrolling", 12, "Pathway-|Scrolling")]
+        [DataRow("Wegebau-scrolling", 12, "Wegebau-|scrolling")]
+        [DataRow("abc-def-ghi", 8, "abc-def-|ghi")]
+        [DataRow("abc-defghijklmnop", 7, "abc-|defghij|klmnop")]
+        [DataRow("abcdef-ghij", 7, "abcdef-|ghij")]
+        [DataRow("abcdefg-hij", 7, "abcdefg|-hij")]
+        [DataRow("-abcdefgh", 7, "-abcdef|gh")]
+        [DataRow("abc-def", 7, "abc-def")]
+        [DataRow("one abc-defgh", 7, "one|abc-|defgh")]
+        public void Wrap_PrefersHyphensWhenSplittingLongWords(string text, int columns, string expected)
+        {
+            var lines = MessageText.Wrap(text, columns, 10, "hyphenated word");
+            Assert.AreEqual(expected, string.Join("|", lines));
+            Assert.AreEqual(text.Replace(" ", ""), string.Concat(lines).Replace(" ", ""));
+            Assert.IsTrue(lines.All(line => line.Length <= columns));
+        }
+
+        [TestMethod]
         public void EmptyMessage_HasNoLines()
         {
             Assert.IsEmpty(MessageText.Wrap("", 16, 1, "empty"));
@@ -157,8 +175,8 @@ namespace Freeserf.Test.Freeserf.Core
             CollectionAssert.AreEqual(new[] { 79, 89, 99, 109 }, unsaved.Select(line => line.Y).ToArray());
             Assert.IsTrue(quit.All(line => line.X == 8 && line.X + line.Text.Length * 8 <= 136 && line.Y + 8 < 54));
             Assert.IsTrue(unsaved.All(line => line.X == 8 && line.X + line.Text.Length * 8 <= 136 && line.Y + 8 < 134));
-            Assert.AreEqual("  Yes        No", Strings.Popup_QuitChoices);
-            Assert.AreEqual("  Save  Yes  No", Strings.Popup_UnsavedQuitChoices);
+            Assert.IsTrue(PopupBox.GetQuitChoices(false).All(choice => choice.Y == 54));
+            Assert.IsTrue(PopupBox.GetQuitChoices(true).All(choice => choice.Y == 134));
         }
 
         [TestMethod]
