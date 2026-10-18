@@ -1485,41 +1485,69 @@ namespace Freeserf
                 numStonesNeeded += info.Stones;
             }
 
-            int remainingPlanks = (int)planks - (int)numPlanksNeeded;
-            int remainingStones = (int)stones - (int)numStonesNeeded;
-
-            if (remainingPlanks <= 0 || remainingStones <= 0)
+            // The materials which still have to be delivered to the construction sites of essential buildings.
+            foreach (var building in Game.GetPlayerBuildings(this))
             {
-                if (!EmergencyProgramActive)
+                if (building.IsDone || building.IsBurning ||
+                    (building.BuildingType != Building.Type.Lumberjack &&
+                     building.BuildingType != Building.Type.Stonecutter &&
+                     building.BuildingType != Building.Type.Sawmill))
+                    continue;
+
+                numPlanksNeeded += GetMaterialsToDeliver(building, 0);
+                numStonesNeeded += GetMaterialsToDeliver(building, 1);
+            }
+
+            // The emergency program only helps if the essential buildings need the material.
+            // E.g. if there are no stones left but the essential buildings don't need stones
+            // (like a stonecutter which can not be built because there are no stones in the
+            // territory) the emergency program would block all other construction sites forever.
+            bool lackOfPlanks = numPlanksNeeded != 0 && planks <= numPlanksNeeded;
+            bool lackOfStones = numStonesNeeded != 0 && stones <= numStonesNeeded;
+
+            if (!lackOfPlanks && !lackOfStones)
+            {
+                EmergencyProgramActive = false;
+                return;
+            }
+
+            if (!EmergencyProgramActive)
+            {
+                EmergencyProgramActive = true;
+
+                if (EmergencyProgramActive) // Test if successful
                 {
-                    EmergencyProgramActive = true;
-
-                    if (EmergencyProgramActive) // Test if successful
+                    // If the emergency program gets activated we cancel all
+                    // transported resources to non-essential buildings.
+                    foreach (var building in Game.GetPlayerBuildings(this).ToArray())
                     {
-                        // If the emergency program gets activated we cancel all
-                        // transported resources to non-essential buildings.
-                        foreach (var building in Game.GetPlayerBuildings(this).ToArray())
+                        if (building.IsDone)
+                            continue;
+
+                        if (building.BuildingType != Building.Type.Lumberjack &&
+                            building.BuildingType != Building.Type.Sawmill &&
+                            building.BuildingType != Building.Type.Stonecutter)
                         {
-                            if (building.IsDone)
-                                continue;
+                            var flag = Game.GetFlag(building.FlagIndex);
 
-                            if (building.BuildingType != Building.Type.Lumberjack &&
-                                building.BuildingType != Building.Type.Sawmill &&
-                                building.BuildingType != Building.Type.Stonecutter)
-                            {
-                                var flag = Game.GetFlag(building.FlagIndex);
+                            if (flag != null)
+                                Game.FlagResetTransport(flag);
 
-                                if (flag != null)
-                                    Game.FlagResetTransport(flag);
-
-                                // Set priority for construction materials to 0
-                                building.SetPriorityInStock(0, 0u);
-                                building.SetPriorityInStock(1, 0u);
-                            }
+                            // Set priority for construction materials to 0
+                            building.SetPriorityInStock(0, 0u);
+                            building.SetPriorityInStock(1, 0u);
                         }
                     }
                 }
             }
+        }
+
+        static uint GetMaterialsToDeliver(Building building, int stockNumber)
+        {
+            uint maximum = building.GetMaximumInStock(stockNumber);
+            uint present = building.GetResourceCountInStock(stockNumber) + building.GetRequestedInStock(stockNumber);
+
+            return maximum > present ? maximum - present : 0u;
         }
 
         public void UpdateStats(int resource, int index)
