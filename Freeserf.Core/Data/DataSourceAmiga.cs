@@ -1030,8 +1030,28 @@ namespace Freeserf.Data
                         break;
                     }
                 case Data.Resource.PathGround:
-                    sprite = GetGroundSprite(index);
-                    break;
+                    {
+                        // There are no own path textures in the Amiga data. Using the ground
+                        // sprites with the same index (grass) made the roads invisible.
+                        // So we use the ground sprites which look like the DOS path textures.
+                        if (index >= PathGroundSprites.Length)
+                            break;
+
+                        uint groundIndex = PathGroundSprites[index];
+
+                        if (groundIndex == 32u) // water
+                        {
+                            var s = new SpriteAmiga(32, 21);
+                            s.Fill(new Sprite.Color { Blue = 0xBB, Green = 0x00, Red = 0x00, Alpha = 0xFF });
+                            sprite = s;
+                        }
+                        else
+                        {
+                            sprite = GetGroundSprite(groundIndex);
+                        }
+
+                        break;
+                    }
                 case Data.Resource.GameObject:
                     sprite = GetGameObjectSprite(15, index + 1);
                     break;
@@ -1389,6 +1409,10 @@ namespace Freeserf.Data
         Buffer sound;
         Buffer music;
         Buffer[] dataPointers = new Buffer[24];
+
+        // Ground sprites used as path textures (same order as the DOS path textures:
+        // three brightness levels for normal terrain, snow and desert, then water).
+        static readonly uint[] PathGroundSprites = [14, 13, 11, 23, 20, 17, 30, 27, 25, 32];
         Buffer[] pictures = new Buffer[14];
         List<uint> iconCatalog = new List<uint>();
 
@@ -1466,7 +1490,7 @@ namespace Freeserf.Data
             return DecodePlannedSprite(data.PopTail(), width, height, compression, filling, Palette);
         }
 
-        SpriteAmiga GetGroundSprite(uint index)
+        unsafe SpriteAmiga GetGroundSprite(uint index)
         {
             Buffer data = GetDataFromCatalog(4, index, gfxChip);
 
@@ -1478,7 +1502,37 @@ namespace Freeserf.Data
             byte filled = data.Pop<byte>();
             byte compressed = data.Pop<byte>();
 
-            SpriteAmiga sprite = DecodePlannedSprite(data.PopTail(), 4, 21, compressed, filled, Palette);
+            // Every stored bitplane holds 42 words. The original blits the texture
+            // with a source modulo of -2 (Amiga draw_landscape_cols @0x931e), so row
+            // r is made of words r and r+1, which gives 41 rows of 32 pixels. The
+            // landscape is drawn off screen and copied to the screen with the third
+            // bitplane inverted (blit_panel @0x19f78). Ported from freeserf.
+            const int GroundPlaneSize = 84;
+            const int GroundRows = GroundPlaneSize / 2 - 1;
+            var planes = data.PopTail();
+            var rows = new List<byte>(5 * GroundRows * 4);
+            uint planeOffset = 0;
+
+            for (int b = 0; b < 5; ++b)
+            {
+                if (((compressed >> b) & 0x01) != 0)
+                    continue;
+
+                for (int r = 0; r < GroundRows; ++r)
+                {
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        byte value = planes.Data[planeOffset + r * 2 + i];
+                        rows.Add(b == 2 ? (byte)~value : value);
+                    }
+                }
+
+                planeOffset += GroundPlaneSize;
+            }
+
+            filled ^= 0x04;
+
+            SpriteAmiga sprite = DecodePlannedSprite(new Buffer(rows.ToArray()), 4, GroundRows, compressed, filled, Palette);
 
             if (sprite != null)
             {
@@ -1552,9 +1606,10 @@ namespace Freeserf.Data
             result.SetOffset(sprite.OffsetX, sprite.OffsetY);
 
             fixed (byte* srcPointer = sprite.GetData())
+            fixed (byte* dstPointer = result.GetData())
             {
                 byte* srcPixels = srcPointer;
-                byte* dstPixels = srcPointer + result.Width * (result.Height - 1) * 4;
+                byte* dstPixels = dstPointer + result.Width * (result.Height - 1) * 4;
 
                 for (uint i = 0; i < sprite.Height; ++i)
                 {
