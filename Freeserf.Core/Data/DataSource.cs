@@ -25,8 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using StbImageSharp;
 
 namespace Freeserf.Data
 {
@@ -167,7 +166,7 @@ namespace Freeserf.Data
 
         public static Sprite CreateFromStream(Stream stream, Color? colorkey = null, KeyValuePair<Color, Color>? colorReplacing = null)
         {
-            var image = Image.Load<Rgba32>(stream);
+            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
             var sprite = new Sprite();
 
             sprite.width = (uint)image.Width;
@@ -191,23 +190,13 @@ namespace Freeserf.Data
             return sprite;
         }
 
-        private static byte[] GetImageData(Image<Rgba32> image, Color? colorkey, KeyValuePair<Color, Color>? colorReplacing)
+        private static byte[] GetImageData(ImageResult image, Color? colorkey, KeyValuePair<Color, Color>? colorReplacing)
         {
-            const int bytesPerPixel = 4;
-            byte[] data = new byte[image.Width * image.Height * bytesPerPixel];
-            int index = 0;
+            // The image data is RGBA, the sprite data BGRA.
+            byte[] data = image.Data;
 
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    Rgba32 pixel = image[x, y];
-                    data[index++] = pixel.B;
-                    data[index++] = pixel.G;
-                    data[index++] = pixel.R;
-                    data[index++] = pixel.A;
-                }
-            }
+            for (int i = 0; i < data.Length; i += 4)
+                (data[i], data[i + 2]) = (data[i + 2], data[i]);
 
             if (colorkey != null)
             {

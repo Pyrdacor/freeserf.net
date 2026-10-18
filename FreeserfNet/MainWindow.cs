@@ -25,7 +25,6 @@ using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.Window;
 using Silk.NET.Windowing;
-using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
 using System.Linq;
@@ -275,13 +274,9 @@ namespace Freeserf
             using var stream = asm.GetManifestResourceStream(resourceName)
                 ?? throw new Exception($"Resource not found: {resourceName}");
 
-            using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(stream);
+            var image = StbImageSharp.ImageResult.FromStream(stream, StbImageSharp.ColorComponents.RedGreenBlueAlpha);
 
-            // Copy pixels into a flat array
-            var data = new byte[image.Width * image.Height * 4];
-            image.CopyPixelDataTo(data);
-
-            return new RawImage(image.Width, image.Height, data);
+            return new RawImage(image.Width, image.Height, image.Data);
         }
 
         void SetWindowSizeLimits()
