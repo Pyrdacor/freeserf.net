@@ -2815,13 +2815,33 @@ namespace Freeserf.UI
         void DrawQuitConfirmBox()
         {
             SetParagraph(Strings.Popup_QuitQuestion, 8, 19, 3, "quit question");
-            clickableTextField = SetText(8, 54, Strings.Popup_QuitChoices);
+            foreach (var choice in GetQuitChoices(false))
+                SetText(choice.X, choice.Y, choice.Text);
         }
 
         void DrawNoSaveQuitConfirmBox()
         {
             SetParagraph(Strings.Popup_UnsavedQuitQuestion, 8, 79, 5, "unsaved quit question");
-            clickableTextField = SetText(8, 134, Strings.Popup_UnsavedQuitChoices);
+            foreach (var choice in GetQuitChoices(true))
+                SetText(choice.X, choice.Y, choice.Text);
+        }
+
+        internal static ChoiceText[] GetQuitChoices(bool unsaved) => unsaved
+            ? ChoiceText.Layout(134, Strings.Popup_QuitSave, Strings.Popup_QuitYes, Strings.Popup_QuitNo)
+            : ChoiceText.Layout(54, Strings.Popup_QuitYes, Strings.Popup_QuitNo);
+
+        internal static Action? GetQuitChoiceAction(bool unsaved, int x, int y)
+        {
+            int index = ChoiceText.HitTest(GetQuitChoices(unsaved), x, y);
+            return (unsaved, index) switch
+            {
+                (false, 0) => Action.QuitConfirm,
+                (false, 1) => Action.QuitCancel,
+                (true, 0) => Action.SaveAndQuit,
+                (true, 1) => Action.NoSaveQuitConfirm,
+                (true, 2) => Action.QuitCancel,
+                _ => null
+            };
         }
 
         void DrawExtendedOptionsBox(Action closeAction)
@@ -5106,52 +5126,19 @@ namespace Freeserf.UI
 
                 return true;
             }
-            else if (Box == Type.QuitConfirm && clickableTextField != null)
+            else if (Box == Type.QuitConfirm || Box == Type.NoSaveQuitConfirm)
             {
-                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
-                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
+                var action = GetQuitChoiceAction(Box == Type.NoSaveQuitConfirm, x - TotalX, y - TotalY);
+                if (action == Action.QuitConfirm && GameManager.Instance.NeedSave() &&
+                    interf.AccessRights == Viewer.Access.Player)
                 {
-                    int relativeX = x - clickableTextField.TotalX;
-
-                    if (relativeX >= 16 && relativeX < 16 + 24) // Yes
-                    {
-                        // TODO: who saves in multiplayer games? The server?
-                        // TODO: What happens if the server leaves the game?
-                        if (GameManager.Instance.NeedSave() && interf.AccessRights == Viewer.Access.Player)
-                            SetBox(Type.NoSaveQuitConfirm);
-                        else
-                            HandleAction(Action.QuitConfirm, x, y);
-                    }
-                    else if (relativeX >= 16 + 24 + 64 && relativeX < 16 + 24 + 64 + 16) // No
-                    {
-                        HandleAction(Action.QuitCancel, x, y);
-                    }
-
-                    return true;
+                    SetBox(Type.NoSaveQuitConfirm);
                 }
-            }
-            else if (Box == Type.NoSaveQuitConfirm && clickableTextField != null)
-            {
-                if (x >= clickableTextField.TotalX && x < clickableTextField.TotalX + clickableTextField.Width &&
-                    y >= clickableTextField.TotalY && y < clickableTextField.TotalY + clickableTextField.Height)
+                else if (action.HasValue)
                 {
-                    int relativeX = x - clickableTextField.TotalX;
-
-                    if (relativeX >= 16 && relativeX < 16 + 32) // Save
-                    {
-                        HandleAction(Action.SaveAndQuit, x, y);
-                    }
-                    else if (relativeX >= 16 + 32 + 16 && relativeX < 16 + 32 + 16 + 24) // Yes
-                    {
-                        HandleAction(Action.NoSaveQuitConfirm, x, y);
-                    }
-                    else if (relativeX >= 16 + 32 + 16 + 24 + 16 && relativeX < 16 + 32 + 16 + 24 + 16 + 16) // No
-                    {
-                        HandleAction(Action.QuitCancel, x, y);
-                    }
-
-                    return true;
+                    HandleAction(action.Value, x, y);
                 }
+                return true;
             }
 
             base.HandleClickLeft(x, y, delayed);

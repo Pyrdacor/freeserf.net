@@ -220,8 +220,10 @@
   <data name="Popup_OrderedBuilding" xml:space="preserve"><value>Auftrag der&#xA;Baustelle:</value></data>
   <data name="Popup_PathwayScrolling" xml:space="preserve"><value>Wegebau-&#xA;scrolling</value></data>
   <data name="Popup_Percentage" xml:space="preserve"><value>{0}%</value><comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment></data>
-  <data name="Popup_QuitChoices" xml:space="preserve"><value>  Ja        Nein</value></data>
+  <data name="Popup_QuitNo" xml:space="preserve"><value>Nein</value></data>
   <data name="Popup_QuitQuestion" xml:space="preserve"><value>Wollen Sie dieses Spiel beenden?</value></data>
+  <data name="Popup_QuitSave" xml:space="preserve"><value>Sich.</value><comment>Short label for saving and quitting in a three-choice row.</comment></data>
+  <data name="Popup_QuitYes" xml:space="preserve"><value>Ja</value></data>
   <data name="Popup_RedVictory" xml:space="preserve"><value>   DIE ROTEN&#xA; SIEDLER LIEGEN&#xA; UNEINHOLBAR IN&#xA;    FÜHRUNG</value></data>
   <data name="Popup_ResetMouseAfterScrolling" xml:space="preserve"><value>Maus danach&#xA;zentrieren</value></data>
   <data name="Popup_ResourceAmountAboveAverage" xml:space="preserve"><value>Über mittel</value></data>
@@ -249,7 +251,6 @@
   <data name="Popup_TutorialOrder6" xml:space="preserve"><value>Erobern Sie das gesamte Land des Gegners.</value></data>
   <data name="Popup_TutorialOrders" xml:space="preserve"><value>   AUFTRÄGE:</value></data>
   <data name="Popup_TutorialTitle" xml:space="preserve"><value>   TRAINING {0}</value><comment>{0}: tutorial level, 1 through 6.</comment></data>
-  <data name="Popup_UnsavedQuitChoices" xml:space="preserve"><value> Sich.  Ja  Nein</value></data>
   <data name="Popup_UnsavedQuitQuestion" xml:space="preserve"><value>Das Spiel wurde länger nicht gespeichert. Sind Sie sicher?</value></data>
   <data name="Popup_VioletVictory" xml:space="preserve"><value> DIE VIOLETTEN&#xA; SIEDLER LIEGEN&#xA; UNEINHOLBAR IN&#xA;    FÜHRUNG</value></data>
   <data name="Popup_Volume" xml:space="preserve"><value>Lautst.</value></data>

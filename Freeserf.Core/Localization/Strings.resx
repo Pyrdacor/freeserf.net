@@ -341,13 +341,12 @@
     <value>{0}%</value>
     <comment>{0}: integer mining output or knight morale percentage; no space before the percent sign.</comment>
   </data>
-  <data name="Popup_QuitChoices" xml:space="preserve">
-    <value>  Yes        No</value>
-    <comment>Fixed zero-based click columns: Yes at characters 2–4; No at 13–14. Preserve spacing and widths.</comment>
-  </data>
+  <data name="Popup_QuitNo" xml:space="preserve"><value>No</value></data>
   <data name="Popup_QuitQuestion" xml:space="preserve">
     <value>Do you want to quit this game?</value>
   </data>
+  <data name="Popup_QuitSave" xml:space="preserve"><value>Save</value><comment>Short label for saving and quitting in a three-choice row.</comment></data>
+  <data name="Popup_QuitYes" xml:space="preserve"><value>Yes</value></data>
   <data name="Popup_RedVictory" xml:space="preserve">
     <value>    THE RED&#xA; SETTLERS HAVE&#xA;   GAINED THE&#xA;  SUPERIORITY</value>
   </data>
@@ -430,10 +429,6 @@
   <data name="Popup_TutorialTitle" xml:space="preserve">
     <value>   TUTORIAL {0}</value>
     <comment>{0}: tutorial level, 1 through 6.</comment>
-  </data>
-  <data name="Popup_UnsavedQuitChoices" xml:space="preserve">
-    <value>  Save  Yes  No</value>
-    <comment>Fixed zero-based click columns: Save at characters 2–5; Yes at 8–10; No at 13–14. Preserve spacing and widths.</comment>
   </data>
   <data name="Popup_UnsavedQuitQuestion" xml:space="preserve">
     <value>The game has not been saved recently. Are you sure?</value>

@@ -187,17 +187,11 @@ namespace Freeserf.Test.Freeserf.Core
         }
 
         [TestMethod]
-        public void ChoiceRows_KeepExistingClickColumnsReachableWithinTheBox()
+        public void ChoiceLabels_UseShortGermanTranslations()
         {
-            Assert.AreEqual("  Ja        Nein", Strings.Popup_QuitChoices);
-            Assert.AreEqual(" Sich.  Ja  Nein", Strings.Popup_UnsavedQuitChoices);
-            Assert.AreEqual("Ja", Strings.Popup_QuitChoices.Substring(2, 2));
-            Assert.AreEqual("ei", Strings.Popup_QuitChoices.Substring(13, 2));
-            Assert.AreEqual("ich.", Strings.Popup_UnsavedQuitChoices.Substring(2, 4));
-            Assert.AreEqual("Ja", Strings.Popup_UnsavedQuitChoices.Substring(8, 2));
-            Assert.AreEqual("ei", Strings.Popup_UnsavedQuitChoices.Substring(13, 2));
-            Assert.AreEqual(16, Strings.Popup_QuitChoices.Length);
-            Assert.AreEqual(16, Strings.Popup_UnsavedQuitChoices.Length);
+            Assert.AreEqual("Ja", Strings.Popup_QuitYes);
+            Assert.AreEqual("Nein", Strings.Popup_QuitNo);
+            Assert.AreEqual("Sich.", Strings.Popup_QuitSave);
             Assert.AreEqual("Ja", Strings.Vote_Answer_Yes);
             Assert.AreEqual("Nein", Strings.Vote_Answer_No);
         }

@@ -52,9 +52,10 @@ namespace Freeserf.Test.Freeserf.Core
             ["Popup_KnightLevelFull", "Full"],
             ["Popup_KnightLevelError", "ERROR"],
             ["Popup_QuitQuestion", "Do you want to quit this game?"],
-            ["Popup_QuitChoices", "  Yes        No"],
+            ["Popup_QuitNo", "No"],
+            ["Popup_QuitSave", "Save"],
+            ["Popup_QuitYes", "Yes"],
             ["Popup_UnsavedQuitQuestion", "The game has not been saved recently. Are you sure?"],
-            ["Popup_UnsavedQuitChoices", "  Save  Yes  No"],
             ["Popup_FastMapclick", "Fast\nMapclick"],
             ["Popup_FastBuilding", "Fast\nBuilding"],
             ["Popup_MessagesAll", "All"],
@@ -152,15 +153,11 @@ namespace Freeserf.Test.Freeserf.Core
         }
 
         [TestMethod]
-        public void ChoiceLabels_PreserveFixedClickColumns()
+        public void ChoiceLabels_AreSeparateResources()
         {
-            Assert.AreEqual(15, Strings.Popup_QuitChoices.Length);
-            Assert.AreEqual("Yes", Strings.Popup_QuitChoices.Substring(16 / 8, 24 / 8));
-            Assert.AreEqual("No", Strings.Popup_QuitChoices.Substring(104 / 8, 16 / 8));
-            Assert.AreEqual(15, Strings.Popup_UnsavedQuitChoices.Length);
-            Assert.AreEqual("Save", Strings.Popup_UnsavedQuitChoices.Substring(16 / 8, 32 / 8));
-            Assert.AreEqual("Yes", Strings.Popup_UnsavedQuitChoices.Substring(64 / 8, 24 / 8));
-            Assert.AreEqual("No", Strings.Popup_UnsavedQuitChoices.Substring(104 / 8, 16 / 8));
+            Assert.AreEqual("Yes", Strings.Popup_QuitYes);
+            Assert.AreEqual("No", Strings.Popup_QuitNo);
+            Assert.AreEqual("Save", Strings.Popup_QuitSave);
         }
 
         [TestMethod]
