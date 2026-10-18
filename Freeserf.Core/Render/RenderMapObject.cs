@@ -32,6 +32,7 @@ namespace Freeserf.Render
         DataSource dataSource = null;
         static Dictionary<uint, Position> spriteOffsets = null;
         static Dictionary<uint, Position> shadowSpriteOffsets = null;
+        uint lastSpriteIndex = uint.MaxValue;
 
         public RenderMapObject(Map.Object objectType, IRenderLayer renderLayer, ISpriteFactory spriteFactory, DataSource dataSource)
             : base(renderLayer, spriteFactory, dataSource)
@@ -79,7 +80,9 @@ namespace Freeserf.Render
             shadowSprite = spriteFactory.Create(shadowInfo.Width, shadowInfo.Height, 0, 0, false, false);
         }
 
-        public void Update(uint tick, RenderMap map, uint position)
+        // The position only has to be updated if the map was scrolled. Otherwise
+        // only the animation of trees changes the sprite.
+        public void Update(uint tick, RenderMap map, uint position, bool updatePosition)
         {
             uint spriteIndex = (uint)objectType - 8;
 
@@ -99,6 +102,11 @@ namespace Freeserf.Render
                     spriteIndex = (uint)((spriteIndex & ~3) + (treeAnim & 3));
                 }
             }
+
+            if (!updatePosition && spriteIndex == lastSpriteIndex)
+                return;
+
+            lastSpriteIndex = spriteIndex;
 
             // the tree sprite sizes are the same per tree type, so no resize is necessary
 
@@ -137,6 +145,7 @@ namespace Freeserf.Render
             }
 
             this.objectType = objectType;
+            lastSpriteIndex = uint.MaxValue;
 
             uint spriteIndex = (uint)objectType - 8;
 

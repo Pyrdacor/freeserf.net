@@ -88,6 +88,16 @@ namespace Freeserf
         readonly ConcurrentDictionary<long, Render.RenderRoadSegment> renderRoadSegments = new ConcurrentDictionary<long, Render.RenderRoadSegment>();
         readonly ConcurrentDictionary<long, Render.RenderBorderSegment> renderBorderSegments = new ConcurrentDictionary<long, Render.RenderBorderSegment>();
         readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
+        // The render positions of roads, borders and map objects only change if the map is scrolled
+        // (or the height of a map position changes, see OnHeightChanged).
+        Render.RenderMap lastRenderMap = null;
+        uint lastScrollX = 0;
+        uint lastScrollY = 0;
+        bool mapScrolled = true;
+        // Reused for the updates to avoid allocations every tick.
+        readonly List<Flag> flagUpdateList = new List<Flag>();
+        readonly List<Building> buildingUpdateList = new List<Building>();
+        readonly List<Serf> serfUpdateList = new List<Serf>();
 
         [Data]
         private readonly GameState state = new GameState();
@@ -644,6 +654,8 @@ namespace Freeserf
         {
             if (Map?.RenderMap != null)
                 Map.RenderMap.UpdateWaves(Tick);
+
+            CheckMapScrolled();
 
             UpdateRoads();
             UpdateBorders();
@@ -1952,11 +1964,16 @@ namespace Freeserf
                 {
                     if (!renderBorderSegments.ContainsKey(index))
                     {
-                        if (!renderBorderSegments.TryAdd(index, new Render.RenderBorderSegment(Map, position, direction,
-                            renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource)))
+                        var renderBorderSegment = new Render.RenderBorderSegment(Map, position, direction,
+                            renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+
+                        if (!renderBorderSegments.TryAdd(index, renderBorderSegment))
                         {
                             throw new ExceptionFreeserf(ErrorSystemType.Application, "Unable to add render border segment.");
                         }
+
+                        if (Map.RenderMap != null)
+                            renderBorderSegment.Update(Map.RenderMap);
                     }
                 }
                 else
@@ -2748,33 +2765,65 @@ namespace Freeserf
             }
         }
 
+        void CheckMapScrolled()
+        {
+            var renderMap = Map?.RenderMap;
+
+            if (renderMap == null)
+            {
+                lastRenderMap = null;
+                mapScrolled = false;
+                return;
+            }
+
+            mapScrolled = renderMap != lastRenderMap || renderMap.ScrollX != lastScrollX || renderMap.ScrollY != lastScrollY;
+            lastRenderMap = renderMap;
+            lastScrollX = renderMap.ScrollX;
+            lastScrollY = renderMap.ScrollY;
+        }
+
         void UpdateMapObjects()
         {
-            foreach (var renderObject in renderObjects.ToArray())
-                renderObject.Value.Update(Tick, Map.RenderMap, renderObject.Key);
+            // Note: Enumerating a concurrent dictionary is safe without copying it.
+            foreach (var renderObject in renderObjects)
+                renderObject.Value.Update(Tick, Map.RenderMap, renderObject.Key, mapScrolled);
         }
 
         void UpdateFlags()
         {
-            foreach (var flag in Flags.ToList())
+            // flag.Update() may change the collection, so we use a copied list here.
+            flagUpdateList.Clear();
+            flagUpdateList.AddRange(Flags);
+
+            foreach (var flag in flagUpdateList)
             {
                 flag.Update();
 
-                if (flag.Index > 0u && renderFlags.ContainsKey(flag))
-                    renderFlags[flag]?.Update(Tick, Map.RenderMap, flag.Position);
+                if (flag.Index > 0u && renderFlags.TryGetValue(flag, out var renderFlag))
+                    renderFlag?.Update(Tick, Map.RenderMap, flag.Position);
             }
+
+            flagUpdateList.Clear();
         }
 
         void UpdateRoads()
         {
-            foreach (var renderRoadSegment in renderRoadSegments.ToArray())
+            // New road segments are positioned when they are added.
+            if (!mapScrolled)
+                return;
+
+            foreach (var renderRoadSegment in renderRoadSegments)
                 renderRoadSegment.Value?.Update(Map.RenderMap);
         }
 
         void UpdateBorders()
         {
-            foreach (var renderBorderSegment in renderBorderSegments.ToArray())
-                renderBorderSegment.Value.Update(Map.RenderMap);
+            // New border segments are positioned when they are added.
+            if (!mapScrolled)
+                return;
+
+            foreach (var renderBorderSegment in renderBorderSegments)
+                renderBorderSegment.Value?.Update(Map.RenderMap);
         }
 
         // This is called after loading a game.
@@ -2913,7 +2962,9 @@ namespace Freeserf
             // collection while we iterate through it!
 
             // Therefore we use a copied list here.
-            var buildingList = Buildings.ToList();
+            var buildingList = buildingUpdateList;
+            buildingList.Clear();
+            buildingList.AddRange(Buildings);
 
             for (int i = 0; i < buildingList.Count; ++i)
             {
@@ -2921,22 +2972,24 @@ namespace Freeserf
 
                 if (buildingList[i].Index > 0u)
                 {
-                    if (renderBuildings.ContainsKey(buildingList[i]))
+                    if (renderBuildings.TryGetValue(buildingList[i], out var renderBuilding))
                     {
                         // if a building burns we have to update its rendering so ensure that is is updated when visible
                         if (buildingList[i].IsBurning)
                         {
-                            if (renderBuildings[buildingList[i]].Visible)
+                            if (renderBuilding.Visible)
                             {
-                                if (!renderBuildingsInProgress.Contains(renderBuildings[buildingList[i]]))
-                                    renderBuildingsInProgress.Add(renderBuildings[buildingList[i]]);
+                                if (!renderBuildingsInProgress.Contains(renderBuilding))
+                                    renderBuildingsInProgress.Add(renderBuilding);
                             }
                         }
 
-                        renderBuildings[buildingList[i]].Update(Tick, Map.RenderMap, buildingList[i].Position);
+                        renderBuilding.Update(Tick, Map.RenderMap, buildingList[i].Position);
                     }
                 }
             }
+
+            buildingList.Clear();
 
             for (int i = renderBuildingsInProgress.Count - 1; i >= 0; --i)
             {
@@ -2952,17 +3005,21 @@ namespace Freeserf
             // collection while we iterate through it!
 
             // Therefore we use a copied list here.
-            var serfList = Serfs.ToList();
+            var serfList = serfUpdateList;
+            serfList.Clear();
+            serfList.AddRange(Serfs);
 
             for (int i = 0; i < serfList.Count; ++i)
             {
                 serfList[i].Update();
 
-                if (serfList[i].Index > 0u && renderSerfs.ContainsKey(serfList[i]))
+                if (serfList[i].Index > 0u && renderSerfs.TryGetValue(serfList[i], out var renderSerf))
                 {
-                    renderSerfs[serfList[i]].Update(this, renderView.DataSource, Tick, Map, serfList[i].Position);
+                    renderSerf.Update(this, renderView.DataSource, Tick, Map, serfList[i].Position);
                 }
             }
+
+            serfList.Clear();
         }
 
         void RecordPlayerHistory(int maxLevel, int aspect, int[] historyIndex, Values values)
@@ -4351,10 +4408,26 @@ namespace Freeserf
                     {
                         long index = Render.RenderRoadSegment.CreateIndex(checkPosition, direction);
 
-                        if (renderRoadSegments.ContainsKey(index))
-                            renderRoadSegments[index].UpdateAppearance();
+                        if (renderRoadSegments.TryGetValue(index, out var renderRoadSegment) && renderRoadSegment != null)
+                        {
+                            renderRoadSegment.UpdateAppearance();
+
+                            if (Map.RenderMap != null)
+                                renderRoadSegment.Update(Map.RenderMap);
+                        }
+                    }
+
+                    // The render positions depend on the height.
+                    if (Map.RenderMap != null &&
+                        renderBorderSegments.TryGetValue(Render.RenderBorderSegment.CreateIndex(checkPosition, direction), out var renderBorderSegment) &&
+                        renderBorderSegment != null)
+                    {
+                        renderBorderSegment.Update(Map.RenderMap);
                     }
                 }
+
+                if (Map.RenderMap != null && renderObjects.TryGetValue(checkPosition, out var renderObject) && renderObject != null)
+                    renderObject.Update(Tick, Map.RenderMap, checkPosition, true);
             }
         }
 
@@ -4551,6 +4624,8 @@ namespace Freeserf
 
             if (!renderRoadSegments.TryAdd(index, renderRoadSegment))
                 Log.Error.Write(ErrorSystemType.Game, $"Failed to add road segment at position {position} direction {direction}.");
+            else if (Map.RenderMap != null)
+                renderRoadSegment.Update(Map.RenderMap);
         }
 
         void RemoveRoadSegment(MapPos position, Direction direction)
