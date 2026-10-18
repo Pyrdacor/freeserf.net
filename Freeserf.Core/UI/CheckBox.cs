@@ -83,6 +83,8 @@ namespace Freeserf.UI
             {
                 base.Displayed = value;
 
+                checkButton.Displayed = value;
+                textField.Displayed = value;
                 textField.UpdateVisibility();
             }
         }
