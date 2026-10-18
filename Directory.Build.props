@@ -8,7 +8,7 @@
   <PropertyGroup>
     <FreeserfVersionMajor>2</FreeserfVersionMajor>
     <FreeserfVersionMinor>2</FreeserfVersionMinor>
-    <FreeserfVersionPatch>9</FreeserfVersionPatch>
+    <FreeserfVersionPatch>10</FreeserfVersionPatch>
 
     <Version>$(FreeserfVersionMajor).$(FreeserfVersionMinor).$(FreeserfVersionPatch)</Version>
     <AssemblyVersion>$(Version).0</AssemblyVersion>

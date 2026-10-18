@@ -13,9 +13,9 @@ Freeserf.net is a C# port and extension of [freeserf](https://github.com/freeser
 
 | Windows | Linux | macOS | Android |
 | ---- | ---- | ---- | ---- |
-| [v2.2.9](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.9/Freeserf.net-Windows.zip "Windows v2.2.9") | [v2.2.9](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.9/Freeserf.net-Linux.tar.gz "Linux v2.2.9") | [v2.2.9](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.9/Freeserf.dmg "macOS v2.2.9") | [v2.2.9](https://github.com/Pyrdacor/freeserf.net/releases/download/android-2.2.9/net.freeserf.android-Signed.apk "Android v2.2.9 APK") |
+| [v2.2.10](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.10/Freeserf.net-Windows.zip "Windows v2.2.10") | [v2.2.10](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.10/Freeserf.net-Linux.tar.gz "Linux v2.2.10") | [v2.2.10](https://github.com/Pyrdacor/freeserf.net/releases/download/v2.2.10/Freeserf.dmg "macOS v2.2.10") | [v2.2.10](https://github.com/Pyrdacor/freeserf.net/releases/download/android-2.2.10/net.freeserf.android-Signed.apk "Android v2.2.10 APK") |
 
-Latest version 2.2.9 was released on 18th of October 2026. See the [changelog](https://github.com/Pyrdacor/freeserf.net/blob/master/changelog.txt) for what's new and all [releases](https://github.com/Pyrdacor/freeserf.net/releases) for older versions.
+Latest version 2.2.10 was released on 18th of October 2026. See the [changelog](https://github.com/Pyrdacor/freeserf.net/blob/master/changelog.txt) for what's new and all [releases](https://github.com/Pyrdacor/freeserf.net/releases) for older versions.
 
 Only recent Ubuntu versions are tested for the Linux version. The macOS version is a universal app (Apple Silicon and Intel).
 
@@ -28,7 +28,7 @@ Audio is provided by [BASS](https://www.un4seen.com/ "BASS"). The libraries are 
 
 ### Android
 
-Install the [APK](https://github.com/Pyrdacor/freeserf.net/releases/download/android-2.2.9/net.freeserf.android-Signed.apk "Android v2.2.9 APK") on your device (you may have to allow the installation from unknown sources). Android 5.0 or newer with OpenGL ES 3.0 is needed.
+Install the [APK](https://github.com/Pyrdacor/freeserf.net/releases/download/android-2.2.10/net.freeserf.android-Signed.apk "Android v2.2.10 APK") on your device (you may have to allow the installation from unknown sources). Android 5.0 or newer with OpenGL ES 3.0 is needed.
 
 The game data is not included. On the first start you can either download it from Ubisoft Connect if you own the game there (e.g. The Settlers - History Edition) or select your own data file. The game is controlled by touch: pinch to zoom, pan with one finger and long-press for the special click.
 

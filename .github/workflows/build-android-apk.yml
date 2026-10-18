@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to publish (e.g. android-2.2.9). Leave empty to only build and upload the artifact.'
+        description: 'Release tag to publish (e.g. android-2.2.10). Leave empty to only build and upload the artifact.'
         required: false
         default: ''
 
@@ -56,13 +56,11 @@ jobs:
 
           Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
 
-          ### What's new in 2.2.9
+          ### What's new in 2.2.10
 
-          - **Languages**: the game texts can be shown in English or German (see the options). Thanks to kadrim!
-          - **Android 15+/16**: devices with 16 KB memory pages are supported. Thanks to dos-ise!
-          - **AI**: better use of knights, builds at the border and resolves congested roads.
-          - **Fixes**: construction sites waiting forever in the emergency program, mines without food, flags drawn in front of buildings, the special click on the build button and more.
-          - **Amiga graphics**: the map tiles and roads are displayed properly now.
+          - **Large maps**: the largest map sizes are playable now and start much faster.
+          - **AI**: it looks for coal and iron with priority, so it can train knights and expand again.
+          - **Fixes**: the special click no longer triggers a normal click afterwards.
           - Same version number as the desktop version of freeserf.net.
 
           ### Install

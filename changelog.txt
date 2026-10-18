@@ -1,3 +1,19 @@
+Version 2.2.10:
+===============
+
+- Large maps are playable now: only the visible trees, stones etc. get render
+  objects (the game stuttered heavily with the largest map size), creating a
+  large map takes a few seconds instead of up to half a minute, and the AI
+  searches its territory faster
+- The AI prioritizes coal and iron if it has no mine for them (without them
+  there are no new knights): smart AIs know where the minerals are, build the
+  mines at the best spots and expand towards the minerals, and a miner of
+  another mine is freed if there is no miner and no pick left
+- A special click (left + right button) no longer triggers a normal click
+  afterwards (e.g. the map button opened the map after jumping to the castle)
+- ImageSharp was replaced by StbImageSharp (no known vulnerabilities)
+
+
 Version 2.2.9:
 ==============
 
