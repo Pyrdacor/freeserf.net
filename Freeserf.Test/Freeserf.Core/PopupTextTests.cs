@@ -82,22 +82,22 @@ namespace Freeserf.Test.Freeserf.Core
             ["Popup_State", "State:"],
             ["Popup_TransportInfo", "Transport Info:"],
             ["Popup_BuildingStock", "Stock of\nthis building:"],
-            ["Popup_MissionWon", "CONGRATULATIONS.\n  YOUR ENEMIES\n  RESIGN. YOU\n HAVE WON THIS\n    MISSION."],
-            ["Popup_MissionLost", "SORRY, ONLY ONE\nOF YOUR ENEMIES\nHAS GAINED THE\n SUPERIORITY IN\n  THIS MISSION"],
-            ["Popup_TutorialCompleted", "   WELL DONE.\n YOU COMPLETED\n THIS TUTORIAL\n     GAME."],
-            ["Popup_BlueVictory", "    THE BLUE\n SETTLERS HAVE\n   GAINED THE\n  SUPERIORITY"],
-            ["Popup_RedVictory", "    THE RED\n SETTLERS HAVE\n   GAINED THE\n  SUPERIORITY"],
-            ["Popup_VioletVictory", "  THE VIOLET\n SETTLERS HAVE\n   GAINED THE\n  SUPERIORITY"],
-            ["Popup_YellowVictory", "   THE YELLOW\n SETTLERS HAVE\n   GAINED THE\n  SUPERIORITY"],
+            ["Popup_MissionWon", "CONGRATULATIONS.\nYOUR ENEMIES\nRESIGN. YOU\nHAVE WON THIS\nMISSION."],
+            ["Popup_MissionLost", "SORRY, ONLY ONE\nOF YOUR ENEMIES\nHAS GAINED THE\nSUPERIORITY IN\nTHIS MISSION"],
+            ["Popup_TutorialCompleted", "WELL DONE.\nYOU COMPLETED\nTHIS TUTORIAL\nGAME."],
+            ["Popup_BlueVictory", "THE BLUE\nSETTLERS HAVE\nGAINED THE\nSUPERIORITY"],
+            ["Popup_RedVictory", "THE RED\nSETTLERS HAVE\nGAINED THE\nSUPERIORITY"],
+            ["Popup_VioletVictory", "THE VIOLET\nSETTLERS HAVE\nGAINED THE\nSUPERIORITY"],
+            ["Popup_YellowVictory", "THE YELLOW\nSETTLERS HAVE\nGAINED THE\nSUPERIORITY"],
             ["Popup_TutorialOrder1", "Build a guard hut and a guard tower and a fortress."],
             ["Popup_TutorialOrder2", "Produce five planks and five stones."],
             ["Popup_TutorialOrder3", "Produce five fish and five meat and five bread."],
             ["Popup_TutorialOrder4", "Smelt five steel bars and five gold bars."],
             ["Popup_TutorialOrder5", "Make ten weapons and ten tools."],
             ["Popup_TutorialOrder6", "Conquer all the land of the enemy."],
-            ["Popup_TutorialTitle", "   TUTORIAL {0}"],
-            ["Popup_TutorialOrders", "    ORDERS:"],
-            ["Popup_Demolish", "    Demolish:\n   Click here\n   if you are\n      sure"],
+            ["Popup_TutorialTitle", "TUTORIAL {0}"],
+            ["Popup_TutorialOrders", "ORDERS:"],
+            ["Popup_Demolish", "Demolish:\nClick here\nif you are\nsure"],
             ["Popup_SaveGame", "Save  Game"],
             ["Popup_SaveSuccess", "Game was saved\nsuccessfully."],
             ["Popup_SaveFail", "Game could not\nbe saved."],
@@ -161,25 +161,82 @@ namespace Freeserf.Test.Freeserf.Core
         }
 
         [TestMethod]
-        public void TextLayout_PreservesIrregularPositionsAndLeadingSpaces()
+        public void CenteredTextLayout_PreservesIrregularRowsWithoutPadding()
         {
             CollectionAssert.AreEqual(
                 new[]
                 {
                     (8, 13, "CONGRATULATIONS."),
-                    (8, 25, "  YOUR ENEMIES"),
-                    (8, 35, "  RESIGN. YOU"),
-                    (8, 45, " HAVE WON THIS"),
-                    (8, 55, "    MISSION.")
+                    (24, 25, "YOUR ENEMIES"),
+                    (28, 35, "RESIGN. YOU"),
+                    (20, 45, "HAVE WON THIS"),
+                    (40, 55, "MISSION.")
                 },
-                PopupBox.GetTextLayout(Strings.Popup_MissionWon,
-                    (8, 13), (8, 25), (8, 35), (8, 45), (8, 55)).ToArray());
+                PopupBox.GetCenteredTextLayout(Strings.Popup_MissionWon, 13, 25, 35, 45, 55).ToArray());
             CollectionAssert.AreEqual(
-                new[] { (8, 19, "    Demolish:"), (8, 39, "   Click here"), (8, 77, "   if you are"), (8, 95, "      sure") },
-                PopupBox.GetTextLayout(Strings.Popup_Demolish, (8, 19), (8, 39), (8, 77), (8, 95)).ToArray());
+                new[] { (36, 19, "Demolish:"), (32, 39, "Click here"), (32, 77, "if you are"), (56, 95, "sure") },
+                PopupBox.GetCenteredTextLayout(Strings.Popup_Demolish, 19, 39, 77, 95).ToArray());
             CollectionAssert.AreEqual(
-                new[] { (11, 33, "Game was loaded"), (22, 74, "successfully.") },
-                PopupBox.GetTextLayout(Strings.Popup_LoadSuccess, (11, 33), (22, 74)).ToArray());
+                new[] { (12, 33, "Game was loaded"), (20, 74, "successfully.") },
+                PopupBox.GetCenteredTextLayout(Strings.Popup_LoadSuccess, 33, 74).ToArray());
+            CollectionAssert.AreEqual(new[] { (16, 20, "  Left aligned") },
+                PopupBox.GetTextLayout("  Left aligned", (16, 20)).ToArray());
+        }
+
+        [TestMethod]
+        [DataRow("en")]
+        [DataRow("de")]
+        [DataRow("fr-FR")]
+        public void CenteredResources_HaveNoPaddingAndFitTheContentArea(string language)
+        {
+            var culture = CultureInfo.GetCultureInfo(language);
+            (string Key, int[] Rows)[] resources =
+            [
+                ("Popup_MissionWon", [13, 25, 35, 45, 55]),
+                ("Popup_MissionLost", [15, 25, 35, 45, 55]),
+                ("Popup_TutorialCompleted", [13, 25, 35, 45]),
+                ("Popup_BlueVictory", [15, 25, 35, 45]),
+                ("Popup_RedVictory", [15, 25, 35, 45]),
+                ("Popup_VioletVictory", [15, 25, 35, 45]),
+                ("Popup_YellowVictory", [15, 25, 35, 45]),
+                ("Popup_Demolish", [19, 39, 77, 95]),
+                ("Popup_SaveSuccess", [33, 74]),
+                ("Popup_SaveFail", [33, 74]),
+                ("Popup_LoadSuccess", [33, 74]),
+                ("Popup_LoadFail", [33, 74]),
+                ("Popup_TutorialTitle", [15]),
+                ("Popup_TutorialOrders", [35])
+            ];
+            foreach (var (key, rows) in resources)
+            {
+                string template = Strings.ResourceManager.GetString(key, culture);
+                Assert.IsNotNull(template, key);
+                for (int level = 1; level <= 6; ++level)
+                {
+                    string text = string.Format(culture, template, level);
+                    var layout = PopupBox.GetCenteredTextLayout(text, rows).ToArray();
+                    CollectionAssert.AreEqual(rows, layout.Select(line => line.Y).ToArray(), key);
+                    CollectionAssert.AreEqual(text.Split('\n'), layout.Select(line => line.Text).ToArray(), key);
+                    foreach (var line in layout)
+                    {
+                        Assert.AreEqual(line.Text.Trim(), line.Text, key);
+                        Assert.IsGreaterThanOrEqualTo(8, line.X, key);
+                        Assert.IsLessThanOrEqualTo(136, line.X + line.Text.Length * 8, key);
+                        Assert.AreEqual(144, line.X * 2 + line.Text.Length * 8, key);
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
+        public void CenteredTextLayout_RejectsOverflowAndIncorrectRowCounts()
+        {
+            Assert.ThrowsExactly<ExceptionFreeserf>(() =>
+                PopupBox.GetCenteredTextLayout(new string('X', 17), 15).ToArray());
+            Assert.ThrowsExactly<ExceptionFreeserf>(() =>
+                PopupBox.GetCenteredTextLayout("First\nSecond", 15).ToArray());
+            CollectionAssert.AreEqual(new[] { (8, 15, new string('X', 16)), (72, 25, "") },
+                PopupBox.GetCenteredTextLayout(new string('X', 16) + "\n", 15, 25).ToArray());
         }
 
         [TestMethod]
@@ -204,7 +261,7 @@ namespace Freeserf.Test.Freeserf.Core
             Assert.AreEqual("100%", PopupBox.FormatPercentage(100));
             Assert.AreEqual("1599%", PopupBox.FormatPercentage(1599));
             Assert.AreEqual(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de"
-                ? "   TRAINING 6" : "   TUTORIAL 6", PopupBox.FormatTutorialTitle(6));
+                ? "TRAINING 6" : "TUTORIAL 6", PopupBox.FormatTutorialTitle(6));
         }
 
         [TestMethod]
@@ -214,9 +271,9 @@ namespace Freeserf.Test.Freeserf.Core
         [DataRow(4)]
         [DataRow(5)]
         [DataRow(6)]
-        public void TutorialTitle_PreservesPaddingAndLevel(int level)
+        public void TutorialTitle_PreservesLevelWithoutPadding(int level)
         {
-            Assert.AreEqual("   TUTORIAL " + level.ToString(), PopupBox.FormatTutorialTitle(level));
+            Assert.AreEqual("TUTORIAL " + level.ToString(), PopupBox.FormatTutorialTitle(level));
         }
     }
 }

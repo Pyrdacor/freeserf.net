@@ -1125,6 +1125,24 @@ namespace Freeserf.UI
                 SetText(line.X, line.Y, line.Text);
         }
 
+        internal static IEnumerable<(int X, int Y, string Text)> GetCenteredTextLayout(
+            string text, params int[] rows)
+        {
+            foreach (var line in GetTextLayout(text, rows.Select(y => (8, y)).ToArray()))
+            {
+                int width = line.Text.Length * 8;
+                if (width > 128)
+                    MessageText.ReportLayoutError("centered popup text", $"needs {width} pixels but only 128 fit");
+                yield return (8 + (128 - width) / 2, line.Y, line.Text);
+            }
+        }
+
+        void SetCenteredText(string text, params int[] rows)
+        {
+            foreach (var line in GetCenteredTextLayout(text, rows))
+                SetText(line.X, line.Y, line.Text);
+        }
+
         internal static IEnumerable<(int X, int Y, string Text)> GetParagraphLayout(
             string text, int x, int y, int maxLines, string context)
         {
@@ -3584,24 +3602,22 @@ namespace Freeserf.UI
                 case (int)Game.GameType.Mission:
                     if (winner == 0)
                     {
-                        SetTextLines(Strings.Popup_MissionWon,
-                            (8, 13), (8, 25), (8, 35), (8, 45), (8, 55));
+                        SetCenteredText(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
                     }
                     else
                     {
-                        SetTextLines(Strings.Popup_MissionLost,
-                            (8, 15), (8, 25), (8, 35), (8, 45), (8, 55));
+                        SetCenteredText(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
                     }
                     break;
                 case (int)Game.GameType.Tutorial:
-                    SetTextLines(Strings.Popup_TutorialCompleted, (8, 13), (8, 25), (8, 35), (8, 45));
+                    SetCenteredText(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
                     break;
                 default:
                     string[] victoryMessages = {
                         Strings.Popup_BlueVictory, Strings.Popup_RedVictory,
                         Strings.Popup_VioletVictory, Strings.Popup_YellowVictory
                     };
-                    SetTextLines(victoryMessages[winner & 3], (8, 15), (8, 25), (8, 35), (8, 45));
+                    SetCenteredText(victoryMessages[winner & 3], 15, 25, 35, 45);
                     break;
             }
         }
@@ -3629,8 +3645,8 @@ namespace Freeserf.UI
                 return;
             }
 
-            SetText(8, 15, FormatTutorialTitle(level));
-            SetText(8, 35, Strings.Popup_TutorialOrders);
+            SetCenteredText(FormatTutorialTitle(level), 15);
+            SetCenteredText(Strings.Popup_TutorialOrders, 35);
 
             SetParagraph(orders[level - 1], 8, 55, 9, "tutorial orders");
         }
@@ -3640,7 +3656,7 @@ namespace Freeserf.UI
             SetButton(120, 137, 60u, Action.CloseBox); // exit button
             SetButton(64, 54, 288u, Action.Demolish); // checkbox
 
-            SetTextLines(Strings.Popup_Demolish, (8, 19), (8, 39), (8, 77), (8, 95));
+            SetCenteredText(Strings.Popup_Demolish, 19, 39, 77, 95);
         }
 
         void DrawBld1Box()
@@ -3712,20 +3728,20 @@ namespace Freeserf.UI
             switch (GameStore.Instance.LastOperationResult)
             {
                 case GameStore.LastOperationStatus.SaveSuccess:
-                    SetTextLines(Strings.Popup_SaveSuccess, (15, 33), (22, 74));
+                    SetCenteredText(Strings.Popup_SaveSuccess, 33, 74);
                     iconIndex = 288u;
                     closeAction = Action.QuitConfirm;
                     break;
                 case GameStore.LastOperationStatus.SaveFail:
-                    SetTextLines(Strings.Popup_SaveFail, (15, 33), (39, 74));
+                    SetCenteredText(Strings.Popup_SaveFail, 33, 74);
                     closeAction = Action.QuitCancel;
                     break;
                 case GameStore.LastOperationStatus.LoadSuccess:
-                    SetTextLines(Strings.Popup_LoadSuccess, (11, 33), (22, 74));
+                    SetCenteredText(Strings.Popup_LoadSuccess, 33, 74);
                     iconIndex = 288u;
                     break;
                 case GameStore.LastOperationStatus.LoadFail:
-                    SetTextLines(Strings.Popup_LoadFail, (15, 33), (34, 74));
+                    SetCenteredText(Strings.Popup_LoadFail, 33, 74);
                     break;
                 default:
                     SetRedraw();

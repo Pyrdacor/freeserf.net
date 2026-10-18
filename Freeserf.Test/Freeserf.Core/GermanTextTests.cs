@@ -199,17 +199,27 @@ namespace Freeserf.Test.Freeserf.Core
         [TestMethod]
         public void IrregularFixedLayouts_PreserveRowCountsAndFitActualCoordinates()
         {
-            CheckFixed(Strings.Popup_MissionWon, (8, 13), (8, 25), (8, 35), (8, 45), (8, 55));
-            CheckFixed(Strings.Popup_MissionLost, (8, 15), (8, 25), (8, 35), (8, 45), (8, 55));
-            CheckFixed(Strings.Popup_TutorialCompleted, (8, 13), (8, 25), (8, 35), (8, 45));
+            CheckCentered(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
+            CheckCentered(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
+            CheckCentered(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
             foreach (string text in new[] { Strings.Popup_BlueVictory, Strings.Popup_RedVictory,
                 Strings.Popup_VioletVictory, Strings.Popup_YellowVictory })
-                CheckFixed(text, (8, 15), (8, 25), (8, 35), (8, 45));
-            CheckFixed(Strings.Popup_Demolish, (8, 19), (8, 39), (8, 77), (8, 95));
-            CheckFixed(Strings.Popup_SaveSuccess, (15, 33), (22, 74));
-            CheckFixed(Strings.Popup_SaveFail, (15, 33), (39, 74));
-            CheckFixed(Strings.Popup_LoadSuccess, (11, 33), (22, 74));
-            CheckFixed(Strings.Popup_LoadFail, (15, 33), (34, 74));
+                CheckCentered(text, 15, 25, 35, 45);
+            CheckCentered(Strings.Popup_Demolish, 19, 39, 77, 95);
+            CheckCentered(Strings.Popup_SaveSuccess, 33, 74);
+            CheckCentered(Strings.Popup_SaveFail, 33, 74);
+            CheckCentered(Strings.Popup_LoadSuccess, 33, 74);
+            CheckCentered(Strings.Popup_LoadFail, 33, 74);
+        }
+
+        static void CheckCentered(string text, params int[] rows)
+        {
+            foreach (var line in PopupBox.GetCenteredTextLayout(text, rows))
+            {
+                Assert.IsGreaterThanOrEqualTo(8, line.X);
+                Assert.IsLessThanOrEqualTo(136, line.X + line.Text.Length * 8);
+                Assert.AreEqual(144, line.X * 2 + line.Text.Length * 8);
+            }
         }
 
         [TestMethod]
