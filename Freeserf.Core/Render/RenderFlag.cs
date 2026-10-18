@@ -36,7 +36,7 @@ namespace Freeserf.Render
         readonly ISprite[] resources = new ISprite[8];
         readonly ISpriteFactory spriteFactory = null;
         static Rect[] resourceSpriteInfos = null;
-        int maxBaseLine = 0;
+        int maxBaseLine = int.MinValue;
 
         static readonly int[] ResPos = new int[]
         {
@@ -130,12 +130,16 @@ namespace Freeserf.Render
             sprite.TextureAtlasOffset = textureAtlas.GetOffset(flagSpriteIndex);
             shadowSprite.TextureAtlasOffset = textureAtlas.GetOffset(1000u + spriteIndex);
 
-            int baseLine = sprite.Y + sprite.Height;
+            // The sprites of the flag animation have different heights. All of them use the
+            // lowest baseline so that the flag doesn't switch between being in front of and
+            // behind other objects. It must be relative to the flag position. Otherwise the
+            // flag would be drawn in front of buildings after scrolling the map.
+            int baseLine = sprite.Y + sprite.Height - renderPosition.Y;
 
             if (baseLine > maxBaseLine)
                 maxBaseLine = baseLine;
-            else if (baseLine < maxBaseLine)
-                sprite.BaseLineOffset = maxBaseLine - baseLine;
+
+            sprite.BaseLineOffset = maxBaseLine - baseLine;
 
             // resources
             for (int i = 0; i < 8; ++i)
