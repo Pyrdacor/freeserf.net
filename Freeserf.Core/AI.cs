@@ -811,6 +811,9 @@ namespace Freeserf
                 if (flag.HasDirectConnectionTo(otherFlag)) // TODO: maybe let this happen in special cases later
                     continue; // not link if already linked
 
+                if (WasRoadDemolished(flag.Position, otherFlag.Position))
+                    continue; // the road was demolished to avoid congestion
+
                 int distance = game.Map.Distance(flag.Position, otherFlag.Position);
 
                 if (distance > maxLength) // too far away
@@ -1136,6 +1139,81 @@ namespace Freeserf
         #endregion
 
 
+        #region Congestion
+
+        // Serfs which wait in front of a flag to step onto it. If a serf waits there for
+        // several minutes, the flag is congested (see AIStateAvoidCongestion). This is
+        // not saved. After loading a game the detection simply starts again.
+        Dictionary<uint, (uint Flag, Direction Direction, long Since)> waitingSerfs = new();
+        readonly Dictionary<uint, long> lastCongestionHandling = new();
+        long nextCongestionCheck = 0;
+        const int CongestionCheckInterval = 20 * Global.TICKS_PER_SEC;
+        const int CongestionWaitTime = 3 * Global.TICKS_PER_MIN;
+        const int CongestionHandlingInterval = 5 * Global.TICKS_PER_MIN;
+        const int DemolishedRoadMemoryTime = 30 * Global.TICKS_PER_MIN;
+        // Roads demolished to avoid congestion (by the positions of their flags).
+        readonly Dictionary<(MapPos, MapPos), long> demolishedRoads = new();
+
+        internal long LastRoadDemolition { get; set; } = -60 * Global.TICKS_PER_MIN;
+
+        static (MapPos, MapPos) RoadKey(MapPos flag1, MapPos flag2) => flag1 < flag2 ? (flag1, flag2) : (flag2, flag1);
+
+        internal void RememberDemolishedRoad(MapPos flag1, MapPos flag2)
+        {
+            demolishedRoads[RoadKey(flag1, flag2)] = GameTime;
+        }
+
+        // A road which was demolished to avoid congestion is not built again for a while.
+        internal bool WasRoadDemolished(MapPos flag1, MapPos flag2)
+        {
+            return demolishedRoads.TryGetValue(RoadKey(flag1, flag2), out var time) && GameTime - time < DemolishedRoadMemoryTime;
+        }
+
+        void CheckCongestion(Game game)
+        {
+            if (GameTime < nextCongestionCheck)
+                return;
+
+            nextCongestionCheck = GameTime + CongestionCheckInterval;
+
+            var stillWaitingSerfs = new Dictionary<uint, (uint Flag, Direction Direction, long Since)>();
+            Flag congestedFlag = null;
+
+            foreach (var flag in game.GetPlayerFlags(player))
+            {
+                foreach (var direction in DirectionCycleCW.CreateDefault())
+                {
+                    var serf = game.GetSerfAtPosition(game.Map.Move(flag.Position, direction));
+
+                    if (serf == null || serf.Player != player.Index || !serf.IsWaitingToMove(direction.Reverse()))
+                        continue;
+
+                    long since = GameTime;
+
+                    if (waitingSerfs.TryGetValue(serf.Index, out var entry) && entry.Flag == flag.Index && entry.Direction == direction)
+                        since = entry.Since;
+
+                    stillWaitingSerfs[serf.Index] = (flag.Index, direction, since);
+
+                    if (congestedFlag == null && GameTime - since >= CongestionWaitTime &&
+                        (!lastCongestionHandling.TryGetValue(flag.Index, out var lastHandling) || GameTime - lastHandling >= CongestionHandlingInterval))
+                    {
+                        congestedFlag = flag;
+                    }
+                }
+            }
+
+            waitingSerfs = stillWaitingSerfs;
+
+            if (congestedFlag != null && !states.Any(state => state is AIStates.AIStateAvoidCongestion))
+            {
+                lastCongestionHandling[congestedFlag.Index] = GameTime;
+                PushState(new AIStates.AIStateAvoidCongestion(congestedFlag.Index));
+            }
+        }
+
+        #endregion
+
         public void Update(Game game)
         {
             if (lastTick == 0)
@@ -1152,6 +1230,9 @@ namespace Freeserf
             {
                 GameTime += game.Tick - lastTick;
             }
+
+            if (player.HasCastle)
+                CheckCongestion(game);
 
             if (states.Count == 0)
             {

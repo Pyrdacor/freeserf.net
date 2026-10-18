@@ -694,7 +694,62 @@ namespace Freeserf.AIStates
             return Global.INVALID_MAPPOS;
         }
 
+        // Number of positions within a distance of 8 and 9 (see Map.PositionAddSpirally).
+        const uint PositionsInRadius8 = 217;
+        const uint PositionsInRadius9 = 271;
+        // A new military building should at least gain this many positions without owner.
+        const int MinLandGainForMilitaryBuilding = 10;
+
+        static int CountPositionsWithoutOwner(Map map, MapPos position, uint positionCount)
+        {
+            int count = 0;
+
+            for (uint i = 0; i < positionCount; ++i)
+            {
+                if (!map.HasOwner(map.PositionAddSpirally(position, i)))
+                    ++count;
+            }
+
+            return count;
+        }
+
+        // Finds a spot for a military building which gains as much land as possible.
+        // Instead of checking the whole border, only the area around the military buildings
+        // with the most land without owner nearby is checked. These are the buildings at
+        // the part of the border where the territory can still grow.
         uint FindSpotNearBorder(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
+        {
+            var map = game.Map;
+            var baseBuildings = game.GetPlayerBuildings(player)
+                .Where(building => building.IsMilitary())
+                .Select(building => new { Building = building, FreeLand = CountPositionsWithoutOwner(map, building.Position, PositionsInRadius9) })
+                .Where(entry => entry.FreeLand >= MinLandGainForMilitaryBuilding)
+                .OrderByDescending(entry => entry.FreeLand)
+                .Take(3)
+                .ToList();
+
+            if (baseBuildings.Count != 0)
+            {
+                var baseBuilding = baseBuildings[game.AIRandomInt() % baseBuildings.Count].Building;
+
+                bool CheckSpot(Map map, MapPos position) =>
+                    game.CanBuildBuilding(position, type, player) && !map.HasAnyInArea(position, 3, FindMilitary, 1);
+
+                // Lower is better, so the land gain is negated.
+                int RateSpot(Map map, MapPos position) =>
+                    -CountPositionsWithoutOwner(map, position, PositionsInRadius8);
+
+                var spot = map.FindSpotNear(baseBuilding.Position, 9, CheckSpot, RateSpot);
+
+                if (spot != Global.INVALID_MAPPOS && CountPositionsWithoutOwner(map, spot, PositionsInRadius8) >= MinLandGainForMilitaryBuilding)
+                    return spot;
+            }
+
+            // The territory can't grow anymore (e.g. it is surrounded by enemies).
+            return FindSpotNearOtherMilitaryBuildings(game, player, intelligence, maxInArea);
+        }
+
+        uint FindSpotNearOtherMilitaryBuildings(Game game, Player player, int intelligence, int maxInArea = int.MaxValue)
         {
             var militaryBuildings = game.GetPlayerBuildings(player).Where(building => building.IsMilitary());
             var possibleBaseBuildings = new List<Building>();

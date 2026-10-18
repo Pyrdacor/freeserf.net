@@ -1725,15 +1725,25 @@ namespace Freeserf
         };
 
         // Update land ownership around map position. 
-        internal void UpdateLandOwnership(MapPos position)
+        // Currently the land ownership algorithm will only work when
+        // both influence radius and calculate radius are 8.
+        const int LandInfluenceRadius = 8;
+        const int LandCalculateRadius = LandInfluenceRadius;
+        const int LandCalculateDiameter = 1 + 2 * LandCalculateRadius;
+
+        /// <summary>
+        /// Calculates the owners of the 17*17 square around the given position
+        /// without changing anything. The result contains the player index or -1
+        /// for each position (row by row). A given building is ignored, so it can
+        /// be checked what would happen without it.
+        /// </summary>
+        int[] CalculateLandOwners(MapPos position, Building ignoredBuilding = null)
         {
-            // Currently the below algorithm will only work when
-            // both influence_radius and calculate_radius are 8.
-            const int influenceRadius = 8;
+            const int influenceRadius = LandInfluenceRadius;
             const int influenceDiameter = 1 + 2 * influenceRadius;
 
-            int calculateRadius = influenceRadius;
-            int calculateDiameter = 1 + 2 * calculateRadius;
+            int calculateRadius = LandCalculateRadius;
+            int calculateDiameter = LandCalculateDiameter;
 
             int tempArraySize = calculateDiameter * calculateDiameter * Players.Size;
             var tempArray = new int[tempArraySize];
@@ -1751,6 +1761,10 @@ namespace Freeserf
                     if (Map.HasBuilding(checkPosition))
                     {
                         var building = GetBuildingAtPosition(checkPosition);
+
+                        if (building == ignoredBuilding)
+                            continue;
+
                         int militaryType = -1;
 
                         if (building.BuildingType == Building.Type.Castle)
@@ -1803,7 +1817,9 @@ namespace Freeserf
                 }
             }
 
-            // Update owner of 17*17 square. 
+            // Find the owner of each position of the 17*17 square.
+            var owners = new int[calculateDiameter * calculateDiameter];
+
             for (int i = -calculateRadius; i <= calculateRadius; ++i)
             {
                 for (int j = -calculateRadius; j <= calculateRadius; ++j)
@@ -1823,6 +1839,48 @@ namespace Freeserf
                         }
                     }
 
+                    owners[calculateDiameter * (i + calculateRadius) + (j + calculateRadius)] = playerIndex;
+                }
+            }
+
+            return owners;
+        }
+
+        /// <summary>
+        /// Checks if the owner of every position stays the same when the
+        /// given military building is removed. A building only influences
+        /// the 17*17 square around it.
+        /// </summary>
+        internal bool IsLandOwnershipKeptWithout(Building building)
+        {
+            var owners = CalculateLandOwners(building.Position, building);
+
+            for (int i = -LandCalculateRadius; i <= LandCalculateRadius; ++i)
+            {
+                for (int j = -LandCalculateRadius; j <= LandCalculateRadius; ++j)
+                {
+                    var checkPosition = Map.PositionAdd(building.Position, j, i);
+                    int oldPlayer = Map.HasOwner(checkPosition) ? (int)Map.GetOwner(checkPosition) : -1;
+
+                    if (owners[LandCalculateDiameter * (i + LandCalculateRadius) + (j + LandCalculateRadius)] != oldPlayer)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        internal void UpdateLandOwnership(MapPos position)
+        {
+            int calculateRadius = LandCalculateRadius;
+            var owners = CalculateLandOwners(position);
+
+            // Update owner of 17*17 square.
+            for (int i = -calculateRadius; i <= calculateRadius; ++i)
+            {
+                for (int j = -calculateRadius; j <= calculateRadius; ++j)
+                {
+                    int playerIndex = owners[LandCalculateDiameter * (i + calculateRadius) + (j + calculateRadius)];
                     var checkPosition = Map.PositionAdd(position, j, i);
                     int oldPlayer = -1;
 
@@ -2279,6 +2337,15 @@ namespace Freeserf
         }
 
         public int PlayerCount => Players.Size;
+
+        /// <summary>
+        /// Knights which are not in a military building: the knights in the
+        /// stocks and the knights which defend the castle.
+        /// </summary>
+        internal int GetKnightCountInInventories(Player player)
+        {
+            return knights[player.Index].Count(k => k.SerfState == Serf.State.IdleInStock) + (int)player.CastleKnights;
+        }
 
         internal int GetFreeKnightCount(Player player)
         {

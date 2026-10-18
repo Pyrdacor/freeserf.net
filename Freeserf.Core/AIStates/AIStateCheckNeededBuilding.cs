@@ -375,8 +375,10 @@ namespace Freeserf.AIStates
                             return CheckResult.Needed;
                         break;
                     case Building.Type.WeaponSmith:
+                        // Also build it if there is steel. Otherwise the AI could stay in hard times
+                        // forever as it needs a weaponsmith to get out of them.
                         if (count == 0 && player.GetCompletedBuildingCount(Building.Type.ToolMaker) != 0 &&
-                            game.GetPossibleFreeKnightCount(player) < 4)
+                            (game.GetPossibleFreeKnightCount(player) < 4 || game.GetResourceAmountInInventories(player, Resource.Type.Steel) != 0))
                             return CheckResult.Needed;
                         break;
                 }

@@ -19,6 +19,7 @@
  * along with freeserf.net. If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System;
 using System.Linq;
 
 namespace Freeserf.AIStates
@@ -82,7 +83,15 @@ namespace Freeserf.AIStates
                     additionalKnights += (uint)(ai.GameTime / ((60 - Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) * 10) * Global.TICKS_PER_MIN));
                 }
 
-                player.SetCastleKnightsWanted(3u + (uint)Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) + additionalKnights);
+                uint castleKnightsWanted = 3u + (uint)Misc.Max(ai.DefendFocus, ai.MilitaryFocus, ai.MilitarySkill) + additionalKnights;
+
+                // The castle must not keep the knights which are needed to expand. So it keeps at most
+                // a third of the knights in the inventories (at least 3 if there are more than 3).
+                // Otherwise the castle took every new knight in longer games and the AI stopped expanding.
+                int knightsInInventories = game.GetKnightCountInInventories(player);
+                uint maxCastleKnights = knightsInInventories > 3 ? (uint)Math.Max(3, knightsInInventories / 3) : 1u;
+
+                player.SetCastleKnightsWanted(Math.Min(castleKnightsWanted, maxCastleKnights));
             }
 
             // TODO: flag/inventory prios

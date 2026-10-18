@@ -4513,6 +4513,13 @@ namespace Freeserf
             return resource > Resource.Type.None && destination != 0;
         }
 
+        internal bool IsWaitingToMove(Direction direction)
+        {
+            var waitingDirection = Direction.None;
+
+            return IsWaiting(ref waitingDirection) && waitingDirection == direction;
+        }
+
         bool SwitchWaiting(Direction direction)
         {
             if ((SerfState == State.Transporting || SerfState == State.Walking ||
