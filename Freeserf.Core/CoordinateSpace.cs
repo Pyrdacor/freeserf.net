@@ -102,26 +102,33 @@ namespace Freeserf
                 y += mapHeight;
             }*/
 
-            while (y < 0)
+            // Positions a bit above or left of the view are not wrapped to the other
+            // side of the map. Otherwise sprites which reach into the view from there
+            // (like road segments which start above the view) would be cut off.
+            while (y < -ViewMarginY)
             {
                 x -= mapWidth / columnRowFactor;
                 y += mapHeight;
             }
 
-            while (y >= mapHeight)
+            while (y >= mapHeight - ViewMarginY)
             {
                 x += mapWidth / columnRowFactor;
                 y -= mapHeight;
             }
 
-            while (x < 0)
+            while (x < -ViewMarginX)
                 x += mapWidth;
 
-            while (x >= mapWidth)
+            while (x >= mapWidth - ViewMarginX)
                 x -= mapWidth;
 
             return new Position(x, y);
         }
+
+        // Large enough for road segments with the maximum height difference.
+        const int ViewMarginX = 2 * RenderMap.TILE_WIDTH;
+        const int ViewMarginY = 8 * RenderMap.TILE_HEIGHT;
 
         public Position MapSpaceToViewSpace(Position position)
         {
