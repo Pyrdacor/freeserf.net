@@ -56,6 +56,9 @@ namespace Freeserf
         static (int MonitorIndex, int X, int Y, int Width, int Height)? configuredWindowArea = null;
         static Data.DataSource dataSource = null;
         bool scrolled = false;
+        // After a special click (left + right) the clicks of the released buttons are ignored.
+        // Otherwise e.g. the map button would open the map after jumping to the castle.
+        bool specialClickActive = false;
         Vector2D<int> clickPosition = Vector2D<int>.Zero;
 
         private MainWindow(WindowOptions options)
@@ -812,6 +815,10 @@ namespace Freeserf
         {
             UpdateMouseState(button, true);
 
+            // A new click starts.
+            if (!pressedMouseButtons[(int)MouseButtonIndex.Left] || !pressedMouseButtons[(int)MouseButtonIndex.Right])
+                specialClickActive = false;
+
             clickPosition = position;
 
             // left + right = special click
@@ -822,6 +829,7 @@ namespace Freeserf
                     if (pressedMouseButtons[(int)MouseButtonIndex.Left] &&
                         pressedMouseButtons[(int)MouseButtonIndex.Right])
                     {
+                        specialClickActive = true;
                         gameView?.NotifySpecialClick(position.X, position.Y);
                     }
                     else
@@ -854,6 +862,15 @@ namespace Freeserf
                     pressedMouseButtons[(int)MouseButtonIndex.Right]
                 )
                 return; // special clicks are handled in OnMouseDown
+
+                if (specialClickActive)
+                {
+                    // The click of a button released after a special click.
+                    if (!pressedMouseButtons[(int)MouseButtonIndex.Left] && !pressedMouseButtons[(int)MouseButtonIndex.Right])
+                        specialClickActive = false;
+
+                    return;
+                }
             }
 
             try
