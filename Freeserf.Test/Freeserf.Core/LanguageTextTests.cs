@@ -157,6 +157,14 @@ namespace Freeserf.Test.Freeserf.Core
         public void Selector_CyclesAllSupportedPreferences(string current, string next)
         {
             Assert.AreEqual(next, LanguageSettings.Next(current));
+            Assert.AreEqual(current, LanguageSettings.Previous(next));
+        }
+
+        [TestMethod]
+        public void Selector_RejectsUnsupportedPreferencesInBothDirections()
+        {
+            Assert.ThrowsExactly<ArgumentException>(() => LanguageSettings.Next("fr"));
+            Assert.ThrowsExactly<ArgumentException>(() => LanguageSettings.Previous("fr"));
         }
 
         [TestMethod]
@@ -167,7 +175,7 @@ namespace Freeserf.Test.Freeserf.Core
         {
             UserConfig.Game.Language = language;
             Assert.IsTrue(16 + Strings.Popup_Language.Length * 8 <= 136);
-            Assert.IsTrue(16 + LanguageSettings.DisplayName.Length * 8 <= 112);
+            Assert.IsTrue(16 + LanguageSettings.DisplayName.Length * 8 <= 96);
         }
     }
 }

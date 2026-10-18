@@ -64,8 +64,9 @@ ResetCursorAfterScrolling = Bit 9 -> 512 // After map scrolling ends, place the 
 ### Language
 
 The first options page (available from game setup and during play on both
-desktop and Android) has a language row. Its arrow cycles through **System**,
-**English**, and **German**. Changes apply immediately without restarting.
+desktop and Android) has a language row. Minus selects the previous language
+and plus selects the next, cycling through **System**, **English**, and
+**German** in either direction. Changes apply immediately without restarting.
 
 The `[game]` setting `language` accepts:
 

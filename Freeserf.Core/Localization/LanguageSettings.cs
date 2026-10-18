@@ -6,6 +6,7 @@ namespace Freeserf.Localization
 {
     internal static class LanguageSettings
     {
+        static readonly string[] supportedLanguages = ["system", "en", "de"];
         internal static CultureInfo SystemCulture { get; } = CultureInfo.CurrentUICulture;
         static string preference = "system";
         static int revision;
@@ -13,7 +14,7 @@ namespace Freeserf.Localization
         public static string Preference => preference;
         public static int Revision => Volatile.Read(ref revision);
 
-        public static bool IsSupported(string value) => value is "system" or "en" or "de";
+        public static bool IsSupported(string value) => Array.IndexOf(supportedLanguages, value) >= 0;
 
         public static void Apply(string value)
         {
@@ -30,13 +31,18 @@ namespace Freeserf.Localization
             Interlocked.Increment(ref revision);
         }
 
-        public static string Next(string value) => value switch
+        public static string Next(string value) => Move(value, 1);
+
+        public static string Previous(string value) => Move(value, -1);
+
+        static string Move(string value, int direction)
         {
-            "system" => "en",
-            "en" => "de",
-            "de" => "system",
-            _ => throw new ArgumentException($"Unsupported language preference: '{value}'.", nameof(value))
-        };
+            int index = Array.IndexOf(supportedLanguages, value);
+            if (index < 0)
+                throw new ArgumentException($"Unsupported language preference: '{value}'.", nameof(value));
+
+            return supportedLanguages[(index + direction + supportedLanguages.Length) % supportedLanguages.Length];
+        }
 
         public static string DisplayName => preference switch
         {

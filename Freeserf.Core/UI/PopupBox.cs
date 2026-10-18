@@ -334,7 +334,8 @@ namespace Freeserf.UI
             IncreaseCastleKnights,
             OptionsMusic,
             OptionsFullscreen,
-            OptionsLanguage,
+            OptionsLanguagePrevious,
+            OptionsLanguageNext,
             OptionsVolumeMinus,
             OptionsVolumePlus,
             OptionsPathwayScrolling,
@@ -2966,7 +2967,8 @@ namespace Freeserf.UI
 
             SetText(16, 108, Strings.Popup_Language);
             SetText(16, 120, LanguageSettings.DisplayName);
-            SetButton(112, 115, 61u, Action.OptionsLanguage);
+            SetButton(96, 115, 220u, Action.OptionsLanguagePrevious);
+            SetButton(112, 115, 221u, Action.OptionsLanguageNext);
 
             SetButton(104, 137, 61u, Action.ShowExtendedOptions); // flip
             SetButton(120, 137, 60u, closeAction); // exit
@@ -4602,8 +4604,12 @@ namespace Freeserf.UI
                 case Action.AttackingKnightsInc:
                     player.TotalKnightsAttacking = Math.Min(player.TotalKnightsAttacking + 1, Math.Min(player.MaxAttackingKnights, 100));
                     break;
-                case Action.OptionsLanguage:
-                    if (!UserConfig.SaveLanguage(LanguageSettings.Next(UserConfig.Game.Language), FileSystem.Paths.UserConfigPath))
+                case Action.OptionsLanguagePrevious:
+                case Action.OptionsLanguageNext:
+                    string language = action == Action.OptionsLanguagePrevious
+                        ? LanguageSettings.Previous(UserConfig.Game.Language)
+                        : LanguageSettings.Next(UserConfig.Game.Language);
+                    if (!UserConfig.SaveLanguage(language, FileSystem.Paths.UserConfigPath))
                         PlaySound(Freeserf.Audio.Audio.TypeSfx.NotAccepted);
                     SetRedraw();
                     break;
