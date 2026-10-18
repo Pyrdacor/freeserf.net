@@ -32,8 +32,10 @@ namespace Freeserf.UI
                     int offset = 0;
                     while (word.Length - offset > columns)
                     {
-                        lines.Add(word.Substring(offset, columns));
-                        offset += columns;
+                        int hyphen = word.LastIndexOf('-', offset + columns - 1, columns);
+                        int length = hyphen > offset ? hyphen - offset + 1 : columns;
+                        lines.Add(word.Substring(offset, length));
+                        offset += length;
                     }
 
                     string remainder = word.Substring(offset);

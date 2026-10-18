@@ -199,17 +199,28 @@ namespace Freeserf.Test.Freeserf.Core
         [TestMethod]
         public void IrregularFixedLayouts_PreserveRowCountsAndFitActualCoordinates()
         {
-            CheckCentered(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
-            CheckCentered(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
-            CheckCentered(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
+            CheckCenteredParagraph(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
+            CheckCenteredParagraph(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
+            CheckCenteredParagraph(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
             foreach (string text in new[] { Strings.Popup_BlueVictory, Strings.Popup_RedVictory,
                 Strings.Popup_VioletVictory, Strings.Popup_YellowVictory })
-                CheckCentered(text, 15, 25, 35, 45);
+                CheckCenteredParagraph(text, 15, 25, 35, 45);
             CheckCentered(Strings.Popup_Demolish, 19, 39, 77, 95);
             CheckCentered(Strings.Popup_SaveSuccess, 33, 74);
             CheckCentered(Strings.Popup_SaveFail, 33, 74);
             CheckCentered(Strings.Popup_LoadSuccess, 33, 74);
             CheckCentered(Strings.Popup_LoadFail, 33, 74);
+        }
+
+        static void CheckCenteredParagraph(string text, params int[] rows)
+        {
+            foreach (var line in PopupBox.GetCenteredParagraphLayout(text, rows))
+            {
+                Assert.IsGreaterThanOrEqualTo(8, line.X);
+                Assert.IsLessThanOrEqualTo(136, line.X + line.Text.Length * 8);
+                Assert.AreEqual(144, line.X * 2 + line.Text.Length * 8);
+                Assert.IsLessThanOrEqualTo(65, line.Y + 8);
+            }
         }
 
         static void CheckCentered(string text, params int[] rows)
@@ -225,15 +236,14 @@ namespace Freeserf.Test.Freeserf.Core
         [TestMethod]
         public void OptionsAndBuildingLabels_FitTheirFixedRows()
         {
-            CheckFixed(Strings.Popup_FastMapclick, (16, 20), (16, 29));
-            CheckFixed(Strings.Popup_FastBuilding, (16, 45), (16, 54));
-            CheckFixed(Strings.Popup_PathwayScrolling, (16, 20), (16, 29));
-            CheckFixed(Strings.Popup_InvertScrolling, (16, 45), (16, 54));
-            CheckFixed(Strings.Popup_HideMouseWhileScrolling, (16, 70), (16, 79));
-            CheckFixed(Strings.Popup_ResetMouseAfterScrolling, (16, 95), (16, 104));
-            CheckFixed(Strings.Popup_SoundEffects, (16, 39), (16, 48));
-            CheckFixed(Strings.Popup_OrderedBuilding, (16, 13), (16, 23));
-            CheckFixed(Strings.Popup_BuildingStock, (16, 13), (16, 23));
+            foreach (string text in new[] { Strings.Popup_FastMapclick, Strings.Popup_FastBuilding,
+                Strings.Popup_PathwayScrolling, Strings.Popup_InvertScrolling, Strings.Popup_HideMouseWhileScrolling,
+                Strings.Popup_ResetMouseAfterScrolling, Strings.Popup_SoundEffects })
+                Assert.IsTrue(PopupBox.GetWrappedLabelLayout(text, 16, 12, 20, 29)
+                    .All(line => line.X + line.Text.Length * 8 <= 112));
+            foreach (string text in new[] { Strings.Popup_OrderedBuilding, Strings.Popup_BuildingStock })
+                Assert.IsTrue(PopupBox.GetWrappedLabelLayout(text, 16, 15, 13, 23)
+                    .All(line => line.X + line.Text.Length * 8 <= 136));
         }
 
         [TestMethod]
@@ -338,12 +348,5 @@ namespace Freeserf.Test.Freeserf.Core
             StringAssert.Contains(Strings.CommandLine_ExcludeLogType, "-o");
         }
 
-        static void CheckFixed(string text, params (int X, int Y)[] positions)
-        {
-            var layout = PopupBox.GetTextLayout(text, positions).ToArray();
-            Assert.AreEqual(positions.Length, layout.Length);
-            foreach (var line in layout)
-                Assert.IsTrue(line.X + line.Text.Length * 8 <= 136, $"{line.Text}: right edge exceeds message area");
-        }
     }
 }

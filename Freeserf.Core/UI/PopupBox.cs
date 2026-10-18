@@ -1119,9 +1119,17 @@ namespace Freeserf.UI
                 yield return (positions[i].X, positions[i].Y, lines[i]);
         }
 
-        void SetTextLines(string text, params (int X, int Y)[] positions)
+        internal static IEnumerable<(int X, int Y, string Text)> GetWrappedLabelLayout(
+            string text, int x, int columns, params int[] rows)
         {
-            foreach (var line in GetTextLayout(text, positions))
+            var lines = MessageText.Wrap(text, columns, rows.Length, "compact popup label");
+            for (int i = 0; i < lines.Length; ++i)
+                yield return (x, rows[i], lines[i]);
+        }
+
+        void SetWrappedLabel(string text, int x, int columns, params int[] rows)
+        {
+            foreach (var line in GetWrappedLabelLayout(text, x, columns, rows))
                 SetText(line.X, line.Y, line.Text);
         }
 
@@ -1140,6 +1148,19 @@ namespace Freeserf.UI
         void SetCenteredText(string text, params int[] rows)
         {
             foreach (var line in GetCenteredTextLayout(text, rows))
+                SetText(line.X, line.Y, line.Text);
+        }
+
+        internal static IEnumerable<(int X, int Y, string Text)> GetCenteredParagraphLayout(
+            string text, params int[] rows)
+        {
+            var lines = MessageText.Wrap(text, MessageText.Columns, rows.Length, "centered popup paragraph");
+            return GetCenteredTextLayout(string.Join("\n", lines), rows.Take(lines.Length).ToArray());
+        }
+
+        void SetCenteredParagraph(string text, params int[] rows)
+        {
+            foreach (var line in GetCenteredParagraphLayout(text, rows))
                 SetText(line.X, line.Y, line.Text);
         }
 
@@ -2864,8 +2885,8 @@ namespace Freeserf.UI
 
         void DrawExtendedOptionsBox(Action closeAction)
         {
-            SetTextLines(Strings.Popup_FastMapclick, (16, 20), (16, 29));
-            SetTextLines(Strings.Popup_FastBuilding, (16, 45), (16, 54));
+            SetWrappedLabel(Strings.Popup_FastMapclick, 16, 12, 20, 29);
+            SetWrappedLabel(Strings.Popup_FastBuilding, 16, 12, 45, 54);
 
             SetButton(112, 21, interf.GetOption(Option.FastMapClick) ? 288u : 220u, Action.OptionsFastMapclick);
             SetButton(112, 47, interf.GetOption(Option.FastBuilding) ? 288u : 220u, Action.OptionsFastBuilding);
@@ -2896,10 +2917,10 @@ namespace Freeserf.UI
 
         void DrawScrollOptionsBox(Action closeAction)
         {
-            SetTextLines(Strings.Popup_PathwayScrolling, (16, 20), (16, 29));
-            SetTextLines(Strings.Popup_InvertScrolling, (16, 45), (16, 54));
-            SetTextLines(Strings.Popup_HideMouseWhileScrolling, (16, 70), (16, 79));
-            SetTextLines(Strings.Popup_ResetMouseAfterScrolling, (16, 95), (16, 104));
+            SetWrappedLabel(Strings.Popup_PathwayScrolling, 16, 12, 20, 29);
+            SetWrappedLabel(Strings.Popup_InvertScrolling, 16, 12, 45, 54);
+            SetWrappedLabel(Strings.Popup_HideMouseWhileScrolling, 16, 12, 70, 79);
+            SetWrappedLabel(Strings.Popup_ResetMouseAfterScrolling, 16, 12, 95, 104);
 
             SetButton(112, 21, interf.GetOption(Option.PathwayScrolling) ? 288u : 220u, Action.OptionsPathwayScrolling);
             SetButton(112, 47, interf.GetOption(Option.InvertScrolling) ? 288u : 220u, Action.OptionsInvertScrolling);
@@ -2913,7 +2934,7 @@ namespace Freeserf.UI
         void DrawOptionsBox(Action closeAction)
         {
             SetText(16, 23, Strings.Popup_Music);
-            SetTextLines(Strings.Popup_SoundEffects, (16, 39), (16, 48));
+            SetWrappedLabel(Strings.Popup_SoundEffects, 16, 12, 39, 48);
             SetText(16, 63, Strings.Popup_Volume);
 
             // Music
@@ -3028,7 +3049,7 @@ namespace Freeserf.UI
 
             SetBuildingIcon(x, 49, type);
 
-            SetTextLines(Strings.Popup_OrderedBuilding, (16, 13), (16, 23));
+            SetWrappedLabel(Strings.Popup_OrderedBuilding, 16, 15, 13, 23);
 
             if (building.HasSerf)
             {
@@ -3295,7 +3316,7 @@ namespace Freeserf.UI
             SetBuildingIcon(x, 39, Render.RenderBuilding.MapBuildingSprite[(int)building.BuildingType]);
 
             // draw texts
-            SetTextLines(Strings.Popup_BuildingStock, (16, 13), (16, 23));
+            SetWrappedLabel(Strings.Popup_BuildingStock, 16, 15, 13, 23);
 
             SetButton(120, 137, 60u, Action.CloseBox); // exit
         }
@@ -3602,22 +3623,22 @@ namespace Freeserf.UI
                 case (int)Game.GameType.Mission:
                     if (winner == 0)
                     {
-                        SetCenteredText(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
+                        SetCenteredParagraph(Strings.Popup_MissionWon, 13, 25, 35, 45, 55);
                     }
                     else
                     {
-                        SetCenteredText(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
+                        SetCenteredParagraph(Strings.Popup_MissionLost, 15, 25, 35, 45, 55);
                     }
                     break;
                 case (int)Game.GameType.Tutorial:
-                    SetCenteredText(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
+                    SetCenteredParagraph(Strings.Popup_TutorialCompleted, 13, 25, 35, 45);
                     break;
                 default:
                     string[] victoryMessages = {
                         Strings.Popup_BlueVictory, Strings.Popup_RedVictory,
                         Strings.Popup_VioletVictory, Strings.Popup_YellowVictory
                     };
-                    SetCenteredText(victoryMessages[winner & 3], 15, 25, 35, 45);
+                    SetCenteredParagraph(victoryMessages[winner & 3], 15, 25, 35, 45);
                     break;
             }
         }
