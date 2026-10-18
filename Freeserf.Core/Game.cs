@@ -505,8 +505,85 @@ namespace Freeserf
 
             UpdateVisuals();
 
+            if (state.ConstTick % FixRequestedResourcesInterval == 0)
+                FixRequestedResources();
+
             if (state.ConstTick % CheckpointInterval == 0)
                 CheckpointReached?.Invoke(this);
+        }
+
+        // About once per minute (the game is updated 50 times per second).
+        const uint FixRequestedResourcesInterval = 3000;
+
+        static Resource.Type GetStockResource(Resource.Type resource)
+        {
+            return resource switch
+            {
+                Resource.Type.Fish or Resource.Type.Meat or Resource.Type.Bread => Resource.Type.GroupFood,
+                _ => resource
+            };
+        }
+
+        /// <summary>
+        /// Buildings count the requested resources which are on the way to them. If a
+        /// resource gets lost without canceling the request, the building waits for it
+        /// forever and doesn't request it again. E.g. mines got no food anymore although
+        /// there was plenty of it in the castle. So once in a while the requested resources
+        /// are compared with the resources which are really on the way.
+        /// </summary>
+        void FixRequestedResources()
+        {
+            var onTheWay = new Dictionary<(uint Flag, Resource.Type Resource), uint>();
+
+            void Add(Resource.Type resource, uint destination)
+            {
+                if (resource <= Resource.Type.None || destination == 0)
+                    return;
+
+                var key = (destination, GetStockResource(resource));
+                onTheWay[key] = onTheWay.TryGetValue(key, out uint count) ? count + 1 : 1;
+            }
+
+            foreach (var flag in Flags)
+            {
+                for (int i = 0; i < Global.FLAG_MAX_RES_COUNT; ++i)
+                    Add(flag.GetResourceAtSlot(i), flag.GetResourceDestinationAtSlot(i));
+            }
+
+            foreach (var serf in Serfs)
+            {
+                if (serf.GetTransportedResource(out var resource, out uint destination))
+                    Add(resource, destination);
+            }
+
+            foreach (var inventory in Inventories)
+            {
+                foreach (var (resource, destination) in inventory.GetQueuedResources())
+                    Add(resource, destination);
+            }
+
+            foreach (var building in Buildings)
+            {
+                if (building.IsBurning || building.HasInventory())
+                    continue;
+
+                for (int i = 0; i < Building.MaxStock; ++i)
+                {
+                    var resource = building.GetResourceTypeInStock(i);
+
+                    if (resource <= Resource.Type.None)
+                        continue;
+
+                    uint requested = building.GetRequestedInStock(i);
+                    onTheWay.TryGetValue((building.FlagIndex, resource), out uint count);
+
+                    if (requested > count)
+                    {
+                        Log.Debug.Write(ErrorSystemType.Building, $"Building {building.Index} ({building.BuildingType}) of player {building.Player} requested {requested} {resource} but only {count} are on the way.");
+                        building.LimitRequestedInStock(i, count);
+                    }
+                }
+            }
         }
 
         /// <summary>

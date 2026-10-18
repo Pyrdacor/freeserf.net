@@ -493,6 +493,12 @@ namespace Freeserf
             return state.Slots[slot].Type;
         }
 
+        // The flag index of the destination of the resource at the slot (0 if unknown).
+        internal uint GetResourceDestinationAtSlot(int slot)
+        {
+            return state.Slots[slot].DestinationObjectIndex;
+        }
+
         // Whether this flag has an inventory building.
         public bool HasInventory()
         {

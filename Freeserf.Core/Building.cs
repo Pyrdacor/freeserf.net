@@ -943,8 +943,24 @@ namespace Freeserf
             return state.Stock[stockNumber].Requested;
         }
 
+        internal void LimitRequestedInStock(int stockNumber, uint maxRequested)
+        {
+            if (state.Stock[stockNumber].Requested > maxRequested)
+                state.Stock[stockNumber].Requested = (byte)maxRequested;
+        }
+
         public uint GetRequested(Resource.Type resource)
         {
+            // Food is requested as a group (like in CancelTransportedResource). Otherwise
+            // a canceled food delivery to a mine wasn't removed from its requested food,
+            // so the mine waited for it forever and got no food anymore.
+            if (resource == Resource.Type.Fish ||
+                resource == Resource.Type.Meat ||
+                resource == Resource.Type.Bread)
+            {
+                resource = Resource.Type.GroupFood;
+            }
+
             int inStock = -1;
 
             for (int i = 0; i < MaxStock; ++i)

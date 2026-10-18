@@ -4476,6 +4476,43 @@ namespace Freeserf
         /// </summary>
         /// <param name="direction"></param>
         /// <returns></returns>
+        // The resource the serf carries to a destination flag (used to check the requested
+        // resources of buildings, see Game.FixRequestedResources).
+        internal bool GetTransportedResource(out Resource.Type resource, out uint destination)
+        {
+            resource = Resource.Type.None;
+            destination = 0;
+
+            switch (SerfState)
+            {
+                case State.Transporting:
+                case State.Delivering:
+                    resource = stateData.Walking.Resource;
+                    destination = stateData.Walking.Destination;
+                    break;
+                case State.MoveResourceOut:
+                    if (stateData.MoveResourceOut.NextState == State.DropResourceOut)
+                    {
+                        resource = (Resource.Type)((int)stateData.MoveResourceOut.Resource - 1);
+                        destination = stateData.MoveResourceOut.ResourceDestination;
+                    }
+                    break;
+                case State.DropResourceOut:
+                    resource = (Resource.Type)((int)stateData.MoveResourceOut.Resource - 1);
+                    destination = stateData.MoveResourceOut.ResourceDestination;
+                    break;
+                case State.LeavingBuilding:
+                    if (stateData.LeavingBuilding.NextState == State.DropResourceOut)
+                    {
+                        resource = (Resource.Type)(stateData.LeavingBuilding.FieldB - 1);
+                        destination = stateData.LeavingBuilding.Destination;
+                    }
+                    break;
+            }
+
+            return resource > Resource.Type.None && destination != 0;
+        }
+
         bool SwitchWaiting(Direction direction)
         {
             if ((SerfState == State.Transporting || SerfState == State.Walking ||

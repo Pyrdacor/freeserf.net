@@ -139,6 +139,16 @@ namespace Freeserf
             return state.HasAnyOutMode();
         }
 
+        // The resources in the out queue which already have a destination (flag index).
+        internal IEnumerable<(Resource.Type Resource, uint Destination)> GetQueuedResources()
+        {
+            for (int i = 0; i < state.OutQueue.Length; ++i)
+            {
+                if (state.OutQueue[i].Type != Resource.Type.None && state.OutQueue[i].Destination != 0)
+                    yield return (state.OutQueue[i].Type, state.OutQueue[i].Destination);
+            }
+        }
+
         public uint GetSerfQueueLength()
         {
             return state.SerfsOut;
