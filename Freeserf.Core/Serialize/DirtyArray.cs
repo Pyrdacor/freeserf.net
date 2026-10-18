@@ -67,6 +67,9 @@ namespace Freeserf.Serialize
     {
         T[] array = null;
         readonly List<int> dirtyIndices = new List<int>();
+        // For a fast lookup. The list keeps the order. With large maps all tiles are
+        // marked dirty, and a lookup in the list made creating such a map very slow.
+        bool[] dirtyFlags = null;
   
         public DirtyArray()
         {
@@ -89,8 +92,13 @@ namespace Freeserf.Serialize
 
         public void MarkIndexAsDirty(int index)
         {
-            if (!dirtyIndices.Contains(index))
+            dirtyFlags ??= new bool[array.Length];
+
+            if (!dirtyFlags[index])
+            {
+                dirtyFlags[index] = true;
                 dirtyIndices.Add(index);
+            }
         }
 
         public T this[int index]
@@ -125,6 +133,12 @@ namespace Freeserf.Serialize
 
         public void ResetDirtyFlag()
         {
+            if (dirtyFlags != null)
+            {
+                foreach (int index in dirtyIndices)
+                    dirtyFlags[index] = false;
+            }
+
             dirtyIndices.Clear();
         }
 

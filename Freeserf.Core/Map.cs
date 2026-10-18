@@ -866,6 +866,7 @@ namespace Freeserf
                     if (owner != value)
                     {
                         owner = value;
+                        ++OwnerChangeCount;
                         MarkPropertyAsDirty(nameof(Owner));
                     }
                 }
@@ -1584,15 +1585,12 @@ namespace Freeserf
         {
             List<object> findings = new List<object>();
 
-            foreach (var position in Geometry)
+            foreach (var position in GetOwnedPositions(owner))
             {
-                if (GetOwner(position) == owner)
-                {
-                    var data = searchFunc(this, position);
+                var data = searchFunc(this, position);
 
-                    if (data != null & data.Success)
-                        findings.Add(data.Data);
-                }
+                if (data != null & data.Success)
+                    findings.Add(data.Data);
             }
 
             return findings;
@@ -1606,18 +1604,52 @@ namespace Freeserf
         /// <returns></returns>
         public object FindFirstInTerritory(uint owner, Func<Map, MapPos, FindData> searchFunc)
         {
-            foreach (var position in Geometry)
+            foreach (var position in GetOwnedPositions(owner))
             {
-                if (GetOwner(position) == owner)
-                {
-                    var data = searchFunc(this, position);
+                var data = searchFunc(this, position);
 
-                    if (data != null & data.Success)
-                        return data.Data;
-                }
+                if (data != null & data.Success)
+                    return data.Data;
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Is increased by every change of the owner of any map position
+        /// (also by deserialization).
+        /// </summary>
+        internal static long OwnerChangeCount = 0;
+
+        // The positions of each owner in ascending order (index is the owner + 1).
+        // Searching the whole map for the territory of a player is slow on large maps.
+        List<MapPos>[] ownedPositions = null;
+        long ownedPositionsChangeCount = -1;
+
+        IReadOnlyList<MapPos> GetOwnedPositions(uint owner)
+        {
+            if (ownedPositions == null || ownedPositionsChangeCount != OwnerChangeCount)
+            {
+                ownedPositions ??= new List<MapPos>[Game.MAX_PLAYER_COUNT + 1];
+
+                for (int i = 0; i < ownedPositions.Length; ++i)
+                {
+                    ownedPositions[i] ??= new List<MapPos>();
+                    ownedPositions[i].Clear();
+                }
+
+                foreach (var position in Geometry)
+                {
+                    uint tileOwner = gameTiles[(int)position].Owner;
+
+                    if (tileOwner != 0 && tileOwner < ownedPositions.Length)
+                        ownedPositions[tileOwner].Add(position);
+                }
+
+                ownedPositionsChangeCount = OwnerChangeCount;
+            }
+
+            return owner + 1 < ownedPositions.Length ? ownedPositions[owner + 1] : Array.Empty<MapPos>();
         }
 
         public MapPos MoveTowards(MapPos origin, MapPos destination)

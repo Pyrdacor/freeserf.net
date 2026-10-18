@@ -94,6 +94,10 @@ namespace Freeserf
         uint lastScrollX = 0;
         uint lastScrollY = 0;
         bool mapScrolled = true;
+        // Map objects (trees, stones, ...) only get render objects inside the visible area of the map.
+        // Large maps have hundreds of thousands of them which would slow down the game a lot.
+        HashSet<MapPos> renderObjectArea = new HashSet<MapPos>();
+        HashSet<MapPos> nextRenderObjectArea = new HashSet<MapPos>();
         // Reused for the updates to avoid allocations every tick.
         readonly List<Flag> flagUpdateList = new List<Flag>();
         readonly List<Building> buildingUpdateList = new List<Building>();
@@ -213,6 +217,9 @@ namespace Freeserf
 
             foreach (var mapObject in renderObjects)
                 mapObject.Value.Delete();
+
+            renderObjectArea.Clear();
+            lastRenderMap = null; // the render object area is set up again with the next update
 
             foreach (var roadSegment in renderRoadSegments)
                 roadSegment.Value.Delete();
@@ -2784,9 +2791,68 @@ namespace Freeserf
 
         void UpdateMapObjects()
         {
+            if (mapScrolled)
+                UpdateRenderObjectArea();
+
             // Note: Enumerating a concurrent dictionary is safe without copying it.
             foreach (var renderObject in renderObjects)
                 renderObject.Value.Update(Tick, Map.RenderMap, renderObject.Key, mapScrolled);
+        }
+
+        // Rows and columns around the visible map area in which map objects get render objects.
+        // Sprites reach up to the tile above and high positions are drawn up to 7 rows higher.
+        const int RenderObjectAreaMarginTop = 2;
+        const int RenderObjectAreaMarginBottom = 8;
+        const int RenderObjectAreaMarginX = 2;
+
+        void UpdateRenderObjectArea()
+        {
+            var renderMap = Map.RenderMap;
+            int scrollX = (int)renderMap.ScrollX;
+            int scrollY = (int)renderMap.ScrollY;
+            int columns = (int)renderMap.NumVisibleColumns + RenderObjectAreaMarginX;
+            int rows = (int)renderMap.NumVisibleRows + RenderObjectAreaMarginBottom;
+
+            nextRenderObjectArea.Clear();
+
+            for (int r = -RenderObjectAreaMarginTop; r < rows; ++r)
+            {
+                int row = scrollY + r;
+                // The same as RenderMap.GetMapOffset: the first column moves right every second row.
+                int firstColumn = scrollX + (int)Math.Floor(row / 2.0);
+
+                for (int c = -RenderObjectAreaMarginX; c < columns; ++c)
+                    nextRenderObjectArea.Add(Map.Position((uint)(firstColumn + c) & Map.ColumnMask, (uint)row & Map.RowMask));
+            }
+
+            foreach (var position in renderObjectArea)
+            {
+                if (!nextRenderObjectArea.Contains(position) && renderObjects.TryRemove(position, out var renderObject) && renderObject != null)
+                    renderObject.Delete();
+            }
+
+            foreach (var position in nextRenderObjectArea)
+            {
+                if (!renderObjectArea.Contains(position))
+                    AddRenderMapObject(position);
+            }
+
+            (renderObjectArea, nextRenderObjectArea) = (nextRenderObjectArea, renderObjectArea);
+        }
+
+        void AddRenderMapObject(MapPos position)
+        {
+            var obj = Map.GetObject(position);
+
+            if (obj == Map.Object.None || obj == Map.Object.Flag || obj == Map.Object.SmallBuilding ||
+                obj == Map.Object.LargeBuilding || obj == Map.Object.Castle || renderObjects.ContainsKey(position))
+                return;
+
+            var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
+
+            renderObject.Visible = true;
+
+            renderObjects.TryAdd(position, renderObject);
         }
 
         void UpdateFlags()
@@ -4539,16 +4605,9 @@ namespace Freeserf
                         renderBuildingsInProgress.Add(renderBuilding);
                 }
             }
-            else // map object
+            else if (renderObjectArea.Contains(position)) // map object (only visible ones are drawn)
             {
-                if (obj != Map.Object.None)
-                {
-                    var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
-
-                    renderObject.Visible = true;
-
-                    renderObjects.TryAdd(position, renderObject);
-                }
+                AddRenderMapObject(position);
             }
         }
 
