@@ -140,6 +140,10 @@ namespace Freeserf.AIStates
                         // Move the building to the end later
                         moveToEnd.Add(type);
 
+                        // A mine for a missing mineral may get the miner of another mine.
+                        if ((type == Building.Type.CoalMine || type == Building.Type.IronMine) && ai.FreeMinerForMissingMineral(game, type))
+                            return;
+
                         if (game.GetResourceAmountInInventories(player, Resource.Type.Steel) == 0 &&
                             player.GetCompletedBuildingCount(Building.Type.SteelSmelter) == 0)
                             continue; // we can't craft when we don't have any steel
@@ -257,7 +261,16 @@ namespace Freeserf.AIStates
 
         CheckResult CheckBuilding(AI ai, Game game, Player player, int intelligence, Building.Type type)
         {
-            int count = (int)player.GetTotalBuildingCount(type);
+            // While coal or iron is missing, the miners are only used for that.
+            if (type >= Building.Type.StoneMine && type <= Building.Type.GoldMine)
+            {
+                var missingMineral = ai.GetMissingMineral(game);
+
+                if (missingMineral != Map.Minerals.None && MineralFromMine[type - Building.Type.StoneMine] != missingMineral)
+                    return CheckResult.NotNeeded;
+            }
+
+int count = (int)player.GetTotalBuildingCount(type);
 
             if (count == 0)
             {
@@ -471,6 +484,18 @@ namespace Freeserf.AIStates
 
                         if (!ai.CanBuildMilitaryBuilding(type))
                             return CheckResult.NotNeeded;
+
+                        // Expanding to coal or iron has priority as without them no knights can be trained.
+                        if (type == Building.Type.Hut && CanBuildMilitary(ai, game, player) &&
+                            player.GetIncompleteBuildingCount(Building.Type.Hut) == 0 &&
+                            player.GetIncompleteBuildingCount(Building.Type.Tower) == 0 &&
+                            player.GetIncompleteBuildingCount(Building.Type.Fortress) == 0)
+                        {
+                            var missingMineral = ai.GetMissingMineral(game);
+
+                            if (missingMineral != Map.Minerals.None && !ai.HasMineralInTerritory(game, missingMineral))
+                                return NeedBuilding(ai, game, player, type);
+                        }
 
                         int focus = Misc.Max(ai.MilitaryFocus, (ai.DefendFocus + 1) / 2, ai.ExpandFocus) + (ai.MilitaryFocus + ai.DefendFocus + ai.ExpandFocus) / 4;
 

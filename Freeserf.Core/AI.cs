@@ -600,7 +600,181 @@ namespace Freeserf
 
         public void HandleEmptyMine(uint mineIndex)
         {
+            var mine = player.Game.GetBuilding(mineIndex);
+
+            // The mineral spots in the area of the mine are mined out.
+            if (mine != null)
+                ForgetMineralSpots(player.Game.Map, mine.Position);
+
             PushState(CreateState(State.DestroyUselessBuildings, mineIndex));
+        }
+
+        static void ForgetMineralSpots(Map map, MapPos minePosition)
+        {
+            foreach (var spots in memorizedMineralSpots.Values)
+                spots.RemoveAll(spot => map.Distance(spot.Position, minePosition) <= MineRadius);
+        }
+
+        // Mines take the minerals from the 32 positions around them (radius 3).
+        internal const int MineRadius = 3;
+        const uint MineAreaPositions = 32;
+        // Below this amount in the inventories a missing mine is a problem.
+        const uint MissingMineralStock = 20;
+
+        /// <summary>
+        /// Smart AIs know where the minerals are on the map (they cheat a bit).
+        /// </summary>
+        internal bool KnowsMinerals => Smartness >= 1 || playerInfo.Intelligence >= 30;
+
+        /// <summary>
+        /// Coal or iron if there is no mine for it and nearly nothing left in the inventories.
+        /// Without both there is no steel and therefore no weapons for new knights, so
+        /// finding them has priority.
+        /// </summary>
+        internal Map.Minerals GetMissingMineral(Game game)
+        {
+            uint iron = game.GetResourceAmountInInventories(player, Resource.Type.IronOre);
+            uint coal = game.GetResourceAmountInInventories(player, Resource.Type.Coal);
+            bool missingIron = player.GetTotalBuildingCount(Building.Type.IronMine) == 0 && iron < MissingMineralStock;
+            bool missingCoal = player.GetTotalBuildingCount(Building.Type.CoalMine) == 0 && coal < MissingMineralStock;
+
+            if (missingIron && missingCoal)
+                return iron <= coal ? Map.Minerals.Iron : Map.Minerals.Coal;
+            if (missingIron)
+                return Map.Minerals.Iron;
+            if (missingCoal)
+                return Map.Minerals.Coal;
+
+            return Map.Minerals.None;
+        }
+
+        // With this amount in the inventories a mine can be given up for a missing mineral.
+        const uint PlentyMineralStock = 50;
+        long lastFreedMinerTime = 0;
+
+        static readonly (Building.Type Mine, Resource.Type Resource)[] MineResources =
+        [
+            (Building.Type.IronMine, Resource.Type.IronOre),
+            (Building.Type.CoalMine, Resource.Type.Coal),
+            (Building.Type.GoldMine, Resource.Type.GoldOre),
+            (Building.Type.StoneMine, Resource.Type.Stone)
+        ];
+
+        /// <summary>
+        /// If there is no miner and no pick for a mine of a missing mineral, a mine whose
+        /// resource is plentiful in the inventories is demolished, so that its miner can work
+        /// in the new mine. Otherwise the AI could get stuck: a pick needs steel and steel needs
+        /// coal and iron.
+        /// </summary>
+        internal bool FreeMinerForMissingMineral(Game game, Building.Type neededMine)
+        {
+            var missingMineral = GetMissingMineral(game);
+
+            if ((missingMineral != Map.Minerals.Coal || neededMine != Building.Type.CoalMine) &&
+                (missingMineral != Map.Minerals.Iron || neededMine != Building.Type.IronMine))
+                return false;
+
+            if (game.GetResourceAmountInInventories(player, Resource.Type.Pick) != 0)
+                return false;
+
+            // The freed miner needs some time to get back to the inventory.
+            if (lastFreedMinerTime != 0 && GameTime - lastFreedMinerTime < 10 * Global.TICKS_PER_MIN)
+                return false;
+
+            foreach (var (mine, resource) in MineResources)
+            {
+                if (mine == neededMine || game.GetResourceAmountInInventories(player, resource) < PlentyMineralStock)
+                    continue;
+
+                var building = game.GetPlayerBuildings(player, mine).FirstOrDefault(b => b.IsDone && !b.IsBurning && b.HasSerf);
+
+                if (building != null)
+                {
+                    game.DemolishBuilding(building.Position, player);
+                    lastFreedMinerTime = GameTime;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The amount of the mineral which a mine at the given position could mine.
+        /// </summary>
+        internal static uint GetMineralAmountForMine(Map map, MapPos position, Map.Minerals mineral)
+        {
+            uint amount = 0;
+
+            for (uint i = 0; i < MineAreaPositions; ++i)
+            {
+                var minePosition = map.PositionAddSpirally(position, i);
+
+                if (map.GetResourceType(minePosition) == mineral)
+                    amount += map.GetResourceAmount(minePosition);
+            }
+
+            return amount;
+        }
+
+        /// <summary>
+        /// Checks if the mineral can be found in the own territory. Smart AIs know it,
+        /// the others only know the spots their geologists have found.
+        /// </summary>
+        internal bool HasMineralInTerritory(Game game, Map.Minerals mineral)
+        {
+            var map = game.Map;
+
+            if (KnowsMinerals)
+            {
+                return map.FindFirstInTerritory(player.Index, (Map m, MapPos position) => new Map.FindData()
+                {
+                    Success = m.GetResourceType(position) == mineral && m.GetResourceAmount(position) != 0
+                }) != null;
+            }
+
+            return GetMemorizedMineralSpots(mineral, false).Any(spot => map.HasOwner(spot) && map.GetOwner(spot) == player.Index);
+        }
+
+        List<MapPos> mineralTargets = null;
+        Map.Minerals mineralTargetsMineral = Map.Minerals.None;
+        long mineralTargetsTime = 0;
+
+        /// <summary>
+        /// Positions outside of any territory to expand to for the mineral. Smart AIs
+        /// know where the mineral is, the others look for mountains.
+        /// </summary>
+        internal IReadOnlyList<MapPos> GetMineralTargets(Game game, Map.Minerals mineral)
+        {
+            if (mineralTargets == null || mineralTargetsMineral != mineral || GameTime - mineralTargetsTime > 2 * Global.TICKS_PER_MIN)
+            {
+                var map = game.Map;
+                bool knowsMinerals = KnowsMinerals;
+
+                mineralTargets ??= new List<MapPos>();
+                mineralTargets.Clear();
+
+                foreach (var position in map.Geometry)
+                {
+                    if (map.HasOwner(position))
+                        continue;
+
+                    if (knowsMinerals)
+                    {
+                        if (map.GetResourceType(position) == mineral && map.GetResourceAmount(position) != 0)
+                            mineralTargets.Add(position);
+                    }
+                    else if (map.TypeUp(position) >= Map.Terrain.Tundra0 && map.TypeUp(position) <= Map.Terrain.Tundra2)
+                    {
+                        mineralTargets.Add(position);
+                    }
+                }
+
+                mineralTargetsMineral = mineral;
+                mineralTargetsTime = GameTime;
+            }
+
+            return mineralTargets;
         }
 
         public void NotifyCraftedTool(Resource.Type tool)

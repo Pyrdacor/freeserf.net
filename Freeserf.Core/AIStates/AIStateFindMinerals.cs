@@ -97,6 +97,25 @@ namespace Freeserf.AIStates
             if (ai.HardTimes && ((smallSpots.Count > 0 && ai.GameTime >= 60 * Global.TICKS_PER_MIN) || (smallSpots.Count > 3 && ai.GameTime >= 35 * Global.TICKS_PER_MIN)))
                 considerSmallSpots = true;
 
+            // Without any mine of this type every spot is welcome. Without coal and iron
+            // there are no new knights.
+            bool noMine = player.GetTotalBuildingCount(mineType) == 0;
+
+            if (noMine)
+                considerSmallSpots = true;
+
+            // Smart AIs know where the minerals are and build the mine at the best spot.
+            if (ai.KnowsMinerals && CanBuild(game, player))
+            {
+                var bestSpot = FindBestMineSpot(ai, game, player, mineType, noMine ? 1u : 16u);
+
+                if (bestSpot != Global.INVALID_MAPPOS && game.BuildBuilding(bestSpot, mineType, player))
+                {
+                    Kill(ai);
+                    return;
+                }
+            }
+
             while (true)
             {
                 bool canBuild = CanBuild(game, player);
@@ -179,6 +198,31 @@ namespace Freeserf.AIStates
             }
 
             Kill(ai);
+        }
+
+        MapPos FindBestMineSpot(AI ai, Game game, Player player, Building.Type mineType, uint minAmount)
+        {
+            var map = game.Map;
+            var bestSpot = Global.INVALID_MAPPOS;
+            uint bestAmount = minAmount - 1;
+            int maxMinesInArea = 1 + (int)ai.GameTime / (60 * Global.TICKS_PER_MIN);
+
+            foreach (var spot in map.FindInTerritory(player.Index, (Map m, MapPos position) => new Map.FindData()
+            {
+                Success = FindMountain(m, position) && game.CanBuildBuilding(position, mineType, player),
+                Data = position
+            }).Cast<MapPos>())
+            {
+                uint amount = AI.GetMineralAmountForMine(map, spot, mineralType);
+
+                if (amount > bestAmount && CanBuildAtSpot(game, player, spot, maxMinesInArea))
+                {
+                    bestAmount = amount;
+                    bestSpot = spot;
+                }
+            }
+
+            return bestSpot;
         }
 
         int MineralsInArea(Map map, uint basePosition, int range, Map.Minerals mineral,

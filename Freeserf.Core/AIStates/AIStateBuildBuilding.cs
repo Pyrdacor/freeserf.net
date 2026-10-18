@@ -298,6 +298,17 @@ namespace Freeserf.AIStates
                 case Building.Type.Tower:
                 case Building.Type.Fortress:
                     {
+                        // Expanding to coal or iron has priority as without them no knights can be trained.
+                        var missingMineral = ai.GetMissingMineral(game);
+
+                        if (missingMineral != Map.Minerals.None && !ai.HasMineralInTerritory(game, missingMineral))
+                        {
+                            var spot = FindSpotTowardsMineral(ai, game, player, type, missingMineral);
+
+                            if (spot != Global.INVALID_MAPPOS)
+                                return spot;
+                        }
+
                         if (ai.HardTimes && type == Building.Type.Hut)
                         {
                             Func<Map, uint, bool> targetFunc = null;
@@ -932,6 +943,60 @@ namespace Freeserf.AIStates
                 Success = map.FindInArea(position, 4, FindFish, 1).Any(),
                 Data = position
             };
+        }
+
+        // Finds a spot for a military building at the border which is nearest to the mineral.
+        static MapPos FindSpotTowardsMineral(AI ai, Game game, Player player, Building.Type type, Map.Minerals mineral)
+        {
+            var targets = ai.GetMineralTargets(game, mineral);
+
+            if (targets.Count == 0)
+                return Global.INVALID_MAPPOS;
+
+            var map = game.Map;
+            var candidates = new List<(MapPos Building, MapPos Target, int Distance)>();
+
+            foreach (var building in game.GetPlayerBuildings(player).Where(building => building.IsMilitary(false)))
+            {
+                var bestTarget = Global.INVALID_MAPPOS;
+                int bestDistance = int.MaxValue;
+
+                foreach (var target in targets)
+                {
+                    int distance = map.Distance(building.Position, target);
+
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        bestTarget = target;
+                    }
+                }
+
+                if (bestTarget != Global.INVALID_MAPPOS)
+                    candidates.Add((building.Position, bestTarget, bestDistance));
+            }
+
+            foreach (var (buildingPosition, target, distance) in candidates.OrderBy(candidate => candidate.Distance).Take(3))
+            {
+                Func<Map, MapPos, bool> checkSpotFunc = (Map m, MapPos position) => game.CanBuildBuilding(position, type, player);
+                Func<Map, MapPos, int> rateSpotFunc = (Map m, MapPos position) => int.MaxValue - m.Distance(position, target);
+
+                // The new building should be as near as possible to the mineral.
+                for (int steps = Math.Min(8, distance); steps >= 2; steps -= 2)
+                {
+                    var spot = buildingPosition;
+
+                    for (int i = 0; i < steps; ++i)
+                        spot = map.MoveTowards(spot, target);
+
+                    spot = map.FindSpotNear(spot, 3, checkSpotFunc, rateSpotFunc);
+
+                    if (spot != Global.INVALID_MAPPOS)
+                        return spot;
+                }
+            }
+
+            return Global.INVALID_MAPPOS;
         }
 
         static bool FindMountainOutsideTerritory(Map map, MapPos position)
