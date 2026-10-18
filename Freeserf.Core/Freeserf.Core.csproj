@@ -86,17 +86,16 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <LocalizationGeneratedFile>$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/Strings.g.cs</LocalizationGeneratedFile>
-  </PropertyGroup>
-
   <ItemGroup>
     <EmbeddedResource Update="Localization/Strings.resx">
       <StronglyTypedLanguage>C#</StronglyTypedLanguage>
       <StronglyTypedNamespace>Freeserf.Localization</StronglyTypedNamespace>
       <StronglyTypedClassName>Strings</StronglyTypedClassName>
       <PublicClass>true</PublicClass>
-      <StronglyTypedFileName>$(LocalizationGeneratedFile)</StronglyTypedFileName>
+      <!-- The intermediate output path also contains the runtime identifier (e.g. obj/MacRelease/net9.0/osx-arm64/)
+           and is always created before the resources are generated. Item metadata is evaluated after all
+           properties, so IntermediateOutputPath is already set here. -->
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.g.cs</StronglyTypedFileName>
     </EmbeddedResource>
   </ItemGroup>
 
