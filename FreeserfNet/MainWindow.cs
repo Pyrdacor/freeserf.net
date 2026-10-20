@@ -904,7 +904,14 @@ namespace Freeserf
         {
             try
             {
-                if (delta < 0)
+                // Lists under the cursor are scrolled, otherwise the map is zoomed.
+                int steps = delta > 0 ? 1 : delta < 0 ? -1 : 0;
+
+                if (steps != 0 && gameView?.NotifyWheel(position.X, position.Y, steps) == true)
+                {
+                    // handled by the gui
+                }
+                else if (delta < 0)
                     ZoomOut();
                 else if (delta > 0)
                     ZoomIn();

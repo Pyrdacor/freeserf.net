@@ -293,6 +293,21 @@ namespace Freeserf.UI
             return true;
         }
 
+        protected override bool HandleWheel(int x, int y, int steps)
+        {
+            // Scroll by 3 items per wheel step. Wheel up scrolls up.
+            int lastPossibleFirstVisibleItem = Math.Max(0, items.Count + 1 - (Height + 8) / 9);
+            int nextFirstVisibleItem = Math.Max(0, Math.Min(lastPossibleFirstVisibleItem, firstVisibleItem - steps * 3));
+
+            if (firstVisibleItem != nextFirstVisibleItem)
+            {
+                firstVisibleItem = nextFirstVisibleItem;
+                SetRedraw();
+            }
+
+            return true;
+        }
+
         private void SelectAndScroll(int index)
         {
             int lastPossibleFirstVisibleItem = Math.Max(0, items.Count + 1 - (Height + 8) / 9);

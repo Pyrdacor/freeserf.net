@@ -221,6 +221,11 @@ namespace Freeserf.UI
             return false;
         }
 
+        protected virtual bool HandleWheel(int x, int y, int steps)
+        {
+            return false;
+        }
+
         protected virtual bool HandleKeyPressed(char key, int modifier)
         {
             return false;
@@ -404,7 +409,8 @@ namespace Freeserf.UI
                 e.Type == Event.Type.DelayedClick ||
                 e.Type == Event.Type.DoubleClick ||
                 e.Type == Event.Type.SpecialClick ||
-                e.Type == Event.Type.Drag)
+                e.Type == Event.Type.Drag ||
+                e.Type == Event.Type.Wheel)
             {
                 int objectX = e.X - TotalX;
                 int objectY = e.Y - TotalY;
@@ -450,6 +456,9 @@ namespace Freeserf.UI
                 case Event.Type.SpecialClick:
                     result = HandleClickRight(e.X, e.Y);
                     break;
+                case Event.Type.Wheel:
+                    result = HandleWheel(eventX, eventY, e.Dy);
+                    break;
                 case Event.Type.KeyPressed:
                     result = HandleKeyPressed((char)e.Dx, e.Dy);
                     break;
@@ -460,7 +469,7 @@ namespace Freeserf.UI
                     break;
             }
 
-            if (result && FocusedObject != this && FocusedObject == focusedObjectBefore && e.Type != Event.Type.DelayedClick)
+            if (result && FocusedObject != this && FocusedObject == focusedObjectBefore && e.Type != Event.Type.DelayedClick && e.Type != Event.Type.Wheel)
             {
                 if (FocusedObject != null)
                 {
@@ -515,6 +524,7 @@ namespace Freeserf.UI
             renderView.KeyPress += RenderView_KeyPress;
             renderView.SystemKeyPress += RenderView_SystemKeyPress;
             renderView.StopDrag += RenderView_StopDrag;
+            renderView.Wheel += RenderView_Wheel;
         }
 
         public Network.INetworkDataReceiver NetworkDataReceiver { get; set; }
@@ -679,6 +689,15 @@ namespace Freeserf.UI
             var position = PositionToGui(new Position(args.X, args.Y));
 
             args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dy, args.Dy);
+
+            return viewer.SendEvent(args);
+        }
+
+        private bool RenderView_Wheel(object sender, Event.EventArgs args)
+        {
+            var position = PositionToGui(new Position(args.X, args.Y));
+
+            args = Event.EventArgs.Transform(args, position.X, position.Y, args.Dx, args.Dy);
 
             return viewer.SendEvent(args);
         }

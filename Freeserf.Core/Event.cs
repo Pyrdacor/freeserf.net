@@ -33,7 +33,8 @@ namespace Freeserf.Event
         Drag,
         KeyPressed,
         SystemKeyPressed,
-        StopDrag
+        StopDrag,
+        Wheel // Dy is the number of wheel steps (positive is up)
     }
 
     public enum Button
@@ -123,5 +124,6 @@ namespace Freeserf.Event
         event EventHandler KeyPress;
         event EventHandler SystemKeyPress;
         event EventHandler StopDrag;
+        event EventHandler Wheel;
     }
 }

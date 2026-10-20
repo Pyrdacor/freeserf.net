@@ -72,6 +72,7 @@ namespace Freeserf
         public event EventHandler KeyPress;
         public event EventHandler SystemKeyPress;
         public event EventHandler StopDrag;
+        public event EventHandler Wheel;
         public FullscreenRequestHandler FullscreenRequestHandler { get; set; }
         public INetworkDataReceiver NetworkDataReceiver { get; set; }
 
@@ -587,6 +588,18 @@ namespace Freeserf
                 return false;
 
             return RunHandler(DoubleClick, new EventArgs(EventType.DoubleClick, position.X, position.Y, 0, 0, button));
+        }
+
+        // Returns true if the wheel was used by the gui (e.g. to scroll a list).
+        public bool NotifyWheel(int x, int y, int steps)
+        {
+            // transform from screen to view
+            var position = ScreenToView(new Position(x, y));
+
+            if (position == null)
+                return false;
+
+            return RunHandler(Wheel, new EventArgs(EventType.Wheel, position.X, position.Y, 0, steps, Button.None));
         }
 
         public bool NotifySpecialClick(int x, int y)
