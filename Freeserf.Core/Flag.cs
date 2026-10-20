@@ -1303,7 +1303,9 @@ namespace Freeserf
                 map.AddPath(point2, direction2);
                 map.AddPath(Position, direction2.Reverse());
 
-                Game.BuildFlagSplitPath(Position);
+                // The flag usually has other paths (and a building) already, so the
+                // directions of the new path segments must be given explicitly.
+                Game.BuildFlagSplitPath(Position, direction1.Reverse(), direction2.Reverse());
             }
 
             return true;

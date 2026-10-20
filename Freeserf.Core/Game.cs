@@ -3660,6 +3660,16 @@ namespace Freeserf
             if (path1Direction == Direction.None || path2Direction == Direction.None)
                 return; // Should not happen, but to avoid exceptions just stop path splitting if it happens.
 
+            BuildFlagSplitPath(position, path1Direction, path2Direction);
+        }
+
+        /// <summary>
+        /// Splits the path which goes through the flag at the given position in the
+        /// given directions. The flag may have other paths as well (e.g. if a nearby
+        /// path is merged into an existing flag).
+        /// </summary>
+        internal void BuildFlagSplitPath(MapPos position, Direction path1Direction, Direction path2Direction)
+        {
             var path1Data = new SerfPathInfo();
             var path2Data = new SerfPathInfo();
 
@@ -4700,10 +4710,12 @@ namespace Freeserf
 
             long index = Render.RenderRoadSegment.CreateIndex(position, direction);
 
+            // Note: A path is deleted from both of its ends (e.g. between a building and its flag),
+            // so the render segment may be removed already.
             if (renderRoadSegments.TryRemove(index, out var renderRoadSegment) && renderRoadSegment != null)
                 renderRoadSegment.Delete();
             else
-                Log.Error.Write(ErrorSystemType.Game, $"Failed to remove road segment at position {position} direction {direction}.");
+                Log.Debug.Write(ErrorSystemType.Game, $"Road segment at position {position} direction {direction} was removed already.");
         }
 
         internal Road GetRoadFromPathAtPosition(MapPos position)
