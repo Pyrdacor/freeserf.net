@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to publish (e.g. android-2.2.10). Leave empty to only build and upload the artifact.'
+        description: 'Release tag to publish (e.g. android-2.2.11). Leave empty to only build and upload the artifact.'
         required: false
         default: ''
 
@@ -56,11 +56,9 @@ jobs:
 
           Freeserf is a faithful re-implementation of the classic real-time strategy game **The Settlers** (Serf City). This is the Android build of freeserf.net.
 
-          ### What's new in 2.2.10
+          ### What's new in 2.2.11
 
-          - **Large maps**: the largest map sizes are playable now and start much faster.
-          - **AI**: it looks for coal and iron with priority, so it can train knights and expand again.
-          - **Fixes**: the special click no longer triggers a normal click afterwards.
+          - **Fixes**: a crash after merging a nearby path into a flag (flag menu).
           - Same version number as the desktop version of freeserf.net.
 
           ### Install

@@ -1,3 +1,12 @@
+Version 2.2.11:
+===============
+
+- Fixed a crash after merging a nearby path into a flag (flag menu) if the flag
+  had other paths or a building
+- Lists like the save games can be scrolled with the mouse wheel (elsewhere the
+  wheel zooms the map as before)
+
+
 Version 2.2.10:
 ===============
 
