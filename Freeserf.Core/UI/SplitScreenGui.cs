@@ -34,6 +34,19 @@ namespace Freeserf.UI
         readonly List<Viewer> viewers = new List<Viewer>();
         readonly List<Render.IRenderView> playerRenderViews = new List<Render.IRenderView>();
         readonly List<Rect> playerViewRects = new List<Rect>();
+        // The shared layer the decorative pillar at the boundary is drawn on. It is
+        // rendered unscissored on top of both players' content (see GameView).
+        readonly Render.IRenderLayer pillarLayer = null;
+        // The pillar sprites created by this gui. They are deleted when the gui is
+        // destroyed (before the shared pillar layer is disposed by the game view).
+        readonly List<Render.ISprite> pillarSprites = new List<Render.ISprite>();
+        // The rotated middle frame split piece (96x40 -> 40x96) used as the vertical
+        // pillar. It is tiled vertically to span the full height.
+        const int PillarTileWidth = 40;
+        const int PillarTileHeight = 96;
+        // The visible width of the pillar. The middle part of the sprite is used so
+        // the pillar is narrower than the full sprite without distorting the pattern.
+        const int PillarWidth = 30;
         int lastCursorViewX = 0;
 
         // Handler which is called when the split-screen game is closed and the
@@ -42,11 +55,12 @@ namespace Freeserf.UI
         public System.Action DeactivateSplitScreenHandler { get; set; } = null;
 
         public SplitScreenGui(Render.IRenderView sharedRenderView, IEnumerable<Render.IRenderView> playerRenderViews,
-            Audio.IAudioInterface audioInterface)
+            Audio.IAudioInterface audioInterface, Render.IRenderLayer pillarLayer)
             : base(sharedRenderView, audioInterface, false)
         {
             this.sharedRenderView = sharedRenderView;
             this.audioInterface = audioInterface;
+            this.pillarLayer = pillarLayer;
             this.playerRenderViews.AddRange(playerRenderViews);
 
             int count = this.playerRenderViews.Count;
@@ -142,72 +156,45 @@ namespace Freeserf.UI
         }
 
         // Draws a decorative wooden pillar at the boundary between the given player
-        // and the previous one (like the History Edition). The pillar is drawn on the
-        // right player's gui layer (which is rendered last) so it is on top of both
-        // players' content. All coordinates are in gui units (640x480 per player);
-        // the layer transformation maps them to the player's part of the screen.
+        // and the previous one (like the History Edition). The pillar is drawn on
+        // the shared pillar layer which is rendered unscissored on top of both
+        // players' content, so it can span the full height and be centered on the
+        // boundary. All coordinates are in the shared virtual screen space.
         void CreatePillar(int playerIndex)
         {
-            var layer = playerRenderViews[playerIndex].GetLayer(Layer.Gui);
-
-            const int pillarWidth = 24;
-            const int capWidth = 30;
-            const int capHeight = 20;
             const byte displayLayer = 250;
 
-            var outlineColor = new Render.Color(0x2B, 0x1A, 0x0E);
-            var mainColor = new Render.Color(0x8B, 0x5A, 0x2B);
-            var edgeColor = new Render.Color(0x5C, 0x33, 0x17);
-            var highlightColor = new Render.Color(0xA8, 0x7B, 0x4F);
-            var capColor = new Render.Color(0x7A, 0x4E, 0x24);
+            // The boundary between the previous player and this one.
+            int boundaryX = playerViewRects[playerIndex].Left;
+            int screenHeight = playerViewRects[playerIndex].Size.Height;
 
-            // The pillar is drawn on the gui layer which is scaled to the player's
-            // part of the screen. To span the full height of the player's part, the
-            // gui-space height must be the player part height divided by the gui
-            // scale. The gui is anchored to the bottom edge, so the pillar starts
-            // at (480 - height) in gui coordinates.
-            var playerScreen = playerViewRects[playerIndex].Size;
-            var guiScaling = GetPlayerGuiScaling(playerIndex);
-            int height = Misc.Round(playerScreen.Height / guiScaling.ScaleY);
-            int y = GuiScaling.DesignHeight - height;
+            // The pillar is centered on the boundary.
+            int x = boundaryX - PillarWidth / 2;
 
-            // The boundary is at gui x = 0 on this player's layer, so the pillar is
-            // centered on it.
-            int x = -pillarWidth / 2;
+            int tileCount = (screenHeight + PillarTileHeight - 1) / PillarTileHeight;
 
-            // Main shaft: dark outline, brown body with panel lines and a highlight.
-            AddPillarRect(layer, x - 1, y, pillarWidth + 2, height, outlineColor, displayLayer);
-            AddPillarRect(layer, x, y, pillarWidth, height, mainColor, displayLayer);
-            AddPillarRect(layer, x, y, 2, height, edgeColor, displayLayer);
-            AddPillarRect(layer, x + pillarWidth - 2, y, 2, height, edgeColor, displayLayer);
-            AddPillarRect(layer, x + pillarWidth / 3, y, 1, height, edgeColor, displayLayer);
-            AddPillarRect(layer, x + 2 * pillarWidth / 3, y, 1, height, edgeColor, displayLayer);
-            AddPillarRect(layer, -1, y, 2, height, highlightColor, displayLayer);
+            for (int i = 0; i < tileCount; ++i)
+            {
+                int tileY = i * PillarTileHeight;
+                int tileH = System.Math.Min(PillarTileHeight, screenHeight - tileY);
 
-            // Capital (top) and base (bottom): slightly wider decorative sections.
-            int capX = -capWidth / 2;
-            int baseY = y + height - capHeight;
-
-            AddPillarRect(layer, capX - 1, y, capWidth + 2, capHeight, outlineColor, displayLayer);
-            AddPillarRect(layer, capX, y, capWidth, capHeight, capColor, displayLayer);
-            AddPillarRect(layer, capX, y, 2, capHeight, edgeColor, displayLayer);
-            AddPillarRect(layer, capX + capWidth - 2, y, 2, capHeight, edgeColor, displayLayer);
-            AddPillarRect(layer, capX + 2, y + 2, capWidth - 4, 2, highlightColor, displayLayer);
-
-            AddPillarRect(layer, capX - 1, baseY, capWidth + 2, capHeight, outlineColor, displayLayer);
-            AddPillarRect(layer, capX, baseY, capWidth, capHeight, capColor, displayLayer);
-            AddPillarRect(layer, capX, baseY, 2, capHeight, edgeColor, displayLayer);
-            AddPillarRect(layer, capX + capWidth - 2, baseY, 2, capHeight, edgeColor, displayLayer);
-            AddPillarRect(layer, capX + 2, baseY + capHeight - 4, capWidth - 4, 2, highlightColor, displayLayer);
+                AddPillarSprite(x, tileY, PillarWidth, tileH, displayLayer);
+            }
         }
 
-        void AddPillarRect(Render.IRenderLayer layer, int x, int y, int width, int height, Render.Color color, byte displayLayer)
+        void AddPillarSprite(int x, int y, int width, int height, byte displayLayer)
         {
-            var rect = sharedRenderView.ColoredRectFactory.Create(width, height, color, displayLayer);
-            rect.Layer = layer;
-            rect.X = x;
-            rect.Y = y;
-            rect.Visible = true;
+            var offset = Render.TextureAtlasManager.Instance.GetRotatedFrameSplitOffset();
+            // Use the middle part of the rotated frame split piece so the pillar is
+            // narrower than the full sprite without distorting the plank pattern.
+            int textureX = offset.X + (PillarTileWidth - width) / 2;
+            var sprite = sharedRenderView.SpriteFactory.Create(width, height, textureX, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
+            sprite.Layer = pillarLayer;
+            sprite.X = x;
+            sprite.Y = y;
+            sprite.Visible = true;
+
+            pillarSprites.Add(sprite);
         }
 
         // Transforms the given view position (in the shared virtual screen) to the
@@ -438,6 +425,13 @@ namespace Freeserf.UI
 
         public override void DestroyViewer()
         {
+            // Delete the pillar sprites before the shared pillar layer is disposed
+            // by the game view (the layer is not part of the player layers).
+            foreach (var sprite in pillarSprites)
+                sprite.Delete();
+
+            pillarSprites.Clear();
+
             foreach (var viewer in viewers)
                 viewer.Destroy(true);
 

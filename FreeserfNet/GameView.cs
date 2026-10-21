@@ -64,6 +64,11 @@ namespace Freeserf
         bool splitScreenPending = false;
         bool splitScreenDeactivatePending = false;
         GameInfo pendingSplitScreenGameInfo = null;
+        // The shared layer the decorative pillar at the boundary between the
+        // players' screen parts is drawn on. It is rendered unscissored on top of
+        // both players' content so the pillar can span the full height and be
+        // centered on the boundary.
+        RenderLayer pillarLayer = null;
         readonly SpriteFactory spriteFactory = null;
         readonly TriangleFactory triangleFactory = null;
         readonly ColoredRectFactory coloredRectFactory = null;
@@ -380,11 +385,20 @@ namespace Freeserf
             playerRenderViews.Add(new SplitScreenRenderView(this, 0, new Rect(0, 0, playerViewWidth, VirtualScreen.Size.Height)));
             playerRenderViews.Add(new SplitScreenRenderView(this, 1, new Rect(playerViewWidth, 0, playerViewWidth, VirtualScreen.Size.Height)));
 
+            // Create the shared layer for the decorative pillar at the boundary.
+            // It uses the gui texture atlas and the identity transformation (shared
+            // virtual screen coordinates) and is rendered unscissored on top of both
+            // players' content.
+            var textureAtlas = TextureAtlasManager.Instance;
+            var guiTexture = textureAtlas.GetOrCreate(Layer.Gui).Texture as Texture;
+            pillarLayer = Create(Layer.Gui, guiTexture, false, null, null) as RenderLayer;
+            pillarLayer.Visible = true;
+
             // Replace the gui with the split-screen gui. The setup screen is shown
             // for both players so they can configure their characters.
             gui.UnsubscribeEvents();
             gui.DestroyViewer();
-            gui = new UI.SplitScreenGui(this, playerRenderViews, this);
+            gui = new UI.SplitScreenGui(this, playerRenderViews, this, pillarLayer);
             ((UI.SplitScreenGui)gui).DeactivateSplitScreenHandler = DeactivateSplitScreen;
 
             // If a game was started from the setup screen, start it now (the
@@ -441,6 +455,11 @@ namespace Freeserf
             gui = new UI.Gui(this, this);
             gui.ActivateSplitScreenHandler = ActivateSplitScreen;
             gui.StartSplitScreenGameHandler = StartSplitScreenGame;
+
+            // Remove the shared pillar layer. Its sprites were deleted by the
+            // split-screen gui's DestroyViewer above.
+            pillarLayer?.Dispose();
+            pillarLayer = null;
         }
 
         public void Close()
@@ -815,6 +834,12 @@ namespace Freeserf
                 }
 
                 context.DisableScissor();
+
+                // The decorative pillar at the boundary is drawn on a shared layer
+                // which is rendered unscissored so it can span both players' parts
+                // and be centered on the boundary.
+                if (pillarLayer != null)
+                    pillarLayer.Render();
             }
             else
             {
@@ -1055,6 +1080,9 @@ namespace Freeserf
                     }
 
                     playerLayers.Clear();
+
+                    pillarLayer?.Dispose();
+                    pillarLayer = null;
 
                     // Free the audio (BASS) so playback stops when the game
                     // view is closed. On Android the process stays alive after
