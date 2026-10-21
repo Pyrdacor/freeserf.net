@@ -106,6 +106,7 @@
   <data name="CommandLine_ArgumentResolution" xml:space="preserve"><value>AUFL</value></data>
   <data name="CommandLine_Console" xml:space="preserve"><value>Im Konsolenfenster protokollieren.</value></data>
   <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Angegebenes Datenverzeichnis verwenden.</value></data>
+  <data name="CommandLine_SplitScreen" xml:space="preserve"><value>Im Splitscreen-Modus starten (2 Spieler auf einem Gerät).</value></data>
   <data name="CommandLine_Debug" xml:space="preserve"><value>Stufe der Diagnoseausgabe setzen</value></data>
   <data name="CommandLine_ExcludeLogType" xml:space="preserve">
     <value>Nur Meldungen anderer Typen protokollieren.&#xA;Nicht mit der Option -o kombinierbar.</value>
@@ -271,6 +272,7 @@
   <data name="Setup_MultiplayerJoin" xml:space="preserve"><value>Spiel beitreten</value></data>
   <data name="Setup_NameLabel" xml:space="preserve"><value>Name:</value></data>
   <data name="Setup_NewGame" xml:space="preserve"><value>Neues Spiel</value></data>
+  <data name="Setup_SplitScreen" xml:space="preserve"><value>Splitscreen</value></data>
   <data name="Setup_ServerAddress" xml:space="preserve"><value>IP: {0}</value><comment>{0}: server IP address.</comment></data>
   <data name="Setup_ServerValues" xml:space="preserve"><value>Serverwerte</value></data>
   <data name="Setup_StartMission" xml:space="preserve"><value>Mission starten</value></data>

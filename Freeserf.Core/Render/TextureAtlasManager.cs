@@ -559,6 +559,37 @@ namespace Freeserf.Render
                 AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 603u + i, paintedSprite);
             }
 
+            // we create an icon for split-screen (two players on one screen): the
+            // blue "You" player on the left and the red "You" player on the right,
+            // separated by a wooden pillar
+            var splitScreenPixels = new Sprite.Color[32 * 32];
+            var blueColor = new Sprite.Color { Red = 0x00, Green = 0xe3, Blue = 0xe3, Alpha = 255 };
+            var redColor = new Sprite.Color { Red = 0xcf, Green = 0x63, Blue = 0x63, Alpha = 255 };
+            var pillarColor = new Sprite.Color { Red = 0x8b, Green = 0x5a, Blue = 0x2b, Alpha = 255 };
+            var pillarEdgeColor = new Sprite.Color { Red = 0x2b, Green = 0x1a, Blue = 0x0e, Alpha = 255 };
+
+            for (int py = 0; py < 32; ++py)
+            {
+                for (int px = 0; px < 32; ++px)
+                {
+                    Sprite.Color pixel;
+
+                    if (px == 15 || px == 16)
+                        pixel = pillarEdgeColor;
+                    else if (px == 14 || px == 17)
+                        pixel = pillarColor;
+                    else if (px < 15)
+                        pixel = blueColor;
+                    else
+                        pixel = redColor;
+
+                    splitScreenPixels[py * 32 + px] = pixel;
+                }
+            }
+
+            var splitScreenIcon = Sprite.CreateFromPixels(32u, 32u, splitScreenPixels);
+            AddSprite(Layer.Gui, guiResourceOffsets[Data.Resource.Icon] + 501u, splitScreenIcon);
+
             #endregion
 
 

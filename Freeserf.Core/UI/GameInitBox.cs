@@ -127,12 +127,13 @@ namespace Freeserf.UI
             Custom = 0,
             Mission = 1,
             Load = 2,
-            MultiplayerClient = 3,
-            Tutorial = 4,
-            AIvsAI = 5,
+            Tutorial = 3,
+            AIvsAI = 4,
+            MultiplayerClient = 5,
             MultiplayerServer = 6,
             MultiplayerJoined = 7,
-            MultiplayerLoading = 8
+            MultiplayerLoading = 8,
+            SplitScreen = 9
         }
 
         static readonly uint[] GameTypeSprites = new uint[]
@@ -140,9 +141,10 @@ namespace Freeserf.UI
             262u,
             260u,
             500u,
-            263u,
             261u,
             264u,
+            263u,
+            263u,
             263u,
             263u,
             263u
@@ -927,6 +929,7 @@ namespace Freeserf.UI
             {
                 case GameType.Custom:
                 case GameType.AIvsAI:
+                case GameType.SplitScreen:
                 case GameType.MultiplayerClient:
                 case GameType.MultiplayerServer:
                 case GameType.MultiplayerJoined:
@@ -940,6 +943,9 @@ namespace Freeserf.UI
                             break;
                         case GameType.AIvsAI:
                             header = Strings.Setup_Demo;
+                            break;
+                        case GameType.SplitScreen:
+                            header = Strings.Setup_SplitScreen;
                             break;
                         case GameType.MultiplayerClient:
                             header = Strings.Setup_Multiplayer;
@@ -1007,7 +1013,7 @@ namespace Freeserf.UI
                     for (int i = 0; i < Game.MAX_PLAYER_COUNT; ++i)
                     {
                         if (i > 0)
-                            playerBoxes[i].ShowActivationButton = gameType != GameType.MultiplayerLoading;
+                            playerBoxes[i].ShowActivationButton = gameType != GameType.MultiplayerLoading && !IsSplitScreenPlayerLocked(gameType, (uint)i);
 
                         playerBoxes[i].ShowCopyValueButton = gameType != GameType.MultiplayerLoading;
                     }
@@ -1205,6 +1211,19 @@ namespace Freeserf.UI
                         SetRedraw();
                         break;
                     }
+                case GameType.SplitScreen:
+                    {
+                        if (resetRandomGames)
+                        {
+                            ServerGameInfo = GameInfo.CreateSplitScreenGameInfo();
+                            randomInput.SetRandom(ServerGameInfo.RandomBase);
+                        }
+                        randomInput.Displayed = true;
+                        fileList.Displayed = false;
+                        serverList.Displayed = false;
+                        SetRedraw();
+                        break;
+                    }
             }
         }
 
@@ -1376,6 +1395,7 @@ namespace Freeserf.UI
                                 case GameType.Custom:
                                 case GameType.Mission:
                                 case GameType.Tutorial:
+                                case GameType.SplitScreen:
                                     // in GameInitBox the viewer is already a local player
                                     break;
                                 case GameType.AIvsAI:
@@ -1538,6 +1558,12 @@ namespace Freeserf.UI
                                 };
                                 Server.StartGame(game);
                             }
+                            else if (gameType == GameType.SplitScreen)
+                            {
+                                // The game is shared by several local players. Each player
+                                // gets his own render view (own render map and render objects).
+                                interf.StartSplitScreenGame(ServerGameInfo);
+                            }
                             else if (gameType != GameType.MultiplayerClient &&
                                      gameType != GameType.MultiplayerJoined)
                             {
@@ -1579,14 +1605,25 @@ namespace Freeserf.UI
                         gameType == GameType.MultiplayerJoined ||
                         gameType == GameType.MultiplayerLoading)
                     {
+                        // The server/joined/loading states are transient. Leave them
+                        // and continue with the split-screen game type.
                         randomInput.Enabled = true; // was disabled in MultiplayerJoined
                         buttonStart.Enabled = true; // was disabled in MultiplayerJoined
-                        gameType = GameType.MultiplayerClient;
+                        gameType = GameType.SplitScreen;
                     }
-
-                    if (++gameType > GameType.AIvsAI)
+                    else
                     {
-                        gameType = GameType.Custom;
+                        // Skip the transient multiplayer states in the cycle.
+                        do
+                        {
+                            if (++gameType > GameType.SplitScreen)
+                            {
+                                gameType = GameType.Custom;
+                            }
+                        }
+                        while (gameType == GameType.MultiplayerServer ||
+                               gameType == GameType.MultiplayerJoined ||
+                               gameType == GameType.MultiplayerLoading);
                     }
 
                     UpdateGameType();
@@ -1609,6 +1646,7 @@ namespace Freeserf.UI
                             break;
                         case GameType.Custom:
                         case GameType.AIvsAI:
+                        case GameType.SplitScreen:
                         case GameType.MultiplayerServer:
                             if (ServerGameInfo.MapSize == 9u)
                                 return;
@@ -1634,6 +1672,7 @@ namespace Freeserf.UI
                             break;
                         case GameType.Custom:
                         case GameType.AIvsAI:
+                        case GameType.SplitScreen:
                         case GameType.MultiplayerServer:
                             if (ServerGameInfo.MapSize == 3u)
                                 return;
@@ -1654,6 +1693,7 @@ namespace Freeserf.UI
                             break;
                         case GameType.Custom:
                         case GameType.AIvsAI:
+                        case GameType.SplitScreen:
                         case GameType.MultiplayerServer:
                             if (ServerGameInfo.MapSize == 9u)
                                 return;
@@ -1674,6 +1714,7 @@ namespace Freeserf.UI
                             break;
                         case GameType.Custom:
                         case GameType.AIvsAI:
+                        case GameType.SplitScreen:
                         case GameType.MultiplayerServer:
                             if (ServerGameInfo.MapSize == 3u)
                                 return;
@@ -1733,6 +1774,10 @@ namespace Freeserf.UI
                                 SetRedraw();
 
                                 ServerUpdate();
+                            }
+                            else if (gameType == GameType.SplitScreen)
+                            {
+                                ServerGameInfo = GameInfo.CreateSplitScreenGameInfo();
                             }
                             else
                             {
@@ -2144,6 +2189,14 @@ namespace Freeserf.UI
             return false;
         }
 
+        // In split-screen mode the two human players have fixed player indices (0 and 1).
+        // They can't change their character/color and can't be removed. Only the CPU
+        // players (2 and 3) can be modified.
+        internal static bool IsSplitScreenPlayerLocked(GameType gameType, uint playerIndex)
+        {
+            return gameType == GameType.SplitScreen && playerIndex <= 1;
+        }
+
         bool HandlePlayerClick(uint playerIndex, int cx, int cy)
         {
             // The players of a loaded multiplayer game can't be changed.
@@ -2157,10 +2210,10 @@ namespace Freeserf.UI
 
             if (cx >= 8 + 32 + 8 && cx < 8 + 32 + 8 + 24 && cy >= 8 && cy < 24) // click on activation button
             {
-                // players can only be removed or added in custom games, AI vs AI and in multiplayer
-                if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.MultiplayerServer)
+                // players can only be removed or added in custom games, AI vs AI, split-screen and in multiplayer
+                if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.SplitScreen || gameType == GameType.MultiplayerServer)
                 {
-                    if (playerIndex > 0) // at least one player must be active
+                    if (playerIndex > 0 && !IsSplitScreenPlayerLocked(gameType, playerIndex)) // at least one player must be active
                     {
                         if (playerIndex >= ServerGameInfo.PlayerCount) // add player
                         {
@@ -2225,7 +2278,8 @@ namespace Freeserf.UI
 
             if (cx < 8 + 32 && cy < 72) // click on face
             {
-                bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
+                bool canNotChange = IsSplitScreenPlayerLocked(gameType, playerIndex) ||
+                                    (playerIndex == 0 && gameType != GameType.AIvsAI && gameType != GameType.SplitScreen) ||
                                     gameType == GameType.Mission ||
                                     gameType == GameType.Tutorial ||
                                     gameType == GameType.Load;
@@ -2287,9 +2341,9 @@ namespace Freeserf.UI
             }
             else if (cx >= 8 + 32 && cx < 8 + 32 + 8 && cy >= 8 && cy < 24) // click on copy values button
             {
-                // values can only copied in custom games and AI vs AI
+                // values can only copied in custom games, AI vs AI and split-screen
                 // and to AI enemies in multiplayer
-                if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.MultiplayerServer)
+                if (gameType == GameType.Custom || gameType == GameType.AIvsAI || gameType == GameType.SplitScreen || gameType == GameType.MultiplayerServer)
                 {
                     for (uint i = 0; i < ServerGameInfo.PlayerCount; ++i)
                     {
@@ -2373,7 +2427,8 @@ namespace Freeserf.UI
                     }
                     else if (cx >= 6 && cx < 12)
                     {
-                        bool canNotChange = (playerIndex == 0 && gameType != GameType.AIvsAI) ||
+                        bool canNotChange = IsSplitScreenPlayerLocked(gameType, playerIndex) ||
+                                            (playerIndex == 0 && gameType != GameType.AIvsAI && gameType != GameType.SplitScreen) ||
                                             gameType == GameType.MultiplayerJoined ||
                                             gameType == GameType.Mission ||
                                             gameType == GameType.Tutorial ||

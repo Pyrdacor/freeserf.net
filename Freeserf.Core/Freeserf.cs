@@ -28,6 +28,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Freeserf.Test")]
+[assembly: InternalsVisibleTo("FreeserfNet")]
+[assembly: InternalsVisibleTo("FreeserfNet.Android")]
 
 namespace Freeserf
 {
@@ -62,6 +64,8 @@ namespace Freeserf
             public bool ConsoleWindow = false;
             public bool LogLevelSet = false;
             public bool MultiplayerTest = false;
+            // Split-screen mode: several local players share one game on one device.
+            public bool SplitScreen = false;
             // True if given by the command line (then they are used as they are).
             public bool ScreenSizeGiven = false;
             public bool WindowPositionGiven = false;
@@ -151,6 +155,11 @@ namespace Freeserf
             commandLine.AddOption('c', Strings.CommandLine_Console, () =>
             {
                 initInfo.ConsoleWindow = true;
+            });
+
+            commandLine.AddOption('s', Strings.CommandLine_SplitScreen, () =>
+            {
+                initInfo.SplitScreen = true;
             });
 
             commandLine.AddOption('o', Strings.CommandLine_IncludeLogType).AddParameter(Strings.CommandLine_ArgumentLogType, (AutoParseableString s) =>

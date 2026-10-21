@@ -129,6 +129,9 @@ namespace Freeserf.Android
         static volatile float pinchStartZoom = 0.0f;
         static volatile float pinchCurrentDistance = 0.0f;
         static volatile bool touchInputEnabled = false;
+        // In split-screen mode each player pans his own map, so panning is enabled
+        // even though zooming is not.
+        static volatile bool touchPanEnabled = false;
         static volatile float currentZoom = 0.0f;
         static readonly ConcurrentQueue<Action<GameView>> pendingTouchEvents = new();
 
@@ -946,6 +949,7 @@ namespace Freeserf.Android
             if (currentGameView != null)
             {
                 touchInputEnabled = currentGameView.CanZoom;
+                touchPanEnabled = currentGameView.CanZoom || currentGameView.IsSplitScreen;
                 currentZoom = currentGameView.Zoom;
 
                 while (pendingTouchEvents.TryDequeue(out var touchEvent))
@@ -1378,7 +1382,7 @@ namespace Freeserf.Android
                             global::Android.Util.Log.Debug("Freeserf_Input", $"Touch down: {touchStartX},{touchStartY}");
                             touchActive = true;
                             touchPanning = false;
-                            touchPanAllowed = touchInputEnabled;
+                            touchPanAllowed = touchPanEnabled;
                             longPressFired = false;
                             StartLongPress();
                             int touchDownX = touchStartX;

@@ -32,6 +32,8 @@ namespace Freeserf.Renderer
         Matrix4 modelViewMatrix = Matrix4.Identity;
         Matrix4 unzoomedModelViewMatrix = Matrix4.Identity;
         float zoom = 0.0f;
+        float zoomCenterX = 0.0f;
+        float zoomCenterY = 0.0f;
 
         public Context(int width, int height)
         {
@@ -61,6 +63,9 @@ namespace Freeserf.Renderer
             this.width = width;
             this.height = height;
 
+            zoomCenterX = 0.5f * width;
+            zoomCenterY = 0.5f * height;
+
             SetRotation(rotation, true);
         }
 
@@ -73,9 +78,28 @@ namespace Freeserf.Renderer
                     return;
 
                 zoom = value;
+                zoomCenterX = 0.5f * width;
+                zoomCenterY = 0.5f * height;
 
                 ApplyMatrix();
             }
+        }
+
+        // Sets the zoom and the center it scales around. Used for the per-player
+        // zoom in split-screen mode where each player's part of the screen is
+        // zoomed around its own center.
+        public void SetZoom(float zoom, float centerX, float centerY)
+        {
+            if (Misc.FloatEqual(zoom, this.zoom) &&
+                Misc.FloatEqual(centerX, zoomCenterX) &&
+                Misc.FloatEqual(centerY, zoomCenterY))
+                return;
+
+            this.zoom = zoom;
+            zoomCenterX = centerX;
+            zoomCenterY = centerY;
+
+            ApplyMatrix();
         }
 
         public void SetRotation(Rotation rotation, bool forceUpdate = false)
@@ -86,6 +110,27 @@ namespace Freeserf.Renderer
 
                 ApplyMatrix();
             }
+        }
+
+        // Limits the rendering to the given area (in window coordinates, origin at
+        // the bottom-left like the viewport). Used in split-screen mode to clip each
+        // player's rendering to his part of the screen so it does not bleed into the
+        // other player's part (e.g. when zooming).
+        public void SetScissorRect(int x, int y, int width, int height)
+        {
+            if (width <= 0 || height <= 0)
+            {
+                State.Gl.Disable(EnableCap.ScissorTest);
+                return;
+            }
+
+            State.Gl.Enable(EnableCap.ScissorTest);
+            State.Gl.Scissor(x, y, (uint)width, (uint)height);
+        }
+
+        public void DisableScissor()
+        {
+            State.Gl.Disable(EnableCap.ScissorTest);
         }
 
         void ApplyMatrix()
@@ -146,8 +191,8 @@ namespace Freeserf.Renderer
 
             if (!Misc.FloatEqual(zoom, 0.0f))
             {
-                var x = 0.5f * width;
-                var y = 0.5f * height;
+                var x = zoomCenterX;
+                var y = zoomCenterY;
 
                 modelViewMatrix = Matrix4.CreateTranslationMatrix(x, y) *
                     Matrix4.CreateScalingMatrix(1.0f + zoom * 0.5f, 1.0f + zoom * 0.5f) *

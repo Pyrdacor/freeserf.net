@@ -37,6 +37,8 @@ namespace Freeserf.UI
 
         readonly Interface interf = null;
         readonly Map map = null;
+        // In split-screen mode each player has his own render map (own scroll position).
+        Render.RenderMap RenderMap => map.GetRenderMap(interf.RenderView) ?? map.RenderMap;
         int totalDragX = 0;
         int totalDragY = 0;
         readonly IRenderLayer buildsLayer = null;
@@ -76,7 +78,7 @@ namespace Freeserf.UI
 
             buildsLayer = interf.RenderView.GetLayer(Freeserf.Layer.Builds);
 
-            builds = new ILayerSprite[map.RenderMap.NumVisibleColumns, map.RenderMap.NumVisibleRows];
+            builds = new ILayerSprite[RenderMap.NumVisibleColumns, RenderMap.NumVisibleRows];
 
             if (buildSpriteInfos == null)
             {
@@ -107,12 +109,12 @@ namespace Freeserf.UI
 
         public void CleanUp()
         {
-            if (map?.RenderMap != null)
+            if (RenderMap != null)
             {
                 // destroy build sprites
-                for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
+                for (uint row = 0; row < RenderMap.NumVisibleRows; ++row)
                 {
-                    for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
+                    for (uint column = 0; column < RenderMap.NumVisibleColumns; ++column)
                     {
                         builds[column, row]?.Delete();
                         builds[column, row] = null;
@@ -143,8 +145,8 @@ namespace Freeserf.UI
         public void Update()
         {
             // update map zoom factor
-            if (map?.RenderMap != null && interf?.RenderView != null)
-                map.RenderMap.ZoomFactor = 1.0f + interf.RenderView.Zoom * 0.5f;
+            if (RenderMap != null && interf?.RenderView != null)
+                RenderMap.ZoomFactor = 1.0f + interf.RenderView.Zoom * 0.5f;
 
             // The possible builds change with the map, e.g. when the player
             // builds something while they are shown (#131).
@@ -160,15 +162,15 @@ namespace Freeserf.UI
 
         public MapPos GetCurrentMapPosition()
         {
-            return map.RenderMap.GetMapOffset();
+            return RenderMap.GetMapOffset();
         }
 
         public void MoveToMapPosition(MapPos position, bool center)
         {
             if (center)
-                map.RenderMap.CenterMapPosition(position);
+                RenderMap.CenterMapPosition(position);
             else
-                map.RenderMap.ScrollToMapPosition(position);
+                RenderMap.ScrollToMapPosition(position);
 
             interf.UpdateMinimap();
             recheckMapCursorSprites = true;
@@ -184,7 +186,7 @@ namespace Freeserf.UI
 
         protected override void InternalDraw()
         {
-            if (map.RenderMap == null) // no more viewport rendering
+            if (RenderMap == null) // no more viewport rendering
                 return;
 
             DrawMapCursor();
@@ -231,7 +233,7 @@ namespace Freeserf.UI
 
         void DrawMapCursorSprite(MapPos position, int index, uint spriteIndex)
         {
-            var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
+            var renderPos = RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
             var spriteInfo = buildSpriteInfos[spriteIndex - 31u];
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Freeserf.Layer.Builds);
 
@@ -260,7 +262,7 @@ namespace Freeserf.UI
                     builds[column, row].TextureAtlasOffset = offset;
                 }
 
-                var renderPos = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
+                var renderPos = RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
 
                 builds[column, row].X = TotalX + renderPos.X + spriteInfo.OffsetX;
                 builds[column, row].Y = TotalY + renderPos.Y + spriteInfo.OffsetY;
@@ -275,9 +277,9 @@ namespace Freeserf.UI
 
         void ClearMapCursorPossibleBuild()
         {
-            for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
+            for (uint row = 0; row < RenderMap.NumVisibleRows; ++row)
             {
-                for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
+                for (uint column = 0; column < RenderMap.NumVisibleColumns; ++column)
                 {
                     SetBuildSprite(column, row, 0u, -1);
                 }
@@ -287,14 +289,14 @@ namespace Freeserf.UI
         void DrawMapCursorPossibleBuild()
         {
             var game = interf.Game;
-            var columnStart = map.RenderMap.GetMapOffset();
+            var columnStart = RenderMap.GetMapOffset();
 
-            for (uint column = 0; column < map.RenderMap.NumVisibleColumns; ++column)
+            for (uint column = 0; column < RenderMap.NumVisibleColumns; ++column)
             {
-                bool down = map.RenderMap.ScrollY % 2 == 0;
+                bool down = RenderMap.ScrollY % 2 == 0;
                 var position = columnStart;
 
-                for (uint row = 0; row < map.RenderMap.NumVisibleRows; ++row)
+                for (uint row = 0; row < RenderMap.NumVisibleRows; ++row)
                 {
                     // Draw possible building 
                     int sprite = -1;
@@ -383,7 +385,7 @@ namespace Freeserf.UI
                 return false;
 
             var position = new Position(x, y);
-            var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
+            var mapPosition = RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
 
             if (delayed)
             {
@@ -551,7 +553,7 @@ namespace Freeserf.UI
             interf.ClosePopup();
 
             var position = new Position(x, y);
-            var mapPosition = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
+            var mapPosition = RenderMap.CoordinateSpace.ViewSpaceToTileSpace(position);
             var player = interf.Player;
 
             if (interf.IsBuildingRoad)
@@ -717,10 +719,13 @@ namespace Freeserf.UI
             int scrollX = totalDragX / RenderMap.TILE_WIDTH;
             int scrollY = totalDragY / RenderMap.TILE_HEIGHT;
 
+            // Scroll the player's own render map (in split-screen mode each player
+            // has his own render map with his own scroll position). The map's
+            // default render map is the first player's and must not be used here.
             if (interf.GetOption(Option.InvertScrolling)) // invert scrolling
-                map.Scroll(-scrollX, -scrollY);
+                RenderMap.Scroll(-scrollX, -scrollY);
             else
-                map.Scroll(scrollX, scrollY);
+                RenderMap.Scroll(scrollX, scrollY);
 
             interf.UpdateMinimap();
             recheckMapCursorSprites = true;

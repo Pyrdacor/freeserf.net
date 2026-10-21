@@ -1156,7 +1156,10 @@ namespace Freeserf
 
         // Rendering
         readonly Render.IRenderView renderView = null;
-        internal Render.RenderMap RenderMap { get; private set; } = null;
+        // In split-screen mode there is one render map per local player (each with its own
+        // scroll position). The first one is the default render map used by the game logic.
+        readonly List<(Render.IRenderView RenderView, Render.RenderMap RenderMap)> renderMaps = new List<(Render.IRenderView, Render.RenderMap)>();
+        internal Render.RenderMap RenderMap => renderMaps.Count > 0 ? renderMaps[0].RenderMap : null;
 
         // Callback for map height changes 
         readonly ChangeHandlers changeHandlers = new ChangeHandlers();
@@ -1213,35 +1216,75 @@ namespace Freeserf
             InitSpiralPosPattern();
         }
 
-        public void AttachToRenderLayer(Render.IRenderLayer renderLayerTiles,
-            Render.IRenderLayer renderLayerWaves, DataSource dataSource)
+        // Attaches the render map of the given player's render view to the given layers.
+        // The first call creates the render map (with the size of the player's virtual
+        // screen). In split-screen mode each player has his own render view and therefore
+        // his own render map with his own scroll position.
+        public void AttachToRenderLayer(Render.IRenderView playerRenderView,
+            Render.IRenderLayer renderLayerTiles, Render.IRenderLayer renderLayerWaves, DataSource dataSource)
         {
-            if (RenderMap == null)
+            for (int i = 0; i < renderMaps.Count; ++i)
             {
-                int virtualScreenWidth = renderView.VirtualScreen.Size.Width;
-                int virtualScreenHeight = renderView.VirtualScreen.Size.Height;
-                int tileWidth = Render.RenderMap.TILE_WIDTH;
-                int tileHeight = Render.RenderMap.TILE_HEIGHT;
-
-                RenderMap = new Render.RenderMap(
-                    (uint)(virtualScreenWidth / tileWidth),
-                    (uint)(virtualScreenHeight / tileHeight),
-                    this, renderView.TriangleFactory, renderView.SpriteFactory,
-                    Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Landscape),
-                    Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Waves),
-                    dataSource);
+                if (renderMaps[i].RenderView == playerRenderView)
+                {
+                    renderMaps[i].RenderMap.AttachToRenderLayer(renderLayerTiles, renderLayerWaves);
+                    return;
+                }
             }
 
-            RenderMap.AttachToRenderLayer(renderLayerTiles, renderLayerWaves);
+            var renderMap = CreateRenderMap(playerRenderView, renderLayerTiles, renderLayerWaves, dataSource);
+
+            renderMaps.Add((playerRenderView, renderMap));
         }
+
+        Render.RenderMap CreateRenderMap(Render.IRenderView playerRenderView,
+            Render.IRenderLayer renderLayerTiles, Render.IRenderLayer renderLayerWaves, DataSource dataSource)
+        {
+            int virtualScreenWidth = playerRenderView.VirtualScreen.Size.Width;
+            int virtualScreenHeight = playerRenderView.VirtualScreen.Size.Height;
+            int tileWidth = Render.RenderMap.TILE_WIDTH;
+            int tileHeight = Render.RenderMap.TILE_HEIGHT;
+
+            var renderMap = new Render.RenderMap(
+                (uint)(virtualScreenWidth / tileWidth),
+                (uint)(virtualScreenHeight / tileHeight),
+                this, playerRenderView.TriangleFactory, playerRenderView.SpriteFactory,
+                Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Landscape),
+                Render.TextureAtlasManager.Instance.GetOrCreate(Layer.Waves),
+                dataSource);
+
+            renderMap.AttachToRenderLayer(renderLayerTiles, renderLayerWaves);
+
+            return renderMap;
+        }
+
+        // The render map of the given local player (0 = default).
+        public Render.RenderMap GetRenderMap(int playerIndex)
+        {
+            return playerIndex < renderMaps.Count ? renderMaps[playerIndex].RenderMap : null;
+        }
+
+        // The render map which belongs to the given render view (e.g. of a local
+        // player in split-screen mode).
+        public Render.RenderMap GetRenderMap(Render.IRenderView playerRenderView)
+        {
+            for (int i = 0; i < renderMaps.Count; ++i)
+            {
+                if (renderMaps[i].RenderView == playerRenderView)
+                    return renderMaps[i].RenderMap;
+            }
+
+            return null;
+        }
+
+        public int RenderMapCount => renderMaps.Count;
 
         public void Close()
         {
-            if (RenderMap != null)
-            {
-                RenderMap.DetachFromRenderLayer();
-                RenderMap = null;
-            }
+            foreach (var renderMap in renderMaps)
+                renderMap.RenderMap.DetachFromRenderLayer();
+
+            renderMaps.Clear();
         }
 
         public uint Size => Geometry.Size;

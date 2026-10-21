@@ -351,12 +351,12 @@ namespace Freeserf.Render
             return head;
         }
 
-        static int GetBuildingBaseLine(uint mapPos, Game game, DataSource dataSource, Map map)
+        static int GetBuildingBaseLine(uint mapPos, Game game, DataSource dataSource, RenderMap renderMap)
         {
-            return GetBuildingBaseLine(game.GetBuildingAtPosition(mapPos), dataSource, map);
+            return GetBuildingBaseLine(game.GetBuildingAtPosition(mapPos), dataSource, renderMap);
         }
 
-        static int GetBuildingBaseLine(Building building, DataSource dataSource, Map map)
+        static int GetBuildingBaseLine(Building building, DataSource dataSource, RenderMap renderMap)
         {
             if (building == null)
                 return -1;
@@ -374,10 +374,10 @@ namespace Freeserf.Render
 
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
 
-            return map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).Y + info.OffsetY + info.Height;
+            return renderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).Y + info.OffsetY + info.Height;
         }
 
-        static bool InFrontOfBuilding(int x, int width, Building building, DataSource dataSource, Map map)
+        static bool InFrontOfBuilding(int x, int width, Building building, DataSource dataSource, RenderMap renderMap)
         {
             if (building == null)
                 return false;
@@ -395,7 +395,7 @@ namespace Freeserf.Render
 
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
 
-            int buildingLeft = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).X + info.OffsetX;
+            int buildingLeft = renderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).X + info.OffsetX;
             int buildingRight = buildingLeft + info.Width;
 
             int serfLeft = x;
@@ -420,7 +420,7 @@ namespace Freeserf.Render
             }
         }
 
-        void SetBaseLineOffset(Building building, int relativeOffset, Map map)
+        void SetBaseLineOffset(Building building, int relativeOffset, RenderMap renderMap)
         {
             if (building == null)
                 return;
@@ -437,7 +437,7 @@ namespace Freeserf.Render
             }
 
             var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, sprite);
-            int buildingBaseLine = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).Y + info.OffsetY + info.Height;
+            int buildingBaseLine = renderMap.CoordinateSpace.TileSpaceToViewSpace(building.Position).Y + info.OffsetY + info.Height;
 
             int serfBaseLine = this.sprite.Y + this.sprite.Height;
 
@@ -450,10 +450,10 @@ namespace Freeserf.Render
             SetBaseLineOffset(System.Math.Max(0, 1 + baseLine - (sprite.Y + sprite.Height)));
         }
 
-        public void Update(Game game, DataSource dataSource, int tick, Map map, MapPos position)
+        public void Update(Game game, DataSource dataSource, int tick, Map map, MapPos position, RenderMap renderMap)
         {
             var textureAtlas = TextureAtlasManager.Instance.GetOrCreate(Layer.Serfs);
-            var renderPosition = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(position);
+            var renderPosition = renderMap.CoordinateSpace.TileSpaceToViewSpace(position);
             int x = 0;
             int y = 0;
             int body = -1;
@@ -619,7 +619,7 @@ namespace Freeserf.Render
 
                 if (building != null)
                 {
-                    int baseLine = GetBuildingBaseLine(building, dataSource, map);
+                    int baseLine = GetBuildingBaseLine(building, dataSource, renderMap);
 
                     if (baseLine != -1)
                     {
@@ -629,7 +629,7 @@ namespace Freeserf.Render
                 else if (serf.SerfState == Serf.State.StoneCutting)
                 {
                     var info = dataSource.GetSpriteInfo(Data.Resource.MapObject, 65); // biggest rock
-                    int rockBaseLine = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(serf.Position).Y + info.OffsetY + info.Height;
+                    int rockBaseLine = renderMap.CoordinateSpace.TileSpaceToViewSpace(serf.Position).Y + info.OffsetY + info.Height;
 
                     SetBaseLine(rockBaseLine + 1);
                 }
@@ -639,7 +639,7 @@ namespace Freeserf.Render
                 }
                 else if (serf.SerfState == Serf.State.Mining && serf.MiningSubstate == 1)
                 {
-                    int baseLine = GetBuildingBaseLine(building, dataSource, map);
+                    int baseLine = GetBuildingBaseLine(building, dataSource, renderMap);
 
                     if (baseLine != -1)
                     {
@@ -654,29 +654,29 @@ namespace Freeserf.Render
                     {
                         building = game.GetBuildingAtPosition(map.MoveLeft(position));
 
-                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
-                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, renderMap))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], renderMap);
                     }
                     if (map.HasBuilding(map.MoveUpLeft(position)))
                     {
                         building = game.GetBuildingAtPosition(map.MoveUpLeft(position));
 
-                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
-                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], map);
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, renderMap))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetRight[(int)building.BuildingType], renderMap);
                     }
                     if (map.HasBuilding(map.MoveRight(position)))
                     {
                         building = game.GetBuildingAtPosition(map.MoveRight(position));
 
-                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
-                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, renderMap))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], renderMap);
                     }
                     if (map.HasBuilding(map.MoveUp(position)))
                     {
                         building = game.GetBuildingAtPosition(map.MoveUp(position));
 
-                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, map))
-                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], map);
+                        if (InFrontOfBuilding(sprite.X, sprite.Width, building, dataSource, renderMap))
+                            SetBaseLineOffset(building, 1 + BuildingBaseLineOffsetLeft[(int)building.BuildingType], renderMap);
                     }
                 }
 
@@ -740,7 +740,7 @@ namespace Freeserf.Render
                 fightingFlash.Visible = fightingFlashVisible;
         }
 
-        void DrawAdditionalSerf(Game game, int tick, Map map, Animation animation, Position renderPosition)
+        void DrawAdditionalSerf(Game game, int tick, Map map, Animation animation, Position renderPosition, RenderMap renderMap)
         {
             if (serf.SerfState == Serf.State.KnightEngagingBuilding ||
                 serf.SerfState == Serf.State.KnightPrepareAttacking ||
@@ -761,7 +761,7 @@ namespace Freeserf.Render
                         fightingEnemy = new RenderSerf(serf, this, defendingSerf, sprite.Layer, spriteFactory, dataSource, audio);
                     }
 
-                    fightingEnemy.Update(game, dataSource, tick, map, defendingSerf.Position);
+                    fightingEnemy.Update(game, dataSource, tick, map, defendingSerf.Position, renderMap);
                 }
             }
             else if (fightingEnemy != null)

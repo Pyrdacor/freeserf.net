@@ -500,10 +500,39 @@ namespace Freeserf.UI
 
         public static bool IsTextInputFocused => GuiObject.IsTextInputFocused;
 
-        readonly Render.IRenderView renderView = null;
-        Viewer viewer = null;
+        protected readonly Render.IRenderView renderView = null;
+        protected Viewer viewer = null;
+
+        // Handler which is called when a split-screen game is started from the
+        // setup screen. The game view uses it to switch to split-screen mode.
+        public System.Action<GameInfo> StartSplitScreenGameHandler { get; set; } = null;
+
+        // Handler which is called when the split-screen game type is selected in
+        // the setup screen. The game view uses it to switch to split-screen mode
+        // (showing the setup screen for both players).
+        public System.Action ActivateSplitScreenHandler { get; set; } = null;
+
+        // Starts a split-screen game. The default gui delegates to the handler
+        // which is set by the game view (it switches to split-screen mode first).
+        public virtual void StartSplitScreenGame(GameInfo gameInfo)
+        {
+            StartSplitScreenGameHandler?.Invoke(gameInfo);
+        }
+
+        // Switches to split-screen mode (showing the setup screen for both players).
+        public virtual void ActivateSplitScreen()
+        {
+            ActivateSplitScreenHandler?.Invoke();
+        }
 
         public Gui(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
+            : this(renderView, audioInterface, true)
+        {
+        }
+
+        // Subclasses (e.g. the split-screen gui) may skip the creation of the initial
+        // viewer and the event subscription and do it themselves.
+        protected Gui(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, bool createViewer)
         {
             if (renderView.VirtualScreen.Size.Width > Global.MAX_VIRTUAL_SCREEN_WIDTH ||
                 renderView.VirtualScreen.Size.Height > Global.MAX_VIRTUAL_SCREEN_HEIGHT)
@@ -512,6 +541,9 @@ namespace Freeserf.UI
             this.renderView = renderView;
 
             renderView.ZoomChanged += RenderView_ZoomChanged;
+
+            if (!createViewer)
+                return;
 
             // At the beginning we start with a local player.
             // Depending on the chosen game mode the viewer may be changed.
@@ -527,9 +559,25 @@ namespace Freeserf.UI
             renderView.Wheel += RenderView_Wheel;
         }
 
+        // Removes the event subscriptions of this gui. Must be called when the gui
+        // is replaced (e.g. when switching to split-screen mode) so the old gui does
+        // not receive events anymore.
+        public virtual void UnsubscribeEvents()
+        {
+            renderView.ZoomChanged -= RenderView_ZoomChanged;
+            renderView.Click -= RenderView_Click;
+            renderView.DoubleClick -= RenderView_DoubleClick;
+            renderView.SpecialClick -= RenderView_DoubleClick;
+            renderView.Drag -= RenderView_Drag;
+            renderView.KeyPress -= RenderView_KeyPress;
+            renderView.SystemKeyPress -= RenderView_SystemKeyPress;
+            renderView.StopDrag -= RenderView_StopDrag;
+            renderView.Wheel -= RenderView_Wheel;
+        }
+
         public Network.INetworkDataReceiver NetworkDataReceiver { get; set; }
 
-        public void UpdateNetworkEvents()
+        public virtual void UpdateNetworkEvents()
         {
             if (viewer != null)
             {
@@ -563,7 +611,7 @@ namespace Freeserf.UI
 
         // Closes any active multiplayer connection (e.g. when the app is
         // backgrounded) so no network threads keep running.
-        public void DisconnectNetwork()
+        public virtual void DisconnectNetwork()
         {
             if (viewer?.MainInterface == null)
                 return;
@@ -589,7 +637,7 @@ namespace Freeserf.UI
             }
         }
 
-        void RenderView_ZoomChanged(object sender, EventArgs e)
+        protected virtual void RenderView_ZoomChanged(object sender, EventArgs e)
         {
             viewer.MainInterface.HandleZoomChange();
         }
@@ -614,7 +662,7 @@ namespace Freeserf.UI
         // keeps receiving game events and accesses the disposed render view's
         // layers, which throws (e.g. "The given key 'Landscape' was not present
         // in the dictionary") when the next game starts.
-        public void DestroyViewer()
+        public virtual void DestroyViewer()
         {
             if (viewer != null)
             {
@@ -625,15 +673,15 @@ namespace Freeserf.UI
 
         public Viewer ActiveViewer => viewer;
 
-        public bool Ingame => viewer.Ingame;
-        public bool CanZoom => viewer.MainInterface.CanZoom;
+        public virtual bool Ingame => viewer.Ingame;
+        public virtual bool CanZoom => viewer.MainInterface.CanZoom;
 
-        public void DrawCursor(int x, int y)
+        public virtual void DrawCursor(int x, int y)
         {
             viewer.DrawCursor(x, y);
         }
 
-        Position PositionToGui(Position position) => GuiScaling.For(renderView.VirtualScreen.Size).ToGui(position);
+        protected Position PositionToGui(Position position) => GuiScaling.For(renderView.VirtualScreen.Size).ToGui(position);
 
         public static Position PositionToGame(Position position, Render.IRenderView renderView)
         {
@@ -647,7 +695,7 @@ namespace Freeserf.UI
             return new Position(x, y);
         }
 
-        Size DeltaToGui(Size delta) => GuiScaling.For(renderView.VirtualScreen.Size).DeltaToGui(delta);
+        protected Size DeltaToGui(Size delta) => GuiScaling.For(renderView.VirtualScreen.Size).DeltaToGui(delta);
 
         public static Size DeltaToGame(Size delta, Render.IRenderView renderView)
         {
@@ -659,17 +707,17 @@ namespace Freeserf.UI
             return new Size(width, height);
         }
 
-        private bool RenderView_KeyPress(object sender, Event.EventArgs args)
+        protected virtual bool RenderView_KeyPress(object sender, Event.EventArgs args)
         {
             return viewer.SendEvent(args);
         }
 
-        private bool RenderView_SystemKeyPress(object sender, Event.EventArgs args)
+        protected virtual bool RenderView_SystemKeyPress(object sender, Event.EventArgs args)
         {
             return viewer.SendEvent(args);
         }
 
-        private bool RenderView_Drag(object sender, Event.EventArgs args)
+        protected virtual bool RenderView_Drag(object sender, Event.EventArgs args)
         {
             var position = PositionToGui(new Position(args.X, args.Y));
             var delta = DeltaToGui(new Size(args.Dx, args.Dy));
@@ -679,12 +727,12 @@ namespace Freeserf.UI
             return viewer.SendEvent(args);
         }
 
-        private bool RenderView_StopDrag(object sender, Event.EventArgs args)
+        protected virtual bool RenderView_StopDrag(object sender, Event.EventArgs args)
         {
             return viewer.SendEvent(args);
         }
 
-        private bool RenderView_DoubleClick(object sender, Event.EventArgs args)
+        protected virtual bool RenderView_DoubleClick(object sender, Event.EventArgs args)
         {
             var position = PositionToGui(new Position(args.X, args.Y));
 
@@ -702,7 +750,7 @@ namespace Freeserf.UI
             return viewer.SendEvent(args);
         }
 
-        private bool RenderView_Click(object sender, Event.EventArgs args)
+        protected virtual bool RenderView_Click(object sender, Event.EventArgs args)
         {
             var position = PositionToGui(new Position(args.X, args.Y));
 
@@ -711,7 +759,7 @@ namespace Freeserf.UI
             return viewer.SendEvent(args);
         }
 
-        public void Draw()
+        public virtual void Draw()
         {
             MultiplayerTestDriver.PreUpdate(this);
             viewer.Update();

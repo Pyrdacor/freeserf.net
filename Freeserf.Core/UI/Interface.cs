@@ -86,6 +86,20 @@ namespace Freeserf.UI
         int languageRevision = LanguageSettings.Revision;
         public GameInitBox GameInitBox { get; private set; }
 
+        // In split-screen mode the game is shared by several local players. Only one
+        // interface (the first player's) drives the game updates, the others only
+        // update their own UI (viewport, panel bar, notifications, ...).
+        public bool DrivesGameUpdates { get; set; } = true;
+
+        // In split-screen mode only the first player may change the game speed
+        // (the game speed buttons are hidden for the other players).
+        public bool CanChangeGameSpeed { get; set; } = true;
+
+        // In split-screen mode only the first player may change the game settings
+        // (quit, save, options). The corresponding menu entries are hidden for
+        // the other players.
+        public bool CanChangeGameSettings { get; set; } = true;
+
         bool ignoreNextDelayedClick = false;
         protected MapPos mapCursorPosition = 0u;
         CursorType mapCursorType = CursorType.None;
@@ -117,6 +131,26 @@ namespace Freeserf.UI
 
         public IRenderView RenderView { get; } = null;
         public Audio.IAudioInterface AudioInterface { get; } = null;
+        // In split-screen mode each player has his own render map (own scroll position).
+        Render.RenderMap RenderMap => Game?.Map?.GetRenderMap(RenderView) ?? Game?.Map?.RenderMap;
+        // True if this interface belongs to a split-screen game (several local players).
+        public bool IsSplitScreen => NetworkDataHandler is SplitScreenGui;
+
+        // Starts a split-screen game (2 local players sharing one game).
+        public void StartSplitScreenGame(GameInfo gameInfo)
+        {
+            if (NetworkDataHandler is SplitScreenGui splitScreenGui)
+                splitScreenGui.StartSplitScreenGame(gameInfo);
+            else if (NetworkDataHandler is Gui gui)
+                gui.StartSplitScreenGame(gameInfo);
+        }
+
+        // Switches to split-screen mode (showing the setup screen for both players).
+        public void ActivateSplitScreen()
+        {
+            if (NetworkDataHandler is Gui gui)
+                gui.ActivateSplitScreen();
+        }
         public Network.INetworkDataHandler NetworkDataHandler { get; } = null;
         public Viewport Viewport { get; private set; } = null;
         public PanelBar PanelBar { get; private set; } = null;
@@ -343,8 +377,10 @@ namespace Freeserf.UI
             if (Game == null || Game.Map == null)
                 return;
 
-            if (Game.Map.RenderMap == null)
-                Game.Map.AttachToRenderLayer(RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
+            // In split-screen mode each player has his own render view and therefore
+            // his own render map. The map attaches the render map of the given render
+            // view (creating it on the first call).
+            Game.Map.AttachToRenderLayer(RenderView, RenderView.GetLayer(Freeserf.Layer.Landscape), RenderView.GetLayer(Freeserf.Layer.Waves), RenderView.DataSource);
 
             if (Viewport == null)
             {
@@ -468,6 +504,11 @@ namespace Freeserf.UI
         // Open box for starting a new game 
         public void OpenGameInit(GameInitBox.GameType gameType = GameInitBox.GameType.Custom)
         {
+            // In split-screen mode the setup screen starts with the split-screen
+            // game type selected (like the History Edition).
+            if (gameType == GameInitBox.GameType.Custom && IsSplitScreen)
+                gameType = GameInitBox.GameType.SplitScreen;
+
             // This might be called through a click event out of an interface which
             // didn't notices a previous viewer switch. So re-check it here.
             Viewer = Viewer?.ActiveViewer ?? Viewer;
@@ -479,8 +520,11 @@ namespace Freeserf.UI
                 return;
             }
 
-            // the following code will start the intro mission that is played in the background while the GameInitBox is active
-            GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView, AudioInterface);
+            // the following code will start the intro mission that is played in the background while the GameInitBox is active.
+            // In split-screen mode the game is shared by several render views, so the
+            // single-view intro mission is not started here.
+            if (!IsSplitScreen)
+                GameManager.Instance.StartGame(GameInfo.GetIntroMission(), RenderView, AudioInterface);
 
             ClosePopup();
 
@@ -890,7 +934,7 @@ namespace Freeserf.UI
             if (map.Distance(lastPathwayScrollPosition, destination) > 3)
                 return true;
 
-            var viewPosition = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(destination);
+            var viewPosition = RenderMap.CoordinateSpace.TileSpaceToViewSpace(destination);
             var viewRectWithBorder = RenderView.VirtualScreen.CreateShrinked(40);
 
             return !viewRectWithBorder.Contains(viewPosition);
@@ -1136,10 +1180,13 @@ namespace Freeserf.UI
                 /*if (this is RemoteInterface)
                     Game.UpdateVisuals();
                 else*/
-                int gameUpdates = TakeGameUpdates();
+                if (DrivesGameUpdates)
+                {
+                    int gameUpdates = TakeGameUpdates();
 
-                for (int i = 0; i < gameUpdates; ++i)
-                    Game.Update();
+                    for (int i = 0; i < gameUpdates; ++i)
+                        Game.Update();
+                }
 
                 UpdateBuildingRoadSegments();
 
@@ -1257,7 +1304,7 @@ namespace Freeserf.UI
         {
             foreach (var segment in buildingRoadSegments)
             {
-                segment.Update(Game.Map.RenderMap);
+                segment.Update(RenderMap);
             }
         }
 
@@ -1735,6 +1782,10 @@ namespace Freeserf.UI
             }
             else if (key == Event.SystemKey.F5)
             {
+                // In split-screen mode only the first player may save the game.
+                if (!CanChangeGameSettings)
+                    return true;
+
                 // In multiplayer games all players vote on saving (the server saves the game).
                 if (IsMultiplayer)
                 {
@@ -1751,7 +1802,7 @@ namespace Freeserf.UI
             }
             else if (key == Event.SystemKey.F6)
             {
-                if (!IsRemote)
+                if (!IsRemote && CanChangeGameSettings)
                 {
                     // save
                     OpenPopup(PopupBox.Type.LoadSave);
@@ -1773,6 +1824,9 @@ namespace Freeserf.UI
                 // Game speed
                 case '+':
                     {
+                        if (!CanChangeGameSpeed)
+                            break;
+
                         if (IsMultiplayer)
                             RequestGameSpeed(Math.Min(Game.GameSpeed + 1, Global.MAX_GAME_SPEED));
                         else
@@ -1781,6 +1835,9 @@ namespace Freeserf.UI
                     }
                 case '-':
                     {
+                        if (!CanChangeGameSpeed)
+                            break;
+
                         if (IsMultiplayer)
                             RequestGameSpeed(Game.GameSpeed == 0 ? 0 : Game.GameSpeed - 1);
                         else
@@ -1789,6 +1846,9 @@ namespace Freeserf.UI
                     }
                 case '0':
                     {
+                        if (!CanChangeGameSpeed)
+                            break;
+
                         if (IsMultiplayer)
                             RequestGameSpeed(GameState.DEFAULT_GAME_SPEED);
                         else
@@ -1797,6 +1857,9 @@ namespace Freeserf.UI
                     }
                 case '9':
                     {
+                        if (!CanChangeGameSpeed)
+                            break;
+
                         if (IsMultiplayer)
                             RequestGameSpeed(Global.MAX_GAME_SPEED);
                         else
@@ -1805,6 +1868,9 @@ namespace Freeserf.UI
                     }
                 case 'p':
                     {
+                        if (!CanChangeGameSpeed)
+                            break;
+
                         TogglePause();
                         break;
                     }
@@ -1876,7 +1942,9 @@ namespace Freeserf.UI
                         break;
                     }
                 case 'Q':
-                    OpenPopup(PopupBox.Type.QuitConfirm);
+                    // In split-screen mode only the first player may quit the game.
+                    if (CanChangeGameSettings)
+                        OpenPopup(PopupBox.Type.QuitConfirm);
                     break;
                 case 'P':
                     OpenPopup(PopupBox.Type.PlayerFaces);

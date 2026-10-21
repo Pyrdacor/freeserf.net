@@ -488,6 +488,18 @@ namespace Freeserf
             return serverGameInfo;
         }
 
+        // A custom game for split-screen mode: player 0 ("You", blue) and player 1
+        // ("Friend", red) are both human, the other players are AI. Player 1 gets
+        // the same face as the second player in a network game.
+        public static GameInfo CreateSplitScreenGameInfo()
+        {
+            var gameInfo = new GameInfo(new Random(), false);
+
+            gameInfo.ReplacePlayer(1, new PlayerInfo(PlayerFace.Friend, PlayerInfo.PlayerColors[1], 40u, 40u, 40u));
+
+            return gameInfo;
+        }
+
         internal GameInfo(Random randomBase, bool aiPlayersOnly)
         {
             MapSize = 3;
@@ -675,7 +687,14 @@ namespace Freeserf
 
         internal Game Instantiate(Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
-            var game = new Game(renderView, audioInterface);
+            return Instantiate(new[] { renderView }, audioInterface);
+        }
+
+        // In split-screen mode the game is shared by several local players. Each player
+        // gets his own render view (own render map and render objects).
+        internal Game Instantiate(IEnumerable<Render.IRenderView> renderViews, Audio.IAudioInterface audioInterface)
+        {
+            var game = new Game(renderViews, audioInterface);
 
             if (!game.Init(MapSize, RandomBase))
             {
