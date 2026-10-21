@@ -389,8 +389,7 @@ namespace Freeserf
 
                 State.Init(this);
                 gameView = new(dataSource, new Size(initInfo.ScreenWidth, initInfo.ScreenHeight),
-                    DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed,
-                    initInfo.SplitScreen ? 2 : 1);
+                    DeviceType.Desktop, SizingPolicy.FitRatio, OrientationPolicy.Fixed);
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
                 gameView.Resize(Width, Height);
 

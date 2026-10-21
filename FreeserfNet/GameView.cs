@@ -59,7 +59,6 @@ namespace Freeserf
         // mode there is only one entry which is not used (the context zoom is
         // used instead).
         readonly List<float> playerZooms = new List<float>();
-        readonly int splitScreenPlayerCount = 1;
         bool splitScreenActive = false;
         bool splitScreenPending = false;
         bool splitScreenDeactivatePending = false;
@@ -97,15 +96,13 @@ namespace Freeserf
         public GameView(DataSource dataSource, Size virtualScreenSize,
             DeviceType deviceType = DeviceType.Desktop,
             SizingPolicy sizingPolicy = SizingPolicy.FitRatio,
-            OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation,
-            int splitScreenPlayerCount = 1)
+            OrientationPolicy orientationPolicy = OrientationPolicy.Support180DegreeRotation)
         {
             VirtualScreen = new Rect(0, 0, Math.Min(virtualScreenSize.Width, Global.MAX_VIRTUAL_SCREEN_WIDTH), Math.Min(virtualScreenSize.Height, Global.MAX_VIRTUAL_SCREEN_HEIGHT));
             virtualScreenDisplay = new Rect(VirtualScreen);
             this.sizingPolicy = sizingPolicy;
             this.orientationPolicy = orientationPolicy;
             this.deviceType = deviceType;
-            this.splitScreenPlayerCount = Math.Max(1, splitScreenPlayerCount);
             isLandscapeRatio = VirtualScreen.Size.Width > VirtualScreen.Size.Height;
 
             playerZooms.Add(0.0f);

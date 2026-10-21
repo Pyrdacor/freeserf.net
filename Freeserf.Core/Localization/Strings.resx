@@ -106,7 +106,6 @@
   <data name="CommandLine_ArgumentResolution" xml:space="preserve"><value>RES</value></data>
   <data name="CommandLine_Console" xml:space="preserve"><value>Log to console window.</value></data>
   <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Use specified data directory.</value></data>
-  <data name="CommandLine_SplitScreen" xml:space="preserve"><value>Start in split-screen mode (2 players on one device).</value></data>
   <data name="CommandLine_Debug" xml:space="preserve"><value>Set debug output level</value></data>
   <data name="CommandLine_ExcludeLogType" xml:space="preserve">
     <value>Log only messages not of the given type.&#xA;Cannot be used with -o option.</value>

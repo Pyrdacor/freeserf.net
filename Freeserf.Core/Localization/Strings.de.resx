@@ -106,7 +106,6 @@
   <data name="CommandLine_ArgumentResolution" xml:space="preserve"><value>AUFL</value></data>
   <data name="CommandLine_Console" xml:space="preserve"><value>Im Konsolenfenster protokollieren.</value></data>
   <data name="CommandLine_DataDirectory" xml:space="preserve"><value>Angegebenes Datenverzeichnis verwenden.</value></data>
-  <data name="CommandLine_SplitScreen" xml:space="preserve"><value>Im Splitscreen-Modus starten (2 Spieler auf einem Gerät).</value></data>
   <data name="CommandLine_Debug" xml:space="preserve"><value>Stufe der Diagnoseausgabe setzen</value></data>
   <data name="CommandLine_ExcludeLogType" xml:space="preserve">
     <value>Nur Meldungen anderer Typen protokollieren.&#xA;Nicht mit der Option -o kombinierbar.</value>
