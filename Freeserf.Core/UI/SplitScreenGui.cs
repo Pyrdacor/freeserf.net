@@ -40,13 +40,8 @@ namespace Freeserf.UI
         // The pillar sprites created by this gui. They are deleted when the gui is
         // destroyed (before the shared pillar layer is disposed by the game view).
         readonly List<Render.ISprite> pillarSprites = new List<Render.ISprite>();
-        // The rotated middle frame split piece (96x40 -> 40x96) used as the vertical
-        // pillar. It is tiled vertically to span the full height.
-        const int PillarTileWidth = 40;
-        const int PillarTileHeight = 96;
-        // The visible width of the pillar. The middle part of the sprite is used so
-        // the pillar is narrower than the full sprite without distorting the pattern.
-        const int PillarWidth = 30;
+        // The width of the custom pillar sprite (see CustomSprites.Pillar).
+        const int PillarWidth = 53;
         int lastCursorViewX = 0;
 
         // Handler which is called when the split-screen game is closed and the
@@ -91,6 +86,12 @@ namespace Freeserf.UI
             // options). The corresponding menu entries are hidden for the others.
             for (int i = 1; i < count; ++i)
                 viewers[i].MainInterface.CanChangeGameSettings = false;
+
+            // The custom pillar sprite is scaled to the full height of the screen
+            // (the texture is sampled at its native size, the rendered quad is
+            // stretched to the screen height).
+            int screenHeight = playerViewRects[0].Size.Height;
+            pillarLayer.SizeTransformation = (Size size) => new Size(size.Width, screenHeight);
 
             // Draw a decorative wooden pillar at each boundary between the players'
             // screen parts (like the History Edition).
@@ -159,36 +160,28 @@ namespace Freeserf.UI
         // and the previous one (like the History Edition). The pillar is drawn on
         // the shared pillar layer which is rendered unscissored on top of both
         // players' content, so it can span the full height and be centered on the
-        // boundary. All coordinates are in the shared virtual screen space.
+        // boundary. All coordinates are in the shared virtual screen space. The
+        // custom pillar sprite is scaled to the screen height by the pillar layer's
+        // size transformation.
         void CreatePillar(int playerIndex)
         {
             const byte displayLayer = 250;
 
             // The boundary between the previous player and this one.
             int boundaryX = playerViewRects[playerIndex].Left;
-            int screenHeight = playerViewRects[playerIndex].Size.Height;
 
-            // The pillar is centered on the boundary.
+            // The pillar is centered on the boundary. The sprite is created at its
+            // native size and scaled to the screen height by the pillar layer's
+            // size transformation.
             int x = boundaryX - PillarWidth / 2;
 
-            int tileCount = (screenHeight + PillarTileHeight - 1) / PillarTileHeight;
-
-            for (int i = 0; i < tileCount; ++i)
-            {
-                int tileY = i * PillarTileHeight;
-                int tileH = System.Math.Min(PillarTileHeight, screenHeight - tileY);
-
-                AddPillarSprite(x, tileY, PillarWidth, tileH, displayLayer);
-            }
+            AddPillarSprite(x, 0, PillarWidth, (int)Render.CustomSprites.Pillar.Height, displayLayer);
         }
 
         void AddPillarSprite(int x, int y, int width, int height, byte displayLayer)
         {
-            var offset = Render.TextureAtlasManager.Instance.GetRotatedFrameSplitOffset();
-            // Use the middle part of the rotated frame split piece so the pillar is
-            // narrower than the full sprite without distorting the plank pattern.
-            int textureX = offset.X + (PillarTileWidth - width) / 2;
-            var sprite = sharedRenderView.SpriteFactory.Create(width, height, textureX, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
+            var offset = Render.TextureAtlasManager.Instance.GetPillarOffset();
+            var sprite = sharedRenderView.SpriteFactory.Create(width, height, offset.X, offset.Y, false, true, displayLayer) as Render.ILayerSprite;
             sprite.Layer = pillarLayer;
             sprite.X = x;
             sprite.Y = y;

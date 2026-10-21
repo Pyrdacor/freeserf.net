@@ -16,9 +16,9 @@ namespace Freeserf.Render
         readonly Dictionary<Layer, ITextureAtlasBuilder> atlasBuilders = new Dictionary<Layer, ITextureAtlasBuilder>();
         readonly Dictionary<Layer, ITextureAtlas> atlas = new Dictionary<Layer, ITextureAtlas>();
         readonly Dictionary<Data.Resource, uint> guiResourceOffsets = new Dictionary<Data.Resource, uint>();
-        // Index of the rotated middle frame split piece (the vertical pillar in
-        // split-screen mode) in the gui atlas.
-        uint rotatedFrameSplitIndex = 0;
+        // Index of the custom pillar sprite (the vertical pillar in split-screen
+        // mode) in the gui atlas.
+        uint pillarIndex = 0;
 
         public static TextureAtlasManager Instance
         {
@@ -49,13 +49,13 @@ namespace Freeserf.Render
             return guiResourceOffsets[type];
         }
 
-        // Returns the texture atlas offset of the rotated middle frame split piece
-        // (the vertical pillar between the players' screen parts in split-screen mode).
-        public Position GetRotatedFrameSplitOffset()
+        // Returns the texture atlas offset of the custom pillar sprite (the
+        // vertical pillar between the players' screen parts in split-screen mode).
+        public Position GetPillarOffset()
         {
             var textureAtlas = GetOrCreate(Layer.Gui);
 
-            return textureAtlas.GetOffset(rotatedFrameSplitIndex);
+            return textureAtlas.GetOffset(pillarIndex);
         }
 
         public void AddSprite(Layer layer, uint spriteIndex, Sprite sprite)
@@ -457,18 +457,6 @@ namespace Freeserf.Render
             AddGuiElements(Data.Resource.FrameBottom, 26, ref index, data, color); // actually there are only 23 sprites but we have to pass the max sprite number + 1 (non-existent sprites are skipped)
             AddGuiElements(Data.Resource.FramePopup, 4, ref index, data, color);
             AddGuiElements(Data.Resource.FrameSplit, 3, ref index, data, color);
-
-            // Add a rotated version of the middle frame split piece (96x40 -> 40x96)
-            // which is used as the vertical pillar between the players' screen parts
-            // in split-screen mode.
-            var frameSplitMiddle = data.GetSprite(Data.Resource.FrameSplit, 1, color);
-
-            if (frameSplitMiddle != null)
-            {
-                rotatedFrameSplitIndex = index;
-                AddSprite(Layer.Gui, index++, Rotate90Clockwise(frameSplitMiddle));
-            }
-
             AddGuiElements(Data.Resource.FrameTop, 4, ref index, data, color);
             AddGuiElements(Data.Resource.Indicator, 8, ref index, data, color);
             AddGuiElements(Data.Resource.Logo, 1, ref index, data, color);
@@ -638,6 +626,17 @@ namespace Freeserf.Render
 
             #endregion
 
+
+            #region Split-screen pillar
+
+            // The custom pillar sprite (the vertical pillar between the players'
+            // screen parts in split-screen mode). It is scaled to the screen height
+            // by the pillar layer's size transformation.
+            pillarIndex = speedButtonIndex + 1u;
+            AddSprite(Layer.Gui, pillarIndex, CustomSprites.Pillar);
+
+            #endregion
+
         }
 
         void AddGuiElements(Data.Resource resourceType, uint num, ref uint index, DataSource data, PixelColor color)
@@ -657,32 +656,5 @@ namespace Freeserf.Render
             }
         }
 
-        // Rotates the given sprite 90 degrees clockwise (used for the vertical
-        // split-screen pillar).
-        static Sprite Rotate90Clockwise(Sprite sprite)
-        {
-            int width = (int)sprite.Width;
-            int height = (int)sprite.Height;
-            var data = sprite.GetData();
-            var rotated = new byte[width * height * 4];
-
-            for (int y = 0; y < height; ++y)
-            {
-                for (int x = 0; x < width; ++x)
-                {
-                    int newX = height - 1 - y;
-                    int newY = x;
-                    int oldIndex = (y * width + x) * 4;
-                    int newIndex = (newY * height + newX) * 4;
-
-                    rotated[newIndex] = data[oldIndex];
-                    rotated[newIndex + 1] = data[oldIndex + 1];
-                    rotated[newIndex + 2] = data[oldIndex + 2];
-                    rotated[newIndex + 3] = data[oldIndex + 3];
-                }
-            }
-
-            return Sprite.CreateFromData((uint)height, (uint)width, rotated);
-        }
     }
 }
