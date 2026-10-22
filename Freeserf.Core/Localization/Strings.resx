@@ -470,6 +470,7 @@
   <data name="Setup_MultiplayerJoin" xml:space="preserve"><value>Multiplayer Join</value></data>
   <data name="Setup_NameLabel" xml:space="preserve"><value>Name:</value></data>
   <data name="Setup_NewGame" xml:space="preserve"><value>New game</value></data>
+  <data name="Setup_SplitScreen" xml:space="preserve"><value>Split-Screen</value></data>
   <data name="Setup_ServerAddress" xml:space="preserve">
     <value>IP: {0}</value>
     <comment>{0}: server IP address.</comment>

@@ -50,13 +50,30 @@ namespace Freeserf
         readonly DeviceType deviceType;
         readonly bool isLandscapeRatio = true;
         Rotation rotation = Rotation.None;
-        readonly SortedDictionary<Layer, RenderLayer> layers = new SortedDictionary<Layer, RenderLayer>();
+        // In split-screen mode there is one set of layers per local player. Each set
+        // has position transformations which map the player's rendering to his part
+        // of the screen.
+        readonly List<SortedDictionary<Layer, RenderLayer>> playerLayers = new List<SortedDictionary<Layer, RenderLayer>>();
+        readonly List<SplitScreenRenderView> playerRenderViews = new List<SplitScreenRenderView>();
+        // The zoom of each local player (used in split-screen mode). In normal
+        // mode there is only one entry which is not used (the context zoom is
+        // used instead).
+        readonly List<float> playerZooms = new List<float>();
+        bool splitScreenActive = false;
+        bool splitScreenPending = false;
+        bool splitScreenDeactivatePending = false;
+        GameInfo pendingSplitScreenGameInfo = null;
+        // The shared layer the decorative pillar at the boundary between the
+        // players' screen parts is drawn on. It is rendered unscissored on top of
+        // both players' content so the pillar can span the full height and be
+        // centered on the boundary.
+        RenderLayer pillarLayer = null;
         readonly SpriteFactory spriteFactory = null;
         readonly TriangleFactory triangleFactory = null;
         readonly ColoredRectFactory coloredRectFactory = null;
         readonly MinimapTextureFactory minimapTextureFactory = null;
         readonly AudioFactory audioFactory = null;
-        readonly UI.Gui gui = null;
+        UI.Gui gui = null;
         bool fullscreen = false;
 
         float sizeFactorX = 1.0f;
@@ -87,6 +104,8 @@ namespace Freeserf
             this.orientationPolicy = orientationPolicy;
             this.deviceType = deviceType;
             isLandscapeRatio = VirtualScreen.Size.Width > VirtualScreen.Size.Height;
+
+            playerZooms.Add(0.0f);
 
             context = new Context(VirtualScreen.Size.Width, VirtualScreen.Size.Height);
 
@@ -123,6 +142,33 @@ namespace Freeserf
 
             textureAtlas.AddAll(dataSource);
 
+            // The game starts with a single local player (full screen). Split-screen
+            // mode is activated from the setup screen (like the History Edition).
+            CreatePlayerLayers(0, VirtualScreen.Size.Width, 0, false);
+
+            try
+            {
+                System.Console.WriteLine($"GameView: glError after layer creation = {Freeserf.Renderer.State.Gl.GetError()}");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("GameView: glError query failed: " + ex.Message);
+            }
+
+            gui = new UI.Gui(this, this);
+            gui.ActivateSplitScreenHandler = ActivateSplitScreen;
+            gui.StartSplitScreenGameHandler = StartSplitScreenGame;
+        }
+
+        // Creates the render layers for one local player. In split-screen mode the
+        // layers are transformed to the player's part of the screen.
+        void CreatePlayerLayers(int playerIndex, int playerViewWidth, int viewOffsetX, bool splitScreen)
+        {
+            var layers = new SortedDictionary<Layer, RenderLayer>();
+            playerLayers.Add(layers);
+
+            var textureAtlas = TextureAtlasManager.Instance;
+
             foreach (Layer layer in Enum.GetValues(typeof(Layer)))
             {
                 if (layer == Layer.None)
@@ -151,58 +197,11 @@ namespace Freeserf
                         null, // no color key for now
                         layer == Layer.GuiFont ? new Render.Color(115, 179, 67, 255) : null); // UI font uses green color overlay
 
-                    if (layer == Layer.Gui || layer == Layer.GuiBuildings || layer == Layer.Minimap)
-                    {
-                        // the gui needs uniform scaling + centering
-                        var guiScaling = GuiScaling.For(VirtualScreen.Size);
-                        float scale = guiScaling.Scale;
-                        int offsetX = guiScaling.OffsetX;
-                        int offsetY = guiScaling.OffsetY;
-
-                        renderLayer.PositionTransformation = (Position position) =>
-                        {
-                            return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
-                        };
-
-                        renderLayer.SizeTransformation = (Size size) =>
-                        {
-                            // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * scale);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * scale);
-
-                            return new Size(width, height);
-                        };
-                    }
-                    else if (layer == Layer.GuiFont) // UI Font needs different scaling
-                    {
-                        // The UI expects 8x8 characters but we may use different sizes.
-                        // So we adjust the scale factors accordingly.
-                        var guiScaling = GuiScaling.For(VirtualScreen.Size);
-                        float scale = guiScaling.Scale;
-                        int offsetX = guiScaling.OffsetX;
-                        int offsetY = guiScaling.OffsetY;
-
-                        float charScaleX = (8.0f / Global.UIFontCharacterWidth) * scale;
-                        float charScaleY = (8.0f / Global.UIFontCharacterHeight) * scale;
-
-                        renderLayer.PositionTransformation = (Position position) =>
-                        {
-                            return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
-                        };
-
-                        renderLayer.SizeTransformation = (Size size) =>
-                        {
-                            // don't scale a dimension of 0
-                            int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * charScaleX);
-                            int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * charScaleY);
-
-                            return new Size(width, height);
-                        };
-                    }
+                    SetLayerTransformation(renderLayer as RenderLayer, layer, playerIndex, playerViewWidth, viewOffsetX, splitScreen);
 
                     renderLayer.Visible = true;
 
-                    AddLayer(renderLayer);
+                    layers.Add(layer, renderLayer as RenderLayer);
                 }
                 catch (Exception ex)
                 {
@@ -220,8 +219,244 @@ namespace Freeserf
                 System.Console.WriteLine("GameView: glError query failed: " + ex.Message);
             }
 #endif
+        }
 
+        // Sets the position/size transformation of a render layer. In normal mode
+        // (single player) the gui is scaled uniformly and centered (like the
+        // original game). In split-screen mode the gui layers are scaled to the
+        // player's part of the screen and the map layers of the other players are
+        // offset.
+        void SetLayerTransformation(RenderLayer layer, Layer layerType, int playerIndex, int playerViewWidth, int viewOffsetX, bool splitScreen)
+        {
+            if (splitScreen)
+            {
+                var guiScaling = new SplitScreenGuiScaling(new Size(playerViewWidth, VirtualScreen.Size.Height));
+
+                if (layerType == Layer.Gui || layerType == Layer.GuiBuildings || layerType == Layer.Minimap)
+                {
+                    // the gui needs scaling to fit the player's part of the screen
+                    float scaleX = guiScaling.ScaleX;
+                    float scaleY = guiScaling.ScaleY;
+                    int offsetX = guiScaling.OffsetX + viewOffsetX;
+                    int offsetY = guiScaling.OffsetY;
+
+                    layer.PositionTransformation = (Position position) =>
+                    {
+                        return new Position(Misc.Round(position.X * scaleX + offsetX), Misc.Round(position.Y * scaleY + offsetY));
+                    };
+
+                    layer.SizeTransformation = (Size size) =>
+                    {
+                        // don't scale a dimension of 0
+                        int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * scaleX);
+                        int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * scaleY);
+
+                        return new Size(width, height);
+                    };
+                }
+                else if (layerType == Layer.GuiFont) // UI Font needs different scaling
+                {
+                    // The UI expects 8x8 characters but we may use different sizes.
+                    // So we adjust the scale factors accordingly.
+                    float charScaleX = (8.0f / Global.UIFontCharacterWidth) * guiScaling.ScaleX;
+                    float charScaleY = (8.0f / Global.UIFontCharacterHeight) * guiScaling.ScaleY;
+
+                    layer.PositionTransformation = (Position position) =>
+                    {
+                        return new Position(Misc.Round(position.X * guiScaling.ScaleX + guiScaling.OffsetX + viewOffsetX),
+                            Misc.Round(position.Y * guiScaling.ScaleY + guiScaling.OffsetY));
+                    };
+
+                    layer.SizeTransformation = (Size size) =>
+                    {
+                        // don't scale a dimension of 0
+                        int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * charScaleX);
+                        int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * charScaleY);
+
+                        return new Size(width, height);
+                    };
+                }
+                else // the map layers are offset to the player's part of the screen
+                {
+                    layer.PositionTransformation = (Position position) =>
+                    {
+                        return new Position(position.X + viewOffsetX, position.Y);
+                    };
+                }
+            }
+            else if (layerType == Layer.Gui || layerType == Layer.GuiBuildings || layerType == Layer.Minimap)
+            {
+                // the gui needs uniform scaling + centering
+                var guiScaling = GuiScaling.For(VirtualScreen.Size);
+                float scale = guiScaling.Scale;
+                int offsetX = guiScaling.OffsetX;
+                int offsetY = guiScaling.OffsetY;
+
+                layer.PositionTransformation = (Position position) =>
+                {
+                    return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
+                };
+
+                layer.SizeTransformation = (Size size) =>
+                {
+                    // don't scale a dimension of 0
+                    int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * scale);
+                    int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * scale);
+
+                    return new Size(width, height);
+                };
+            }
+            else if (layerType == Layer.GuiFont) // UI Font needs different scaling
+            {
+                // The UI expects 8x8 characters but we may use different sizes.
+                // So we adjust the scale factors accordingly.
+                var guiScaling = GuiScaling.For(VirtualScreen.Size);
+                float scale = guiScaling.Scale;
+                int offsetX = guiScaling.OffsetX;
+                int offsetY = guiScaling.OffsetY;
+
+                float charScaleX = (8.0f / Global.UIFontCharacterWidth) * scale;
+                float charScaleY = (8.0f / Global.UIFontCharacterHeight) * scale;
+
+                layer.PositionTransformation = (Position position) =>
+                {
+                    return new Position(Misc.Round(position.X * scale + offsetX), Misc.Round(position.Y * scale + offsetY));
+                };
+
+                layer.SizeTransformation = (Size size) =>
+                {
+                    // don't scale a dimension of 0
+                    int width = (size.Width == 0) ? 0 : Misc.Round(size.Width * charScaleX);
+                    int height = (size.Height == 0) ? 0 : Misc.Round(size.Height * charScaleY);
+
+                    return new Size(width, height);
+                };
+            }
+        }
+
+        // Switches the game view to split-screen mode (several local players) and
+        // shows the setup screen for both players. Called when the split-screen
+        // game type is selected in the setup screen. The actual switch is deferred
+        // to the next render call so the setup screen's click handling can finish.
+        public void ActivateSplitScreen()
+        {
+            splitScreenPending = true;
+        }
+
+        // Starts a split-screen game (2 local players sharing one game). Called when
+        // the player clicks "Start" in the setup screen with the split-screen game
+        // type selected. The switch to split-screen mode is deferred to the next
+        // render call so the setup screen's click handling can finish.
+        public void StartSplitScreenGame(GameInfo gameInfo)
+        {
+            pendingSplitScreenGameInfo = gameInfo;
+            splitScreenPending = true;
+        }
+
+        void DoActivateSplitScreen()
+        {
+            splitScreenPending = false;
+
+            if (splitScreenActive)
+                return;
+
+            splitScreenActive = true;
+
+            int playerViewWidth = VirtualScreen.Size.Width / 2;
+
+            // The second player starts with the default zoom.
+            playerZooms.Add(0.0f);
+
+            // The background game (intro mission) is closed so its render objects
+            // do not stay on the re-transformed layers.
+            GameManager.Instance.CloseGame();
+
+            // Re-transform the first player's layers to the left half of the screen.
+            foreach (var layer in playerLayers[0])
+                SetLayerTransformation(layer.Value, layer.Key, 0, playerViewWidth, 0, true);
+
+            // Create the layers of the second player.
+            CreatePlayerLayers(1, playerViewWidth, playerViewWidth, true);
+
+            // Create the render views of both players.
+            playerRenderViews.Add(new SplitScreenRenderView(this, 0, new Rect(0, 0, playerViewWidth, VirtualScreen.Size.Height)));
+            playerRenderViews.Add(new SplitScreenRenderView(this, 1, new Rect(playerViewWidth, 0, playerViewWidth, VirtualScreen.Size.Height)));
+
+            // Create the shared layer for the decorative pillar at the boundary.
+            // It uses the gui texture atlas and the identity transformation (shared
+            // virtual screen coordinates) and is rendered unscissored on top of both
+            // players' content.
+            var textureAtlas = TextureAtlasManager.Instance;
+            var guiTexture = textureAtlas.GetOrCreate(Layer.Gui).Texture as Texture;
+            pillarLayer = Create(Layer.Gui, guiTexture, false, null, null) as RenderLayer;
+            pillarLayer.Visible = true;
+
+            // Replace the gui with the split-screen gui. The setup screen is shown
+            // for both players so they can configure their characters.
+            gui.UnsubscribeEvents();
+            gui.DestroyViewer();
+            gui = new UI.SplitScreenGui(this, playerRenderViews, this, pillarLayer);
+            ((UI.SplitScreenGui)gui).DeactivateSplitScreenHandler = DeactivateSplitScreen;
+
+            // If a game was started from the setup screen, start it now (the
+            // split-screen gui is in place and its viewers are registered).
+            if (pendingSplitScreenGameInfo != null)
+            {
+                var gameInfo = pendingSplitScreenGameInfo;
+                pendingSplitScreenGameInfo = null;
+
+                if (!GameManager.Instance.StartSplitScreenGame(gameInfo, playerRenderViews, this))
+                    Log.Error.Write(ErrorSystemType.Application, "Failed to start split-screen game.");
+            }
+        }
+
+        // Switches the game view back to the normal single-player mode (full screen
+        // menu). Called when the split-screen game is closed. The actual switch is
+        // deferred to the next render call so the quit handling can finish.
+        public void DeactivateSplitScreen()
+        {
+            splitScreenDeactivatePending = true;
+        }
+
+        void DoDeactivateSplitScreen()
+        {
+            splitScreenDeactivatePending = false;
+
+            if (!splitScreenActive)
+                return;
+
+            splitScreenActive = false;
+
+            // Remove the second player's zoom and reset the shared context zoom
+            // (it may have been left at the second player's zoom by the last
+            // split-screen render).
+            playerZooms.RemoveAt(1);
+            context.Zoom = 0.0f;
+
+            // The scissor test may still be enabled if the last split-screen
+            // render was interrupted, so it is disabled here.
+            context.DisableScissor();
+
+            // Re-transform the first player's layers back to the full screen.
+            foreach (var layer in playerLayers[0])
+                SetLayerTransformation(layer.Value, layer.Key, 0, VirtualScreen.Size.Width, 0, false);
+
+            // Remove the second player's layers and render views.
+            playerLayers.RemoveAt(1);
+            playerRenderViews.Clear();
+
+            // Replace the split-screen gui with the normal gui. It creates a fresh
+            // viewer which opens the setup screen (full screen menu).
+            gui.UnsubscribeEvents();
+            gui.DestroyViewer();
             gui = new UI.Gui(this, this);
+            gui.ActivateSplitScreenHandler = ActivateSplitScreen;
+            gui.StartSplitScreenGameHandler = StartSplitScreenGame;
+
+            // Remove the shared pillar layer. Its sprites were deleted by the
+            // split-screen gui's DestroyViewer above.
+            pillarLayer?.Dispose();
+            pillarLayer = null;
         }
 
         public void Close()
@@ -236,13 +471,62 @@ namespace Freeserf
             Closed?.Invoke(this, System.EventArgs.Empty);
         }
 
+        // True if the game view is in split-screen mode (several local players).
+        public bool IsSplitScreen => splitScreenActive;
+
         public bool CanZoom => gui.CanZoom;
+
+        // Returns the index of the local player whose part of the screen the
+        // cursor is currently in (used to route the zoom input in split-screen
+        // mode).
+        int GetActivePlayerIndex()
+        {
+            if (!splitScreenActive)
+                return 0;
+
+            int playerViewWidth = VirtualScreen.Size.Width / 2;
+
+            return Math.Min(playerZooms.Count - 1, cursorPosition.X / playerViewWidth);
+        }
+
+        // Returns the zoom of the given local player (used in split-screen mode).
+        public float GetPlayerZoom(int playerIndex) => playerZooms[playerIndex];
+
+        // Sets the zoom of the given local player (used in split-screen mode).
+        public void SetPlayerZoom(int playerIndex, float zoom)
+        {
+            if (zoom < 0.0f)
+                zoom = 0.0f;
+
+            if (Misc.FloatEqual(zoom, playerZooms[playerIndex]))
+                return;
+
+            playerZooms[playerIndex] = zoom;
+
+            ZoomChanged?.Invoke(this, System.EventArgs.Empty);
+        }
 
         public float Zoom
         {
-            get => context.Zoom;
+            get
+            {
+                // In split-screen mode the zoom is per player, so the zoom of the
+                // player whose part of the screen the cursor is in is returned.
+                if (splitScreenActive)
+                    return playerZooms[GetActivePlayerIndex()];
+
+                return context.Zoom;
+            }
             set
             {
+                // In split-screen mode the zoom input is routed to the player
+                // whose part of the screen the cursor is in.
+                if (splitScreenActive)
+                {
+                    SetPlayerZoom(GetActivePlayerIndex(), value);
+                    return;
+                }
+
                 float oldZoom = context.Zoom;
 
                 if (gui.Ingame)
@@ -257,7 +541,15 @@ namespace Freeserf
 
         public void ResetZoom()
         {
-            context.Zoom = 0.0f;
+            if (splitScreenActive)
+            {
+                for (int i = 0; i < playerZooms.Count; ++i)
+                    SetPlayerZoom(i, 0.0f);
+            }
+            else
+            {
+                context.Zoom = 0.0f;
+            }
         }
 
         public bool Fullscreen
@@ -440,26 +732,47 @@ namespace Freeserf
 
         public void AddLayer(IRenderLayer layer)
         {
+            AddLayer(0, layer);
+        }
+
+        public void AddLayer(int playerIndex, IRenderLayer layer)
+        {
             if (!(layer is RenderLayer))
                 throw new InvalidCastException("The given layer is not valid for this renderer.");
 
-            layers.Add(layer.Layer, layer as RenderLayer);
+            playerLayers[playerIndex].Add(layer.Layer, layer as RenderLayer);
         }
 
         public IRenderLayer GetLayer(Layer layer)
         {
-            return layers[layer];
+            return GetLayer(0, layer);
+        }
+
+        public IRenderLayer GetLayer(int playerIndex, Layer layer)
+        {
+            return playerLayers[playerIndex][layer];
         }
 
         public void ShowLayer(Layer layer, bool show)
         {
-            layers[layer].Visible = show;
+            foreach (var layers in playerLayers)
+                layers[layer].Visible = show;
         }
 
         public void Render()
         {
             if (disposed)
                 return;
+
+            // A split-screen game was started from the setup screen. Switch to
+            // split-screen mode now (the click handling has finished).
+            if (splitScreenPending)
+                DoActivateSplitScreen();
+
+            // The split-screen game was closed. Switch back to the normal
+            // single-player mode (full screen menu).
+            if (splitScreenDeactivatePending)
+                DoDeactivateSplitScreen();
 
             context.SetRotation(rotation);
 
@@ -475,7 +788,18 @@ namespace Freeserf
                 }
             }
 
-            if (layers[Layer.Gui].Visible)
+            bool guiVisible = false;
+
+            foreach (var layers in playerLayers)
+            {
+                if (layers[Layer.Gui].Visible)
+                {
+                    guiVisible = true;
+                    break;
+                }
+            }
+
+            if (guiVisible)
             {
                 // TODO gui.Draw draws/prepares everything at the moment
                 // TODO separate rendering from game logic/update
@@ -483,8 +807,92 @@ namespace Freeserf
                 gui.DrawCursor(cursorPosition.X, cursorPosition.Y);
             }
 
-            foreach (var layer in layers)
-                layer.Value.Render();
+            if (splitScreenActive)
+            {
+                int playerViewWidth = VirtualScreen.Size.Width / 2;
+
+                for (int i = 0; i < playerLayers.Count; ++i)
+                {
+                    // Each player's part of the screen is zoomed around its own
+                    // center (the gui layers are not zoomed, they use the
+                    // unzoomed model view matrix).
+                    float centerX = i * playerViewWidth + playerViewWidth * 0.5f;
+                    float centerY = VirtualScreen.Size.Height * 0.5f;
+
+                    context.SetZoom(playerZooms[i], centerX, centerY);
+
+                    // Clip the player's rendering to his part of the screen so it
+                    // does not bleed into the other player's part (e.g. when
+                    // zooming).
+                    SetPlayerScissor(i, playerViewWidth);
+
+                    foreach (var layer in playerLayers[i])
+                        layer.Value.Render();
+                }
+
+                context.DisableScissor();
+
+                // The decorative pillar at the boundary is drawn on a shared layer
+                // which is rendered unscissored so it can span both players' parts
+                // and be centered on the boundary.
+                if (pillarLayer != null)
+                    pillarLayer.Render();
+            }
+            else
+            {
+                foreach (var layer in playerLayers[0])
+                    layer.Value.Render();
+            }
+        }
+
+        // Clips the rendering to the given player's part of the screen (used in
+        // split-screen mode). The scissor rect is in window coordinates (origin at
+        // the bottom-left, like the viewport).
+        void SetPlayerScissor(int playerIndex, int playerViewWidth)
+        {
+            int viewportX = virtualScreenDisplay.Position.X;
+            int viewportY = virtualScreenDisplay.Position.Y;
+            int viewportWidth = virtualScreenDisplay.Size.Width;
+            int viewportHeight = virtualScreenDisplay.Size.Height;
+
+            int x, y, width, height;
+
+            switch (rotation)
+            {
+                case Rotation.Deg90:
+                    // The left half of the virtual screen is the top half of the viewport.
+                    width = viewportWidth;
+                    height = viewportHeight / 2;
+                    x = viewportX;
+                    y = viewportY + ((playerIndex == 0) ? height : 0);
+                    break;
+                case Rotation.Deg180:
+                    // The left half of the virtual screen is the right half of the viewport.
+                    width = viewportWidth / 2;
+                    height = viewportHeight;
+                    x = viewportX + ((playerIndex == 0) ? width : 0);
+                    y = viewportY;
+                    break;
+                case Rotation.Deg270:
+                    // The left half of the virtual screen is the bottom half of the viewport.
+                    width = viewportWidth;
+                    height = viewportHeight / 2;
+                    x = viewportX;
+                    y = viewportY + ((playerIndex == 0) ? 0 : height);
+                    break;
+                case Rotation.None:
+                default:
+                    {
+                        float scaleX = (float)viewportWidth / (float)VirtualScreen.Size.Width;
+                        width = Misc.Round(playerViewWidth * scaleX);
+                        height = viewportHeight;
+                        x = viewportX + Misc.Round(playerIndex * playerViewWidth * scaleX);
+                        y = viewportY;
+                    }
+                    break;
+            }
+
+            context.SetScissorRect(x, y, width, height);
         }
 
         public void SetCursorPosition(int x, int y)
@@ -660,10 +1068,18 @@ namespace Freeserf
                     // receives game events for this (now disposed) render view.
                     gui.DestroyViewer();
 
-                    foreach (var layer in layers.Values)
-                        layer?.Dispose();
+                    foreach (var layers in playerLayers)
+                    {
+                        foreach (var layer in layers.Values)
+                            layer?.Dispose();
 
-                    layers.Clear();
+                        layers.Clear();
+                    }
+
+                    playerLayers.Clear();
+
+                    pillarLayer?.Dispose();
+                    pillarLayer = null;
 
                     // Free the audio (BASS) so playback stops when the game
                     // view is closed. On Android the process stays alive after

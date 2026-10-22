@@ -431,7 +431,10 @@ namespace Freeserf.UI
         /* Game end: 0 result picture, 1 result text, 2 mission picture. */
         int gameEndStage = 0;
 
-        static UI.BackgroundPattern[] backgrounds = null;
+        // The backgrounds are created per popup box (not static) because in
+        // split-screen mode each player has his own render view and the sprites
+        // must be created on the player's own layers.
+        UI.BackgroundPattern[] backgrounds = null;
 
         void SaveCurrentGame()
         {
@@ -460,7 +463,7 @@ namespace Freeserf.UI
             // TODO: status messages, sounds?
         }
 
-        static void InitBackgrounds(Render.ISpriteFactory spriteFactory)
+        void InitBackgrounds(Render.ISpriteFactory spriteFactory)
         {
             if (backgrounds != null)
                 return;
@@ -2598,9 +2601,14 @@ namespace Freeserf.UI
             SetButton(104, 113, 61u, Action.ShowStatMenu);
             SetButton(120, 137, 60u, Action.CloseBox);
 
-            SetButton(40, 137, 285u, Action.ShowOptions);
-            SetButton(8, 137, 286u, Action.ShowQuit);
-            SetButton(72, 137, 224u, Action.ShowSave);
+            // In split-screen mode only the first player may quit, save or change
+            // the game options. The entries are hidden for the other players.
+            if (interf.CanChangeGameSettings)
+            {
+                SetButton(40, 137, 285u, Action.ShowOptions);
+                SetButton(8, 137, 286u, Action.ShowQuit);
+                SetButton(72, 137, 224u, Action.ShowSave);
+            }
         }
 
         void DrawFoodDistributionBox()
@@ -3932,7 +3940,9 @@ namespace Freeserf.UI
                     SetBox(Type.KnightSettings);
                     break;
                 case Action.ShowOptions:
-                    SetBox(Type.Options);
+                    // In split-screen mode only the first player may change the game options.
+                    if (interf.CanChangeGameSettings)
+                        SetBox(Type.Options);
                     break;
                 case Action.ShowExtendedOptions:
                     SetBox(Box == Type.GameInitOptions ? Type.ExtendedGameInitOptions : Type.ExtendedOptions);
@@ -3941,7 +3951,9 @@ namespace Freeserf.UI
                     SetBox(Box == Type.ExtendedGameInitOptions ? Type.GameInitScrollOptions : Type.ScrollOptions);
                     break;
                 case Action.ShowQuit:
-                    SetBox(Type.QuitConfirm);
+                    // In split-screen mode only the first player may quit the game.
+                    if (interf.CanChangeGameSettings)
+                        SetBox(Type.QuitConfirm);
                     break;
                 case Action.DefaultFoodDistribution:
                     if (spectator)
@@ -4740,7 +4752,17 @@ namespace Freeserf.UI
                     // no saving
                     interf.ClosePopup();
                     GameManager.Instance.CloseGame();
-                    interf.Viewer.ActiveViewer.MainInterface.OpenGameInit();
+                    if (interf.NetworkDataHandler is SplitScreenGui splitScreenGui)
+                    {
+                        // In split-screen mode there is no single active viewer. The
+                        // game view switches back to the normal mode (full screen
+                        // menu) which opens the setup screen.
+                        splitScreenGui.DeactivateSplitScreen();
+                    }
+                    else
+                    {
+                        interf.Viewer.ActiveViewer.MainInterface.OpenGameInit();
+                    }
                     break;
                 case Action.SaveAndQuit:
                     {
@@ -4762,7 +4784,9 @@ namespace Freeserf.UI
                     SaveCurrentGame();
                     break;
                 case Action.ShowSave:
-                    SetBox(Type.LoadSave);
+                    // In split-screen mode only the first player may save the game.
+                    if (interf.CanChangeGameSettings)
+                        SetBox(Type.LoadSave);
                     break;
                 case Action.Demolish:
                     interf.DemolishObject();

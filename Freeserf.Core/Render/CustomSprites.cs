@@ -3,7 +3,7 @@ using System;
 
 namespace Freeserf.Render;
 
-class CustomSprites
+partial class CustomSprites
 {
     static readonly Color[] SpeedButtonsColors =
     [
@@ -80,9 +80,10 @@ class CustomSprites
         {
             var color = colors[colorIndices[i]];
 
-            data[index++] = color.R;
-            data[index++] = color.G;
+            // The sprite data is stored in BGRA order (see Data.Sprite).
             data[index++] = color.B;
+            data[index++] = color.G;
+            data[index++] = color.R;
             data[index++] = color.A;
         }
 

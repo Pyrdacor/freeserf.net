@@ -393,6 +393,9 @@ namespace Freeserf
                 gameView.FullscreenRequestHandler = FullscreenRequestHandler;
                 gameView.Resize(Width, Height);
 
+                // In split-screen mode the setup screen is shown first (like the
+                // History Edition). The game is started from there.
+
                 CursorVisible = false; // hide cursor
                 DoubleClickTime = 300;
 
@@ -553,13 +556,13 @@ namespace Freeserf
 
         void ZoomIn()
         {
-            if (gameView.Zoom < 4.0f)
+            if (gameView != null && gameView.Zoom < 4.0f)
                 gameView.Zoom += 0.5f;
         }
 
         void ZoomOut()
         {
-            if (gameView.Zoom > 0.0f)
+            if (gameView != null && gameView.Zoom > 0.0f)
                 gameView.Zoom -= 0.5f;
         }
 

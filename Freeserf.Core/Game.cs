@@ -81,24 +81,10 @@ namespace Freeserf
         // Rendering
         readonly Render.IRenderView renderView = null;
         readonly IAudioInterface audioInterface = null;
-        readonly ConcurrentDictionary<Serf, Render.RenderSerf> renderSerfs = new ConcurrentDictionary<Serf, Render.RenderSerf>();
-        readonly ConcurrentDictionary<Building, Render.RenderBuilding> renderBuildings = new ConcurrentDictionary<Building, Render.RenderBuilding>();
-        readonly ConcurrentDictionary<Flag, Render.RenderFlag> renderFlags = new ConcurrentDictionary<Flag, Render.RenderFlag>();
-        readonly ConcurrentDictionary<MapPos, Render.RenderMapObject> renderObjects = new ConcurrentDictionary<MapPos, Render.RenderMapObject>();
-        readonly ConcurrentDictionary<long, Render.RenderRoadSegment> renderRoadSegments = new ConcurrentDictionary<long, Render.RenderRoadSegment>();
-        readonly ConcurrentDictionary<long, Render.RenderBorderSegment> renderBorderSegments = new ConcurrentDictionary<long, Render.RenderBorderSegment>();
-        readonly List<Render.RenderBuilding> renderBuildingsInProgress = new List<Render.RenderBuilding>();
-        // The render positions of roads, borders and map objects only change if the map is scrolled
-        // (or the height of a map position changes, see OnHeightChanged).
-        Render.RenderMap lastRenderMap = null;
-        uint lastScrollX = 0;
-        uint lastScrollY = 0;
-        bool mapScrolled = true;
-        // Map objects (trees, stones, ...) only get render objects inside the visible area of the map.
-        // Large maps have hundreds of thousands of them which would slow down the game a lot.
-        HashSet<MapPos> renderObjectArea = new HashSet<MapPos>();
-        HashSet<MapPos> nextRenderObjectArea = new HashSet<MapPos>();
-        // Reused for the updates to avoid allocations every tick.
+        // In split-screen mode there is one render view per local player (each with its own
+        // render map and render objects). In single player mode there is exactly one.
+        readonly List<GameRenderView> renderViews = new List<GameRenderView>();
+        // Reused for the game logic updates to avoid allocations every tick.
         readonly List<Flag> flagUpdateList = new List<Flag>();
         readonly List<Building> buildingUpdateList = new List<Building>();
         readonly List<Serf> serfUpdateList = new List<Serf>();
@@ -159,6 +145,9 @@ namespace Freeserf
 
         [Data]
         internal Map Map { get; private set; }
+        // The number of render views (1 in single player, one per local player in
+        // split-screen mode).
+        public int RenderViewCount => renderViews.Count;
         internal uint MapGoldMoraleFactor => state.MapGoldMoraleFactor;
         internal uint GoldTotal => state.GoldTotal;
         internal word Tick => state.Tick;
@@ -187,10 +176,24 @@ namespace Freeserf
         }
 
         internal Game(Render.IRenderView renderView, IAudioInterface audioInterface)
+            : this(new[] { renderView }, audioInterface)
+        {
+        }
+
+        // In split-screen mode the game is shared by several local players. Each player
+        // gets his own render view (own render map and render objects).
+        internal Game(IEnumerable<Render.IRenderView> renderViews, IAudioInterface audioInterface)
             : this(null)
         {
-            this.renderView = renderView;
+            this.renderView = renderViews.FirstOrDefault();
             this.audioInterface = audioInterface;
+
+            int playerIndex = 0;
+
+            foreach (var playerRenderView in renderViews)
+            {
+                this.renderViews.Add(new GameRenderView(this, playerRenderView, audioInterface, playerIndex++));
+            }
 
             // Create NULL-serf 
             Serfs.Allocate();
@@ -204,36 +207,9 @@ namespace Freeserf
 
         public void ClearVisuals()
         {
-            // delete all render objects
-
-            foreach (var building in renderBuildings)
-                building.Value.Delete();
-
-            foreach (var serf in renderSerfs)
-                serf.Value.Delete();
-
-            foreach (var flag in renderFlags)
-                flag.Value.Delete();
-
-            foreach (var mapObject in renderObjects)
-                mapObject.Value.Delete();
-
-            renderObjectArea.Clear();
-            lastRenderMap = null; // the render object area is set up again with the next update
-
-            foreach (var roadSegment in renderRoadSegments)
-                roadSegment.Value.Delete();
-
-            foreach (var borderSegment in renderBorderSegments)
-                borderSegment.Value.Delete();
-
-            renderBuildings.Clear();
-            renderBuildingsInProgress.Clear();
-            renderSerfs.Clear();
-            renderFlags.Clear();
-            renderObjects.Clear();
-            renderRoadSegments.Clear();
-            renderBorderSegments.Clear();
+            // delete all render objects of all views
+            foreach (var renderView in renderViews)
+                renderView.Clear();
         }
 
         public void Close()
@@ -659,17 +635,28 @@ namespace Freeserf
 
         public void UpdateVisuals()
         {
-            if (Map?.RenderMap != null)
-                Map.RenderMap.UpdateWaves(Tick);
+            // The scroll dependent parts (waves, roads, borders, map objects) are
+            // updated per render view as each player may scroll independently.
+            foreach (var renderView in renderViews)
+                renderView.UpdateVisuals(Tick);
 
-            CheckMapScrolled();
-
-            UpdateRoads();
-            UpdateBorders();
-            UpdateMapObjects();
+            // The game logic updates of flags, buildings and serfs are done once
+            // per tick. The render objects are updated per render view afterwards.
             UpdateFlags();
+
+            foreach (var renderView in renderViews)
+                renderView.UpdateFlagRenders(Tick);
+
             UpdateBuildings();
+
+            foreach (var renderView in renderViews)
+                renderView.UpdateBuildingRenders(Tick);
+
             UpdateSerfs();
+
+            foreach (var renderView in renderViews)
+                renderView.UpdateSerfRenders(Tick);
+
             UpdateGameStats();
 
             // Play bird sounds 
@@ -1689,7 +1676,8 @@ namespace Freeserf
                 }
             }
 
-            UpdateBorders();
+            foreach (var renderView in renderViews)
+                renderView.UpdateBorders();
         }
 
         void InitLandOwnershipPreservingThreatLevels()
@@ -1960,35 +1948,8 @@ namespace Freeserf
 
         void UpdateBorders(MapPos position)
         {
-            var cycle = new DirectionCycleCW(Direction.Right, 3);
-
-            foreach (var direction in cycle)
-            {
-                long index = Render.RenderBorderSegment.CreateIndex(position, direction);
-
-                if (Map.HasOwner(position) != Map.HasOwner(Map.Move(position, direction)) ||
-                    Map.GetOwner(position) != Map.GetOwner(Map.Move(position, direction)))
-                {
-                    if (!renderBorderSegments.ContainsKey(index))
-                    {
-                        var renderBorderSegment = new Render.RenderBorderSegment(Map, position, direction,
-                            renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
-
-                        if (!renderBorderSegments.TryAdd(index, renderBorderSegment))
-                        {
-                            throw new ExceptionFreeserf(ErrorSystemType.Application, "Unable to add render border segment.");
-                        }
-
-                        if (Map.RenderMap != null)
-                            renderBorderSegment.Update(Map.RenderMap);
-                    }
-                }
-                else
-                {
-                    if (renderBorderSegments.TryRemove(index, out var renderBorderSegment) && renderBorderSegment != null)
-                        renderBorderSegment.Delete();
-                }
-            }
+            foreach (var renderView in renderViews)
+                renderView.UpdateBorders(position);
         }
 
         /// <summary>
@@ -2315,11 +2276,8 @@ namespace Freeserf
             if (building.Position != Global.INVALID_MAPPOS)
                 Map?.SetObject(building.Position, Map.Object.None, 0);
 
-            if (renderBuildings.TryRemove(building, out var renderBuilding) && renderBuilding != null)
-            {
-                renderBuildingsInProgress.Remove(renderBuilding);
-                renderBuilding.Delete();
-            }
+            foreach (var renderView in renderViews)
+                renderView.DeleteBuilding(building);
 
             Buildings.Erase(building.Index);
         }
@@ -2329,8 +2287,8 @@ namespace Freeserf
             if (flag.Position != Global.INVALID_MAPPOS)
                 Map?.SetObject(flag.Position, Map.Object.None, 0);
 
-            if (renderFlags.TryRemove(flag, out var renderFlag) && renderFlag != null)
-                renderFlag.Delete();
+            foreach (var renderView in renderViews)
+                renderView.DeleteFlag(flag);
 
             Flags.Erase(flag.Index);
         }
@@ -2772,89 +2730,6 @@ namespace Freeserf
             }
         }
 
-        void CheckMapScrolled()
-        {
-            var renderMap = Map?.RenderMap;
-
-            if (renderMap == null)
-            {
-                lastRenderMap = null;
-                mapScrolled = false;
-                return;
-            }
-
-            mapScrolled = renderMap != lastRenderMap || renderMap.ScrollX != lastScrollX || renderMap.ScrollY != lastScrollY;
-            lastRenderMap = renderMap;
-            lastScrollX = renderMap.ScrollX;
-            lastScrollY = renderMap.ScrollY;
-        }
-
-        void UpdateMapObjects()
-        {
-            if (mapScrolled)
-                UpdateRenderObjectArea();
-
-            // Note: Enumerating a concurrent dictionary is safe without copying it.
-            foreach (var renderObject in renderObjects)
-                renderObject.Value.Update(Tick, Map.RenderMap, renderObject.Key, mapScrolled);
-        }
-
-        // Rows and columns around the visible map area in which map objects get render objects.
-        // Sprites reach up to the tile above and high positions are drawn up to 7 rows higher.
-        const int RenderObjectAreaMarginTop = 2;
-        const int RenderObjectAreaMarginBottom = 8;
-        const int RenderObjectAreaMarginX = 2;
-
-        void UpdateRenderObjectArea()
-        {
-            var renderMap = Map.RenderMap;
-            int scrollX = (int)renderMap.ScrollX;
-            int scrollY = (int)renderMap.ScrollY;
-            int columns = (int)renderMap.NumVisibleColumns + RenderObjectAreaMarginX;
-            int rows = (int)renderMap.NumVisibleRows + RenderObjectAreaMarginBottom;
-
-            nextRenderObjectArea.Clear();
-
-            for (int r = -RenderObjectAreaMarginTop; r < rows; ++r)
-            {
-                int row = scrollY + r;
-                // The same as RenderMap.GetMapOffset: the first column moves right every second row.
-                int firstColumn = scrollX + (int)Math.Floor(row / 2.0);
-
-                for (int c = -RenderObjectAreaMarginX; c < columns; ++c)
-                    nextRenderObjectArea.Add(Map.Position((uint)(firstColumn + c) & Map.ColumnMask, (uint)row & Map.RowMask));
-            }
-
-            foreach (var position in renderObjectArea)
-            {
-                if (!nextRenderObjectArea.Contains(position) && renderObjects.TryRemove(position, out var renderObject) && renderObject != null)
-                    renderObject.Delete();
-            }
-
-            foreach (var position in nextRenderObjectArea)
-            {
-                if (!renderObjectArea.Contains(position))
-                    AddRenderMapObject(position);
-            }
-
-            (renderObjectArea, nextRenderObjectArea) = (nextRenderObjectArea, renderObjectArea);
-        }
-
-        void AddRenderMapObject(MapPos position)
-        {
-            var obj = Map.GetObject(position);
-
-            if (obj == Map.Object.None || obj == Map.Object.Flag || obj == Map.Object.SmallBuilding ||
-                obj == Map.Object.LargeBuilding || obj == Map.Object.Castle || renderObjects.ContainsKey(position))
-                return;
-
-            var renderObject = new Render.RenderMapObject(obj, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
-
-            renderObject.Visible = true;
-
-            renderObjects.TryAdd(position, renderObject);
-        }
-
         void UpdateFlags()
         {
             // flag.Update() may change the collection, so we use a copied list here.
@@ -2862,34 +2737,9 @@ namespace Freeserf
             flagUpdateList.AddRange(Flags);
 
             foreach (var flag in flagUpdateList)
-            {
                 flag.Update();
 
-                if (flag.Index > 0u && renderFlags.TryGetValue(flag, out var renderFlag))
-                    renderFlag?.Update(Tick, Map.RenderMap, flag.Position);
-            }
-
             flagUpdateList.Clear();
-        }
-
-        void UpdateRoads()
-        {
-            // New road segments are positioned when they are added.
-            if (!mapScrolled)
-                return;
-
-            foreach (var renderRoadSegment in renderRoadSegments)
-                renderRoadSegment.Value?.Update(Map.RenderMap);
-        }
-
-        void UpdateBorders()
-        {
-            // New border segments are positioned when they are added.
-            if (!mapScrolled)
-                return;
-
-            foreach (var renderBorderSegment in renderBorderSegments)
-                renderBorderSegment.Value?.Update(Map.RenderMap);
         }
 
         // This is called after loading a game.
@@ -2898,19 +2748,8 @@ namespace Freeserf
         // for all road segments.
         void PostLoadRoads()
         {
-            foreach (var position in Map.Geometry)
-            {
-                if (Map.Paths(position) != 0)
-                {
-                    var cycle = new DirectionCycleCW(Direction.Right, 3);
-
-                    foreach (var direction in cycle)
-                    {
-                        if (Map.HasPath(position, direction))
-                            AddRoadSegment(position, direction);
-                    }
-                }
-            }
+            foreach (var renderView in renderViews)
+                renderView.PostLoadRoads();
         }
 
         class SendSerfToFlagData
@@ -3033,35 +2872,9 @@ namespace Freeserf
             buildingList.AddRange(Buildings);
 
             for (int i = 0; i < buildingList.Count; ++i)
-            {
                 buildingList[i].Update(Tick);
 
-                if (buildingList[i].Index > 0u)
-                {
-                    if (renderBuildings.TryGetValue(buildingList[i], out var renderBuilding))
-                    {
-                        // if a building burns we have to update its rendering so ensure that is is updated when visible
-                        if (buildingList[i].IsBurning)
-                        {
-                            if (renderBuilding.Visible)
-                            {
-                                if (!renderBuildingsInProgress.Contains(renderBuilding))
-                                    renderBuildingsInProgress.Add(renderBuilding);
-                            }
-                        }
-
-                        renderBuilding.Update(Tick, Map.RenderMap, buildingList[i].Position);
-                    }
-                }
-            }
-
             buildingList.Clear();
-
-            for (int i = renderBuildingsInProgress.Count - 1; i >= 0; --i)
-            {
-                if (!renderBuildingsInProgress[i].UpdateProgress()) // no more updating needed
-                    renderBuildingsInProgress.RemoveAt(i);
-            }
         }
 
         void UpdateSerfs()
@@ -3076,14 +2889,7 @@ namespace Freeserf
             serfList.AddRange(Serfs);
 
             for (int i = 0; i < serfList.Count; ++i)
-            {
                 serfList[i].Update();
-
-                if (serfList[i].Index > 0u && renderSerfs.TryGetValue(serfList[i], out var renderSerf))
-                {
-                    renderSerf.Update(this, renderView.DataSource, Tick, Map, serfList[i].Position);
-                }
-            }
 
             serfList.Clear();
         }
@@ -3995,7 +3801,7 @@ namespace Freeserf
             state.GameSpeed = 0;
             gameSpeedSave = GameState.DEFAULT_GAME_SPEED;
 
-            Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
+            Map.AttachToRenderLayer(renderView, renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
             InitLandOwnershipPreservingThreatLevels();
             PostLoadRoads();
@@ -4200,7 +4006,7 @@ namespace Freeserf
             state.GameSpeed = 0;
             gameSpeedSave = GameState.DEFAULT_GAME_SPEED;
 
-            Map.AttachToRenderLayer(renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
+            Map.AttachToRenderLayer(renderView, renderView.GetLayer(Layer.Landscape), renderView.GetLayer(Layer.Waves), renderView.DataSource);
 
             InitKnights();
             InitLandOwnershipPreservingThreatLevels();
@@ -4472,39 +4278,8 @@ namespace Freeserf
 
         internal override void OnHeightChanged(MapPos position)
         {
-            // Update road segments
-            for (int i = 0; i < 7; ++i)
-            {
-                var checkPosition = Map.PositionAddSpirally(position, (uint)i);
-                var cycle = new DirectionCycleCW(Direction.Right, 3u);
-
-                foreach (var direction in cycle)
-                {
-                    if (Map.HasPath(checkPosition, direction))
-                    {
-                        long index = Render.RenderRoadSegment.CreateIndex(checkPosition, direction);
-
-                        if (renderRoadSegments.TryGetValue(index, out var renderRoadSegment) && renderRoadSegment != null)
-                        {
-                            renderRoadSegment.UpdateAppearance();
-
-                            if (Map.RenderMap != null)
-                                renderRoadSegment.Update(Map.RenderMap);
-                        }
-                    }
-
-                    // The render positions depend on the height.
-                    if (Map.RenderMap != null &&
-                        renderBorderSegments.TryGetValue(Render.RenderBorderSegment.CreateIndex(checkPosition, direction), out var renderBorderSegment) &&
-                        renderBorderSegment != null)
-                    {
-                        renderBorderSegment.Update(Map.RenderMap);
-                    }
-                }
-
-                if (Map.RenderMap != null && renderObjects.TryGetValue(checkPosition, out var renderObject) && renderObject != null)
-                    renderObject.Update(Tick, Map.RenderMap, checkPosition, true);
-            }
+            foreach (var renderView in renderViews)
+                renderView.OnHeightChanged(position);
         }
 
         internal override void OnObjectChanged(uint position, Map.Object oldObjectType, uint oldObjectIndex)
@@ -4565,108 +4340,34 @@ namespace Freeserf
 
         internal override void OnObjectExchanged(MapPos position, Map.Object oldObject, Map.Object newObject)
         {
-            if (oldObject != Map.Object.None && newObject < Map.Object.Tree0)
-            {
-                // we don't draw buildings etc with renderObjects
-                if (renderObjects.TryRemove(position, out var renderObject) && renderObject != null)
-                    renderObject.Delete();
-            }
-            else if (renderObjects.ContainsKey(position))
-            {
-                renderObjects[position].ChangeObjectType(newObject);
-            }
+            foreach (var renderView in renderViews)
+                renderView.OnObjectExchanged(position, oldObject, newObject);
         }
 
         internal override void OnObjectPlaced(MapPos position)
         {
-            var obj = Map.GetObject(position);
-
-            // rendering
-            if (obj == Map.Object.Flag)
-            {
-                var flag = GetFlagAtPosition(position);
-
-                if (!renderFlags.ContainsKey(flag))
-                {
-                    var renderFlag = new Render.RenderFlag(flag, renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource);
-
-                    renderFlag.Visible = true;
-
-                    renderFlags.TryAdd(flag, renderFlag);
-                }
-            }
-            else if (obj == Map.Object.SmallBuilding ||
-                     obj == Map.Object.LargeBuilding ||
-                     obj == Map.Object.Castle)
-            {
-                var building = GetBuildingAtPosition(position);
-
-                if (!renderBuildings.ContainsKey(building))
-                {
-                    var renderBuilding = new Render.RenderBuilding(building, renderView.GetLayer(Layer.Buildings),
-                        renderView.GetLayer(Layer.Objects), renderView.SpriteFactory, renderView.DataSource, audioInterface.AudioFactory.GetAudio());
-
-                    renderBuilding.Visible = true;
-
-                    if (!renderBuildings.TryAdd(building, renderBuilding))
-                        throw new ExceptionFreeserf(ErrorSystemType.Application, "Unable to add render building.");
-
-                    if (!building.IsDone || building.IsBurning)
-                        renderBuildingsInProgress.Add(renderBuilding);
-                }
-            }
-            else if (renderObjectArea.Contains(position)) // map object (only visible ones are drawn)
-            {
-                AddRenderMapObject(position);
-            }
+            foreach (var renderView in renderViews)
+                renderView.OnObjectPlaced(position);
         }
 
         internal void AddSerfForDrawing(Serf serf, MapPos position)
         {
-            if (renderSerfs.ContainsKey(serf))
-                return;
-
-            var renderSerf = new Render.RenderSerf(serf, renderView.GetLayer(Layer.Serfs), renderView.SpriteFactory,
-                renderView.DataSource, audioInterface.AudioFactory.GetAudio());
-
-            renderSerf.Visible = true;
-
-            if (!renderSerfs.TryAdd(serf, renderSerf))
-                throw new ExceptionFreeserf(ErrorSystemType.Application, "Unable to add render serf.");
+            foreach (var renderView in renderViews)
+                renderView.AddSerfForDrawing(serf, position);
         }
 
         // Adds the render objects of all serfs which are visible on the map
         // (e.g. after a full game state sync which cleared all visuals).
         internal void AddAllSerfsForDrawing()
         {
-            foreach (var serf in Serfs.ToList())
-            {
-                if (serf.Index == 0)
-                    continue;
-
-                switch (serf.SerfState)
-                {
-                    case Serf.State.BuildingCastle:
-                    case Serf.State.IdleInStock:
-                    case Serf.State.DefendingCastle:
-                    case Serf.State.DefendingFortress:
-                    case Serf.State.DefendingHut:
-                    case Serf.State.DefendingTower:
-                    case Serf.State.Invalid:
-                    case Serf.State.Null:
-                    case Serf.State.WaitForResourceOut:
-                        break;
-                    default:
-                        AddSerfForDrawing(serf, serf.Position);
-                        break;
-                }
-            }
+            foreach (var renderView in renderViews)
+                renderView.AddAllSerfsForDrawing();
         }
 
         internal void RemoveSerfFromDrawing(Serf serf)
         {
-            if (renderSerfs.TryRemove(serf, out var renderSerf) && renderSerf != null)
-                renderSerf.Delete();
+            foreach (var renderView in renderViews)
+                renderView.RemoveSerfFromDrawing(serf);
         }
 
         internal override void OnRoadSegmentPlaced(MapPos position, Direction direction)
@@ -4681,41 +4382,14 @@ namespace Freeserf
 
         void AddRoadSegment(MapPos position, Direction direction)
         {
-            if (direction < Direction.Right || direction > Direction.Down)
-                return;
-
-            long index = Render.RenderRoadSegment.CreateIndex(position, direction);
-
-            var renderRoadSegment = new Render.RenderRoadSegment(Map, position, direction, renderView.GetLayer(Layer.Paths),
-                renderView.SpriteFactory, renderView.DataSource);
-
-            renderRoadSegment.Visible = true;
-
-            if (!renderRoadSegments.TryAdd(index, renderRoadSegment))
-                Log.Error.Write(ErrorSystemType.Game, $"Failed to add road segment at position {position} direction {direction}.");
-            else if (Map.RenderMap != null)
-                renderRoadSegment.Update(Map.RenderMap);
+            foreach (var renderView in renderViews)
+                renderView.AddRoadSegment(position, direction);
         }
 
         void RemoveRoadSegment(MapPos position, Direction direction)
         {
-            if (direction < Direction.Right)
-                return;
-
-            if (direction > Direction.Down)
-            {
-                RemoveRoadSegment(Map.Move(position, direction), direction.Reverse());
-                return;
-            }
-
-            long index = Render.RenderRoadSegment.CreateIndex(position, direction);
-
-            // Note: A path is deleted from both of its ends (e.g. between a building and its flag),
-            // so the render segment may be removed already.
-            if (renderRoadSegments.TryRemove(index, out var renderRoadSegment) && renderRoadSegment != null)
-                renderRoadSegment.Delete();
-            else
-                Log.Debug.Write(ErrorSystemType.Game, $"Road segment at position {position} direction {direction} was removed already.");
+            foreach (var renderView in renderViews)
+                renderView.RemoveRoadSegment(position, direction);
         }
 
         internal Road GetRoadFromPathAtPosition(MapPos position)

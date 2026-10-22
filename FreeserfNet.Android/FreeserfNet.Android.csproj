@@ -67,6 +67,7 @@
     <!-- GameView is part of the desktop host project but only depends on the
          game projects and Silk.NET.OpenGL, so we compile it directly here. -->
     <Compile Include="..\FreeserfNet\GameView.cs" Link="GameView.cs" />
+    <Compile Include="..\FreeserfNet\SplitScreenRenderView.cs" Link="SplitScreenRenderView.cs" />
   </ItemGroup>
 
   <!-- BASS audio (Un4seen Developments). Native libraries under lib/<abi>/

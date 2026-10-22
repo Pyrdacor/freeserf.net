@@ -271,6 +271,7 @@
   <data name="Setup_MultiplayerJoin" xml:space="preserve"><value>Spiel beitreten</value></data>
   <data name="Setup_NameLabel" xml:space="preserve"><value>Name:</value></data>
   <data name="Setup_NewGame" xml:space="preserve"><value>Neues Spiel</value></data>
+  <data name="Setup_SplitScreen" xml:space="preserve"><value>Splitscreen</value></data>
   <data name="Setup_ServerAddress" xml:space="preserve"><value>IP: {0}</value><comment>{0}: server IP address.</comment></data>
   <data name="Setup_ServerValues" xml:space="preserve"><value>Serverwerte</value></data>
   <data name="Setup_StartMission" xml:space="preserve"><value>Mission starten</value></data>

@@ -93,6 +93,24 @@ namespace Freeserf
             return true;
         }
 
+        // Starts a game which is shared by several local players (split-screen mode).
+        // Each player gets his own render view (own render map and render objects).
+        public bool StartSplitScreenGame(GameInfo gameInfo, IEnumerable<Render.IRenderView> renderViews, Audio.IAudioInterface audioInterface)
+        {
+            var newGame = gameInfo.Instantiate(renderViews, audioInterface);
+
+            if (newGame == null)
+            {
+                return false;
+            }
+
+            lastSaveTime = DateTime.MinValue;
+            currentGameSaveFile = null;
+            SetCurrentGame(newGame);
+
+            return true;
+        }
+
         public Game PrepareMultiplayerGame(GameInfo gameInfo, Render.IRenderView renderView, Audio.IAudioInterface audioInterface)
         {
             var newGame = gameInfo.Instantiate(renderView, audioInterface);
