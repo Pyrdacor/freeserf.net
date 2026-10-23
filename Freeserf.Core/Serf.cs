@@ -6442,6 +6442,13 @@ namespace Freeserf
             var map = Game.Map;
             var inventory = Game.GetInventory(stateData.ReadyToLeaveInventory.InventoryIndex);
 
+            if (inventory == null)
+            {
+                // The inventory may have been destroyed while this serf was waiting to leave.
+                SetState(State.EscapeBuilding);
+                return;
+            }
+
             if (map.HasSerf(Position) || map.HasSerf(map.MoveDownRight(Position)))
             {
                 // The flag is in use. Serfs which approach the flag will wait until we are out.
@@ -7887,7 +7894,9 @@ namespace Freeserf
             }
             else
             {
-                SetLostState();
+                // Another serf is still at the exit. Stay inside and retry next update.
+                state.Tick = Game.Tick;
+                Counter = 0;
             }
         }
 
