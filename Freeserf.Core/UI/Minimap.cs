@@ -36,6 +36,8 @@ namespace Freeserf.UI
         protected readonly Interface interf = null;
         readonly ILayerSprite sprite = null;
         protected Map map = null;
+        // In split-screen mode each player has his own render map (own scroll position).
+        Render.RenderMap RenderMap => map.GetRenderMap(interf.RenderView) ?? map.RenderMap;
         MapPos mapOffset = Global.INVALID_MAPPOS;
         int scale = MinScale;
         protected static readonly Color GridColor = new Color(0x01, 0x01, 0x01);
@@ -121,18 +123,18 @@ namespace Freeserf.UI
             if (!Displayed || map == null || !ShowsMap)
                 return;
 
-            var offset = map.RenderMap.GetCenteredPosition();
+            var offset = RenderMap.GetCenteredPosition();
 
             if (offset == mapOffset && !force)
                 return;
 
             mapOffset = offset;
 
-            var mapCoordinates = map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(offset);
+            var mapCoordinates = RenderMap.CoordinateSpace.TileSpaceToViewSpace(offset);
             mapCoordinates.X -= (64 / scale) * RenderMap.TILE_WIDTH + RenderMap.TILE_WIDTH;
             mapCoordinates.Y -= (64 / scale) * RenderMap.TILE_HEIGHT - RenderMap.TILE_HEIGHT;
 
-            offset = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(mapCoordinates.X, mapCoordinates.Y);
+            offset = RenderMap.CoordinateSpace.ViewSpaceToTileSpace(mapCoordinates.X, mapCoordinates.Y);
 
             byte[] minimapData = new byte[128 * 128 * 4];
             int visibleWidth = Math.Min(128, (int)map.Columns) / scale;
@@ -148,7 +150,7 @@ namespace Freeserf.UI
                 visibleHeight = 128 / scale;
 
             var virtualScreenSize = interf.RenderView.VirtualScreen.Size;
-            var zoom = map.RenderMap.ZoomFactor;
+            var zoom = RenderMap.ZoomFactor;
             int viewRectWidth = Misc.Round(virtualScreenSize.Width / zoom) / RenderMap.TILE_WIDTH;
             int viewRectHeight = Misc.Round(virtualScreenSize.Height / zoom) / RenderMap.TILE_HEIGHT;
             int viewRectX = (visibleWidth - viewRectWidth) / 2;

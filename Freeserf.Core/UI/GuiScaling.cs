@@ -62,4 +62,58 @@ namespace Freeserf
             return new Size(Misc.Round(delta.Width / Scale), Misc.Round(delta.Height / Scale));
         }
     }
+
+    // The gui scaling for one player's part of the screen in split-screen mode.
+    // In touch mode the gui uses the touch scaling (larger logical size, uniform
+    // scale). Otherwise the gui is scaled non-uniformly to fill the player's part
+    // of the screen (like the History Edition).
+    public readonly struct SplitScreenGuiScaling
+    {
+        public float ScaleX { get; }
+        public float ScaleY { get; }
+        public int OffsetX { get; }
+        public int OffsetY { get; }
+        public int LogicalWidth { get; }
+        public int LogicalHeight { get; }
+
+        public SplitScreenGuiScaling(Size playerScreen)
+        {
+            if (GuiScaling.TouchMode)
+            {
+                var guiScaling = GuiScaling.For(playerScreen);
+                ScaleX = guiScaling.Scale;
+                ScaleY = guiScaling.Scale;
+                OffsetX = guiScaling.OffsetX;
+                OffsetY = guiScaling.OffsetY;
+                LogicalWidth = guiScaling.LogicalWidth;
+                LogicalHeight = guiScaling.LogicalHeight;
+            }
+            else
+            {
+                // Scale the gui uniformly to fit the player's part of the screen
+                // (like the normal single-player mode). Non-uniform scaling would
+                // distort the gui (e.g. the bottom panel bar). The gui is anchored
+                // to the bottom edge so the bottom panel bar stays at the bottom
+                // of the player's part of the screen.
+                float scale = Math.Min(playerScreen.Width / (float)GuiScaling.DesignWidth,
+                    playerScreen.Height / (float)GuiScaling.DesignHeight);
+                ScaleX = scale;
+                ScaleY = scale;
+                OffsetX = Misc.Round((playerScreen.Width - GuiScaling.DesignWidth * scale) / 2.0f);
+                OffsetY = Misc.Round(playerScreen.Height - GuiScaling.DesignHeight * scale);
+                LogicalWidth = GuiScaling.DesignWidth;
+                LogicalHeight = GuiScaling.DesignHeight;
+            }
+        }
+
+        public Position ToGui(Position position)
+        {
+            return new Position(Misc.Round((position.X - OffsetX) / ScaleX), Misc.Round((position.Y - OffsetY) / ScaleY));
+        }
+
+        public Size DeltaToGui(Size delta)
+        {
+            return new Size(Misc.Round(delta.Width / ScaleX), Misc.Round(delta.Height / ScaleY));
+        }
+    }
 }

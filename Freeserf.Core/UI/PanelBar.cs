@@ -225,8 +225,8 @@ namespace Freeserf.UI
             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
         }
 
-        // In multiplayer games the buttons request a vote of all players.
-        static bool IsGameSpeedButtonAvailable(int index) => true;
+        // In split-screen mode only the first player has the game speed buttons.
+        bool IsGameSpeedButtonAvailable(int index) => interf.CanChangeGameSpeed;
 
         private void SetGameSpeed(uint speed)
         {

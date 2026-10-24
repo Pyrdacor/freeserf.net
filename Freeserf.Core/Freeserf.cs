@@ -28,6 +28,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Freeserf.Test")]
+[assembly: InternalsVisibleTo("FreeserfNet")]
+[assembly: InternalsVisibleTo("FreeserfNet.Android")]
 
 namespace Freeserf
 {

@@ -36,13 +36,22 @@ namespace Freeserf
         }
 
         public LocalPlayerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
+            : this(renderView, audioInterface, previousViewer, gui, true)
+        {
+        }
+
+        // In split-screen mode the game is started programmatically, so the game init
+        // box is not opened for the additional players.
+        protected LocalPlayerViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui, bool openGameInit)
             : this(renderView, previousViewer, gui, Type.LocalPlayer)
         {
             if (previousViewer == null)
             {
                 Init();
                 MainInterface = new Interface(renderView, audioInterface, gui, this);
-                MainInterface.OpenGameInit();
+
+                if (openGameInit)
+                    MainInterface.OpenGameInit();
             }
             else
             {
