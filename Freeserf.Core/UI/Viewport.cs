@@ -719,7 +719,9 @@ namespace Freeserf.UI
 
             var popup = interf.PopupBox;
             bool analyzingGround = popup != null && popup.Displayed && popup.Box == PopupBox.Type.GroundAnalysis;
-            var analysisPosition = analyzingGround
+            bool moveAnalysisPosition = !interf.IsBuildingRoad &&
+                (popup == null || !popup.Displayed || analyzingGround);
+            var analysisPosition = moveAnalysisPosition
                 ? map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(interf.MapCursorPosition)
                 : null;
 
@@ -728,12 +730,13 @@ namespace Freeserf.UI
             else
                 map.Scroll(scrollX, scrollY);
 
-            if (analyzingGround && (scrollX != 0 || scrollY != 0))
+            if (moveAnalysisPosition && (scrollX != 0 || scrollY != 0))
             {
-                // Keep the analysis marker at the same screen position while exploring the map.
+                // Keep the analysis marker at the same screen position even while the popup is closed.
                 var position = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(analysisPosition);
                 interf.UpdateMapCursorPosition(position);
-                popup.SetRedraw();
+                if (analyzingGround)
+                    popup.SetRedraw();
             }
 
             interf.UpdateMinimap();
