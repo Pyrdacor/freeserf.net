@@ -593,7 +593,9 @@ namespace Freeserf
             Minerals mineral = Minerals.None;
             int resourceAmount = 0;
             Object mapObject = Object.None;
+            [Data]
             public Terrain TypeUp = Terrain.Water0;
+            [Data]
             public Terrain TypeDown = Terrain.Water0;
             readonly DirtyArray<LandscapeTile> parent;
             readonly int parentIndex;
