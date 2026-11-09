@@ -784,18 +784,14 @@ namespace Freeserf
         // Prepare a ground analysis at position. 
         internal void PrepareGroundAnalysis(MapPos position, uint[] estimates)
         {
-            const uint groundAnalysisRadius = 25;
+            const uint groundAnalysisRadius = 24;
 
             for (int i = 0; i < 5; ++i)
                 estimates[i] = 0;
 
-            // Sample the cursor position with maximum weighting. 
-            GetResourceEstimate(position, groundAnalysisRadius, estimates);
-
-            // Move outward in a spiral around the initial position.
-            // The weighting of the samples attenuates linearly
-            // with the distance to the center.
-            for (uint i = 0; i < groundAnalysisRadius - 1; ++i)
+            // The original DOS game skips the center and samples 24 rings,
+            // with weights decreasing from 24 on the first ring to 1 on the last.
+            for (uint i = 0; i < groundAnalysisRadius; ++i)
             {
                 position = Map.MoveRight(position);
 
@@ -3410,7 +3406,9 @@ namespace Freeserf
                 Map.GetResourceType(position) != Map.Minerals.None)
             {
                 uint value = weight * Map.GetResourceAmount(position);
-                estimates[(int)Map.GetResourceType(position)] += value;
+                int mineral = (int)Map.GetResourceType(position);
+                // The original uses saturating 16-bit accumulators.
+                estimates[mineral] = Math.Min(estimates[mineral] + value, ushort.MaxValue);
             }
         }
 
