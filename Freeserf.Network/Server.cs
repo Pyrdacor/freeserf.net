@@ -42,10 +42,9 @@ namespace Freeserf.Network
 
             do
             {
-                while (!stream.DataAvailable)
-                    Thread.Sleep(5);
-
                 numRead = stream.Read(buffer, 0, Math.Min(buffer.Length, length));
+                if (numRead == 0)
+                    throw new System.IO.EndOfStreamException("Peer disconnected during a network packet.");
                 largeBuffer.AddRange(buffer.Take(numRead));
                 length -= numRead;
             } while (length != 0);
@@ -88,15 +87,15 @@ namespace Freeserf.Network
             return ReadData(stream, (int)(length & 0x7fffffff));
         }
 
-        internal static void WriteData(NetworkStream stream, byte[] data)
+        internal static async Task WriteDataAsync(System.IO.Stream stream, byte[] data, CancellationToken cancellationToken)
         {
             byte[] header = new byte[]
             {
                 (byte)'F', (byte)'S', (byte)'N', ProtocolVersion
             };
-            stream.Write(header);
-            stream.Write(BitConverter.GetBytes((uint)data.Length));
-            stream.Write(data);
+            await stream.WriteAsync(header, cancellationToken);
+            await stream.WriteAsync(BitConverter.GetBytes((uint)data.Length), cancellationToken);
+            await stream.WriteAsync(data, cancellationToken);
         }
 
         internal static IPAddress GetLocalIpAddress()
@@ -580,13 +579,14 @@ namespace Freeserf.Network
                             server.HandleData(client, data);
                         }
                     }
-                    catch (ObjectDisposedException)
+                    catch (Exception ex) when (ex is System.IO.IOException || ex is SocketException ||
+                        ex is ObjectDisposedException || ex is InvalidOperationException)
                     {
-                        if (tcpClient.Connected)
+                        if (!cancellationToken.IsCancellationRequested)
                         {
-                            // TODO: connected but disposed? should not happen.
+                            Log.Verbose.Write(ErrorSystemType.Network, "Unable to receive data from client " + client.Ip + ": " + ex.Message);
+                            client.NotifyConnectionLost();
                         }
-
                         return;
                     }
                 }
@@ -632,7 +632,7 @@ namespace Freeserf.Network
                 // ignore
             }
 
-            tcpClient?.Close();
+            client.Close(drain: true);
         }
 
         // Returns the player which a rejoining client gets or null if there is none.
@@ -1117,8 +1117,9 @@ namespace Freeserf.Network
 
         public void RejectClient(TcpClient client)
         {
-            new RemoteClient(uint.MaxValue, this, client).SendDisconnect();
-            client?.Close();
+            var remote = new RemoteClient(uint.MaxValue, this, client);
+            remote.SendDisconnect();
+            remote.Close(drain: true);
         }
 
         public void DisconnectClient(IRemoteClient client, bool sendNotificationToClient = true)
@@ -1132,7 +1133,10 @@ namespace Freeserf.Network
 
             if (clients.ContainsKey(client))
             {
-                clients[client]?.Close();
+                if (client is RemoteClient remote)
+                    remote.Close(drain: sendNotificationToClient);
+                else
+                    clients[client]?.Close();
                 clients.Remove(client);
                 playerClients.Remove(client.PlayerIndex);
                 clientStatus.Remove(client);
@@ -1385,6 +1389,7 @@ namespace Freeserf.Network
     {
         private TcpClient localClient = null;
         private Task receiveTask = null;
+        readonly NetworkSendQueue sendQueue;
         private readonly CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
 
         public RemoteServer(string name, IPAddress ip, TcpClient localClient)
@@ -1393,34 +1398,34 @@ namespace Freeserf.Network
             Ip = ip;
             State = ServerState.Lobby; // when joining we are in lobby
             this.localClient = localClient;
+            sendQueue = new NetworkSendQueue(localClient.GetStream(), localClient.Close, ex =>
+            {
+                Log.Error.Write(ErrorSystemType.Network, "Unable to send data to the server: " + ex.Message);
+                ConnectionLost?.Invoke();
+            });
 
-            receiveTask = Task.Run(() => Run(cancelTokenSource.Token), cancelTokenSource.Token);
+            receiveTask = Run(localClient, cancelTokenSource.Token);
         }
 
         public void Close()
         {
+            cancelTokenSource.Cancel();
+            sendQueue.Dispose(); // Closing the socket releases the background receive task.
             localClient = null;
             State = ServerState.Offline;
-
-            cancelTokenSource.Cancel();
-
-            if (receiveTask != null)
-            {
-                if (receiveTask.Status == TaskStatus.Running)
-                    receiveTask.Wait();
-                receiveTask = null;
-            }
+            // Do not join a network worker on the game thread.
+            receiveTask = null;
         }
 
-        Task Run(CancellationToken cancellationToken)
+        Task Run(TcpClient connection, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
                 byte[] buffer = new byte[1024];
 
-                using (var stream = localClient.GetStream())
+                using (var stream = connection.GetStream())
                 {
-                    while (!cancellationToken.IsCancellationRequested && localClient.Connected)
+                    while (!cancellationToken.IsCancellationRequested && connection.Connected)
                     {
                         try
                         {
@@ -1437,12 +1442,16 @@ namespace Freeserf.Network
                                 DataReceived?.Invoke(this, data);
                             }
                         }
-                        catch (ObjectDisposedException)
+                        catch (Exception ex) when (ex is System.IO.IOException || ex is SocketException ||
+                            ex is ObjectDisposedException || ex is InvalidOperationException)
                         {
-                            if (localClient?.Connected == true)
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                // TODO: connected but disposed? should not happen.
+                                Log.Verbose.Write(ErrorSystemType.Network, "Unable to receive data from the server: " + ex.Message);
+                                sendQueue.Dispose();
+                                ConnectionLost?.Invoke();
                             }
+                            return;
                         }
                     }
                 }
@@ -1467,20 +1476,7 @@ namespace Freeserf.Network
 
         public event ReceivedDataHandler DataReceived;
 
-        public void Send(byte[] rawData)
-        {
-            try
-            {
-                if (localClient != null && localClient.Connected)
-                    Host.WriteData(localClient.GetStream(), rawData);
-            }
-            catch (Exception ex) when (ex is System.IO.IOException || ex is SocketException ||
-                ex is ObjectDisposedException || ex is InvalidOperationException)
-            {
-                Log.Verbose.Write(ErrorSystemType.Network, "Unable to send data to the server: " + ex.Message);
-                ConnectionLost?.Invoke();
-            }
-        }
+        public void Send(byte[] rawData) => sendQueue.Send(rawData);
 
         /// <summary>
         /// Raised when data could not be sent.

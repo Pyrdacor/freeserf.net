@@ -30,13 +30,16 @@ namespace Freeserf.Network
 
         public void ProcessReceivedData(ReceivedNetworkDataHandler dataHandler)
         {
+            Action<ReceivedNetworkDataHandler>[] handlers;
             lock (receivedNetworkDataHandlers)
             {
-                foreach (var handler in receivedNetworkDataHandlers)
-                    handler?.Invoke(dataHandler);
-
+                handlers = receivedNetworkDataHandlers.ToArray();
                 receivedNetworkDataHandlers.Clear();
             }
+
+            // Never hold the receive queue lock while applying game states or handling requests.
+            foreach (var handler in handlers)
+                handler?.Invoke(dataHandler);
         }
 
         public void Receive(IRemote source, INetworkData data, ResponseHandler responseHandler)

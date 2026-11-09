@@ -710,7 +710,8 @@ namespace Freeserf.Network
 
     internal class RemoteClient : ConnectionObserver, IRemoteClient
     {
-        readonly TcpClient client = new TcpClient();
+        readonly TcpClient client;
+        readonly NetworkSendQueue sendQueue;
         public DateTime LastHeartbeat { get; set; } = DateTime.UtcNow;
         readonly CancellationTokenSource disconnectToken = new CancellationTokenSource();
 
@@ -721,7 +722,18 @@ namespace Freeserf.Network
             PlayerIndex = playerIndex;
             Server = server;
             this.client = client;
+            sendQueue = new NetworkSendQueue(client.GetStream(), client.Close, ex =>
+            {
+                Log.Error.Write(ErrorSystemType.Network, $"Unable to send data to client {Ip} (player {PlayerIndex}): {ex.Message}");
+                disconnectToken.Cancel();
+                NotifyConnectionLost();
+            });
 
+            ConnectionLost += () =>
+            {
+                disconnectToken.Cancel();
+                sendQueue.Dispose();
+            };
             lastHeartbeatTimeProvider = () => LastHeartbeat;
             cancellationToken = disconnectToken.Token;
 
@@ -764,21 +776,16 @@ namespace Freeserf.Network
             disconnectToken.Cancel();
         }
 
-        public void Send(byte[] rawData)
+        internal void Close(bool drain = false)
         {
-            if (client != null && client.Connected)
-            {
-                try
-                {
-                    Host.WriteData(client.GetStream(), rawData);
-                }
-                catch (System.IO.IOException)
-                {
-                    if (client.Connected)
-                        throw;
-                }
-            }
+            disconnectToken.Cancel();
+            if (drain)
+                sendQueue.Complete();
+            else
+                sendQueue.Dispose();
         }
+
+        public void Send(byte[] rawData) => sendQueue.Send(rawData);
 
         public void SendLobbyDataUpdate(byte messageIndex, LobbyServerInfo serverInfo, List<LobbyPlayerInfo> players)
         {
