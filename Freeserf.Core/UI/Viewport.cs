@@ -717,10 +717,24 @@ namespace Freeserf.UI
             int scrollX = totalDragX / RenderMap.TILE_WIDTH;
             int scrollY = totalDragY / RenderMap.TILE_HEIGHT;
 
+            var popup = interf.PopupBox;
+            bool analyzingGround = popup != null && popup.Displayed && popup.Box == PopupBox.Type.GroundAnalysis;
+            var analysisPosition = analyzingGround
+                ? map.RenderMap.CoordinateSpace.TileSpaceToViewSpace(interf.MapCursorPosition)
+                : null;
+
             if (interf.GetOption(Option.InvertScrolling)) // invert scrolling
                 map.Scroll(-scrollX, -scrollY);
             else
                 map.Scroll(scrollX, scrollY);
+
+            if (analyzingGround && (scrollX != 0 || scrollY != 0))
+            {
+                // Keep the analysis marker at the same screen position while exploring the map.
+                var position = map.RenderMap.CoordinateSpace.ViewSpaceToTileSpace(analysisPosition);
+                interf.UpdateMapCursorPosition(position);
+                popup.SetRedraw();
+            }
 
             interf.UpdateMinimap();
             recheckMapCursorSprites = true;
