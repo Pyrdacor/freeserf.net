@@ -136,8 +136,11 @@ namespace Freeserf.Network
             HandleDisconnect();
         }
 
-        private void HandleDisconnect()
+        private void HandleDisconnect(bool connectionInterrupted = false)
         {
+            if (connectionInterrupted)
+                Game?.Pause();
+            disconnectToken.Cancel();
             Freeserf.Game.CheckpointReached -= Game_CheckpointReached;
 
             lock (registeredResponseHandlers)
@@ -153,8 +156,8 @@ namespace Freeserf.Network
             client?.Close();
             client = null;
             server = null;
-            Disconnected?.Invoke(this, EventArgs.Empty);
             serverState = ServerState.Offline;
+            Disconnected?.Invoke(this, new ClientDisconnectedEventArgs(connectionInterrupted));
         }
 
         public bool JoinServer(string name, IPAddress ip)
@@ -245,8 +248,8 @@ namespace Freeserf.Network
 
                 if (server != null)
                 {
-                    Log.Verbose.Write(ErrorSystemType.Network, "Lost connection to the server.");
-                    HandleDisconnect();
+                    Log.Verbose.Write(ErrorSystemType.Network, "Lost connection to the server. Keeping the game paused for rejoining.");
+                    HandleDisconnect(connectionInterrupted: true);
                 }
 
                 return;

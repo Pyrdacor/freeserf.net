@@ -25,6 +25,16 @@ using System.Net;
 
 namespace Freeserf.Network
 {
+    public sealed class ClientDisconnectedEventArgs : EventArgs
+    {
+        public bool ConnectionLost { get; }
+
+        public ClientDisconnectedEventArgs(bool connectionLost)
+        {
+            ConnectionLost = connectionLost;
+        }
+    }
+
     public interface IClient
     {
         IPAddress Ip { get; }
