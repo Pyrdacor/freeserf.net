@@ -537,7 +537,7 @@ namespace Freeserf
                 throw new ArgumentOutOfRangeException("Invalid knight occupation value length.");
 
             for (int i = 0; i < 4; ++i)
-                settings.KnightOccupation[0] = values[i];
+                settings.KnightOccupation[i] = values[i];
         }
 
         public void SetKnightOccupation(int threatLevel, byte value)
