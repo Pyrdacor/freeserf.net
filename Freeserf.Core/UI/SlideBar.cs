@@ -62,7 +62,7 @@ namespace Freeserf.UI
                 fill = value;
 
                 fillRect.Resize(fill, 4);
-                FillChanged?.Invoke(this, System.EventArgs.Empty);
+                // Updating the display from game state must not send a setting change.
             }
         }
 
@@ -94,6 +94,7 @@ namespace Freeserf.UI
             if (delayed)
                 return true;
 
+            int oldFill = Fill;
             int relX = x - TotalX;
 
             if (relX < 7)
@@ -102,6 +103,9 @@ namespace Freeserf.UI
                 Fill = relX - 7;
             else
                 Fill = 50;
+
+            if (Fill != oldFill)
+                FillChanged?.Invoke(this, System.EventArgs.Empty);
 
             SetRedraw();
 
