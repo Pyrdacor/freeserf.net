@@ -60,7 +60,12 @@ namespace Freeserf.Test.Freeserf.Core
                 for (int i = 0; i < 500; ++i)
                 {
                     Log.Info.Write(ErrorSystemType.Network, $"packet {i:D5}");
-                    string text = File.ReadAllText(path);
+                    // Windows checks sharing in both directions: this reader
+                    // must allow the logger's already-open write handle too.
+                    string text;
+                    using (var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(input))
+                        text = reader.ReadToEnd();
                     Assert.IsTrue(text.Length <= Log.MaxSize.Value);
                     Assert.IsTrue(text.EndsWith($"packet {i:D5}" + Environment.NewLine));
                     Assert.IsTrue(text.Split(Environment.NewLine)[0].Contains("Info: [Network] packet "));
