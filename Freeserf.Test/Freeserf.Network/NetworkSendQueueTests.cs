@@ -20,6 +20,34 @@ namespace Freeserf.Test.Network
             }
         }
 
+        sealed class UncancellableStream : MemoryStream
+        {
+            internal readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            internal readonly TaskCompletionSource Closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                Started.TrySetResult();
+                await Closed.Task; // Deliberately ignore the cancellation token.
+                throw new IOException("Socket closed");
+            }
+        }
+
+        [TestMethod]
+        public async Task UncancellableWrite_ShouldStillTimeOutAndClosePeer()
+        {
+            using var stream = new UncancellableStream();
+            var failure = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var sender = new NetworkSendQueue(stream, () => stream.Closed.TrySetResult(),
+                ex => failure.TrySetResult(ex), TimeSpan.FromMilliseconds(200));
+            sender.Send(new byte[1024]);
+            await stream.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            var error = await failure.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            await sender.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.IsInstanceOfType<IOException>(error);
+            Assert.IsInstanceOfType<OperationCanceledException>(error.InnerException);
+            Assert.IsTrue(stream.Closed.Task.IsCompleted);
+        }
+
         sealed class RecordingStream : MemoryStream
         {
             int writes;
@@ -155,7 +183,10 @@ namespace Freeserf.Test.Network
                 ex => failure.TrySetResult(ex), TimeSpan.FromMilliseconds(300));
 
             await Task.Run(() => sender.Send(new byte[8 * 1024 * 1024])).WaitAsync(TimeSpan.FromSeconds(2));
-            var error = await failure.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var completed = await Task.WhenAny(failure.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+            Assert.AreSame(failure.Task, completed,
+                $"No send timeout was reported; queue completed: {sender.Completion.IsCompleted}.");
+            var error = await failure.Task;
             await sender.Completion.WaitAsync(TimeSpan.FromSeconds(2));
             Assert.IsInstanceOfType<IOException>(error);
             Assert.IsInstanceOfType<OperationCanceledException>(error.InnerException);

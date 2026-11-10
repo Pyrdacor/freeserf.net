@@ -67,7 +67,22 @@ namespace Freeserf.Network
                 {
                     using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token);
                     timeout.CancelAfter(sendTimeout);
-                    await Host.WriteDataAsync(stream, data, timeout.Token);
+                    var write = Host.WriteDataAsync(stream, data, timeout.Token);
+                    try
+                    {
+                        // Enforce the deadline even if the stream does not complete
+                        // its pending write promptly when cancellation is requested.
+                        await write.WaitAsync(timeout.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Stop closes the socket below. Observe any eventual write
+                        // failure without waiting for it on the game/queue thread.
+                        _ = write.ContinueWith(task => { _ = task.Exception; },
+                            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted |
+                            TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                        throw;
+                    }
                     lock (sync)
                         pendingBytes -= data.LongLength + 8;
                 }
