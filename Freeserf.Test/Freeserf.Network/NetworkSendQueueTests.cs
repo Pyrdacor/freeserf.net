@@ -139,6 +139,10 @@ namespace Freeserf.Test.Network
         public async Task RealSocketWithNonReadingPeer_ShouldTimeOutWithoutBlockingCaller()
         {
             using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+            // Set the receive window before the TCP handshake. Changing only
+            // the accepted socket can leave a large negotiated/autotuned window
+            // on Windows, allowing the entire payload to be buffered.
+            listener.Server.ReceiveBufferSize = 1024;
             listener.Start();
             using var client = new System.Net.Sockets.TcpClient();
             client.SendBufferSize = 1024;
@@ -154,6 +158,7 @@ namespace Freeserf.Test.Network
             var error = await failure.Task.WaitAsync(TimeSpan.FromSeconds(5));
             await sender.Completion.WaitAsync(TimeSpan.FromSeconds(2));
             Assert.IsInstanceOfType<IOException>(error);
+            Assert.IsInstanceOfType<OperationCanceledException>(error.InnerException);
         }
 
         [TestMethod]
