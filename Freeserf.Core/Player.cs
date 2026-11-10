@@ -50,9 +50,6 @@ namespace Freeserf
         readonly Dictionary<MapPos, GameTime> lastUnderAttackNotificationTimes = new Dictionary<MapPos, GameTime>();
         uint selectedBuildingIndex = 0;
 
-        // TODO: move to state as multiplayer games won't have the info otherwise
-        readonly uint[,] playerStatHistory = new uint[16, 112];
-        readonly uint[,] resourceCountHistory = new uint[26, 120];
 
         /// <summary>
         /// Target building that should be attacked.
@@ -1552,7 +1549,7 @@ namespace Freeserf
 
         public void UpdateStats(int resource, int index)
         {
-            resourceCountHistory[resource, index] = state.ResourceCounts[resource];
+            state.ResourceCountHistory[resource * 120 + index] = state.ResourceCounts[resource];
             state.ResourceCounts[resource] = 0;
         }
 
@@ -1673,17 +1670,17 @@ namespace Freeserf
 
         public uint[] GetResourceCountHistory(Resource.Type type)
         {
-            return resourceCountHistory.SliceRow((int)type).ToArray();
+            return state.ResourceCountHistory.Skip((int)type * 120).Take(120).ToArray();
         }
 
         public void SetPlayerStatHistory(int mode, int index, uint val)
         {
-            playerStatHistory[mode, index] = val;
+            state.PlayerStatHistory[mode * 112 + index] = val;
         }
 
         public uint[] GetPlayerStatHistory(int mode)
         {
-            return playerStatHistory.SliceRow(mode).ToArray();
+            return state.PlayerStatHistory.Skip(mode * 112).Take(112).ToArray();
         }
 
         public ResourceMap GetStatsResources()
@@ -2198,7 +2195,7 @@ namespace Freeserf
                 {
                     for (int i = 0; i < 112; ++i)
                     {
-                        playerStatHistory[mode, i] = history[mode * 112 + i].ReadUInt();
+                        state.PlayerStatHistory[mode * 112 + i] = history[mode * 112 + i].ReadUInt();
                     }
                 }
             }
@@ -2209,7 +2206,7 @@ namespace Freeserf
                 {
                     for (int i = 0; i < 120; ++i)
                     {
-                        resourceCountHistory[res, i] = history[res * 120 + i].ReadUInt();
+                        state.ResourceCountHistory[res * 120 + i] = history[res * 120 + i].ReadUInt();
                     }
                 }
             }
@@ -2348,7 +2345,7 @@ namespace Freeserf
             {
                 for (int i = 0; i < 112; ++i)
                 {
-                    writer.Value("player_stat_history").Write(playerStatHistory[mode, i]);
+                    writer.Value("player_stat_history").Write(state.PlayerStatHistory[mode * 112 + i]);
                 }
             }
 
@@ -2356,7 +2353,7 @@ namespace Freeserf
             {
                 for (int i = 0; i < 120; ++i)
                 {
-                    writer.Value("resource_count_history").Write(resourceCountHistory[res, i]);
+                    writer.Value("resource_count_history").Write(state.ResourceCountHistory[res * 120 + i]);
                 }
             }
         }

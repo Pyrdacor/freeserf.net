@@ -161,6 +161,8 @@ namespace Freeserf
 
         public PlayerState()
         {
+            PlayerStatHistory.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(PlayerStatHistory)); };
+            ResourceCountHistory.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ResourceCountHistory)); };
             SerfCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(SerfCounts)); };
             ResourceCounts.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(ResourceCounts)); };
             CompletedBuildingCount.GotDirty += (object sender, EventArgs args) => { MarkPropertyAsDirty(nameof(CompletedBuildingCount)); };
@@ -171,6 +173,8 @@ namespace Freeserf
         {
             lock (dirtyLock)
             {
+                PlayerStatHistory.ResetDirtyFlag();
+                ResourceCountHistory.ResetDirtyFlag();
                 SerfCounts.ResetDirtyFlag();
                 ResourceCounts.ResetDirtyFlag();
                 CompletedBuildingCount.ResetDirtyFlag();
@@ -431,6 +435,11 @@ namespace Freeserf
                 }
             }
         }
+
+        [Data]
+        public DirtyArray<dword> PlayerStatHistory { get; } = new DirtyArray<dword>(16 * 112);
+        [Data]
+        public DirtyArray<dword> ResourceCountHistory { get; } = new DirtyArray<dword>(26 * 120);
 
         [Data]
         public DirtyArrayWithEnumIndex<Serf.Type, dword> SerfCounts { get; } = new DirtyArrayWithEnumIndex<Serf.Type, dword>(Global.NUM_SERF_TYPES);
