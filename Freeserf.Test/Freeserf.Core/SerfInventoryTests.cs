@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Freeserf.Test.Freeserf.Core
@@ -5,6 +6,52 @@ namespace Freeserf.Test.Freeserf.Core
     [TestClass]
     public class SerfInventoryTests
     {
+        [TestMethod]
+        [DataRow((int)Building.Type.CoalMine, 125)]
+        [DataRow((int)Building.Type.IronMine, 126)]
+        [DataRow((int)Building.Type.GoldMine, 127)]
+        [DataRow((int)Building.Type.StoneMine, 128)]
+        public void MinerInBurnedMine_ShouldNotBlockItsOwnEscape(int mineType, int animation)
+        {
+            var map = new Map(new MapGeometry(3), null);
+            map.InitTiles(new FlatGrassMapGenerator(map));
+            var game = new Game(map);
+            game.InsertPlayer(0, 0, 20, 20);
+            var position = game.Map.Position(10, 10);
+            var mine = game.CreateBuilding(1);
+            mine.Position = position;
+            mine.Player = 0;
+            mine.StartBuilding((Building.Type)mineType);
+            var buildingState = (BuildingState)typeof(Building)
+                .GetField("state", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(mine);
+            buildingState.Constructing = false;
+            buildingState.Active = true;
+            buildingState.Holder = true;
+            game.Map.SetObject(position, Map.Object.SmallBuilding, (int)mine.Index);
+            game.Map.SetOwner(position, 0);
+            game.Map.SetOwner(game.Map.MoveDownRight(position), 0);
+            var miner = game.CreateSerf(1);
+            miner.Position = position;
+            miner.Player = 0;
+            miner.SerfType = Serf.Type.Miner;
+            typeof(Serf).GetProperty("SerfState").SetValue(miner, Serf.State.Mining);
+            typeof(Serf).GetProperty("Animation").SetValue(miner, animation);
+            game.Map.SetSerfIndex(position, (int)miner.Index);
+
+            Assert.IsTrue(mine.BurnUp());
+            Assert.AreEqual(Serf.State.EscapeBuilding, miner.SerfState);
+            game.DeleteBuilding(mine);
+            miner.Update();
+
+            Assert.AreSame(miner, game.GetSerf(miner.Index));
+            Assert.AreEqual(Serf.Type.Miner, miner.SerfType);
+            Assert.AreEqual(Serf.State.Lost, miner.SerfState);
+            Assert.AreEqual(82, miner.Animation, "The elevator animation must be replaced.");
+            Assert.AreEqual(0, miner.Counter);
+            Assert.AreEqual(miner.Index, game.Map.GetSerfIndex(position));
+            Assert.IsNull(game.GetBuilding(mine.Index));
+        }
+
         [TestMethod]
         public void EscapeBuildingWithOccupiedExit_ShouldKeepWaiting()
         {

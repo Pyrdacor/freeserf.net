@@ -493,7 +493,8 @@ namespace Freeserf.Render
                 // when they stand in the door. Otherwise another serf is there (#97).
                 // Right after entering this state the counter of the previous state
                 // might still be negative. It is reset with the next update.
-                bool insideBuilding = (serf.SerfState == Serf.State.ReadyToLeave || serf.SerfState == Serf.State.ReadyToLeaveInventory) &&
+                bool insideBuilding = (serf.SerfState == Serf.State.ReadyToLeave || serf.SerfState == Serf.State.ReadyToLeaveInventory ||
+                    serf.SerfState == Serf.State.EscapeBuilding) &&
                     (map.GetSerfIndex(position) != serf.Index || serf.Counter < 0);
 
                 if (map.HasSerf(position) && !insideBuilding && serf.SerfState != Serf.State.IdleOnPath && serf.SerfState != Serf.State.WaitIdleOnPath) // active serf

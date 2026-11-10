@@ -7880,7 +7880,10 @@ namespace Freeserf
 
         void HandleSerfEscapeBuildingState()
         {
-            if (!Game.Map.HasSerf(Position))
+            // A visible worker (e.g. a miner in the elevator) may already
+            // occupy this tile. Only a different serf blocks the escape.
+            bool alreadyOutside = Game.Map.GetSerfIndex(Position) == Index;
+            if (!Game.Map.HasSerf(Position) || alreadyOutside)
             {
                 Game.Map.SetSerfIndex(Position, (int)Index);
                 Animation = 82;
@@ -7890,7 +7893,8 @@ namespace Freeserf
                 SetState(State.Lost);
                 stateData.Lost.FieldB = 0;
 
-                Game.AddSerfForDrawing(this, Position);
+                if (!alreadyOutside)
+                    Game.AddSerfForDrawing(this, Position);
             }
             else
             {
