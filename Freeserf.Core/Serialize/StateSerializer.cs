@@ -160,7 +160,7 @@ namespace Freeserf.Serialize
         /// Minor data version.
         /// This is part of the data version a communication partner uses.
         /// </summary>
-        private const byte DATA_MINOR_VERSION = 0;
+        private const byte DATA_MINOR_VERSION = 1;
 
         public static void RegisterCustomTypeCreator(Type type, CustomTypeCreator customTypeCreator)
         {
