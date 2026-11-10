@@ -3846,6 +3846,17 @@ namespace Freeserf.UI
             SendClientUserAction(() => UserActionData.CreateChangeSettingUserAction(Network.Global.SpontaneousMessage, interf.Game, setting, value));
         }
 
+        internal static UserActionData StartAttackAndCreateUserAction(Game game, Player player)
+        {
+            // StartAttack consumes TotalKnightsAttacking as knights leave.
+            // Preserve the selected count in the command before local prediction.
+            var position = game.GetBuilding((uint)player.BuildingToAttack).Position;
+            var attack = UserActionData.CreateAttackUserAction(Network.Global.SpontaneousMessage,
+                game, position, player.TotalKnightsAttacking);
+            player.StartAttack();
+            return attack;
+        }
+
         void SendClientUserAction(Func<UserActionData> userActionDataProvider)
         {
             if (interf.Viewer is ClientViewer clientViewer)
@@ -4567,10 +4578,8 @@ namespace Freeserf.UI
                         if (player.AttackingBuildingCount > 0)
                         {
                             PlaySound(Freeserf.Audio.Audio.TypeSfx.Accepted);
-                            player.StartAttack();
-                            var position = interf.Game.GetBuilding((uint)player.BuildingToAttack).Position;
-                            SendClientUserAction(() => UserActionData.CreateAttackUserAction(Network.Global.SpontaneousMessage, interf.Game, position, player.TotalKnightsAttacking));
-                            // TODO: I guess we need a full player sync including knights for each attack
+                            var attack = StartAttackAndCreateUserAction(interf.Game, player);
+                            SendClientUserAction(() => attack);
                         }
 
                         interf.ClosePopup();
