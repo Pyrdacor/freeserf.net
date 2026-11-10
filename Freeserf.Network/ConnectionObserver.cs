@@ -57,7 +57,7 @@ namespace Freeserf.Network
 
                     if (noResponseTime > ConnectionTimeoutInSeconds)
                     {
-                        ConnectionLost?.Invoke();
+                        NotifyConnectionLost();
                         break;
                     }
                     else if (noResponseTime > NeedRefreshTimeoutInSeconds)
@@ -72,6 +72,14 @@ namespace Freeserf.Network
                     Thread.Sleep(checkDelay);
                 }
             });
+        }
+
+        int connectionLostNotified;
+
+        internal void NotifyConnectionLost()
+        {
+            if (Interlocked.Exchange(ref connectionLostNotified, 1) == 0)
+                ConnectionLost?.Invoke();
         }
 
         public event Action ConnectionLost;
