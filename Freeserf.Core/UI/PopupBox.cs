@@ -4140,6 +4140,7 @@ namespace Freeserf.UI
                 case Action.PlayerStatisticsSetAspectBuildings:
                 case Action.PlayerStatisticsSetAspectMilitary:
                     currentPlayerStatisticsMode = (currentPlayerStatisticsMode & 0x3) | ((action - Action.PlayerStatisticsSetAspectAll) << 2);
+                    SetBackground(BackgroundFromType());
                     break;
                 case Action.ShowPlayerFaces:
                     SetBox(Type.PlayerFaces);
