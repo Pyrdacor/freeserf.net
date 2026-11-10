@@ -82,7 +82,7 @@ namespace Freeserf
         private void EnsureFile()
         {
             if (logFileStream == null)
-                logFileStream = File.Create(filename);
+                logFileStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
         }
 
         public override void Flush()
@@ -114,13 +114,20 @@ namespace Freeserf
             logFileStream.Write(buffer, offset, count);
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                logFileStream?.Dispose();
+            base.Dispose(disposing);
+        }
+
         public void PopFrontText(int length)
         {
             logFileStream?.Close();
 
             File.WriteAllText(filename, File.ReadAllText(filename).Substring(length));
 
-            logFileStream = File.OpenWrite(filename);
+            logFileStream = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
             logFileStream.Position = logFileStream.Length;
         }
     }
@@ -162,35 +169,44 @@ namespace Freeserf
                 ApplyLevel();
             }
 
-            private void PopLine()
-            {
-                int lineSize = lineSizes.Dequeue();
-                (streamWriter.BaseStream as LogFileStream).PopFrontText(lineSize);
-                currentSize -= lineSize;
-            }
-
             private void Write(string text)
             {
-                if (MaxSize != null)
+                // All log levels share one stream and its size accounting.
+                lock (writeLock)
                 {
-                    if (MaxSize < text.Length)
+                    if (MaxSize is long maxSize && streamWriter.BaseStream is LogFileStream file)
                     {
-                        Write(text.Substring(0, (int)MaxSize - 3) + "...");
-                        return;
+                        int newlineSize = Environment.NewLine.Length;
+                        int maxTextSize = (int)Math.Min(int.MaxValue - newlineSize, Math.Max(0, maxSize - newlineSize));
+                        if (text.Length > maxTextSize)
+                            text = text.Substring(0, maxTextSize);
+
+                        int lineSize = text.Length + newlineSize;
+                        if (currentSize + lineSize > maxSize)
+                        {
+                            // Make room in batches instead of rewriting the whole file
+                            // for every line after a long session reaches the limit.
+                            long targetSize = Math.Max(0, maxSize - Math.Max(lineSize, maxSize / 4));
+                            int removedSize = 0;
+                            while (currentSize > targetSize && lineSizes.Count > 0)
+                            {
+                                int removedLineSize = lineSizes.Dequeue();
+                                currentSize -= removedLineSize;
+                                removedSize += removedLineSize;
+                            }
+                            if (removedSize > 0)
+                                file.PopFrontText(removedSize);
+                        }
+                        currentSize += lineSize;
+                        lineSizes.Enqueue(lineSize);
+                    }
+                    else
+                    {
+                        // Unlimited and console logs need no per-line bookkeeping.
+                        currentSize = 0;
+                        lineSizes.Clear();
                     }
 
-                    lock (streamWriter)
-                    {
-                        while (currentSize + text.Length > MaxSize)
-                            PopLine();
-                    }
-                }
-
-                currentSize += text.Length + Environment.NewLine.Length;
-                lineSizes.Enqueue(text.Length + Environment.NewLine.Length);
-
-                lock (streamWriter)
-                {
                     streamWriter.WriteLine(text);
                     streamWriter.Flush();
                 }
@@ -241,6 +257,7 @@ namespace Freeserf
 
             Log.stream = stream;
             currentSize = 0;
+            lineSizes.Clear();
 
             SetLevel(level); // this will attach the streams to the levels
         }
@@ -283,7 +300,8 @@ namespace Freeserf
         protected static Level level = UserConfig.DefaultLogLevel;
 #endif
 
-        static int currentSize = 0;
+        static readonly object writeLock = new object();
+        static long currentSize = 0;
         static readonly Queue<int> lineSizes = new Queue<int>();
         public static long? MaxSize { get; set; } = UserConfig.DefaultMaxLogSize;
     }
