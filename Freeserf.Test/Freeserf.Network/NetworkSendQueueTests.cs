@@ -173,7 +173,9 @@ namespace Freeserf.Test.Network
             listener.Server.ReceiveBufferSize = 1024;
             listener.Start();
             using var client = new System.Net.Sockets.TcpClient();
-            client.SendBufferSize = 1024;
+            // Disable sender-side buffering so successful completion cannot merely
+            // mean that Windows queued the whole payload for a non-reading peer.
+            client.SendBufferSize = 0;
             var accept = listener.AcceptTcpClientAsync();
             await client.ConnectAsync((System.Net.IPEndPoint)listener.LocalEndpoint);
             using var peer = await accept;
