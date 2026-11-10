@@ -1876,6 +1876,10 @@ namespace Freeserf.UI
 
         private void Client_GamePaused(object sender, System.EventArgs e)
         {
+            // A player may rejoin a session that the host paused after a disconnect.
+            // Start its viewer without resuming the simulation.
+            if (GameManager.Instance.GetCurrentGame() != Client.Game)
+                GameManager.Instance.StartMultiplayerGame(Client.Game);
             Client.Game.Pause();
         }
 

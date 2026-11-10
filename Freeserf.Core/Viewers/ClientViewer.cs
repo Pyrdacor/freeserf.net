@@ -26,7 +26,7 @@ namespace Freeserf
     internal class ClientViewer : RemoteSpectatorViewer
     {
         readonly Network.ILocalClient client = null;
-        public override Access AccessRights => Access.Player;
+        public override Access AccessRights => client == null || client.Connected ? Access.Player : Access.Spectator;
 
         public ClientViewer(Render.IRenderView renderView, Audio.IAudioInterface audioInterface, Viewer previousViewer, Gui gui)
             : base(renderView, audioInterface, previousViewer, gui, Type.Client)
@@ -54,6 +54,14 @@ namespace Freeserf
         private void Client_Disconnected(object sender, System.EventArgs e)
         {
             client.Disconnected -= Client_Disconnected;
+
+            if (e is Network.ClientDisconnectedEventArgs { ConnectionLost: true })
+            {
+                Log.Info.Write(ErrorSystemType.Network, "Connection interrupted. The current game is paused and preserved; rejoin the server from the multiplayer menu.");
+                client.Game?.Pause();
+                MainInterface.ClosePopup();
+                return;
+            }
 
             Log.Info.Write(ErrorSystemType.Network, "The connection to the server was closed. Leaving the game.");
 

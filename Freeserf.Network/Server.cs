@@ -1075,9 +1075,11 @@ namespace Freeserf.Network
                     break;
                 case Request.StartGame:
                     // This may be send by reconnected clients.
-                    new RequestData(Global.SpontaneousMessage, Request.Resume).Send(client);
+                    var currentGame = GameManager.Instance.GetCurrentGame();
+                    new RequestData(Global.SpontaneousMessage,
+                        currentGame.IsPaused ? Request.Pause : Request.Resume).Send(client);
                     new RequestData(Global.SpontaneousMessage, Request.AllowUserInput).Send(client);
-                    client.SendGameStateUpdate(Global.SpontaneousMessage, GameManager.Instance.GetCurrentGame(), true);
+                    client.SendGameStateUpdate(Global.SpontaneousMessage, currentGame, true);
                     break;
                 default:
                     responseHandler?.Invoke(ResponseType.BadRequest);
@@ -1150,10 +1152,15 @@ namespace Freeserf.Network
                     // Note: GameInitBox removes the player
                     break;
                 case ServerState.Game:
-                    // TODO: let AI continue the players settlement or keep it at this state?
-                    // Maybe even allow a reconnect?
-                    GameManager.Instance.GetCurrentGame()?.PlayerLeftGame(client.PlayerIndex);
-                    GameDirty = true; // tell the other clients
+                    var game = GameManager.Instance.GetCurrentGame();
+                    if (game != null)
+                    {
+                        game.Pause();
+                        PauseGame();
+                        game.PlayerLeftGame(client.PlayerIndex);
+                        Log.Info.Write(ErrorSystemType.Network, $"Game paused after player {client.PlayerIndex} disconnected. The settlement is preserved for rejoining.");
+                    }
+                    GameDirty = true; // Synchronize the pause and disconnected-player status.
                     break;
                 default:
                     break;
