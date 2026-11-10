@@ -2552,6 +2552,17 @@ namespace Freeserf.UI
             return Strings.Popup_ResourceAmountPerfect;
         }
 
+        internal static string GetGroundAnalysisResourceText(Map.Minerals mineral, uint estimate)
+        {
+            uint amount = mineral switch
+            {
+                Map.Minerals.Gold or Map.Minerals.Stone => 2u * estimate,
+                Map.Minerals.Coal => estimate / 2u,
+                _ => estimate
+            };
+            return GetResourceAmountText(amount);
+        }
+
         void DrawGroundAnalysisBox()
         {
             SetIcon(64, 19, 0x1c); // geologist
@@ -2570,16 +2581,16 @@ namespace Freeserf.UI
             SetText(8, 39, Strings.Popup_GroundAnalysis);
 
             // gold
-            SetText(32, 63, GetResourceAmountText(2u * estimates[(int)Map.Minerals.Gold]));
+            SetText(32, 63, GetGroundAnalysisResourceText(Map.Minerals.Gold, estimates[(int)Map.Minerals.Gold]));
 
             // iron
-            SetText(32, 83, GetResourceAmountText(estimates[(int)Map.Minerals.Iron]));
+            SetText(32, 83, GetGroundAnalysisResourceText(Map.Minerals.Iron, estimates[(int)Map.Minerals.Iron]));
 
             // coal
-            SetText(32, 103, GetResourceAmountText(estimates[(int)Map.Minerals.Coal]));
+            SetText(32, 103, GetGroundAnalysisResourceText(Map.Minerals.Coal, estimates[(int)Map.Minerals.Coal]));
 
             // stone
-            SetText(32, 123, GetResourceAmountText(2u * estimates[(int)Map.Minerals.Stone]));
+            SetText(32, 123, GetGroundAnalysisResourceText(Map.Minerals.Stone, estimates[(int)Map.Minerals.Stone]));
         }
 
         void DrawSettlerMenuBox()
